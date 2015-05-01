@@ -54,9 +54,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * @param def
    *          The definition for the record batch.
    * @param buf
-   *          The buffer that holds the data associated with the record batch
-   * @return Whether or not the schema changed since the previous load.
+   *          The buffer that holds the data associated with the record batch.
+   * @return Whether the schema changed since the previous load.
    * @throws SchemaChangeException
+   *   TODO:  Clean:  DRILL-2933  load(...) never actually throws SchemaChangeException.
    */
   public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
 //    logger.debug("Loading record batch with def {} and data {}", def, buf);

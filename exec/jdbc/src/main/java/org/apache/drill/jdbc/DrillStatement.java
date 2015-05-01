@@ -47,23 +47,53 @@ public abstract class DrillStatement extends AvaticaStatement
     return (DrillConnectionImpl) connection;
   }
 
+  // WORKAROUND:  Work around AvaticaStatement's code that wraps _any_ exception,
+  // even if SQLException, by unwrapping to get cause exception so caller can
+  // throw it directly if it's a SQLException:
+  // TODO:  Any ideas for a better name?
+  private SQLException unwrapIfExtra( final SQLException superMethodException ) {
+    final SQLException result;
+    final Throwable cause = superMethodException.getCause();
+    if ( null != cause && cause instanceof SQLException ) {
+      result = (SQLException) cause;
+    }
+    else {
+      result = superMethodException;
+    }
+    return result;
+  }
 
   @Override
   public boolean execute( String sql ) throws SQLException {
     checkNotClosed();
-    return super.execute( sql );
+    try {
+      return super.execute( sql );
+    }
+    catch ( final SQLException possiblyExtraWrapperException ) {
+      throw unwrapIfExtra( possiblyExtraWrapperException );
+    }
   }
 
   @Override
   public ResultSet executeQuery( String sql ) throws SQLException {
-    checkNotClosed();
-    return super.executeQuery( sql );
+    try {
+       checkNotClosed();
+       return super.executeQuery( sql );
+    }
+    catch ( final SQLException possiblyExtraWrapperException ) {
+      throw unwrapIfExtra( possiblyExtraWrapperException );
+    }
   }
 
   @Override
   public int executeUpdate( String sql ) throws SQLException {
     checkNotClosed();
-    return super.executeUpdate( sql );
+    try {
+      return super.executeUpdate( sql );
+    }
+    catch ( final SQLException possiblyExtraWrapperException ) {
+      throw unwrapIfExtra( possiblyExtraWrapperException );
+    }
   }
 
   @Override

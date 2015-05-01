@@ -76,6 +76,8 @@ public class PrintingResultsListener implements UserResultsListener {
       count.addAndGet(header.getRowCount());
       try {
         loader.load(header.getDef(), data);
+        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+        // SchemaChangeException, so check/clean catch clause below.
       } catch (SchemaChangeException e) {
         submissionFailed(UserException.systemError(e).build());
       }

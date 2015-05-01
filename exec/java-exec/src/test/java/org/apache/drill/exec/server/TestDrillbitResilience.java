@@ -208,6 +208,8 @@ public class TestDrillbitResilience {
             final QueryData queryData = queryResultBatch.getHeader();
             try {
               loader.load(queryData.getDef(), queryResultBatch.getData());
+              // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+              // SchemaChangeException, so check/clean catch clause below.
             } catch (final SchemaChangeException e) {
               fail(e.toString());
             }

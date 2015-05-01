@@ -75,6 +75,8 @@ public class TestTextColumn extends BaseTestQuery{
       int rows = batch.getHeader().getRowCount();
       if(batch.getData() != null) {
         loader.load(batch.getHeader().getDef(), batch.getData());
+        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+        // SchemaChangeException, so check/clean throws clause above.
         for (int i = 0; i < rows; ++i) {
           output.add(new ArrayList<String>());
           for (VectorWrapper<?> vw: loader) {

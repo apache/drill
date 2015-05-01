@@ -81,7 +81,7 @@ public class QueryResultHandler {
 
     assert queryResult.hasQueryState() : "received query result without QueryState";
 
-    final boolean isFailureResult    = QueryState.FAILED    == queryState;
+    final boolean isFailureResult = QueryState.FAILED == queryState;
     // CANCELED queries are handled the same way as COMPLETED
     final boolean isTerminalResult;
     switch ( queryState ) {

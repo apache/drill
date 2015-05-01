@@ -155,12 +155,12 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
       // TODO:  Revisit:  Why reaching directly into ResultsListener rather than
       // calling some wait method?
       resultsListener.latch.await();
-      cursor.next();
-    } catch (InterruptedException e) {
-      // TODO:  Check:  Should this call Thread.currentThread.interrupt()?   If
-      // not, at least document why this is empty.
-      // TODO:  Check:  Does anything ever interrupt this?  (Is catch needed?)
+    } catch ( InterruptedException e ) {
+      // Not normally expected--Drill doesn't interrupt in this area (right?)--
+      // but JDBC client certainly could.
+      throw new SQLException( "Interrupted", e );
     }
+    cursor.next();
 
     return this;
   }
@@ -180,7 +180,6 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     private static final int THROTTLING_QUEUE_SIZE_THRESHOLD = 100;
 
     private volatile QueryId queryId;
-
 
     private volatile UserException executionFailureException;
     volatile boolean completed = false;
@@ -259,8 +258,16 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
 
-    // TODO:  Doc.:  Specify whether result can be null and what that means.
-    public QueryDataBatch getNext() throws Exception {
+    /**
+     * Gets the next batch of query results from the queue.
+     * @return  the next batch, or {@code null} after last batch has been returned
+     * @throws UserException
+     *         if the query failed
+     * @throws InterruptedException
+     *         if waiting on the queue was interrupted
+     */
+    public QueryDataBatch getNext() throws UserException,
+                                           InterruptedException {
       while (true) {
         if (executionFailureException != null) {
           logger.debug( "Dequeued query failure exception: {}.", executionFailureException );

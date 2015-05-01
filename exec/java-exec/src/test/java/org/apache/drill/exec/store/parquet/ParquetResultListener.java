@@ -109,6 +109,8 @@ public class ParquetResultListener implements UserResultsListener {
     RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
     try {
       schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
+      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+      // SchemaChangeException, so check/clean catch clause below.
     } catch (SchemaChangeException e) {
       throw new RuntimeException(e);
     }

@@ -243,6 +243,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         final UserBitShared.RecordBatchDef rbd = batch.getHeader().getDef();
         try {
           batchLoaders[i].load(rbd, batch.getBody());
+          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+          // SchemaChangeException, so check/clean catch clause below.
         } catch(final SchemaChangeException e) {
           logger.error("MergingReceiver failed to load record batch from remote host.  {}", e);
           context.fail(e);
@@ -313,6 +315,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
             incomingBatches[b] = batch;
             if (batch != null) {
               batchLoaders[b].load(batch.getHeader().getDef(), batch.getBody());
+              // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+              // SchemaChangeException, so check/clean catch clause below.
             } else {
               batchLoaders[b].clear();
               batchLoaders[b] = null;
@@ -399,6 +403,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         final UserBitShared.RecordBatchDef rbd = incomingBatches[node.batchId].getHeader().getDef();
         try {
           batchLoaders[node.batchId].load(rbd, incomingBatches[node.batchId].getBody());
+          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+          // SchemaChangeException, so check/clean catch clause below.
         } catch(final SchemaChangeException ex) {
           context.fail(ex);
           return IterOutcome.STOP;

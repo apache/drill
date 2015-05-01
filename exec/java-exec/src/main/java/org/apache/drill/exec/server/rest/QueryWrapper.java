@@ -148,6 +148,8 @@ public class QueryWrapper {
         if (result.hasData()) {
           final RecordBatchLoader loader = new RecordBatchLoader(allocator);
           loader.load(result.getHeader().getDef(), result.getData());
+          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+          // SchemaChangeException, so check/clean catch clause below.
           for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
             columns.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
           }

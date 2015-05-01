@@ -225,6 +225,8 @@ public class DrillTestWrapper {
     for (int i = 0; i < size; i++) {
       batch = records.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
+      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+      // SchemaChangeException, so check/clean throws clause above.
       if (schema == null) {
         schema = loader.getSchema();
         for (MaterializedField mf : schema) {
@@ -410,6 +412,8 @@ public class DrillTestWrapper {
     for (int i = 0; i < size; i++) {
       batch = records.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
+      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+      // SchemaChangeException, so check/clean throws clause above.
       if (schema == null) {
         schema = loader.getSchema();
       }

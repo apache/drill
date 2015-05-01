@@ -169,6 +169,8 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
       final RecordBatchDef rbd = batch.getHeader().getDef();
       final boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
+      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+      // SchemaChangeException, so check/clean catch clause below.
       stats.addLongStat(Metric.BYTES_RECEIVED, batch.getByteCount());
 
       batch.release();

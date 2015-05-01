@@ -25,6 +25,9 @@ import net.hydromatic.avatica.ArrayImpl.Factory;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.Cursor;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -132,8 +135,13 @@ public class DrillCursor implements Cursor {
           return false;
         } else {
           currentRecordNumber = 0;
-          boolean changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
-          qrb.release();
+          final boolean changed;
+          try {
+            changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
+          }
+          finally {
+            qrb.release();
+          }
           schema = currentBatch.getSchema();
           if (changed) {
             updateColumns();
@@ -143,8 +151,28 @@ public class DrillCursor implements Cursor {
           }
           return true;
         }
-      } catch (Exception e) {
-        throw new SQLException("Failure while executing query.", e);
+      }
+      catch ( UserException e ) {
+        // A normally expected case--for any server-side error (e.g., syntax
+        // error in SQL statement).
+        // Contruct SQLException with message text from the UserException.
+        // TODO:  Map UserException error type to SQLException subclass (once
+        // error type is accessible, of course. :-( )
+        throw new SQLException( e.getMessage(), e );
+      }
+      catch ( InterruptedException e ) {
+        // Not normally expected--Drill doesn't interrupt in this area (right?)--
+        // but JDBC client certainly could.
+        throw new SQLException( "Interrupted.", e );
+      }
+      catch ( SchemaChangeException e ) {
+        // TODO:  Clean:  DRILL-2933:  RecordBatchLoader.load(...) no longer
+        // throws SchemaChangeException, so check/clean catch clause.
+        throw new SQLException(
+            "Unexpected SchemaChangeException from RecordBatchLoader.load(...)" );
+      }
+      catch ( RuntimeException e ) {
+        throw new SQLException( "Unexpected exception: " + e.toString(), e );
       }
 
     }
