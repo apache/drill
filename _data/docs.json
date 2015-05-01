@@ -881,7 +881,7 @@
                     "parent": "Configuring Different Workloads", 
                     "previous_title": "Configuring Different Workloads Introduction", 
                     "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                    "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-mixed-cluster.md", 
                     "title": "Configuring Resources in a Mixed Cluster", 
                     "url": "/docs/configuring-resources-in-a-mixed-cluster/"
                 }, 
@@ -992,7 +992,7 @@
             "parent": "Configuring Different Workloads", 
             "previous_title": "Configuring Different Workloads Introduction", 
             "previous_url": "/docs/configuring-different-workloads-introduction/", 
-            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-mixed-cluster.md", 
             "title": "Configuring Resources in a Mixed Cluster", 
             "url": "/docs/configuring-resources-in-a-mixed-cluster/"
         }, 
@@ -3530,7 +3530,7 @@
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads Introduction", 
                             "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-mixed-cluster.md", 
                             "title": "Configuring Resources in a Mixed Cluster", 
                             "url": "/docs/configuring-resources-in-a-mixed-cluster/"
                         }, 
@@ -10958,7 +10958,7 @@
                             "parent": "Configuring Different Workloads", 
                             "previous_title": "Configuring Different Workloads Introduction", 
                             "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
+                            "relative_path": "_docs/manage-drill/015-configuring-resources-in-a-mixed-cluster.md", 
                             "title": "Configuring Resources in a Mixed Cluster", 
                             "url": "/docs/configuring-resources-in-a-mixed-cluster/"
                         }, 
