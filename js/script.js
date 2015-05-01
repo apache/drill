@@ -1,7 +1,5 @@
-// JavaScript Document
-
-
-
+---
+---
 var reelPointer = null;
 $(document).ready(function(e) {
 	
@@ -33,44 +31,13 @@ $(document).ready(function(e) {
 			$(this).addClass("parent");	
 		}
     });
-	
-	$("#menu ul li.parent").mouseenter(function() {
-		closeSearch();
-	});
-	
+
 	$("#header .dots .dot:eq(0)").addClass("sel");
 	
-	$("#menu ul li.l").click(function() {
-		if ($(this).hasClass("open")) {
-			//devo chiudere	
-			closeSearch();
-		} else {
-			//devo aprire
-			$("#search").css({ display: "block", paddingTop: "0px", paddingBottom: "0px", marginTop:"-40px" }).animate({ paddingTop: "30px", paddingBottom: "30px", marginTop: "0px" },400,"easeOutQuint");
-			$("#search input").trigger("focus").select();
-			$(this).addClass("open");
-		}
-	});
-	
-	$("#search input").val("").keypress(function(e) {
-		if(e.keyCode == 13 && $(this).val()) {
-			document.location.href = "https://www.google.com/webhp?ie=UTF-8#q="+$(this).val()+"%20site%3Aincubator.apache.org%2Fdrill%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fincubator-drill-dev";
-		}
-	});	
-    
 	resized();
 	
 	$(window).scroll(onScroll);
 });
-
-function closeSearch() {
-	var R = ($("#menu ul li.l.open").length) ? true : false;
-	$("#menu ul li.l").removeClass("open");
-	$("#search").stop(false,true,false).animate({ paddingTop: "0px", paddingBottom: "0px", marginTop: "-40px" },400,"easeInQuint",function() {
-		$(this).css({ display: "none" });	
-	});
-	return R;
-}
 
 var reel_currentIndex = 0;
 function resized() {
@@ -90,8 +57,8 @@ function resized() {
 		$(this).find(".tc").css({ top: Math.round(d/2)+"px" });
 	});
 	
-	if (WW < 999) $("#menu, #search").addClass("r");
-	else $("#menu, #search").removeClass("r");
+	if (WW < 999) $("#menu").addClass("r");
+	else $("#menu").removeClass("r");
 	
 	onScroll();
 		
@@ -123,10 +90,8 @@ function onScroll() {
 	var ST = document.body.scrollTop || document.documentElement.scrollTop;
 	if ($("#menu.r").length) {
 		$("#menu.r").css({ top: ST+"px" });	
-		$("#search.r").css({ top: (ST+50)+"px" });	
 	} else {
 		$("#menu").css({ top: "0px" });
-		$("#search").css({ top: "50px" });
 	}
 	
 	if (ST > 400) $("#subhead").addClass("show");	

@@ -1,3 +1,5 @@
+---
+---
 var Drill = Drill || {};
 
 Drill.Site = {
@@ -6,6 +8,18 @@ Drill.Site = {
     Drill.Site.watchInternalAnchorClicks();
     Drill.Site.watchSearchBarMouseEnter();
     Drill.Site.watchSearchSubmit();
+    Drill.Site.setSearchVal();
+  },
+  
+  getParameterByName : function(name) {
+      name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+          results = regex.exec(location.search);
+      return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  },
+  
+  setSearchVal : function() {
+    $("#drill-search-term").val(Drill.Site.getParameterByName('q'));
   },
 
   watchExpandMenuClicks : function(){
@@ -47,11 +61,8 @@ Drill.Site = {
     $("#menu .search-bar #drill-search-form").on("submit", function(e){
       e.preventDefault();
       var search_val = $("#drill-search-term").val();
-      var search_url = "https://www.google.com/webhp?ie=UTF-8#q="+search_val+"%20site%3Adrill.apache.org%20OR%20site%3Aissues.apache.org%2Fjira%2Fbrowse%2FDRILL%20OR%20site%3Amail-archives.apache.org%2Fmod_mbox%2Fdrill-user";
-      var form = $("#menu .search-bar form#search-using-google");
-      form.attr("action",search_url);
-      form.submit();
-      form.attr("action","");
+      var search_url = "{{ site.baseurl }}/search/?q="+search_val;
+      document.location.href = search_url;
     });
   },
 
