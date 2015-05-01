@@ -340,14 +340,14 @@ connectionStatus_t DrillClientImpl::validateHandshake(DrillUserProperties* prope
             case exec::user::RPC_VERSION_MISMATCH:
                 DRILL_LOG(LOG_TRACE) << "Invalid rpc version.  Expected "
                     << DRILL_RPC_VERSION << ", actual "<< m_handshakeVersion << "." << std::endl;
-                return handleConnError(CONN_HANDSHAKE_FAILED,
+                return handleConnError(CONN_BAD_RPC_VER,
                         getMessage(ERR_CONN_BAD_RPC_VER, DRILL_RPC_VERSION,
                             m_handshakeVersion,
                             this->m_handshakeErrorId.c_str(),
                             this->m_handshakeErrorMsg.c_str()));
             case exec::user::AUTH_FAILED:
                 DRILL_LOG(LOG_TRACE) << "Authentication failed." << std::endl;
-                return handleConnError(CONN_HANDSHAKE_FAILED,
+                return handleConnError(CONN_AUTH_FAILED,
                         getMessage(ERR_CONN_AUTHFAIL,
                             this->m_handshakeErrorId.c_str(),
                             this->m_handshakeErrorMsg.c_str()));
