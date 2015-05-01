@@ -71,9 +71,10 @@ You configure memory for each service by setting three values in `warden.conf`.
 Configure memory for other services in the same manner, as described in [MapR documentation](http://doc.mapr.com/display/MapR/warden.%3Cservicename%3E.conf)
 
 For more information about managing memory in a MapR cluster, see the following sections in the MapR documentation:
-* [Memory Allocation for Nodes](http://doc.mapr.com/display/MapR40x/Memory+Allocation+for+Nodes)
-* [Cluster Resource Allocation](http://doc.mapr.com/display/MapR40x/Cluster+Resource+Allocation)
-* [Customizing Memory Settings for MapReduce v1](http://doc.mapr.com/display/MapR40x/Customize+Memory+Settings+for+MapReduce+v1)
+
+* [Memory Allocation for Nodes](http://doc.mapr.com/display/MapR40x/Memory+Allocation+for+Nodes)  
+* [Cluster Resource Allocation](http://doc.mapr.com/display/MapR40x/Cluster+Resource+Allocation)  
+* [Customizing Memory Settings for MapReduce v1](http://doc.mapr.com/display/MapR40x/Customize+Memory+Settings+for+MapReduce+v1)  
 
 ## How to Manage Drill CPU Resources
 Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
