@@ -835,7 +835,66 @@
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
         }, 
-        "Configuring Different Workloads": {
+        "Configuring Drill in a Dedicated Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring a Multitenant Cluster", 
+            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Manage Drill Introduction", 
+            "previous_url": "/docs/manage-drill-introduction/", 
+            "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
+            "title": "Configuring Drill in a Dedicated Cluster", 
+            "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+        }, 
+        "Configuring Multitenant Resources": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Resources for a Shared Drillbit", 
+            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+            "parent": "Configuring a Multitenant Cluster", 
+            "previous_title": "Configuring a Multitenant Cluster Introduction", 
+            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+            "title": "Configuring Multitenant Resources", 
+            "url": "/docs/configuring-multitenant-resources/"
+        }, 
+        "Configuring Resources for a Shared Drillbit": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configuring a Multitenant Cluster", 
+            "previous_title": "Configuring Multitenant Resources", 
+            "previous_url": "/docs/configuring-multitenant-resources/", 
+            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+            "title": "Configuring Resources for a Shared Drillbit", 
+            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+        }, 
+        "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
                 {
                     "title": "Manage Drill", 
@@ -846,8 +905,8 @@
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Configuring Different Workloads", 
-                            "url": "/docs/configuring-different-workloads/"
+                            "title": "Configuring a Multitenant Cluster", 
+                            "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
                             "title": "Manage Drill", 
@@ -855,20 +914,20 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Resources in a Mixed Cluster", 
-                    "next_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
-                    "parent": "Configuring Different Workloads", 
-                    "previous_title": "Configuring Different Workloads", 
-                    "previous_url": "/docs/configuring-different-workloads/", 
-                    "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
-                    "title": "Configuring Different Workloads Introduction", 
-                    "url": "/docs/configuring-different-workloads-introduction/"
+                    "next_title": "Configuring Multitenant Resources", 
+                    "next_url": "/docs/configuring-multitenant-resources/", 
+                    "parent": "Configuring a Multitenant Cluster", 
+                    "previous_title": "Configuring a Multitenant Cluster", 
+                    "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                    "title": "Configuring a Multitenant Cluster Introduction", 
+                    "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Configuring Different Workloads", 
-                            "url": "/docs/configuring-different-workloads/"
+                            "title": "Configuring a Multitenant Cluster", 
+                            "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
                             "title": "Manage Drill", 
@@ -878,18 +937,18 @@
                     "children": [], 
                     "next_title": "Configuring Resources for a Shared Drillbit", 
                     "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "parent": "Configuring Different Workloads", 
-                    "previous_title": "Configuring Different Workloads Introduction", 
-                    "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                    "title": "Configuring Resources in a Mixed Cluster", 
-                    "url": "/docs/configuring-resources-in-a-mixed-cluster/"
+                    "parent": "Configuring a Multitenant Cluster", 
+                    "previous_title": "Configuring a Multitenant Cluster Introduction", 
+                    "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                    "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                    "title": "Configuring Multitenant Resources", 
+                    "url": "/docs/configuring-multitenant-resources/"
                 }, 
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Configuring Different Workloads", 
-                            "url": "/docs/configuring-different-workloads/"
+                            "title": "Configuring a Multitenant Cluster", 
+                            "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
                             "title": "Manage Drill", 
@@ -899,28 +958,28 @@
                     "children": [], 
                     "next_title": "Configuration Options", 
                     "next_url": "/docs/configuration-options/", 
-                    "parent": "Configuring Different Workloads", 
-                    "previous_title": "Configuring Resources in a Mixed Cluster", 
-                    "previous_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
+                    "parent": "Configuring a Multitenant Cluster", 
+                    "previous_title": "Configuring Multitenant Resources", 
+                    "previous_url": "/docs/configuring-multitenant-resources/", 
                     "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
                     "title": "Configuring Resources for a Shared Drillbit", 
                     "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                 }
             ], 
-            "next_title": "Configuring Different Workloads Introduction", 
-            "next_url": "/docs/configuring-different-workloads-introduction/", 
+            "next_title": "Configuring a Multitenant Cluster Introduction", 
+            "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
             "parent": "Manage Drill", 
             "previous_title": "Configuring Drill in a Dedicated Cluster", 
             "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-            "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
-            "title": "Configuring Different Workloads", 
-            "url": "/docs/configuring-different-workloads/"
+            "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+            "title": "Configuring a Multitenant Cluster", 
+            "url": "/docs/configuring-a-multitenant-cluster/"
         }, 
-        "Configuring Different Workloads Introduction": {
+        "Configuring a Multitenant Cluster Introduction": {
             "breadcrumbs": [
                 {
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
                     "title": "Manage Drill", 
@@ -928,73 +987,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Resources in a Mixed Cluster", 
-            "next_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
-            "parent": "Configuring Different Workloads", 
-            "previous_title": "Configuring Different Workloads", 
-            "previous_url": "/docs/configuring-different-workloads/", 
-            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
-            "title": "Configuring Different Workloads Introduction", 
-            "url": "/docs/configuring-different-workloads-introduction/"
-        }, 
-        "Configuring Drill in a Dedicated Cluster": {
-            "breadcrumbs": [
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring Different Workloads", 
-            "next_url": "/docs/configuring-different-workloads/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
-            "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
-            "title": "Configuring Drill in a Dedicated Cluster", 
-            "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
-        }, 
-        "Configuring Resources for a Shared Drillbit": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
-            "parent": "Configuring Different Workloads", 
-            "previous_title": "Configuring Resources in a Mixed Cluster", 
-            "previous_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
-            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
-            "title": "Configuring Resources for a Shared Drillbit", 
-            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
-        }, 
-        "Configuring Resources in a Mixed Cluster": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
-                }, 
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring Resources for a Shared Drillbit", 
-            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-            "parent": "Configuring Different Workloads", 
-            "previous_title": "Configuring Different Workloads Introduction", 
-            "previous_url": "/docs/configuring-different-workloads-introduction/", 
-            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-            "title": "Configuring Resources in a Mixed Cluster", 
-            "url": "/docs/configuring-resources-in-a-mixed-cluster/"
+            "next_title": "Configuring Multitenant Resources", 
+            "next_url": "/docs/configuring-multitenant-resources/", 
+            "parent": "Configuring a Multitenant Cluster", 
+            "previous_title": "Configuring a Multitenant Cluster", 
+            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+            "title": "Configuring a Multitenant Cluster Introduction", 
+            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
@@ -1058,9 +1058,9 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
-                            "title": "Storage Plugin Configuration Introduction", 
-                            "url": "/docs/storage-plugin-configuration-introduction/"
+                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
+                            "title": "Plugin Configuration Introduction", 
+                            "url": "/docs/plugin-configuration-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -1077,8 +1077,8 @@
                             "next_title": "File System Storage Plugin", 
                             "next_url": "/docs/file-system-storage-plugin/", 
                             "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Storage Plugin Configuration Introduction", 
-                            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
+                            "previous_title": "Plugin Configuration Introduction", 
+                            "previous_url": "/docs/plugin-configuration-introduction/", 
                             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -1168,8 +1168,8 @@
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Storage Plugin Configuration Introduction", 
-                    "next_url": "/docs/storage-plugin-configuration-introduction/", 
+                    "next_title": "Plugin Configuration Introduction", 
+                    "next_url": "/docs/plugin-configuration-introduction/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
@@ -3475,8 +3475,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Different Workloads", 
-                    "next_url": "/docs/configuring-different-workloads/", 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
@@ -3495,8 +3495,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3504,20 +3504,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Resources in a Mixed Cluster", 
-                            "next_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Different Workloads", 
-                            "previous_url": "/docs/configuring-different-workloads/", 
-                            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
-                            "title": "Configuring Different Workloads Introduction", 
-                            "url": "/docs/configuring-different-workloads-introduction/"
+                            "next_title": "Configuring Multitenant Resources", 
+                            "next_url": "/docs/configuring-multitenant-resources/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                            "title": "Configuring a Multitenant Cluster Introduction", 
+                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3527,18 +3527,18 @@
                             "children": [], 
                             "next_title": "Configuring Resources for a Shared Drillbit", 
                             "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Different Workloads Introduction", 
-                            "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                            "title": "Configuring Resources in a Mixed Cluster", 
-                            "url": "/docs/configuring-resources-in-a-mixed-cluster/"
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                            "title": "Configuring Multitenant Resources", 
+                            "url": "/docs/configuring-multitenant-resources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -3548,22 +3548,22 @@
                             "children": [], 
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Resources in a Mixed Cluster", 
-                            "previous_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring Multitenant Resources", 
+                            "previous_url": "/docs/configuring-multitenant-resources/", 
                             "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
                             "title": "Configuring Resources for a Shared Drillbit", 
                             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
                     ], 
-                    "next_title": "Configuring Different Workloads Introduction", 
-                    "next_url": "/docs/configuring-different-workloads-introduction/", 
+                    "next_title": "Configuring a Multitenant Cluster Introduction", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Configuring Drill in a Dedicated Cluster", 
                     "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
+                    "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4485,6 +4485,27 @@
             "relative_path": "_docs/manage-drill/configuration-options/030-planning-and-exececution-options.md", 
             "title": "Planning and Execution Options", 
             "url": "/docs/planning-and-execution-options/"
+        }, 
+        "Plugin Configuration Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Storage Plugin Configuration", 
+                    "url": "/docs/storage-plugin-configuration/"
+                }, 
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Workspaces", 
+            "next_url": "/docs/workspaces/", 
+            "parent": "Storage Plugin Configuration", 
+            "previous_title": "Storage Plugin Configuration", 
+            "previous_url": "/docs/storage-plugin-configuration/", 
+            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
+            "title": "Plugin Configuration Introduction", 
+            "url": "/docs/plugin-configuration-introduction/"
         }, 
         "Ports Used by Drill": {
             "breadcrumbs": [
@@ -7234,9 +7255,9 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
-                    "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
-                    "title": "Storage Plugin Configuration Introduction", 
-                    "url": "/docs/storage-plugin-configuration-introduction/"
+                    "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
+                    "title": "Plugin Configuration Introduction", 
+                    "url": "/docs/plugin-configuration-introduction/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7253,8 +7274,8 @@
                     "next_title": "File System Storage Plugin", 
                     "next_url": "/docs/file-system-storage-plugin/", 
                     "parent": "Storage Plugin Configuration", 
-                    "previous_title": "Storage Plugin Configuration Introduction", 
-                    "previous_url": "/docs/storage-plugin-configuration-introduction/", 
+                    "previous_title": "Plugin Configuration Introduction", 
+                    "previous_url": "/docs/plugin-configuration-introduction/", 
                     "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                     "title": "Workspaces", 
                     "url": "/docs/workspaces/"
@@ -7344,35 +7365,14 @@
                     "url": "/docs/drill-default-input-format/"
                 }
             ], 
-            "next_title": "Storage Plugin Configuration Introduction", 
-            "next_url": "/docs/storage-plugin-configuration-introduction/", 
+            "next_title": "Plugin Configuration Introduction", 
+            "next_url": "/docs/plugin-configuration-introduction/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Storage Plugin Registration", 
             "previous_url": "/docs/storage-plugin-registration/", 
             "relative_path": "_docs/connect-a-data-source/030-storage-plugin-configuration.md", 
             "title": "Storage Plugin Configuration", 
             "url": "/docs/storage-plugin-configuration/"
-        }, 
-        "Storage Plugin Configuration Introduction": {
-            "breadcrumbs": [
-                {
-                    "title": "Storage Plugin Configuration", 
-                    "url": "/docs/storage-plugin-configuration/"
-                }, 
-                {
-                    "title": "Connect a Data Source", 
-                    "url": "/docs/connect-a-data-source/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Workspaces", 
-            "next_url": "/docs/workspaces/", 
-            "parent": "Storage Plugin Configuration", 
-            "previous_title": "Storage Plugin Configuration", 
-            "previous_url": "/docs/storage-plugin-configuration/", 
-            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
-            "title": "Storage Plugin Configuration Introduction", 
-            "url": "/docs/storage-plugin-configuration-introduction/"
         }, 
         "Storage Plugin Registration": {
             "breadcrumbs": [
@@ -8332,8 +8332,8 @@
             "next_title": "File System Storage Plugin", 
             "next_url": "/docs/file-system-storage-plugin/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "Storage Plugin Configuration Introduction", 
-            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
+            "previous_title": "Plugin Configuration Introduction", 
+            "previous_url": "/docs/plugin-configuration-introduction/", 
             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
             "title": "Workspaces", 
             "url": "/docs/workspaces/"
@@ -8968,9 +8968,9 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect-a-data-source/035-storage-plugin-configuration-introduction.md", 
-                            "title": "Storage Plugin Configuration Introduction", 
-                            "url": "/docs/storage-plugin-configuration-introduction/"
+                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
+                            "title": "Plugin Configuration Introduction", 
+                            "url": "/docs/plugin-configuration-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8987,8 +8987,8 @@
                             "next_title": "File System Storage Plugin", 
                             "next_url": "/docs/file-system-storage-plugin/", 
                             "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Storage Plugin Configuration Introduction", 
-                            "previous_url": "/docs/storage-plugin-configuration-introduction/", 
+                            "previous_title": "Plugin Configuration Introduction", 
+                            "previous_url": "/docs/plugin-configuration-introduction/", 
                             "relative_path": "_docs/connect-a-data-source/040-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -9078,8 +9078,8 @@
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Storage Plugin Configuration Introduction", 
-                    "next_url": "/docs/storage-plugin-configuration-introduction/", 
+                    "next_title": "Plugin Configuration Introduction", 
+                    "next_url": "/docs/plugin-configuration-introduction/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
@@ -10903,8 +10903,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Different Workloads", 
-                    "next_url": "/docs/configuring-different-workloads/", 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
@@ -10923,8 +10923,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -10932,20 +10932,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Resources in a Mixed Cluster", 
-                            "next_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Different Workloads", 
-                            "previous_url": "/docs/configuring-different-workloads/", 
-                            "relative_path": "_docs/manage-drill/013-configuring-dfferent-workloads-introduction.md", 
-                            "title": "Configuring Different Workloads Introduction", 
-                            "url": "/docs/configuring-different-workloads-introduction/"
+                            "next_title": "Configuring Multitenant Resources", 
+                            "next_url": "/docs/configuring-multitenant-resources/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                            "title": "Configuring a Multitenant Cluster Introduction", 
+                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -10955,18 +10955,18 @@
                             "children": [], 
                             "next_title": "Configuring Resources for a Shared Drillbit", 
                             "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Different Workloads Introduction", 
-                            "previous_url": "/docs/configuring-different-workloads-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-drill-in-a-cluster.md", 
-                            "title": "Configuring Resources in a Mixed Cluster", 
-                            "url": "/docs/configuring-resources-in-a-mixed-cluster/"
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                            "title": "Configuring Multitenant Resources", 
+                            "url": "/docs/configuring-multitenant-resources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Configuring Different Workloads", 
-                                    "url": "/docs/configuring-different-workloads/"
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
                                 }, 
                                 {
                                     "title": "Manage Drill", 
@@ -10976,22 +10976,22 @@
                             "children": [], 
                             "next_title": "Configuration Options", 
                             "next_url": "/docs/configuration-options/", 
-                            "parent": "Configuring Different Workloads", 
-                            "previous_title": "Configuring Resources in a Mixed Cluster", 
-                            "previous_url": "/docs/configuring-resources-in-a-mixed-cluster/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring Multitenant Resources", 
+                            "previous_url": "/docs/configuring-multitenant-resources/", 
                             "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
                             "title": "Configuring Resources for a Shared Drillbit", 
                             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
                     ], 
-                    "next_title": "Configuring Different Workloads Introduction", 
-                    "next_url": "/docs/configuring-different-workloads-introduction/", 
+                    "next_title": "Configuring a Multitenant Cluster Introduction", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Configuring Drill in a Dedicated Cluster", 
                     "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-different-workloads.md", 
-                    "title": "Configuring Different Workloads", 
-                    "url": "/docs/configuring-different-workloads/"
+                    "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
                     "breadcrumbs": [

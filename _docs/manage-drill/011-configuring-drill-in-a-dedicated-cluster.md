@@ -3,7 +3,7 @@ title: "Configuring Drill in a Dedicated Cluster"
 parent: "Manage Drill"
 ---
 
-This section describes how to configure the amount of direct memory allocated to a Drillbit for query processing in a dedicated Drill cluster. When you use Drill in a cluster with other workloads, configure memory as described in section, ["Configuring Resources in a Mixed Cluster"]({{site.baseurl}}/docs/configuring-resources-in-a-cluster). 
+This section describes how to configure the amount of direct memory allocated to a Drillbit for query processing in a dedicated Drill cluster. When you use Drill in a cluster with other workloads, configure memory as described in section, ["Configuring Resources in a Mixed Cluster"]({{site.baseurl}}/docs/configuring-resources-in-a-mixed-cluster). 
 
 The default memory for a Drillbit is 8G, but Drill prefers 16G or more
 depending on the workload. The total amount of direct memory that a Drillbit

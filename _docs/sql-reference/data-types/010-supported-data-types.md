@@ -38,12 +38,12 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   <tr>
     <td valign="top">FLOAT</td>
     <td valign="top">4-byte floating point number</td>
-    <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
+    <td valign="top">0.456<br><a href="http://apache.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
     <td valign="top">DOUBLE, DOUBLE PRECISION</td>
     <td valign="top">8-byte floating point number, precision-scalable. Precision (p) is digits in the number. Scale (s) is digits to the right of the decimal point. Specify both p and s or neither. Default is 1.</td>
-    <td valign="top">0.456<br><a href="http://tshiran.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
+    <td valign="top">0.456<br><a href="http://apache.github.io/drill/docs/handling-different-data-types/">See guidelines</a></td>
   </tr>
   <tr>
     <td valign="top">INTEGER or INT</td>
@@ -53,12 +53,12 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   <tr>
     <td valign="top">INTERVALDAY</td>
     <td valign="top">A period of time in days, hours, minutes, and seconds only</td>
-    <td valign="top">'1 10:20:30.123'<br><a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/#intervalyear-and-intervalday">More examples</a></td>
+    <td valign="top">'1 10:20:30.123'<br><a href="http://apache.github.io/drill/docs/date-time-and-timestamp/#intervalyear-and-intervalday">More examples</a></td>
   </tr>
   <tr>
     <td valign="top">INTERVALYEAR</td>
     <td valign="top">A period of time in years and months only</td>
-    <td valign="top">'1-2' year to month<br><a href="http://tshiran.github.io/drill/docs/data-type-conversion/#casting-intervals">More examples</a></td>
+    <td valign="top">'1-2' year to month<br><a href="http://apache.github.io/drill/docs/data-type-conversion/#casting-intervals">More examples</a></td>
   </tr>
   <tr>
     <td valign="top">SMALLINT**</td>
@@ -68,12 +68,12 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
   <tr>
     <td valign="top">TIME</td>
     <td valign="top">24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss</td>
-    <td valign="top">22:55:55.23<br><a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
+    <td valign="top">22:55:55.23<br><a href="http://apache.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
     <td valign="top">TIMESTAMP</td>
     <td valign="top">JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS</td>
-    <td valign="top">2015-12-30 22:55:55.23<br> <a href="http://tshiran.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
+    <td valign="top">2015-12-30 22:55:55.23<br> <a href="http://apache.github.io/drill/docs/date-time-and-timestamp/">More examples</a></td>
   </tr>
   <tr>
     <td valign="top">CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR***</td>
