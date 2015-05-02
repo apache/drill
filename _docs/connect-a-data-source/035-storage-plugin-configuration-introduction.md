@@ -1,5 +1,5 @@
 ---
-title: "Storage Plugin Configuration Introduction"
+title: "Plugin Configuration Introduction"
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin instances on one Drill node in a Drill
