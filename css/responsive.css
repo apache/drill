@@ -121,6 +121,10 @@
   table.intro {
     width: 768px;
   }
+  
+  img {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 570px) {
