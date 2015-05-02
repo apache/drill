@@ -308,8 +308,9 @@ a.anchor {
 #header .scroller .item .tc {
 	color:#FFF;
 	margin-left:80px;
-	position:absolute;
-	width:530px;
+	position:relative;
+	width:900px;
+  margin:0 auto;
 }
 
 #header .scroller .item .tc h1, #header .scroller .item .tc h2 {

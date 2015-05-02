@@ -1,6 +1,25 @@
 ---
 layout: default
 ---
+<link href="{{ site.baseurl }}/static/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css">
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/static/fancybox/jquery.fancybox.pack.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+  $(".various").fancybox({
+maxWidth    : 800,
+                   maxHeight   : 600,
+                   fitToView   : true,
+                   autoSize    : true,
+                   beforeLoad  : function(){
+                       var url= $(this.element).attr("href");
+                       url = url.replace(new RegExp("watch\\?v=", "i"), 'v/');
+                       url += '?fs=1&autoplay=1';
+                       this.href = url
+                   }
+  });
+});
+</script>
 
 <div id="header" class="mw">
 
@@ -13,6 +32,8 @@ layout: default
 <div class="scroller">
   <div class="item">
     <div class="headlines tc">
+      <!--<iframe allowfullscreen="" frameborder="0" height="200" src="http://www.youtube.com/embed/SgD3RD2Shg4" style="float:right"></iframe>-->
+      <a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=SgD3RD2Shg4" style="float:right"><img src="http://1.bp.blogspot.com/-a4w9qhGaAxE/UnuBETl9rjI/AAAAAAAAHuE/x3ebr4IOfsw/s1600/iconmonstr-video-5-icon.png" height="160" width="320" style="border:solid 1px red"/></a>
       <h1 class="main-headline">Apache Drill</h1>
       <h2 id="sub-headline">Schema-free SQL Query Engine <br class="mobile-break" /> for Hadoop and NoSQL</h2>
       <a href="{{ site.baseurl }}/download/" class="download-headline btn btn-1 btn-1c"><span>DOWNLOAD NOW</span></a>
