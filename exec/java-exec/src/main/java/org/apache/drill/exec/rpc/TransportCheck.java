@@ -30,10 +30,11 @@ import io.netty.util.internal.SystemPropertyUtil;
 
 import java.util.Locale;
 
+import org.apache.drill.exec.ExecConstants;
+
 /**
  * TransportCheck decides whether or not to use the native EPOLL mechanism for communication.
  */
-@SuppressWarnings("unused")
 public class TransportCheck {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransportCheck.class);
 
@@ -43,12 +44,10 @@ public class TransportCheck {
 
     String name = SystemPropertyUtil.get("os.name").toLowerCase(Locale.US).trim();
 
-    if (!name.startsWith("linux") || SystemPropertyUtil.getBoolean("drill.exec.disable-linux-epoll", false) //
-        /* disable epoll */  || true //
-        ) {
-      SUPPORTS_EPOLL = false;
-    }else{
+    if (name.startsWith("linux") && SystemPropertyUtil.getBoolean(ExecConstants.USE_LINUX_EPOLL, false)) {
       SUPPORTS_EPOLL = true;
+    } else {
+      SUPPORTS_EPOLL = false;
     }
   }
 
