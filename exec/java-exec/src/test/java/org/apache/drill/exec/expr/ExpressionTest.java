@@ -62,6 +62,16 @@ public class ExpressionTest extends ExecTest {
   }
 
   @Test
+  public void testExprParseUpperExponent(@Injectable RecordBatch batch) throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0E-4)", batch);
+  }
+
+  @Test
+  public void testExprParseLowerExponent(@Injectable RecordBatch batch) throws Exception {
+    getExpressionCode("multiply(`$f0`, 1.0e-4)", batch);
+  }
+
+  @Test
   public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
     final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT), false, 0);
 
