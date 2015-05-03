@@ -61,6 +61,7 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.hadoop.security.AccessControlException;
 
 public class DrillSqlWorker {
@@ -143,7 +144,7 @@ public class DrillSqlWorker {
       injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
       sqlNode = planner.parse(sql);
     } catch (SqlParseException e) {
-      throw new QueryInputException("Failure parsing SQL. " + e.getMessage(), e);
+      throw UserException.parseError(e).build();
     }
 
     AbstractSqlHandler handler;
@@ -179,6 +180,9 @@ public class DrillSqlWorker {
       throw UserException.parseError(e).message(errorMessage).build();
     } catch (AccessControlException e) {
       throw UserException.permissionError(e).build();
+    } catch(SqlUnsupportedException e) {
+      throw UserException.unsupportedError(e)
+          .build();
     } catch (IOException | RelConversionException e) {
       throw new QueryInputException("Failure handling SQL.", e);
     }
