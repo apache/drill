@@ -27,7 +27,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
-
+import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -41,6 +41,7 @@ import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.LinkedList;
 import java.util.List;
+
 import com.google.common.collect.Lists;
 
 public class JoinUtils {
@@ -205,16 +206,25 @@ public class JoinUtils {
     }
   }
 
-  public static boolean isScalarSubquery(RelNode childrel) {
+  /**
+   * Utility method to check if a subquery (represented by its root RelNode) is provably scalar. Currently
+   * only aggregates with no group-by are considered scalar. In the future, this method should be generalized
+   * to include more cases and reconciled with Calcite's notion of scalar.
+   * @param root The root RelNode to be examined
+   * @return True if the root rel or its descendant is scalar, False otherwise
+   */
+  public static boolean isScalarSubquery(RelNode root) {
     DrillAggregateRel agg = null;
-    RelNode currentrel = childrel;
+    RelNode currentrel = root;
     while (agg == null && currentrel != null) {
       if (currentrel instanceof DrillAggregateRel) {
         agg = (DrillAggregateRel)currentrel;
-      } else if (currentrel instanceof DrillFilterRel) {
-        currentrel = currentrel.getInput(0);
       } else if (currentrel instanceof RelSubset) {
         currentrel = ((RelSubset)currentrel).getBest() ;
+      } else if (currentrel.getInputs().size() == 1) {
+        // If the rel is not an aggregate or RelSubset, but is a single-input rel (could be Project,
+        // Filter, Sort etc.), check its input
+        currentrel = currentrel.getInput(0);
       } else {
         break;
       }
