@@ -88,11 +88,11 @@ function moveReel(direction) {
 
 function onScroll() {
 	var ST = document.body.scrollTop || document.documentElement.scrollTop;
-	if ($("#menu.r").length) {
-		$("#menu.r").css({ top: ST+"px" });	
-	} else {
-		$("#menu").css({ top: "0px" });
-	}
+	//if ($("#menu.r").length) {
+	//	$("#menu.r").css({ top: ST+"px" });	
+	//} else {
+	//	$("#menu").css({ top: "0px" });
+	//}
 	
 	if (ST > 400) $("#subhead").addClass("show");	
 	else $("#subhead").removeClass("show");	

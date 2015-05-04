@@ -60,17 +60,17 @@
     width: auto;
     margin: 20px 10px 100px 20px;
   }
-  #menu ul li.force-expand, #menu ul li.d.force-expand {
+  #menu.force-expand ul li, #menu.force-expand ul li.d {
     display:inline-block;
   }
 
-  #menu ul li.force-expand.toc-categories {
+  #menu.force-expand ul li.toc-categories {
     display: none;
   }
-  #menu ul li.force-expand ul li{
+  #menu.force-expand ul li ul li{
     display:block;
   }
-  #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
+  #menu.force-expand ul li.nav, #menu.force-expand ul li#twitter-menu-item {
     clear:both;
     margin: 0 auto;
   }
@@ -101,13 +101,22 @@
     margin-right: 10px;
   }
 
+  /* Blog Posts */
+
+  div.post.int_text {
+    margin: 40px 20px 20px 20px;
+  }
+  div.post .post-header .int_title {
+    margin-left: 0px;
+  }
+
 }
 @media (max-width: 768px) {
-  #menu ul li.force-expand.nav {
+  #menu.force-expand ul li.nav {
     clear:both;
     margin: 0 auto;
   }
-  #menu ul li.force-expand.search-bar {
+  #menu.force-expand ul li.search-bar {
     clear:both;
   }
 
@@ -125,6 +134,11 @@
   img {
     max-width: 100%;
   }
+
+  /* Search page */
+  div.int_search {
+    width: 100%;
+  }
 }
 
 @media (max-width: 570px) {
@@ -134,12 +148,12 @@
 
   /* Responsive Menu 570 max width */
 
-  #menu ul li.force-expand.nav, #menu ul li.force-expand#twitter-menu-item {
+  #menu.force-expand ul li.nav, #menu.force-expand ul li#twitter-menu-item {
     clear: both;
     width: 100%;
     margin: auto;
   }
-  #menu ul li.force-expand {
+  #menu.force-expand ul li {
     display:block;
   }
   #menu ul li.clear-float{
@@ -156,6 +170,9 @@
     margin: 10px;
     clear: both;
     float: right;
+  }
+  #menu.force-expand {
+    position: relative;
   }
 
   /* Responsive Homepage 570 max width */

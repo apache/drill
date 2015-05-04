@@ -284,8 +284,12 @@ span.expand.show, span.contract.show {
    Need menu click to make sidebar appear */
 
 @media (max-width: 1024px) {
-  #footer {
+  div#footer {
     margin-left: 0px;
+    width: 100%;
+  }
+  div#footer .wrapper {
+    padding: 0 20px;
   }
   .main-content .edit-link {
     margin-right: 0px; /* container takes care of right margin */
@@ -299,7 +303,7 @@ span.expand.show, span.contract.show {
   #menu ul li.logo {
     padding-left: 0px;
   }
-  #menu ul li.force-expand.toc-categories {
+  #menu.force-expand ul li.toc-categories {
     display: inline-block;
   }
 
@@ -329,7 +333,12 @@ span.expand.show, span.contract.show {
   .sidebar.reveal {
     left: 0;
   }
-
+  .main-content.force-expand {
+    margin-left: 313px;
+  }
+  #footer.force-expand .wrapper {
+    margin-left: 313px;
+  }
   .main-content{
     margin: 0px 20px 0px 20px;
   }
@@ -341,6 +350,9 @@ span.expand.show, span.contract.show {
   }
   .page-wrap #footer {
     width: auto;
+  }
+  .breadcrumbs.force-expand li:first-of-type {
+    margin-left: 301px;
   }
 }
 @media (min-width: 1025px) {
@@ -356,6 +368,9 @@ span.expand.show, span.contract.show {
   }
   #footer .wrapper {
     margin-left: 313px;
+  }
+  #footer {
+    width: 100%;
   }
  .breadcrumbs {
     margin-left: 0px;

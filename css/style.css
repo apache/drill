@@ -44,9 +44,12 @@ a.anchor {
 	z-index:5;
 }
 
+/* This seems to override menu position fixed. Fixed positioning allows menu to always be available at the top of the viewport, and JS is not needed to do this */
+/*
 #menu.r {
 	position:absolute;
 }
+*/
 
 #menu ul {
 	background:#051221;
