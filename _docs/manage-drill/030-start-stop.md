@@ -26,7 +26,7 @@ For example, to restart a Drillbit, navigate to the Drill installation directory
 ## Invoking SQLLine
 SQLLine is used as the Drill shell. SQLLine connects to relational databases and executes SQL commands. You invoke SQLLine for Drill in embedded or distributed mode. If you want to use a particular storage plugin, you specify the plugin as a schema when you invoke SQLLine.
 
-### SQLLine Command Syntax
+### SQLLine Command Syntax on Linux and Mac OS X
 To start SQLLine, use the following **sqlline command** syntax:
 
 
@@ -39,6 +39,9 @@ To start SQLLine, use the following **sqlline command** syntax:
 * `schema` is the name of a [storage plugin]({{site.baseurl}}/docs/storage-plugin-registration) to use for queries. Optional.  
 * `Zk=zkname` is one or more zookeeper host names or IP addresses, or the keyword `local`, which is an alias for localhost. Required.  
 * `port` is the zookeeper port number. Optional. Port 2181 is the default.  
+
+### SQLLine Command Syntax on Windows
+To start SQLLine on Windows, use the same syntax as Linux and Mac OS X, except enter the default user name and password (admin/admin) when prompted to do so.
 
 ## Examples of Starting Drill
 Issue the **sqlline** command from the Drill installation directory. The simplest example of how to start SQLLine is to identify the protocol, JDBC, and zookeeper node or nodes in the **sqlline** command. This example starts SQLLine on a node in an embedded, single-node cluster:
