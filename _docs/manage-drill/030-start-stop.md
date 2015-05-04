@@ -24,7 +24,7 @@ For example, to restart a Drillbit, navigate to the Drill installation directory
     bin/drillbit.sh restart
 
 ## Invoking SQLLine
-SQLLine is used as the Drill shell. SQLLine connects to relational databases and executes SQL commands. You invoke SQLLine for Drill in embedded or distributed mode. If you want to use a particular storage plugin, you can indicate the schema name when you invoke SQLLine.
+SQLLine is used as the Drill shell. SQLLine connects to relational databases and executes SQL commands. You invoke SQLLine for Drill in embedded or distributed mode. If you want to use a particular storage plugin, you specify the plugin as a schema when you invoke SQLLine.
 
 ### SQLLine Command Syntax
 To start SQLLine, use the following **sqlline command** syntax:
