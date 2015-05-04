@@ -11,7 +11,7 @@ On a MapR cluster, Drill runs as a service and the installation process starts t
 
 The Drillbit service accepts requests from the client, processing the queries, and returning results to the client. You install Drill as a service and run the Drillbit on all of the required nodes in a Hadoop cluster to form a distributed cluster environment. When a Drillbit runs on each data node in the cluster, Drill maximizes data locality during query execution. Movement of data over the network or between nodes is minimized or eliminated when possible.
 
-If you use Drill in distributed mode, you need to understand how to control a Drillbit. If you use Drill in embedded mode, you do not use the Drillbit command. Windows and Mac OS X run Drill only in embedded mode, and therefore do not use the Drillbit command.
+If you use Drill in distributed mode, you need to understand how to control a Drillbit. If you use Drill in embedded mode, you do not use the **drillbit** command. Windows and Mac OS X run Drill only in embedded mode, and therefore do not use the Drillbit command.
 
 Using the **drillbit command**, located in the `bin` directory, you check the status of the Drillbit, start, stop, and restart a DrillBit. You can use a configuration file to start Drill. Using such a file is handy for controlling Drillbits on multiple nodes.
 
