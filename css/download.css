@@ -1,0 +1,33 @@
+.table {
+  display: table;   /* Allow the centering to work */
+  margin: 0 auto;
+}
+
+ul#download_buttons {
+  list-style: none;
+  padding-left:0px;
+  margin-bottom:100px;
+}
+
+ul#download_buttons li {
+  float: left;
+  text-align: center;
+  background-color: #4aaf4c;
+  margin:0 10px 10px 10px;
+  width: 235px;
+  line-height: 60px;
+}
+
+ul#download_buttons li a{
+  text-decoration:none;
+  color:#fff;
+  display:block;
+}
+ 
+ul#download_buttons li a:hover {
+  background-color: #348436;
+}
+
+div#download_bar:after{
+  clear:both;
+}

@@ -8,22 +8,22 @@ We welcome contributions to the project. If you're interested in contributing, t
 
 ## Drill Committers
 
-| Name | Alias (email is &lt;alias&gt;@apache.org) |  |
-|------|-------|------|
-| Jacques Nadeau (PMC Chair and VP Apache Drill) | jacques |  |
-| Tomer Shiran | tshiran |  |
-| Ted Dunning | tdunning |  |
-| Jason Frantz | jason |  |
-| MC Srivas | srivas |  |
-| Julian Hyde | jhyde |  |
-| Tim Chen | tnachen |  |
-| Mehant Baid | mehant |  |
-| Jinfeng Ni | jni |  |
-| Venki Korukanti | venki |  |
-| Jason Altekruse | json |  |
-| Aditya Kishore | adi |  |
-| Parth Chandra | parthc |  |
-| Aman Sinha | amansinha |  |
-| Steven Phillips | smp |  |
-| Bridget Bevens | bridgetb |  |
-| Hanifi Gunes | hg |  |
+| Name | Alias (email is &lt;alias&gt;@apache.org) |
+|------|-------|
+| **Jacques Nadeau (PMC Chair and VP Apache Drill)** | **jacques** |
+| Tomer Shiran | tshiran |
+| Ted Dunning | tdunning |
+| Jason Frantz | jason |
+| MC Srivas | srivas |
+| Julian Hyde | jhyde |
+| Tim Chen | tnachen |
+| Mehant Baid | mehant |
+| Jinfeng Ni | jni |
+| Venki Korukanti | venki |
+| Jason Altekruse | json |
+| Aditya Kishore | adi |
+| Parth Chandra | parthc |
+| Aman Sinha | amansinha |
+| Steven Phillips | smp |
+| Bridget Bevens | bridgetb |
+| Hanifi Gunes | hg |
