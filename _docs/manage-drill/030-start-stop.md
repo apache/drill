@@ -4,7 +4,7 @@ parent: "Manage Drill"
 ---
 How you start Drill depends on the installation method you followed. If you installed Drill in embedded mode, invoking SQLLine automatically starts a Drillbit locally. 
 
-On a MapR cluster, Drill runs as a service and the installation process starts the Drillbit service automatically. If you installed Drill in distributed mode, and the Drillbit on a node did not start, start the Drillbit before invoking running queries.
+On a MapR cluster, Drill runs as a service and the installation process starts the Drillbit service automatically. If you installed Drill in distributed mode, and the Drillbit on a node did not start, start the Drillbit before attempting to run queries.
 
 
 ## Controlling a Drillbit
