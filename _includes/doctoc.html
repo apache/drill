@@ -17,7 +17,7 @@ Notes:
         {% if doc0.children.size == 0 %}
           <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a class="reference internal" href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
         {% else %}
-          <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a href="javascript: void(0);">{{ doc0.title }}</a></li>
+          <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}{%if titles_array contains doc0.title %} current_section {% endif %}"><a href="javascript: void(0);">{{ doc0.title }}</a></li>
           <ul {% if titles_array contains doc0.title %}class="current_section"{% else %}style="display: none"{% endif %}>
           {% for doc1 in doc0.children %}
             {% if doc1.children.size == 0 %}

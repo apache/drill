@@ -412,6 +412,9 @@ span.expand.show, span.contract.show {
   .int_title h1 {
     font-size: 28px;
   }
+  .page-wrap #footer {
+    width: auto;
+  }
 }
 @media (min-width: 1025px) {
   .main-content-wrapper {
@@ -425,7 +428,7 @@ span.expand.show, span.contract.show {
     padding-left: 30px;
   }
   #footer .wrapper {
-    margin-left: 293px;
+    margin-left: 313px;
   }
  .breadcrumbs {
     margin-left: 0px;
@@ -440,6 +443,5 @@ div.page-wrap:after {
 }
 */
 #footer {
-  position: absolute;
-  width: 100%;
+  width: 1092px;
 }

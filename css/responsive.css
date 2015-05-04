@@ -86,6 +86,7 @@
   }
   #menu ul li.expand-menu, #menu ul li.expand-menu a {
     height: 50px;
+    width: 110px;
   }
   #menu ul li.expand-menu span.expand-icon{
     font-size: 24px;
@@ -119,6 +120,10 @@
   }
   table.intro {
     width: 768px;
+  }
+  
+  img {
+    max-width: 100%;
   }
 }
 
