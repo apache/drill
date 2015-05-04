@@ -62,154 +62,97 @@ extend the layer to a broader array of use cases. Drill provides a built in
 classpath scanning and plugin concept to add additional storage plugins,
 functions, and operators with minimal configuration.
 
-## Process Overview
+## Installation Overview
 
-Download the Apache Drill archive and extract the contents to a directory on
-your machine. The Apache Drill archive contains sample JSON and Parquet files
-that you can query immediately.
+You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about running Drill in distributed mode, see  [Deploying Drill in a Cluster]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster).
 
-Query the sample JSON and parquet files using SQLLine. SQLLine is a pure-Java
-console-based utility for connecting to relational databases and executing SQL
-commands. SQLLine is used as the shell for Drill. Drill follows the ANSI SQL:
-2011 standard with a few extensions for nested data formats.
+This installation procedure includes how to download the Apache Drill archive and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
 
-### Prerequisite
+After installing Drill, you start  SQLLine. SQLLine is a pure-Java console-based utility for connecting to relational databases and executing SQL commands. SQLLine is used as the shell for Drill. Drill follows the ANSI SQL: 2011 standard with [extensions]({{site.baseurl}}/docs/sql-extensions/) for nested data formats and other capabilities.
 
-You must have the following software installed on your machine to run Drill:
+## Embedded Mode Installation Prerequisites
 
-<table ><tbody><tr><td ><strong>Software</strong></td><td ><strong>Description</strong></td></tr><tr><td ><a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html" class="external-link" rel="nofollow">Oracle JDK version 7</a></td><td >A set of programming tools for developing Java applications.</td></tr></tbody></table>
+You need to meet the following prerequisites to run Drill:
 
+* Linux, Mac OS X, and Windows: [Oracle Java SE Development (JDK) Kit 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) installation  
+* Windows only:  
+  * A JAVA_HOME environment variable set up that points to  to the JDK installation  
+  * A PATH environment variable that includes a pointer to the JDK installation  
+  * A third-party utility for unzipping a tar.gz file 
   
-### Prerequisite Validation
+### Java Installation Prerequisite Check
 
-Run the following command to verify that the system meets the software
-prerequisite:
-<table ><tbody><tr><td ><strong>Command </strong></td><td ><strong>Example Output</strong></td></tr><tr><td ><code>java –version</code></td><td ><code>java version &quot;1.7.0_65&quot;</code><br /><code>Java(TM) SE Runtime Environment (build 1.7.0_65-b19)</code><br /><code>Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)</code></td></tr></tbody></table>
-  
-## Install Drill
+Run the following command in a terminal (Linux and Mac OS X) or Command Prompt (Windows) to verify that Java 7 is the version in effect:
 
-You can install Drill on a machine running Linux, Mac OS X, or Windows.  
+    java -version
 
-### Installing Drill on Linux
+The output looks something like this:
 
-Complete the following steps to install Drill:
+    java version "1.7.0_79"
+    Java(TM) SE Runtime Environment (build 1.7.0_7965-b15)
+    Java HotSpot(TM) 64-Bit Server VM (build 24.79-b02, mixed mode)
 
-  1. Issue the following command to download the latest, stable version of Apache Drill to a directory on your machine:
-        
-        wget http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz
-  2. Issue the following command to create a new directory to which you can extract the contents of the Drill `tar.gz` file:
-  
-        sudo mkdir -p /opt/drill
-  3. Navigate to the directory where you downloaded the Drill `tar.gz` file.
-  4. Issue the following command to extract the contents of the Drill `tar.gz` file:
-  
-        sudo tar -xvzf apache-drill-<version>.tar.gz -C /opt/drill
-  5. Issue the following command to navigate to the Drill installation directory:
-  
-        cd /opt/drill/apache-drill-<version>
+## Install Drill on Linux or Mac OS X
 
-At this point, you can [start Drill]({{ site.baseurl }}/docs/drill-in-10-minutes/#start-drill).
+Complete the following steps to install Drill:  
 
-### Installing Drill on Mac OS X
+1. Issue the following command in a terminal to download the latest, stable version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz):
 
-Complete the following steps to install Drill:
+        wget http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz  
 
-  1. Open a Terminal window, and create a `drill` directory inside your home directory (or in some other location if you prefer).
-  
-     **Example**
+2. Copy the downloaded file to the directory where you want to install Drill. 
 
-        $ pwd
-        /Users/max
-        $ mkdir drill
-        $ cd drill
-        $ pwd
-        /Users/max/drill
-  2. Click the following link to download the latest, stable version of Apache Drill:  
-      [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
-  3. Open the downloaded `TAR` file with the Mac Archive utility or a similar tool for unzipping files.
-  4. Move the resulting `apache-drill-<version>` folder into the `drill` directory that you created.
-  5. Issue the following command to navigate to the `apache-drill-<version>` directory:
-  
-        cd /Users/max/drill/apache-drill-<version>
+3. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
-At this point, you can [start Drill]({{ site.baseurl }}/docs/drill-in-10-minutes/#start-drill).
+        sudo tar -xvzf apache-drill-0.8.0..tar.gz  
 
-### Installing Drill on Windows
+The extraction process creates the installation directory named apache-drill-0.8.0 containing the Drill software.
 
-You can install Drill on Windows 7 or 8. To install Drill on Windows, you must
-have JDK 7, and you must set the `JAVA_HOME` path in the Windows Environment
-Variables. You must also have a utility, such as
-[7-zip](http://www.7-zip.org/), installed on your machine. These instructions
-assume that the [7-zip](http://www.7-zip.org/) decompression utility is
-installed to extract a Drill archive file that you download.
+At this point, you can [start Drill]({{site.baseurl}}/docs/drill-in-10-minutes/#start-drill).
 
-#### Setting JAVA_HOME
+## Start Drill on Linux and Mac OS X
+Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The zk=local means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
 
-Complete the following steps to set `JAVA_HOME`:
+1. Navigate to the Drill installation directory. For example:  
 
-  1. Navigate to `Control Panel\All Control Panel Items\System`, and select **Advanced System Settings**. The System Properties window appears.
-  2. On the Advanced tab, click **Environment Variables**. The Environment Variables window appears.
-  3. Add/Edit `JAVA_HOME` to point to the location where the JDK software is located.
-  
-       **Example**
-       
-        C:\Program Files\Java\jdk1.7.0_65
-  4. Click **OK** to exit the windows.
+        cd apache-drill-0.8.0  
 
-#### Installing Drill
+2. Issue the following command to launch SQLLine:
 
-Complete the following steps to install Drill:
+        bin/sqlline -u jdbc:drill:zk=local  
 
-  1. Create a `drill` directory on your `C:\` drive, (or in some other location if you prefer).
-  
-       **Example**
-       
-         C:\drill
-     Do not include spaces in your directory path. If you include spaces in the
-directory path, Drill fails to run.
-  2. Click the following link to download the latest, stable version of Apache Drill: 
-      [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
-  3. Move the `apache-drill-<version>.tar.gz` file to the `drill` directory that you created on your `C:\` drive.
-  4. Unzip the `TAR.GZ` file and the resulting `TAR` file.
-     1. Right-click `apache-drill-<version>.tar.gz,` and select `7-Zip>Extract Here`. The utility extracts the `apache-drill-<version>.tar` file.
-     2. Right-click `apache-drill-<version>.tar`, and select ` 7-Zip>Extract Here`. The utility extracts the `apache-drill-<version> `folder.
-  5. Open the `apache-drill-<version>` folder.
-  6. Open the `bin` folder, and double-click on the `sqlline.bat` file. The Windows command prompt opens.
-  7. At the `sqlline>` prompt, type `!connect jdbc:drill:zk=local` and then press `Enter`.
-  8. Enter the username and password.
-     1. When prompted, enter the user name `admin` and then press Enter.
-     2. When prompted, enter the password `admin` and then press Enter. The cursor blinks for a few seconds and then `0: jdbc:drill:zk=local>` displays in the prompt.
+   The `0: jdbc:drill:zk=local>`  prompt appears.  
 
-At this point, you can submit queries to Drill. Refer to the [Query Sample Data]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data) section of this document.
+   At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
-## Start Drill
+### Install Drill on Windows
 
-Launch SQLLine, the Drill shell, to start and run Drill in embedded mode.
-Launching SQLLine automatically starts a new Drillbit within the shell. In a
-production environment, Drillbits are the daemon processes that run on each
-node in a Drill cluster.
+You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
-Complete the following steps to launch SQLLine and start Drill:
+1. Click the following link to download the latest, stable version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
+2. Move the `apache-drill-0.8.0.tar.gz` file to a directory where you want to install Drill.
+3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-0.8.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-0.8.0 containing the Drill software. For example:
+   ![drill install dir]({{ site.baseurl }}/docs/img/drill-directory.png)
+   At this point, you can start Drill.  
 
-  1. Verify that you are in the Drill installation directory.  
-Example: `~/apache-drill-<version>`
+## Start Drill on Windows
+Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
 
-  2. Issue the following command to launch SQLLine:
+1. Open the apache-drill-0.8.0 folder.  
+2. Open the bin folder, and double-click the `sqlline.bat` file:
+   ![drill bin dir]({{ site.baseurl }}/docs/img/drill-bin.png)
+   The Windows command prompt opens.  
+3. At the sqlline> prompt, type `!connect jdbc:drill:zk=local` and then press Enter:
+   ![sqlline]({{ site.baseurl }}/docs/img/sqlline1.png)
+4. Enter the username, `admin`, and password, also `admin` when prompted.
+   The `0: jdbc:drill:zk=local>` prompt appears.
+At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
-        bin/sqlline -u jdbc:drill:zk=local
-
-     `-u` is a JDBC connection string that directs SQLLine to connect to Drill. It
-also starts a local Drillbit. If you are connecting to an Apache Drill
-cluster, the value of `zk=` would be a list of Zookeeper quorum nodes. For
-more information about how to run Drill in clustered mode, go to [Deploying Drill in a Cluster]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster).
-
-When SQLLine starts, the system displays the following prompt:  
-`0: jdbc:drill:zk=local>`
+## Stopping Drill
 
 Issue the following command when you want to exit SQLLine:
 
     !quit
-
 
 ## Query Sample Data
 

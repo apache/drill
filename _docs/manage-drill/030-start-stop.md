@@ -2,44 +2,61 @@
 title: "Starting/Stopping Drill"
 parent: "Manage Drill"
 ---
-How you start Drill depends on the installation method you followed. If you
-installed Drill in embedded mode, invoking SQLLine automatically starts a
-Drillbit locally. If you installed Drill in distributed mode on one or
-multiple nodes in a cluster, you must start the Drillbit service and then
-invoke SQLLine. Once SQLLine starts, you can issue queries to Drill.
+How you start Drill depends on the installation method you followed. If you installed Drill in embedded mode, invoking SQLLine automatically starts a Drillbit locally. If you installed Drill in distributed mode on a MapR cluster, the installation process starts the Drillbit service automatically; otherwise,  you must start the Drillbit service before invoking running queries.
 
-## Starting a Drillbit
+## Controlling a Drillbit
 
-If you installed Drill in embedded mode, you do not need to start the
-Drillbit.
+Using the **drillbit command**, located in the `bin` directory, check the status of, start, start, and restart a DrillBit. You can use a configuration file to start Drill. Using such a file is handy for controlling Drillbits on multiple nodes.
 
-To start a Drillbit, navigate to the Drill installation directory, and issue
-the following command:
+### drillbit Command Syntax
 
-`bin/drillbit.sh restart`
+    drillbit.sh [--config <conf-dir>] (start|stop|status|restart|autorestart)
 
-## Invoking SQLLine/Connecting to a Schema
+For example, to restart a Drillbit, navigate to the Drill installation directory, and issue the following command:
 
-SQLLine is used as the Drill shell. SQLLine connects to relational databases
-and executes SQL commands. You invoke SQLLine for Drill in embedded or
-distributed mode. If you want to connect directly to a particular schema, you
-can indicate the schema name when you invoke SQLLine.
+    bin/drillbit.sh restart
 
-To start SQLLine, issue the appropriate command for your Drill installation
-type:
+## Invoking SQLLine
+SQLLine is used as the Drill shell. SQLLine connects to relational databases and executes SQL commands. You invoke SQLLine for Drill in embedded or distributed mode. If you want to use a particular storage plugin, you can indicate the schema name when you invoke SQLLine.
+To start SQLLine, use the following **sqlline command** syntax:
 
-<table ><tbody><tr><td valign="top"><strong>Drill Install Type</strong></td><td valign="top"><strong>Example</strong></td><td valign="top"><strong>Command</strong></td></tr><tr><td valign="top">Embedded</td><td valign="top">Drill installed locally (embedded mode);Hive with embedded metastore</td><td valign="top">To connect without specifying a schema, navigate to the Drill installation directory and issue the following command:<code>$ bin/sqlline -u jdbc:drill:zk=local -n admin -p admin </code><span> </span>Once you are in the prompt, you can issue<code> USE &lt;schema&gt; </code>or you can use absolute notation: <code>schema.table.column.</code>To connect to a schema directly, issue the command with the schema name:<code>$ bin/sqlline -u jdbc:drill:schema=&lt;database&gt;;zk=local -n admin -p admin</code></td></tr><tr><td valign="top">Distributed</td><td valign="top">Drill installed in distributed mode;Hive with remote metastore;HBase</td><td valign="top">To connect without specifying a schema, navigate to the Drill installation directory and issue the following command:<code>$ bin/sqlline -u jdbc:drill:zk=&lt;zk1host&gt;:&lt;port&gt;,&lt;zk2host&gt;:&lt;port&gt;,&lt;zk3host&gt;:&lt;port&gt; -n admin -p admin</code>Once you are in the prompt, you can issue<code> USE &lt;schema&gt; </code>or you can use absolute notation: <code>schema.table.column.</code>To connect to a schema directly, issue the command with the schema name:<code>$ bin/sqlline -u jdbc:drill:schema=&lt;database&gt;;zk=&lt;zk1host&gt;:&lt;port&gt;,&lt;zk2host&gt;:&lt;port&gt;,&lt;zk3host&gt;:&lt;port&gt; -n admin -p admin</code></td></tr></tbody></table></div>
-  
-When SQLLine starts, the system displays the following prompt:
+### SQLLine Command Syntax
 
-`0: jdbc:drill]:schema=<database>;zk=<zkhost>:<port>`
+    sqlline –u jdbc:drill:[schema=<storage plugin>;]zk=<zk name>[:<port>][,<zk name2>[:<port>]... ]
 
-At this point, you can use Drill to query your data source or you can discover
-metadata.
+#### sqlline Arguments 
+
+* `-u` is the option that precedes a connection string. Required.  
+* `jdbc` is the connection protocol. Required.  
+* `schema` is the name of a storage plugin to use for queries. Optional.  
+* `Zk=zkname` is one or more zookeeper host names or IP addresses. Required.  
+* `port` is the zookeeper port number. Optional. Port 2181 is the default.  
+
+## Examples of Starting Drill
+Issue the sqlline command from the Drill installation directory. For example, this command starts Drill on an embedded mode (single-node) cluster:
+
+    bin/sqlline –u jdbc:drill:schema=dfs;zk=localhost
+
+This command starts Drill on a distributed mode (multi-node) cluster configured to run zookeeper on three nodes:
+
+    bin/sqlline –u jdbc:drill:zk=cento23,zk=centos24,zk=centos26:5181
 
 ## Exiting SQLLine
 
 To exit SQLLine, issue the following command:
 
-`!quit`  
+    !quit
+
+## Stopping Drill
+
+In some cases, such as stopping while a query is in progress, the `!quit` command does not stop Drill. You need to kill the Drill process. For example, on Mac OS X and Linux, follow
+these steps:
+
+  1. Issue a CTRL Z to stop the query, then start Drill again. If the startup message indicates success, skip the rest of the steps. If not, proceed to step 2.
+  2. Search for the Drill process IDs.
+  
+        $ ps auwx | grep drill
+  3. Kill each process using the process numbers in the grep output. For example:
+
+        $ sudo kill -9 2674  
 
