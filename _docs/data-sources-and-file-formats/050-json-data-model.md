@@ -215,7 +215,7 @@ KVGEN allows queries against maps where the keys themselves represent data rathe
 FLATTEN breaks the list of key-value pairs into separate rows on which you can apply analytic functions. FLATTEN takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error.
 
     SELECT FLATTEN(kvgen(sales)) Sales 
-    FROM dfs.`/Users/drilluser/drill/apache-drill-0.8.0-SNAPSHOT/ticket_sales.json`;
+    FROM dfs.`/Users/drilluser/drill/ticket_sales.json`;
 
     +--------------------------------+
     |           Sales                |

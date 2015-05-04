@@ -32,7 +32,7 @@ The element names that you see in the `checkin_info` are unknown upfront and can
 Step 1: First download Drill, if you have not yet done so, onto your machine
 
     http://drill.apache.org/download/
-    tar -xvf apache-drill-0.8.0.tar
+    tar -xvf apache-drill-0.9.0.tar
 
 Install Drill locally on your desktop (embedded mode). You don’t need Hadoop.
 

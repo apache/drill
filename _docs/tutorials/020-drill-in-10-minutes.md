@@ -96,17 +96,17 @@ The output looks something like this:
 
 Complete the following steps to install Drill:  
 
-1. Issue the following command in a terminal to download the latest, stable version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz):
+1. Issue the following command in a terminal to download the latest, stable version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz):
 
-        wget http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz  
+        wget http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz  
 
 2. Copy the downloaded file to the directory where you want to install Drill. 
 
 3. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
-        sudo tar -xvzf apache-drill-0.8.0..tar.gz  
+        sudo tar -xvzf apache-drill-0.9.0..tar.gz  
 
-The extraction process creates the installation directory named apache-drill-0.8.0 containing the Drill software.
+The extraction process creates the installation directory named apache-drill-0.9.0 containing the Drill software.
 
 At this point, you can [start Drill]({{site.baseurl}}/docs/drill-in-10-minutes/#start-drill).
 
@@ -115,7 +115,7 @@ Launch SQLLine using the sqlline command to start to Drill in embedded mode. The
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-0.8.0  
+        cd apache-drill-0.9.0  
 
 2. Issue the following command to launch SQLLine:
 
@@ -129,16 +129,16 @@ Launch SQLLine using the sqlline command to start to Drill in embedded mode. The
 
 You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
-1. Click the following link to download the latest, stable version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz)
-2. Move the `apache-drill-0.8.0.tar.gz` file to a directory where you want to install Drill.
-3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-0.8.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-0.8.0 containing the Drill software. For example:
+1. Click the following link to download the latest, stable version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz)
+2. Move the `apache-drill-0.9.0.tar.gz` file to a directory where you want to install Drill.
+3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-0.9.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-0.9.0 containing the Drill software. For example:
    ![drill install dir]({{ site.baseurl }}/docs/img/drill-directory.png)
    At this point, you can start Drill.  
 
 ## Start Drill on Windows
 Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
 
-1. Open the apache-drill-0.8.0 folder.  
+1. Open the apache-drill-0.9.0 folder.  
 2. Open the bin folder, and double-click the `sqlline.bat` file:
    ![drill bin dir]({{ site.baseurl }}/docs/img/drill-bin.png)
    The Windows command prompt opens.  
