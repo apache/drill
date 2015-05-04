@@ -92,13 +92,7 @@ a.anchor {
 	line-height:50px;
 	padding:14px 20px;
 }
-/*
-#menu ul li.d, #menu ul li.d:hover {
-	background:#4aaf4c;
-	font-weight:bold;
-	text-transform:uppercase;
-}
-*/
+
 #menu ul li.d, #menu ul li.d:hover {
 	background-color: #4aaf4c;
 	font-size:12px;
@@ -530,42 +524,6 @@ table.intro a {
 	width:770px;	
 }
 
-.getInvolved {
-	background:#f6f5f7;
-	font-size:14px;
-	font-weight:lighter;
-	line-height:26px;
-	padding:50px 0;
-}
-
-.getInvolved .wrapper {
-	margin:auto;
-	width:780px;
-}
-
-.getInvolved a {
-	color:#1a6bc7;
-	text-decoration:none;
-}
-
-.getInvolved table {
-	font-size:12px;	
-	margin-top:10px;
-	table-layout:fixed;
-	width:100%;
-}
-.getInvolved table td, .getInvolved table th {
-	text-align:left;
-}
-
-.getInvolved table th {
-	border-bottom:1px solid #e9e9e9;	
-}
-
-.getInvolved table td {
-	border-top:1px solid #f0f0f0;	
-}
-
 #blu {
 	display:table;
 	font-size:12px;
@@ -705,24 +663,6 @@ div.post.int_text {
 	margin:30px auto;	
 }
 
-.int_text table {
-	font-size:14px;
-	margin-bottom:50px;
-	width:100%;	
-}
-.int_text table td, .int_text table th {
-	padding:7px;
-	text-align:left;
-}
-
-.int_text table tr td:first-child, .int_text table tr th:first-child {
-	padding-left:0px;
-}
-
-.int_text table.ul td {
-	border-top:1px solid #e9e9e9;
-}
-
 ul.num {
 	list-style:decimal;	
 }
@@ -793,49 +733,6 @@ table.intro a, .int_title a {
 }
 
 #header .dots, .aLeft, .aRight { display:none; }
-
-div.download { text-align:center; }
-
-div.download table { table-layout:fixed; }
-
-div.download table a {
-	background-size:16px auto;
-	background-position:17px center;
-	background-repeat:no-repeat;
-	padding:10px 35px 10px 45px;
-	line-height:40px;
-	font-size:12px;
-	font-weight:normal;
-	color:#FFF;	
-}
-
-div.download table a.dl {
-	background-color:#4aaf4c;
-	background-size:13px auto;
-	background-image:url(../images/download-ico.png);
-}
-
-div.download table a.dl:hover {
-	background-color:#348436;
-}
-
-div.download table a.find {
-	background-color:#4aaf4c;
-	background-image:url(../images/btn-lens.png);
-}
-
-div.download table a.find:hover {
-	background-color:#348436;
-}
-
-div.download table a.tutorial {
-    background-color:#1a6bc7;
-    background-image:url(../images/btn-lens.png);
-}
-
-div.download table a.tutorial:hover {
-    background-color:#145aa8;
-}
 
 p.info {
 	background-color: #ffc;
@@ -912,4 +809,15 @@ li p {
    color: white;
 }
 
-
+.int_text table{border-collapse:collapse;border-spacing:0;empty-cells:show;border:1px solid #cbcbcb}
+.int_text table caption{color:#000;font-style: italic;padding:1em 0;text-align:center}
+.int_text table td, .int_text table th{border-left:1px solid #cbcbcb;border-width:0 0 0 1px;font-size:inherit;margin:0;overflow:visible;padding:.5em 1em}
+.int_text table td:first-child, .int_text table th:first-child{border-left-width:0}
+.int_text table thead{background-color:#e0e0e0;color:#000;text-align:left;vertical-align:bottom}
+.int_text table td{background-color:transparent}
+.int_text table-odd td{background-color:#f2f2f2}
+.int_text table-striped tr:nth-child(2n-1) td{background-color:#f2f2f2}
+.int_text table-bordered td{border-bottom:1px solid #cbcbcb}
+.int_text table-bordered tbody>tr:last-child>td{border-bottom-width:0}
+.int_text table-horizontal td, .int_text table-horizontal th{border-width:0 0 1px;border-bottom:1px solid #cbcbcb}
+.int_text table-horizontal tbody>tr:last-child>td{border-bottom-width:0}

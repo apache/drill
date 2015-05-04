@@ -2,49 +2,27 @@
 layout: page
 title: Download
 ---
-<div class="download">
-  <h2>The latest release is Drill 0.8.0, released March 31, 2015</h2>
-  <br>
+<link href="{{ site.baseurl }}/css/download.css" rel="stylesheet" type="text/css">
+<p>Drill {{ site.data.version.display_version }} was released on {{ site.data.version.release_date }}.</p>
 
-  <table>
-    <tr>
-      <td><a href="http://www.apache.org/dyn/closer.cgi/drill/drill-0.8.0/apache-drill-0.8.0.tar.gz" class="find" id="apachemirror">FIND AN APACHE MIRROR</a></td>
-      <!-- Or: http://archive.apache.org/dist/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz, https://dist.apache.org/repos/dist/release/drill/drill-0.7.0/apache-drill-0.7.0.tar.gz -->
-      <td><a href="http://getdrill.org/drill/download/apache-drill-0.8.0.tar.gz" rel="nofollow" class="dl" id="directdownload">DIRECT FILE DOWNLOAD</a></td>
-      <td><a href="https://cwiki.apache.org/confluence/display/DRILL/Using+ODBC+to+Access+Apache+Drill+from+BI+Tools" class="dl">ODBC DRIVERS FOR DRILL*</a></td>
-    </tr>
-  </table>
-
-  <p style="margin-top:1px; padding-top:1px;">
-    <strong>Release Notes: </strong><a href="https://cwiki.apache.org/confluence/display/DRILL/Release+Notes"> Click here</a> &nbsp;&nbsp;|&nbsp;&nbsp;
-    <strong>Fork Drill 0.8 on GitHub: </strong><a href="https://github.com/apache/drill/tree/0.8.0" rel="nofollow">Click here</a>
-  </p>
-
-  <br>
-  <!--<div style="border-top: solid 2px #1a6bc7; border-bottom: solid 2px #1a6bc7;padding: 5px;">-->
-  <!--<div style="background: #e7e7e7; padding:1px 0px 0px 0px;">-->
-  <h2>Visit the Apache Drill Tutorial for sample datasets and code examples</h2><br>
-  <table>
-    <tr>
-      <td>&nbsp;</td>
-      <td style="padding-left: 38px"><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Tutorial" rel="nofollow" target="_blank" class="tutorial">DRILL TUTORIAL</a></td>
-      <td>&nbsp;</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td></td>
-      <td>&nbsp;</td>
-    </tr>
-  </table>
-
-  <!--</div>-->
-  <!--</div>-->
-  <p style="margin-top:0px; padding-top:0px;"><strong>Don't have Hadoop deployed? You can try <a href="https://www.mapr.com/products/mapr-sandbox-hadoop/download-sandbox-drill" rel="nofollow">Drill with a VM</a>*</p>
-  <br>
-  <p style="margin-top:1px; padding-top:1px;"><strong>Previous Drill releases: </strong><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.7.0+Release+Notes" rel="nofollow">0.7.0</a> |<a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.6.0+Release+Notes" rel="nofollow">0.6.0</a> | <a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.5.0+Release+Notes" rel="nofollow">0.5.0</a> | <a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+0.4.0+Release+Notes" rel="nofollow">0.4.0</a></p>
-  <br><br>
-  <p>*Please note that ODBC drivers and VM are provided by a third-party under a non-Apache license.</p>
+<div id="download_bar">
+<div class="table">
+<ul id="download_buttons">
+<li><a href="http://www.apache.org/dyn/closer.cgi/drill/drill-{{ site.data.version.full_version }}/apache-drill-{{ site.data.version.full_version }}.tar.gz" class="find" id="apachemirror">Find an Apache Mirror</a></li>
+<li><a href="http://getdrill.org/drill/download/apache-drill-{{ site.data.version.full_version }}.tar.gz" rel="nofollow" class="dl" id="directdownload">Direct File Download</a></li>
+<li><a href="{{ site.baseurl }}/docs/interfaces-introduction/" class="dl">Client Drivers (ODBC/JDBC)</a></li>
+</ul>
 </div>
+</div>
+
+<p>Additional resources for Drill {{ site.data.version.display_version }}:</p>
+<ul>
+<li><a href="{{ site.baseurl }}/docs/apache-drill-{{ site.data.version.full_version | handleize }}-release-notes/">Release notes</a></li>
+<li><a href="https://github.com/apache/drill/tree/{{ site.data.version.full_version }}">Source code</a></li>
+</ul>
+
+<p>If you're looking for an older release, see the <a href="{{ site.baseurl }}/docs/release-notes/">release notes</a>.
+
 <script type="text/javascript">
 $('#directdownload').click(function(event) {
   ga('send', 'event', 'Downloads', 'Direct', 'Direct Download');
@@ -59,3 +37,4 @@ $('#apachemirror').click(function(event) {
   });
 });
 </script>
+

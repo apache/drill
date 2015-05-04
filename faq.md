@@ -2,104 +2,133 @@
 layout: page
 title: Frequently Asked Questions
 ---
-## What use cases should I consider using Drill for?
+## Overview
 
-Drill provides low latency SQL queries on large-scale datasets. Example use cases for Drill include
+### Why Drill?
 
-* Interactive data exploration/data discovery
-* Adhoc BI/reporting queries
-* Analytics on NoSQL data
-* Real time or Day zero analytics (i.e analyze data as it comes with no preparation/ETL)
+The 40-year monopoly of the RDBMS is over. With the exponential growth of data in recent years, and the shift towards rapid application development, new data is increasingly being stored in non-relational datastores including Hadoop, NoSQL and cloud storage. Apache Drill enables analysts, business users, data scientists and developers to explore and analyze this data without sacrificing the flexibility and agility offered by these datastores. Drill processes the data in-situ without requiring users to define schemas or transform data.
 
-We expect Drill to be used in lot more use cases where low latency is required.
+### What are some of Drill's key features?
 
-## Does Drill replace Hive for batch processing? What about my OLTP applications?
+Drill is an innovative distributed SQL engine designed to enable data exploration and analytics on non-relational datastores. Users can query the data using standard SQL and BI tools without having to create and manage schemas. Some of the key features are:
 
-Drill complements batch-processing frameworks such as Hive, Pig, MapReduce to support low latency queries. Drill at this point doesn't make an optimal choice for OLTP/operational applications that require sub-second response times.
+* Schema-free JSON document model similar to MongoDB and Elasticsearch
+* Industry-standard APIs: ANSI SQL, ODBC/JDBC, RESTful APIs
+* Extremely user and developer friendly
+* Pluggable architecture enables connectivity to multiple datastores
 
-## There are lots of SQL on Hadoop technologies out there. How is Drill different?
+### How does Drill achieve performance?
 
-Drill takes a different approach to SQL-on-Hadoop than Hive and other related technologies. The goal for Drill is to bring the SQL ecosystem and performance of the relational systems to Hadoop-scale data without compromising on the flexibility of Hadoop/NoSQL systems. Drill provides a flexible query environment for users with the key capabilities as below.
+Drill is built from the ground up to achieve high throughput and low latency. The following capabilities help accomplish that:
 
-* Self-describing data support without centralized schema definitions/management
-* Support for complex/multi-structured data types
-* ANSI SQL support (not SQL "Like") & BI tool integration
-* Extensibility to go beyond Hadoop environments
+* **Distributed query optimization and execution**: Drill is designed to scale from a single node (your laptop) to large clusters with thousands of servers.
+* **Columnar execution**: Drill is the world's only columnar execution engine that supports complex data and schema-free data. It uses a shredded, in-memory, columnar data representation.
+* **Runtime compilation and code generation**: Drill is the world's only query engine that compiles and re-compiles queries at runtime. This allows Drill to achieve high performance without knowing the structure of the data in advance. Drill leverages multiple compilers as well as ASM-based bytecode rewriting to optimize the code.
+* **Vectorization**: Drill takes advantage of the latest SIMD instructions available in modern processors. 
+* **Optimistic/pipelined execution**: Drill is able to stream data in memory between operators. Drill minimizes the use of disks unless needed to complete the query.
 
-## What is self-describing data?
+### What datastores does Drill support?
 
-Self-describing data is where schema is specified as part of the data itself. File formats such as Parquet, JSON, ProtoBuf, XML, AVRO and NoSQL databases are all examples of self-describing data. Some of these data formats also dynamic and complex in that every record in the data can have its own set of columns/attributes and each column can be semi-structured/nested.
+Drill is primarily focused on non-relational datastores, including Hadoop, NoSQL and cloud storage. The following datastores are currently supported:
 
-## How does Drill support queries on self-describing data?
+* **Hadoop**: All Hadoop distributions (HDFS API 2.3+), including Apache Hadoop, MapR, CDH and Amazon EMR
+* **NoSQL**: MongoDB, HBase
+* **Cloud storage**: Amazon S3, Google Cloud Storage, Azure Blog Storage, Swift
 
-Drill enables queries on self-describing data using the fundamental architectural foundations:
+A new datastore can be added by developing a storage plugin. Drill's unique schema-free JSON data model enables it to query non-relational datastores in-situ (many of these systems store complex or schema-free data).
 
-* Dynamic schema discovery or late binding:  Drill allows performing queries directly on self-describing data such as Files, HBase without defining overlay schema definitions in Hive metastore.  The schema is discovered on the fly at the query time. With the dynamic schema discovery, Drill makes it easy to support dynamic and rapidly evolving data models.
-* Flexible data model:  Drill is built from the ground up for complex/semi-structured data commonly seen in Hadoop/NoSQL systems. Drill provides intuitive extensions to SQL to represent and operate on complex data. The internal data model of Drill is hierarchical and columnar with which it can represent and perform efficient SQL processing on complex data natively without flattening into rows either at the design time or runtime.
+### What clients are supported?
 
-Together with the dynamic data discovery and a flexible data model that can handle complex data types, Drill allows users to get fast and complete value from all their data.
+* **BI tools** via the ODBC and JDBC drivers (eg, Tableau, Excel, MicroStrategy, Spotfire, QlikView, Business Objects)
+* **Custom applications** via the REST API
+* **Java and C applications** via the dedicated Java and C libraries
 
-## But I already have schemas defined in Hive metastore? Can I use that with Drill?
+## Comparisons
 
-Yes, Hive also serves as data source for Drill. So you can simply point to the Hive metastore from Drill and start performing low latency queries on Hive tables with no modifications.
+### Is  Drill a 'SQL-on-Hadoop' engine?
 
-## Is Drill trying to be "anti-schema" or "anti-DBA"?
+Drill supports a variety of non-relational datastores in addition to Hadoop. Drill takes a different approach compared to traditional SQL-on-Hadoop technologies like Hive and Impala. For example, users can directly query self-describing data (eg, JSON, Parquet) without having to create and manage schemas.
 
-Of course not! Central EDW schemas work great if data models are not changing often, value of data is well understood and is ready to be operationalized for regular reporting purposes. However, during data exploration and discovery phase, rigid modeling requirement poses challenges and delays value from data, especially in the Hadoop/NoSQL environments where the data is highly complex, dynamic and evolving fast. Few challenges include
+The following table provides a more detailed comparison between Drill and traditional SQL-on-Hadoop technologies:
 
-* Complex data models (eg: JSON)  are hard to map to relational paradigms
-* Centralized schemas are hard to keep up with when data models evolve fast
-* Static models defined for known questions are not enough for the diversity and volumes of big data
-* Non-repetitive/ad hoc queries and short-term data exploration needs may not justify modeling costs
+| &nbsp; | Drill | SQL-on-Hadoop (Hive, Impala, etc.) |
+|---|-------|------------------------------------|
+| Use case | Self-service, in-situ, SQL-based analytics | Data warehouse offload |
+| Data sources | Hadoop, NoSQL, cloud storage (including multiple instances)| A single Hadoop cluster |
+| Data model | Schema-free JSON (like MongoDB) | Relational |
+| User experience | Point-and-query | Ingest data &#8594; define schemas &#8594; query |
+| Deployment model | Standalone service or co-located with Hadoop or NoSQL | Co-located with Hadoop |
+| Data management | Self-service | IT-driven |
+| SQL | ANSI SQL | SQL-like |
+| 1.0 availability | Q2 2015 | Q2 2013 or earlier |
 
-Drill is all about flexibility. The flexible schema management capabilities in Drill lets users explore the data in its native format as it comes in directly and create models/structure if needed in Hive metastore or using the CREATE TABLE/CREATE VIEW syntax within Drill.
+### Is Spark SQL similar to Drill?
 
-## What does a Drill query look like?
+No. Spark SQL is primarily designed to enable developers to incorporate SQL statements in Spark programs. Drill does not depend on Spark, and is targeted at business users, analysts, data scientists and developers. 
 
-Drill uses a de-centralized metadata model and relies on its storage plugins to provide with the metadata. Drill supports queries on file system (distributed and local), HBase and Hive tables. There is a storage plugin associated with each data source that is supported by Drill.
+### Does Drill replace Hive?
 
-Here is the anatomy of a Drill query.
+Hive is a batch processing framework most suitable for long-running jobs. For data exploration and BI, Drill provides a much better experience than Hive.
 
-![]({{ site.baseurl }}/images/overview-img1.png)
+In addition, Drill is not limited to Hadoop. For example, it can query NoSQL databases (eg, MongoDB, HBase) and cloud storage (eg, Amazon S3, Google Cloud Storage, Azure Blob Storage, Swift).
 
-## Can I connect to Drill from my BI tools (Tableau, MicroStrategy, etc.)?
+## Metadata
 
-Yes, Drill provides JDBC/ODBC drivers for integrating with BI/SQL based tools.
+### How does Drill support queries on self-describing data?
 
-## What SQL functionality can Drill support?
+Drill's flexible JSON data model and on-the-fly schema discovery enable it to query self-describing data.
 
-Drill provides ANSI standard SQL (not SQL "Like" or Hive QL) with support for all key analytics functionality such as SQL data types, joins, aggregations, filters, sort, sub-queries (including correlated), joins in where clause etc. [Click here](https://cwiki.apache.org/confluence/display/DRILL/SQL+Reference) for reference on SQL functionality in Drill.
+* **JSON data model**: Traditional query engines have a relational data model, which is limited to flat records with a fixed structure. Drill is built from the ground up to support modern complex/semi-structured data commonly seen in non-relational datastores such as Hadoop, NoSQL and cloud storage. Drill's internal in-memory data representation is hierarchical and columnar, allowing it to perform efficient SQL processing on complex data without flattening into rows.
+* **On-the-fly schema discovery (or late binding)**: Traditional query engines (eg, relational databases, Hive, Impala, Spark SQL) need to know the structure of the data before query execution. Drill, on the other hand, features a fundamentally different architecture, which enables execution to begin without knowing the structure of the data. The query is automatically compiled and re-compiled during the execution phase, based on the actual data flowing through the system. As a result, Drill can handle data with evolving schema or even no schema at all (eg, JSON files, MongoDB collections, HBase tables).
 
-## What Hadoop distributions does Drill work with?
+### But I already have schemas defined in Hive Metastore? Can I use that with Drill?
 
-Drill is not designed with a particular Hadoop distribution in mind and we expect it to work with all Hadoop distributions that support Hadoop 2.3.x+ API. We have validated it so far with Apache Hadoop/MapR/CDH/Amazon EMR distributions (Amazon EMR requires a custom configuration required - contact <user@drill.apache.org> for questions.
+Absolutely. Drill has a storage plugin for Hive tables, so you can simply point Drill to the Hive Metastore and start performing low-latency queries on Hive tables. In fact, a single Drill cluster can query data from multiple Hive Metastores, and even perform joins across these datasets.
 
-## How does Drill achieve performance?
+### Is Drill "anti-schema" or "anti-DBA"?
 
-Drill is built from the ground up for performance on large-scale datasets. The key architectural components that help in achieving performance include.
+Not at all. Drill actually takes advantage of schemas when available. For example, Drill leverages the schema information in Hive when querying Hive tables. However, when querying schema-free datastores like MongoDB, or raw files on S3 or Hadoop, schemas are not available, and Drill is still able to query that data.
 
-* Distributed query optimization & execution
-* Columnar execution
-* Vectorization
-* Runtime compilation & code generation
-* Optimistic/pipelined execution
+Centralized schemas work well if the data structure is static, and the value of data is well understood and ready to be operationalized for regular reporting purposes. However, during data exploration, discovery and interactive analysis, requiring rigid modeling poses significant challenges. For example:
 
-## Does Drill support multi-tenant/high concurrency environments?
+* Complex data (eg, JSON) is hard to map to relational tables
+* Centralized schemas are hard to keep in sync when the data structure is changing rapidly
+* Non-repetitive/ad-hoc queries and data exploration needs may not justify modeling costs
 
-Drill is built to support several 100s of queries at any given point. Clients can submit requests to any node running Drillbit service in the cluster (no master-slave concept). To support more users, you simply have to add more nodes to the cluster.
+Drill is all about flexibility. The flexible schema management capabilities in Drill allow users to explore raw data and then create models/structure with `CREATE TABLE` or `CREATE VIEW` statements, or with Hive Metastore.
 
-## Do I need to load data into Drill to start querying it?
+### What does a Drill query look like?
 
-No. Drill can query data "in situ".
+Drill uses a decentralized metadata model and relies on its storage plugins to provide metadata. There is a storage plugin associated with each data source that is supported by Drill.
 
-## What is the best way to get started with Drill?
+The name of the table in a query tells Drill where to get the data:
 
-The best way to get started is to just try it out. It just takes a few minutes even if you do not have a cluster. Here is a good place to start: [Apache Drill in 10 minutes](https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+in+10+Minutes).
+```sql
+SELECT * FROM dfs1.root.`/my/log/files/`;
+SELECT * FROM dfs2.root.`/home/john/log.json`;
+SELECT * FROM mongodb1.website.users;
+SELECT * FROM hive1.logs.frontend;
+SELECT * FROM hbase1.events.clicks;
+```
 
-## How can I ask questions and provide feedback?
+### What SQL functionality does Drill support?
 
-Please post your questions and feedback on <user@drill.apache.org>. We are happy to have you try out Drill and help with any questions!
+Drill supports standard SQL (aka ANSI SQL). In addition, it features several extensions that help with complex data, such as the `KVGEN` and `FLATTEN` functions. For more details, refer to the [SQL Reference]({{ site.baseurl }}/docs/sql-reference/).
 
-## How can I contribute to Drill?
+### Do I need to load data into Drill to start querying it?
 
-Please refer to the [Get Involved]({{ site.baseurl }}/community/#getinvolved) page on how to get involved with Drill.
+No. Drill can query data 'in-situ'.
+
+## Getting Started
+
+### What is the best way to get started with Drill?
+
+The best way to get started is to try it out. It only takes a few minutes and all you need is a laptop (Mac, Windows or Linux). We've compiled [several tutorials]({{ site.baseurl }}/docs/tutorials-introduction/) to help you get started.
+
+### How can I ask questions and provide feedback?
+
+Please post your questions and feedback to <user@drill.apache.org>. We are happy to help!
+
+### How can I contribute to Drill?
+
+The documentation has information on [how to contribute]({{ site.baseurl }}/docs/contribute-to-drill/).
