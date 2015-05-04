@@ -32,10 +32,9 @@ UI to connect to Drill. Drill must be running in order to access the Web UI.
 
 Complete the following steps to configure MongoDB as a data source for Drill:
 
-  1. Navigate to `<drill_installation_directory>/drill-<version>,` and enter the following command to invoke SQLLine and start Drill:
+  1. Navigate to Drill installation directory and invoke SQLLine to run Drill queries. On Linux, for example:
 
-        bin/sqlline -u jdbc:drill:zk=local -n admin -p admin
-     When Drill starts, the following prompt appears: `0: jdbc:drill:zk=local>`
+        bin/sqlline -u jdbc:drill:zk=local
 
      Do not enter any commands. You will return to the command prompt after
 completing the configuration in the Drill Web UI.

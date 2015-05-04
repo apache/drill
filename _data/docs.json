@@ -1215,8 +1215,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Installing Drill in Distributed Mode", 
-            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+            "previous_title": "Starting Drill in Distributed Mode", 
+            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -1632,23 +1632,6 @@
             "relative_path": "_docs/sql-reference/sql-functions/030-date-time-functions-and-arithmetic.md", 
             "title": "Date/Time Functions and Arithmetic", 
             "url": "/docs/date-time-functions-and-arithmetic/"
-        }, 
-        "Deploying Drill in a Cluster": {
-            "breadcrumbs": [
-                {
-                    "title": "Install Drill", 
-                    "url": "/docs/install-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Installing Drill in Embedded Mode", 
-            "next_url": "/docs/installing-drill-in-embedded-mode/", 
-            "parent": "Install Drill", 
-            "previous_title": "Install Drill Introduction", 
-            "previous_url": "/docs/install-drill-introduction/", 
-            "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-            "title": "Deploying Drill in a Cluster", 
-            "url": "/docs/deploying-drill-in-a-cluster/"
         }, 
         "Deploying and Using a Hive UDF": {
             "breadcrumbs": [
@@ -2272,6 +2255,27 @@
             "title": "Developing an Aggregate Function", 
             "url": "/docs/developing-an-aggregate-function/"
         }, 
+        "Distributed Mode Prerequisites": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing Drill in Distributed Mode", 
+                    "url": "/docs/installing-drill-in-distributed-mode/"
+                }, 
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Installing Drill on the Cluster", 
+            "next_url": "/docs/installing-drill-on-the-cluster/", 
+            "parent": "Installing Drill in Distributed Mode", 
+            "previous_title": "Installing Drill in Distributed Mode", 
+            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+            "title": "Distributed Mode Prerequisites", 
+            "url": "/docs/distributed-mode-prerequisites/"
+        }, 
         "Drill Default Input Format": {
             "breadcrumbs": [
                 {
@@ -2423,8 +2427,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing Drill on Linux", 
-            "next_url": "/docs/installing-drill-on-linux/", 
+            "next_title": "Installing Drill on Linux and Mac OS X", 
+            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
             "parent": "Installing Drill in Embedded Mode", 
             "previous_title": "Installing Drill in Embedded Mode", 
             "previous_url": "/docs/installing-drill-in-embedded-mode/", 
@@ -2709,31 +2713,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Drill in a Cluster", 
-                    "next_url": "/docs/deploying-drill-in-a-cluster/", 
+                    "next_title": "Installing Drill in Embedded Mode", 
+                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing Drill in Embedded Mode", 
-                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill Introduction", 
-                    "previous_url": "/docs/install-drill-introduction/", 
-                    "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-                    "title": "Deploying Drill in a Cluster", 
-                    "url": "/docs/deploying-drill-in-a-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2755,8 +2742,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing Drill on Linux", 
-                            "next_url": "/docs/installing-drill-on-linux/", 
+                            "next_title": "Installing Drill on Linux and Mac OS X", 
+                            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Installing Drill in Embedded Mode", 
                             "previous_url": "/docs/installing-drill-in-embedded-mode/", 
@@ -2776,14 +2763,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing Drill on Mac OS X", 
-                            "next_url": "/docs/installing-drill-on-mac-os-x/", 
+                            "next_title": "Starting Drill on Linux and Mac OS X", 
+                            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Embedded Mode Prerequisites", 
                             "previous_url": "/docs/embedded-mode-prerequisites/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux.md", 
-                            "title": "Installing Drill on Linux", 
-                            "url": "/docs/installing-drill-on-linux/"
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
+                            "title": "Installing Drill on Linux and Mac OS X", 
+                            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -2800,11 +2787,32 @@
                             "next_title": "Installing Drill on Windows", 
                             "next_url": "/docs/installing-drill-on-windows/", 
                             "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill on Linux", 
-                            "previous_url": "/docs/installing-drill-on-linux/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-installing-drill-on-mac-os-x.md", 
-                            "title": "Installing Drill on Mac OS X", 
-                            "url": "/docs/installing-drill-on-mac-os-x/"
+                            "previous_title": "Installing Drill on Linux and Mac OS X", 
+                            "previous_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md", 
+                            "title": "Starting Drill on Linux and Mac OS X", 
+                            "url": "/docs/starting-drill-on-linux-and-mac-os-x/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Embedded Mode", 
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Starting Drill on Windows", 
+                            "next_url": "/docs/starting-drill-on-windows/", 
+                            "parent": "Installing Drill in Embedded Mode", 
+                            "previous_title": "Starting Drill on Linux and Mac OS X", 
+                            "previous_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
+                            "title": "Installing Drill on Windows", 
+                            "url": "/docs/installing-drill-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -2821,18 +2829,18 @@
                             "next_title": "Installing Drill in Distributed Mode", 
                             "next_url": "/docs/installing-drill-in-distributed-mode/", 
                             "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill on Mac OS X", 
-                            "previous_url": "/docs/installing-drill-on-mac-os-x/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
-                            "title": "Installing Drill on Windows", 
-                            "url": "/docs/installing-drill-on-windows/"
+                            "previous_title": "Installing Drill on Windows", 
+                            "previous_url": "/docs/installing-drill-on-windows/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
+                            "title": "Starting Drill on Windows", 
+                            "url": "/docs/starting-drill-on-windows/"
                         }
                     ], 
                     "next_title": "Embedded Mode Prerequisites", 
                     "next_url": "/docs/embedded-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Deploying Drill in a Cluster", 
-                    "previous_url": "/docs/deploying-drill-in-a-cluster/", 
+                    "previous_title": "Install Drill Introduction", 
+                    "previous_url": "/docs/install-drill-introduction/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
@@ -2844,12 +2852,76 @@
                             "url": "/docs/install-drill/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Installing Drill on the Cluster", 
+                            "next_url": "/docs/installing-drill-on-the-cluster/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Installing Drill in Distributed Mode", 
+                            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+                            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                            "title": "Distributed Mode Prerequisites", 
+                            "url": "/docs/distributed-mode-prerequisites/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Starting Drill in Distributed Mode", 
+                            "next_url": "/docs/starting-drill-in-distributed-mode/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Distributed Mode Prerequisites", 
+                            "previous_url": "/docs/distributed-mode-prerequisites/", 
+                            "relative_path": "_docs/install/047-installing-drill-on-the-cluster.md", 
+                            "title": "Installing Drill on the Cluster", 
+                            "url": "/docs/installing-drill-on-the-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Connect a Data Source", 
+                            "next_url": "/docs/connect-a-data-source/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Installing Drill on the Cluster", 
+                            "previous_url": "/docs/installing-drill-on-the-cluster/", 
+                            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                            "title": "Starting Drill in Distributed Mode", 
+                            "url": "/docs/starting-drill-in-distributed-mode/"
+                        }
+                    ], 
+                    "next_title": "Distributed Mode Prerequisites", 
+                    "next_url": "/docs/distributed-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Installing Drill on Windows", 
-                    "previous_url": "/docs/installing-drill-on-windows/", 
+                    "previous_title": "Starting Drill on Windows", 
+                    "previous_url": "/docs/starting-drill-on-windows/", 
                     "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
                     "title": "Installing Drill in Distributed Mode", 
                     "url": "/docs/installing-drill-in-distributed-mode/"
@@ -2872,8 +2944,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Deploying Drill in a Cluster", 
-            "next_url": "/docs/deploying-drill-in-a-cluster/", 
+            "next_title": "Installing Drill in Embedded Mode", 
+            "next_url": "/docs/installing-drill-in-embedded-mode/", 
             "parent": "Install Drill", 
             "previous_title": "Install Drill", 
             "previous_url": "/docs/install-drill/", 
@@ -2888,12 +2960,76 @@
                     "url": "/docs/install-drill/"
                 }
             ], 
-            "children": [], 
-            "next_title": "Connect a Data Source", 
-            "next_url": "/docs/connect-a-data-source/", 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing Drill in Distributed Mode", 
+                            "url": "/docs/installing-drill-in-distributed-mode/"
+                        }, 
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing Drill on the Cluster", 
+                    "next_url": "/docs/installing-drill-on-the-cluster/", 
+                    "parent": "Installing Drill in Distributed Mode", 
+                    "previous_title": "Installing Drill in Distributed Mode", 
+                    "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+                    "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                    "title": "Distributed Mode Prerequisites", 
+                    "url": "/docs/distributed-mode-prerequisites/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing Drill in Distributed Mode", 
+                            "url": "/docs/installing-drill-in-distributed-mode/"
+                        }, 
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Starting Drill in Distributed Mode", 
+                    "next_url": "/docs/starting-drill-in-distributed-mode/", 
+                    "parent": "Installing Drill in Distributed Mode", 
+                    "previous_title": "Distributed Mode Prerequisites", 
+                    "previous_url": "/docs/distributed-mode-prerequisites/", 
+                    "relative_path": "_docs/install/047-installing-drill-on-the-cluster.md", 
+                    "title": "Installing Drill on the Cluster", 
+                    "url": "/docs/installing-drill-on-the-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing Drill in Distributed Mode", 
+                            "url": "/docs/installing-drill-in-distributed-mode/"
+                        }, 
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Installing Drill in Distributed Mode", 
+                    "previous_title": "Installing Drill on the Cluster", 
+                    "previous_url": "/docs/installing-drill-on-the-cluster/", 
+                    "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                    "title": "Starting Drill in Distributed Mode", 
+                    "url": "/docs/starting-drill-in-distributed-mode/"
+                }
+            ], 
+            "next_title": "Distributed Mode Prerequisites", 
+            "next_url": "/docs/distributed-mode-prerequisites/", 
             "parent": "Install Drill", 
-            "previous_title": "Installing Drill on Windows", 
-            "previous_url": "/docs/installing-drill-on-windows/", 
+            "previous_title": "Starting Drill on Windows", 
+            "previous_url": "/docs/starting-drill-on-windows/", 
             "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
             "title": "Installing Drill in Distributed Mode", 
             "url": "/docs/installing-drill-in-distributed-mode/"
@@ -2918,8 +3054,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing Drill on Linux", 
-                    "next_url": "/docs/installing-drill-on-linux/", 
+                    "next_title": "Installing Drill on Linux and Mac OS X", 
+                    "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
                     "parent": "Installing Drill in Embedded Mode", 
                     "previous_title": "Installing Drill in Embedded Mode", 
                     "previous_url": "/docs/installing-drill-in-embedded-mode/", 
@@ -2939,14 +3075,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing Drill on Mac OS X", 
-                    "next_url": "/docs/installing-drill-on-mac-os-x/", 
+                    "next_title": "Starting Drill on Linux and Mac OS X", 
+                    "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
                     "parent": "Installing Drill in Embedded Mode", 
                     "previous_title": "Embedded Mode Prerequisites", 
                     "previous_url": "/docs/embedded-mode-prerequisites/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux.md", 
-                    "title": "Installing Drill on Linux", 
-                    "url": "/docs/installing-drill-on-linux/"
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
+                    "title": "Installing Drill on Linux and Mac OS X", 
+                    "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2963,11 +3099,32 @@
                     "next_title": "Installing Drill on Windows", 
                     "next_url": "/docs/installing-drill-on-windows/", 
                     "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Installing Drill on Linux", 
-                    "previous_url": "/docs/installing-drill-on-linux/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-installing-drill-on-mac-os-x.md", 
-                    "title": "Installing Drill on Mac OS X", 
-                    "url": "/docs/installing-drill-on-mac-os-x/"
+                    "previous_title": "Installing Drill on Linux and Mac OS X", 
+                    "previous_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md", 
+                    "title": "Starting Drill on Linux and Mac OS X", 
+                    "url": "/docs/starting-drill-on-linux-and-mac-os-x/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing Drill in Embedded Mode", 
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        }, 
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Starting Drill on Windows", 
+                    "next_url": "/docs/starting-drill-on-windows/", 
+                    "parent": "Installing Drill in Embedded Mode", 
+                    "previous_title": "Starting Drill on Linux and Mac OS X", 
+                    "previous_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
+                    "title": "Installing Drill on Windows", 
+                    "url": "/docs/installing-drill-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2984,23 +3141,23 @@
                     "next_title": "Installing Drill in Distributed Mode", 
                     "next_url": "/docs/installing-drill-in-distributed-mode/", 
                     "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Installing Drill on Mac OS X", 
-                    "previous_url": "/docs/installing-drill-on-mac-os-x/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
-                    "title": "Installing Drill on Windows", 
-                    "url": "/docs/installing-drill-on-windows/"
+                    "previous_title": "Installing Drill on Windows", 
+                    "previous_url": "/docs/installing-drill-on-windows/", 
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
+                    "title": "Starting Drill on Windows", 
+                    "url": "/docs/starting-drill-on-windows/"
                 }
             ], 
             "next_title": "Embedded Mode Prerequisites", 
             "next_url": "/docs/embedded-mode-prerequisites/", 
             "parent": "Install Drill", 
-            "previous_title": "Deploying Drill in a Cluster", 
-            "previous_url": "/docs/deploying-drill-in-a-cluster/", 
+            "previous_title": "Install Drill Introduction", 
+            "previous_url": "/docs/install-drill-introduction/", 
             "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
             "title": "Installing Drill in Embedded Mode", 
             "url": "/docs/installing-drill-in-embedded-mode/"
         }, 
-        "Installing Drill on Linux": {
+        "Installing Drill on Linux and Mac OS X": {
             "breadcrumbs": [
                 {
                     "title": "Installing Drill in Embedded Mode", 
@@ -3012,35 +3169,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing Drill on Mac OS X", 
-            "next_url": "/docs/installing-drill-on-mac-os-x/", 
+            "next_title": "Starting Drill on Linux and Mac OS X", 
+            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
             "parent": "Installing Drill in Embedded Mode", 
             "previous_title": "Embedded Mode Prerequisites", 
             "previous_url": "/docs/embedded-mode-prerequisites/", 
-            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux.md", 
-            "title": "Installing Drill on Linux", 
-            "url": "/docs/installing-drill-on-linux/"
-        }, 
-        "Installing Drill on Mac OS X": {
-            "breadcrumbs": [
-                {
-                    "title": "Installing Drill in Embedded Mode", 
-                    "url": "/docs/installing-drill-in-embedded-mode/"
-                }, 
-                {
-                    "title": "Install Drill", 
-                    "url": "/docs/install-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Installing Drill on Windows", 
-            "next_url": "/docs/installing-drill-on-windows/", 
-            "parent": "Installing Drill in Embedded Mode", 
-            "previous_title": "Installing Drill on Linux", 
-            "previous_url": "/docs/installing-drill-on-linux/", 
-            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-installing-drill-on-mac-os-x.md", 
-            "title": "Installing Drill on Mac OS X", 
-            "url": "/docs/installing-drill-on-mac-os-x/"
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
+            "title": "Installing Drill on Linux and Mac OS X", 
+            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
         }, 
         "Installing Drill on Windows": {
             "breadcrumbs": [
@@ -3054,14 +3190,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing Drill in Distributed Mode", 
-            "next_url": "/docs/installing-drill-in-distributed-mode/", 
+            "next_title": "Starting Drill on Windows", 
+            "next_url": "/docs/starting-drill-on-windows/", 
             "parent": "Installing Drill in Embedded Mode", 
-            "previous_title": "Installing Drill on Mac OS X", 
-            "previous_url": "/docs/installing-drill-on-mac-os-x/", 
+            "previous_title": "Starting Drill on Linux and Mac OS X", 
+            "previous_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
             "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
             "title": "Installing Drill on Windows", 
             "url": "/docs/installing-drill-on-windows/"
+        }, 
+        "Installing Drill on the Cluster": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing Drill in Distributed Mode", 
+                    "url": "/docs/installing-drill-in-distributed-mode/"
+                }, 
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Starting Drill in Distributed Mode", 
+            "next_url": "/docs/starting-drill-in-distributed-mode/", 
+            "parent": "Installing Drill in Distributed Mode", 
+            "previous_title": "Distributed Mode Prerequisites", 
+            "previous_url": "/docs/distributed-mode-prerequisites/", 
+            "relative_path": "_docs/install/047-installing-drill-on-the-cluster.md", 
+            "title": "Installing Drill on the Cluster", 
+            "url": "/docs/installing-drill-on-the-cluster/"
         }, 
         "Installing the Apache Drill Sandbox": {
             "breadcrumbs": [
@@ -7213,6 +7370,69 @@
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
         }, 
+        "Starting Drill in Distributed Mode": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing Drill in Distributed Mode", 
+                    "url": "/docs/installing-drill-in-distributed-mode/"
+                }, 
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Connect a Data Source", 
+            "next_url": "/docs/connect-a-data-source/", 
+            "parent": "Installing Drill in Distributed Mode", 
+            "previous_title": "Installing Drill on the Cluster", 
+            "previous_url": "/docs/installing-drill-on-the-cluster/", 
+            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+            "title": "Starting Drill in Distributed Mode", 
+            "url": "/docs/starting-drill-in-distributed-mode/"
+        }, 
+        "Starting Drill on Linux and Mac OS X": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing Drill in Embedded Mode", 
+                    "url": "/docs/installing-drill-in-embedded-mode/"
+                }, 
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Installing Drill on Windows", 
+            "next_url": "/docs/installing-drill-on-windows/", 
+            "parent": "Installing Drill in Embedded Mode", 
+            "previous_title": "Installing Drill on Linux and Mac OS X", 
+            "previous_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md", 
+            "title": "Starting Drill on Linux and Mac OS X", 
+            "url": "/docs/starting-drill-on-linux-and-mac-os-x/"
+        }, 
+        "Starting Drill on Windows": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing Drill in Embedded Mode", 
+                    "url": "/docs/installing-drill-in-embedded-mode/"
+                }, 
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Installing Drill in Distributed Mode", 
+            "next_url": "/docs/installing-drill-in-distributed-mode/", 
+            "parent": "Installing Drill in Embedded Mode", 
+            "previous_title": "Installing Drill on Windows", 
+            "previous_url": "/docs/installing-drill-on-windows/", 
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
+            "title": "Starting Drill on Windows", 
+            "url": "/docs/starting-drill-on-windows/"
+        }, 
         "Starting/Stopping Drill": {
             "breadcrumbs": [
                 {
@@ -8751,31 +8971,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Deploying Drill in a Cluster", 
-                    "next_url": "/docs/deploying-drill-in-a-cluster/", 
+                    "next_title": "Installing Drill in Embedded Mode", 
+                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Install Drill", 
-                            "url": "/docs/install-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing Drill in Embedded Mode", 
-                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
-                    "parent": "Install Drill", 
-                    "previous_title": "Install Drill Introduction", 
-                    "previous_url": "/docs/install-drill-introduction/", 
-                    "relative_path": "_docs/install/020-deploying-drill-in-a-cluster.md", 
-                    "title": "Deploying Drill in a Cluster", 
-                    "url": "/docs/deploying-drill-in-a-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8797,8 +9000,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing Drill on Linux", 
-                            "next_url": "/docs/installing-drill-on-linux/", 
+                            "next_title": "Installing Drill on Linux and Mac OS X", 
+                            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Installing Drill in Embedded Mode", 
                             "previous_url": "/docs/installing-drill-in-embedded-mode/", 
@@ -8818,14 +9021,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Installing Drill on Mac OS X", 
-                            "next_url": "/docs/installing-drill-on-mac-os-x/", 
+                            "next_title": "Starting Drill on Linux and Mac OS X", 
+                            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
                             "parent": "Installing Drill in Embedded Mode", 
                             "previous_title": "Embedded Mode Prerequisites", 
                             "previous_url": "/docs/embedded-mode-prerequisites/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux.md", 
-                            "title": "Installing Drill on Linux", 
-                            "url": "/docs/installing-drill-on-linux/"
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
+                            "title": "Installing Drill on Linux and Mac OS X", 
+                            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8842,11 +9045,32 @@
                             "next_title": "Installing Drill on Windows", 
                             "next_url": "/docs/installing-drill-on-windows/", 
                             "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill on Linux", 
-                            "previous_url": "/docs/installing-drill-on-linux/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-installing-drill-on-mac-os-x.md", 
-                            "title": "Installing Drill on Mac OS X", 
-                            "url": "/docs/installing-drill-on-mac-os-x/"
+                            "previous_title": "Installing Drill on Linux and Mac OS X", 
+                            "previous_url": "/docs/installing-drill-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md", 
+                            "title": "Starting Drill on Linux and Mac OS X", 
+                            "url": "/docs/starting-drill-on-linux-and-mac-os-x/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Embedded Mode", 
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Starting Drill on Windows", 
+                            "next_url": "/docs/starting-drill-on-windows/", 
+                            "parent": "Installing Drill in Embedded Mode", 
+                            "previous_title": "Starting Drill on Linux and Mac OS X", 
+                            "previous_url": "/docs/starting-drill-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
+                            "title": "Installing Drill on Windows", 
+                            "url": "/docs/installing-drill-on-windows/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8863,18 +9087,18 @@
                             "next_title": "Installing Drill in Distributed Mode", 
                             "next_url": "/docs/installing-drill-in-distributed-mode/", 
                             "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill on Mac OS X", 
-                            "previous_url": "/docs/installing-drill-on-mac-os-x/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
-                            "title": "Installing Drill on Windows", 
-                            "url": "/docs/installing-drill-on-windows/"
+                            "previous_title": "Installing Drill on Windows", 
+                            "previous_url": "/docs/installing-drill-on-windows/", 
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
+                            "title": "Starting Drill on Windows", 
+                            "url": "/docs/starting-drill-on-windows/"
                         }
                     ], 
                     "next_title": "Embedded Mode Prerequisites", 
                     "next_url": "/docs/embedded-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Deploying Drill in a Cluster", 
-                    "previous_url": "/docs/deploying-drill-in-a-cluster/", 
+                    "previous_title": "Install Drill Introduction", 
+                    "previous_url": "/docs/install-drill-introduction/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
@@ -8886,12 +9110,76 @@
                             "url": "/docs/install-drill/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Installing Drill on the Cluster", 
+                            "next_url": "/docs/installing-drill-on-the-cluster/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Installing Drill in Distributed Mode", 
+                            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+                            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                            "title": "Distributed Mode Prerequisites", 
+                            "url": "/docs/distributed-mode-prerequisites/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Starting Drill in Distributed Mode", 
+                            "next_url": "/docs/starting-drill-in-distributed-mode/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Distributed Mode Prerequisites", 
+                            "previous_url": "/docs/distributed-mode-prerequisites/", 
+                            "relative_path": "_docs/install/047-installing-drill-on-the-cluster.md", 
+                            "title": "Installing Drill on the Cluster", 
+                            "url": "/docs/installing-drill-on-the-cluster/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Distributed Mode", 
+                                    "url": "/docs/installing-drill-in-distributed-mode/"
+                                }, 
+                                {
+                                    "title": "Install Drill", 
+                                    "url": "/docs/install-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Connect a Data Source", 
+                            "next_url": "/docs/connect-a-data-source/", 
+                            "parent": "Installing Drill in Distributed Mode", 
+                            "previous_title": "Installing Drill on the Cluster", 
+                            "previous_url": "/docs/installing-drill-on-the-cluster/", 
+                            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                            "title": "Starting Drill in Distributed Mode", 
+                            "url": "/docs/starting-drill-in-distributed-mode/"
+                        }
+                    ], 
+                    "next_title": "Distributed Mode Prerequisites", 
+                    "next_url": "/docs/distributed-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Installing Drill on Windows", 
-                    "previous_url": "/docs/installing-drill-on-windows/", 
+                    "previous_title": "Starting Drill on Windows", 
+                    "previous_url": "/docs/starting-drill-on-windows/", 
                     "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
                     "title": "Installing Drill in Distributed Mode", 
                     "url": "/docs/installing-drill-in-distributed-mode/"
@@ -9125,8 +9413,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Installing Drill in Distributed Mode", 
-            "previous_url": "/docs/installing-drill-in-distributed-mode/", 
+            "previous_title": "Starting Drill in Distributed Mode", 
+            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"

@@ -27,4 +27,4 @@ env.sh`.
 
 {% include startnote.html %}If this parameter is not set, the limit depends on the amount of available system memory.{% include endnote.html %}
 
-After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the Drillbit]({{ site.baseurl }}/docs/starting-stopping-drill#starting-a-drillbit) onthe node.
+After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the Drillbit]({{ site.baseurl }}/docs/starting-drill-in-distributed-mode) on the node.

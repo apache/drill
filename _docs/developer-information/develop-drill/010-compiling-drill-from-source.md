@@ -37,6 +37,6 @@ data or you can connect Drill to your data sources.
 
   * To connect Drill to your data sources, refer to [Connect to Data Sources]({{ site.baseurl }}/docs/connect-a-data-source-introduction) for instructions.
   * To connect to Drill and query sample data, refer to the following topics:
-    * [Start Drill ]({{ site.baseurl }}/docs/starting-stopping-drill)(For Drill installed in embedded mode)
+    * [Starting Drill on Linux and Mac OS X]({{ site.baseurl }}/docs/install-drill)
     * [Query Data ]({{ site.baseurl }}/docs/query-data)
 

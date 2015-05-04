@@ -13,11 +13,12 @@ running Linux, Mac OS X, or Windows.
 
 You must have the following software installed on your machine to run Drill:
 
-<table ><tbody><tr><td ><strong>Software</strong></td><td ><strong>Description</strong></td></tr><tr><td ><a class="external-link" href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html" rel="nofollow">Oracle JDK version 7</a></td><td >A set of programming tools for developing Java applications.</td></tr></tbody></table>
+You need to meet the following prerequisites to run Drill:
 
-You can run the following command to verify that the system meets the software
-prerequisite:
-
-<table ><tbody><tr><td ><strong>Command</strong></td><td ><strong>Example Output</strong></td></tr><tr><td ><code>java –version</code></td><td ><code>java version &quot;1.7.0_65&quot;</code><br /><code>Java(TM) SE Runtime Environment (build 1.7.0_65-b19)</code><br /><code>Java HotSpot(TM) 64-Bit Server VM (build 24.65-b04, mixed mode)</code></td></tr></tbody></table>
+* Linux, Mac OS X, and Windows: [Oracle Java SE Development (JDK) Kit 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) installation  
+* Windows only:  
+  * A JAVA_HOME environment variable set up that points to  to the JDK installation  
+  * A PATH environment variable that includes a pointer to the JDK installation  
+  * A third-party utility for unzipping a tar.gz file 
 
 Follow installation instructions in this documentation for your particular operating system.
