@@ -39,8 +39,13 @@ public class OperatorPathBuilder {
   }
 
   // Utility to left pad strings
-  protected String leftPad(String text) {
-    return String.format("00%s", text).substring(text.length());
+  private String leftPad(final String text) {
+    final int length = text.length();
+    if (length > 2) {
+      return text;
+    } else {
+      return String.format("00%s", text).substring(length);
+    }
   }
 
   public OperatorPathBuilder setMajor(MajorFragmentProfile major) {
