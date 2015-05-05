@@ -53,10 +53,12 @@ public class ColumnDataReader {
   }
 
   public void loadPage(DrillBuf target, int pageLength) throws IOException {
+    target.clear();
     ByteBuffer directBuffer = target.nioBuffer(0, pageLength);
     while (directBuffer.remaining() > 0) {
       CompatibilityUtil.getBuf(input, directBuffer, directBuffer.remaining());
     }
+    target.writerIndex(pageLength);
   }
 
   public void clear(){

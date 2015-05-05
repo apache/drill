@@ -80,6 +80,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private boolean validating = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
+  private DirectCodecFactory codecFactory;
 
   private long recordCount = 0;
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
@@ -100,6 +101,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
     super();
     this.oContext = context.newOperatorContext(writer, true);
+    this.codecFactory = new DirectCodecFactory(writer.getFormatPlugin().getFsConf(), oContext.getAllocator());
   }
 
   @Override
@@ -156,10 +158,9 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
     int initialBlockBufferSize = max(MINIMUM_BUFFER_SIZE, blockSize / this.schema.getColumns().size() / 5);
     pageStore = ColumnChunkPageWriteStoreExposer.newColumnChunkPageWriteStore(this.oContext,
-      codec,
-      pageSize,
-      this.schema,
-      initialBlockBufferSize);
+        codecFactory.getCompressor(codec, pageSize),
+        schema,
+        initialBlockBufferSize);
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
     store = new ColumnWriteStoreV1(pageStore, pageSize, initialPageBufferSize, dictionaryPageSize, enableDictionary, writerVersion);
     MessageColumnIO columnIO = new ColumnIOFactory(validating).getColumnIO(this.schema);
@@ -331,6 +332,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     if (pageStore != null) {
       ColumnChunkPageWriteStoreExposer.close(pageStore);
     }
+
+    codecFactory.close();
 
     if (!hasRecords) {
       // the very last file is empty, delete it (DRILL-2408)

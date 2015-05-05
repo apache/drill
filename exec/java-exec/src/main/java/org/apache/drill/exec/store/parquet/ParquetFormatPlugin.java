@@ -54,7 +54,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 
 import parquet.format.converter.ParquetMetadataConverter;
-import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
 
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +73,6 @@ public class ParquetFormatPlugin implements FormatPlugin{
   private static final List<MagicString> MAGIC_STRINGS = Lists.newArrayList(new MagicString(0, ParquetFileWriter.MAGIC));
 
   private final DrillbitContext context;
-  private final CodecFactoryExposer codecFactoryExposer;
   private final Configuration fsConf;
   private final ParquetFormatMatcher formatMatcher;
   private final ParquetFormatConfig config;
@@ -89,7 +87,6 @@ public class ParquetFormatPlugin implements FormatPlugin{
   public ParquetFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
       StoragePluginConfig storageConfig, ParquetFormatConfig formatConfig){
     this.context = context;
-    this.codecFactoryExposer = new CodecFactoryExposer(fsConf);
     this.config = formatConfig;
     this.formatMatcher = new ParquetFormatMatcher(this);
     this.storageConfig = storageConfig;
@@ -169,10 +166,6 @@ public class ParquetFormatPlugin implements FormatPlugin{
   @Override
   public StoragePluginConfig getStorageConfig() {
     return storageConfig;
-  }
-
-  public CodecFactoryExposer getCodecFactoryExposer() {
-    return codecFactoryExposer;
   }
 
   public String getName(){

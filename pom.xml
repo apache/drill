@@ -33,7 +33,7 @@
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
-    <parquet.version>1.6.0rc3-drill-r0.1</parquet.version>
+    <parquet.version>1.6.0rc3-drill-r0.3</parquet.version>
   </properties>
 
   <scm>

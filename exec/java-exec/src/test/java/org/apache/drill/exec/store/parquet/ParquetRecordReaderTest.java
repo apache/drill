@@ -70,7 +70,6 @@ import parquet.bytes.BytesInput;
 import parquet.column.page.DataPageV1;
 import parquet.column.page.PageReadStore;
 import parquet.column.page.PageReader;
-import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.Footer;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
@@ -625,7 +624,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     BufferAllocator allocator = new TopLevelAllocator();
     for(int i = 0; i < 25; i++) {
       ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
-          new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), columns);
+          new DirectCodecFactory(dfsConfig, allocator), f.getParquetMetadata(), columns);
       TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(mutator);
       Stopwatch watch = new Stopwatch();

@@ -18,15 +18,13 @@
 package org.apache.drill.exec.store.parquet2;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.Sets;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -43,37 +41,30 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.column.ColumnDescriptor;
 import parquet.common.schema.ColumnPath;
-import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ColumnChunkIncReadStore;
 import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.io.ColumnIOFactory;
-import parquet.io.InvalidRecordException;
 import parquet.io.MessageColumnIO;
 import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.Type;
-import parquet.schema.PrimitiveType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
-import parquet.schema.Types;
+import com.google.common.collect.Sets;
 
 public class DrillParquetReader extends AbstractRecordReader {
 
@@ -247,7 +238,6 @@ public class DrillParquetReader extends AbstractRecordReader {
         paths.put(md.getPath(), md);
       }
 
-      CodecFactoryExposer codecFactoryExposer = new CodecFactoryExposer(fileSystem.getConf());
       Path filePath = new Path(entry.getPath());
 
       BlockMetaData blockMetaData = footer.getBlocks().get(entry.getRowGroupIndex());
@@ -255,7 +245,8 @@ public class DrillParquetReader extends AbstractRecordReader {
       recordCount = (int) blockMetaData.getRowCount();
 
       pageReadStore = new ColumnChunkIncReadStore(recordCount,
-              codecFactoryExposer.getCodecFactory(), operatorContext.getAllocator(), fileSystem, filePath);
+          new DirectCodecFactory(fileSystem.getConf(), operatorContext.getAllocator()), operatorContext.getAllocator(),
+          fileSystem, filePath);
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);

@@ -39,7 +39,6 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -130,7 +129,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           readers.add(
               new ParquetRecordReader(
                   context, e.getPath(), e.getRowGroupIndex(), fs,
-                  rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
+                  new DirectCodecFactory(fs.getConf(), oContext.getAllocator()),
                   footers.get(e.getPath()),
                   rowGroupScan.getColumns()
               )

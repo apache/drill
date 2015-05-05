@@ -21,21 +21,19 @@ import java.io.IOException;
 
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
-import org.apache.hadoop.conf.Configuration;
 
 import parquet.column.page.PageWriteStore;
 import parquet.hadoop.CodecFactory.BytesCompressor;
-import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.MessageType;
 
 public class ColumnChunkPageWriteStoreExposer {
 
-  public static ColumnChunkPageWriteStore newColumnChunkPageWriteStore(OperatorContext oContext,
-                                                                       CompressionCodecName codec,
-                                                                       int pageSize,
-                                                                       MessageType schema,
-                                                                       int initialSize) {
-    BytesCompressor compressor = new CodecFactory(new Configuration()).getCompressor(codec, pageSize);
+  public static ColumnChunkPageWriteStore newColumnChunkPageWriteStore(
+      OperatorContext oContext,
+      BytesCompressor compressor,
+      MessageType schema,
+      int initialSize
+      ) {
     return new ColumnChunkPageWriteStore(compressor, schema, initialSize, new ParquetDirectByteBufferAllocator(oContext));
   }
 

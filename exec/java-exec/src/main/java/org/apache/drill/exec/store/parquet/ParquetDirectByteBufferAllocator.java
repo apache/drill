@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.OperatorContext;
 
 import parquet.bytes.ByteBufferAllocator;
@@ -32,17 +34,24 @@ import parquet.bytes.ByteBufferAllocator;
 public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetDirectByteBufferAllocator.class);
 
-  private OperatorContext oContext;
-  private HashMap<Integer, ByteBuf> allocatedBuffers = new HashMap<Integer, ByteBuf>();
+  private final BufferAllocator allocator;
+  private final HashMap<Integer, ByteBuf> allocatedBuffers = new HashMap<Integer, ByteBuf>();
 
   public ParquetDirectByteBufferAllocator(OperatorContext o){
-    oContext=o;
+    allocator = o.getAllocator();
+  }
+
+  public ParquetDirectByteBufferAllocator(BufferAllocator allocator) {
+    this.allocator = allocator;
   }
 
 
   @Override
   public ByteBuffer allocate(int sz) {
-    ByteBuf bb = oContext.getAllocator().buffer(sz);
+    ByteBuf bb = allocator.buffer(sz);
+    if (bb == null) {
+      throw new OutOfMemoryRuntimeException();
+    }
     ByteBuffer b = bb.nioBuffer(0, sz);
     allocatedBuffers.put(System.identityHashCode(b), bb);
     logger.debug("ParquetDirectByteBufferAllocator: Allocated "+sz+" bytes. Allocated ByteBuffer id: "+System.identityHashCode(b));
