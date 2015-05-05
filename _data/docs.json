@@ -287,14 +287,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Sample Datasets", 
-            "next_url": "/docs/sample-datasets/", 
+            "next_title": "Apache Drill 0.9.0 Release Notes", 
+            "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 0.7.0 Release Notes", 
             "previous_url": "/docs/apache-drill-0-7-0-release-notes/", 
             "relative_path": "_docs/rn/060-0.8.0-rn.md", 
             "title": "Apache Drill 0.8.0 Release Notes", 
             "url": "/docs/apache-drill-0-8-0-release-notes/"
+        }, 
+        "Apache Drill 0.9.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Sample Datasets", 
+            "next_url": "/docs/sample-datasets/", 
+            "parent": "Release Notes", 
+            "previous_title": "Apache Drill 0.8.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+            "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+            "title": "Apache Drill 0.9.0 Release Notes", 
+            "url": "/docs/apache-drill-0-9-0-release-notes/"
         }, 
         "Apache Drill Contribution Guidelines": {
             "breadcrumbs": [
@@ -4510,14 +4527,48 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
+                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-drill.md", 
                     "title": "Using MicroStrategy Analytics with Drill", 
                     "url": "/docs/using-microstrategy-analytics-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using MicroStrategy Analytics with Drill", 
+                    "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
+                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
+                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -5082,8 +5133,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using MicroStrategy Analytics with Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -5780,14 +5831,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Sample Datasets", 
-                    "next_url": "/docs/sample-datasets/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.7.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-7-0-release-notes/", 
                     "relative_path": "_docs/rn/060-0.8.0-rn.md", 
                     "title": "Apache Drill 0.8.0 Release Notes", 
                     "url": "/docs/apache-drill-0-8-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sample Datasets", 
+                    "next_url": "/docs/sample-datasets/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.8.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }
             ], 
             "next_title": "Apache Drill 0.5.0 Release Notes", 
@@ -7280,8 +7348,8 @@
             "next_title": "AOL Search", 
             "next_url": "/docs/aol-search/", 
             "parent": "", 
-            "previous_title": "Apache Drill 0.8.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+            "previous_title": "Apache Drill 0.9.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
             "relative_path": "_docs/140-sample-datasets.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
@@ -8042,6 +8110,23 @@
             "title": "Useful Research", 
             "url": "/docs/useful-research/"
         }, 
+        "Using Apache Drill with Tibco Spotfire Desktop": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Data", 
+            "next_url": "/docs/query-data/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
+            "title": "Using Apache Drill with Tibco Spotfire Desktop", 
+            "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+        }, 
         "Using Custom Functions in Queries": {
             "breadcrumbs": [
                 {
@@ -8105,8 +8190,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Data", 
-            "next_url": "/docs/query-data/", 
+            "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using Drill Explorer on Windows", 
             "previous_url": "/docs/using-drill-explorer-on-windows/", 
@@ -9773,14 +9858,48 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
+                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-drill.md", 
                     "title": "Using MicroStrategy Analytics with Drill", 
                     "url": "/docs/using-microstrategy-analytics-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using MicroStrategy Analytics with Drill", 
+                    "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
+                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
+                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
+                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -10151,8 +10270,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using MicroStrategy Analytics with Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
+            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -11830,14 +11949,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Sample Datasets", 
-                    "next_url": "/docs/sample-datasets/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.7.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-7-0-release-notes/", 
                     "relative_path": "_docs/rn/060-0.8.0-rn.md", 
                     "title": "Apache Drill 0.8.0 Release Notes", 
                     "url": "/docs/apache-drill-0-8-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sample Datasets", 
+                    "next_url": "/docs/sample-datasets/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.8.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }
             ], 
             "next_title": "Apache Drill 0.5.0 Release Notes", 
@@ -11907,8 +12043,8 @@
             "next_title": "AOL Search", 
             "next_url": "/docs/aol-search/", 
             "parent": "", 
-            "previous_title": "Apache Drill 0.8.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+            "previous_title": "Apache Drill 0.9.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
             "relative_path": "_docs/140-sample-datasets.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"

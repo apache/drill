@@ -16,17 +16,13 @@ Complete the following steps to use Apache Drill with MicroStrategy Analytics En
 
 ### Step 1: Install and Configure the MapR Drill ODBC Driver 
 
-Drill uses standard ODBC connectivity to provide you with easy data exploration capabilities on complex, schema-less data sets. Verify that the ODBC driver version is compatible with the Apache Drill version that you use.
- 
-Ideally, you should upgrade to Drill 0.7, which uses the v0.07.0.0608 version of the driver. Earlier versions of Drill use the v0.07.0.0600 ODBC driver version located at:
-
-http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.07.0.0600/
+Drill uses standard ODBC connectivity to provide easy data exploration capabilities on complex, schema-less data sets. Verify that the ODBC driver version that you download correlates with the Apache Drill version that you use. Ideally, you should upgrade to the latest version of Apache Drill and the MapR Drill ODBC Driver. 
 
 Complete the following steps to install and configure the driver:
 
 1.	Download the driver from the following location: 
 
-    http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.07.0.0608/MapRDrillODBC32.msi
+    http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/
 
     {% include startnote.html %}Use the 32-bit Windows driver for MicroStrategy 9.4.1.{% include endnote.html %}
 
@@ -41,8 +37,7 @@ Complete the following steps to install and configure the driver:
 
 	a.	Verify the version number of the driver.
 
-    ![]({{ site.baseurl }}/docs/img/image_17.png)
-	 
+    	 
 	b.	Click Test to verify that the ODBC configuration works before using it with MicroStrategy.
 
     ![]({{ site.baseurl }}/docs/img/image_2.png)

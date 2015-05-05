@@ -27,16 +27,15 @@ You can copy the Drill JDBC `JAR` file from the following Drill installation
 directory on the node with Drill installed, to a directory on your Windows
 machine:
 
-    <drill_installation_directory>/jars/jdbc-driver/drill-jdbc-all-0.7.0-SNAPSHOT.jar
+    <drill_installation_directory>/jars/jdbc-driver/drill-jdbc-all-<version>.jar
 
 Or, you can download the [apache-
-drill-0.7.0.tar.gz](http://www.apache.org/dyn/closer.cgi/drill/drill-0.7.0
-/apache-drill-0.7.0.tar.gz) file to a location on your Windows machine, and
+drill-0.9.0.tar.gz](http://apache.osuosl.org/drill/drill-0.9.0/apache-drill-0.9.0-src.tar.gz) file to a location on your Windows machine, and
 extract the contents of the file. You may need to use a decompression utility,
 such as [7-zip](http://www.7-zip.org/) to extract the archive. Once extracted,
 you can locate the driver in the following directory:
 
-    <windows_directory>\apache-drill-<version>\jars\jdbc-driver\drill-jdbc-all-0.7.0-SNAPSHOT.jar
+    <windows_directory>\apache-drill-<version>\jars\jdbc-driver\drill-jdbc-all-<version>.jar
 
 ----------
 

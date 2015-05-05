@@ -27,8 +27,8 @@ To install the driver, you need Administrator privileges on the computer.
 ## Installing the Driver
 
   1. Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection:
-     * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC32.msi)
-     * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.08.1.0618/MapRDrillODBC64.msi)
+     * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.09.0.0620/MapRDrillODBC32.msi)
+     * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v0.09.0.0620/MapRDrillODBC64.msi)
   2. Double-click the installer from the location where you downloaded it.
   3. Click **Next.**
   4. Select the check box to accept the terms of the License Agreement and click **Next**.
