@@ -25,33 +25,12 @@ Drill handles plain text files and directories like standard SQL tables and can 
 ## SQL Function Extensions
 Drill provides the following functions for analyzing nested data.
 
-<table>
-  <tr>
-    <th>Function</th>
-    <th>SQL</th>
-    <th>Drill</th>
-  </tr>
-  <tr>
-    <td><a href='http://drill.apache.org/docs/flatten-function'>FLATTEN</a> </td>
-    <td>None</td>
-    <td>Separates the elements in nested data from a repeated field into individual records.</td>
-  </tr>
-  <tr>
-    <td><a href='http://drill.apache.org/docs/kvgen-function'>KVGEN</a></td>
-    <td>None</td>
-    <td>Returns a repeated map, generating key-value pairs to simplify querying of complex data having unknown column names. You can then aggregate or filter on the key or value.</td>
-  </tr>
-  <tr>
-    <td><a href='http://drill.apache.org/docs/repeated-count-function'>REPEATED_COUNT</a></td>
-    <td>None</td>
-    <td>Counts the values in an array.</td>
-  </tr>
-  <tr>
-    <td><a href='http://drill.apache.org/docs/repeated-contains'>REPEATED_CONTAINS</a></td>
-    <td>None</td>
-    <td>Searches for a keyword in an array.</td>
-  </tr>
-</table>
+| Function          | SQL  | Drill                                                                                                                                                                      |
+|-------------------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| FLATTEN           | None | Separates the elements in nested data from a repeated field into individual records.                                                                                       |
+| KVGEN             | None | Returns a repeated map, generating key-value pairs to simplify querying of complex data having unknown column names. You can then aggregate or filter on the key or value. |
+| REPEATED_COUNT    | None | Counts the values in an array.                                                                                                                                             |
+| REPEATED_CONTAINS | None | Searches for a keyword in an array.                                                                                                                                        |
 
 ## Other Extensions
 

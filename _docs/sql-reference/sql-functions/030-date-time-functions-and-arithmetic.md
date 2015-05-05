@@ -283,55 +283,55 @@ The following examples show how to use these functions:
 * NOW
 * TIMEOFDAY
 
-    SELECT CURRENT_DATE FROM sys.version;
-    +--------------+
-    | current_date |
-    +--------------+
-    | 2015-04-02   |
-    +--------------+
-    1 row selected (0.077 seconds)
+        SELECT CURRENT_DATE FROM sys.version;
+        +--------------+
+        | current_date |
+        +--------------+
+        | 2015-04-02   |
+        +--------------+
+        1 row selected (0.077 seconds)
 
-    SELECT CURRENT_TIME FROM sys.version;
-    +--------------+
-    | current_time |
-    +--------------+
-    | 14:32:04.751 |
-    +--------------+
-    1 row selected (0.073 seconds)
+        SELECT CURRENT_TIME FROM sys.version;
+        +--------------+
+        | current_time |
+        +--------------+
+        | 14:32:04.751 |
+        +--------------+
+        1 row selected (0.073 seconds)
 
-    SELECT CURRENT_TIMESTAMP FROM sys.version;
-    +-------------------+
-    | current_timestamp |
-    +-------------------+
-    | 2015-04-02 14:32:34.047 |
-    +-------------------+
-    1 row selected (0.061 seconds)
+        SELECT CURRENT_TIMESTAMP FROM sys.version;
+        +-------------------+
+        | current_timestamp |
+        +-------------------+
+        | 2015-04-02 14:32:34.047 |
+        +-------------------+
+        1 row selected (0.061 seconds)
 
-    SELECT LOCALTIME FROM sys.version;
+        SELECT LOCALTIME FROM sys.version;
 
-    +------------+
-    | localtime  |
-    +------------+
-    | 14:33:04.95 |
-    +------------+
-    1 row selected (0.051 seconds)
+        +------------+
+        | localtime  |
+        +------------+
+        | 14:33:04.95 |
+        +------------+
+        1 row selected (0.051 seconds)
 
-    SELECT LOCALTIMESTAMP FROM sys.version;
+        SELECT LOCALTIMESTAMP FROM sys.version;
 
-    +----------------+
-    | LOCALTIMESTAMP |
-    +----------------+
-    | 2015-04-02 23:13:13.204 |
-    +----------------+
-    1 row selected (0.105 seconds)
+        +----------------+
+        | LOCALTIMESTAMP |
+        +----------------+
+        | 2015-04-02 23:13:13.204 |
+        +----------------+
+        1 row selected (0.105 seconds)
 
-    SELECT NOW() FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-04-02 23:14:30.076 |
-    +------------+
-    1 row selected (0.05 seconds)
+        SELECT NOW() FROM sys.version;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2015-04-02 23:14:30.076 |
+        +------------+
+        1 row selected (0.05 seconds)
 
 If you set up Drill for [UTC time]({{ site.baseurl }}/docs/casting-converting-data-types/time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
 

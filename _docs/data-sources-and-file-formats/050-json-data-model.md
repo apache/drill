@@ -30,33 +30,12 @@ JSON data consists of the following types:
 
 The following table shows SQL-JSON data type mapping, assuming you use the default `all_text_mode` option setting, false: 
 
-<table>
-  <tr>
-    <th>SQL Type</th>
-    <th>JSON Type</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>BOOLEAN</td>
-    <td>Boolean</td>
-    <td>True or false</td>
-  </tr>
-  <tr>
-    <td>BIGINT</td>
-    <td>Numeric</td>
-    <td>Number having no decimal point in JSON, 8-byte signed integer in Drill</td>
-  </tr>
-   <tr>
-    <td>DOUBLE</td>
-    <td>Numeric</td>
-    <td>Number having a decimal point in JSON, 8-byte double precision floating point number in Drill</td>
-  </tr>
-  <tr>
-    <td>VARCHAR</td>
-    <td>String</td>
-    <td>Character string of variable length</td>
-  </tr>
-</table>
+| SQL Type | JSON Type | Description                                                                                   |
+|----------|-----------|-----------------------------------------------------------------------------------------------|
+| BOOLEAN  | Boolean   | True or false                                                                                 |
+| BIGINT   | Numeric   | Number having no decimal point in JSON, 8-byte signed integer in Drill                        |
+| DOUBLE   | Numeric   | Number having a decimal point in JSON, 8-byte double precision floating point number in Drill |
+| VARCHAR  | String    | Character string of variable length                                                           |
 
 Drill does not support JSON lists of different types. For example, JSON does not enforce types or distinguish between integers and floating point values. When reading numerical values from a JSON file, Drill distinguishes integers from floating point numbers by the presence or lack of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error.
 

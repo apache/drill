@@ -6,94 +6,24 @@ Using Drill you can read tables created in Hive that use data types compatible w
 
 <!-- See DRILL-1570 -->
 
-<table>
-  <tr>
-    <th>Supported SQL Type</th>
-    <th>Hive Type</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>BIGINT</td>
-    <td>BIGINT</td>
-    <td>8-byte signed integer</td>
-  </tr>
-  <tr>
-    <td>BOOLEAN</td>
-    <td>BOOLEAN</td>
-    <td>TRUE (1) or FALSE (0)</td>
-  </tr>
-  <tr>
-    <td>CHAR</td>
-    <td>CHAR</td>
-    <td>Character string, fixed-length max 255</td>
-  </tr>
-  <tr>
-    <td>DATE</td>
-    <td>DATE</td>
-    <td>Years months and days in the form in the form YYYY-­MM-­DD</td>
-  </tr>
-  <tr>
-    <td>DECIMAL</td>
-    <td>DECIMAL</td>
-    <td>38-digit precision</td>
-  </tr>
-  <tr>
-    <td>FLOAT</td>
-    <td>FLOAT</td>
-    <td>4-byte single precision floating point number</td>
-  </tr>
-  <tr>
-    <td>DOUBLE</td>
-    <td>DOUBLE</td>
-    <td>8-byte double precision floating point number</td>
-  </tr>
-  <tr>
-    <td>INT or INTEGER</td>
-    <td>INT</td>
-    <td>4-byte signed integer</td>
-  </tr>
-  <tr>
-    <td>INTERVALDAY</td>
-    <td>N/A</td>
-    <td>Integer fields representing a day</td>
-  </tr>
-  <tr>
-    <td>INTERVALYEAR</td>
-    <td>N/A</td>
-    <td>Integer fields representing a year</td>
-  </tr>
-  <tr>
-    <td>SMALLINT</td>
-    <td>SMALLINT</td>
-    <td>2-byte signed integer</td>
-  </tr>
-  <tr>
-    <td>TIME</td>
-    <td>N/A</td>
-    <td>Hours minutes seconds 24-hour basis</td>
-  </tr>
-  <tr>
-    <td>N/A</td>
-    <td>TIMESTAMP</td>
-    <td>Conventional UNIX Epoch timestamp.</td>
-  </tr>
-  <tr>
-    <td>TIMESTAMP</td>
-    <td>TIMESTAMP</td>
-    <td>JDBC timestamp in yyyy-mm-dd hh:mm:ss format</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td>STRING</td>
-    <td>Binary string (16)</td>
-  </tr>
-  
-  <tr>
-    <td>VARCHAR</td>
-    <td>VARCHAR</td>
-    <td>Character string variable length</td>
-  </tr>
-</table>
+| Supported SQL Type | Hive Type | Description                                                |
+|--------------------|-----------|------------------------------------------------------------|
+| BIGINT             | BIGINT    | 8-byte signed integer                                      |
+| BOOLEAN            | BOOLEAN   | TRUE (1) or FALSE (0)                                      |
+| CHAR               | CHAR      | Character string, fixed-length max 255                     |
+| DATE               | DATE      | Years months and days in the form in the form YYYY-­MM-­DD |
+| DECIMAL            | DECIMAL   | 38-digit precision                                         |
+| FLOAT              | FLOAT     | 4-byte single precision floating point number              |
+| DOUBLE             | DOUBLE    | 8-byte double precision floating point number              |
+| INT or INTEGER     | INT       | 4-byte signed integer                                      |
+| INTERVALDAY        | N/A       | Integer fields representing a day                          |
+| INTERVALYEAR       | N/A       | Integer fields representing a year                         |
+| SMALLINT           | SMALLINT  | 2-byte signed integer                                      |
+| TIME               | N/A       | Hours minutes seconds 24-hour basis                        |
+| N/A                | TIMESTAMP | Conventional UNIX Epoch timestamp.                         |
+| TIMESTAMP          | TIMESTAMP | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
+| None               | STRING    | Binary string (16)                                         |
+| VARCHAR            | VARCHAR   | Character string variable length                           |
 
 ## Unsupported Types
 Drill does not support the following Hive types:

@@ -15,17 +15,27 @@ When you develop a simple function, you implement the `DrillSimpleFunc` interfac
 
 The `nulls = NullHandling.NULL_IF_NULL` variable tells Drill to return NULL values as NULL. For most scenarios, this setting should suffice. If you want to change how Drill handles NULL values, you can change the setting to `nulls = NullHandling.INTERNAL`.
 
-The simple function interface includes holders where you indicate the data types that your function can process.
+The simple function interface includes the `@Param` and `@Output` holders where you indicate the data types that your function can process.
 
-The following table provides a list of the holders and their descriptions, with examples: 
+### @Param Holder
 
-<table><tbody><tr><th ><strong>Holder</strong></th><th ><strong>Description</strong></th><th ><strong>Example</strong></th></tr><tr><td valign="top" ><code>@Param</code></td><td valign="top" >Indicates the data type that the function processes as input and determines the number of parameters that your function accepts within the query.</td><td valign="top" ><code>@Param BigIntHolder input1;</code><br /><code>@Param BigIntHolder input2;</code></td></tr><tr><td valign="top" ><code>@Output</code></td><td valign="top" >Indicates the data type that the processing returns.</td><td valign="top" ><code>@Output BigIntHolder out;</code> </td></tr></tbody></table>
+This holder indicates the data type that the function processes as input and determines the number of parameters that your function accepts within the query. For example:
 
-The simple function interface also includes two required methods that Drill calls when processing a query with the function.
+    @Param BigIntHolder input1;
+    @Param BigIntHolder input2;
 
-The following table lists the required methods:
+### @Output Holder
 
-<table><tbody><tr><th><strong>Method</strong></th><th ><strong>Description</strong></th></tr><tr><td valign="top" ><code>setup()</code></td><td valign="top" >Performs the initialization and processing that Drill only performs once.</td></tr><tr><td valign="top" ><code>eval()</code></td><td valign="top" >Contains the code that tells Drill what operations to perform on columns of data. You add your custom code to this method.</td></tr></tbody></table>
+This holder indicates the data type that the processing returns. For example:
+
+    @Output BigIntHolder out;
+
+### Setup and Eval Functions
+
+The simple function interface also includes two required methods, setup and eval, that Drill calls when processing a query with the function.
+
+* The setup function performs the initialization and processing that Drill only performs once.
+* The eval function contains the code that tells Drill what operations to perform on columns of data. You add your custom code to this method.
 
 ## Example
 The following example shows the program created for the `myaddints` function:
@@ -69,17 +79,25 @@ When you develop an aggregate function, you implement the `DrillAggFunc` interfa
     @FunctionTemplate(name = "mysecondmin", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
     public static class MySecondMin implements DrillAggFunc {
 
-The aggregate function interface includes holders where you indicate the data types that your function can process.
+The aggregate function interface includes holders where you indicate the data types that your function can process. This interface includes the @Param and @Output holders previously described and also includes the @Workspace holder. 
 
-The following table provides a list of the holders and their descriptions, with examples: 
+### @Workspace holder
 
-<table ><tbody><tr><th ><strong>Holder</strong></th><th ><strong>Description</strong></th><th ><strong>Example</strong></th></tr><tr><td valign="top" ><code>@Param</code></td><td valign="top" >Indicates the data type that the function processes as input and determines the number of parameters that your function accepts within the query.</td><td valign="top" ><code>@Param BigIntHolder in;</code></td></tr><tr><td valign="top" ><code>@Workspace</code></td><td valign="top" >Indicates the data type used to store intermediate data during processing.</td><td valign="top" ><code>@Workspace BigIntHolder min;</code><br><code >@Workspace BigIntHolder secondMin;</code></td></tr><tr><td valign="top" ><code>@Output</code></td><td valign="top" >Indicates the data type that the processing returns.</td><td valign="top" ><code>@Output BigIntHolder out;</code></td></tr></tbody></table>
+This holder indicates the data type used to store intermediate data during processing. For example:
 
-The aggregate function interface also includes four required methods that Drill calls when processing a query with the function.
+    @Workspace BigIntHolder min;
+    @Workspace BigIntHolder secondMin;
 
-The following table lists the required methods:
+The aggregate function interface also includes the following methods that Drill calls when processing a query with the function.
 
-<table><tbody><tr><th ><strong>Method</strong></th><th ><strong>Description</strong></th></tr><tr><td valign="top" ><code>setup()</code></td><td valign="top" >Performs the initialization and processing that Drill only performs once.</td></tr><tr><td valign="top" ><code>add()</code></td><td valign="top" >Processes each and every record. It applies the function to each value in a column that Drill processes.</td></tr><tr><td valign="top" ><code>output()</code></td><td valign="top" >Returns the final result of the aggregate function; the computed value of the processing applied by the Add method. This is the last method that Drill calls. Drill calls this one time after processing all the records.</td></tr><tr><td valign="top" ><code>reset()</code></td><td valign="top" >You provide the code in this method that determines the action Drill takes when data types in a column change from one type to another, for example from int to float. Before processing schema-less data, Drill scans the data and implicitly tries to identify the data type associated with each column. If Drill cannot identify a schema associated with each column, Drill processes a column assuming that the column contains a certain data type. If Drill encounters another data type in the column, Drill calls the reset method to determine how to handle the scenario.</td></tr></tbody></table>
+* setup
+  Performs the initialization and processing that Drill only performs once.  
+* add
+  Processes each and every record. It applies the function to each value in a column that Drill processes.
+* output
+  Returns the final result of the aggregate function; the computed value of the processing applied by the Add method. This is the last method that Drill calls. Drill calls this one time after processing all the records.
+* reset
+  You provide the code in this method that determines the action Drill takes when data types in a column change from one type to another, for example from int to float. Before processing schema-less data, Drill scans the data and implicitly tries to identify the data type associated with each column. If Drill cannot identify a schema associated with each column, Drill processes a column assuming that the column contains a certain data type. If Drill encounters another data type in the column, Drill calls the reset method to determine how to handle the scenario.
 
 ## Example
 

@@ -119,144 +119,35 @@ For more examples of and information about using Parquet data, see ["Evolving Pa
 ### SQL Data Types to Parquet
 The first table in this section maps SQL data types to Parquet data types, limited intentionally by Parquet creators to minimize the impact on disk storage:
 
-<table>
-  <tr>
-    <th>SQL Type</th>
-    <th>Parquet Type</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>BIGINT</td>
-    <td>INT64</td>
-    <td>8-byte signed integer</td>
-  </tr>
-  <tr>
-    <td>BOOLEAN</td>
-    <td>BOOLEAN</td>
-    <td>TRUE (1) or FALSE (0)</td>
-  </tr>
-  <tr>
-    <td>N/A</td>
-    <td>BYTE_ARRAY</td>
-    <td>Arbitrarily long byte array</td>
-  </tr>
-  <tr>
-    <td>FLOAT</td>
-    <td>FLOAT</td>
-    <td>4-byte single precision floating point number</td>
-  </tr>
-  <tr>
-    <td>DOUBLE</td>
-    <td>DOUBLE</td>
-    <td>8-byte double precision floating point number</td>
-  </tr>
-  <tr>
-    <td>INTEGER</td>
-    <td>INT32</td>
-    <td>4-byte signed integer</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td>INT96</td>
-    <td>12-byte signed int</td>
-  </tr>
-</table>
+| SQL Type | Parquet Type | Description                                   |
+|----------|--------------|-----------------------------------------------|
+| BIGINT   | INT64        | 8-byte signed integer                         |
+| BOOLEAN  | BOOLEAN      | TRUE (1) or FALSE (0)                         |
+| N/A      | BYTE_ARRAY   | Arbitrarily long byte array                   |
+| FLOAT    | FLOAT        | 4-byte single precision floating point number |
+| DOUBLE   | DOUBLE       | 8-byte double precision floating point number |
+| INTEGER  | INT32        | 4-byte signed integer                         |
+| None     | INT96        | 12-byte signed int                            |
 
 ### SQL Types to Parquet Logical Types
 Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:
  
-<table>
-  <tr>
-    <th>SQL Type</th>
-    <th>Drill Description</th>
-    <th>Parquet Logical Type</th>
-    <th>Parquet Description</th>
-  </tr>
-  <tr>
-    <td>DATE</td>
-    <td>Years months and days in the form in the form YYYY-­MM-­DD</td>
-    <td>DATE</td>
-    <td>Date, not including time of day. Uses the int32 annotation. Stores the number of days from the Unix epoch, 1 January 1970.</td>
-  </tr>
-  <tr>
-    <td>VARCHAR</td>
-    <td>Character string variable length</td>
-    <td>UTF8 (Strings)</td>
-    <td>Annotates the binary primitive type. The byte array is interpreted as a UTF-8 encoded character string.</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>INT_8</td>
-    <td>8 bits, signed</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>INT_16</td>
-    <td>16 bits, usigned</td>
-  </tr>
-  <tr>
-    <td>INT</td>
-    <td>4-byte signed integer</td>
-    <td>INT_32</td>
-    <td>32 bits, signed</td>
-  </tr>
-  <tr>
-    <td>DOUBLE</td>
-    <td>8-byte double precision floating point number</td>
-    <td>INT_64</td>
-    <td>64 bits, signed</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>UINT_8</td>
-    <td>8 bits, unsigned</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>UINT_16</td>
-    <td>16 bits, unsigned</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>UINT_32</td>
-    <td>32 bits, unsigned</td>
-  </tr>
-  <tr>
-    <td>None</td>
-    <td></td>
-    <td>UINT_64</td>
-    <td>64 bits, unsigned</td>
-  </tr>
-  <tr>
-    <td>DECIMAL</td>
-    <td>38-digit precision</td>
-    <td>DECIMAL</td>
-    <td>Arbitrary-precision signed decimal numbers of the form unscaledValue * 10^(-scale)</td>
-  </tr>
-  <tr>
-    <td>TIME</td>
-    <td>Hours, minutes, seconds, milliseconds; 24-hour basis</td>
-    <td>TIME_MILLIS</td>
-    <td>Logical time, not including the date. Annotates int32. Number of milliseconds after midnight.</td>
-  </tr>
-  <tr>
-    <td>TIMESTAMP</td>
-    <td>Year, month, day, and seconds</td>
-    <td>TIMESTAMP_MILLIS</td>
-    <td>Logical date and time. Annotates an int64 that stores the number of milliseconds from the Unix epoch, 00:00:00.000 on 1 January 1970, UTC.</td>
-  </tr>
-  <tr>
-    <td>INTERVALDAY and INTERVALYEAR</td>
-    <td>Integer fields representing a period of time depending on the type of interval</td>
-    <td>INTERVAL</td>
-    <td>An interval of time. Annotates a fixed_len_byte_array of length 12. Months, days, and ms in unsigned little-endian format.</td>
-  </tr>
-</table>
+| SQL Type                     | Drill Description                                                              | Parquet Logical Type | Parquet Description                                                                                                                        |
+|------------------------------|--------------------------------------------------------------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| DATE                         | Years months and days in the form in the form YYYY-­MM-­DD                     | DATE                 | Date, not including time of day. Uses the int32 annotation. Stores the number of days from the Unix epoch, 1 January 1970.                 |
+| VARCHAR                      | Character string variable length                                               | UTF8 (Strings)       | Annotates the binary primitive type. The byte array is interpreted as a UTF-8 encoded character string.                                    |
+| None                         |                                                                                | INT_8                | 8 bits, signed                                                                                                                             |
+| None                         |                                                                                | INT_16               | 16 bits, usigned                                                                                                                           |
+| INT                          | 4-byte signed integer                                                          | INT_32               | 32 bits, signed                                                                                                                            |
+| DOUBLE                       | 8-byte double precision floating point number                                  | INT_64               | 64 bits, signed                                                                                                                            |
+| None                         |                                                                                | UINT_8               | 8 bits, unsigned                                                                                                                           |
+| None                         |                                                                                | UINT_16              | 16 bits, unsigned                                                                                                                          |
+| None                         |                                                                                | UINT_32              | 32 bits, unsigned                                                                                                                          |
+| None                         |                                                                                | UINT_64              | 64 bits, unsigned                                                                                                                          |
+| DECIMAL                      | 38-digit precision                                                             | DECIMAL              | Arbitrary-precision signed decimal numbers of the form unscaledValue * 10^(-scale)                                                         |
+| TIME                         | Hours, minutes, seconds, milliseconds; 24-hour basis                           | TIME_MILLIS          | Logical time, not including the date. Annotates int32. Number of milliseconds after midnight.                                              |
+| TIMESTAMP                    | Year, month, day, and seconds                                                  | TIMESTAMP_MILLIS     | Logical date and time. Annotates an int64 that stores the number of milliseconds from the Unix epoch, 00:00:00.000 on 1 January 1970, UTC. |
+| INTERVALDAY and INTERVALYEAR | Integer fields representing a period of time depending on the type of interval | INTERVAL             | An interval of time. Annotates a fixed_len_byte_array of length 12. Months, days, and ms in unsigned little-endian format.                 |
 
 ## Data Description Language Support
 Parquet supports the following data description languages:

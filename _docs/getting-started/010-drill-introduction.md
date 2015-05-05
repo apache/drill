@@ -28,9 +28,28 @@ If you've never used Drill, visit these links to get a jump start:
 
 ## Videos
 
-* [Introduction to Apache Drill](https://www.youtube.com/embed/HITzj3ihSUk)
-* [Tableau + Drill](https://www.youtube.com/embed/FkcegazNuio)
-* [Drill Configuration Options](https://www.youtube.com/embed/kG6vzsk8T7E)
-* [Self-service SQL Exploration on MongoDB](https://www.youtube.com/embed/XUIKlsX8yVM)
-* [MicroStrategy + Drill](https://www.youtube.com/embed/uyN9DDCNP8o)
+<table>
+  <tr>
+    <th><a href="http://www.youtube.com/watch?feature=player_embedded&v=HITzj3ihSUk
+" target="_blank"><img src="http://img.youtube.com/vi/HITzj3ihSUk/0.jpg" 
+alt="intro to Drill" width="240" height="180" border="10" />Introduction to Apache Drill</a></th>
+    <th><a href="http://www.youtube.com/watch?feature=player_embedded&v=FkcegazNuio
+" target="_blank"><img src="http://img.youtube.com/vi/FkcegazNuio/0.jpg" 
+alt="Tableau and Drill" width="240" height="180" border="10" />Tableau + Drill</a</th>
+  </tr>
+  <tr>
+    <td><a href="http://www.youtube.com/watch?feature=player_embedded&v=kG6vzsk8T7E
+" target="_blank"><img src="http://img.youtube.com/vi/kG6vzsk8T7E/0.jpg" 
+alt="drill config options" width="240" height="180" border="10" />Drill Configuration Options</a></td>
+    <td><a href="http://www.youtube.com/watch?feature=player_embedded&v=XUIKlsX8yVM
+" target="_blank"><img src="http://img.youtube.com/vi/XUIKlsX8yVM/0.jpg" 
+alt="Self-service SQL Exploration on Mongo" width="240" height="180" border="10" />Self-service SQL Exploration on MongoDB</a></td>
+  </tr>
+  <tr>
+    <td><a href="http://www.youtube.com/watch?feature=player_embedded&v=uyN9DDCNP8o
+" target="_blank"><img src="http://img.youtube.com/vi/uyN9DDCNP8o/0.jpg" 
+alt="Microstrategy and Drill" width="240" height="180" border="10" />Microstrategy + Drill</a></td>
+    <td></td>
+  </tr>
+</table>
 

@@ -18,7 +18,7 @@ Complete the following steps to install Drill on designated nodes:
        
          drill.exec:{
           cluster-id: "<mydrillcluster>",
-          zk.connect: "<zkhostname1>:<port>,<zkhostname2>:<port>,<zkhostname3>:<port>",
+          zk.connect: "<zkhostname1>:<port>,<zkhostname2>:<port>,<zkhostname3>:<port>"
          }
 
 You can connect Drill to various types of data sources. Refer to [Connect

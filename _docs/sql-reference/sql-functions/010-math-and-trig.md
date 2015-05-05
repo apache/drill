@@ -16,138 +16,33 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOA
 
 ## Table of Math Functions
 
-<table>
-  <tr>
-    <th>Function</th>
-    <th>Return Type</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>ABS(x)</td>
-    <td>Same as input</td>
-    <td>Returns the absolute value of the input argument x.</td>
-  </tr>
-  <tr>
-    <td>CBRT(x)</td>
-    <td>FLOAT8</td>
-    <td>Returns the cubic root of x.</td>
-  </tr>
-  <tr>
-    <td>CEIL(x)</td>
-    <td>Same as input</td>
-    <td>Returns the smallest integer not less than x.</td>
-  </tr>
-  <tr>
-    <td>CEILING(x)</td>
-    <td>Same as input</td>
-    <td>Same as CEIL.</td>
-  </tr>
-  <tr>
-    <td>DEGREES(x)</td>
-    <td>FLOAT8</td>
-    <td>Converts x radians to degrees.</td>
-  </tr>
-  <tr>
-    <td>E()</td>
-    <td>FLOAT8</td>
-    <td>Returns 2.718281828459045.</td>
-  </tr>
-  <tr>
-    <td>EXP(x)</td>
-    <td>FLOAT8</td>
-    <td>Returns e (Euler's number) to the power of x.</td>
-  </tr>
-  <tr>
-    <td>FLOOR(x)</td>
-    <td>Same as input</td>
-    <td>Returns the largest integer not greater than x.</td>
-  </tr>
-  <tr>
-    <td>LOG(x)</td>
-    <td>FLOAT8</td>
-    <td>Returns the natural log (base e) of x.</td>
-  </tr>
-  <tr>
-    <td>LOG(x, y)</td>
-    <td>FLOAT8</td>
-    <td>Returns log base x to the y power.</td>
-  </tr>
-  <tr>
-    <td>LOG10(x)</td>
-    <td>FLOAT8</td>
-    <td>Returns the common log of x.</td>
-  </tr>
-  <tr>
-    <td>LSHIFT(x, y)</td>
-    <td>Same as input</td>
-    <td>Shifts the binary x by y times to the left.</td>
-  </tr>
-  <tr>
-    <td>MOD(x, y)</td>
-    <td>FLOAT8</td>
-    <td>Returns the remainder of x divided by y. Requires a cast to DECIMAL for consistent results when x and y are FLOAT or DOUBLE.</td>
-  </tr>
-  <tr>
-    <td>NEGATIVE(x)</td>
-    <td>Same as input</td>
-    <td>Returns x as a negative number.</td>
-  </tr>
-  <tr>
-    <td>PI</td>
-    <td>FLOAT8</td>
-    <td>Returns pi.</td>
-  </tr>
-  <tr>
-    <td>POW(x, y)</td>
-    <td>FLOAT8</td>
-    <td>Returns the value of x to the y power.</td>
-  </tr>
-  <tr>
-    <td>RADIANS</td>
-    <td>FLOAT8</td>
-    <td>Converts x degress to radians.</td>
-  </tr>
-  <tr>
-    <td>RAND</td>
-    <td>FLOAT8</td>
-    <td>Returns a random number from 0-1.</td>
-  </tr>
-  <tr>
-    <td>ROUND(x)</td>
-    <td>Same as input</td>
-    <td>Rounds to the nearest integer.</td>
-  </tr>
-  <tr>
-    <td>ROUND(x, y)</td>
-    <td>DECIMAL</td>
-    <td>Rounds x to s decimal places.</td>
-  </tr>
-  <tr>
-    <td>RSHIFT(x, y)</td>
-    <td>Same as input</td>
-    <td>Shifts the binary x by y times to the right.</td>
-  </tr>
-  <tr>
-    <td>SIGN(x)</td>
-    <td>INT</td>
-    <td>Returns the sign of x.</td>
-  </tr>
-  <tr>
-    <td>SQRT(x)</td>
-    <td>Same as input</td>
-    <td>Returns the square root of x.</td>
-  </tr>
-  <tr>
-    <td>TRUNC(x, y)</td>
-    <td>Same as input</td>
-    <td>Truncates x to y decimal places. Specifying y is optional. Default is 1.</td>
-  </tr>
-  <tr>
-    <td>TRUNC(x, y)</td>
-    <td>DECIMAL</td>
-    <td>Truncates x to y decimal places.</td>
-  </tr>
-</table>
+| Function     | Return Type   | Description                                                                                                                  |
+|--------------|---------------|------------------------------------------------------------------------------------------------------------------------------|
+| ABS(x)       | Same as input | Returns the absolute value of the input argument x.                                                                          |
+| CBRT(x)      | FLOAT8        | Returns the cubic root of x.                                                                                                 |
+| CEIL(x)      | Same as input | Returns the smallest integer not less than x.                                                                                |
+| CEILING(x)   | Same as input | Same as CEIL.                                                                                                                |
+| DEGREES(x)   | FLOAT8        | Converts x radians to degrees.                                                                                               |
+| E()          | FLOAT8        | Returns 2.718281828459045.                                                                                                   |
+| EXP(x)       | FLOAT8        | Returns e (Euler's number) to the power of x.                                                                                |
+| FLOOR(x)     | Same as input | Returns the largest integer not greater than x.                                                                              |
+| LOG(x)       | FLOAT8        | Returns the natural log (base e) of x.                                                                                       |
+| LOG(x, y)    | FLOAT8        | Returns log base x to the y power.                                                                                           |
+| LOG10(x)     | FLOAT8        | Returns the common log of x.                                                                                                 |
+| LSHIFT(x, y) | Same as input | Shifts the binary x by y times to the left.                                                                                  |
+| MOD(x, y)    | FLOAT8        | Returns the remainder of x divided by y. Requires a cast to DECIMAL for consistent results when x and y are FLOAT or DOUBLE. |
+| NEGATIVE(x)  | Same as input | Returns x as a negative number.                                                                                              |
+| PI           | FLOAT8        | Returns pi.                                                                                                                  |
+| POW(x, y)    | FLOAT8        | Returns the value of x to the y power.                                                                                       |
+| RADIANS      | FLOAT8        | Converts x degress to radians.                                                                                               |
+| RAND         | FLOAT8        | Returns a random number from 0-1.                                                                                            |
+| ROUND(x)     | Same as input | Rounds to the nearest integer.                                                                                               |
+| ROUND(x, y)  | DECIMAL       | Rounds x to s decimal places.                                                                                                |
+| RSHIFT(x, y) | Same as input | Shifts the binary x by y times to the right.                                                                                 |
+| SIGN(x)      | INT           | Returns the sign of x.                                                                                                       |
+| SQRT(x)      | Same as input | Returns the square root of x.                                                                                                |
+| TRUNC(x, y)  | Same as input | Truncates x to y decimal places. Specifying y is optional. Default is 1.                                                     |
+| TRUNC(x, y)  | DECIMAL       | Truncates x to y decimal places.                                                                                             |
 
 ## Math Function Examples
 

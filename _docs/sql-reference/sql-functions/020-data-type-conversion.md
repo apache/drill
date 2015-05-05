@@ -386,208 +386,49 @@ use in your Drill queries as described in this section:
 
 ### Format Specifiers for Numerical Conversions
 Use the following format specifiers for converting numbers:
-<table >
-     <tr >
-          <th align=left>Symbol
-          <th align=left>Location
-          <th align=left>Meaning
-     <tr valign=top>
-          <td><code>0</code>
-          <td>Number
-          <td>Digit
-     <tr >
-          <td><code>#</code>
-          <td>Number
-          <td>Digit, zero shows as absent
-     <tr valign=top>
-          <td><code>.</code>
-          <td>Number
-          <td>Decimal separator or monetary decimal separator
-     <tr >
-          <td><code>-</code>
-          <td>Number
-          <td>Minus sign
-     <tr valign=top>
-          <td><code>,</code>
-          <td>Number
-          <td>Grouping separator
-     <tr >
-          <td><code>E</code>
-          <td>Number
-          <td>Separates mantissa and exponent in scientific notation.
-              <em>Need not be quoted in prefix or suffix.</em>
-     <tr valign=top>
-          <td><code>;</code>
-          <td>Subpattern boundary
-          <td>Separates positive and negative subpatterns
-     <tr >
-          <td><code>%</code>
-          <td>Prefix or suffix
-          <td>Multiply by 100 and show as percentage
-     <tr valign=top>
-          <td><code>&#92;u2030</code>
-          <td>Prefix or suffix
-          <td>Multiply by 1000 and show as per mille value
-     <tr >
-          <td><code>&#164;</code> (<code>&#92;u00A4</code>)
-          <td>Prefix or suffix
-          <td>Currency sign, replaced by currency symbol.  If
-              doubled, replaced by international currency symbol.
-              If present in a pattern, the monetary decimal separator
-              is used instead of the decimal separator.
-     <tr valign=top>
-          <td><code>'</code>
-          <td>Prefix or suffix
-          <td>Used to quote special characters in a prefix or suffix,
-              for example, <code>"'#'#"</code> formats 123 to
-              <code>"#123"</code>.  To create a single quote
-              itself, use two in a row: <code>"# o''clock"</code>.
- </table>
+
+| Symbol     | Location            | Meaning                                                                                                                                                                                              |
+|------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0          | Number              | Digit                                                                                                                                                                                                |
+| #          | Number              | Digit, zero shows as absent                                                                                                                                                                          |
+| .          | Number              | Decimal separator or monetary decimal separator                                                                                                                                                      |
+| -          | Number              | Minus sign                                                                                                                                                                                           |
+| ,          | Number              | Grouping separator                                                                                                                                                                                   |
+| E          | Number              | Separates mantissa and exponent in scientific notation. Need not be quoted in prefix or suffix.                                                                                                      |
+| ;          | Subpattern boundary | Separates positive and negative subpatterns                                                                                                                                                          |
+| %          | Prefix or suffix    | Multiply by 100 and show as percentage                                                                                                                                                               |
+| \u2030     | Prefix or suffix    | Multiply by 1000 and show as per mille value                                                                                                                                                         |
+| _ (\u00A4) | Prefix or suffix    | Currency sign, replaced by currency symbol. If doubled, replaced by international currency symbol. If present in a pattern, the monetary decimal separator is used instead of the decimal separator. |
+| '          | Prefix or suffix    | Used to quote special characters in a prefix or suffix, for example, "'#'#"" formats 123 to ""#123"". To create a single quote itself, use two in a row: "# o''clock".                               |  
 
 ### Format Specifiers for Date/Time Conversions
 
 Use the following format specifiers for date/time conversions:
 
-<table>
-  <tr>
-    <th>Symbol</th>
-    <th>Meaning</th>
-    <th>Presentation</th>
-    <th>Examples</th>
-  </tr>
-  <tr>
-    <td>G</td>
-    <td>era</td>
-    <td>text</td>
-    <td>AD</td>
-  </tr>
-  <tr>
-    <td>C</td>
-    <td>century of era (&gt;=0)</td>
-    <td>number</td>
-    <td>20</td>
-  </tr>
-  <tr>
-    <td>Y</td>
-    <td>year of era (&gt;=0)</td>
-    <td>year</td>
-    <td>1996</td>
-  </tr>
-  <tr>
-    <td>x</td>
-    <td>weekyear</td>
-    <td>year</td>
-    <td>1996</td>
-  </tr>
-  <tr>
-    <td>w</td>
-    <td>week of weekyear</td>
-    <td>number</td>
-    <td>27</td>
-  </tr>
-  <tr>
-    <td>e</td>
-    <td>day of week</td>
-    <td>number</td>
-    <td>2</td>
-  </tr>
-  <tr>
-    <td>E</td>
-    <td>day of week</td>
-    <td>text</td>
-    <td>Tuesday; Tue</td>
-  </tr>
-  <tr>
-    <td>y</td>
-    <td>year</td>
-    <td>year</td>
-    <td>1996</td>
-  </tr>
-  <tr>
-    <td>D</td>
-    <td>day of year</td>
-    <td>number</td>
-    <td>189</td>
-  </tr>
-  <tr>
-    <td>M</td>
-    <td>month of year</td>
-    <td>month</td>
-    <td>July; Jul; 07</td>
-  </tr>
-  <tr>
-    <td>d</td>
-    <td>day of month</td>
-    <td>number</td>
-    <td>10</td>
-  </tr>
-  <tr>
-    <td>a</td>
-    <td>halfday of day</td>
-    <td>text</td>
-    <td>PM</td>
-  </tr>
-  <tr>
-    <td>K</td>
-    <td>hour of halfday (0~11)</td>
-    <td>number</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>h</td>
-    <td>clockhour of halfday (1~12)number</td>
-    <td>12</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td>H</td>
-    <td>hour of day (0~23)</td>
-    <td>number</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>k</td>
-    <td>clockhour of day (1~24)</td>
-    <td>number</td>
-    <td>24</td>
-  </tr>
-  <tr>
-    <td>m</td>
-    <td>minute of hour</td>
-    <td>number</td>
-    <td>30</td>
-  </tr>
-  <tr>
-    <td>s</td>
-    <td>second of minute</td>
-    <td>number</td>
-    <td>55</td>
-  </tr>
-  <tr>
-    <td>S</td>
-    <td>fraction of second</td>
-    <td>number</td>
-    <td>978</td>
-  </tr>
-  <tr>
-    <td>z</td>
-    <td>time zone</td>
-    <td>text</td>
-    <td>Pacific Standard Time; PST</td>
-  </tr>
-  <tr>
-    <td>Z</td>
-    <td>time zone offset/id</td>
-    <td>zone</td>
-    <td>-0800; -08:00; America/Los_Angeles</td>
-  </tr>
-  <tr>
-    <td>'</td>
-    <td>single quotation mark, escape for text delimiter</td>
-    <td>literal</td>
-    <td></td>
-  </tr>
-</table>
+| Symbol | Meaning                                          | Presentation | Examples                           |
+|--------|--------------------------------------------------|--------------|------------------------------------|
+| G      | era                                              | text         | AD                                 |
+| C      | century of era (>=0)                             | number       | 20                                 |
+| Y      | year of era (>=0)                                | year         | 1996                               |
+| x      | weekyear                                         | year         | 1996                               |
+| w      | week of weekyear                                 | number       | 27                                 |
+| e      | day of week                                      | number       | 2                                  |
+| E      | day of week                                      | text         | Tuesday; Tue                       |
+| y      | year                                             | year         | 1996                               |
+| D      | day of year                                      | number       | 189                                |
+| M      | month of year                                    | month        | July; Jul; 07                      |
+| d      | day of month                                     | number       | 10                                 |
+| a      | halfday of day                                   | text         | PM                                 |
+| K      | hour of halfday (0~11)                           | number       | 0                                  |
+| h      | clockhour of halfday (1~12) number               | 12           |                                    |
+| H      | hour of day (0~23)                               | number       | 0                                  |
+| k      | clockhour of day (1~24)                          | number       | 24                                 |
+| m      | minute of hour                                   | number       | 30                                 |
+| s      | second of minute                                 | number       | 55                                 |
+| S      | fraction of second                               | number       | 978                                |
+| z      | time zone                                        | text         | Pacific Standard Time; PST         |
+| Z      | time zone offset/id                              | zone         | -0800; -08:00; America/Los_Angeles |
+| '      | single quotation mark, escape for text delimiter | literal      |                                    |  
 
 For more information about specifying a format, refer to one of the following format specifier documents:
 
