@@ -184,7 +184,7 @@ public class ProfileResources {
       QueryInfo info = runningQueries.get(queryId);
       return work.getContext().getController().getTunnel(info.getForeman()).requestQueryProfile(id).checkedGet(2, TimeUnit.SECONDS);
     }catch(Exception e){
-      logger.debug("Failure to find query as running profile.", e);
+      logger.trace("Failed to find query as running profile.", e);
     }
 
     // then check blob store

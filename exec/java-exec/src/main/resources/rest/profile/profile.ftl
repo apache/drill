@@ -77,6 +77,12 @@
   </div>
 
   <div class="page-header"></div>
+  <h3>Query Profile</h3>
+  <p>STATE: ${model.getProfile().getState().name()}</p>
+  <p>FOREMAN: ${model.getProfile().getForeman().getAddress()}</p>
+  <p>TOTAL FRAGMENTS: ${model.getProfile().getTotalFragments()}</p>
+
+  <div class="page-header"></div>
   <h3>Fragment Profiles</h3>
 
   <div class="panel-group" id="fragment-accordion">
