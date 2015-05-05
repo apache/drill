@@ -46,9 +46,11 @@ public class OperatorWrapper {
     return String.format("operator-%d-%d", major, ops.get(0).getLeft().getOperatorId());
   }
 
+  public static final String [] OPERATOR_COLUMNS = {"Minor Fragment", "Setup Time", "Process Time", "Wait Time",
+    "Max Batches", "Max Records", "Peak Memory"};
+
   public String getContent() {
-    final String [] columns = {"Minor Fragment", "Setup", "Process", "Wait", "Max Batches", "Max Records", "Peak Mem"};
-    TableBuilder builder = new TableBuilder(columns);
+    TableBuilder builder = new TableBuilder(OPERATOR_COLUMNS);
 
     for (ImmutablePair<OperatorProfile, Integer> ip : ops) {
       int minor = ip.getRight();
@@ -73,6 +75,10 @@ public class OperatorWrapper {
     }
     return builder.toString();
   }
+
+  public static final String[] OPERATORS_OVERVIEW_COLUMNS = {"Operator ID", "Type", "Min Setup Time", "Avg Setup Time",
+    "Max Setup Time", "Min Process Time", "Avg Process Time", "Max Process Time", "Min Wait Time", "Avg Wait Time",
+    "Max Wait Time", "Avg Peak Memory", "Max Peak Memory"};
 
   public void addSummary(TableBuilder tb) {
     OperatorProfile op = ops.get(0).getLeft();

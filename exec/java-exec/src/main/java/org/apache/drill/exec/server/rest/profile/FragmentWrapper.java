@@ -45,7 +45,14 @@ public class FragmentWrapper {
     return String.format("fragment-%s", major.getMajorFragmentId());
   }
 
-  public void addSummary(final TableBuilder tb, final int colCount) {
+  public static final String[] FRAGMENT_OVERVIEW_COLUMNS = {"Major Fragment", "Minor Fragments Reporting",
+    "First Start", "Last Start", "First End", "Last End", "Min Runtime", "Avg Runtime", "Max Runtime", "Last Update",
+    "Last Progress", "Max Peak Memory"};
+
+  // Not including Major Fragment ID and Minor Fragments Reporting
+  public static final int NUM_NULLABLE_OVERVIEW_COLUMNS = FRAGMENT_OVERVIEW_COLUMNS.length - 2;
+
+  public void addSummary(TableBuilder tb) {
     final String fmt = " (%d)";
     final long t0 = start;
 
@@ -56,7 +63,7 @@ public class FragmentWrapper {
     tb.appendCell(complete.size() + " / " + major.getMinorFragmentProfileCount(), null);
 
     if (complete.size() < 1) {
-      tb.appendRepeated("", null, colCount - 2);
+      tb.appendRepeated("", null, NUM_NULLABLE_OVERVIEW_COLUMNS);
       return;
     }
 
@@ -96,11 +103,14 @@ public class FragmentWrapper {
     return majorFragmentTimingProfile(major);
   }
 
+  public static final String[] FRAGMENT_COLUMNS = {"Minor Fragment ID", "Host Name", "Start", "End",
+    "Runtime", "Max Records", "Max Batches", "Last Update", "Last Progress", "Peak Memory", "State"};
+
+  // Not including minor fragment ID
+  private static final int NUM_NULLABLE_FRAGMENTS_COLUMNS = FRAGMENT_COLUMNS.length - 1;
 
   public String majorFragmentTimingProfile(final MajorFragmentProfile major) {
-    final String[] columns = { "Minor Fragment", "Host", "Start", "End", "Total Time", "Max Records", "Max Batches",
-        "Last Update", "Last Progress", "Peak Memory", "State" };
-    final TableBuilder builder = new TableBuilder(columns);
+    final TableBuilder builder = new TableBuilder(FRAGMENT_COLUMNS);
 
     ArrayList<MinorFragmentProfile> complete, incomplete;
     complete = new ArrayList<MinorFragmentProfile>(Collections2.filter(
@@ -145,7 +155,7 @@ public class FragmentWrapper {
       builder.appendCell(
           major.getMajorFragmentId() + "-"
               + m.getMinorFragmentId(), null);
-      builder.appendRepeated(m.getState().toString(), null, columns.length - 1);
+      builder.appendRepeated(m.getState().toString(), null, NUM_NULLABLE_FRAGMENTS_COLUMNS);
     }
     return builder.toString();
   }

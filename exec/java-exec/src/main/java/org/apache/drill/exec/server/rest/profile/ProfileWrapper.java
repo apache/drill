@@ -105,11 +105,9 @@ public class ProfileWrapper {
   }
 
   public String getFragmentsOverview() {
-    final String[] columns = { "Major Fragment", "Minor Fragments Reporting", "First Start", "Last Start", "First End",
-        "Last End", "tmin", "tavg", "tmax", "last update", "last progress", "memmax" };
-    final TableBuilder tb = new TableBuilder(columns);
+    TableBuilder tb = new TableBuilder(FragmentWrapper.FRAGMENT_OVERVIEW_COLUMNS);
     for (final FragmentWrapper fw : getFragmentProfiles()) {
-      fw.addSummary(tb, columns.length);
+      fw.addSummary(tb);
     }
     return tb.toString();
   }
@@ -117,8 +115,7 @@ public class ProfileWrapper {
 
 
   public String getOperatorsOverview() {
-    final String [] columns = {"Operator", "Type", "Setup (min)", "Setup (avg)", "Setup (max)", "Process (min)", "Process (avg)", "Process (max)", "Wait (min)", "Wait (avg)", "Wait (max)", "Mem (avg)", "Mem (max)"};
-    final TableBuilder tb = new TableBuilder(columns);
+    final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS);
     for (final OperatorWrapper ow : getOperatorProfiles()) {
       ow.addSummary(tb);
     }
