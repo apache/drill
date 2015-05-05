@@ -124,19 +124,29 @@ class TableBuilder {
     appendCell(bytePrint(l), link);
   }
 
-  private String bytePrint(final long size){
-    final double m = size/Math.pow(1024, 2);
-    final double g = size/Math.pow(1024, 3);
-    final double t = size/Math.pow(1024, 4);
+  private String bytePrint(final long size) {
+    final double t = size / Math.pow(1024, 4);
     if (t > 1) {
       return dec.format(t).concat("TB");
-    } else if (g > 1) {
-      return dec.format(g).concat("GB");
-    } else if (m > 1){
-      return intformat.format(m).concat("MB");
-    } else {
-      return "-";
     }
+
+    final double g = size / Math.pow(1024, 3);
+    if (g > 1) {
+      return dec.format(g).concat("GB");
+    }
+
+    final double m = size / Math.pow(1024, 2);
+    if (m > 1) {
+      return intformat.format(m).concat("MB");
+    }
+
+    final double k = size / 1024;
+    if (k >= 1) {
+      return intformat.format(k).concat("KB");
+    }
+
+    // size < 1 KB
+    return "-";
   }
 
   @Override

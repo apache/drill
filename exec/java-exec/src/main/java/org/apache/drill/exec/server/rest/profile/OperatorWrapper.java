@@ -113,7 +113,7 @@ public class OperatorWrapper {
     tb.appendNanos(longWait.getLeft().getWaitNanos(), String.format(fmt, longWait.getRight()));
 
     final ImmutablePair<OperatorProfile, Integer> peakMem = Collections.max(ops, Comparators.opPeakMem);
-    tb.appendBytes((long) (memSum / ops.size()), null);
+    tb.appendBytes(Math.round(memSum / ops.size()), null);
     tb.appendBytes(peakMem.getLeft().getPeakLocalMemoryAllocated(), null);
   }
 }
