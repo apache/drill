@@ -18,8 +18,6 @@ Drill includes SQLLine, a JDBC utility for connecting to relational databases an
     sqlline version 1.1.6
     0: jdbc:drill:>
 
-In distributed mode, [Warden](http://doc.mapr.com/display/MapR/Apache+Drill+Installation+Overview) attempts to start Drill automatically when Drill is defined as service.
-
 [Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/install-drill) for use with Drill requires entering a few options, covered in the section, ["Install Drill"](docs/install-drill/). 
 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 

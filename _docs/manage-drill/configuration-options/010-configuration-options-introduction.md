@@ -387,19 +387,19 @@ The sys.options table lists the following options that you can set at the sessio
     <td>Compression type for storing Parquet output. Allowed values: snappy, gzip, none</td>
   </tr>
   <tr>
-    <td>store.parquet.enable_dictionary_encoding</td>
+    <td>store.parquet.enable_dictionary_encoding*</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Do not change.</td>
   </tr>
   <tr>
     <td>store.parquet.use_new_reader</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Not supported</td>
   </tr>
   <tr>
     <td>window.enable*</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Coming soon.</td>
   </tr>
 </table>
 
