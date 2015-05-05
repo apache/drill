@@ -191,20 +191,20 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         }
       }
 
-      if (props != null) {
-        UserProperties.Builder upBuilder = UserProperties.newBuilder();
-        for (String key : props.stringPropertyNames()) {
-          upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
-        }
-
-        this.props = upBuilder.build();
-      }
-
       ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
       checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
       // shuffle the collection then get the first endpoint
       Collections.shuffle(endpoints);
       endpoint = endpoints.iterator().next();
+    }
+
+    if (props != null) {
+      UserProperties.Builder upBuilder = UserProperties.newBuilder();
+      for (String key : props.stringPropertyNames()) {
+        upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
+      }
+
+      this.props = upBuilder.build();
     }
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
