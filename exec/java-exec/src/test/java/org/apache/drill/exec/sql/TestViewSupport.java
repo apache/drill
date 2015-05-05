@@ -193,10 +193,10 @@ public class TestViewSupport extends TestBaseViewSupport {
         "(regionid, salescity)",
         "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY `region_id` DESC",
         "SELECT regionid FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "regionid" },
+        new String[]{"regionid"},
         ImmutableList.of(
-            new Object[] { 109L },
-            new Object[] { 108L }
+            new Object[]{109L},
+            new Object[]{108L}
         )
     );
   }
@@ -209,10 +209,10 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         "SELECT region_id FROM cp.`region.json` UNION SELECT employee_id FROM cp.`employee.json`",
         "SELECT regionid FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 2",
-        new String[] { "regionid" },
+        new String[]{"regionid"},
         ImmutableList.of(
-            new Object[] { 110L },
-            new Object[] { 108L }
+            new Object[]{110L},
+            new Object[]{108L}
         )
     );
   }
@@ -254,9 +254,9 @@ public class TestViewSupport extends TestBaseViewSupport {
         null,
         viewDef,
         "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 1",
-        new String[] { "n_nationkey", "n_name", "n_regionkey", "n_comment" },
+        new String[]{"n_nationkey", "n_name", "n_regionkey", "n_comment"},
         ImmutableList.of(
-            new Object[] { 0, "ALGERIA", 0, " haggle. carefully final deposits detect slyly agai" }
+            new Object[]{0, "ALGERIA", 0, " haggle. carefully final deposits detect slyly agai"}
         )
     );
   }
@@ -296,8 +296,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Make sure the new view created returns the data expected.
       queryViewHelper(String.format("SELECT * FROM %s.`%s` LIMIT 1", TEMP_SCHEMA, viewName),
-          new String[] { "sales_state_province" },
-          ImmutableList.of(new Object[] { "None" })
+          new String[]{"sales_state_province" },
+          ImmutableList.of(new Object[]{"None"})
       );
     } finally {
       dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
@@ -434,7 +434,7 @@ public class TestViewSupport extends TestBaseViewSupport {
       createViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA, null, "SELECT region_id, sales_city FROM `region.json`");
 
       final String[] baselineColumns = new String[] { "region_id", "sales_city" };
-      final List<Object[]> baselineValues = ImmutableList.of(new Object[] { 109L, "Santa Fe"});
+      final List<Object[]> baselineValues = ImmutableList.of(new Object[]{109L, "Santa Fe"});
 
       // Query the view
       queryViewHelper(
@@ -479,5 +479,115 @@ public class TestViewSupport extends TestBaseViewSupport {
     } finally {
       dropViewHelper(TEMP_SCHEMA, viewName, TEMP_SCHEMA);
     }
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef1() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
+        String.format("Error: Duplicate column name [%s]", "region_id")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef2() throws Exception {
+    createViewErrorTestHelper("CREATE VIEW %s.%s AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
+        String.format("Error: Duplicate column name [%s]", "sales_city")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef3() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s(regionid, regionid) AS SELECT region_id, sales_city FROM cp.`region.json`",
+        String.format("Error: Duplicate column name [%s]", "regionid")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef4() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s(regionid, salescity, salescity) " +
+            "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
+        String.format("Error: Duplicate column name [%s]", "salescity")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef5() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s(regionid, salescity, SalesCity) " +
+            "AS SELECT region_id, sales_city, sales_city FROM cp.`region.json`",
+        String.format("Error: Duplicate column name [%s]", "SalesCity")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithDuplicateColumnsInDef6() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s " +
+            "AS SELECT t1.region_id, t2.region_id FROM cp.`region.json` t1 JOIN cp.`region.json` t2 " +
+            "ON t1.region_id = t2.region_id LIMIT 1",
+        String.format("Error: Duplicate column name [%s]", "region_id")
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithUniqueColsInFieldListDuplicateColsInQuery1() throws Exception {
+    testViewHelper(
+        TEMP_SCHEMA,
+        "(regionid1, regionid2)",
+        "SELECT region_id, region_id FROM cp.`region.json` LIMIT 1",
+        "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME",
+        new String[]{"regionid1", "regionid2"},
+        ImmutableList.of(
+            new Object[]{0L, 0L}
+        )
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWithUniqueColsInFieldListDuplicateColsInQuery2() throws Exception {
+    testViewHelper(
+        TEMP_SCHEMA,
+        "(regionid1, regionid2)",
+        "SELECT t1.region_id, t2.region_id FROM cp.`region.json` t1 JOIN cp.`region.json` t2 " +
+            "ON t1.region_id = t2.region_id LIMIT 1",
+        "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME",
+        new String[]{"regionid1", "regionid2"},
+        ImmutableList.of(
+            new Object[]{0L, 0L}
+        )
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWhenInEqualColumnCountInViewDefVsInViewQuery() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s(regionid, salescity) " +
+            "AS SELECT region_id, sales_city, sales_region FROM cp.`region.json`",
+        "Error: view's field list and the view's query field list have different counts."
+    );
+  }
+
+  @Test // DRILL-2589
+  public void createViewWhenViewQueryColumnHasStarAndViewFiledListIsSpecified() throws Exception {
+    createViewErrorTestHelper(
+        "CREATE VIEW %s.%s(regionid, salescity) " +
+            "AS SELECT region_id, * FROM cp.`region.json`",
+        "Error: view's query field list has a '*', which is invalid when view's field list is specified."
+    );
+  }
+
+  private static void createViewErrorTestHelper(final String viewSql, final String errorMsg)
+      throws Exception {
+    final String createViewSql = String.format(viewSql, TEMP_SCHEMA, "duplicateColumnsInViewDef");
+
+    testBuilder()
+        .sqlQuery(createViewSql)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, errorMsg)
+        .go();
   }
 }
