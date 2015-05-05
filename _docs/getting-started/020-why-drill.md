@@ -7,7 +7,7 @@ parent: "Getting Started"
 
 ### 1. Get started in minutes
 
-It only takes a couple minutes to start working with Drill. Untar it on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure. No need to define schemas. Just point at the data and drill!
+It only takes a couple of minutes to start working with Drill. Untar it on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure. No need to define schemas. Just point at the data and drill!
 
     $ tar -xvf apache-drill-<version>.tar.gz
     $ <install directory>/bin/sqlline -u jdbc:drill:zk=local
