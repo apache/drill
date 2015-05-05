@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -175,7 +176,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         first = false;
         return outcome;
       case UPDATE_AGGREGATOR:
-        context.fail(new SchemaChangeException("Streaming aggregate does not support schema changes"));
+        context.fail(UserException.unsupportedError()
+          .message("Streaming aggregate does not support schema changes")
+          .build());
         close();
         killIncoming(false);
         return IterOutcome.STOP;

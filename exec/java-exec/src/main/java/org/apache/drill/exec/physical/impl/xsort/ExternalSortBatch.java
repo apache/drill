@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -60,6 +61,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.store.ischema.Records;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -244,7 +246,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
           if (!incoming.getSchema().equals(schema)) {
             if (schema != null) {
-              throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
+              throw new SchemaChangeException();
             }
             this.schema = incoming.getSchema();
             this.sorter = createNewSorter(context, incoming);
@@ -378,9 +380,13 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
       return IterOutcome.OK_NEW_SCHEMA;
 
-    } catch(SchemaChangeException | ClassTransformationException | IOException ex) {
+    } catch (SchemaChangeException ex) {
       kill(false);
-      logger.error("Failure during query", ex);
+      context.fail(UserException.unsupportedError(ex)
+        .message("Sort doesn't currently support sorts with changing schemas").build());
+      return IterOutcome.STOP;
+    } catch(ClassTransformationException | IOException ex) {
+      kill(false);
       context.fail(ex);
       return IterOutcome.STOP;
     } catch (UnsupportedOperationException e) {

@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -133,7 +134,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         IterOutcome outcome = aggregator.getOutcome();
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
-        context.fail(new SchemaChangeException("Hash aggregate does not support schema changes"));
+        context.fail(UserException.unsupportedError()
+          .message("Hash aggregate does not support schema changes").build());
         close();
         killIncoming(false);
         return IterOutcome.STOP;
