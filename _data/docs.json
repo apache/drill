@@ -860,8 +860,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring a Multitenant Cluster", 
-            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "next_title": "Configuring User Impersonation", 
+            "next_url": "/docs/configuring-user-impersonation/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill Introduction", 
             "previous_url": "/docs/manage-drill-introduction/", 
@@ -911,6 +911,23 @@
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
+        "Configuring User Impersonation": {
+            "breadcrumbs": [
+                {
+                    "title": "Manage Drill", 
+                    "url": "/docs/manage-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring a Multitenant Cluster", 
+            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "parent": "Manage Drill", 
+            "previous_title": "Configuring Drill in a Dedicated Cluster", 
+            "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+            "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
+            "title": "Configuring User Impersonation", 
+            "url": "/docs/configuring-user-impersonation/"
+        }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
                 {
@@ -936,7 +953,7 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring a Multitenant Cluster", 
                     "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                    "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
                     "title": "Configuring a Multitenant Cluster Introduction", 
                     "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                 }, 
@@ -986,9 +1003,9 @@
             "next_title": "Configuring a Multitenant Cluster Introduction", 
             "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring Drill in a Dedicated Cluster", 
-            "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-            "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+            "previous_title": "Configuring User Impersonation", 
+            "previous_url": "/docs/configuring-user-impersonation/", 
+            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
             "title": "Configuring a Multitenant Cluster", 
             "url": "/docs/configuring-a-multitenant-cluster/"
         }, 
@@ -1009,7 +1026,7 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring a Multitenant Cluster", 
             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
             "title": "Configuring a Multitenant Cluster Introduction", 
             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
@@ -3649,14 +3666,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "next_title": "Configuring User Impersonation", 
+                    "next_url": "/docs/configuring-user-impersonation/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
                     "title": "Configuring Drill in a Dedicated Cluster", 
                     "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3683,7 +3717,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
                             "title": "Configuring a Multitenant Cluster Introduction", 
                             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
@@ -3733,9 +3767,9 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
@@ -4544,29 +4578,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
                     "title": "Using Apache Drill with Tibco Spotfire Desktop", 
                     "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
                 }
@@ -8121,9 +8138,9 @@
             "next_title": "Query Data", 
             "next_url": "/docs/query-data/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
+            "previous_title": "Using MicroStrategy Analytics with Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
             "title": "Using Apache Drill with Tibco Spotfire Desktop", 
             "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
         }, 
@@ -9875,29 +9892,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
                     "title": "Using Apache Drill with Tibco Spotfire Desktop", 
                     "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
                 }
@@ -11310,14 +11310,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "next_title": "Configuring User Impersonation", 
+                    "next_url": "/docs/configuring-user-impersonation/", 
                     "parent": "Manage Drill", 
                     "previous_title": "Manage Drill Introduction", 
                     "previous_url": "/docs/manage-drill-introduction/", 
                     "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
                     "title": "Configuring Drill in a Dedicated Cluster", 
                     "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11344,7 +11361,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster-introduction.md", 
+                            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
                             "title": "Configuring a Multitenant Cluster Introduction", 
                             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
@@ -11394,9 +11411,9 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-a-multitenant-cluster.md", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 

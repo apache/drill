@@ -1,6 +1,6 @@
 ---
-title: "User Impersonation"
-parent: "Architecture"
+title: "Configuring User Impersonation"
+parent: "Manage Drill"
 ---
 Impersonation allows a service to act on behalf of a client while performing the action requested by the client. By default, user impersonation is disabled in Drill. You can configure user impersonation in the drill-override.conf file.
  
@@ -19,14 +19,31 @@ When impersonation is enabled and user Bob issues a query through the SQLLine cl
 ## Impersonation Support
 The following table lists the clients, storage plugins, and types of queries that you can use with impersonation in Drill:
 
-| Type     | Supported     | Not Supported     |
-|-----------------    |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------    |-----------------------    |
-| Clients     | SQLLine ODBC JDBC     | Drill Web UI REST API     |
-| Storage Plugins     | File System     | Hive HBase     |
-| Queries     | When you enable impersonation, the setting applies to queries on data and metadata. For example, if you issue the SHOW SCHEMAS command, Drill impersonates the user logged into the client to access the requested metadata. If you issue a SELECT  query on a workspace, Drill impersonates the user logged in to the client to access the requested data. Drill applies impersonation to queries issued using the following commands: SHOW SCHEMAS SHOW DATABASES SHOW TABLES CTAS SELECT CREATE VIEW DROP VIEW SHOW FILES  To successfully run the CTAS and CREATE VIEW commands, a user must have write permissions on the directory where the table or view will exist. Running these commands creates artifacts on the file system.     |      |
+<table>
+  <tr>
+    <th>Type</th>
+    <th>Supported</th>
+    <th>Not Supported</th>
+  </tr>
+  <tr>
+    <td>Clients</td>
+    <td>SQLLine ODBC JDBC</td>
+    <td>Drill Web UI REST API</td>
+  </tr>
+  <tr>
+    <td>Storage Plugins</td>
+    <td>File System</td>
+    <td>Hive HBase</td>
+  </tr>
+  <tr>
+    <td>Queries</td>
+    <td>When you enable impersonation, the setting applies to queries on data and metadata. For example, if you issue the SHOW SCHEMAS command, Drill impersonates the user logged into the client to access the requested metadata. If you issue a SELECT query on a workspace, Drill impersonates the user logged in to the client to access the requested data. Drill applies impersonation to queries issued using the following commands: <br>SHOW SCHEMAS <br>SHOW DATABASES<br> SHOW TABLES<br> CTAS<br> SELECT<br> CREATE VIEW<br> DROP VIEW<br> SHOW FILES<br> To successfully run the CTAS and CREATE VIEW commands, a user must have write permissions on the directory where the table or view will exist. Running these commands creates artifacts on the file system.</td>
+    <td></td>
+  </tr>
+</table>
 
 ## Impersonation and Views
-You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See CREATE VIEW Command.
+You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view-command/) Command.
 
 You can create a view and grant read permissions on the view to give other users access to the data that the view references. When a user queries the view, Drill impersonates the view owner to access the underlying data. A user with read access to a view can create new views from the originating view to further restrict access on data.
 
@@ -37,7 +54,7 @@ When users query a view, Drill accesses the underlying data as the user that cre
  
 The view owner or a superuser can modify permissions on the view file directly or they can set view permissions at the system or session level prior to creating any views. Any user that alters view permissions must have write access on the directory or workspace in which they are working. See Modifying Permissions on a View File and Modifying SYSTEM|SESSION Level View Permissions. 
 
-####Modifying Permissions on a View File
+#### Modifying Permissions on a View File
 Only a view owner or a super user can modify permissions on a view file to change them from owner to group or world readable. Before you grant permission to users to access a view, verify that they have access to the directory or workspace in which the view file is stored.
 
 Use the `chmod` and `chown` commands with the appropriate octal code to change permissions on a view file:
@@ -82,10 +99,10 @@ Complete the following steps on each Drillbit node to enable user impersonation,
 1. Navigate to `<drill_installation_directory>/conf/` and edit `drill-override.conf`.
 2. Under `drill.exe`, add the following:
 
-       drill.exec.impersonation: {
-             enabled: true,
-              max_chained_user_hops: 3
-       }
+          drill.exec.impersonation: {
+                enabled: true,
+                 max_chained_user_hops: 3
+          }
 
 3. Verify that enabled is set to `‘true’`.
 4. Set the maximum number of chained user hops that you want Drill to allow.
@@ -96,8 +113,8 @@ Complete the following steps on each Drillbit node to enable user impersonation,
     `export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket`
 6. Restart the Drillbit process on each Drill node.
    * In a MapR cluster, run the following command:
-    ` maprcli node services -name drill-bits -action restart -nodes `<hostname> -f``
-   * In a non-MapR environment, run the following command:
+    `maprcli node services -name drill-bits -action restart -nodes <hostname> -f`
+   * In a non-MapR environment, run the following command:  
      <DRILLINSTALL_HOME>/bin/drillbit.sh restart
 
 
@@ -114,7 +131,7 @@ Frank needs to share a subset of this information with Joe who is an HR manager 
 rwxr-----     frank:mgr   /user/frank/emp_mgr_view.drill.view
  
 The emp_mgr_view.drill.view file contains the following view definition:
-(view definition: SELECT emp_id, emp_name, emp_salary, emp_addr, emp_phone FROM `/user/frank/employee` WHERE emp_mgr = user())
+(view definition: SELECT emp_id, emp_name, emp_salary, emp_addr, emp_phone FROM \`/user/frank/employee\` WHERE emp_mgr = user())
  
 When Joe issues SELECT * FROM emp_mgr_view, Drill impersonates Frank when accessing the employee data, and the query returns the data that Joe has permission to see based on the view definition. The query results do not include any sensitive data because the view protects that information. If Joe tries to query the employees table directly, Drill returns an error or null values.
  
