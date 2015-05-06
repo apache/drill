@@ -49,5 +49,5 @@ if [ -n "$QUERY" ] ; then
 elif [ -n "$FILE" ] ; then
   exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}" --run=$FILE
 else
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver --maxWidth=10000 "${ARGS[@]}"
+  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine --color=true -d org.apache.drill.jdbc.Driver --maxWidth=10000 "${ARGS[@]}"
 fi
