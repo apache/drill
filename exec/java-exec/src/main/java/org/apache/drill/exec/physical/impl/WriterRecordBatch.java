@@ -77,10 +77,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   @Override
-  public void buildSchema() throws SchemaChangeException {
-  }
-
-  @Override
   public IterOutcome innerNext() {
     if(processed) {
 //      cleanup();

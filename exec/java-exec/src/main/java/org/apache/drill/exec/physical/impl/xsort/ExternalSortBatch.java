@@ -171,6 +171,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     super.close();
   }
 
+  @Override
   public void buildSchema() throws SchemaChangeException {
     IterOutcome outcome = next(incoming);
     switch (outcome) {

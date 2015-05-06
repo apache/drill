@@ -119,6 +119,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     super.close();
   }
 
+  @Override
   public void buildSchema() throws SchemaChangeException {
     VectorContainer c = new VectorContainer(oContext);
     IterOutcome outcome = next(incoming);

@@ -172,6 +172,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     leftUpstream = next(left);
     rightUpstream = next(right);
 
+    if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
+      state = BatchState.STOP;
+      return;
+    }
+
     if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
       state = BatchState.OUT_OF_MEMORY;
       return;

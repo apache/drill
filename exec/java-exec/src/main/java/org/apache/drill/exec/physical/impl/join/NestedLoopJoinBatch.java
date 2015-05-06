@@ -277,6 +277,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       leftUpstream = next(LEFT_INPUT, left);
       rightUpstream = next(RIGHT_INPUT, right);
 
+      if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
+        state = BatchState.STOP;
+        return;
+      }
+
       if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
         state = BatchState.OUT_OF_MEMORY;
         return;

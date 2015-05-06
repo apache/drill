@@ -134,7 +134,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       comparator = JoinUtils.checkAndSetComparison(condition, comparator);
     }
     assert comparator != JoinComparator.NONE;
-    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM) ? true : false;
+    areNullsEqual = (comparator == JoinComparator.IS_NOT_DISTINCT_FROM);
   }
 
   public JoinRelType getJoinType() {
@@ -146,10 +146,18 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     return status.getOutPosition();
   }
 
+  @Override
   public void buildSchema() throws SchemaChangeException {
     status.ensureInitial();
 
-    if (status.getLastLeft() == IterOutcome.OUT_OF_MEMORY || status.getLastRight() == IterOutcome.OUT_OF_MEMORY) {
+    final IterOutcome leftOutcome = status.getLastLeft();
+    final IterOutcome rightOutcome = status.getLastRight();
+    if (leftOutcome == IterOutcome.STOP || rightOutcome == IterOutcome.STOP) {
+      state = BatchState.STOP;
+      return;
+    }
+
+    if (leftOutcome == IterOutcome.OUT_OF_MEMORY || rightOutcome == IterOutcome.OUT_OF_MEMORY) {
       state = BatchState.OUT_OF_MEMORY;
       return;
     }

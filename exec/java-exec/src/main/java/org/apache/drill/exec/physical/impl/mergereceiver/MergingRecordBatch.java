@@ -460,7 +460,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     return outgoingContainer.getSchema();
   }
 
-  public void buildSchema() {
+  @Override
+  public void buildSchema() throws SchemaChangeException {
     // find frag provider that has data to use to build schema, and put in tempBatchHolder for later use
     tempBatchHolder = new RawFragmentBatch[fragProviders.length];
     int i = 0;
