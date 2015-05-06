@@ -124,6 +124,34 @@ public class ExecutionControlsInjector {
     }
   }
 
+  /**
+   * Insert a pause that can be interrupted using {@link Thread#interrupt()} at the given site point, if such an
+   * injection is specified (i.e. matches the site description).
+   * <p/>
+   * <p>Implementors use this in their code at a site where they want to simulate a interruptible pause
+   * during testing.
+   *
+   * @param executionControls the controls in the current context
+   * @param desc              the site description
+   * @param logger            logger of the class containing the injection site
+   * @throws InterruptedException if interrupted using {@link Thread#interrupt()}
+   */
+  public void injectInterruptiblePause(final ExecutionControls executionControls, final String desc,
+      final Logger logger) throws InterruptedException {
+    final PauseInjection pauseInjection = executionControls.lookupPauseInjection(this, desc);
+
+    if (pauseInjection != null) {
+      logger.debug("Interruptible pausing at {}", desc);
+      try {
+        pauseInjection.interruptiblePause();
+      } catch (final InterruptedException e) {
+        logger.debug("Pause interrupted at {}", desc);
+        throw e;
+      }
+      logger.debug("Interruptible pause resuming at {}", desc);
+    }
+  }
+
   public CountDownLatchInjection getLatch(final ExecutionControls executionControls, final String desc) {
     return executionControls.lookupCountDownLatchInjection(this, desc);
   }

@@ -48,9 +48,12 @@ public class DataTunnel {
     try{
       sendingSemaphore.acquire();
       manager.runCommand(b);
-    }catch(InterruptedException e){
+    }catch(final InterruptedException e){
       outcomeListener.failed(new RpcException("Interrupted while trying to get sending semaphore.", e));
-      // TODO InterruptedException
+
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -59,9 +62,12 @@ public class DataTunnel {
     try{
       sendingSemaphore.acquire();
       manager.runCommand(b);
-    }catch(InterruptedException e){
+    }catch(final InterruptedException e){
       b.connectionFailed(FailureType.CONNECTION, new RpcException("Interrupted while trying to get sending semaphore.", e));
-      // TODO InterruptedException
+
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
     }
     return b.getFuture();
   }

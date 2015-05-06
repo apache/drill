@@ -285,7 +285,8 @@ public abstract class PartitionerTemplate implements Partitioner {
       //      to terminate we need to send at least one batch with "isLastBatch" set to true, so that receiver knows
       //      sender has acknowledged the terminate request. After sending the last batch, all further batches are
       //      dropped.
-      final boolean isLastBatch = isLast || terminated;
+      //   3. Partitioner thread is interrupted due to cancellation of fragment.
+      final boolean isLastBatch = isLast || terminated || Thread.currentThread().isInterrupted();
 
       // if the batch is not the last batch and the current recordCount is zero, then no need to send any RecordBatches
       if (!isLastBatch && recordCount == 0) {

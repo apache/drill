@@ -112,9 +112,12 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
           cmd.connectionSucceeded(connection);
 //          logger.debug("Finished connection succeeded activity.");
         }
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         cmd.connectionFailed(FailureType.CONNECTION, e);
-        // TODO InterruptedException
+
+        // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+        // interruption and respond to it if it wants to.
+        Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
         throw new IllegalStateException();
       }

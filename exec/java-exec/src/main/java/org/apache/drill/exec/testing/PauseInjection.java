@@ -54,6 +54,13 @@ public class PauseInjection extends Injection {
     latch.awaitUninterruptibly();
   }
 
+  public void interruptiblePause() throws InterruptedException {
+    if (!injectNow()) {
+      return;
+    }
+    latch.await();
+  }
+
   public void unpause() {
     latch.countDown();
   }

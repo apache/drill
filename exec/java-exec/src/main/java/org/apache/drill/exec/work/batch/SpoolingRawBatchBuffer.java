@@ -141,7 +141,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   }
 
   @Override
-  public RawFragmentBatch getNext() throws IOException {
+  public RawFragmentBatch getNext() throws IOException, InterruptedException {
     if (outOfMemory && buffer.size() < 10) {
       outOfMemory = false;
       fragmentManager.setAutoRead(true);
@@ -160,9 +160,12 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
         }
         queueSize -= w.getBodySize();
         return batch;
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
+        // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+        // interruption and respond to it if it wants to.
+        Thread.currentThread().interrupt();
+
         return null;
-        // TODO InterruptedException
       }
     }
     if (w == null) {

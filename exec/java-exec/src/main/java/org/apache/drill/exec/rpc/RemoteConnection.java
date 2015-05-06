@@ -70,9 +70,13 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
     try{
       writeManager.waitForWritable();
       return true;
-    }catch(InterruptedException e){
+    }catch(final InterruptedException e){
       listener.failed(new RpcException(e));
-      // TODO InterruptedException
+
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
+
       return false;
     }
   }
@@ -131,9 +135,13 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
       if (channel.isActive()) {
         channel.close().get();
       }
-    } catch (InterruptedException | ExecutionException e) {
+      channel.close().get();
+    } catch (final InterruptedException | ExecutionException e) {
       logger.warn("Caught exception while closing channel.", e);
-      // TODO InterruptedException
+
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
     }
   }
 

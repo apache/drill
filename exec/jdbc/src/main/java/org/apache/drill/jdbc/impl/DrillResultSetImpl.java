@@ -156,6 +156,10 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
       // calling some wait method?
       resultsListener.latch.await();
     } catch ( InterruptedException e ) {
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
+
       // Not normally expected--Drill doesn't interrupt in this area (right?)--
       // but JDBC client certainly could.
       throw new SQLException( "Interrupted", e );

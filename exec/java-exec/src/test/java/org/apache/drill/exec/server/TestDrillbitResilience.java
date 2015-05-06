@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.server;
 
+import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
+import static org.apache.drill.exec.ExecConstants.SLICE_TARGET_DEFAULT;
+import static org.apache.drill.exec.planner.physical.PlannerSettings.HASHAGG;
+import static org.apache.drill.exec.planner.physical.PlannerSettings.PARTITION_SENDER_SET_THREADS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,6 +47,10 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
+import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionerDecorator;
+import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -437,6 +445,20 @@ public class TestDrillbitResilience {
     }
   }
 
+  private static class ListenerThatCancelsQueryAfterFirstBatchOfData extends WaitUntilCompleteListener {
+    private boolean cancelRequested = false;
+
+    @Override
+    public void dataArrived(final QueryDataBatch result, final ConnectionThrottle throttle) {
+      if (!cancelRequested) {
+        check(queryId != null, "Query id should not be null, since we have waited long enough.");
+        (new CancellingThread(queryId, ex, null)).start();
+        cancelRequested = true;
+      }
+      result.release();
+    }
+  };
+
   /**
    * Thread that cancels the given query id. After the cancel is acknowledged, the latch is counted down.
    */
@@ -459,7 +481,9 @@ public class TestDrillbitResilience {
       } catch (final RpcException ex) {
         this.ex.value = ex;
       }
-      latch.countDown();
+      if (latch != null) {
+        latch.countDown();
+      }
     }
   }
 
@@ -507,11 +531,31 @@ public class TestDrillbitResilience {
    * Given a set of controls, this method ensures that the TEST_QUERY completes with a CANCELED state.
    */
   private static void assertCancelledWithoutException(final String controls, final WaitUntilCompleteListener listener) {
+    assertCancelled(controls, TEST_QUERY, listener);
+  }
+
+  /**
+   * Given a set of controls, this method ensures that the given query completes with a CANCELED state.
+   */
+  private static void assertCancelled(final String controls, final String testQuery,
+      final WaitUntilCompleteListener listener) {
     setControls(controls);
 
-    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, TEST_QUERY, listener);
+    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, testQuery, listener);
     final Pair<QueryState, Exception> result = listener.waitForCompletion();
     assertCompleteState(result, QueryState.CANCELED);
+  }
+
+  private static void setSessionOption(final String option, final String value) {
+    try {
+      final List<QueryDataBatch> results = drillClient.runQuery(QueryType.SQL,
+          String.format("alter session set `%s` = %s", option, value));
+      for (final QueryDataBatch data : results) {
+        data.release();
+      }
+    } catch(RpcException e) {
+      fail(String.format("Failed to set session option `%s` = %s, Error: %s", option, value, e.toString()));
+    }
   }
 
   private static String createPauseInjection(final Class siteClass, final String siteDesc, final int nSkip) {
@@ -666,5 +710,74 @@ public class TestDrillbitResilience {
     final Class<? extends Throwable> exceptionClass = IOException.class;
     final String controls = createSingleException(FragmentExecutor.class, exceptionDesc, exceptionClass);
     assertFailsWithException(controls, exceptionClass, exceptionDesc);
+  }
+
+  /**
+   * Test cancelling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
+   * Specifically tests cancelling fragment which has {@link MergingRecordBatch} blocked waiting for data.
+   */
+  @Test
+  public void testInterruptingBlockedMergingRecordBatch() {
+    final String control = createPauseInjection(MergingRecordBatch.class, "waiting-for-data", 1);
+    testInterruptingBlockedFragmentsWaitingForData(control);
+  }
+
+  /**
+   * Test cancelling query interrupts currently blocked FragmentExecutor threads waiting for some event to happen.
+   * Specifically tests cancelling fragment which has {@link UnorderedReceiverBatch} blocked waiting for data.
+   */
+  @Test
+  public void testInterruptingBlockedUnorderedReceiverBatch() {
+    final String control = createPauseInjection(UnorderedReceiverBatch.class, "waiting-for-data", 1);
+    testInterruptingBlockedFragmentsWaitingForData(control);
+  }
+
+  private static void testInterruptingBlockedFragmentsWaitingForData(final String control) {
+    try {
+      setSessionOption(SLICE_TARGET, "1");
+      setSessionOption(HASHAGG.getOptionName(), "false");
+
+      final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
+      assertCancelled(control, query, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+    } finally {
+      setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+    }
+  }
+
+  /**
+   * Tests interrupting the fragment thread that is running {@link PartitionSenderRootExec}.
+   * {@link PartitionSenderRootExec} spawns threads for partitioner. Interrupting fragment thread should also interrupt
+   * the partitioner threads.
+   */
+  @Test
+  public void testInterruptingPartitionerThreadFragment() {
+    try {
+      setSessionOption(SLICE_TARGET, "1");
+      setSessionOption(HASHAGG.getOptionName(), "true");
+      setSessionOption(PARTITION_SENDER_SET_THREADS.getOptionName(), "6");
+
+      final String controls = "{\"injections\" : ["
+          + "{"
+          + "\"type\" : \"latch\","
+          + "\"siteClass\" : \"" + PartitionerDecorator.class.getName() + "\","
+          + "\"desc\" : \"partitioner-sender-latch\""
+          + "},"
+          + "{"
+          + "\"type\" : \"pause\","
+          + "\"siteClass\" : \"" + PartitionerDecorator.class.getName() + "\","
+          + "\"desc\" : \"wait-for-fragment-interrupt\","
+          + "\"nSkip\" : 1"
+          + "}" +
+          "]}";
+
+      final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
+      assertCancelled(controls, query, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+    } finally {
+      setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+      setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
+      setSessionOption(PARTITION_SENDER_SET_THREADS.getOptionName(),
+          Long.toString(PARTITION_SENDER_SET_THREADS.getDefault().num_val));
+    }
   }
 }

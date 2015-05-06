@@ -30,7 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Queues;
 
 public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
 
   private static enum BufferState {
     INIT,
@@ -149,7 +149,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
-  public RawFragmentBatch getNext() {
+  public RawFragmentBatch getNext() throws IOException, InterruptedException {
 
     if (outOfMemory.get() && buffer.size() < 10) {
       logger.trace("Setting autoread true");
@@ -166,8 +166,8 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       try {
         b = buffer.take();
       } catch (final InterruptedException e) {
-        return null;
-        // TODO InterruptedException
+        logger.debug("Interrupted while waiting for incoming data.", e);
+        throw e;
       }
     }
 

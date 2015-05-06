@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -28,6 +29,8 @@ import org.apache.drill.exec.record.RecordBatch;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.testing.CountDownLatchInjection;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
 /**
  * Decorator class to hide multiple Partitioner existence from the caller
@@ -38,19 +41,22 @@ import com.google.common.collect.Lists;
  * totalWaitTime = totalAllPartitionersProcessingTime - max(sum(processingTime) by partitioner)
  */
 public class PartitionerDecorator {
-
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerDecorator.class);
+  private static final ExecutionControlsInjector injector =
+      ExecutionControlsInjector.getInjector(PartitionerDecorator.class);
 
   private List<Partitioner> partitioners;
   private final OperatorStats stats;
   private final String tName;
   private final String childThreadPrefix;
   private final ExecutorService executor;
+  private final FragmentContext context;
 
 
   public PartitionerDecorator(List<Partitioner> partitioners, OperatorStats stats, FragmentContext context) {
     this.partitioners = partitioners;
     this.stats = stats;
+    this.context = context;
     this.executor = context.getDrillbitContext().getExecutor();
     this.tName = Thread.currentThread().getName();
     this.childThreadPrefix = "Partitioner-" + tName + "-";
@@ -145,17 +151,42 @@ public class PartitionerDecorator {
     stats.startWait();
     final CountDownLatch latch = new CountDownLatch(partitioners.size());
     final List<CustomRunnable> runnables = Lists.newArrayList();
+    final List<Future> taskFutures = Lists.newArrayList();
+    CountDownLatchInjection testCountDownLatch = null;
     try {
-      int i = 0;
-      for (final Partitioner part : partitioners ) {
-        runnables.add(new CustomRunnable(childThreadPrefix, latch, iface, part));
-        executor.submit(runnables.get(i++));
+      // To simulate interruption of main fragment thread and interrupting the partition threads, create a
+      // CountDownInject patch. Partitioner threads await on the latch and main fragment thread counts down or
+      // interrupts waiting threads. This makes sures that we are actually interrupting the blocked partitioner threads.
+      testCountDownLatch = injector.getLatch(context.getExecutionControls(), "partitioner-sender-latch");
+      testCountDownLatch.initialize(1);
+      for (final Partitioner part : partitioners) {
+        final CustomRunnable runnable = new CustomRunnable(childThreadPrefix, latch, iface, part, testCountDownLatch);
+        runnables.add(runnable);
+        taskFutures.add(executor.submit(runnable));
       }
-      try {
-        latch.await();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+
+      while (true) {
+        try {
+          // Wait for main fragment interruption.
+          injector.injectInterruptiblePause(context.getExecutionControls(), "wait-for-fragment-interrupt", logger);
+
+          // If there is no pause inserted at site "wait-for-fragment-interrupt", release the latch.
+          injector.getLatch(context.getExecutionControls(), "partitioner-sender-latch").countDown();
+
+          latch.await();
+          break;
+        } catch (final InterruptedException e) {
+          // If the fragment state says we shouldn't continue, cancel or interrupt partitioner threads
+          if (!context.shouldContinue()) {
+            for(Future f : taskFutures) {
+              f.cancel(true);
+            }
+
+            break;
+          }
+        }
       }
+
       IOException excep = null;
       for (final CustomRunnable runnable : runnables ) {
         IOException myException = runnable.getException();
@@ -180,8 +211,12 @@ public class PartitionerDecorator {
       // scale down main stats wait time based on calculated processing time
       // since we did not wait for whole duration of above execution
       stats.adjustWaitNanos(-maxProcessTime);
-    }
 
+      // Done with the latch, close it.
+      if (testCountDownLatch != null) {
+        testCountDownLatch.close();
+      }
+    }
   }
 
   /**
@@ -190,7 +225,7 @@ public class PartitionerDecorator {
    * protected is for testing purposes
    */
   protected interface GeneralExecuteIface {
-    public void execute(Partitioner partitioner) throws IOException;
+    void execute(Partitioner partitioner) throws IOException;
   }
 
   /**
@@ -242,17 +277,28 @@ public class PartitionerDecorator {
     private final CountDownLatch latch;
     private final GeneralExecuteIface iface;
     private final Partitioner part;
+    private CountDownLatchInjection testCountDownLatch;
+
     private volatile IOException exp;
 
-    public CustomRunnable(String parentThreadName, CountDownLatch latch, GeneralExecuteIface iface, Partitioner part) {
+    public CustomRunnable(final String parentThreadName, final CountDownLatch latch, final GeneralExecuteIface iface,
+        final Partitioner part, CountDownLatchInjection testCountDownLatch) {
       this.parentThreadName = parentThreadName;
       this.latch = latch;
       this.iface = iface;
       this.part = part;
+      this.testCountDownLatch = testCountDownLatch;
     }
 
     @Override
     public void run() {
+      // Test only - Pause until interrupted by fragment thread
+      try {
+        testCountDownLatch.await();
+      } catch (final InterruptedException e) {
+        logger.debug("Test only: partitioner thread is interrupted in test countdown latch await()", e);
+      }
+
       final Thread currThread = Thread.currentThread();
       final String currThreadName = currThread.getName();
       final OperatorStats localStats = part.getStats();

@@ -23,7 +23,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 
 public interface RawFragmentBatchProvider {
 
-  public RawFragmentBatch getNext() throws IOException;
+  public RawFragmentBatch getNext() throws IOException, InterruptedException;
   public void kill(FragmentContext context);
   public void cleanup();
 }

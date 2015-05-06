@@ -20,10 +20,15 @@ package org.apache.drill.exec.store;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 
 import com.google.common.base.Stopwatch;
@@ -35,6 +40,8 @@ import com.google.common.collect.Lists;
  * @param <V> The time value that will be returned when the task is executed.
  */
 public abstract class TimedRunnable<V> implements Runnable {
+
+  private static int TIMEOUT_PER_RUNNABLE_IN_MSECS = 15000;
 
   private volatile Exception e;
   private volatile long timeNanos;
@@ -91,10 +98,13 @@ public abstract class TimedRunnable<V> implements Runnable {
   }
 
   /**
-   * Execute the list of runnables with the given parallelization.  At end, return values and report completion time stats to provided logger.
+   * Execute the list of runnables with the given parallelization.  At end, return values and report completion time
+   * stats to provided logger. Each runnable is allowed a certain timeout. If the timeout exceeds, existing/pending
+   * tasks will be cancelled and a {@link UserException} is thrown.
    * @param activity Name of activity for reporting in logger.
    * @param logger The logger to use to report results.
-   * @param runnables List of runnables that should be executed and timed.  If this list has one item, task will be completed in-thread.
+   * @param runnables List of runnables that should be executed and timed.  If this list has one item, task will be
+   *                  completed in-thread. Runnable must handle {@link InterruptedException}s.
    * @param parallelism  The number of threads that should be run to complete this task.
    * @return The list of outcome objects.
    * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
@@ -107,24 +117,42 @@ public abstract class TimedRunnable<V> implements Runnable {
       runnables.get(0).run();
     }else{
       parallelism = Math.min(parallelism,  runnables.size());
-      final CountDownLatch latch = new CountDownLatch(runnables.size());
+      final ExtendedLatch latch = new ExtendedLatch(runnables.size());
       final ExecutorService threadPool = Executors.newFixedThreadPool(parallelism);
       try{
         for(TimedRunnable<V> runnable : runnables){
           threadPool.submit(new LatchedRunnable(latch, runnable));
         }
-      }finally{
-        threadPool.shutdown();
-      }
 
-      try{
-        latch.await();
-      }catch(InterruptedException e){
-        // TODO interrupted exception.
-        throw new RuntimeException(e);
+        final long timeout = (long)Math.ceil((TIMEOUT_PER_RUNNABLE_IN_MSECS * runnables.size())/parallelism);
+        if (!latch.awaitUninterruptibly(timeout)) {
+          // Issue a shutdown request. This will cause existing threads to interrupt and pending threads to cancel.
+          // It is highly important that the task Runnables are handling interrupts correctly.
+          threadPool.shutdownNow();
+
+          try {
+            // Wait for 5s for currently running threads to terminate. Above call (threadPool.shutdownNow()) interrupts
+            // any running threads. If the runnables are handling the interrupts properly they should be able to
+            // wrap up and terminate. If not waiting for 5s here gives a chance to identify and log any potential
+            // thread leaks.
+            threadPool.awaitTermination(5, TimeUnit.SECONDS);
+          } catch (final InterruptedException e) {
+            logger.warn("Interrupted while waiting for pending threads in activity '{}' to terminate.", activity);
+          }
+
+          final String errMsg = String.format("Waited for %dms, but tasks for '%s' are not complete. " +
+              "Total runnable size %d, parallelism %d.", timeout, activity, runnables.size(), parallelism);
+          logger.error(errMsg);
+          throw UserException.resourceError()
+              .message(errMsg)
+              .build();
+        }
+      } finally {
+        if (!threadPool.isShutdown()) {
+          threadPool.shutdown();
+        }
       }
     }
-
 
     List<V> values = Lists.newArrayList();
     long sum = 0;

@@ -61,6 +61,10 @@ public final class NoOpControlsInjector extends ExecutionControlsInjector {
     @Override
     public void countDown() {
     }
+
+    @Override
+    public void close() {
+    }
   };
 
   @Override

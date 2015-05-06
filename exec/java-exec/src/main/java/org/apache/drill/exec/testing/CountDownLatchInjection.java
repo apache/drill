@@ -48,4 +48,9 @@ public interface CountDownLatchInjection {
    * Decrements the count of the latch, releasing all waiting threads if the count reaches zero.
    */
   void countDown();
+
+  /**
+   * Close the latch.
+   */
+  void close();
 }
