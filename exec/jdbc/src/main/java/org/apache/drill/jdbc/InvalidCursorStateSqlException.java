@@ -17,7 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import java.sql.ResultSet;
 
 /**
  * SQLException for invalid-cursor-state conditions, e.g., calling a column

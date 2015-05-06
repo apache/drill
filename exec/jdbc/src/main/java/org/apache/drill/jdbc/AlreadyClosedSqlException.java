@@ -17,8 +17,6 @@
  */
 package org.apache.drill.jdbc;
 
-import java.sql.ResultSet;
-
 
 /**
  * SQLException for object-already-closed conditions, e.g., calling a method

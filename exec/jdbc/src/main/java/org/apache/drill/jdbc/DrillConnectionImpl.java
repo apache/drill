@@ -40,6 +40,7 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.TestUtilities;
+import org.apache.drill.jdbc.impl.DrillStatementImpl;
 
 // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
 /**
@@ -53,7 +54,8 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
                                           implements DrillConnection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
-  final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
+  // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
+  public final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
 
   private final DrillClient client;
@@ -167,9 +169,9 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   }
 
   @Override
-  public void commit() throws SQLException  {
+  public void commit() throws SQLException {
     checkNotClosed();
-    if ( getAutoCommit()  ) {
+    if ( getAutoCommit() ) {
       throw new JdbcApiSqlException( "Can't call commit() in auto-commit mode." );
     }
     else {
@@ -258,11 +260,11 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   }
 
   @Override
-  public DrillStatement createStatement(int resultSetType, int resultSetConcurrency,
+  public DrillStatementImpl createStatement(int resultSetType, int resultSetConcurrency,
                                         int resultSetHoldability) throws SQLException {
     checkNotClosed();
-    DrillStatement statement =
-        (DrillStatement) super.createStatement(resultSetType, resultSetConcurrency,
+    DrillStatementImpl statement =
+        (DrillStatementImpl) super.createStatement(resultSetType, resultSetConcurrency,
                                                resultSetHoldability);
     return statement;
   }

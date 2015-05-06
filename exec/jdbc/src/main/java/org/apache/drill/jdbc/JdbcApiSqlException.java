@@ -37,10 +37,6 @@ import java.sql.SQLNonTransientException;
  *   {@link SQLTransientException}), or internal Drill errors.)
  * </p>
  * <p>
- *  TODO:  Consider having a DrillSqlException (in part for reviewing,
- *  coordinating, and revising the many uses of SQLException in the code).
- * </p>
- * <p>
  *  TODO:  Consider using ANSI-/XOPEN-standard SQL State values.  (See:
  * </p>
  * <ul>

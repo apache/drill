@@ -30,6 +30,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.drill.jdbc.impl.DrillResultSetImpl;
+import org.apache.drill.jdbc.impl.DrillStatementImpl;
 
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaDatabaseMetaData;
@@ -98,7 +99,7 @@ public class DrillJdbc41Factory extends DrillFactory {
 
   }
 
-  private static class DrillJdbc41Statement extends DrillStatement {
+  private static class DrillJdbc41Statement extends DrillStatementImpl {
     public DrillJdbc41Statement(DrillConnectionImpl connection, int resultSetType, int resultSetConcurrency,
         int resultSetHoldability) {
       super(connection, resultSetType, resultSetConcurrency, resultSetHoldability);

@@ -37,7 +37,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  *   coordinated elsewhere).)
  * </p>
  */
-class DrillStatementRegistry {
+// (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
+public class DrillStatementRegistry {
 
   private static final Logger logger = getLogger( DrillStatementRegistry.class );
 
