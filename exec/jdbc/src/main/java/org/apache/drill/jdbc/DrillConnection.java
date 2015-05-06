@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Savepoint;
+import java.util.concurrent.Executor;
 
 import org.apache.drill.exec.client.DrillClient;
 
@@ -95,6 +96,16 @@ public interface DrillConnection extends Connection {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>: Does not throw SQLException.
+   * </p>
+   */
+  @Override
+  boolean isClosed();
+
+
+  /**
+   * {@inheritDoc}
+   * <p>
    *   <strong>Drill</strong>:
    *   Accepts only {@link Connection.TRANSACTION_NONE}.
    * </p>
@@ -151,6 +162,35 @@ public interface DrillConnection extends Connection {
 
   // In java.sql.Connection from JDK 1.7, but declared here to allow other JDKs.
   String getSchema() throws SQLException;
+
+
+  /**
+   * Not supported (for non-zero timeout value).
+   * <p>
+   *   Normally, just throws {@link SQLFeatureNotSupportedException} unless
+   *   request is trivially for no timeout (zero {@code milliseconds} value).
+   * </p>
+   * @throws  AlreadyClosedSqlException
+   *            if connection is closed
+   * @throws  JdbcApiSqlException
+   *            if an invalid parameter value is detected (and not above case)
+   * @throws  SQLFeatureNotSupportedException
+   *            if timeout is non-zero (and not above case)
+   */
+  @Override
+  void setNetworkTimeout( Executor executor, int milliseconds )
+      throws AlreadyClosedSqlException,
+             JdbcApiSqlException,
+             SQLFeatureNotSupportedException;
+
+  /**
+   * Returns zero.
+   * {@inheritDoc}
+   * @throws  AlreadyClosedSqlException
+   *            if connection is closed
+   */
+  @Override
+  int getNetworkTimeout() throws AlreadyClosedSqlException;
 
 
   //////////////////////////////////////////////////////////////////////

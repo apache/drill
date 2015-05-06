@@ -24,6 +24,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Savepoint;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaFactory;
@@ -32,6 +33,7 @@ import net.hydromatic.avatica.Meta;
 import net.hydromatic.avatica.UnregisteredDriver;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -123,12 +125,10 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
   }
 
   /**
-   * Throws AlreadyClosedSqlException if this Connection is closed.
+   * Throws AlreadyClosedSqlException <i>iff</i> this Connection is closed.
    *
-   * @throws AlreadyClosedSqlException if Connection is closed
-   * @throws SQLException if error in calling {@link #isClosed()}
-   */
-  private void checkNotClosed() throws SQLException {
+   * @throws  AlreadyClosedSqlException  if Connection is closed   */
+  private void checkNotClosed() throws AlreadyClosedSqlException {
     if ( isClosed() ) {
       throw new AlreadyClosedSqlException( "Connection is already closed." );
     }
@@ -194,6 +194,23 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
     }
   }
 
+
+  @Override
+  public boolean isClosed() {
+    try {
+      return super.isClosed();
+    }
+    catch ( SQLException e ) {
+      // Currently can't happen, since AvaticaConnection.isClosed() never throws
+      // SQLException.
+      throw new DrillRuntimeException(
+          "Unexpected exception from " + getClass().getSuperclass()
+          + ".isClosed(): " + e,
+          e );
+    }
+  }
+
+
   @Override
   public Savepoint setSavepoint() throws SQLException {
     checkNotClosed();
@@ -258,6 +275,38 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
         //break;
     }
   }
+
+  @Override
+  public void setNetworkTimeout( Executor executor, int milliseconds )
+      throws AlreadyClosedSqlException,
+             JdbcApiSqlException,
+             SQLFeatureNotSupportedException {
+    checkNotClosed();
+    if ( null == executor ) {
+      throw new InvalidParameterSqlException(
+          "Invalid (null) \"executor\" parameter to setNetworkTimeout(...)" );
+    }
+    else if ( milliseconds < 0 ) {
+      throw new InvalidParameterSqlException(
+          "Invalid (negative) \"milliseconds\" parameter to setNetworkTimeout(...)"
+          + " (" + milliseconds + ")" );
+    }
+    else {
+      if ( 0 != milliseconds ) {
+        throw new SQLFeatureNotSupportedException(
+            "Setting network timeout is not supported." );
+      }
+    }
+  }
+
+
+  @Override
+  public int getNetworkTimeout() throws AlreadyClosedSqlException
+  {
+    checkNotClosed();
+    return 0;  // (No no timeout.)
+  }
+
 
   @Override
   public DrillStatementImpl createStatement(int resultSetType, int resultSetConcurrency,

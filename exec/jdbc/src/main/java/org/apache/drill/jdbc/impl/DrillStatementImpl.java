@@ -19,11 +19,14 @@ package org.apache.drill.jdbc.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillConnectionImpl;
 import org.apache.drill.jdbc.DrillRemoteStatement;
 import org.apache.drill.jdbc.DrillStatement;
+import org.apache.drill.jdbc.InvalidParameterSqlException;
 
 import net.hydromatic.avatica.AvaticaStatement;
 
@@ -37,12 +40,11 @@ public abstract class DrillStatementImpl extends AvaticaStatement
   }
 
   /**
-   * Throws AlreadyClosedSqlException if this Statement is closed.
+   * Throws AlreadyClosedSqlException <i>iff</i> this Statement is closed.
    *
-   * @throws AlreadyClosedSqlException if Statement is closed
-   * @throws SQLException if error in calling {@link #isClosed()}
+   * @throws  AlreadyClosedSqlException  if Statement is closed
    */
-  private void checkNotClosed() throws SQLException {
+  private void checkNotClosed() throws AlreadyClosedSqlException {
     if ( isClosed() ) {
       throw new AlreadyClosedSqlException( "Statement is already closed." );
     }
@@ -118,6 +120,47 @@ public abstract class DrillStatementImpl extends AvaticaStatement
   public void cleanup() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
     connection1.openStatementsRegistry.removeStatement(this);
+  }
+
+  @Override
+  public int getQueryTimeout() throws AlreadyClosedSqlException
+  {
+    checkNotClosed();
+    return 0;  // (No no timeout.)
+  }
+
+  @Override
+  public void setQueryTimeout( int milliseconds )
+      throws AlreadyClosedSqlException,
+             InvalidParameterSqlException,
+             SQLFeatureNotSupportedException {
+    checkNotClosed();
+    if ( milliseconds < 0 ) {
+      throw new InvalidParameterSqlException(
+          "Invalid (negative) \"milliseconds\" parameter to setQueryTimeout(...)"
+          + " (" + milliseconds + ")" );
+    }
+    else {
+      if ( 0 != milliseconds ) {
+        throw new SQLFeatureNotSupportedException(
+            "Setting network timeout is not supported." );
+      }
+    }
+  }
+
+  @Override
+  public boolean isClosed() {
+    try {
+      return super.isClosed();
+    }
+    catch ( SQLException e ) {
+      // Currently can't happen, since AvaticaStatement.isClosed() never throws
+      // SQLException.
+      throw new DrillRuntimeException(
+          "Unexpected exception from " + getClass().getSuperclass()
+          + ".isClosed(): " + e,
+          e );
+    }
   }
 
 }
