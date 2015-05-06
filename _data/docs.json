@@ -783,9 +783,9 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring Resources for a Shared Drillbit", 
-            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-            "relative_path": "_docs/manage-drill/020-configuration-options.md", 
+            "previous_title": "Configuring User Impersonation", 
+            "previous_url": "/docs/configuring-user-impersonation/", 
+            "relative_path": "_docs/manage-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
         }, 
@@ -860,12 +860,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Impersonation", 
-            "next_url": "/docs/configuring-user-impersonation/", 
+            "next_title": "Configuring a Multitenant Cluster", 
+            "next_url": "/docs/configuring-a-multitenant-cluster/", 
             "parent": "Manage Drill", 
             "previous_title": "Manage Drill Introduction", 
             "previous_url": "/docs/manage-drill-introduction/", 
-            "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
+            "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
             "title": "Configuring Drill in a Dedicated Cluster", 
             "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
         }, 
@@ -886,7 +886,7 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring a Multitenant Cluster Introduction", 
             "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
             "title": "Configuring Multitenant Resources", 
             "url": "/docs/configuring-multitenant-resources/"
         }, 
@@ -902,12 +902,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
+            "next_title": "Configuring User Impersonation", 
+            "next_url": "/docs/configuring-user-impersonation/", 
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring Multitenant Resources", 
             "previous_url": "/docs/configuring-multitenant-resources/", 
-            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
@@ -919,12 +919,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring a Multitenant Cluster", 
-            "next_url": "/docs/configuring-a-multitenant-cluster/", 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring Drill in a Dedicated Cluster", 
-            "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-            "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
+            "previous_title": "Configuring Resources for a Shared Drillbit", 
+            "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+            "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
             "title": "Configuring User Impersonation", 
             "url": "/docs/configuring-user-impersonation/"
         }, 
@@ -953,7 +953,7 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring a Multitenant Cluster", 
                     "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                    "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
+                    "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
                     "title": "Configuring a Multitenant Cluster Introduction", 
                     "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                 }, 
@@ -974,7 +974,7 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring a Multitenant Cluster Introduction", 
                     "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                    "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                    "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
                     "title": "Configuring Multitenant Resources", 
                     "url": "/docs/configuring-multitenant-resources/"
                 }, 
@@ -990,12 +990,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Impersonation", 
+                    "next_url": "/docs/configuring-user-impersonation/", 
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring Multitenant Resources", 
                     "previous_url": "/docs/configuring-multitenant-resources/", 
-                    "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                    "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
                     "title": "Configuring Resources for a Shared Drillbit", 
                     "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                 }
@@ -1003,9 +1003,9 @@
             "next_title": "Configuring a Multitenant Cluster Introduction", 
             "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
             "parent": "Manage Drill", 
-            "previous_title": "Configuring User Impersonation", 
-            "previous_url": "/docs/configuring-user-impersonation/", 
-            "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
+            "previous_title": "Configuring Drill in a Dedicated Cluster", 
+            "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+            "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
             "title": "Configuring a Multitenant Cluster", 
             "url": "/docs/configuring-a-multitenant-cluster/"
         }, 
@@ -1026,7 +1026,7 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring a Multitenant Cluster", 
             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
+            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
             "title": "Configuring a Multitenant Cluster Introduction", 
             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
@@ -3666,31 +3666,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation", 
-                    "next_url": "/docs/configuring-user-impersonation/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuring a Multitenant Cluster", 
                     "next_url": "/docs/configuring-a-multitenant-cluster/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
+                    "previous_title": "Manage Drill Introduction", 
+                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
+                    "title": "Configuring Drill in a Dedicated Cluster", 
+                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3717,7 +3700,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
+                            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
                             "title": "Configuring a Multitenant Cluster Introduction", 
                             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
@@ -3738,7 +3721,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster Introduction", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
                             "title": "Configuring Multitenant Resources", 
                             "url": "/docs/configuring-multitenant-resources/"
                         }, 
@@ -3754,12 +3737,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuration Options", 
-                            "next_url": "/docs/configuration-options/", 
+                            "next_title": "Configuring User Impersonation", 
+                            "next_url": "/docs/configuring-user-impersonation/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
-                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
                             "title": "Configuring Resources for a Shared Drillbit", 
                             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
@@ -3767,11 +3750,28 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3869,9 +3869,9 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/manage-drill/020-configuration-options.md", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/manage-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
                 }, 
@@ -3888,7 +3888,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Persistent Configuration Storage", 
                     "previous_url": "/docs/persistent-configuration-storage/", 
-                    "relative_path": "_docs/manage-drill/030-start-stop.md", 
+                    "relative_path": "_docs/manage-drill/090-start-stop.md", 
                     "title": "Starting/Stopping Drill", 
                     "url": "/docs/starting-stopping-drill/"
                 }, 
@@ -3905,7 +3905,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Starting/Stopping Drill", 
                     "previous_url": "/docs/starting-stopping-drill/", 
-                    "relative_path": "_docs/manage-drill/040-ports-used-by-drill.md", 
+                    "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
                     "title": "Ports Used by Drill", 
                     "url": "/docs/ports-used-by-drill/"
                 }, 
@@ -3922,7 +3922,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/manage-drill/050-partition-pruning.md", 
+                    "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
                     "title": "Partition Pruning", 
                     "url": "/docs/partition-pruning/"
                 }, 
@@ -3939,7 +3939,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Partition Pruning", 
                     "previous_url": "/docs/partition-pruning/", 
-                    "relative_path": "_docs/manage-drill/060-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+                    "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
                     "title": "Monitoring and Canceling Queries in the Drill Web UI", 
                     "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
                 }
@@ -4038,7 +4038,7 @@
             "parent": "Manage Drill", 
             "previous_title": "Partition Pruning", 
             "previous_url": "/docs/partition-pruning/", 
-            "relative_path": "_docs/manage-drill/060-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+            "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
             "title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
         }, 
@@ -4644,7 +4644,7 @@
             "parent": "Manage Drill", 
             "previous_title": "Ports Used by Drill", 
             "previous_url": "/docs/ports-used-by-drill/", 
-            "relative_path": "_docs/manage-drill/050-partition-pruning.md", 
+            "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
             "title": "Partition Pruning", 
             "url": "/docs/partition-pruning/"
         }, 
@@ -4745,7 +4745,7 @@
             "parent": "Manage Drill", 
             "previous_title": "Starting/Stopping Drill", 
             "previous_url": "/docs/starting-stopping-drill/", 
-            "relative_path": "_docs/manage-drill/040-ports-used-by-drill.md", 
+            "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
             "title": "Ports Used by Drill", 
             "url": "/docs/ports-used-by-drill/"
         }, 
@@ -7531,7 +7531,7 @@
             "parent": "Manage Drill", 
             "previous_title": "Persistent Configuration Storage", 
             "previous_url": "/docs/persistent-configuration-storage/", 
-            "relative_path": "_docs/manage-drill/030-start-stop.md", 
+            "relative_path": "_docs/manage-drill/090-start-stop.md", 
             "title": "Starting/Stopping Drill", 
             "url": "/docs/starting-stopping-drill/"
         }, 
@@ -11310,31 +11310,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation", 
-                    "next_url": "/docs/configuring-user-impersonation/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/011-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Configuring a Multitenant Cluster", 
                     "next_url": "/docs/configuring-a-multitenant-cluster/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/012-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
+                    "previous_title": "Manage Drill Introduction", 
+                    "previous_url": "/docs/manage-drill-introduction/", 
+                    "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
+                    "title": "Configuring Drill in a Dedicated Cluster", 
+                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11361,7 +11344,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/014-configuring-a-multitenant-cluster-introduction.md", 
+                            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
                             "title": "Configuring a Multitenant Cluster Introduction", 
                             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                         }, 
@@ -11382,7 +11365,7 @@
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring a Multitenant Cluster Introduction", 
                             "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                            "relative_path": "_docs/manage-drill/015-configuring-multitenant-resources.md", 
+                            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
                             "title": "Configuring Multitenant Resources", 
                             "url": "/docs/configuring-multitenant-resources/"
                         }, 
@@ -11398,12 +11381,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuration Options", 
-                            "next_url": "/docs/configuration-options/", 
+                            "next_title": "Configuring User Impersonation", 
+                            "next_url": "/docs/configuring-user-impersonation/", 
                             "parent": "Configuring a Multitenant Cluster", 
                             "previous_title": "Configuring Multitenant Resources", 
                             "previous_url": "/docs/configuring-multitenant-resources/", 
-                            "relative_path": "_docs/manage-drill/017-configuring-a-shared-drillbit.md", 
+                            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
                             "title": "Configuring Resources for a Shared Drillbit", 
                             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                         }
@@ -11411,11 +11394,28 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/manage-drill/013-configuring-a-multitenant-cluster.md", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Manage Drill", 
+                            "url": "/docs/manage-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Manage Drill", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11513,9 +11513,9 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Manage Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/manage-drill/020-configuration-options.md", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/manage-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
                 }, 
@@ -11532,7 +11532,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Persistent Configuration Storage", 
                     "previous_url": "/docs/persistent-configuration-storage/", 
-                    "relative_path": "_docs/manage-drill/030-start-stop.md", 
+                    "relative_path": "_docs/manage-drill/090-start-stop.md", 
                     "title": "Starting/Stopping Drill", 
                     "url": "/docs/starting-stopping-drill/"
                 }, 
@@ -11549,7 +11549,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Starting/Stopping Drill", 
                     "previous_url": "/docs/starting-stopping-drill/", 
-                    "relative_path": "_docs/manage-drill/040-ports-used-by-drill.md", 
+                    "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
                     "title": "Ports Used by Drill", 
                     "url": "/docs/ports-used-by-drill/"
                 }, 
@@ -11566,7 +11566,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/manage-drill/050-partition-pruning.md", 
+                    "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
                     "title": "Partition Pruning", 
                     "url": "/docs/partition-pruning/"
                 }, 
@@ -11583,7 +11583,7 @@
                     "parent": "Manage Drill", 
                     "previous_title": "Partition Pruning", 
                     "previous_url": "/docs/partition-pruning/", 
-                    "relative_path": "_docs/manage-drill/060-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+                    "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
                     "title": "Monitoring and Canceling Queries in the Drill Web UI", 
                     "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
                 }
