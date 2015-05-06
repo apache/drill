@@ -19,8 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import io.netty.buffer.DrillBuf;
 
-import java.util.List;
-
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
@@ -55,6 +53,7 @@ public interface OutputMutator {
    * Whether or not the fields added to the OutputMutator generated a new schema event.
    * @return
    */
+  // TODO(DRILL-2970)
   public boolean isNewSchema();
 
   /**

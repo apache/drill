@@ -122,6 +122,10 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
     if (state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
       BatchSchema schema = incoming.getSchema();
+      if (schema == null) {
+        return state;
+      }
+
       if (schema.getFieldCount() == 0) {
         throw new IllegalStateException ("Incoming batch has an empty schema. This is not allowed.");
       }

@@ -207,7 +207,12 @@ public class ScanBatch implements CloseableRecordBatch {
       }
 
       populatePartitionVectors();
-      if (mutator.isNewSchema()) {
+
+      // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.
+      final boolean isNewSchema = mutator.isNewSchema();
+      oContext.getStats().batchReceived(0, getRecordCount(), isNewSchema);
+
+      if (isNewSchema) {
         container.buildSchema(SelectionVectorMode.NONE);
         schema = container.getSchema();
         return IterOutcome.OK_NEW_SCHEMA;
