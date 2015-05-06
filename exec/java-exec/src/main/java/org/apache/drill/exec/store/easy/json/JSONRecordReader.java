@@ -21,10 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
@@ -38,10 +36,7 @@ import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -114,9 +109,13 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(final OutputMutator output) throws ExecutionSetupException {
+  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+    this.operatorContext = context;
     try{
-      setupData();
+      if (hadoopPath != null) {
+        this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
+      }
+
       this.writer = new VectorContainerWriter(output);
       if (isSkipQuery()) {
         this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer());
@@ -126,18 +125,6 @@ public class JSONRecordReader extends AbstractRecordReader {
       setupParser();
     }catch(final Exception e){
       handleAndRaise("Failure reading JSON file", e);
-    }
-  }
-
-  private void setupData() throws IOException{
-    if(hadoopPath != null){
-      final CompressionCodecFactory factory = new CompressionCodecFactory(new Configuration());
-      final CompressionCodec codec = factory.getCodec(hadoopPath); // infers from file ext.
-      if (codec != null) {
-        this.stream = codec.createInputStream(fileSystem.open(hadoopPath));
-      } else {
-        this.stream = fileSystem.open(hadoopPath);
-      }
     }
   }
 
@@ -169,15 +156,6 @@ public class JSONRecordReader extends AbstractRecordReader {
             .pushContext("File ", hadoopPath.toUri().getPath());
 
     throw exceptionBuilder.build();
-  }
-
-
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(final OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
   }
 
   @Override

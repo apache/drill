@@ -17,16 +17,20 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import com.google.common.base.Stopwatch;
-
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.GenericContainer;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.FsInput;
 import org.apache.avro.util.Utf8;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -46,15 +50,10 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Stopwatch;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -96,8 +95,8 @@ public class AvroRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(final OutputMutator output) throws ExecutionSetupException {
-
+  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+    operatorContext = context;
     writer = new VectorContainerWriter(output);
 
     try {
@@ -105,15 +104,6 @@ public class AvroRecordReader extends AbstractRecordReader {
     } catch (IOException e) {
       throw new ExecutionSetupException(e);
     }
-  }
-
-  @Override
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
-
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
   }
 
   @Override

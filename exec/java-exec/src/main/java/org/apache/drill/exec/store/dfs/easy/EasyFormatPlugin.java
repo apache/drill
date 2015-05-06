@@ -49,7 +49,6 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -66,7 +65,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final StoragePluginConfig storageConfig;
   protected final FormatPluginConfig formatConfig;
   private final String name;
-  protected final CompressionCodecFactory codecFactory;
   private final boolean compressible;
 
   protected EasyFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
@@ -82,7 +80,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     this.storageConfig = storageConfig;
     this.formatConfig = formatConfig;
     this.name = name == null ? defaultName : name;
-    this.codecFactory = new CompressionCodecFactory(new Configuration(fsConf));
   }
 
   @Override
@@ -148,8 +145,10 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
         newColumns.add(AbstractRecordReader.STAR_COLUMN);
       }
       // Create a new sub scan object with the new set of columns;
-      scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(), newColumns,
-          scan.getSelectionRoot());
+      EasySubScan newScan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
+          newColumns, scan.getSelectionRoot());
+      newScan.setOperatorId(scan.getOperatorId());
+      scan = newScan;
     }
 
     int numParts = 0;

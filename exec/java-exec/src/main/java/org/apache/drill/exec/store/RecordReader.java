@@ -39,17 +39,9 @@ public interface RecordReader {
    *          mutating the set of schema values for that particular record.
    * @throws ExecutionSetupException
    */
-  public abstract void setup(OutputMutator output) throws ExecutionSetupException;
+  public abstract void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException;
 
   public abstract void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException;
-
-  /**
-   * Set the operator context. The Reader can use this to access the operator context and allocate direct memory
-   * if needed
-   * @param operatorContext
-   */
-  public abstract void setOperatorContext(OperatorContext operatorContext);
-
 
   /**
    * Increment record reader forward, writing into the provided output batch.

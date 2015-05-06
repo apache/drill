@@ -37,7 +37,8 @@
         },
         "txt" : {
           type : "text",
-          extensions: [ "txt" ]
+          extensions: [ "txt" ],
+          delimiter: "\u0000"
         },
         "avro" : {
           type: "avro"

@@ -108,6 +108,7 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ExecConstants.DRILLBIT_CONTROLS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
+      ExecConstants.ENABLE_NEW_TEXT_READER
   };
 
   private final PStoreConfig<OptionValue> config;

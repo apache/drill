@@ -28,8 +28,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -161,7 +163,7 @@ public class LocalSyncableFileSystem extends FileSystem {
     }
   }
 
-  public class LocalInputStream extends InputStream implements Seekable, PositionedReadable {
+  public class LocalInputStream extends InputStream implements Seekable, PositionedReadable, ByteBufferReadable {
 
     private BufferedInputStream input;
 
@@ -198,6 +200,36 @@ public class LocalSyncableFileSystem extends FileSystem {
     @Override
     public boolean seekToNewSource(long l) throws IOException {
       throw new IOException("seekToNewSource not supported");
+    }
+
+
+
+    @Override
+    public int read(ByteBuffer buf) throws IOException {
+      buf.reset();
+
+      if(buf.hasArray()){
+        int read = read(buf.array(), buf.arrayOffset(), buf.capacity());
+        buf.limit(read);
+        return read;
+      }else{
+        byte[] b = new byte[buf.capacity()];
+        int read = read(b);
+        buf.put(b);
+        return read;
+      }
+
+    }
+
+
+    @Override
+    public int read(byte[] b) throws IOException {
+      return input.read(b);
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      return input.read(b, off, len);
     }
 
     @Override

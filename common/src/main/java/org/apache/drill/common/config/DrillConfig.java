@@ -49,6 +49,9 @@ public final class DrillConfig extends NestedConfig{
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
+
+  public static final boolean ON_OSX = System.getProperty("os.name").contains("OS X");
+
   @SuppressWarnings("restriction")  private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
 
   @SuppressWarnings("unchecked")

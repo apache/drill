@@ -22,7 +22,7 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class CompleteFileWork implements FileWork, CompleteWork{
+public class CompleteFileWork implements FileWork, CompleteWork {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompleteFileWork.class);
 
   private long start;
@@ -40,7 +40,22 @@ public class CompleteFileWork implements FileWork, CompleteWork{
 
   @Override
   public int compareTo(CompleteWork o) {
+    if(o instanceof CompleteFileWork){
+      CompleteFileWork c = (CompleteFileWork) o;
+      int cmp = path.compareTo(c.getPath());
+      if(cmp != 0){
+        return cmp;
+      }
+
+      cmp = Long.compare(start,  c.getStart());
+      if(cmp != 0){
+        return cmp;
+      }
+
+    }
+
     return Long.compare(getTotalBytes(), o.getTotalBytes());
+
   }
 
   @Override

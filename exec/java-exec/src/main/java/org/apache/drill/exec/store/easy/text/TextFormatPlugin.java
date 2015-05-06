@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -33,13 +34,15 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader;
+import org.apache.drill.exec.store.easy.text.compliant.TextParsingSettings;
 import org.apache.drill.exec.store.text.DrillTextRecordReader;
 import org.apache.drill.exec.store.text.DrillTextRecordWriter;
 import org.apache.hadoop.conf.Configuration;
@@ -47,8 +50,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
@@ -71,9 +77,15 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       List<SchemaPath> columns) throws ExecutionSetupException {
     Path path = dfs.makeQualified(new Path(fileWork.getPath()));
     FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
-    Preconditions.checkArgument(((TextFormatConfig)formatConfig).getDelimiter().length() == 1, "Only single character delimiter supported");
-    return new DrillTextRecordReader(split, getFsConf(), context,
-        ((TextFormatConfig) formatConfig).getDelimiter().charAt(0), columns);
+
+    if (context.getOptions().getOption(ExecConstants.ENABLE_NEW_TEXT_READER_KEY).bool_val == true) {
+      TextParsingSettings settings = new TextParsingSettings();
+      settings.set((TextFormatConfig)formatConfig);
+      return new CompliantTextRecordReader(split, dfs, context, settings, columns);
+    } else {
+      char delim = ((TextFormatConfig)formatConfig).getFieldDelimiter();
+      return new DrillTextRecordReader(split, dfs.getConf(), context, delim, columns);
+    }
   }
 
   @Override
@@ -92,7 +104,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
 
-    options.put("separator", ((TextFormatConfig)getConfig()).getDelimiter());
+    options.put("separator", ((TextFormatConfig)getConfig()).getFieldDelimiterAsString());
     options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
 
     options.put("extension", ((TextFormatConfig)getConfig()).getExtensions().get(0));
@@ -103,41 +115,116 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     return recordWriter;
   }
 
-  @JsonTypeName("text")
+  @JsonTypeName("text") @JsonInclude(Include.NON_DEFAULT)
   public static class TextFormatConfig implements FormatPluginConfig {
 
     public List<String> extensions;
-    public String delimiter = "\n";
+    public String lineDelimiter = "\n";
+    public char fieldDelimiter = '\n';
+    public char quote = '"';
+    public char escape = '"';
+    public char comment = '#';
+    public boolean skipFirstLine = false;
+
 
     public List<String> getExtensions() {
       return extensions;
     }
 
-    public String getDelimiter() {
-      return delimiter;
+    public char getQuote() {
+      return quote;
+    }
+
+    public char getEscape() {
+      return escape;
+    }
+
+    public char getComment() {
+      return comment;
+    }
+
+    public String getLineDelimiter() {
+      return lineDelimiter;
+    }
+
+    public char getFieldDelimiter() {
+      return fieldDelimiter;
+    }
+
+    @JsonIgnore
+    public String getFieldDelimiterAsString(){
+      return new String(new char[]{fieldDelimiter});
+    }
+
+    @Deprecated
+    @JsonProperty("delimiter")
+    public void setFieldDelimiter(char delimiter){
+      this.fieldDelimiter = delimiter;
+    }
+
+    public boolean isSkipFirstLine() {
+      return skipFirstLine;
     }
 
     @Override
     public int hashCode() {
-      return 33;
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + comment;
+      result = prime * result + escape;
+      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      result = prime * result + fieldDelimiter;
+      result = prime * result + ((lineDelimiter == null) ? 0 : lineDelimiter.hashCode());
+      result = prime * result + quote;
+      result = prime * result + (skipFirstLine ? 1231 : 1237);
+      return result;
     }
 
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
         return true;
-      } else if (obj == null) {
-        return false;
-      } else if (!(obj instanceof TextFormatConfig)) {
+      }
+      if (obj == null) {
         return false;
       }
-
-      TextFormatConfig that = (TextFormatConfig) obj;
-      if (this.delimiter.equals(that.delimiter)) {
-        return true;
+      if (getClass() != obj.getClass()) {
+        return false;
       }
-      return false;
+      TextFormatConfig other = (TextFormatConfig) obj;
+      if (comment != other.comment) {
+        return false;
+      }
+      if (escape != other.escape) {
+        return false;
+      }
+      if (extensions == null) {
+        if (other.extensions != null) {
+          return false;
+        }
+      } else if (!extensions.equals(other.extensions)) {
+        return false;
+      }
+      if (fieldDelimiter != other.fieldDelimiter) {
+        return false;
+      }
+      if (lineDelimiter == null) {
+        if (other.lineDelimiter != null) {
+          return false;
+        }
+      } else if (!lineDelimiter.equals(other.lineDelimiter)) {
+        return false;
+      }
+      if (quote != other.quote) {
+        return false;
+      }
+      if (skipFirstLine != other.skipFirstLine) {
+        return false;
+      }
+      return true;
     }
+
+
 
   }
 

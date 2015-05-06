@@ -126,16 +126,9 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     return transformed;
   }
 
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
-
   @Override
-  public void setup(OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    this.operatorContext = context;
     this.outputMutator = output;
     familyVectorMap = new HashMap<String, MapVector>();
 

@@ -249,16 +249,9 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
-
   @Override
-  public void setup(OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    this.operatorContext = context;
     try {
       for (int i = 0; i < selectedColumnNames.size(); i++) {
         MajorType type = getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), true);

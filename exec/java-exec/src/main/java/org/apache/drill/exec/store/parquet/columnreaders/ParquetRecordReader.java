@@ -204,10 +204,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    this.operatorContext = context;
     if (!isStarQuery()) {
       columnsFound = new boolean[getColumns().size()];
-      nullFilledVectors = new ArrayList();
+      nullFilledVectors = new ArrayList<>();
     }
     columnStatuses = new ArrayList<>();
 //    totalRecords = footer.getBlocks().get(rowGroupIndex).getRowCount();

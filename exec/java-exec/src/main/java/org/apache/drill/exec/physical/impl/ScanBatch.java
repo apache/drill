@@ -92,12 +92,11 @@ public class ScanBatch implements CloseableRecordBatch {
     }
     this.currentReader = readers.next();
     this.oContext = oContext;
-    this.currentReader.setOperatorContext(this.oContext);
 
     boolean setup = false;
     try {
       oContext.getStats().startProcessing();
-      this.currentReader.setup(mutator);
+      this.currentReader.setup(oContext, mutator);
       setup = true;
     } finally {
       // if we had an exception during setup, make sure to release existing data.
@@ -188,8 +187,7 @@ public class ScanBatch implements CloseableRecordBatch {
           currentReader.cleanup();
           currentReader = readers.next();
           partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
-          currentReader.setup(mutator);
-          currentReader.setOperatorContext(oContext);
+          currentReader.setup(oContext, mutator);
           try {
             currentReader.allocate(fieldVectorMap);
           } catch (OutOfMemoryException e) {
