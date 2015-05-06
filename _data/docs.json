@@ -690,8 +690,8 @@
         "Configuration Options": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [
@@ -702,8 +702,8 @@
                             "url": "/docs/configuration-options/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -712,7 +712,7 @@
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options", 
                     "previous_url": "/docs/configuration-options/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/010-configuration-options-introduction.md", 
+                    "relative_path": "_docs/configure-drill/configuration-options/010-configuration-options-introduction.md", 
                     "title": "Configuration Options Introduction", 
                     "url": "/docs/configuration-options-introduction/"
                 }, 
@@ -723,8 +723,8 @@
                             "url": "/docs/configuration-options/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -733,7 +733,7 @@
                     "parent": "Configuration Options", 
                     "previous_title": "Configuration Options Introduction", 
                     "previous_url": "/docs/configuration-options-introduction/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
+                    "relative_path": "_docs/configure-drill/configuration-options/020-start-up-options.md", 
                     "title": "Start-Up Options", 
                     "url": "/docs/start-up-options/"
                 }, 
@@ -744,8 +744,8 @@
                             "url": "/docs/configuration-options/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -754,7 +754,7 @@
                     "parent": "Configuration Options", 
                     "previous_title": "Start-Up Options", 
                     "previous_url": "/docs/start-up-options/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/030-planning-and-exececution-options.md", 
+                    "relative_path": "_docs/configure-drill/configuration-options/030-planning-and-exececution-options.md", 
                     "title": "Planning and Execution Options", 
                     "url": "/docs/planning-and-execution-options/"
                 }, 
@@ -765,27 +765,27 @@
                             "url": "/docs/configuration-options/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Starting/Stopping Drill", 
-                    "next_url": "/docs/starting-stopping-drill/", 
+                    "next_title": "Ports Used by Drill", 
+                    "next_url": "/docs/ports-used-by-drill/", 
                     "parent": "Configuration Options", 
                     "previous_title": "Planning and Execution Options", 
                     "previous_url": "/docs/planning-and-execution-options/", 
-                    "relative_path": "_docs/manage-drill/configuration-options/040-persistent-configuration-storage.md", 
+                    "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
                     "title": "Persistent Configuration Storage", 
                     "url": "/docs/persistent-configuration-storage/"
                 }
             ], 
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
-            "parent": "Manage Drill", 
+            "parent": "Configure Drill", 
             "previous_title": "Configuring User Impersonation", 
             "previous_url": "/docs/configuring-user-impersonation/", 
-            "relative_path": "_docs/manage-drill/080-configuration-options.md", 
+            "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
         }, 
@@ -796,8 +796,8 @@
                     "url": "/docs/configuration-options/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -806,9 +806,307 @@
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options", 
             "previous_url": "/docs/configuration-options/", 
-            "relative_path": "_docs/manage-drill/configuration-options/010-configuration-options-introduction.md", 
+            "relative_path": "_docs/configure-drill/configuration-options/010-configuration-options-introduction.md", 
             "title": "Configuration Options Introduction", 
             "url": "/docs/configuration-options-introduction/"
+        }, 
+        "Configure Drill": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Drill in a Dedicated Cluster", 
+                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configure Drill", 
+                    "previous_url": "/docs/configure-drill/", 
+                    "relative_path": "_docs/configure-drill/010-configure-drill-introduction.md", 
+                    "title": "Configure Drill Introduction", 
+                    "url": "/docs/configure-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configure Drill Introduction", 
+                    "previous_url": "/docs/configure-drill-introduction/", 
+                    "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
+                    "title": "Configuring Drill in a Dedicated Cluster", 
+                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Multitenant Resources", 
+                            "next_url": "/docs/configuring-multitenant-resources/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "relative_path": "_docs/configure-drill/030-configuring-a-multitenant-cluster-introduction.md", 
+                            "title": "Configuring a Multitenant Cluster Introduction", 
+                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                            "relative_path": "_docs/configure-drill/050-configuring-multitenant-resources.md", 
+                            "title": "Configuring Multitenant Resources", 
+                            "url": "/docs/configuring-multitenant-resources/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring User Impersonation", 
+                            "next_url": "/docs/configuring-user-impersonation/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring Multitenant Resources", 
+                            "previous_url": "/docs/configuring-multitenant-resources/", 
+                            "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+                        }
+                    ], 
+                    "next_title": "Configuring a Multitenant Cluster Introduction", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuration Options", 
+                            "previous_url": "/docs/configuration-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/010-configuration-options-introduction.md", 
+                            "title": "Configuration Options Introduction", 
+                            "url": "/docs/configuration-options-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuration Options Introduction", 
+                            "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/020-start-up-options.md", 
+                            "title": "Start-Up Options", 
+                            "url": "/docs/start-up-options/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Persistent Configuration Storage", 
+                            "next_url": "/docs/persistent-configuration-storage/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Start-Up Options", 
+                            "previous_url": "/docs/start-up-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/030-planning-and-exececution-options.md", 
+                            "title": "Planning and Execution Options", 
+                            "url": "/docs/planning-and-execution-options/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ports Used by Drill", 
+                            "next_url": "/docs/ports-used-by-drill/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Planning and Execution Options", 
+                            "previous_url": "/docs/planning-and-execution-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
+                            "title": "Persistent Configuration Storage", 
+                            "url": "/docs/persistent-configuration-storage/"
+                        }
+                    ], 
+                    "next_title": "Configuration Options Introduction", 
+                    "next_url": "/docs/configuration-options-introduction/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/080-configuration-options.md", 
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Persistent Configuration Storage", 
+                    "previous_url": "/docs/persistent-configuration-storage/", 
+                    "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
+                    "title": "Ports Used by Drill", 
+                    "url": "/docs/ports-used-by-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Ports Used by Drill", 
+                    "previous_url": "/docs/ports-used-by-drill/", 
+                    "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }
+            ], 
+            "next_title": "Configure Drill Introduction", 
+            "next_url": "/docs/configure-drill-introduction/", 
+            "parent": "", 
+            "previous_title": "Starting Drill in Distributed Mode", 
+            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "relative_path": "_docs/045-configure-drill.md", 
+            "title": "Configure Drill", 
+            "url": "/docs/configure-drill/"
+        }, 
+        "Configure Drill Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring Drill in a Dedicated Cluster", 
+            "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configure Drill", 
+            "previous_url": "/docs/configure-drill/", 
+            "relative_path": "_docs/configure-drill/010-configure-drill-introduction.md", 
+            "title": "Configure Drill Introduction", 
+            "url": "/docs/configure-drill-introduction/"
         }, 
         "Configuring Connections on Linux and Mac OS X": {
             "breadcrumbs": [
@@ -855,17 +1153,17 @@
         "Configuring Drill in a Dedicated Cluster": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
             "next_title": "Configuring a Multitenant Cluster", 
             "next_url": "/docs/configuring-a-multitenant-cluster/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Manage Drill Introduction", 
-            "previous_url": "/docs/manage-drill-introduction/", 
-            "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configure Drill Introduction", 
+            "previous_url": "/docs/configure-drill-introduction/", 
+            "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
             "title": "Configuring Drill in a Dedicated Cluster", 
             "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
         }, 
@@ -876,8 +1174,8 @@
                     "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -886,7 +1184,7 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring a Multitenant Cluster Introduction", 
             "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
+            "relative_path": "_docs/configure-drill/050-configuring-multitenant-resources.md", 
             "title": "Configuring Multitenant Resources", 
             "url": "/docs/configuring-multitenant-resources/"
         }, 
@@ -897,8 +1195,8 @@
                     "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -907,32 +1205,32 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring Multitenant Resources", 
             "previous_url": "/docs/configuring-multitenant-resources/", 
-            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
+            "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
         "Configuring User Impersonation": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
-            "parent": "Manage Drill", 
+            "parent": "Configure Drill", 
             "previous_title": "Configuring Resources for a Shared Drillbit", 
             "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-            "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
+            "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
             "title": "Configuring User Impersonation", 
             "url": "/docs/configuring-user-impersonation/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [
@@ -943,8 +1241,8 @@
                             "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -953,7 +1251,7 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring a Multitenant Cluster", 
                     "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                    "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
+                    "relative_path": "_docs/configure-drill/030-configuring-a-multitenant-cluster-introduction.md", 
                     "title": "Configuring a Multitenant Cluster Introduction", 
                     "url": "/docs/configuring-a-multitenant-cluster-introduction/"
                 }, 
@@ -964,8 +1262,8 @@
                             "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -974,7 +1272,7 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring a Multitenant Cluster Introduction", 
                     "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                    "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
+                    "relative_path": "_docs/configure-drill/050-configuring-multitenant-resources.md", 
                     "title": "Configuring Multitenant Resources", 
                     "url": "/docs/configuring-multitenant-resources/"
                 }, 
@@ -985,8 +1283,8 @@
                             "url": "/docs/configuring-a-multitenant-cluster/"
                         }, 
                         {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
                         }
                     ], 
                     "children": [], 
@@ -995,17 +1293,17 @@
                     "parent": "Configuring a Multitenant Cluster", 
                     "previous_title": "Configuring Multitenant Resources", 
                     "previous_url": "/docs/configuring-multitenant-resources/", 
-                    "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
+                    "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
                     "title": "Configuring Resources for a Shared Drillbit", 
                     "url": "/docs/configuring-resources-for-a-shared-drillbit/"
                 }
             ], 
             "next_title": "Configuring a Multitenant Cluster Introduction", 
             "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-            "parent": "Manage Drill", 
+            "parent": "Configure Drill", 
             "previous_title": "Configuring Drill in a Dedicated Cluster", 
             "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-            "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
+            "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
             "title": "Configuring a Multitenant Cluster", 
             "url": "/docs/configuring-a-multitenant-cluster/"
         }, 
@@ -1016,8 +1314,8 @@
                     "url": "/docs/configuring-a-multitenant-cluster/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -1026,7 +1324,7 @@
             "parent": "Configuring a Multitenant Cluster", 
             "previous_title": "Configuring a Multitenant Cluster", 
             "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
+            "relative_path": "_docs/configure-drill/030-configuring-a-multitenant-cluster-introduction.md", 
             "title": "Configuring a Multitenant Cluster Introduction", 
             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
@@ -1249,8 +1547,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Starting Drill in Distributed Mode", 
-            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -1378,8 +1676,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Manage Drill", 
-            "next_url": "/docs/manage-drill/", 
+            "next_title": "Developer Information", 
+            "next_url": "/docs/developer-information/", 
             "parent": "Develop Custom Functions", 
             "previous_title": "Using Custom Functions in Queries", 
             "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -1903,8 +2201,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Manage Drill", 
-                    "next_url": "/docs/manage-drill/", 
+                    "next_title": "Developer Information", 
+                    "next_url": "/docs/developer-information/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Using Custom Functions in Queries", 
                     "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -2266,8 +2564,8 @@
             "next_title": "Develop Drill", 
             "next_url": "/docs/develop-drill/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Custom Function Interfaces", 
+            "previous_url": "/docs/custom-function-interfaces/", 
             "relative_path": "_docs/120-developer-information.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
@@ -2941,8 +3239,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connect a Data Source", 
-                            "next_url": "/docs/connect-a-data-source/", 
+                            "next_title": "Configure Drill", 
+                            "next_url": "/docs/configure-drill/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -3049,8 +3347,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Connect a Data Source", 
-                    "next_url": "/docs/connect-a-data-source/", 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
                     "parent": "Installing Drill in Distributed Mode", 
                     "previous_title": "Installing Drill on the Cluster", 
                     "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -3638,338 +3936,6 @@
             "title": "Lexical Structure", 
             "url": "/docs/lexical-structure/"
         }, 
-        "Manage Drill": {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Drill in a Dedicated Cluster", 
-                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill", 
-                    "previous_url": "/docs/manage-drill/", 
-                    "relative_path": "_docs/manage-drill/010-manage-drill-introduction.md", 
-                    "title": "Manage Drill Introduction", 
-                    "url": "/docs/manage-drill-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Multitenant Resources", 
-                            "next_url": "/docs/configuring-multitenant-resources/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring a Multitenant Cluster", 
-                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
-                            "title": "Configuring a Multitenant Cluster Introduction", 
-                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Resources for a Shared Drillbit", 
-                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
-                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
-                            "title": "Configuring Multitenant Resources", 
-                            "url": "/docs/configuring-multitenant-resources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring User Impersonation", 
-                            "next_url": "/docs/configuring-user-impersonation/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring Multitenant Resources", 
-                            "previous_url": "/docs/configuring-multitenant-resources/", 
-                            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
-                            "title": "Configuring Resources for a Shared Drillbit", 
-                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
-                        }
-                    ], 
-                    "next_title": "Configuring a Multitenant Cluster Introduction", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
-                    "title": "Configuring a Multitenant Cluster", 
-                    "url": "/docs/configuring-a-multitenant-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options", 
-                            "previous_url": "/docs/configuration-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/010-configuration-options-introduction.md", 
-                            "title": "Configuration Options Introduction", 
-                            "url": "/docs/configuration-options-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options Introduction", 
-                            "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
-                            "title": "Start-Up Options", 
-                            "url": "/docs/start-up-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Persistent Configuration Storage", 
-                            "next_url": "/docs/persistent-configuration-storage/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Start-Up Options", 
-                            "previous_url": "/docs/start-up-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/030-planning-and-exececution-options.md", 
-                            "title": "Planning and Execution Options", 
-                            "url": "/docs/planning-and-execution-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Starting/Stopping Drill", 
-                            "next_url": "/docs/starting-stopping-drill/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Planning and Execution Options", 
-                            "previous_url": "/docs/planning-and-execution-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/040-persistent-configuration-storage.md", 
-                            "title": "Persistent Configuration Storage", 
-                            "url": "/docs/persistent-configuration-storage/"
-                        }
-                    ], 
-                    "next_title": "Configuration Options Introduction", 
-                    "next_url": "/docs/configuration-options-introduction/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/manage-drill/080-configuration-options.md", 
-                    "title": "Configuration Options", 
-                    "url": "/docs/configuration-options/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Ports Used by Drill", 
-                    "next_url": "/docs/ports-used-by-drill/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Persistent Configuration Storage", 
-                    "previous_url": "/docs/persistent-configuration-storage/", 
-                    "relative_path": "_docs/manage-drill/090-start-stop.md", 
-                    "title": "Starting/Stopping Drill", 
-                    "url": "/docs/starting-stopping-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Starting/Stopping Drill", 
-                    "previous_url": "/docs/starting-stopping-drill/", 
-                    "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
-                    "title": "Ports Used by Drill", 
-                    "url": "/docs/ports-used-by-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Ports Used by Drill", 
-                    "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Developer Information", 
-                    "next_url": "/docs/developer-information/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Partition Pruning", 
-                    "previous_url": "/docs/partition-pruning/", 
-                    "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
-                }
-            ], 
-            "next_title": "Manage Drill Introduction", 
-            "next_url": "/docs/manage-drill-introduction/", 
-            "parent": "", 
-            "previous_title": "Custom Function Interfaces", 
-            "previous_url": "/docs/custom-function-interfaces/", 
-            "relative_path": "_docs/110-manage-drill.md", 
-            "title": "Manage Drill", 
-            "url": "/docs/manage-drill/"
-        }, 
-        "Manage Drill Introduction": {
-            "breadcrumbs": [
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring Drill in a Dedicated Cluster", 
-            "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Manage Drill", 
-            "previous_url": "/docs/manage-drill/", 
-            "relative_path": "_docs/manage-drill/010-manage-drill-introduction.md", 
-            "title": "Manage Drill Introduction", 
-            "url": "/docs/manage-drill-introduction/"
-        }, 
         "MapR-DB Format": {
             "breadcrumbs": [
                 {
@@ -4028,17 +3994,17 @@
         "Monitoring and Canceling Queries in the Drill Web UI": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
                 }
             ], 
             "children": [], 
-            "next_title": "Developer Information", 
-            "next_url": "/docs/developer-information/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
-            "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+            "next_title": "SQL Reference", 
+            "next_url": "/docs/sql-reference/", 
+            "parent": "Query Data", 
+            "previous_title": "Querying System Tables", 
+            "previous_url": "/docs/querying-system-tables/", 
+            "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
             "title": "Monitoring and Canceling Queries in the Drill Web UI", 
             "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
         }, 
@@ -4634,17 +4600,17 @@
         "Partition Pruning": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
-            "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
-            "parent": "Manage Drill", 
+            "next_title": "Connect a Data Source", 
+            "next_url": "/docs/connect-a-data-source/", 
+            "parent": "Configure Drill", 
             "previous_title": "Ports Used by Drill", 
             "previous_url": "/docs/ports-used-by-drill/", 
-            "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
+            "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
             "title": "Partition Pruning", 
             "url": "/docs/partition-pruning/"
         }, 
@@ -4676,17 +4642,17 @@
                     "url": "/docs/configuration-options/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
-            "next_title": "Starting/Stopping Drill", 
-            "next_url": "/docs/starting-stopping-drill/", 
+            "next_title": "Ports Used by Drill", 
+            "next_url": "/docs/ports-used-by-drill/", 
             "parent": "Configuration Options", 
             "previous_title": "Planning and Execution Options", 
             "previous_url": "/docs/planning-and-execution-options/", 
-            "relative_path": "_docs/manage-drill/configuration-options/040-persistent-configuration-storage.md", 
+            "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
             "title": "Persistent Configuration Storage", 
             "url": "/docs/persistent-configuration-storage/"
         }, 
@@ -4697,8 +4663,8 @@
                     "url": "/docs/configuration-options/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -4707,7 +4673,7 @@
             "parent": "Configuration Options", 
             "previous_title": "Start-Up Options", 
             "previous_url": "/docs/start-up-options/", 
-            "relative_path": "_docs/manage-drill/configuration-options/030-planning-and-exececution-options.md", 
+            "relative_path": "_docs/configure-drill/configuration-options/030-planning-and-exececution-options.md", 
             "title": "Planning and Execution Options", 
             "url": "/docs/planning-and-execution-options/"
         }, 
@@ -4735,17 +4701,17 @@
         "Ports Used by Drill": {
             "breadcrumbs": [
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
             "next_title": "Partition Pruning", 
             "next_url": "/docs/partition-pruning/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Starting/Stopping Drill", 
-            "previous_url": "/docs/starting-stopping-drill/", 
-            "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
+            "parent": "Configure Drill", 
+            "previous_title": "Persistent Configuration Storage", 
+            "previous_url": "/docs/persistent-configuration-storage/", 
+            "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
             "title": "Ports Used by Drill", 
             "url": "/docs/ports-used-by-drill/"
         }, 
@@ -5137,14 +5103,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Reference", 
-                    "next_url": "/docs/sql-reference/", 
+                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Reference", 
+                    "next_url": "/docs/sql-reference/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Querying System Tables", 
+                    "previous_url": "/docs/querying-system-tables/", 
+                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
+                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
                 }
             ], 
             "next_title": "Query Data Introduction", 
@@ -5502,8 +5485,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Reference", 
-            "next_url": "/docs/sql-reference/", 
+            "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
             "parent": "Query Data", 
             "previous_title": "Querying the INFORMATION SCHEMA", 
             "previous_url": "/docs/querying-the-information-schema/", 
@@ -7263,8 +7246,8 @@
             "next_title": "SQL Reference Introduction", 
             "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
-            "previous_title": "Querying System Tables", 
-            "previous_url": "/docs/querying-system-tables/", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
             "relative_path": "_docs/080-sql-reference.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
@@ -7441,8 +7424,8 @@
                     "url": "/docs/configuration-options/"
                 }, 
                 {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
                 }
             ], 
             "children": [], 
@@ -7451,7 +7434,7 @@
             "parent": "Configuration Options", 
             "previous_title": "Configuration Options Introduction", 
             "previous_url": "/docs/configuration-options-introduction/", 
-            "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
+            "relative_path": "_docs/configure-drill/configuration-options/020-start-up-options.md", 
             "title": "Start-Up Options", 
             "url": "/docs/start-up-options/"
         }, 
@@ -7467,8 +7450,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Connect a Data Source", 
-            "next_url": "/docs/connect-a-data-source/", 
+            "next_title": "Configure Drill", 
+            "next_url": "/docs/configure-drill/", 
             "parent": "Installing Drill in Distributed Mode", 
             "previous_title": "Installing Drill on the Cluster", 
             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -7517,23 +7500,6 @@
             "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
             "title": "Starting Drill on Windows", 
             "url": "/docs/starting-drill-on-windows/"
-        }, 
-        "Starting/Stopping Drill": {
-            "breadcrumbs": [
-                {
-                    "title": "Manage Drill", 
-                    "url": "/docs/manage-drill/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Ports Used by Drill", 
-            "next_url": "/docs/ports-used-by-drill/", 
-            "parent": "Manage Drill", 
-            "previous_title": "Persistent Configuration Storage", 
-            "previous_url": "/docs/persistent-configuration-storage/", 
-            "relative_path": "_docs/manage-drill/090-start-stop.md", 
-            "title": "Starting/Stopping Drill", 
-            "url": "/docs/starting-stopping-drill/"
         }, 
         "Storage Plugin Configuration": {
             "breadcrumbs": [
@@ -9267,8 +9233,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Connect a Data Source", 
-                            "next_url": "/docs/connect-a-data-source/", 
+                            "next_title": "Configure Drill", 
+                            "next_url": "/docs/configure-drill/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -9295,6 +9261,287 @@
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Drill in a Dedicated Cluster", 
+                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configure Drill", 
+                    "previous_url": "/docs/configure-drill/", 
+                    "relative_path": "_docs/configure-drill/010-configure-drill-introduction.md", 
+                    "title": "Configure Drill Introduction", 
+                    "url": "/docs/configure-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring a Multitenant Cluster", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configure Drill Introduction", 
+                    "previous_url": "/docs/configure-drill-introduction/", 
+                    "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
+                    "title": "Configuring Drill in a Dedicated Cluster", 
+                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Multitenant Resources", 
+                            "next_url": "/docs/configuring-multitenant-resources/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
+                            "relative_path": "_docs/configure-drill/030-configuring-a-multitenant-cluster-introduction.md", 
+                            "title": "Configuring a Multitenant Cluster Introduction", 
+                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Resources for a Shared Drillbit", 
+                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
+                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                            "relative_path": "_docs/configure-drill/050-configuring-multitenant-resources.md", 
+                            "title": "Configuring Multitenant Resources", 
+                            "url": "/docs/configuring-multitenant-resources/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring a Multitenant Cluster", 
+                                    "url": "/docs/configuring-a-multitenant-cluster/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring User Impersonation", 
+                            "next_url": "/docs/configuring-user-impersonation/", 
+                            "parent": "Configuring a Multitenant Cluster", 
+                            "previous_title": "Configuring Multitenant Resources", 
+                            "previous_url": "/docs/configuring-multitenant-resources/", 
+                            "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
+                            "title": "Configuring Resources for a Shared Drillbit", 
+                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+                        }
+                    ], 
+                    "next_title": "Configuring a Multitenant Cluster Introduction", 
+                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
+                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
+                    "title": "Configuring a Multitenant Cluster", 
+                    "url": "/docs/configuring-a-multitenant-cluster/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring Resources for a Shared Drillbit", 
+                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
+                    "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
+                    "title": "Configuring User Impersonation", 
+                    "url": "/docs/configuring-user-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Start-Up Options", 
+                            "next_url": "/docs/start-up-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuration Options", 
+                            "previous_url": "/docs/configuration-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/010-configuration-options-introduction.md", 
+                            "title": "Configuration Options Introduction", 
+                            "url": "/docs/configuration-options-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Planning and Execution Options", 
+                            "next_url": "/docs/planning-and-execution-options/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Configuration Options Introduction", 
+                            "previous_url": "/docs/configuration-options-introduction/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/020-start-up-options.md", 
+                            "title": "Start-Up Options", 
+                            "url": "/docs/start-up-options/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Persistent Configuration Storage", 
+                            "next_url": "/docs/persistent-configuration-storage/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Start-Up Options", 
+                            "previous_url": "/docs/start-up-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/030-planning-and-exececution-options.md", 
+                            "title": "Planning and Execution Options", 
+                            "url": "/docs/planning-and-execution-options/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuration Options", 
+                                    "url": "/docs/configuration-options/"
+                                }, 
+                                {
+                                    "title": "Configure Drill", 
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ports Used by Drill", 
+                            "next_url": "/docs/ports-used-by-drill/", 
+                            "parent": "Configuration Options", 
+                            "previous_title": "Planning and Execution Options", 
+                            "previous_url": "/docs/planning-and-execution-options/", 
+                            "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
+                            "title": "Persistent Configuration Storage", 
+                            "url": "/docs/persistent-configuration-storage/"
+                        }
+                    ], 
+                    "next_title": "Configuration Options Introduction", 
+                    "next_url": "/docs/configuration-options-introduction/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/080-configuration-options.md", 
+                    "title": "Configuration Options", 
+                    "url": "/docs/configuration-options/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Persistent Configuration Storage", 
+                    "previous_url": "/docs/persistent-configuration-storage/", 
+                    "relative_path": "_docs/configure-drill/100-ports-used-by-drill.md", 
+                    "title": "Ports Used by Drill", 
+                    "url": "/docs/ports-used-by-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connect a Data Source", 
+                    "next_url": "/docs/connect-a-data-source/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Ports Used by Drill", 
+                    "previous_url": "/docs/ports-used-by-drill/", 
+                    "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }
+            ], 
+            "next_title": "Configure Drill Introduction", 
+            "next_url": "/docs/configure-drill-introduction/", 
+            "parent": "", 
+            "previous_title": "Starting Drill in Distributed Mode", 
+            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "relative_path": "_docs/045-configure-drill.md", 
+            "title": "Configure Drill", 
+            "url": "/docs/configure-drill/"
         }, 
         {
             "breadcrumbs": [], 
@@ -9515,8 +9762,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Starting Drill in Distributed Mode", 
-            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -10257,14 +10504,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Reference", 
-                    "next_url": "/docs/sql-reference/", 
+                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md", 
                     "title": "Querying System Tables", 
                     "url": "/docs/querying-system-tables/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Reference", 
+                    "next_url": "/docs/sql-reference/", 
+                    "parent": "Query Data", 
+                    "previous_title": "Querying System Tables", 
+                    "previous_url": "/docs/querying-system-tables/", 
+                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
+                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
+                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
                 }
             ], 
             "next_title": "Query Data Introduction", 
@@ -11063,8 +11327,8 @@
             "next_title": "SQL Reference Introduction", 
             "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
-            "previous_title": "Querying System Tables", 
-            "previous_url": "/docs/querying-system-tables/", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
             "relative_path": "_docs/080-sql-reference.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
@@ -11263,8 +11527,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Manage Drill", 
-                    "next_url": "/docs/manage-drill/", 
+                    "next_title": "Developer Information", 
+                    "next_url": "/docs/developer-information/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Using Custom Functions in Queries", 
                     "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -11281,321 +11545,6 @@
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
-        }, 
-        {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Drill in a Dedicated Cluster", 
-                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill", 
-                    "previous_url": "/docs/manage-drill/", 
-                    "relative_path": "_docs/manage-drill/010-manage-drill-introduction.md", 
-                    "title": "Manage Drill Introduction", 
-                    "url": "/docs/manage-drill-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring a Multitenant Cluster", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Manage Drill Introduction", 
-                    "previous_url": "/docs/manage-drill-introduction/", 
-                    "relative_path": "_docs/manage-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Multitenant Resources", 
-                            "next_url": "/docs/configuring-multitenant-resources/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring a Multitenant Cluster", 
-                            "previous_url": "/docs/configuring-a-multitenant-cluster/", 
-                            "relative_path": "_docs/manage-drill/030-configuring-a-multitenant-cluster-introduction.md", 
-                            "title": "Configuring a Multitenant Cluster Introduction", 
-                            "url": "/docs/configuring-a-multitenant-cluster-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Resources for a Shared Drillbit", 
-                            "next_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring a Multitenant Cluster Introduction", 
-                            "previous_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                            "relative_path": "_docs/manage-drill/050-configuring-multitenant-resources.md", 
-                            "title": "Configuring Multitenant Resources", 
-                            "url": "/docs/configuring-multitenant-resources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring a Multitenant Cluster", 
-                                    "url": "/docs/configuring-a-multitenant-cluster/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring User Impersonation", 
-                            "next_url": "/docs/configuring-user-impersonation/", 
-                            "parent": "Configuring a Multitenant Cluster", 
-                            "previous_title": "Configuring Multitenant Resources", 
-                            "previous_url": "/docs/configuring-multitenant-resources/", 
-                            "relative_path": "_docs/manage-drill/060-configuring-a-shared-drillbit.md", 
-                            "title": "Configuring Resources for a Shared Drillbit", 
-                            "url": "/docs/configuring-resources-for-a-shared-drillbit/"
-                        }
-                    ], 
-                    "next_title": "Configuring a Multitenant Cluster Introduction", 
-                    "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
-                    "relative_path": "_docs/manage-drill/040-configuring-a-multitenant-cluster.md", 
-                    "title": "Configuring a Multitenant Cluster", 
-                    "url": "/docs/configuring-a-multitenant-cluster/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring Resources for a Shared Drillbit", 
-                    "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
-                    "relative_path": "_docs/manage-drill/070-configuring-user-impersonation.md", 
-                    "title": "Configuring User Impersonation", 
-                    "url": "/docs/configuring-user-impersonation/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Start-Up Options", 
-                            "next_url": "/docs/start-up-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options", 
-                            "previous_url": "/docs/configuration-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/010-configuration-options-introduction.md", 
-                            "title": "Configuration Options Introduction", 
-                            "url": "/docs/configuration-options-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Planning and Execution Options", 
-                            "next_url": "/docs/planning-and-execution-options/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Configuration Options Introduction", 
-                            "previous_url": "/docs/configuration-options-introduction/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/020-start-up-options.md", 
-                            "title": "Start-Up Options", 
-                            "url": "/docs/start-up-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Persistent Configuration Storage", 
-                            "next_url": "/docs/persistent-configuration-storage/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Start-Up Options", 
-                            "previous_url": "/docs/start-up-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/030-planning-and-exececution-options.md", 
-                            "title": "Planning and Execution Options", 
-                            "url": "/docs/planning-and-execution-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuration Options", 
-                                    "url": "/docs/configuration-options/"
-                                }, 
-                                {
-                                    "title": "Manage Drill", 
-                                    "url": "/docs/manage-drill/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Starting/Stopping Drill", 
-                            "next_url": "/docs/starting-stopping-drill/", 
-                            "parent": "Configuration Options", 
-                            "previous_title": "Planning and Execution Options", 
-                            "previous_url": "/docs/planning-and-execution-options/", 
-                            "relative_path": "_docs/manage-drill/configuration-options/040-persistent-configuration-storage.md", 
-                            "title": "Persistent Configuration Storage", 
-                            "url": "/docs/persistent-configuration-storage/"
-                        }
-                    ], 
-                    "next_title": "Configuration Options Introduction", 
-                    "next_url": "/docs/configuration-options-introduction/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
-                    "relative_path": "_docs/manage-drill/080-configuration-options.md", 
-                    "title": "Configuration Options", 
-                    "url": "/docs/configuration-options/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Ports Used by Drill", 
-                    "next_url": "/docs/ports-used-by-drill/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Persistent Configuration Storage", 
-                    "previous_url": "/docs/persistent-configuration-storage/", 
-                    "relative_path": "_docs/manage-drill/090-start-stop.md", 
-                    "title": "Starting/Stopping Drill", 
-                    "url": "/docs/starting-stopping-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Starting/Stopping Drill", 
-                    "previous_url": "/docs/starting-stopping-drill/", 
-                    "relative_path": "_docs/manage-drill/100-ports-used-by-drill.md", 
-                    "title": "Ports Used by Drill", 
-                    "url": "/docs/ports-used-by-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Ports Used by Drill", 
-                    "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/manage-drill/110-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Manage Drill", 
-                            "url": "/docs/manage-drill/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Developer Information", 
-                    "next_url": "/docs/developer-information/", 
-                    "parent": "Manage Drill", 
-                    "previous_title": "Partition Pruning", 
-                    "previous_url": "/docs/partition-pruning/", 
-                    "relative_path": "_docs/manage-drill/120-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
-                }
-            ], 
-            "next_title": "Manage Drill Introduction", 
-            "next_url": "/docs/manage-drill-introduction/", 
-            "parent": "", 
-            "previous_title": "Custom Function Interfaces", 
-            "previous_url": "/docs/custom-function-interfaces/", 
-            "relative_path": "_docs/110-manage-drill.md", 
-            "title": "Manage Drill", 
-            "url": "/docs/manage-drill/"
         }, 
         {
             "breadcrumbs": [], 
@@ -11847,8 +11796,8 @@
             "next_title": "Develop Drill", 
             "next_url": "/docs/develop-drill/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Custom Function Interfaces", 
+            "previous_url": "/docs/custom-function-interfaces/", 
             "relative_path": "_docs/120-developer-information.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"

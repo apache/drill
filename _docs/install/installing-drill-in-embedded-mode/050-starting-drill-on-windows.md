@@ -17,3 +17,14 @@ At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minu
 You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=local
+
+## Exiting SQLLine
+
+To exit SQLLine, issue the following command:
+
+    !quit
+
+## Stopping Drill
+
+In some cases, such as stopping while a query is in progress, the `!quit` command does not stop Drill running in embedded mode. To stop the Drill process use the [**TaskKill**](https://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/taskkill.mspx?mfr=true) command.
+
