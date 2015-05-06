@@ -101,10 +101,9 @@ public class FragmentExecutor implements Runnable {
       return null;
     }
 
-    final FragmentStatus status = AbstractStatusReporter
+    return AbstractStatusReporter
         .getBuilder(fragmentContext, FragmentState.RUNNING, null)
         .build();
-    return status;
   }
 
   /**
@@ -120,11 +119,17 @@ public class FragmentExecutor implements Runnable {
      * For example, consider the case when the Foreman sets up the root fragment executor which is
      * waiting on incoming data, but the Foreman fails to setup non-root fragment executors. The
      * run() method on the root executor will never be called, and the executor will never be ready
-     * to accept external events. This will make the cancelling thread wait forever.
+     * to accept external events. This would make the cancelling thread wait forever, if it was waiting on
+     * acceptExternalEvents.
      */
     synchronized (this) {
       if (root != null) {
         acceptExternalEvents.awaitUninterruptibly();
+      } else {
+        // This fragment may or may not start running. If it doesn't then closeOutResources() will never be called.
+        // Assuming it's safe to call closeOutResources() multiple times, we call it here explicitly in case this
+        // fragment will never start running.
+        closeOutResources();
       }
 
       /*

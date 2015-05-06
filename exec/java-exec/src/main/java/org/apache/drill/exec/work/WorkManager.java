@@ -265,7 +265,11 @@ public class WorkManager implements AutoCloseable {
     }
 
     public void startFragmentPendingRemote(final FragmentManager handler) {
-      executor.execute(handler.getRunnable());
+      final FragmentExecutor fragmentExecutor = handler.getRunnable();
+      // cancelled fragment managers will return null fragment executors
+      if (fragmentExecutor != null) {
+        executor.execute(fragmentExecutor);
+      }
     }
 
     public void addFragmentRunner(final FragmentExecutor fragmentExecutor) {
