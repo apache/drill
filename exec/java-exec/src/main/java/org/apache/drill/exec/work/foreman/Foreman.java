@@ -406,13 +406,15 @@ public class Foreman implements Runnable {
    */
   private void acquireQuerySemaphore(final PhysicalPlan plan) throws ForemanSetupException {
     final OptionManager optionManager = queryContext.getOptions();
-    final boolean queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE_KEY).bool_val;
+    final boolean queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
     if (queuingEnabled) {
-      final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_KEY).num_val;
+      final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
       double totalCost = 0;
       for (final PhysicalOperator ops : plan.getSortedOperators()) {
         totalCost += ops.getCost();
       }
+
+      final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
 
       try {
         @SuppressWarnings("resource")
@@ -421,18 +423,27 @@ public class Foreman implements Runnable {
 
         // get the appropriate semaphore
         if (totalCost > queueThreshold) {
-          final int largeQueue = optionManager.getOption(ExecConstants.LARGE_QUEUE_KEY).num_val.intValue();
+          final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
           distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
         } else {
-          final int smallQueue = optionManager.getOption(ExecConstants.SMALL_QUEUE_KEY).num_val.intValue();
+          final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
           distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
         }
 
-        final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT_KEY).num_val;
+
         lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
       } catch (final Exception e) {
         throw new ForemanSetupException("Unable to acquire slot for query.", e);
       }
+
+      if (lease == null) {
+        throw UserException
+            .resourceError()
+            .message("Unable to acquire queue resources for query within timeout.  Timeout was set at %d seconds.",
+                queueTimeout / 1000)
+            .build();
+      }
+
     }
   }
 
