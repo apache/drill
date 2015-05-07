@@ -1,5 +1,5 @@
 ---
-title: "CREATE VIEW command"
+title: "CREATE VIEW Command"
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a

@@ -2,9 +2,9 @@
 title: "Configuring Resources for a Shared Drillbit"
 parent: "Configuring a Multitenant Cluster"
 ---
-To manage a cluster in which multiple users share a Drillbit, you configure Drill queuing and parallelization in addition to memory, as described in the previous section.
+To manage a cluster in which multiple users share a Drillbit, you configure Drill queuing and parallelization in addition to memory, as described in the previous section, ["Configuring Drill Memory"]({{site.baseurl}}/docs/configuring-drill-memory/).
 
-##Configuring Drill Query Queuing
+##Configuring Query Queuing
 
 Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introduction/) to enable and manage query queuing, which is turned off by default. There are two types of queues: large and small. You configure a maximum number of queries that each queue allows by configuring the following options in the `sys.options` table:
 
@@ -26,7 +26,7 @@ The exec.queue.threshold default is 30 million, which is the estimated rows to b
 
 The Drill queuing configuration in this example tends to give many users running small queries a rapid response. Users running a large query might experience some delay until an earlier-received large query returns, freeing space in the large queue to process queries that are waiting.
 
-## Controlling Parallelization
+## Configuring Parallelization
 
 By default, Drill parallelizes operations when number of records manipulated within a fragment reaches 100,000. When parallelization of operations is high, the cluster operates as fast as possible, which is fine for a single user. In a contentious multi-tenant situation, however, you need to reduce parallelization to levels based on user needs.
 

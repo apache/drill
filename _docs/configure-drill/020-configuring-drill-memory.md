@@ -33,5 +33,8 @@ The drill-env.sh file contains the following options:
 
     export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea"
 
-The DRILL_MAX_DIRECT_MEMORY is the Java direct memory. The DRILL_MAX_HEAP is the maximum theoretical heap limit for the JVM. Xmx specifies the maximum memory allocation pool for a Java Virtual Machine (JVM). Xms specifies the initial memory allocation pool.
+* DRILL_MAX_DIRECT_MEMORY is the Java direct memory. 
+* DRILL_MAX_HEAP is the maximum theoretical heap limit for the JVM. 
+* Xmx specifies the maximum memory allocation pool for a Java Virtual Machine (JVM). 
+* Xms specifies the initial memory allocation pool.
 

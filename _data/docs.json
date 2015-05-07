@@ -50,7 +50,7 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE TABLE AS (CTAS) command", 
+            "next_title": "CREATE TABLE AS (CTAS) Command", 
             "next_url": "/docs/create-table-as-ctas-command/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SESSION Command", 
@@ -624,7 +624,7 @@
             "title": "CASE", 
             "url": "/docs/case/"
         }, 
-        "CREATE TABLE AS (CTAS) command": {
+        "CREATE TABLE AS (CTAS) Command": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -636,16 +636,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE VIEW command", 
+            "next_title": "CREATE VIEW Command", 
             "next_url": "/docs/create-view-command/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM Command", 
             "previous_url": "/docs/alter-system-command/", 
             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-            "title": "CREATE TABLE AS (CTAS) command", 
+            "title": "CREATE TABLE AS (CTAS) Command", 
             "url": "/docs/create-table-as-ctas-command/"
         }, 
-        "CREATE VIEW command": {
+        "CREATE VIEW Command": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -660,10 +660,10 @@
             "next_title": "DESCRIBE Command", 
             "next_url": "/docs/describe-command/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TABLE AS (CTAS) command", 
+            "previous_title": "CREATE TABLE AS (CTAS) Command", 
             "previous_url": "/docs/create-table-as-ctas-command/", 
             "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-            "title": "CREATE VIEW command", 
+            "title": "CREATE VIEW Command", 
             "url": "/docs/create-view-command/"
         }, 
         "Compiling Drill from Source": {
@@ -1731,10 +1731,10 @@
                 }
             ], 
             "children": [], 
-            "next_title": "EXPLAIN commands", 
+            "next_title": "EXPLAIN Commands", 
             "next_url": "/docs/explain-commands/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE VIEW command", 
+            "previous_title": "CREATE VIEW Command", 
             "previous_url": "/docs/create-view-command/", 
             "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
             "title": "DESCRIBE Command", 
@@ -2760,7 +2760,7 @@
             "title": "Driver Configuration Options", 
             "url": "/docs/driver-configuration-options/"
         }, 
-        "EXPLAIN commands": {
+        "EXPLAIN Commands": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -2778,7 +2778,7 @@
             "previous_title": "DESCRIBE Command", 
             "previous_url": "/docs/describe-command/", 
             "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-            "title": "EXPLAIN commands", 
+            "title": "EXPLAIN Commands", 
             "url": "/docs/explain-commands/"
         }, 
         "Embedded Mode Prerequisites": {
@@ -4561,8 +4561,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Using Tibco Spotfire", 
+                    "next_url": "/docs/using-tibco-spotfire/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
@@ -4583,9 +4583,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire.md", 
+                    "title": "Using Tibco Spotfire", 
+                    "url": "/docs/using-tibco-spotfire/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -5167,8 +5167,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "previous_title": "Using Tibco Spotfire", 
+            "previous_url": "/docs/using-tibco-spotfire/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -5930,16 +5930,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
             "next_url": "/docs/show-databases-and-show-schemas-command/", 
             "parent": "SQL Commands", 
-            "previous_title": "EXPLAIN commands", 
+            "previous_title": "EXPLAIN Commands", 
             "previous_url": "/docs/explain-commands/", 
             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
             "title": "SELECT Statements", 
             "url": "/docs/select-statements/"
         }, 
-        "SHOW DATABASES AND SHOW SCHEMAS Command": {
+        "SHOW DATABASES and SHOW SCHEMAS Command": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -5957,7 +5957,7 @@
             "previous_title": "SELECT Statements", 
             "previous_url": "/docs/select-statements/", 
             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-            "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
             "url": "/docs/show-databases-and-show-schemas-command/"
         }, 
         "SHOW FILES Command": {
@@ -5975,7 +5975,7 @@
             "next_title": "SHOW TABLES Command", 
             "next_url": "/docs/show-tables-command/", 
             "parent": "SQL Commands", 
-            "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
             "title": "SHOW FILES Command", 
@@ -6064,7 +6064,7 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE TABLE AS (CTAS) command", 
+                    "next_title": "CREATE TABLE AS (CTAS) Command", 
                     "next_url": "/docs/create-table-as-ctas-command/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SESSION Command", 
@@ -6085,13 +6085,13 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE VIEW command", 
+                    "next_title": "CREATE VIEW Command", 
                     "next_url": "/docs/create-view-command/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM Command", 
                     "previous_url": "/docs/alter-system-command/", 
                     "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                    "title": "CREATE TABLE AS (CTAS) command", 
+                    "title": "CREATE TABLE AS (CTAS) Command", 
                     "url": "/docs/create-table-as-ctas-command/"
                 }, 
                 {
@@ -6109,10 +6109,10 @@
                     "next_title": "DESCRIBE Command", 
                     "next_url": "/docs/describe-command/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "CREATE TABLE AS (CTAS) command", 
+                    "previous_title": "CREATE TABLE AS (CTAS) Command", 
                     "previous_url": "/docs/create-table-as-ctas-command/", 
                     "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                    "title": "CREATE VIEW command", 
+                    "title": "CREATE VIEW Command", 
                     "url": "/docs/create-view-command/"
                 }, 
                 {
@@ -6127,10 +6127,10 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "EXPLAIN commands", 
+                    "next_title": "EXPLAIN Commands", 
                     "next_url": "/docs/explain-commands/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "CREATE VIEW command", 
+                    "previous_title": "CREATE VIEW Command", 
                     "previous_url": "/docs/create-view-command/", 
                     "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                     "title": "DESCRIBE Command", 
@@ -6154,7 +6154,7 @@
                     "previous_title": "DESCRIBE Command", 
                     "previous_url": "/docs/describe-command/", 
                     "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                    "title": "EXPLAIN commands", 
+                    "title": "EXPLAIN Commands", 
                     "url": "/docs/explain-commands/"
                 }, 
                 {
@@ -6169,10 +6169,10 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                    "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                     "next_url": "/docs/show-databases-and-show-schemas-command/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "EXPLAIN commands", 
+                    "previous_title": "EXPLAIN Commands", 
                     "previous_url": "/docs/explain-commands/", 
                     "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                     "title": "SELECT Statements", 
@@ -6196,7 +6196,7 @@
                     "previous_title": "SELECT Statements", 
                     "previous_url": "/docs/select-statements/", 
                     "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                    "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                    "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                     "url": "/docs/show-databases-and-show-schemas-command/"
                 }, 
                 {
@@ -6214,7 +6214,7 @@
                     "next_title": "SHOW TABLES Command", 
                     "next_url": "/docs/show-tables-command/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                    "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                     "previous_url": "/docs/show-databases-and-show-schemas-command/", 
                     "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                     "title": "SHOW FILES Command", 
@@ -6995,7 +6995,7 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS) command", 
+                            "next_title": "CREATE TABLE AS (CTAS) Command", 
                             "next_url": "/docs/create-table-as-ctas-command/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SESSION Command", 
@@ -7016,13 +7016,13 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW command", 
+                            "next_title": "CREATE VIEW Command", 
                             "next_url": "/docs/create-view-command/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                            "title": "CREATE TABLE AS (CTAS) command", 
+                            "title": "CREATE TABLE AS (CTAS) Command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
                         {
@@ -7040,10 +7040,10 @@
                             "next_title": "DESCRIBE Command", 
                             "next_url": "/docs/describe-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TABLE AS (CTAS) command", 
+                            "previous_title": "CREATE TABLE AS (CTAS) Command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                            "title": "CREATE VIEW command", 
+                            "title": "CREATE VIEW Command", 
                             "url": "/docs/create-view-command/"
                         }, 
                         {
@@ -7058,10 +7058,10 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "EXPLAIN commands", 
+                            "next_title": "EXPLAIN Commands", 
                             "next_url": "/docs/explain-commands/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE VIEW command", 
+                            "previous_title": "CREATE VIEW Command", 
                             "previous_url": "/docs/create-view-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
@@ -7085,7 +7085,7 @@
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                            "title": "EXPLAIN commands", 
+                            "title": "EXPLAIN Commands", 
                             "url": "/docs/explain-commands/"
                         }, 
                         {
@@ -7100,10 +7100,10 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "next_url": "/docs/show-databases-and-show-schemas-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "EXPLAIN commands", 
+                            "previous_title": "EXPLAIN Commands", 
                             "previous_url": "/docs/explain-commands/", 
                             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                             "title": "SELECT Statements", 
@@ -7127,7 +7127,7 @@
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                            "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
                         {
@@ -7145,7 +7145,7 @@
                             "next_title": "SHOW TABLES Command", 
                             "next_url": "/docs/show-tables-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                             "title": "SHOW FILES Command", 
@@ -8127,23 +8127,6 @@
             "title": "Useful Research", 
             "url": "/docs/useful-research/"
         }, 
-        "Using Apache Drill with Tibco Spotfire Desktop": {
-            "breadcrumbs": [
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Query Data", 
-            "next_url": "/docs/query-data/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using MicroStrategy Analytics with Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
-            "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
-        }, 
         "Using Custom Functions in Queries": {
             "breadcrumbs": [
                 {
@@ -8207,8 +8190,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "next_title": "Using Tibco Spotfire", 
+            "next_url": "/docs/using-tibco-spotfire/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using Drill Explorer on Windows", 
             "previous_url": "/docs/using-drill-explorer-on-windows/", 
@@ -8545,6 +8528,23 @@
             "relative_path": "_docs/query-data/querying-complex-data/030-using-sql-functions-clauses-and-joins.md", 
             "title": "Using SQL Functions, Clauses, and Joins", 
             "url": "/docs/using-sql-functions-clauses-and-joins/"
+        }, 
+        "Using Tibco Spotfire": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Data", 
+            "next_url": "/docs/query-data/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using MicroStrategy Analytics with Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire.md", 
+            "title": "Using Tibco Spotfire", 
+            "url": "/docs/using-tibco-spotfire/"
         }, 
         "Using a Connection String": {
             "breadcrumbs": [
@@ -10173,8 +10173,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Using Tibco Spotfire", 
+                    "next_url": "/docs/using-tibco-spotfire/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
@@ -10195,9 +10195,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire.md", 
+                    "title": "Using Tibco Spotfire", 
+                    "url": "/docs/using-tibco-spotfire/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -10585,8 +10585,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "previous_title": "Using Tibco Spotfire", 
+            "previous_url": "/docs/using-tibco-spotfire/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -11093,7 +11093,7 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS) command", 
+                            "next_title": "CREATE TABLE AS (CTAS) Command", 
                             "next_url": "/docs/create-table-as-ctas-command/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SESSION Command", 
@@ -11114,13 +11114,13 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW command", 
+                            "next_title": "CREATE VIEW Command", 
                             "next_url": "/docs/create-view-command/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM Command", 
                             "previous_url": "/docs/alter-system-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                            "title": "CREATE TABLE AS (CTAS) command", 
+                            "title": "CREATE TABLE AS (CTAS) Command", 
                             "url": "/docs/create-table-as-ctas-command/"
                         }, 
                         {
@@ -11138,10 +11138,10 @@
                             "next_title": "DESCRIBE Command", 
                             "next_url": "/docs/describe-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TABLE AS (CTAS) command", 
+                            "previous_title": "CREATE TABLE AS (CTAS) Command", 
                             "previous_url": "/docs/create-table-as-ctas-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                            "title": "CREATE VIEW command", 
+                            "title": "CREATE VIEW Command", 
                             "url": "/docs/create-view-command/"
                         }, 
                         {
@@ -11156,10 +11156,10 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "EXPLAIN commands", 
+                            "next_title": "EXPLAIN Commands", 
                             "next_url": "/docs/explain-commands/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE VIEW command", 
+                            "previous_title": "CREATE VIEW Command", 
                             "previous_url": "/docs/create-view-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
                             "title": "DESCRIBE Command", 
@@ -11183,7 +11183,7 @@
                             "previous_title": "DESCRIBE Command", 
                             "previous_url": "/docs/describe-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                            "title": "EXPLAIN commands", 
+                            "title": "EXPLAIN Commands", 
                             "url": "/docs/explain-commands/"
                         }, 
                         {
@@ -11198,10 +11198,10 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "next_url": "/docs/show-databases-and-show-schemas-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "EXPLAIN commands", 
+                            "previous_title": "EXPLAIN Commands", 
                             "previous_url": "/docs/explain-commands/", 
                             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
                             "title": "SELECT Statements", 
@@ -11225,7 +11225,7 @@
                             "previous_title": "SELECT Statements", 
                             "previous_url": "/docs/select-statements/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                            "title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "url": "/docs/show-databases-and-show-schemas-command/"
                         }, 
                         {
@@ -11243,7 +11243,7 @@
                             "next_title": "SHOW TABLES Command", 
                             "next_url": "/docs/show-tables-command/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW DATABASES AND SHOW SCHEMAS Command", 
+                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
                             "previous_url": "/docs/show-databases-and-show-schemas-command/", 
                             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
                             "title": "SHOW FILES Command", 

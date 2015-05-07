@@ -1,5 +1,5 @@
 ---
-title: "EXPLAIN commands"
+title: "EXPLAIN Commands"
 parent: "SQL Commands"
 ---
 EXPLAIN is a useful tool for examining the steps that a query goes through
