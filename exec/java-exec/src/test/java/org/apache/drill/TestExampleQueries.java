@@ -844,4 +844,20 @@ public class TestExampleQueries extends BaseTestQuery{
     test("ALTER SESSION SET `store.format`='parquet'");
   }
 
+  @Test // DRILL-2914
+  public void testGroupByStarSchemaless() throws Exception {
+    String query = "SELECT n.n_nationkey AS col \n" +
+        "FROM (SELECT * FROM cp.`tpch/nation.parquet`) AS n \n" +
+        "GROUP BY n.n_nationkey \n" +
+        "ORDER BY n.n_nationkey";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("col")
+        .build()
+        .run();
+  }
 }
