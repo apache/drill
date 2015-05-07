@@ -53,7 +53,7 @@ A parallelizer in the Foreman transforms the physical plan into multiple phases.
 
 ## Data Isolation
 
-Tenants can share data on a cluster using Drill views and impersonation. ??Link to impersonation doc.??
+Tenants can share data on a cluster using Drill views and [impersonation]({{site.baseurl}}/docs/configuring-user-impersonation). 
 
 
 
