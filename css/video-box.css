@@ -1,0 +1,53 @@
+div#video-box{
+  position:relative;
+  float:right;
+  width:320px;
+  height:160px;
+}
+div#video-box div.background {
+  position:absolute;
+  background-color:#fff;
+  height:100%;
+  width:100%;
+  opacity:.15;
+}
+div#video-box div.row {
+  position:absolute;
+  height:40px;
+  width:100%;
+  border-bottom:dotted 1px #999;
+  top:0px;
+  font-size:12px;
+  color:black;
+  line-height:40px;
+  
+}
+
+div#video-box div.row.r1 {
+  top:40px;
+}
+
+div#video-box div.row.r2 {
+  top:80px;
+}
+
+div#video-box div.row.r3 {
+  top:120px;
+  border-bottom:none;
+}
+
+div#video-box div.row div {
+  overflow: hidden;
+  margin:5px;
+  height:30px;
+  float:left;
+}
+
+div#video-box div.row div img {
+  height:40px;
+  margin:-5px 0;
+}
+
+div#video-box a {
+  color:#006;
+}
