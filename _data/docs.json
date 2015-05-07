@@ -821,8 +821,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill in a Dedicated Cluster", 
-                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "next_title": "Configuring Drill Memory", 
+                    "next_url": "/docs/configuring-drill-memory/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configure Drill", 
                     "previous_url": "/docs/configure-drill/", 
@@ -843,9 +843,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configure Drill Introduction", 
                     "previous_url": "/docs/configure-drill-introduction/", 
-                    "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                    "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
+                    "title": "Configuring Drill Memory", 
+                    "url": "/docs/configuring-drill-memory/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -922,8 +922,8 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "previous_title": "Configuring Drill Memory", 
+                    "previous_url": "/docs/configuring-drill-memory/", 
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"
@@ -1099,8 +1099,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Drill in a Dedicated Cluster", 
-            "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+            "next_title": "Configuring Drill Memory", 
+            "next_url": "/docs/configuring-drill-memory/", 
             "parent": "Configure Drill", 
             "previous_title": "Configure Drill", 
             "previous_url": "/docs/configure-drill/", 
@@ -1150,7 +1150,7 @@
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
         }, 
-        "Configuring Drill in a Dedicated Cluster": {
+        "Configuring Drill Memory": {
             "breadcrumbs": [
                 {
                     "title": "Configure Drill", 
@@ -1163,9 +1163,9 @@
             "parent": "Configure Drill", 
             "previous_title": "Configure Drill Introduction", 
             "previous_url": "/docs/configure-drill-introduction/", 
-            "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
-            "title": "Configuring Drill in a Dedicated Cluster", 
-            "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+            "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
+            "title": "Configuring Drill Memory", 
+            "url": "/docs/configuring-drill-memory/"
         }, 
         "Configuring Multitenant Resources": {
             "breadcrumbs": [
@@ -1301,8 +1301,8 @@
             "next_title": "Configuring a Multitenant Cluster Introduction", 
             "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Drill in a Dedicated Cluster", 
-            "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+            "previous_title": "Configuring Drill Memory", 
+            "previous_url": "/docs/configuring-drill-memory/", 
             "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
             "title": "Configuring a Multitenant Cluster", 
             "url": "/docs/configuring-a-multitenant-cluster/"
@@ -9273,8 +9273,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Drill in a Dedicated Cluster", 
-                    "next_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "next_title": "Configuring Drill Memory", 
+                    "next_url": "/docs/configuring-drill-memory/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configure Drill", 
                     "previous_url": "/docs/configure-drill/", 
@@ -9295,9 +9295,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configure Drill Introduction", 
                     "previous_url": "/docs/configure-drill-introduction/", 
-                    "relative_path": "_docs/configure-drill/020-configuring-drill-in-a-dedicated-cluster.md", 
-                    "title": "Configuring Drill in a Dedicated Cluster", 
-                    "url": "/docs/configuring-drill-in-a-dedicated-cluster/"
+                    "relative_path": "_docs/configure-drill/020-configuring-drill-memory.md", 
+                    "title": "Configuring Drill Memory", 
+                    "url": "/docs/configuring-drill-memory/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -9374,8 +9374,8 @@
                     "next_title": "Configuring a Multitenant Cluster Introduction", 
                     "next_url": "/docs/configuring-a-multitenant-cluster-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Drill in a Dedicated Cluster", 
-                    "previous_url": "/docs/configuring-drill-in-a-dedicated-cluster/", 
+                    "previous_title": "Configuring Drill Memory", 
+                    "previous_url": "/docs/configuring-drill-memory/", 
                     "relative_path": "_docs/configure-drill/040-configuring-a-multitenant-cluster.md", 
                     "title": "Configuring a Multitenant Cluster", 
                     "url": "/docs/configuring-a-multitenant-cluster/"

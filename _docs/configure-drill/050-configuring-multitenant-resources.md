@@ -2,7 +2,29 @@
 title: "Configuring Multitenant Resources"
 parent: "Configuring a Multitenant Cluster"
 ---
-Drill operations are memory and CPU-intensive. You need to statically partition the cluster to designate which partition handles which workload. To configure resources for Drill in a MapR cluster, modify one or more of the following files in `/opt/mapr/conf/conf.d` that the installation process creates. 
+Drill operations are memory and CPU-intensive. Currently, Drill resources are managed outside MapR Warden service in terms of configuring the resources as well as enforcing the resource usage within the limit. Configure memory for Drill in a multitenant by modifying drill-env.sh. <Add detail on property names etc>
+
+3. To ensure Warden account for resources required for Drill, make sure the following properties are set appropriately in warden.drill-bits.conf. For reference on the meaning of the properties refer to the following MapR doc <add link>
+
+service.heapsize.min
+service.heapsize.max
+service.heapsize.percent
+
+The percent should always be considered as the one to change, it is more intuitive to understand and grows/shrinks according to different node's configuration. 
+
+It will be good if someone in Drill QA could try it out and see if it fits Drill's needs. 
+
+ 
+
+Note that these properties should be set in addition to configuring the resources the in drill-env.conf even if you didnt change the defaults in drill-env.sh. Setting up memory limit in drill-env.sh tells Drill how much resources to use during query execution and setting up these warden-drill-bits.conf tells warden not to commit these resources to some other process. In near future, we expect to provide a more deeper integration on these settings
+\<give an example>
+
+4. This configuration is same whether you use Drill is enabled cluster or non-YARN cluster.
+
+
+
+
+You need to statically partition the cluster to designate which partition handles which workload. To configure resources for Drill in a MapR cluster, modify one or more of the following files in `/opt/mapr/conf/conf.d` that the installation process creates. 
 
 * `warden.drill-bits.conf`
 * `warden.nodemanager.conf`
