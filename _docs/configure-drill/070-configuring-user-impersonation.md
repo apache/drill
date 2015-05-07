@@ -54,7 +54,8 @@ When users query a view, Drill accesses the underlying data as the user that cre
  
 The view owner or a superuser can modify permissions on the view file directly or they can set view permissions at the system or session level prior to creating any views. Any user that alters view permissions must have write access on the directory or workspace in which they are working. See Modifying Permissions on a View File and Modifying SYSTEM|SESSION Level View Permissions. 
 
-#### Modifying Permissions on a View File
+### Modifying Permissions on a View File
+
 Only a view owner or a super user can modify permissions on a view file to change them from owner to group or world readable. Before you grant permission to users to access a view, verify that they have access to the directory or workspace in which the view file is stored.
 
 Use the `chmod` and `chown` commands with the appropriate octal code to change permissions on a view file:
@@ -64,7 +65,8 @@ Use the `chmod` and `chown` commands with the appropriate octal code to change p
     hadoop fs –chown <user>:<group> <file_name>
 Example: `hadoop fs –chmod 750 employees.drill.view`
 
-####Modifying SYSTEM|SESSION Level View Permissions
+### Modifying SYSTEM|SESSION Level View Permissions
+
 Use the `ALTER SESSION|SYSTEM` command with the `new_view_default_permissions` parameter and the appropriate octal code to set view permissions at the system or session level prior to creating a view.
  
     ALTER SESSION SET `new_view_default_permissions` = '<octal_code>';
@@ -91,7 +93,7 @@ In this scenario, when Chad queries Jane’s view Drill returns an error stating
 
 If users encounter this error, you can increase the maximum hop setting to accommodate users running queries on views. When configuring the maximum number of hops that Drill can make, consider that joined views increase the number of identity transitions required for Drill to access the underlying data.
 
-#### Configuring Impersonation and Chaining
+### Configuring Impersonation and Chaining
 Chaining is a system-wide setting that applies to all views. Currently, Drill does not provide an option to  allow different chain lengths for different views.
 
 Complete the following steps on each Drillbit node to enable user impersonation, and set the maximum number of chained user hops that Drill allows:
@@ -117,7 +119,6 @@ Complete the following steps on each Drillbit node to enable user impersonation,
    * In a non-MapR environment, run the following command:  
      <DRILLINSTALL_HOME>/bin/drillbit.sh restart
 
-
 ## Impersonation and Chaining Example
 Frank is a senior HR manager at a company. Frank has access to all of the employee data because he is a member of the hr group. Frank created a table named “employees” in his home directory to store the employee data he uses. Only Frank has access to this table.
  
@@ -131,6 +132,7 @@ Frank needs to share a subset of this information with Joe who is an HR manager 
 rwxr-----     frank:mgr   /user/frank/emp_mgr_view.drill.view
  
 The emp_mgr_view.drill.view file contains the following view definition:
+
 (view definition: SELECT emp_id, emp_name, emp_salary, emp_addr, emp_phone FROM \`/user/frank/employee\` WHERE emp_mgr = user())
  
 When Joe issues SELECT * FROM emp_mgr_view, Drill impersonates Frank when accessing the employee data, and the query returns the data that Joe has permission to see based on the view definition. The query results do not include any sensitive data because the view protects that information. If Joe tries to query the employees table directly, Drill returns an error or null values.
@@ -143,7 +145,7 @@ rwxr-----     joe:joeteam   /user/joe/emp_team_view.drill.view
  
 The emp_team_view.drill.view file contains the following view definition:
  
-(view definition: SELECT emp_id, emp_name, emp_phone FROM `/user/frank/emp_mgr_view.drill`);
+(view definition: SELECT emp_id, emp_name, emp_phone FROM \`/user/frank/emp_mgr_view.drill\`);
  
 When anyone on Joe’s team issues SELECT * FROM emp_team_view, Drill impersonates Joe to access the emp_team_view and then impersonates Frank to access the emp_mgr_view and the employee data. Drill returns the data that Joe’s team has can see based on the view definition. If anyone on Joe’s team tries to query the emp_mgr_view or employees table directly, Drill returns an error or null values.
  
