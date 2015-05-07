@@ -50,7 +50,7 @@ public class JsonConvertFrom {
     @Output ComplexWriter writer;
 
     public void setup(){
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, true /* read numbers as doubles */);
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, false /* do not read numbers as doubles */);
     }
 
     public void eval(){
@@ -76,7 +76,7 @@ public class JsonConvertFrom {
     @Output ComplexWriter writer;
 
     public void setup(){
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, true /* read numbers as doubles */);
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer, false, false, false /* do not read numbers as doubles */);
     }
 
     public void eval(){
