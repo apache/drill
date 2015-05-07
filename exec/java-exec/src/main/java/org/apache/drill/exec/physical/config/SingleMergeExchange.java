@@ -72,7 +72,7 @@ public class SingleMergeExchange extends AbstractExchange {
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExpr);
+    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExpr, false);
   }
 
   @Override

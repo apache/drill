@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
@@ -33,7 +34,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestSpoolingBuffer extends ExecTest {
+public class TestSpoolingBuffer extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSpoolingBuffer.class);
 
   @Test
@@ -59,5 +60,4 @@ public class TestSpoolingBuffer extends ExecTest {
       assertEquals(500024, count);
     }
   }
-
 }

@@ -34,8 +34,9 @@ public class UnorderedReceiver extends AbstractReceiver{
 
   @JsonCreator
   public UnorderedReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
-                           @JsonProperty("senders") List<MinorFragmentEndpoint> senders) {
-    super(oppositeMajorFragmentId, senders);
+                           @JsonProperty("senders") List<MinorFragmentEndpoint> senders,
+                           @JsonProperty("spooling") boolean spooling) {
+    super(oppositeMajorFragmentId, senders, spooling);
   }
 
   @Override

@@ -46,7 +46,7 @@ public class UnorderedDeMuxExchange extends AbstractDeMuxExchange {
       throw new IllegalStateException(String.format("Failed to find sender for receiver [%d]", minorFragmentId));
     }
 
-    return new UnorderedReceiver(this.senderMajorFragmentId, Collections.singletonList(sender));
+    return new UnorderedReceiver(this.senderMajorFragmentId, Collections.singletonList(sender), false);
   }
 
   @Override

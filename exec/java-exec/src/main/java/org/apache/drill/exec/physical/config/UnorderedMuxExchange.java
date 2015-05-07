@@ -45,7 +45,7 @@ public class UnorderedMuxExchange extends AbstractMuxExchange {
       throw new IllegalStateException(String.format("Failed to find senders for receiver [%d]", minorFragmentId));
     }
 
-    return new UnorderedReceiver(senderMajorFragmentId, senders);
+    return new UnorderedReceiver(senderMajorFragmentId, senders, false);
   }
 
   @Override

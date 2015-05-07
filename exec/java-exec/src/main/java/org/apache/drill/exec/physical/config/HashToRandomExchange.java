@@ -34,6 +34,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class HashToRandomExchange extends AbstractExchange{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToRandomExchange.class);
 
+  private static final boolean HASH_EXCHANGE_SPOOLING;
+
+  static {
+    HASH_EXCHANGE_SPOOLING = "true".equals(System.getProperty("drill.hash_exchange_spooling", "false"));
+  }
+
   private final LogicalExpression expr;
 
   @JsonCreator
@@ -50,7 +56,7 @@ public class HashToRandomExchange extends AbstractExchange{
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations));
+    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), HASH_EXCHANGE_SPOOLING);
   }
 
   @Override

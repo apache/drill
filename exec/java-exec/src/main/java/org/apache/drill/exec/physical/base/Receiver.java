@@ -49,4 +49,7 @@ public interface Receiver extends FragmentLeaf {
 
   @JsonProperty("sender-major-fragment")
   public int getOppositeMajorFragmentId();
+
+  @JsonProperty("spooling")
+  public boolean isSpooling();
 }

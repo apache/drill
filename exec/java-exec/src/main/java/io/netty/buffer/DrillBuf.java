@@ -755,7 +755,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     release();
   }
 

@@ -69,7 +69,7 @@ public class UnionExchange extends AbstractExchange{
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations));
+    return new UnorderedReceiver(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), false);
   }
 
   @Override

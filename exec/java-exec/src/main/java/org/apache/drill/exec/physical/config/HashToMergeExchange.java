@@ -55,7 +55,7 @@ public class HashToMergeExchange extends AbstractExchange{
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExprs);
+    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExprs, true);
   }
 
   @Override

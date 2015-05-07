@@ -33,15 +33,17 @@ public abstract class AbstractReceiver extends AbstractBase implements Receiver{
 
   private final int oppositeMajorFragmentId;
   private final List<MinorFragmentEndpoint> senders;
+  private final boolean spooling;
 
   /**
    * @param oppositeMajorFragmentId MajorFragmentId of fragments that are sending data to this receiver.
    * @param senders List of sender MinorFragmentEndpoints each containing sender MinorFragmentId and Drillbit endpoint
    *                where it is running.
    */
-  public AbstractReceiver(int oppositeMajorFragmentId, List<MinorFragmentEndpoint> senders){
+  public AbstractReceiver(int oppositeMajorFragmentId, List<MinorFragmentEndpoint> senders, boolean spooling){
     this.oppositeMajorFragmentId = oppositeMajorFragmentId;
     this.senders = ImmutableList.copyOf(senders);
+    this.spooling = spooling;
   }
 
   @Override
@@ -74,6 +76,11 @@ public abstract class AbstractReceiver extends AbstractBase implements Receiver{
   @JsonIgnore
   public int getNumSenders() {
     return senders.size();
+  }
+
+  @Override
+  public boolean isSpooling() {
+    return spooling;
   }
 }
 

@@ -42,8 +42,9 @@ public class MergingReceiverPOP extends AbstractReceiver{
   @JsonCreator
   public MergingReceiverPOP(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
                             @JsonProperty("senders") List<MinorFragmentEndpoint> senders,
-                            @JsonProperty("orderings") List<Ordering> orderings) {
-    super(oppositeMajorFragmentId, senders);
+                            @JsonProperty("orderings") List<Ordering> orderings,
+                            @JsonProperty("spooling") boolean spooling) {
+    super(oppositeMajorFragmentId, senders, spooling);
     this.orderings = orderings;
   }
 
