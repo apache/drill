@@ -783,8 +783,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Impersonation", 
-            "previous_url": "/docs/configuring-user-impersonation/", 
+            "previous_title": "Configuring User Authentication", 
+            "previous_url": "/docs/configuring-user-authentication/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -936,14 +936,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Authentication", 
+                    "next_url": "/docs/configuring-user-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
                     "title": "Configuring User Impersonation", 
                     "url": "/docs/configuring-user-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
+                    "title": "Configuring User Authentication", 
+                    "url": "/docs/configuring-user-authentication/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1041,8 +1058,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1209,7 +1226,7 @@
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
-        "Configuring User Impersonation": {
+        "Configuring User Authentication": {
             "breadcrumbs": [
                 {
                     "title": "Configure Drill", 
@@ -1219,6 +1236,23 @@
             "children": [], 
             "next_title": "Configuration Options", 
             "next_url": "/docs/configuration-options/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring User Impersonation", 
+            "previous_url": "/docs/configuring-user-impersonation/", 
+            "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
+            "title": "Configuring User Authentication", 
+            "url": "/docs/configuring-user-authentication/"
+        }, 
+        "Configuring User Impersonation": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring User Authentication", 
+            "next_url": "/docs/configuring-user-authentication/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring Resources for a Shared Drillbit", 
             "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
@@ -9388,14 +9422,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Authentication", 
+                    "next_url": "/docs/configuring-user-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring Resources for a Shared Drillbit", 
                     "previous_url": "/docs/configuring-resources-for-a-shared-drillbit/", 
                     "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
                     "title": "Configuring User Impersonation", 
                     "url": "/docs/configuring-user-impersonation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation", 
+                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
+                    "title": "Configuring User Authentication", 
+                    "url": "/docs/configuring-user-authentication/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -9493,8 +9544,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation", 
-                    "previous_url": "/docs/configuring-user-impersonation/", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
