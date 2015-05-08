@@ -28,7 +28,7 @@
 #   DRILL_IDENT_STRING   A string representing this instance of drillbit. $USER by default
 #   DRILL_NICENESS The scheduling priority for daemons. Defaults to 0.
 #   DRILL_STOP_TIMEOUT  Time, in seconds, after which we kill -9 the server if it has not stopped.
-#                        Default 1200 seconds.
+#                        Default 120 seconds.
 #
 # Modelled after $HADOOP_HOME/bin/hadoop-daemon.sh
 
@@ -61,8 +61,8 @@ waitForProcessEnd() {
    do
      echo -n "."
      sleep 1;
-     # if process persists more than $DRILL_STOP_TIMEOUT (default 1200 sec) no mercy
-     if [ $(( `date +%s` - $processedAt )) -gt ${DRILL_STOP_TIMEOUT:-1200} ]; then
+     # if process persists more than $DRILL_STOP_TIMEOUT (default 120 sec) no mercy
+     if [ $(( `date +%s` - $processedAt )) -gt ${DRILL_STOP_TIMEOUT:-120} ]; then
        break;
      fi
    done
