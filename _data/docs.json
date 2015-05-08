@@ -4544,8 +4544,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
@@ -4566,9 +4566,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
                     "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
+                    "title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -5133,8 +5133,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -8110,7 +8110,7 @@
             "title": "Useful Research", 
             "url": "/docs/useful-research/"
         }, 
-        "Using Apache Drill with Tibco Spotfire Desktop": {
+        "Using Apache Drill with Tableau 9 Desktop": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -8123,7 +8123,24 @@
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
             "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
+            "title": "Using Apache Drill with Tableau 9 Desktop", 
+            "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
+        }, 
+        "Using Apache Drill with Tibco Spotfire Desktop": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using MicroStrategy Analytics with Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-apache-drill-with-tibco-spotfire-desktop.md", 
             "title": "Using Apache Drill with Tibco Spotfire Desktop", 
             "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
         }, 
@@ -9875,8 +9892,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
@@ -9897,9 +9914,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
                     "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-spotfire.md", 
-                    "title": "Using Apache Drill with Tibco Spotfire Desktop", 
-                    "url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
+                    "title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -10270,8 +10287,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tibco Spotfire Desktop", 
-            "previous_url": "/docs/using-apache-drill-with-tibco-spotfire-desktop/", 
+            "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
