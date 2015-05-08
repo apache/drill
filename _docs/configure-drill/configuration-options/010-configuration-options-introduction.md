@@ -144,7 +144,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>drill.exec.functions.cast_empty_string_to_null</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Not supported in this release.</td>
   </tr>
   <tr>
     <td>drill.exec.storage.file.partition.column.label</td>
@@ -189,22 +189,23 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>exec.queue.large</td>
     <td>10</td>
-    <td>Range: 0-1000</td>
+    <td>Sets the number of large queries that can run concurrently in the cluster.
+Range: 0-1000</td>
   </tr>
   <tr>
     <td>exec.queue.small</td>
     <td>100</td>
-    <td>Range: 0-1001</td>
+    <td>Sets the number of small queries that can run concurrently in the cluster. Range: 0-1001</td>
   </tr>
   <tr>
     <td>exec.queue.threshold</td>
     <td>30000000</td>
-    <td>Range: 0-9223372036854775807</td>
+    <td>Sets the cost threshold, which depends on the complexity of the queries in queue, for determining whether query is large or small. Complex queries have higher thresholds. Range: 0-9223372036854775807</td>
   </tr>
   <tr>
     <td>exec.queue.timeout_millis</td>
     <td>300000</td>
-    <td>Range: 0-9223372036854775807</td>
+    <td>Indicates how long a query can wait in queue before the query fails. Range: 0-9223372036854775807</td>
   </tr>
   <tr>
     <td>planner.add_producer_consumer</td>
@@ -224,7 +225,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.broadcast_threshold</td>
     <td>10000000</td>
-    <td>Threshold in number of rows that triggers a broadcast join for a query if the right side of the join contains fewer rows than the threshold. Avoids broadcasting too many rows to join. Range: 0-2147483647</td>
+    <td>The maximum number of records allowed to be broadcast as part of a query. After one million records, Drill reshuffles data rather than doing a broadcast to one side of the join. Range: 0-2147483647</td>
   </tr>
   <tr>
     <td>planner.disable_exchanges</td>
@@ -254,7 +255,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.enable_hashjoin</td>
     <td>TRUE</td>
-    <td>Enable the memory hungry hash join. Does not write to disk.</td>
+    <td>Enable the memory hungry hash join. Drill assumes that a query with have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint.</td>
   </tr>
   <tr>
     <td>planner.enable_hashjoin_swap</td>
@@ -264,12 +265,13 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.enable_mergejoin</td>
     <td>TRUE</td>
-    <td>Sort-based operation. Writes to disk.</td>
+    <td>Sort-based operation. A merge join is used for inner join, left and right outer joins.  Inputs to the merge join must be sorted. It reads the sorted input streams from both sides and finds matching rows. Writes to disk.</td>
   </tr>
   <tr>
     <td>planner.enable_multiphase_agg</td>
     <td>TRUE</td>
-    <td></td>
+    <td>Each minor fragment does a local aggregation in phase 1, distributes on a hash basis using GROUP-BY keys partially aggregated results to other fragments, and all the fragments perform a total aggregation using this data.  
+ </td>
   </tr>
   <tr>
     <td>planner.enable_mux_exchange</td>
@@ -304,7 +306,8 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.memory.enable_memory_estimation</td>
     <td>FALSE</td>
-    <td></td>
+    <td>Toggles the state of memory estimation and re-planning of the query.
+When enabled, Drill conservatively estimates memory requirements and typically excludes these operators from the plan and negatively impacts performance.</td>
   </tr>
   <tr>
     <td>planner.memory.hash_agg_table_factor</td>
@@ -319,7 +322,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.memory.max_query_memory_per_node</td>
     <td>2147483648</td>
-    <td></td>
+    <td>Sets the maximum estimate of memory for a query per node. If the estimate is too low, Drill re-plans the query without memory-constrained operators.</td>
   </tr>
   <tr>
     <td>planner.memory.non_blocking_operators_memory</td>
@@ -329,7 +332,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.partitioner_sender_max_threads</td>
     <td>8</td>
-    <td></td>
+    <td>Upper limit of threads for outbound queuing.</td>
   </tr>
   <tr>
     <td>planner.partitioner_sender_set_threads</td>
@@ -354,7 +357,7 @@ The sys.options table lists the following options that you can set at the sessio
   <tr>
     <td>planner.width.max_per_node</td>
     <td>3</td>
-    <td>The maximum degree of distribution of a query across cores and cluster nodes.</td>
+    <td>Maximum number of threads that can run in parallel for a query on a node. A slice is an individual thread. This number indicates the maximum number of slices per query for the query’s major fragment on a node.</td>
   </tr>
   <tr>
     <td>planner.width.max_per_query</td>

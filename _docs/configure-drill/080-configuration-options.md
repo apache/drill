@@ -1,6 +1,6 @@
 ---
 title: "Configuration Options"
-parent: "Manage Drill"
+parent: "Configure Drill"
 ---
 
 

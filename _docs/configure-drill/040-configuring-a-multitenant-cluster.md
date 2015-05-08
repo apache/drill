@@ -1,5 +1,5 @@
 ---
 title: "Configuring a Multitenant Cluster"
-parent: "Manage Drill"
+parent: "Configure Drill"
 ---
 

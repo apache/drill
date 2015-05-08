@@ -714,9 +714,9 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
     1 row selected (0.129 seconds)
 
 ## Time Zone Limitation
-Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. The workaround is to configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
+Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. Queries of data associated with a time zone can return inconsistent results or an error. For more information, see the ["Understanding Drill's Timestamp and Timezone"](http://www.openkb.info/2015/05/understanding-drills-timestamp-and.html#.VUzhotpVhHw) blog. The Drill time zone is based on the operating system time zone unless you override it. To work around the limitation, configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
 
-1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function. This function returns the local date and time with time zone information.
+1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function or by querying the system.options table. This TIMEOFDAY function returns the local date and time with time zone information. 
 
         SELECT TIMEOFDAY() FROM sys.version;
 

@@ -1,6 +1,26 @@
 ---
 layout: default
 ---
+<link href="{{ site.baseurl }}/static/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css">
+<link href="{{ site.baseurl }}/css/video-box.css" rel="stylesheet" type="text/css">
+<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/static/fancybox/jquery.fancybox.pack.js"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  $(".various").fancybox({
+    fitToView: true,
+    autoSize: true,
+    beforeLoad: function(){
+      var url= $(this.element).attr("href");
+      url = url.replace(new RegExp("watch\\?v=", "i"), 'v/');
+      url += '?fs=1&autoplay=1';
+      this.href = url
+    }
+  });
+});
+
+</script>
 
 <div id="header" class="mw">
 
@@ -13,6 +33,13 @@ layout: default
 <div class="scroller">
   <div class="item">
     <div class="headlines tc">
+      <div id="video-box">   
+        <div class="background"></div>
+        <div class="row r0"><div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=65c42i7Xg7Q"><img src="http://img.youtube.com/vi/65c42i7Xg7Q/1.jpg" /></a></div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=65c42i7Xg7Q">1. The Rise of the Non-Relational Datastore</a></div>
+        <div class="row r1"><div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=MYY51kiFPTk"><img src="http://img.youtube.com/vi/MYY51kiFPTk/1.jpg" /></a></div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=MYY51kiFPTk">2. Deployment Options and Client Access</a></div>
+        <div class="row r2"><div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=bhmNbH2yzhM"><img src="http://img.youtube.com/vi/bhmNbH2yzhM/1.jpg" /></a></div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=bhmNbH2yzhM">3. Connecting to Data Sources</a></div>
+        <div class="row r3"><div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=6pGeQOXDdD8"><img src="http://img.youtube.com/vi/6pGeQOXDdD8/1.jpg" /></a></div><a class="various fancybox.iframe" href="http://www.youtube.com/watch?v=6pGeQOXDdD8">4. High-Performance SQL with a JSON Model</a></div>
+      </div>
       <h1 class="main-headline">Apache Drill</h1>
       <h2 id="sub-headline">Schema-free SQL Query Engine <br class="mobile-break" /> for Hadoop and NoSQL</h2>
       <a href="{{ site.baseurl }}/download/" class="download-headline btn btn-1 btn-1c"><span>DOWNLOAD NOW</span></a>

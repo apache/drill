@@ -81,7 +81,7 @@ Drill exposes a simple and high-performance Java API to build custom functions (
 
 
 ## 9. High performance
-Drill is designed fround the ground up for high throughput and low latency. It doesn't use a general purpose execution engine like MapReduce, Tez or Spark. As a result, Drill is able to deliver its unparalleled flexibility (schema-free JSON model) without compromising performance. Drill's optimizer leverages rule- and cost-based techniques, as well as data locality and operator push-down (the ability to push down query fragments into the back-end data sources). Drill also provides a columnar and vectorized execution engine, resulting in higher memory and CPU efficiency.
+Drill is designed from the ground up for high throughput and low latency. It doesn't use a general purpose execution engine like MapReduce, Tez or Spark. As a result, Drill is able to deliver its unparalleled flexibility (schema-free JSON model) without compromising performance. Drill's optimizer leverages rule- and cost-based techniques, as well as data locality and operator push-down (the ability to push down query fragments into the back-end data sources). Drill also provides a columnar and vectorized execution engine, resulting in higher memory and CPU efficiency.
 
 ## 10. Scales from a single laptop to a 1000-node cluster
 Drill is available as a simple download you can run on your laptop. When you're ready to analyze larger datasets, simply deploy Drill on your Hadoop cluster (up to 1000 commodity servers). Drill leverages the aggregate memory in the cluster to execute queries using an optimistic pipelined model, and automatically spills to disk when the working set doesn't fit in memory.

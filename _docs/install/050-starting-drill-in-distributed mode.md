@@ -72,3 +72,15 @@ Drill provides a list of Drillbits that have joined.
 
 Now you can run queries. The Drill installation includes sample data
 that you can query. Refer to [Querying Parquet Files]({{ site.baseurl }}/docs/querying-parquet-files/).
+
+## Exiting SQLLine
+
+To exit SQLLine, issue the following command:
+
+    !quit
+
+## Stopping Drill
+
+In some cases, such as stopping while a query is in progress, the `!quit` command does not stop Drill running in embedded mode. In distributed mode, you stop the Drillbit service. Navigate to the Drill installation directory, and issue the following command to stop a Drillbit:
+  
+        bin/drillbit.sh stop

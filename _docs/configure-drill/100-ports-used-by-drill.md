@@ -1,6 +1,6 @@
 ---
 title: "Ports Used by Drill"
-parent: "Manage Drill"
+parent: "Configure Drill"
 ---
 The following table provides a list of the ports that Drill uses, the port
 type, and a description of how Drill uses the port:

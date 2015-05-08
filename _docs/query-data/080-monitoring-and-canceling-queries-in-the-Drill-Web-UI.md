@@ -1,6 +1,6 @@
 ---
 title: "Monitoring and Canceling Queries in the Drill Web UI"
-parent: "Manage Drill"
+parent: "Query Data"
 ---
 You can monitor and cancel queries from the Drill Web UI. To access the Drill
 Web UI, the Drillbit process must be running on the Drill node that you use to

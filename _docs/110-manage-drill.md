@@ -1,6 +1,0 @@
----
-title: "Manage Drill"
----
-
-  
-
