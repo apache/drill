@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.data;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
+import io.netty.channel.socket.SocketChannel;
 
 import java.util.UUID;
 
@@ -36,8 +36,8 @@ public class DataClientConnection extends RemoteConnection{
   private final DataClient client;
   private final UUID id;
 
-  public DataClientConnection(Channel channel, DataClient client) {
-    super(channel);
+  public DataClientConnection(SocketChannel channel, DataClient client) {
+    super(channel, "data client");
     this.client = client;
     // we use a local listener pool unless a global one is provided.
     this.id = UUID.randomUUID();

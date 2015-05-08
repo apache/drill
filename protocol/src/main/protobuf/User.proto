@@ -44,6 +44,7 @@ message UserToBitHandshake {
   optional exec.shared.UserCredentials credentials = 4;
   optional UserProperties properties = 5;
   optional bool support_complex_types = 6 [default = false];
+  optional bool support_timeout = 7 [default = false];
 }
 
 message RequestResults {

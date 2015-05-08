@@ -20,14 +20,14 @@ package org.apache.drill.exec.rpc.user;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack.Builder;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
-import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -51,13 +51,21 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
 
   private boolean supportComplexTypes = true;
 
-  public UserClient(boolean supportComplexTypes, BufferAllocator alloc, EventLoopGroup eventLoopGroup) {
-    super(UserRpcConfig.MAPPING, alloc, eventLoopGroup, RpcType.HANDSHAKE, BitToUserHandshake.class, BitToUserHandshake.PARSER);
+  public UserClient(DrillConfig config, boolean supportComplexTypes, BufferAllocator alloc,
+      EventLoopGroup eventLoopGroup) {
+    super(
+        UserRpcConfig.getMapping(config),
+        alloc,
+        eventLoopGroup,
+        RpcType.HANDSHAKE,
+        BitToUserHandshake.class,
+        BitToUserHandshake.PARSER,
+        "user client");
     this.supportComplexTypes = supportComplexTypes;
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
-    send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
+    send(queryResultHandler.getWrappedListener(connection, resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
   public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint, UserProperties props, UserBitShared.UserCredentials credentials)
@@ -66,6 +74,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)
         .setSupportComplexTypes(supportComplexTypes)
+        .setSupportTimeout(true)
         .setCredentials(credentials);
 
     if (props != null) {

@@ -42,6 +42,14 @@ public final class GeneralRPCProtos {
      * <code>RESPONSE_FAILURE = 2;</code>
      */
     RESPONSE_FAILURE(2, 2),
+    /**
+     * <code>PING = 3;</code>
+     */
+    PING(3, 3),
+    /**
+     * <code>PONG = 4;</code>
+     */
+    PONG(4, 4),
     ;
 
     /**
@@ -56,6 +64,14 @@ public final class GeneralRPCProtos {
      * <code>RESPONSE_FAILURE = 2;</code>
      */
     public static final int RESPONSE_FAILURE_VALUE = 2;
+    /**
+     * <code>PING = 3;</code>
+     */
+    public static final int PING_VALUE = 3;
+    /**
+     * <code>PONG = 4;</code>
+     */
+    public static final int PONG_VALUE = 4;
 
 
     public final int getNumber() { return value; }
@@ -65,6 +81,8 @@ public final class GeneralRPCProtos {
         case 0: return REQUEST;
         case 1: return RESPONSE;
         case 2: return RESPONSE_FAILURE;
+        case 3: return PING;
+        case 4: return PONG;
         default: return null;
       }
     }
@@ -1972,10 +1990,10 @@ public final class GeneralRPCProtos {
       "rdination_id\030\002 \001(\005\022\020\n\010rpc_type\030\003 \001(\005\"b\n\022" +
       "CompleteRpcMessage\022#\n\006header\030\001 \001(\0132\023.exe" +
       "c.rpc.RpcHeader\022\025\n\rprotobuf_body\030\002 \001(\014\022\020" +
-      "\n\010raw_body\030\003 \001(\014*:\n\007RpcMode\022\013\n\007REQUEST\020\000" +
-      "\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_FAILURE\020\002B1\n\033" +
-      "org.apache.drill.exec.protoB\020GeneralRPCP" +
-      "rotosH\001"
+      "\n\010raw_body\030\003 \001(\014*N\n\007RpcMode\022\013\n\007REQUEST\020\000" +
+      "\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_FAILURE\020\002\022\010\n\004" +
+      "PING\020\003\022\010\n\004PONG\020\004B1\n\033org.apache.drill.exe" +
+      "c.protoB\020GeneralRPCProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

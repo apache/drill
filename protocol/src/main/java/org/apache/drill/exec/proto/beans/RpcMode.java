@@ -24,7 +24,9 @@ public enum RpcMode implements com.dyuproject.protostuff.EnumLite<RpcMode>
 {
     REQUEST(0),
     RESPONSE(1),
-    RESPONSE_FAILURE(2);
+    RESPONSE_FAILURE(2),
+    PING(3),
+    PONG(4);
     
     public final int number;
     
@@ -45,6 +47,8 @@ public enum RpcMode implements com.dyuproject.protostuff.EnumLite<RpcMode>
             case 0: return REQUEST;
             case 1: return RESPONSE;
             case 2: return RESPONSE_FAILURE;
+            case 3: return PING;
+            case 4: return PONG;
             default: return null;
         }
     }

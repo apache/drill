@@ -47,6 +47,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
     static final UserToBitHandshake DEFAULT_INSTANCE = new UserToBitHandshake();
 
     static final Boolean DEFAULT_SUPPORT_COMPLEX_TYPES = new Boolean(false);
+    static final Boolean DEFAULT_SUPPORT_TIMEOUT = new Boolean(false);
     
     private RpcChannel channel;
     private Boolean supportListening;
@@ -54,6 +55,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
     private UserCredentials credentials;
     private UserProperties properties;
     private Boolean supportComplexTypes = DEFAULT_SUPPORT_COMPLEX_TYPES;
+    private Boolean supportTimeout = DEFAULT_SUPPORT_TIMEOUT;
 
     public UserToBitHandshake()
     {
@@ -140,6 +142,19 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
         return this;
     }
 
+    // supportTimeout
+
+    public Boolean getSupportTimeout()
+    {
+        return supportTimeout;
+    }
+
+    public UserToBitHandshake setSupportTimeout(Boolean supportTimeout)
+    {
+        this.supportTimeout = supportTimeout;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -214,6 +229,9 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
                 case 6:
                     message.supportComplexTypes = input.readBool();
                     break;
+                case 7:
+                    message.supportTimeout = input.readBool();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -242,6 +260,9 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
 
         if(message.supportComplexTypes != null && message.supportComplexTypes != DEFAULT_SUPPORT_COMPLEX_TYPES)
             output.writeBool(6, message.supportComplexTypes, false);
+
+        if(message.supportTimeout != null && message.supportTimeout != DEFAULT_SUPPORT_TIMEOUT)
+            output.writeBool(7, message.supportTimeout, false);
     }
 
     public String getFieldName(int number)
@@ -254,6 +275,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
             case 4: return "credentials";
             case 5: return "properties";
             case 6: return "supportComplexTypes";
+            case 7: return "supportTimeout";
             default: return null;
         }
     }
@@ -273,6 +295,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
         __fieldMap.put("credentials", 4);
         __fieldMap.put("properties", 5);
         __fieldMap.put("supportComplexTypes", 6);
+        __fieldMap.put("supportTimeout", 7);
     }
     
 }

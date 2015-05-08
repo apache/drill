@@ -18,10 +18,8 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.GenericFutureListener;
+import io.netty.channel.socket.SocketChannel;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
@@ -35,16 +33,13 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClientWithConnection.class);
 
   private BufferAllocator alloc;
+  private final String connectionName;
 
   public BasicClientWithConnection(RpcConfig rpcMapping, BufferAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
-      Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser) {
+      Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser, String connectionName) {
     super(rpcMapping, alloc.getUnderlyingAllocator(), eventLoopGroup, handshakeType, responseClass, handshakeParser);
     this.alloc = alloc;
-  }
-
-  @Override
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(ServerConnection clientConnection) {
-    return getCloseHandler(clientConnection.getChannel());
+    this.connectionName = connectionName;
   }
 
   @Override
@@ -55,16 +50,16 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   protected abstract Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException ;
 
   @Override
-  public ServerConnection initRemoteConnection(Channel channel) {
-    return new ServerConnection(channel, alloc);
+  public ServerConnection initRemoteConnection(SocketChannel channel) {
+    return new ServerConnection(connectionName, channel, alloc);
   }
 
   public static class ServerConnection extends RemoteConnection{
 
     private final BufferAllocator alloc;
 
-    public ServerConnection(Channel channel, BufferAllocator alloc) {
-      super(channel);
+    public ServerConnection(String name, SocketChannel channel, BufferAllocator alloc) {
+      super(channel, name);
       this.alloc = alloc;
     }
 

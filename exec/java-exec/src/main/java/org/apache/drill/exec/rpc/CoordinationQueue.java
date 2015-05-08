@@ -86,7 +86,7 @@ public class CoordinationQueue {
         if (future.channel().isActive()) {
            throw new RpcException("Future failed") ;
         } else {
-          throw  new ChannelClosedException();
+          setException(new ChannelClosedException());
         }
       }
     }

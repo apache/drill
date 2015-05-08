@@ -18,7 +18,7 @@
 package org.apache.drill.exec.rpc.control;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
+import io.netty.channel.socket.SocketChannel;
 
 import java.util.UUID;
 
@@ -41,8 +41,9 @@ public class ControlConnection extends RemoteConnection {
   private volatile boolean active = false;
   private final UUID id;
 
-  public ControlConnection(Channel channel, RpcBus<RpcType, ControlConnection> bus, BufferAllocator allocator) {
-    super(channel);
+  public ControlConnection(String name, SocketChannel channel, RpcBus<RpcType, ControlConnection> bus,
+      BufferAllocator allocator) {
+    super(channel, name);
     this.bus = bus;
     this.id = UUID.randomUUID();
     this.allocator = allocator;

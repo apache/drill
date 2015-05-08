@@ -1836,6 +1836,16 @@ public final class UserProtos {
      * <code>optional bool support_complex_types = 6 [default = false];</code>
      */
     boolean getSupportComplexTypes();
+
+    // optional bool support_timeout = 7 [default = false];
+    /**
+     * <code>optional bool support_timeout = 7 [default = false];</code>
+     */
+    boolean hasSupportTimeout();
+    /**
+     * <code>optional bool support_timeout = 7 [default = false];</code>
+     */
+    boolean getSupportTimeout();
   }
   /**
    * Protobuf type {@code exec.user.UserToBitHandshake}
@@ -1938,6 +1948,11 @@ public final class UserProtos {
             case 48: {
               bitField0_ |= 0x00000020;
               supportComplexTypes_ = input.readBool();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              supportTimeout_ = input.readBool();
               break;
             }
           }
@@ -2088,6 +2103,22 @@ public final class UserProtos {
       return supportComplexTypes_;
     }
 
+    // optional bool support_timeout = 7 [default = false];
+    public static final int SUPPORT_TIMEOUT_FIELD_NUMBER = 7;
+    private boolean supportTimeout_;
+    /**
+     * <code>optional bool support_timeout = 7 [default = false];</code>
+     */
+    public boolean hasSupportTimeout() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional bool support_timeout = 7 [default = false];</code>
+     */
+    public boolean getSupportTimeout() {
+      return supportTimeout_;
+    }
+
     private void initFields() {
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
@@ -2095,6 +2126,7 @@ public final class UserProtos {
       credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
       properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
       supportComplexTypes_ = false;
+      supportTimeout_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2132,6 +2164,9 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBool(6, supportComplexTypes_);
       }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBool(7, supportTimeout_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -2164,6 +2199,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(6, supportComplexTypes_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(7, supportTimeout_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2303,6 +2342,8 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         supportComplexTypes_ = false;
         bitField0_ = (bitField0_ & ~0x00000020);
+        supportTimeout_ = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -2363,6 +2404,10 @@ public final class UserProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.supportComplexTypes_ = supportComplexTypes_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.supportTimeout_ = supportTimeout_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2396,6 +2441,9 @@ public final class UserProtos {
         }
         if (other.hasSupportComplexTypes()) {
           setSupportComplexTypes(other.getSupportComplexTypes());
+        }
+        if (other.hasSupportTimeout()) {
+          setSupportTimeout(other.getSupportTimeout());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2795,6 +2843,39 @@ public final class UserProtos {
       public Builder clearSupportComplexTypes() {
         bitField0_ = (bitField0_ & ~0x00000020);
         supportComplexTypes_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional bool support_timeout = 7 [default = false];
+      private boolean supportTimeout_ ;
+      /**
+       * <code>optional bool support_timeout = 7 [default = false];</code>
+       */
+      public boolean hasSupportTimeout() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bool support_timeout = 7 [default = false];</code>
+       */
+      public boolean getSupportTimeout() {
+        return supportTimeout_;
+      }
+      /**
+       * <code>optional bool support_timeout = 7 [default = false];</code>
+       */
+      public Builder setSupportTimeout(boolean value) {
+        bitField0_ |= 0x00000040;
+        supportTimeout_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool support_timeout = 7 [default = false];</code>
+       */
+      public Builder clearSupportTimeout() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        supportTimeout_ = false;
         onChanged();
         return this;
       }
@@ -4890,31 +4971,31 @@ public final class UserProtos {
       "\032\023UserBitShared.proto\"&\n\010Property\022\013\n\003key" +
       "\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"9\n\016UserProperties\022" +
       "\'\n\nproperties\030\001 \003(\0132\023.exec.user.Property" +
-      "\"\374\001\n\022UserToBitHandshake\022.\n\007channel\030\001 \001(\016" +
+      "\"\234\002\n\022UserToBitHandshake\022.\n\007channel\030\001 \001(\016" +
       "2\027.exec.shared.RpcChannel:\004USER\022\031\n\021suppo" +
       "rt_listening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\022" +
       "1\n\013credentials\030\004 \001(\0132\034.exec.shared.UserC" +
       "redentials\022-\n\nproperties\030\005 \001(\0132\031.exec.us" +
       "er.UserProperties\022$\n\025support_complex_typ",
-      "es\030\006 \001(\010:\005false\"S\n\016RequestResults\022&\n\010que" +
-      "ry_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021max" +
-      "imum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014resu" +
-      "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM" +
-      "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp" +
-      "e\022\014\n\004plan\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n" +
-      "\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exe" +
-      "c.user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022" +
-      "\024\n\014errorMessage\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHAN" +
-      "DSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QU",
-      "ERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESUL" +
-      "TS\020\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026" +
-      "\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_" +
-      "LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResults" +
-      "Mode\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus" +
-      "\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022" +
-      "\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n" +
-      "\033org.apache.drill.exec.protoB\nUserProtos" +
-      "H\001"
+      "es\030\006 \001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010" +
+      ":\005false\"S\n\016RequestResults\022&\n\010query_id\030\001 " +
+      "\001(\0132\024.exec.shared.QueryId\022\031\n\021maximum_res" +
+      "ponses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014results_mode" +
+      "\030\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n\004t" +
+      "ype\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004pla" +
+      "n\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n\013rpc_ver" +
+      "sion\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.H" +
+      "andshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n\014error" +
+      "Message\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000",
+      "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n" +
+      "\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\016\n\n" +
+      "QUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022REQ_ME" +
+      "TA_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t\022\020" +
+      "\n\014QUERY_RESULT\020\n*#\n\020QueryResultsMode\022\017\n\013" +
+      "STREAM_FULL\020\001*^\n\017HandshakeStatus\022\013\n\007SUCC" +
+      "ESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013AUTH_" +
+      "FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n\033org.apa" +
+      "che.drill.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4938,7 +5019,7 @@ public final class UserProtos {
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", "SupportComplexTypes", "SupportTimeout", });
           internal_static_exec_user_RequestResults_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new

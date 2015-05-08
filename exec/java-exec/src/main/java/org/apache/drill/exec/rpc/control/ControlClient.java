@@ -18,8 +18,8 @@
 package org.apache.drill.exec.rpc.control;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -50,7 +50,8 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   private final BufferAllocator allocator;
 
   public ControlClient(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint, ControlMessageHandler handler, BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
-    super(ControlRpcConfig.MAPPING, context.getAllocator().getUnderlyingAllocator(), context.getBitLoopGroup(), RpcType.HANDSHAKE, BitControlHandshake.class, BitControlHandshake.PARSER);
+    super(ControlRpcConfig.getMapping(context.getConfig()), context.getAllocator().getUnderlyingAllocator(), context
+        .getBitLoopGroup(), RpcType.HANDSHAKE, BitControlHandshake.class, BitControlHandshake.PARSER);
     this.localIdentity = localEndpoint;
     this.remoteEndpoint = remoteEndpoint;
     this.handler = handler;
@@ -64,14 +65,15 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
 
   @SuppressWarnings("unchecked")
   @Override
-  public ControlConnection initRemoteConnection(Channel channel) {
-    this.connection = new ControlConnection(channel, (RpcBus<RpcType, ControlConnection>) (RpcBus<?, ?>) this, allocator);
+  public ControlConnection initRemoteConnection(SocketChannel channel) {
+    this.connection = new ControlConnection("control client", channel,
+        (RpcBus<RpcType, ControlConnection>) (RpcBus<?, ?>) this, allocator);
     return connection;
   }
 
   @Override
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(ControlConnection clientConnection) {
-    return closeHandlerFactory.getHandler(clientConnection, super.getCloseHandler(clientConnection));
+  protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel ch, ControlConnection clientConnection) {
+    return closeHandlerFactory.getHandler(clientConnection, super.getCloseHandler(ch, clientConnection));
   }
 
   @Override

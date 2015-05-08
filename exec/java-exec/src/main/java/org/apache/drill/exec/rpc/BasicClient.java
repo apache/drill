@@ -20,18 +20,24 @@ package org.apache.drill.exec.rpc;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
 
 import com.google.protobuf.Internal.EnumLite;
@@ -40,7 +46,12 @@ import com.google.protobuf.Parser;
 
 public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection, HANDSHAKE_SEND extends MessageLite, HANDSHAKE_RESPONSE extends MessageLite>
     extends RpcBus<T, R> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClient.class);
+  final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
+
+  // The percentage of time that should pass before sending a ping message to ensure server doesn't time us out. For
+  // example, if timeout is set to 30 seconds and we set percentage to 0.5, then if no write has happened within 15
+  // seconds, the idle state handler will send a ping message.
+  private static final double PERCENT_TIMEOUT_BEFORE_SENDING_PING = 0.5;
 
   private final Bootstrap b;
   protected R connection;
@@ -48,18 +59,23 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   private final Class<HANDSHAKE_RESPONSE> responseClass;
   private final Parser<HANDSHAKE_RESPONSE> handshakeParser;
 
+  private final IdlePingHandler pingHandler;
+
   public BasicClient(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
       Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser) {
     super(rpcMapping);
     this.responseClass = responseClass;
     this.handshakeType = handshakeType;
     this.handshakeParser = handshakeParser;
+    final long timeoutInMillis = rpcMapping.hasTimeout() ? (long) (rpcMapping.getTimeout() * 1000.0 * PERCENT_TIMEOUT_BEFORE_SENDING_PING)
+        : -1;
+    this.pingHandler = rpcMapping.hasTimeout() ? new IdlePingHandler(timeoutInMillis) : null;
 
     b = new Bootstrap() //
         .group(eventLoopGroup) //
         .channel(TransportCheck.getClientSocketChannel()) //
         .option(ChannelOption.ALLOCATOR, alloc) //
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30*1000)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30 * 1000)
         .option(ChannelOption.SO_REUSEADDR, true)
         .option(ChannelOption.SO_RCVBUF, 1 << 17) //
         .option(ChannelOption.SO_SNDBUF, 1 << 17) //
@@ -68,40 +84,72 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
-//            logger.debug("initializing client connection.");
+            // logger.debug("initializing client connection.");
             connection = initRemoteConnection(ch);
-            ch.closeFuture().addListener(getCloseHandler(connection));
 
-            ch.pipeline().addLast( //
-                getDecoder(connection.getAllocator()), //
-                new RpcDecoder("c-" + rpcConfig.getName()), //
-                new RpcEncoder("c-" + rpcConfig.getName()), //
-                new ClientHandshakeHandler(), //
-                new InboundHandler(connection), //
-                new RpcExceptionHandler() //
-                );
+            ch.closeFuture().addListener(getCloseHandler(ch, connection));
+
+            final ChannelPipeline pipe = ch.pipeline();
+
+            pipe.addLast("protocol-decoder", getDecoder(connection.getAllocator()));
+            pipe.addLast("message-decoder", new RpcDecoder("c-" + rpcConfig.getName()));
+            pipe.addLast("protocol-encoder", new RpcEncoder("c-" + rpcConfig.getName()));
+            pipe.addLast("handshake-handler", new ClientHandshakeHandler());
+
+            if(pingHandler != null){
+              pipe.addLast("idle-state-handler", pingHandler);
+            }
+
+            pipe.addLast("message-handler", new InboundHandler(connection));
+            pipe.addLast("exception-handler", new RpcExceptionHandler(connection.getName()));
           }
         }); //
 
-//    if(TransportCheck.SUPPORTS_EPOLL){
-//      b.option(EpollChannelOption.SO_REUSEPORT, true); //
-//    }
+    // if(TransportCheck.SUPPORTS_EPOLL){
+    // b.option(EpollChannelOption.SO_REUSEPORT, true); //
+    // }
+  }
+
+  private static final OutboundRpcMessage PING_MESSAGE = new OutboundRpcMessage(RpcMode.PING, 0, 0, Acks.OK);
+
+  /**
+   * Handler that watches for situations where we haven't read from the socket in a certain timeout. If we exceed this
+   * timeout, we send a PING message to the server to state that we are still alive.
+   */
+  private class IdlePingHandler extends IdleStateHandler {
+
+    private GenericFutureListener<Future<? super Void>> pingFailedHandler = new GenericFutureListener<Future<? super Void>>() {
+      public void operationComplete(Future<? super Void> future) throws Exception {
+        if (!future.isSuccess()) {
+          logger.error("Unable to maintain connection {}.  Closing connection.", connection.getName());
+          connection.close();
+        }
+      }
+    };
+
+    public IdlePingHandler(long idleWaitInMillis) {
+      super(0, idleWaitInMillis, 0, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) throws Exception {
+      if (evt.state() == IdleState.WRITER_IDLE) {
+        ctx.writeAndFlush(PING_MESSAGE).addListener(pingFailedHandler);
+      }
+    }
   }
 
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
 
-  public boolean isActive(){
+  public boolean isActive() {
     return connection != null
         && connection.getChannel() != null
-        && connection.getChannel().isActive() ;
+        && connection.getChannel().isActive();
   }
 
   protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;
-  protected abstract void finalizeConnection(HANDSHAKE_RESPONSE handshake, R connection);
 
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(Channel channel) {
-    return new ChannelClosedHandler();
-  }
+  protected abstract void finalizeConnection(HANDSHAKE_RESPONSE handshake, R connection);
 
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
       T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
@@ -118,7 +166,8 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     return true;
   }
 
-  protected void connectAsClient(RpcConnectionHandler<R> connectionListener, HANDSHAKE_SEND handshakeValue, String host, int port){
+  protected void connectAsClient(RpcConnectionHandler<R> connectionListener, HANDSHAKE_SEND handshakeValue,
+      String host, int port) {
     ConnectionMultiListener cml = new ConnectionMultiListener(connectionListener, handshakeValue);
     b.connect(host, port).addListener(cml.connectionHandler);
   }
@@ -145,16 +194,17 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
       @Override
       public void operationComplete(ChannelFuture future) throws Exception {
-//        logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
+        // logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
         try {
           future.get();
           if (future.isSuccess()) {
-            // send a handshake on the current thread.  This is the only time we will send from within the event thread.  We can do this because the connection will not be backed up.
+            // send a handshake on the current thread. This is the only time we will send from within the event thread.
+            // We can do this because the connection will not be backed up.
             send(handshakeSendHandler, connection, handshakeType, handshakeValue, responseClass, true);
           } else {
             l.connectionFailed(FailureType.CONNECTION, new RpcException("General connection failure."));
           }
-//          logger.debug("Handshake queued for send.");
+          // logger.debug("Handshake queued for send.");
         } catch (Exception ex) {
           l.connectionFailed(FailureType.CONNECTION, ex);
         }
@@ -174,12 +224,12 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
       @Override
       public void success(HANDSHAKE_RESPONSE value, ByteBuf buffer) {
-//        logger.debug("Handshake received. {}", value);
+        // logger.debug("Handshake received. {}", value);
         try {
           BasicClient.this.validateHandshake(value);
           BasicClient.this.finalizeConnection(value, connection);
           l.connectionSucceeded(connection);
-//          logger.debug("Handshake completed succesfully.");
+          // logger.debug("Handshake completed succesfully.");
         } catch (RpcException ex) {
           l.connectionFailed(FailureType.HANDSHAKE_VALIDATION, ex);
         }
@@ -205,7 +255,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
   }
 
-  public void setAutoRead(boolean enableAutoRead){
+  public void setAutoRead(boolean enableAutoRead) {
     connection.setAutoRead(enableAutoRead);
   }
 

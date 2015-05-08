@@ -280,6 +280,8 @@ public final class SchemaUserProtos
 
                 if(message.hasSupportComplexTypes())
                     output.writeBool(6, message.getSupportComplexTypes(), false);
+                if(message.hasSupportTimeout())
+                    output.writeBool(7, message.getSupportTimeout(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserProtos.UserToBitHandshake message)
             {
@@ -339,6 +341,9 @@ public final class SchemaUserProtos
                         case 6:
                             builder.setSupportComplexTypes(input.readBool());
                             break;
+                        case 7:
+                            builder.setSupportTimeout(input.readBool());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -385,6 +390,7 @@ public final class SchemaUserProtos
                 case 4: return "credentials";
                 case 5: return "properties";
                 case 6: return "supportComplexTypes";
+                case 7: return "supportTimeout";
                 default: return null;
             }
         }
@@ -402,6 +408,7 @@ public final class SchemaUserProtos
             fieldMap.put("credentials", 4);
             fieldMap.put("properties", 5);
             fieldMap.put("supportComplexTypes", 6);
+            fieldMap.put("supportTimeout", 7);
         }
     }
 

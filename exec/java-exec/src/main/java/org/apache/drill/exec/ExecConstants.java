@@ -42,7 +42,9 @@ public interface ExecConstants {
   public static final String STORAGE_ENGINE_SCAN_PACKAGES = "drill.exec.storage.packages";
   public static final String SERVICE_NAME = "drill.exec.cluster-id";
   public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.server.port";
+  public static final String BIT_RPC_TIMEOUT = "drill.exec.rpc.bit.timeout";
   public static final String INITIAL_USER_PORT = "drill.exec.rpc.user.server.port";
+  public static final String USER_RPC_TIMEOUT = "drill.exec.rpc.user.timeout";
   public static final String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
   public static final String FUNCTION_PACKAGES = "drill.exec.functions";
   public static final String USE_IP_ADDRESS = "drill.exec.rpc.use.ip";

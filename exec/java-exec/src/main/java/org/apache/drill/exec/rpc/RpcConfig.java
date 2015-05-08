@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc;
 
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.protobuf.Internal.EnumLite;
@@ -28,11 +29,14 @@ public class RpcConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcConfig.class);
 
   private final String name;
+  private final int timeout;
   private final Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap;
   private final Map<Integer, RpcMessageType<?, ?, ?>> receiveMap;
 
-  private RpcConfig(String name, Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap, Map<Integer, RpcMessageType<?, ?, ?>> receiveMap) {
+  private RpcConfig(String name, Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap,
+      Map<Integer, RpcMessageType<?, ?, ?>> receiveMap, int timeout) {
     this.name = name;
+    this.timeout = timeout;
     this.sendMap = ImmutableMap.copyOf(sendMap);
     this.receiveMap = ImmutableMap.copyOf(receiveMap);
   }
@@ -41,6 +45,13 @@ public class RpcConfig {
     return name;
   }
 
+  public int getTimeout() {
+    return timeout;
+  }
+
+  public boolean hasTimeout() {
+    return timeout > 0;
+  }
   public boolean checkReceive(int rpcType, Class<?> receiveClass) {
     if (RpcConstants.EXTRA_DEBUGGING) {
       logger.debug(String.format("Checking reception for rpcType %d and receive class %s.", rpcType, receiveClass));
@@ -134,17 +145,27 @@ public class RpcConfig {
 
   }
 
-  public static RpcConfigBuilder newBuilder(String name) {
-    return new RpcConfigBuilder(name);
+  public static RpcConfigBuilder newBuilder() {
+    return new RpcConfigBuilder();
   }
 
   public static class RpcConfigBuilder {
-    private final String name;
+    private String name;
+    private int timeout = -1;
     private Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap = Maps.newHashMap();
     private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = Maps.newHashMap();
 
-    private RpcConfigBuilder(String name) {
+    private RpcConfigBuilder() {
+    }
+
+    public RpcConfigBuilder name(String name) {
       this.name = name;
+      return this;
+    }
+
+    public RpcConfigBuilder timeout(int timeoutInSeconds) {
+      this.timeout = timeoutInSeconds;
+      return this;
     }
 
     public <SEND extends MessageLite, RECEIVE extends MessageLite, T extends EnumLite>  RpcConfigBuilder add(T sendEnum, Class<SEND> send, T receiveEnum, Class<RECEIVE> rec) {
@@ -155,7 +176,9 @@ public class RpcConfig {
     }
 
     public RpcConfig build() {
-      return new RpcConfig(name, sendMap, receiveMap);
+      Preconditions.checkArgument(timeout > -1, "Timeout must be a positive number or zero for disabled.");
+      Preconditions.checkArgument(name != null, "RpcConfig name must be set.");
+      return new RpcConfig(name, sendMap, receiveMap, timeout);
     }
 
   }

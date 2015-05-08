@@ -23,10 +23,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 
@@ -125,25 +127,36 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
   }
 
-  public abstract C initRemoteConnection(Channel channel);
+  public abstract C initRemoteConnection(SocketChannel channel);
 
   public class ChannelClosedHandler implements GenericFutureListener<ChannelFuture> {
+
+    final InetSocketAddress local;
+    final InetSocketAddress remote;
+    final C clientConnection;
+
+    public ChannelClosedHandler(C clientConnection, InetSocketAddress local, InetSocketAddress remote) {
+      this.local = local;
+      this.remote = remote;
+      this.clientConnection = clientConnection;
+    }
+
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      logger.info("Channel closed between local {} and remote {}", future.channel().localAddress(), future.channel()
-          .remoteAddress());
-      closeQueueDueToChannelClose();
+      String msg = String.format("Channel closed %s <--> %s.", local, remote);
+      if (RpcBus.this.isClient()) {
+        logger.info(String.format(msg));
+      } else {
+        queue.channelClosed(new ChannelClosedException(msg));
+      }
+
+      clientConnection.close();
     }
+
   }
 
-  protected void closeQueueDueToChannelClose() {
-    if (this.isClient()) {
-      queue.channelClosed(new ChannelClosedException("Queue closed due to channel closure."));
-    }
-  }
-
-  protected GenericFutureListener<ChannelFuture> getCloseHandler(C clientConnection) {
-    return new ChannelClosedHandler();
+  protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel channel, C clientConnection) {
+    return new ChannelClosedHandler(clientConnection, channel.localAddress(), channel.remoteAddress());
   }
 
   private class ResponseSenderImpl implements ResponseSender {
@@ -170,7 +183,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   }
 
+  private static final OutboundRpcMessage PONG = new OutboundRpcMessage(RpcMode.PONG, 0, 0, Acks.OK);
+
   protected class InboundHandler extends MessageToMessageDecoder<InboundRpcMessage> {
+
 
     private final C connection;
     public InboundHandler(C connection) {
@@ -179,67 +195,84 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, InboundRpcMessage msg, List<Object> output) throws Exception {
+    protected void decode(final ChannelHandlerContext ctx, final InboundRpcMessage msg, final List<Object> output) throws Exception {
       if (!ctx.channel().isOpen()) {
         return;
       }
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Received message {}", msg);
       }
-      switch (msg.mode) {
-      case REQUEST: {
-        // handle message and ack.
-        ResponseSender sender = new ResponseSenderImpl(connection, msg.coordinationId);
-        try {
-          handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
-        } catch(UserRpcException e){
-          UserException uex = UserException.systemError(e).addIdentity(e.getEndpoint()).build();
+      final Channel channel = connection.getChannel();
 
-          logger.error("Unexpected Error while handling request message", e);
+      try{
+        switch (msg.mode) {
+        case REQUEST: {
+          // handle message and ack.
 
-          OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE_FAILURE, 0, msg.coordinationId,
-            uex.getOrCreatePBError(false));
-          if (RpcConstants.EXTRA_DEBUGGING) {
-            logger.debug("Adding message to outbound buffer. {}", outMessage);
+          try {
+            ResponseSender sender = new ResponseSenderImpl(connection, msg.coordinationId);
+            handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
+          } catch (UserRpcException e) {
+            UserException uex = UserException.systemError(e).addIdentity(e.getEndpoint()).build();
+
+            logger.error("Unexpected Error while handling request message", e);
+
+            OutboundRpcMessage outMessage = new OutboundRpcMessage(
+                RpcMode.RESPONSE_FAILURE,
+                0,
+                msg.coordinationId,
+                uex.getOrCreatePBError(false)
+                );
+
+            if (RpcConstants.EXTRA_DEBUGGING) {
+              logger.debug("Adding message to outbound buffer. {}", outMessage);
+            }
+
+            channel.writeAndFlush(outMessage);
           }
-          connection.getChannel().writeAndFlush(outMessage);
+          break;
         }
-        msg.release();  // we release our ownership.  Handle could have taken over ownership.
-        break;
-      }
 
-      case RESPONSE:
-        try{
-        MessageLite m = getResponseDefaultInstance(msg.rpcType);
-        assert rpcConfig.checkReceive(msg.rpcType, m.getClass());
-        RpcOutcome<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
-        Parser<?> parser = m.getParserForType();
-        Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-        rpcFuture.set(value, msg.dBody);
-        msg.release();  // we release our ownership.  Handle could have taken over ownership.
-        if (RpcConstants.EXTRA_DEBUGGING) {
-          logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
-        }
-        }catch(Exception ex) {
-          logger.error("Failure while handling response.", ex);
-          throw ex;
-        }
-        break;
+        case RESPONSE:
+          try {
+            MessageLite m = getResponseDefaultInstance(msg.rpcType);
+            assert rpcConfig.checkReceive(msg.rpcType, m.getClass());
+            RpcOutcome<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
+            Parser<?> parser = m.getParserForType();
+            Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
+            rpcFuture.set(value, msg.dBody);
+            if (RpcConstants.EXTRA_DEBUGGING) {
+              logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
+            }
+          } catch (Exception ex) {
+            logger.error("Failure while handling response.", ex);
+            throw ex;
+          }
+          break;
 
-      case RESPONSE_FAILURE:
-        DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-        queue.updateFailedFuture(msg.coordinationId, failure);
+        case RESPONSE_FAILURE:
+          DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
+          queue.updateFailedFuture(msg.coordinationId, failure);
+          if (RpcConstants.EXTRA_DEBUGGING) {
+            logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
+          }
+          break;
+
+        case PING:
+          connection.getChannel().writeAndFlush(PONG);
+          break;
+
+        case PONG:
+          // noop.
+          break;
+
+        default:
+          throw new UnsupportedOperationException();
+        }
+      } finally {
         msg.release();
-        if (RpcConstants.EXTRA_DEBUGGING) {
-          logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
-        }
-        break;
-
-      default:
-        throw new UnsupportedOperationException();
       }
     }
-
   }
 
   public static <T> T get(ByteBuf pBody, Parser<T> parser) throws RpcException{

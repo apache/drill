@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import io.netty.channel.Channel;
+import io.netty.channel.socket.SocketChannel;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.RemoteConnection;
@@ -26,8 +26,9 @@ public class BitServerConnection extends RemoteConnection{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitServerConnection.class);
 
   private final BufferAllocator allocator;
-  public BitServerConnection(Channel channel, BufferAllocator allocator) {
-    super(channel);
+
+  public BitServerConnection(SocketChannel channel, BufferAllocator allocator) {
+    super(channel, "data server");
     this.allocator = allocator;
   }
 

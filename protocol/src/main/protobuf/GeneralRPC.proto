@@ -14,6 +14,8 @@ enum RpcMode {
   REQUEST = 0;
   RESPONSE = 1;
   RESPONSE_FAILURE = 2;
+  PING = 3;
+  PONG = 4;
 }
 
 message RpcHeader{

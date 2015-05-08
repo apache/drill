@@ -18,6 +18,9 @@
 package org.apache.drill.exec.work.foreman;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -121,6 +124,9 @@ public class Foreman implements Runnable {
   private final ResponseSendListener responseListener = new ResponseSendListener();
   private final StateSwitch stateSwitch = new StateSwitch();
   private final ForemanResult foremanResult = new ForemanResult();
+  private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
+  private final ChannelFuture closeFuture;
+
 
   /**
    * Constructor. Sets up the Foreman, but does not initiate any execution.
@@ -139,11 +145,21 @@ public class Foreman implements Runnable {
     this.drillbitContext = drillbitContext;
 
     initiatingClient = connection;
+    this.closeFuture = initiatingClient.getChannel().closeFuture();
+    closeFuture.addListener(closeListener);
+
     queryContext = new QueryContext(connection.getSession(), drillbitContext);
     queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
         stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
     recordNewState(QueryState.PENDING);
+  }
+
+  private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
+    @Override
+    public void operationComplete(Future<Void> future) throws Exception {
+      cancel();
+    }
   }
 
   /**
@@ -602,6 +618,9 @@ public class Foreman implements Runnable {
 
       logger.info("foreman cleaning up.");
       injector.injectPause(queryContext.getExecutionControls(), "foreman-cleanup", logger);
+
+      // remove the channel disconnected listener (doesn't throw)
+      closeFuture.removeListener(closeListener);
 
       // These are straight forward removals from maps, so they won't throw.
       drillbitContext.getWorkBus().removeFragmentStatusListener(queryId);
