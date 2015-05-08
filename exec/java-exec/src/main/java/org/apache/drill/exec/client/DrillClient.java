@@ -123,7 +123,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     // if isDirect is true, the client will connect directly to the drillbit instead of
     // going thru the zookeeper
     this.isDirectConnection = isDirect;
-    this.ownsZkConnection = coordinator == null;
+    this.ownsZkConnection = coordinator == null && !isDirect;
     this.ownsAllocator = allocator == null;
     this.allocator = ownsAllocator ? new TopLevelAllocator(config) : allocator;
     this.config = config;
