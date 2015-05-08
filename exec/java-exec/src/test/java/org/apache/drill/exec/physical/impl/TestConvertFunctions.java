@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,6 +32,7 @@ import java.util.List;
 import mockit.Injectable;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -74,9 +77,62 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   @Test
   public void test_JSON_convertTo_empty_list_drill_1416() throws Exception {
-    test("select cast(convert_to(rl[1], 'JSON') as varchar(100)) from cp.`/store/json/input2.json`");
-    test("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') from cp.`/store/json/input2.json`");
-    test("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') from cp.`/store/json/json_project_null_object_from_list.json`");
+
+    String listStr = "[ 4, 6 ]";
+    testBuilder()
+        .sqlQuery("select cast(convert_to(rl[1], 'JSON') as varchar(100)) as json_str from cp.`/store/json/input2.json`")
+        .unOrdered()
+        .baselineColumns("json_str")
+        .baselineValues(listStr)
+        .baselineValues("[ ]")
+        .baselineValues(listStr)
+        .baselineValues(listStr)
+        .go();
+
+    Object listVal = listOf(4l, 6l);
+    testBuilder()
+        .sqlQuery("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') list_col from cp.`/store/json/input2.json`")
+        .unOrdered()
+        .baselineColumns("list_col")
+        .baselineValues(listVal)
+        .baselineValues(listOf())
+        .baselineValues(listVal)
+        .baselineValues(listVal)
+        .go();
+
+    Object mapVal1 = mapOf("f1", 4l, "f2", 6l);
+    Object mapVal2 = mapOf("f1", 11l);
+    testBuilder()
+        .sqlQuery("select convert_from(convert_to(rl[1], 'JSON'), 'JSON') as map_col from cp.`/store/json/json_project_null_object_from_list.json`")
+        .unOrdered()
+        .baselineColumns("map_col")
+        .baselineValues(mapVal1)
+        .baselineValues(mapOf())
+        .baselineValues(mapVal2)
+        .baselineValues(mapVal1)
+        .go();
+  }
+
+  @Test
+  public void testConvertToComplexJSON() throws Exception {
+
+    String result1 =
+        "[ {\n" +
+            "  \"$numberLong\" : 4\n" +
+            "}, {\n" +
+            "  \"$numberLong\" : 6\n" +
+            "} ]";
+    String result2 = "[ ]";
+
+    testBuilder()
+        .sqlQuery("select cast(convert_to(rl[1], 'EXTENDEDJSON') as varchar(100)) as json_str from cp.`/store/json/input2.json`")
+        .unOrdered()
+        .baselineColumns("json_str")
+        .baselineValues(result1)
+        .baselineValues(result2)
+        .baselineValues(result1)
+        .baselineValues(result1)
+        .go();
   }
 
   @Test

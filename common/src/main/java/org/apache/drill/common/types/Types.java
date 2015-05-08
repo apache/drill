@@ -376,6 +376,7 @@ public class Types {
       return MinorType.VARBINARY;
     case "json":
     case "simplejson":
+    case "extendedjson":
       return MinorType.LATE;
     case "null":
     case "any":

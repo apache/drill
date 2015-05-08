@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
 public class TestExtendedTypes extends BaseTestQuery {
@@ -39,19 +40,28 @@ public class TestExtendedTypes extends BaseTestQuery {
         Matcher.quoteReplacement(TestTools.getWorkingPath()));
 
     final String newTable = "TestExtendedTypes/newjson";
-    testNoResult("ALTER SESSION SET `store.format` = 'json'");
+    try {
+      testNoResult(String.format("ALTER SESSION SET `%s` = 'json'", ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()));
+      testNoResult(String.format("ALTER SESSION SET `%s` = true", ExecConstants.JSON_EXTENDED_TYPES.getOptionName()));
 
-    // create table
-    test("create table dfs_test.tmp.`%s` as select * from dfs.`%s`", newTable, originalFile);
+      // create table
+      test("create table dfs_test.tmp.`%s` as select * from dfs.`%s`", newTable, originalFile);
 
-    // check query of table.
-    test("select * from dfs_test.tmp.`%s`", newTable);
+      // check query of table.
+      test("select * from dfs_test.tmp.`%s`", newTable);
 
-    // check that original file and new file match.
-    final byte[] originalData = Files.readAllBytes(Paths.get(originalFile));
-    final byte[] newData = Files.readAllBytes(Paths.get(BaseTestQuery.getDfsTestTmpSchemaLocation() + '/' + newTable
-        + "/0_0_0.json"));
-    assertEquals(new String(originalData), new String(newData));
-
+      // check that original file and new file match.
+      final byte[] originalData = Files.readAllBytes(Paths.get(originalFile));
+      final byte[] newData = Files.readAllBytes(Paths.get(BaseTestQuery.getDfsTestTmpSchemaLocation() + '/' + newTable
+          + "/0_0_0.json"));
+      assertEquals(new String(originalData), new String(newData));
+    } finally {
+      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
+          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
+          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
+      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
+          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
+          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+    }
   }
 }

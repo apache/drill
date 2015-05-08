@@ -31,13 +31,21 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
+/**
+ * The two functions defined here convert_toJSON and convert_toEXTENDEDJSON are almost
+ * identical. For now, the default behavior is to use simple JSON (see DRILL-2976). Until the issues with
+ * extended JSON types are resolved, the convert_toJSON/convert_toSIMPLEJSON is consider the default. The default
+ * will possibly change in the future, as the extended types can accurately serialize more types supported
+ * by Drill.
+ * TODO(DRILL-2906) - review the default once issues with extended JSON are resolved
+ */
 public class JsonConvertTo {
 
  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonConvertTo.class);
 
   private JsonConvertTo(){}
 
-  @FunctionTemplate(name = "convert_toJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = { "convert_toJSON", "convert_toSIMPLEJSON" } , scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class ConvertToJson implements DrillSimpleFunc{
 
     @Param FieldReader input;
@@ -52,7 +60,7 @@ public class JsonConvertTo {
 
       java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, true);
+        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, false);
 
         jsonWriter.write(input);
       } catch (Exception e) {
@@ -67,8 +75,8 @@ public class JsonConvertTo {
     }
   }
 
-  @FunctionTemplate(name = "convert_toSIMPLEJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class ConvertToSimpleJson implements DrillSimpleFunc{
+  @FunctionTemplate(name = "convert_toEXTENDEDJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ConvertToExtendedJson implements DrillSimpleFunc{
 
     @Param FieldReader input;
     @Output VarBinaryHolder out;
@@ -82,7 +90,7 @@ public class JsonConvertTo {
 
       java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, false);
+        org.apache.drill.exec.vector.complex.fn.JsonWriter jsonWriter = new org.apache.drill.exec.vector.complex.fn.JsonWriter(stream, true, true);
 
         jsonWriter.write(input);
       } catch (Exception e) {
