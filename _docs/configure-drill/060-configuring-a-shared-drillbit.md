@@ -13,7 +13,7 @@ Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introdu
 
 ### Example Configuration
 
-For example, you configure the queue reserved for large queries to hold a 5-query maximum. You configure the queue reserved for small queries to hold 20 queries. Users start to run queries, and Drill receives the following query requests in this order:
+For example, you configure the queue reserved for large queries for a 5-query maximum. You configure the queue reserved for small queries for 20 queries. Users start to run queries, and Drill receives the following query requests in this order:
 
 * Query A (blue): 1 billion records, Drill estimates 10 million rows will be processed  
 * Query B (red): 2 billion records, Drill estimates 20 million rows will be processed  

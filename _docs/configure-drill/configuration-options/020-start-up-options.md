@@ -36,7 +36,7 @@ file tells Drill to scan that JAR file or associated object and include it.
 
 You can run the following query to see a list of Drill’s startup options:
 
-    SELECT * FROM sys.options WHERE type='BOOT'
+    SELECT * FROM sys.options WHERE type='BOOT';
 
 ## Configuring Start-Up Options
 
