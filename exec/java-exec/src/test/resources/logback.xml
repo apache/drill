@@ -36,6 +36,11 @@
     <appender-ref ref="SOCKET" />
   </logger>
 
+  <logger name="query.logger" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+  </logger>
+
 <!--   <logger name="io.netty" additivity="false"> -->
 <!--     <level value="debug" /> -->
 <!--     <appender-ref ref="SOCKET" /> -->

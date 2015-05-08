@@ -18,6 +18,7 @@
 package org.apache.drill.common.exceptions;
 
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 /**
@@ -531,7 +532,11 @@ public class UserException extends DrillRuntimeException {
    */
   @Override
   public String getMessage() {
-    return generateMessage();
+    return generateMessage(true);
+  }
+
+  public String getMessage(boolean includeErrorIdAndIdentity) {
+    return generateMessage(includeErrorIdAndIdentity);
   }
 
   /**
@@ -548,7 +553,11 @@ public class UserException extends DrillRuntimeException {
    * @return verbose error message
    */
   public String getVerboseMessage() {
-    return generateMessage() + "\n\n" + ErrorHelper.buildCausesMessage(getCause());
+    return getVerboseMessage(true);
+  }
+
+  public String getVerboseMessage(boolean includeErrorIdAndIdentity) {
+    return generateMessage(includeErrorIdAndIdentity) + "\n\n" + ErrorHelper.buildCausesMessage(getCause());
   }
 
   /**
@@ -575,6 +584,18 @@ public class UserException extends DrillRuntimeException {
     return builder.build();
   }
 
+  public String getErrorId() {
+    return context.getErrorId();
+  }
+
+  public String getErrorLocation() {
+    DrillbitEndpoint ep = context.getEndpoint();
+    if (ep != null) {
+      return ep.getAddress() + ":" + ep.getUserPort();
+    } else {
+      return null;
+    }
+  }
   /**
    * Generates a user error message that has the following structure:
    * ERROR TYPE: ERROR_MESSAGE
@@ -583,9 +604,9 @@ public class UserException extends DrillRuntimeException {
    *
    * @return generated user error message
    */
-  private String generateMessage() {
+  private String generateMessage(boolean includeErrorIdAndIdentity) {
     return errorType + " ERROR: " + super.getMessage() + "\n\n" +
-      context.generateContextMessage();
+        context.generateContextMessage(includeErrorIdAndIdentity);
   }
 
 }

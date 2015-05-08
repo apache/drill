@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -225,7 +226,7 @@ public class QueryManager {
     }
   }
 
-  QueryState updateQueryStateInStore(final QueryState queryState) {
+  QueryState updateEphemeralState(final QueryState queryState) {
     switch (queryState) {
       case PENDING:
       case RUNNING:
@@ -242,8 +243,6 @@ public class QueryManager {
           logger.warn("Failure while trying to delete the estore profile for this query.", e);
         }
 
-        // TODO(DRILL-2362) when do these ever get deleted?
-        profilePStore.put(stringQueryId, getQueryProfile());
         break;
 
       default:
@@ -253,18 +252,33 @@ public class QueryManager {
     return queryState;
   }
 
+  void writeFinalProfile(UserException ex) {
+    try {
+      // TODO(DRILL-2362) when do these ever get deleted?
+      profilePStore.put(stringQueryId, getQueryProfile(ex));
+    } catch (Exception e) {
+      logger.error("Failure while storing Query Profile", e);
+    }
+  }
+
   private QueryInfo getQueryInfo() {
     return QueryInfo.newBuilder()
-      .setQuery(runQuery.getPlan())
-      .setState(foreman.getState())
-      .setForeman(foreman.getQueryContext().getCurrentEndpoint())
-      .setStart(startTime)
-      .build();
+        .setQuery(runQuery.getPlan())
+        .setState(foreman.getState())
+        .setUser(foreman.getQueryContext().getQueryUserName())
+        .setForeman(foreman.getQueryContext().getCurrentEndpoint())
+        .setStart(startTime)
+        .build();
   }
 
   public QueryProfile getQueryProfile() {
+    return getQueryProfile(null);
+  }
+
+  private QueryProfile getQueryProfile(UserException ex) {
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
         .setQuery(runQuery.getPlan())
+        .setUser(foreman.getQueryContext().getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
         .setState(foreman.getState())
@@ -273,6 +287,15 @@ public class QueryManager {
         .setEnd(endTime)
         .setTotalFragments(fragmentDataSet.size())
         .setFinishedFragments(finishedFragments.get());
+
+    if (ex != null) {
+      profileBuilder.setError(ex.getMessage(false));
+      profileBuilder.setVerboseError(ex.getVerboseMessage(false));
+      profileBuilder.setErrorId(ex.getErrorId());
+      if (ex.getErrorLocation() != null) {
+        profileBuilder.setErrorNode(ex.getErrorLocation());
+      }
+    }
 
     if (planText != null) {
       profileBuilder.setPlan(planText);

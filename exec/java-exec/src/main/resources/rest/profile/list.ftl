@@ -24,6 +24,7 @@
         <thead>
            <td>Time</td>
            <!-- <td>Query Id</td> -->
+           <td>User</td>
            <td>Query</td>
            <td>State</td>
            <td>Foreman</td>
@@ -41,6 +42,11 @@
               </a>
             </td>
             -->
+            <td>
+              <a href="/profiles/${query.getQueryId()}">
+              <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
+              </a>
+            </td> 
             <td>
               <a href="/profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>
@@ -72,6 +78,7 @@
     <table class="table table-hover">
       <thead>
          <td>Time</td>
+         <td>User</td>
          <!-- <td>Query Id</td> -->
          <td>Query</td>
          <td>State</td>
@@ -90,6 +97,12 @@
             </a>
           </td>
           -->
+          <td>
+            <a href="/profiles/${query.getQueryId()}">
+            <div style="height:100%;width:100%;white-space:pre-line">${query.getUser()}</div>
+            </a>
+          </td> 
+          
           <td>
             <a href="/profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%;white-space:pre-line">${query.getQuery()}</div>

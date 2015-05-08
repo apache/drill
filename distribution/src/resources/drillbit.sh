@@ -147,12 +147,15 @@ JAVA=$JAVA_HOME/bin/java
 export DRILL_LOG_PREFIX=drillbit
 export DRILL_LOGFILE=$DRILL_LOG_PREFIX.log
 export DRILL_OUTFILE=$DRILL_LOG_PREFIX.out
+export DRILL_QUERYFILE=$DRILL_LOG_PREFIX_queries.json
 loggc=$DRILL_LOG_DIR/$DRILL_LOG_PREFIX.gc
 loglog="${DRILL_LOG_DIR}/${DRILL_LOGFILE}"
 logout="${DRILL_LOG_DIR}/${DRILL_OUTFILE}"
+logqueries="${DRILL_LOG_DIR}/${DRILL_QUERYFILE}"
 pid=$DRILL_PID_DIR/drillbit.pid
 
 export DRILLBIT_LOG_PATH=$loglog
+export DRILLBIT_QUERY_LOG_PATH=$logqueries
 
 if [ -n "$SERVER_GC_OPTS" ]; then
   export SERVER_GC_OPTS=${SERVER_GC_OPTS/"-Xloggc:<FILE-PATH>"/"-Xloggc:${loggc}"}

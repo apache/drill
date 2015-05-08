@@ -1778,6 +1778,16 @@ public final class SchemaUserBitShared
                 for(org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile fragmentProfile : message.getFragmentProfileList())
                     output.writeObject(11, fragmentProfile, org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.WRITE, true);
 
+                if(message.hasUser())
+                    output.writeString(12, message.getUser(), false);
+                if(message.hasError())
+                    output.writeString(13, message.getError(), false);
+                if(message.hasVerboseError())
+                    output.writeString(14, message.getVerboseError(), false);
+                if(message.hasErrorId())
+                    output.writeString(15, message.getErrorId(), false);
+                if(message.hasErrorNode())
+                    output.writeString(16, message.getErrorNode(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1853,6 +1863,21 @@ public final class SchemaUserBitShared
                             builder.addFragmentProfile(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.MERGE));
 
                             break;
+                        case 12:
+                            builder.setUser(input.readString());
+                            break;
+                        case 13:
+                            builder.setError(input.readString());
+                            break;
+                        case 14:
+                            builder.setVerboseError(input.readString());
+                            break;
+                        case 15:
+                            builder.setErrorId(input.readString());
+                            break;
+                        case 16:
+                            builder.setErrorNode(input.readString());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1904,6 +1929,11 @@ public final class SchemaUserBitShared
                 case 9: return "totalFragments";
                 case 10: return "finishedFragments";
                 case 11: return "fragmentProfile";
+                case 12: return "user";
+                case 13: return "error";
+                case 14: return "verboseError";
+                case 15: return "errorId";
+                case 16: return "errorNode";
                 default: return null;
             }
         }
@@ -1926,6 +1956,11 @@ public final class SchemaUserBitShared
             fieldMap.put("totalFragments", 9);
             fieldMap.put("finishedFragments", 10);
             fieldMap.put("fragmentProfile", 11);
+            fieldMap.put("user", 12);
+            fieldMap.put("error", 13);
+            fieldMap.put("verboseError", 14);
+            fieldMap.put("errorId", 15);
+            fieldMap.put("errorNode", 16);
         }
     }
 

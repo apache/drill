@@ -43,6 +43,10 @@ public class ProfileWrapper {
     this.id = QueryIdHelper.getQueryId(profile.getId());
   }
 
+  public boolean hasError() {
+    return profile.hasError() && profile.getError() != null;
+  }
+
   public QueryProfile getProfile() {
     return profile;
   }

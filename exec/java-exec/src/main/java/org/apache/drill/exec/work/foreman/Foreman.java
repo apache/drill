@@ -24,6 +24,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -105,6 +106,8 @@ import com.google.common.collect.Sets;
  */
 public class Foreman implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
+  private static final org.slf4j.Logger queryLogger = org.slf4j.LoggerFactory.getLogger("query.logger");
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(Foreman.class);
   private static final int RPC_WAIT_IN_SECONDS = 90;
 
@@ -129,6 +132,7 @@ public class Foreman implements Runnable {
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
 
+  private String queryText;
 
   /**
    * Constructor. Sets up the Foreman, but does not initiate any execution.
@@ -209,6 +213,8 @@ public class Foreman implements Runnable {
 
     try {
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
+      queryText = queryRequest.getPlan();
+
       // convert a run query request into action
       switch (queryRequest.getType()) {
       case LOGICAL:
@@ -435,19 +441,22 @@ public class Foreman implements Runnable {
       }
 
       final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
+      final String queueName;
 
       try {
         @SuppressWarnings("resource")
         final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
-        DistributedSemaphore distributedSemaphore;
+        final DistributedSemaphore distributedSemaphore;
 
         // get the appropriate semaphore
         if (totalCost > queueThreshold) {
           final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
           distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
+          queueName = "large";
         } else {
           final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
           distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
+          queueName = "small";
         }
 
 
@@ -459,12 +468,17 @@ public class Foreman implements Runnable {
       if (lease == null) {
         throw UserException
             .resourceError()
-            .message("Unable to acquire queue resources for query within timeout.  Timeout was set at %d seconds.",
-                queueTimeout / 1000)
+            .message(
+                "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
+                queueTimeout / 1000, queueName)
             .build();
       }
 
     }
+  }
+
+  Exception getCurrentException() {
+    return foremanResult.getException();
   }
 
   private QueryWorkUnit getQueryWorkUnit(final PhysicalPlan plan) throws ExecutionSetupException {
@@ -536,7 +550,7 @@ public class Foreman implements Runnable {
    */
   private class ForemanResult implements AutoCloseable {
     private QueryState resultState = null;
-    private Exception resultException = null;
+    private volatile Exception resultException = null;
     private boolean isClosed = false;
 
     /**
@@ -589,11 +603,20 @@ public class Foreman implements Runnable {
     }
 
     /**
-     * Close the given resource, catching and adding any caught exceptions via
-     * {@link #addException(Exception)}. If an exception is caught, it will change
-     * the result state to FAILED, regardless of what its current value.
+     * Expose the current exception (if it exists). This is useful for secondary reporting to the query profile.
      *
-     * @param autoCloseable the resource to close
+     * @return the current Foreman result exception or null.
+     */
+    public Exception getException() {
+      return resultException;
+    }
+
+    /**
+     * Close the given resource, catching and adding any caught exceptions via {@link #addException(Exception)}. If an
+     * exception is caught, it will change the result state to FAILED, regardless of what its current value.
+     *
+     * @param autoCloseable
+     *          the resource to close
      */
     private void suppressingClose(final AutoCloseable autoCloseable) {
       Preconditions.checkState(!isClosed);
@@ -615,6 +638,22 @@ public class Foreman implements Runnable {
       }
     }
 
+    private void logQuerySummary() {
+      try {
+        LoggedQuery q = new LoggedQuery(
+            QueryIdHelper.getQueryId(queryId),
+            queryContext.getQueryContextInfo().getDefaultSchemaName(),
+            queryText,
+            new Date(queryContext.getQueryContextInfo().getQueryStartTime()),
+            new Date(System.currentTimeMillis()),
+            state,
+            queryContext.getSession().getCredentials().getUserName());
+        queryLogger.info(MAPPER.writeValueAsString(q));
+      } catch (Exception e) {
+        logger.error("Failure while recording query information to query log.", e);
+      }
+    }
+
     @Override
     public void close() {
       Preconditions.checkState(!isClosed);
@@ -625,6 +664,9 @@ public class Foreman implements Runnable {
 
       // remove the channel disconnected listener (doesn't throw)
       closeFuture.removeListener(closeListener);
+
+      // log the query summary
+      logQuerySummary();
 
       // These are straight forward removals from maps, so they won't throw.
       drillbitContext.getWorkBus().removeFragmentStatusListener(queryId);
@@ -653,11 +695,17 @@ public class Foreman implements Runnable {
       final QueryResult.Builder resultBuilder = QueryResult.newBuilder()
           .setQueryId(queryId)
           .setQueryState(resultState);
+      final UserException uex;
       if (resultException != null) {
         final boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        final UserException uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
+        uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
         resultBuilder.addError(uex.getOrCreatePBError(verbose));
+      } else {
+        uex = null;
       }
+
+      // we store the final result here so we can capture any error/errorId in the profile for later debugging.
+      queryManager.writeFinalProfile(uex);
 
       /*
        * If sending the result fails, we don't really have any way to modify the result we tried to send;
@@ -802,7 +850,7 @@ public class Foreman implements Runnable {
 
   private void recordNewState(final QueryState newState) {
     state = newState;
-    queryManager.updateQueryStateInStore(newState);
+    queryManager.updateEphemeralState(newState);
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {

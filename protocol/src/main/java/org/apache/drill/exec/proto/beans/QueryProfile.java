@@ -27,6 +27,7 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.dyuproject.protostuff.ByteString;
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
 import com.dyuproject.protostuff.Message;
@@ -48,6 +49,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
     static final QueryProfile DEFAULT_INSTANCE = new QueryProfile();
 
+    static final String DEFAULT_USER = ByteString.stringDefaultValue("-");
     
     private QueryId id;
     private QueryType type;
@@ -60,6 +62,11 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private int totalFragments;
     private int finishedFragments;
     private List<MajorFragmentProfile> fragmentProfile;
+    private String user = DEFAULT_USER;
+    private String error;
+    private String verboseError;
+    private String errorId;
+    private String errorNode;
 
     public QueryProfile()
     {
@@ -211,6 +218,71 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         return this;
     }
 
+    // user
+
+    public String getUser()
+    {
+        return user;
+    }
+
+    public QueryProfile setUser(String user)
+    {
+        this.user = user;
+        return this;
+    }
+
+    // error
+
+    public String getError()
+    {
+        return error;
+    }
+
+    public QueryProfile setError(String error)
+    {
+        this.error = error;
+        return this;
+    }
+
+    // verboseError
+
+    public String getVerboseError()
+    {
+        return verboseError;
+    }
+
+    public QueryProfile setVerboseError(String verboseError)
+    {
+        this.verboseError = verboseError;
+        return this;
+    }
+
+    // errorId
+
+    public String getErrorId()
+    {
+        return errorId;
+    }
+
+    public QueryProfile setErrorId(String errorId)
+    {
+        this.errorId = errorId;
+        return this;
+    }
+
+    // errorNode
+
+    public String getErrorNode()
+    {
+        return errorNode;
+    }
+
+    public QueryProfile setErrorNode(String errorNode)
+    {
+        this.errorNode = errorNode;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -303,6 +375,21 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                     message.fragmentProfile.add(input.mergeObject(null, MajorFragmentProfile.getSchema()));
                     break;
 
+                case 12:
+                    message.user = input.readString();
+                    break;
+                case 13:
+                    message.error = input.readString();
+                    break;
+                case 14:
+                    message.verboseError = input.readString();
+                    break;
+                case 15:
+                    message.errorId = input.readString();
+                    break;
+                case 16:
+                    message.errorNode = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -353,6 +440,21 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             }
         }
 
+
+        if(message.user != null && message.user != DEFAULT_USER)
+            output.writeString(12, message.user, false);
+
+        if(message.error != null)
+            output.writeString(13, message.error, false);
+
+        if(message.verboseError != null)
+            output.writeString(14, message.verboseError, false);
+
+        if(message.errorId != null)
+            output.writeString(15, message.errorId, false);
+
+        if(message.errorNode != null)
+            output.writeString(16, message.errorNode, false);
     }
 
     public String getFieldName(int number)
@@ -370,6 +472,11 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 9: return "totalFragments";
             case 10: return "finishedFragments";
             case 11: return "fragmentProfile";
+            case 12: return "user";
+            case 13: return "error";
+            case 14: return "verboseError";
+            case 15: return "errorId";
+            case 16: return "errorNode";
             default: return null;
         }
     }
@@ -394,6 +501,11 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("totalFragments", 9);
         __fieldMap.put("finishedFragments", 10);
         __fieldMap.put("fragmentProfile", 11);
+        __fieldMap.put("user", 12);
+        __fieldMap.put("error", 13);
+        __fieldMap.put("verboseError", 14);
+        __fieldMap.put("errorId", 15);
+        __fieldMap.put("errorNode", 16);
     }
     
 }

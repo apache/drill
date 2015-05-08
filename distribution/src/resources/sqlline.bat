@@ -176,7 +176,7 @@ rem Put our property specification before previous value of DRILL_SHELL_JAVA_OPT
 rem so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
 set DRILL_SHELL_JAVA_OPTS=-Dsqlline.isolation=TRANSACTION_NONE %DRILL_SHELL_JAVA_OPTS%
 
-set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log"
+set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log" -Dlog.query.path="%DRILL_LOG_DIR%\sqlline_queries.log"
 
 SET JAVA_CMD=%JAVA_HOME%\bin\%JAVA_EXE%
 if "%JAVA_HOME%" == "" (set JAVA_CMD=%JAVA_EXE%)

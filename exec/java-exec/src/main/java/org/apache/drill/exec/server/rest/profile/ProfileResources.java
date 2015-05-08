@@ -63,14 +63,20 @@ public class ProfileResources {
     private String foreman;
     private String query;
     private String state;
+    private String user;
 
-    public ProfileInfo(String queryId, long time, String foreman, String query, String state) {
+    public ProfileInfo(String queryId, long time, String foreman, String query, String state, String user) {
       this.queryId = queryId;
       this.time = new Date(time);
       this.foreman = foreman;
       this.location = "http://localhost:8047/profile/" + queryId + ".json";
       this.query = query = query.substring(0,  Math.min(query.length(), 150));
       this.state = state;
+      this.user = user;
+    }
+
+    public String getUser() {
+      return user;
     }
 
     public String getQuery(){
@@ -146,7 +152,8 @@ public class ProfileResources {
 
     for (Map.Entry<String, QueryInfo> entry : running) {
       QueryInfo profile = entry.getValue();
-      runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name()));
+      runningQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile
+          .getQuery(), profile.getState().name(), profile.getUser()));
     }
 
     Collections.sort(runningQueries, Collections.reverseOrder());
@@ -155,7 +162,8 @@ public class ProfileResources {
     List<ProfileInfo> finishedQueries = Lists.newArrayList();
     for (Map.Entry<String, QueryProfile> entry : completed) {
       QueryProfile profile = entry.getValue();
-      finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(), profile.getQuery(), profile.getState().name()));
+      finishedQueries.add(new ProfileInfo(entry.getKey(), profile.getStart(), profile.getForeman().getAddress(),
+          profile.getQuery(), profile.getState().name(), profile.getUser()));
     }
 
     return new QProfiles(runningQueries, finishedQueries);

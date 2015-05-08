@@ -12012,17 +12012,17 @@ public final class UserBitShared {
      */
     org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState();
 
-    // optional string user = 4;
+    // optional string user = 4 [default = "-"];
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     boolean hasUser();
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     java.lang.String getUser();
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     com.google.protobuf.ByteString
         getUserBytes();
@@ -12246,17 +12246,17 @@ public final class UserBitShared {
       return state_;
     }
 
-    // optional string user = 4;
+    // optional string user = 4 [default = "-"];
     public static final int USER_FIELD_NUMBER = 4;
     private java.lang.Object user_;
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     public boolean hasUser() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     public java.lang.String getUser() {
       java.lang.Object ref = user_;
@@ -12273,7 +12273,7 @@ public final class UserBitShared {
       }
     }
     /**
-     * <code>optional string user = 4;</code>
+     * <code>optional string user = 4 [default = "-"];</code>
      */
     public com.google.protobuf.ByteString
         getUserBytes() {
@@ -12315,7 +12315,7 @@ public final class UserBitShared {
       query_ = "";
       start_ = 0L;
       state_ = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.PENDING;
-      user_ = "";
+      user_ = "-";
       foreman_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
@@ -12497,7 +12497,7 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000002);
         state_ = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.PENDING;
         bitField0_ = (bitField0_ & ~0x00000004);
-        user_ = "";
+        user_ = "-";
         bitField0_ = (bitField0_ & ~0x00000008);
         if (foremanBuilder_ == null) {
           foreman_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
@@ -12762,16 +12762,16 @@ public final class UserBitShared {
         return this;
       }
 
-      // optional string user = 4;
-      private java.lang.Object user_ = "";
+      // optional string user = 4 [default = "-"];
+      private java.lang.Object user_ = "-";
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public boolean hasUser() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public java.lang.String getUser() {
         java.lang.Object ref = user_;
@@ -12785,7 +12785,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public com.google.protobuf.ByteString
           getUserBytes() {
@@ -12801,7 +12801,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public Builder setUser(
           java.lang.String value) {
@@ -12814,7 +12814,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public Builder clearUser() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -12823,7 +12823,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>optional string user = 4;</code>
+       * <code>optional string user = 4 [default = "-"];</code>
        */
       public Builder setUserBytes(
           com.google.protobuf.ByteString value) {
@@ -13109,6 +13109,81 @@ public final class UserBitShared {
      */
     org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder getFragmentProfileOrBuilder(
         int index);
+
+    // optional string user = 12 [default = "-"];
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    boolean hasUser();
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    java.lang.String getUser();
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    com.google.protobuf.ByteString
+        getUserBytes();
+
+    // optional string error = 13;
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    boolean hasError();
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    java.lang.String getError();
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrorBytes();
+
+    // optional string verboseError = 14;
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    boolean hasVerboseError();
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    java.lang.String getVerboseError();
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    com.google.protobuf.ByteString
+        getVerboseErrorBytes();
+
+    // optional string error_id = 15;
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    boolean hasErrorId();
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    java.lang.String getErrorId();
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrorIdBytes();
+
+    // optional string error_node = 16;
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    boolean hasErrorNode();
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    java.lang.String getErrorNode();
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrorNodeBytes();
   }
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
@@ -13245,6 +13320,31 @@ public final class UserBitShared {
                 mutable_bitField0_ |= 0x00000400;
               }
               fragmentProfile_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.PARSER, extensionRegistry));
+              break;
+            }
+            case 98: {
+              bitField0_ |= 0x00000400;
+              user_ = input.readBytes();
+              break;
+            }
+            case 106: {
+              bitField0_ |= 0x00000800;
+              error_ = input.readBytes();
+              break;
+            }
+            case 114: {
+              bitField0_ |= 0x00001000;
+              verboseError_ = input.readBytes();
+              break;
+            }
+            case 122: {
+              bitField0_ |= 0x00002000;
+              errorId_ = input.readBytes();
+              break;
+            }
+            case 130: {
+              bitField0_ |= 0x00004000;
+              errorNode_ = input.readBytes();
               break;
             }
           }
@@ -13552,6 +13652,221 @@ public final class UserBitShared {
       return fragmentProfile_.get(index);
     }
 
+    // optional string user = 12 [default = "-"];
+    public static final int USER_FIELD_NUMBER = 12;
+    private java.lang.Object user_;
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    public boolean hasUser() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    public java.lang.String getUser() {
+      java.lang.Object ref = user_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          user_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string user = 12 [default = "-"];</code>
+     */
+    public com.google.protobuf.ByteString
+        getUserBytes() {
+      java.lang.Object ref = user_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        user_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string error = 13;
+    public static final int ERROR_FIELD_NUMBER = 13;
+    private java.lang.Object error_;
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    public java.lang.String getError() {
+      java.lang.Object ref = error_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          error_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string error = 13;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrorBytes() {
+      java.lang.Object ref = error_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        error_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string verboseError = 14;
+    public static final int VERBOSEERROR_FIELD_NUMBER = 14;
+    private java.lang.Object verboseError_;
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    public boolean hasVerboseError() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    public java.lang.String getVerboseError() {
+      java.lang.Object ref = verboseError_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          verboseError_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string verboseError = 14;</code>
+     */
+    public com.google.protobuf.ByteString
+        getVerboseErrorBytes() {
+      java.lang.Object ref = verboseError_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        verboseError_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string error_id = 15;
+    public static final int ERROR_ID_FIELD_NUMBER = 15;
+    private java.lang.Object errorId_;
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    public boolean hasErrorId() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    public java.lang.String getErrorId() {
+      java.lang.Object ref = errorId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          errorId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string error_id = 15;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrorIdBytes() {
+      java.lang.Object ref = errorId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        errorId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string error_node = 16;
+    public static final int ERROR_NODE_FIELD_NUMBER = 16;
+    private java.lang.Object errorNode_;
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    public boolean hasErrorNode() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    public java.lang.String getErrorNode() {
+      java.lang.Object ref = errorNode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          errorNode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string error_node = 16;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrorNodeBytes() {
+      java.lang.Object ref = errorNode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        errorNode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       id_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
@@ -13564,6 +13879,11 @@ public final class UserBitShared {
       totalFragments_ = 0;
       finishedFragments_ = 0;
       fragmentProfile_ = java.util.Collections.emptyList();
+      user_ = "-";
+      error_ = "";
+      verboseError_ = "";
+      errorId_ = "";
+      errorNode_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -13609,6 +13929,21 @@ public final class UserBitShared {
       }
       for (int i = 0; i < fragmentProfile_.size(); i++) {
         output.writeMessage(11, fragmentProfile_.get(i));
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeBytes(12, getUserBytes());
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeBytes(13, getErrorBytes());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeBytes(14, getVerboseErrorBytes());
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        output.writeBytes(15, getErrorIdBytes());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeBytes(16, getErrorNodeBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -13662,6 +13997,26 @@ public final class UserBitShared {
       for (int i = 0; i < fragmentProfile_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, fragmentProfile_.get(i));
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(12, getUserBytes());
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(13, getErrorBytes());
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(14, getVerboseErrorBytes());
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(15, getErrorIdBytes());
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(16, getErrorNodeBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -13816,6 +14171,16 @@ public final class UserBitShared {
         } else {
           fragmentProfileBuilder_.clear();
         }
+        user_ = "-";
+        bitField0_ = (bitField0_ & ~0x00000800);
+        error_ = "";
+        bitField0_ = (bitField0_ & ~0x00001000);
+        verboseError_ = "";
+        bitField0_ = (bitField0_ & ~0x00002000);
+        errorId_ = "";
+        bitField0_ = (bitField0_ & ~0x00004000);
+        errorNode_ = "";
+        bitField0_ = (bitField0_ & ~0x00008000);
         return this;
       }
 
@@ -13901,6 +14266,26 @@ public final class UserBitShared {
         } else {
           result.fragmentProfile_ = fragmentProfileBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.user_ = user_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.error_ = error_;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        result.verboseError_ = verboseError_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.errorId_ = errorId_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.errorNode_ = errorNode_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13976,6 +14361,31 @@ public final class UserBitShared {
               fragmentProfileBuilder_.addAllMessages(other.fragmentProfile_);
             }
           }
+        }
+        if (other.hasUser()) {
+          bitField0_ |= 0x00000800;
+          user_ = other.user_;
+          onChanged();
+        }
+        if (other.hasError()) {
+          bitField0_ |= 0x00001000;
+          error_ = other.error_;
+          onChanged();
+        }
+        if (other.hasVerboseError()) {
+          bitField0_ |= 0x00002000;
+          verboseError_ = other.verboseError_;
+          onChanged();
+        }
+        if (other.hasErrorId()) {
+          bitField0_ |= 0x00004000;
+          errorId_ = other.errorId_;
+          onChanged();
+        }
+        if (other.hasErrorNode()) {
+          bitField0_ |= 0x00008000;
+          errorNode_ = other.errorNode_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -14828,6 +15238,376 @@ public final class UserBitShared {
           fragmentProfile_ = null;
         }
         return fragmentProfileBuilder_;
+      }
+
+      // optional string user = 12 [default = "-"];
+      private java.lang.Object user_ = "-";
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public boolean hasUser() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public java.lang.String getUser() {
+        java.lang.Object ref = user_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          user_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public com.google.protobuf.ByteString
+          getUserBytes() {
+        java.lang.Object ref = user_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          user_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public Builder setUser(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        user_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public Builder clearUser() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        user_ = getDefaultInstance().getUser();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string user = 12 [default = "-"];</code>
+       */
+      public Builder setUserBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        user_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string error = 13;
+      private java.lang.Object error_ = "";
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public java.lang.String getError() {
+        java.lang.Object ref = error_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          error_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrorBytes() {
+        java.lang.Object ref = error_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          error_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public Builder setError(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00001000;
+        error_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public Builder clearError() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        error_ = getDefaultInstance().getError();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error = 13;</code>
+       */
+      public Builder setErrorBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00001000;
+        error_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string verboseError = 14;
+      private java.lang.Object verboseError_ = "";
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public boolean hasVerboseError() {
+        return ((bitField0_ & 0x00002000) == 0x00002000);
+      }
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public java.lang.String getVerboseError() {
+        java.lang.Object ref = verboseError_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          verboseError_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public com.google.protobuf.ByteString
+          getVerboseErrorBytes() {
+        java.lang.Object ref = verboseError_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          verboseError_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public Builder setVerboseError(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        verboseError_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public Builder clearVerboseError() {
+        bitField0_ = (bitField0_ & ~0x00002000);
+        verboseError_ = getDefaultInstance().getVerboseError();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string verboseError = 14;</code>
+       */
+      public Builder setVerboseErrorBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
+        verboseError_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string error_id = 15;
+      private java.lang.Object errorId_ = "";
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public boolean hasErrorId() {
+        return ((bitField0_ & 0x00004000) == 0x00004000);
+      }
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public java.lang.String getErrorId() {
+        java.lang.Object ref = errorId_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          errorId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrorIdBytes() {
+        java.lang.Object ref = errorId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          errorId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public Builder setErrorId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        errorId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public Builder clearErrorId() {
+        bitField0_ = (bitField0_ & ~0x00004000);
+        errorId_ = getDefaultInstance().getErrorId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error_id = 15;</code>
+       */
+      public Builder setErrorIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
+        errorId_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string error_node = 16;
+      private java.lang.Object errorNode_ = "";
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public boolean hasErrorNode() {
+        return ((bitField0_ & 0x00008000) == 0x00008000);
+      }
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public java.lang.String getErrorNode() {
+        java.lang.Object ref = errorNode_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          errorNode_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrorNodeBytes() {
+        java.lang.Object ref = errorNode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          errorNode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public Builder setErrorNode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00008000;
+        errorNode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public Builder clearErrorNode() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        errorNode_ = getDefaultInstance().getErrorNode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string error_node = 16;</code>
+       */
+      public Builder setErrorNodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00008000;
+        errorNode_ = value;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.shared.QueryProfile)
@@ -20109,68 +20889,70 @@ public final class UserBitShared {
       "\022\n\n\006FAILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005" +
       "\"p\n\tQueryData\022&\n\010query_id\030\001 \001(\0132\024.exec.s" +
       "hared.QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030" +
-      "\003 \001(\0132\033.exec.shared.RecordBatchDef\"\224\001\n\tQ" +
+      "\003 \001(\0132\033.exec.shared.RecordBatchDef\"\227\001\n\tQ" +
       "ueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222" +
       "\n\005state\030\003 \001(\0162#.exec.shared.QueryResult.",
-      "QueryState\022\014\n\004user\030\004 \001(\t\022\'\n\007foreman\030\005 \001(" +
-      "\0132\026.exec.DrillbitEndpoint\"\336\002\n\014QueryProfi" +
-      "le\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004" +
-      "type\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005st" +
-      "art\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n" +
-      "\004plan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.Dril" +
-      "lbitEndpoint\0222\n\005state\030\010 \001(\0162#.exec.share" +
-      "d.QueryResult.QueryState\022\027\n\017total_fragme" +
-      "nts\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n" +
-      "\020fragment_profile\030\013 \003(\0132!.exec.shared.Ma",
-      "jorFragmentProfile\"t\n\024MajorFragmentProfi" +
-      "le\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026minor_f" +
-      "ragment_profile\030\002 \003(\0132!.exec.shared.Mino" +
-      "rFragmentProfile\"\350\002\n\024MinorFragmentProfil" +
-      "e\022)\n\005state\030\001 \001(\0162\032.exec.shared.FragmentS" +
-      "tate\022(\n\005error\030\002 \001(\0132\031.exec.shared.DrillP" +
-      "BError\022\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020ope" +
-      "rator_profile\030\004 \003(\0132\034.exec.shared.Operat" +
-      "orProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_tim" +
-      "e\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memo",
-      "ry_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.D" +
-      "rillbitEndpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\r" +
-      "last_progress\030\013 \001(\003\"\377\001\n\017OperatorProfile\022" +
-      "1\n\rinput_profile\030\001 \003(\0132\032.exec.shared.Str" +
-      "eamProfile\022\023\n\013operator_id\030\003 \001(\005\022\025\n\ropera" +
-      "tor_type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rp" +
-      "rocess_nanos\030\006 \001(\003\022#\n\033peak_local_memory_" +
-      "allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.s" +
-      "hared.MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n" +
-      "\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batch",
-      "es\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue" +
-      "\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022" +
-      "\024\n\014double_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013B" +
-      "IT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\t" +
-      "QueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSI" +
-      "CAL\020\003*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023" +
-      "AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FI" +
-      "NISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026C" +
-      "ANCELLATION_REQUESTED\020\006*\335\005\n\020CoreOperator" +
-      "Type\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SEN",
-      "DER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n" +
-      "\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PAR" +
-      "TITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RE" +
-      "CEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013" +
-      "\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014R" +
-      "ANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_V" +
-      "ECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017" +
-      "\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005T" +
-      "RACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQU" +
-      "ET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025",
-      "\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030" +
-      "\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020" +
-      "\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n" +
-      "\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN" +
-      "\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONS" +
-      "UMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024" +
-      "\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B" +
-      ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
-      "haredH\001"
+      "QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007foreman\030\005" +
+      " \001(\0132\026.exec.DrillbitEndpoint\"\272\003\n\014QueryPr" +
+      "ofile\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022" +
+      "$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n" +
+      "\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t" +
+      "\022\014\n\004plan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.D" +
+      "rillbitEndpoint\0222\n\005state\030\010 \001(\0162#.exec.sh" +
+      "ared.QueryResult.QueryState\022\027\n\017total_fra" +
+      "gments\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005" +
+      "\022;\n\020fragment_profile\030\013 \003(\0132!.exec.shared",
+      ".MajorFragmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r" +
+      "\n\005error\030\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010e" +
+      "rror_id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\"t\n\024Maj" +
+      "orFragmentProfile\022\031\n\021major_fragment_id\030\001" +
+      " \001(\005\022A\n\026minor_fragment_profile\030\002 \003(\0132!.e" +
+      "xec.shared.MinorFragmentProfile\"\350\002\n\024Mino" +
+      "rFragmentProfile\022)\n\005state\030\001 \001(\0162\032.exec.s" +
+      "hared.FragmentState\022(\n\005error\030\002 \001(\0132\031.exe" +
+      "c.shared.DrillPBError\022\031\n\021minor_fragment_" +
+      "id\030\003 \001(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exe",
+      "c.shared.OperatorProfile\022\022\n\nstart_time\030\005" +
+      " \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 " +
+      "\001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010endpoint" +
+      "\030\t \001(\0132\026.exec.DrillbitEndpoint\022\023\n\013last_u" +
+      "pdate\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017O" +
+      "peratorProfile\0221\n\rinput_profile\030\001 \003(\0132\032." +
+      "exec.shared.StreamProfile\022\023\n\013operator_id" +
+      "\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_n" +
+      "anos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033pea" +
+      "k_local_memory_allocated\030\007 \001(\003\022(\n\006metric",
+      "\030\010 \003(\0132\030.exec.shared.MetricValue\022\022\n\nwait" +
+      "_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records" +
+      "\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003" +
+      "\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlo" +
+      "ng_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\n" +
+      "RpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020" +
+      "\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOG" +
+      "ICAL\020\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013" +
+      "\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007" +
+      "RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n",
+      "\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335" +
+      "\005\n\020CoreOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024" +
+      "\n\020BROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH" +
+      "_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOI" +
+      "N\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020" +
+      "\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTI" +
+      "TION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_" +
+      "RECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r" +
+      "\022\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAM" +
+      "ING_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTER",
+      "NAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_" +
+      "SORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHI" +
+      "VE_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\r" +
+      "MOCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017D" +
+      "IRECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEX" +
+      "T_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_" +
+      "SCHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025" +
+      "\n\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020" +
+      "!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rA" +
+      "VRO_SUB_SCAN\020$B.\n\033org.apache.drill.exec.",
+      "protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -20260,7 +21042,7 @@ public final class UserBitShared {
           internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryProfile_descriptor,
-              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", });
+              new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", });
           internal_static_exec_shared_MajorFragmentProfile_descriptor =
             getDescriptor().getMessageTypes().get(14);
           internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new

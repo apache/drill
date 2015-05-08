@@ -174,7 +174,7 @@ message QueryInfo {
   optional string query = 1;
   optional int64 start = 2;
   optional QueryResult.QueryState state = 3;
-  optional string user = 4;
+  optional string user = 4 [default = "-"];
   optional DrillbitEndpoint foreman = 5;
 }
 
@@ -191,6 +191,11 @@ message QueryProfile {
   optional int32 total_fragments = 9;
   optional int32 finished_fragments = 10;
   repeated MajorFragmentProfile fragment_profile = 11;
+  optional string user = 12 [default = "-"];
+  optional string error = 13;
+  optional string verboseError = 14;
+  optional string error_id = 15;
+  optional string error_node = 16;
 }
 
 message MajorFragmentProfile {

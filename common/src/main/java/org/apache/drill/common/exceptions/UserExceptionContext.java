@@ -133,24 +133,25 @@ class UserExceptionContext {
    * generate a context message
    * @return string containing all context information concatenated
    */
-  String generateContextMessage() {
+  String generateContextMessage(boolean includeErrorIdAndIdentity) {
     StringBuilder sb = new StringBuilder();
 
     for (String context : contextList) {
       sb.append(context).append("\n");
     }
 
-    // add identification infos
-    sb.append("\n[Error Id: ");
-    sb.append(errorId).append(" ");
-    if(endpoint != null) {
-      sb.append("on ")
-        .append(endpoint.getAddress())
-        .append(":")
-        .append(endpoint.getUserPort());
+    if (includeErrorIdAndIdentity) {
+      // add identification infos
+      sb.append("\n[Error Id: ");
+      sb.append(errorId).append(" ");
+      if (endpoint != null) {
+        sb.append("on ")
+            .append(endpoint.getAddress())
+            .append(":")
+            .append(endpoint.getUserPort());
+      }
+      sb.append("]");
     }
-    sb.append("]");
-
     return sb.toString();
   }
 }

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import com.dyuproject.protostuff.ByteString;
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
 import com.dyuproject.protostuff.Message;
@@ -46,11 +47,12 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
 
     static final QueryInfo DEFAULT_INSTANCE = new QueryInfo();
 
+    static final String DEFAULT_USER = ByteString.stringDefaultValue("-");
     
     private String query;
     private long start;
     private QueryResult.QueryState state;
-    private String user;
+    private String user = DEFAULT_USER;
     private DrillbitEndpoint foreman;
 
     public QueryInfo()
@@ -213,7 +215,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
         if(message.state != null)
              output.writeEnum(3, message.state.number, false);
 
-        if(message.user != null)
+        if(message.user != null && message.user != DEFAULT_USER)
             output.writeString(4, message.user, false);
 
         if(message.foreman != null)
