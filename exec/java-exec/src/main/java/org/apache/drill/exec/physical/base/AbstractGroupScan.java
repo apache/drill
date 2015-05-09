@@ -22,10 +22,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Iterators;
-import org.apache.drill.exec.physical.EndpointAffinity;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
@@ -67,6 +68,16 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @JsonIgnore
   public int getMinParallelizationWidth() {
     return 1;
+  }
+
+  @Override
+  public ScanStats getScanStats(PlannerSettings settings) {
+    return getScanStats();
+  }
+
+  @JsonIgnore
+  public ScanStats getScanStats() {
+    throw new UnsupportedOperationException("This should be implemented.");
   }
 
   @Override

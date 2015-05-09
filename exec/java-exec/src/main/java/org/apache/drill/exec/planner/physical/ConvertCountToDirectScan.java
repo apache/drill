@@ -21,18 +21,10 @@ package org.apache.drill.exec.planner.physical;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillProjectRel;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
-import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.store.direct.DirectGroupScan;
-import org.apache.drill.exec.store.pojo.PojoRecordReader;
-import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -41,6 +33,14 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.logical.DrillAggregateRel;
+import org.apache.drill.exec.planner.logical.DrillProjectRel;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.store.direct.DirectGroupScan;
+import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 import com.google.common.collect.Lists;
 
@@ -88,14 +88,15 @@ public class ConvertCountToDirectScan extends Prule {
     final DrillScanRel scan = (DrillScanRel) call.rel(call.rels.length -1);
     final DrillProjectRel proj = call.rels.length == 3 ? (DrillProjectRel) call.rel(1) : null;
 
-    GroupScan oldGrpScan = scan.getGroupScan();
+    final GroupScan oldGrpScan = scan.getGroupScan();
+    final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
 
     // Only apply the rule when :
     //    1) scan knows the exact row count in getSize() call,
     //    2) No GroupBY key,
     //    3) only one agg function (Check if it's count(*) below).
     //    4) No distinct agg call.
-    if (! (oldGrpScan.getScanStats().getGroupScanProperty().hasExactRowCount()
+    if (!(oldGrpScan.getScanStats(settings).getGroupScanProperty().hasExactRowCount()
         && agg.getGroupCount() == 0
         && agg.getAggCallList().size() == 1
         && !agg.containsDistinctCall())) {
@@ -112,7 +113,7 @@ public class ConvertCountToDirectScan extends Prule {
       if (aggCall.getArgList().isEmpty() ||
           (aggCall.getArgList().size() == 1 &&
            ! agg.getInput().getRowType().getFieldList().get(aggCall.getArgList().get(0).intValue()).getType().isNullable())) {
-        cnt = (long) oldGrpScan.getScanStats().getRecordCount();
+        cnt = (long) oldGrpScan.getScanStats(settings).getRecordCount();
       } else if (aggCall.getArgList().size() == 1) {
       // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
         int index = aggCall.getArgList().get(0);

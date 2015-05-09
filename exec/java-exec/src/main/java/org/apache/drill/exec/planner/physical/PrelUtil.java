@@ -82,7 +82,11 @@ public class PrelUtil {
     return (Iterator<Prel>) (Object) nodes.iterator();
   }
 
-  public static PlannerSettings getSettings(RelOptCluster cluster) {
+  public static PlannerSettings getSettings(final RelOptCluster cluster) {
+    return getPlannerSettings(cluster);
+  }
+
+  public static PlannerSettings getPlannerSettings(final RelOptCluster cluster) {
     return cluster.getPlanner().getContext().unwrap(PlannerSettings.class);
   }
 

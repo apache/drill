@@ -26,6 +26,7 @@ import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
 
@@ -116,6 +117,8 @@ public interface ExecConstants {
   public static String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE, false);
   public static final BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator("store.json.extended_types", true);
+  public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator(
+      "store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE, 100.0);
 
   /**
    * The column label (for directory levels) in results when querying files in a directory

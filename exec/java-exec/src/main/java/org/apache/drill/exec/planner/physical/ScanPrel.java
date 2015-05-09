@@ -101,13 +101,15 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
 
   @Override
   public double getRows() {
-    return this.groupScan.getScanStats().getRecordCount();
+    final PlannerSettings settings = PrelUtil.getPlannerSettings(getCluster());
+    return this.groupScan.getScanStats(settings).getRecordCount();
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    ScanStats stats = this.groupScan.getScanStats();
-    int columnCount = this.getRowType().getFieldCount();
+  public RelOptCost computeSelfCost(final RelOptPlanner planner) {
+    final PlannerSettings settings = PrelUtil.getPlannerSettings(planner);
+    final ScanStats stats = this.groupScan.getScanStats(settings);
+    final int columnCount = this.getRowType().getFieldCount();
 
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());

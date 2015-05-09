@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -30,7 +31,7 @@ import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -48,6 +49,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
@@ -102,7 +104,17 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     initFromSelection(selection, formatPlugin);
   }
 
-  private EasyGroupScan(EasyGroupScan that) {
+  @JsonIgnore
+  public Iterable<CompleteFileWork> getWorkIterable() {
+    return new Iterable<CompleteFileWork>() {
+      @Override
+      public Iterator<CompleteFileWork> iterator() {
+        return Iterators.unmodifiableIterator(chunks.iterator());
+      }
+    };
+  }
+
+  private EasyGroupScan(final EasyGroupScan that) {
     super(that.getUserName());
     selection = that.selection;
     formatPlugin = that.formatPlugin;
@@ -134,14 +146,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
 
   @Override
-  public ScanStats getScanStats() {
-    long data =0;
-    for (CompleteFileWork work : chunks) {
-      data += work.getTotalBytes();
-    }
-
-    long estRowCount = data/1024;
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
+  public ScanStats getScanStats(final PlannerSettings settings) {
+    return formatPlugin.getScanStats(settings, this);
   }
 
   @JsonProperty("files")

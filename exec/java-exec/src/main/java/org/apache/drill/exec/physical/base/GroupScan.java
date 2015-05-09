@@ -19,14 +19,14 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
@@ -68,7 +68,7 @@ public interface GroupScan extends Scan, HasAffinity{
   public abstract String getDigest();
 
   @JsonIgnore
-  public ScanStats getScanStats();
+  public ScanStats getScanStats(PlannerSettings settings);
 
   /**
    * Returns a clone of GroupScan instance, except that the new GroupScan will use the provided list of columns .

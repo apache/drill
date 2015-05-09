@@ -29,6 +29,9 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -43,6 +46,7 @@ import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader;
 import org.apache.drill.exec.store.easy.text.compliant.TextParsingSettings;
+import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.exec.store.text.DrillTextRecordReader;
 import org.apache.drill.exec.store.text.DrillTextRecordWriter;
 import org.apache.hadoop.conf.Configuration;
@@ -95,8 +99,19 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    Map<String, String> options = Maps.newHashMap();
+  protected ScanStats getScanStats(final PlannerSettings settings, final EasyGroupScan scan) {
+    long data = 0;
+    for (final CompleteFileWork work : scan.getWorkIterable()) {
+      data += work.getTotalBytes();
+    }
+    final double estimatedRowSize = settings.getOptions().getOption(ExecConstants.TEXT_ESTIMATED_ROW_SIZE);
+    final double estRowCount = data / estimatedRowSize;
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, (long) estRowCount, 1, data);
+  }
+
+  @Override
+  public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) throws IOException {
+    final Map<String, String> options = Maps.newHashMap();
 
     options.put("location", writer.getLocation());
 

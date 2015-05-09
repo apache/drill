@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.apache.calcite.rel.RelWriter;
@@ -52,19 +53,22 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   final private RelDataType rowType;
   private GroupScan groupScan;
   private List<SchemaPath> columns;
+  private PlannerSettings settings;
 
   /** Creates a DrillScan. */
-  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
-      RelOptTable table) {
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table) {
     // By default, scan does not support project pushdown.
     // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
     this(cluster, traits, table, table.getRowType(), GroupScan.ALL_COLUMNS);
+    this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
   /** Creates a DrillScan. */
-  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
-      RelOptTable table, RelDataType rowType, List<SchemaPath> columns) {
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns) {
     super(DRILL_LOGICAL, cluster, traits, table);
+    this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
     if (columns == null) { // planner asks to scan all of the columns
       this.columns =  ColumnList.all();
@@ -75,18 +79,19 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     }
     try {
       this.groupScan = drillTable.getGroupScan().clone(this.columns);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new DrillRuntimeException("Failure creating scan.", e);
     }
   }
 
   /** Creates a DrillScanRel for a particular GroupScan */
-  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
-      RelOptTable table, GroupScan groupScan, RelDataType rowType, List<SchemaPath> columns) {
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
     this.columns = columns;
     this.groupScan = groupScan;
+    this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
 //
@@ -128,15 +133,15 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   @Override
   public double getRows() {
-    return this.groupScan.getScanStats().getRecordCount();
+    return this.groupScan.getScanStats(settings).getRecordCount();
   }
 
   /// TODO: this method is same as the one for ScanPrel...eventually we should consolidate
   /// this and few other methods in a common base class which would be extended
   /// by both logical and physical rels.
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    ScanStats stats = groupScan.getScanStats();
+  public RelOptCost computeSelfCost(final RelOptPlanner planner) {
+    final ScanStats stats = groupScan.getScanStats(settings);
     int columnCount = getRowType().getFieldCount();
     double ioCost = 0;
     boolean isStarQuery = Iterables.tryFind(getRowType().getFieldNames(), new Predicate<String>() {
