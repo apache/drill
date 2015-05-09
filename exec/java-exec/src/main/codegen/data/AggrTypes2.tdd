@@ -17,20 +17,20 @@
 {
   aggrtypes: [
     {className: "Avg", funcName: "avg", types: [
-      {inputType: "Int", outputType: "Float8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
-      {inputType: "BigInt", outputType: "Float8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
+      {inputType: "Int", outputType: "NullableFloat8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
+      {inputType: "BigInt", outputType: "NullableFloat8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
       {inputType: "NullableInt", outputType: "NullableFloat8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "NullableFloat8", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Numeric"},
-      {inputType: "Float4", outputType: "Float8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
-      {inputType: "Float8", outputType: "Float8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
+      {inputType: "Float4", outputType: "NullableFloat8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
+      {inputType: "Float8", outputType: "NullableFloat8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
       {inputType: "NullableFloat4", outputType: "NullableFloat8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
       {inputType: "NullableFloat8", outputType: "NullableFloat8", sumRunningType: "Float8", countRunningType: "BigInt", major: "Numeric"},
-      {inputType: "IntervalDay", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
-      {inputType: "NullableIntervalDay", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
-      {inputType: "IntervalYear", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
-      {inputType: "NullableIntervalYear", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
-      {inputType: "Interval", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
-      {inputType: "NullableInterval", outputType: "Interval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"}
+      {inputType: "IntervalDay", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
+      {inputType: "NullableIntervalDay", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
+      {inputType: "IntervalYear", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
+      {inputType: "NullableIntervalYear", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
+      {inputType: "Interval", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"},
+      {inputType: "NullableInterval", outputType: "NullableInterval", sumRunningType: "BigInt", countRunningType: "BigInt", major: "Date"}
      ]
    }
   ]

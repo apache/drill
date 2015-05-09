@@ -24,12 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+// Source code generated using FreeMarker template ${.template_name}
+
 <#-- A utility class that is used to generate java code for aggr functions that maintain a single -->
 <#-- running counter to hold the result.  This includes: MIN, MAX, COUNT. -->
-
-/*
- * This class is automatically generated from VarCharAggrFunctions1.java using FreeMarker.
- */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
@@ -60,27 +58,20 @@ public class ${aggrtype.className}VarBytesFunctions {
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
-  <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
   @Workspace ObjectHolder value;
-  @Workspace UInt1Holder init; 
+  @Workspace UInt1Holder init;
+  @Workspace BigIntHolder nonNullCount;
   @Inject DrillBuf buf;
-  <#else>
-  @Workspace  ${type.runningType}Holder value;
-  </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup() {
-    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     init = new UInt1Holder();
+    nonNullCount = new BigIntHolder();
+    nonNullCount.value = 0;
     init.value = 0;
     value = new ObjectHolder();
     org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = new org.apache.drill.exec.expr.fn.impl.DrillByteArray();
     value.obj = tmp;
-
-    <#else>
-    value = new ${type.runningType}Holder();
-    value.value = 0;
-    </#if>
   }
 
   @Override
@@ -92,7 +83,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         break sout;
       }
     </#if>
-    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    nonNullCount.value = 1;
     org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
     int cmp = 0;
     boolean swap = false;
@@ -123,9 +114,6 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         tmp.setBytes(tempArray);
       }
     }
-    <#else>
-    value.value++;
-    </#if>
     <#if type.inputType?starts_with("Nullable")>
     } // end of sout block
 	  </#if>
@@ -133,27 +121,24 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
-    buf = buf.reallocIfNeeded(tmp.getLength());
-    buf.setBytes(0, tmp.getBytes(), 0, tmp.getLength());
-    out.start  = 0;
-    out.end    = tmp.getLength();
-    out.buffer = buf;
-    <#else>
-    out.value = value.value;
-    </#if>
+    if (nonNullCount.value > 0) {
+      out.isSet = 1;
+      org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
+      buf = buf.reallocIfNeeded(tmp.getLength());
+      buf.setBytes(0, tmp.getBytes(), 0, tmp.getLength());
+      out.start  = 0;
+      out.end    = tmp.getLength();
+      out.buffer = buf;
+    } else {
+      out.isSet = 0;
+    }
   }
 
   @Override
   public void reset() {
-    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     value = new ObjectHolder();
     init.value = 0;
-    <#else>
-    value = new ${type.runningType}Holder();
-    value.value = 0;
-    </#if>
+    nonNullCount.value = 0;
   }
 }
 </#if>

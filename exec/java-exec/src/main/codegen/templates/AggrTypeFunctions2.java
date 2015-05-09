@@ -24,12 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+// Source code generated using FreeMarker template ${.template_name}
+
 <#-- A utility class that is used to generate java code for aggr functions that maintain a sum -->
 <#-- and a running count.  For now, this includes: AVG. -->
-
-/* 
- * This class is automatically generated from AggrTypeFunctions2.tdd using FreeMarker.
- */
 
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
@@ -63,10 +61,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   public void setup() {
   	sum = new ${type.sumRunningType}Holder();  
     count = new ${type.countRunningType}Holder();  
-    <#if type.inputType?starts_with("Nullable") >
-  	  nonNullCount = new BigIntHolder();
-  	  nonNullCount.value = 0;
-  	</#if>
+  	nonNullCount = new BigIntHolder();
+  	nonNullCount.value = 0;
     sum.value = 0;
     count.value = 0;
   }
@@ -79,10 +75,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    // processing nullable input and the value is null, so don't do anything...
 		    break sout;
 	    } 
-      else {
-        nonNullCount.value++;
-      } 
 	  </#if>
+    nonNullCount.value = 1;
 	  <#if aggrtype.funcName == "avg">
  	    sum.value += in.value;
  	    count.value++;
@@ -96,27 +90,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    <#if type.inputType?starts_with("Nullable") >
-      if (nonNullCount.value > 0) {
-        out.value = sum.value / ((double) count.value);
-        out.isSet = 1;
-      } else {
-        out.isSet = 0;
-      }
-    <#else> 
+    if (nonNullCount.value > 0) {
       out.value = sum.value / ((double) count.value);
-    </#if>
+      out.isSet = 1;
+    } else {
+      out.isSet = 0;
+    }
   }
 
   @Override
   public void reset() {
-    <#if type.inputType?starts_with("Nullable") >
-      nonNullCount.value = 0;
-    </#if>
+    nonNullCount.value = 0;
     sum.value = 0;
     count.value = 0;
   }
- 
+
  }
 
 </#if>

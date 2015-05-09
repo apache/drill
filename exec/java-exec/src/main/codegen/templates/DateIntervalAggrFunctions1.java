@@ -24,12 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+// Source code generated using FreeMarker template ${.template_name}
+
 <#-- A utility class that is used to generate java code for aggr functions for Date, Time, Interval types -->
 <#--  that maintain a single running counter to hold the result.  This includes: MIN, MAX, SUM, COUNT. -->
-
-/*
- * This class is automatically generated from AggrTypeFunctions1.tdd using FreeMarker.
- */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
@@ -52,10 +50,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Param ${type.inputType}Holder in;
   @Workspace ${type.runningType}Holder value;
+  @Workspace BigIntHolder nonNullCount;
   @Output ${type.outputType}Holder out;
 
   public void setup() {
-	value = new ${type.runningType}Holder();
+	  value = new ${type.runningType}Holder();
+    nonNullCount = new BigIntHolder();
+    nonNullCount.value = 0;
     <#if type.runningType == "Interval">
     value.months = ${type.initialValue};
     value.days= ${type.initialValue};
@@ -77,10 +78,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    break sout;
 	    }
 	  </#if>
-
+    nonNullCount.value = 1;
 	  <#if aggrtype.funcName == "min">
 
-    <#if type.outputType == "Interval">
+    <#if type.outputType?ends_with("Interval")>
 
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
@@ -88,7 +89,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
     value.value = Math.min(value.value, inMS);
 
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType?ends_with("IntervalDay")>
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
@@ -99,13 +100,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = Math.min(value.value, in.value);
     </#if>
 	  <#elseif aggrtype.funcName == "max">
-    <#if type.outputType == "Interval">
+    <#if type.outputType?ends_with("Interval")>
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType?ends_with("IntervalDay")>
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
@@ -115,11 +116,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 
 	  <#elseif aggrtype.funcName == "sum">
-    <#if type.outputType == "Interval">
+    <#if type.outputType?ends_with("Interval")>
     value.days += in.days;
     value.months += in.months;
     value.milliseconds += in.milliseconds;
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType?ends_with("IntervalDay")>
     value.days += in.days;
     value.milliseconds += in.milliseconds;
     <#else>
@@ -137,35 +138,40 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-
-    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    <#if type.outputType == "Interval">
-    out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
-    value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
-    out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    <#elseif type.outputType == "IntervalDay">
-    out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    <#else>
-    out.value = value.value;
-    </#if>
-    <#else>
-    <#if type.outputType == "Interval">
-    out.months = value.months;
-    out.days = value.days;
-    out.milliseconds = value.milliseconds;
-    <#elseif type.outputType == "IntervalDay">
-    out.days = value.days;
-    out.milliseconds = value.milliseconds;
-    <#else>
-    out.value = value.value;
-    </#if>
-    </#if>
+    if (nonNullCount.value > 0) {
+      out.isSet = 1;
+      <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+      <#if type.outputType?ends_with("Interval")>
+      out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
+      value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
+      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      <#elseif type.outputType?ends_with("IntervalDay")>
+      out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+      <#else>
+      out.value = value.value;
+      </#if>
+      <#else>
+      <#if type.outputType?ends_with("Interval")>
+      out.months = value.months;
+      out.days = value.days;
+      out.milliseconds = value.milliseconds;
+      <#elseif type.outputType?ends_with("IntervalDay")>
+      out.days = value.days;
+      out.milliseconds = value.milliseconds;
+      <#else>
+      out.value = value.value;
+      </#if>
+      </#if>
+    } else {
+      out.isSet = 0;
+    }
   }
 
   @Override
   public void reset() {
+    nonNullCount.value = 0;
     <#if type.runningType == "Interval">
     value.months = ${type.initialValue};
     value.days= ${type.initialValue};

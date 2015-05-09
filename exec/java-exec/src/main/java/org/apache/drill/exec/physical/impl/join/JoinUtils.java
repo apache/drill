@@ -178,7 +178,7 @@ public class JoinUtils {
         // currently we only support implicit casts if the input types are numeric or varchar/varbinary
         if (!allowImplicitCast(rightType, leftType)) {
           throw new DrillRuntimeException(String.format("Join only supports implicit casts between " +
-              "1. Numeric data\n 2. Varchar, Varbinary data " +
+              "1. Numeric data\n 2. Varchar, Varbinary data 3. Date, Timestamp data " +
               "Left type: %s, Right type: %s. Add explicit casts to avoid this error", leftType, rightType));
         }
 

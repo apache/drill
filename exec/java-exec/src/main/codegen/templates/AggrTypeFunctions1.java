@@ -24,12 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for aggr functions that maintain a single -->
-<#-- running counter to hold the result.  This includes: MIN, MAX, SUM, COUNT. -->
+// Source code generated using FreeMarker template ${.template_name}
 
-/* 
- * This class is automatically generated from AggrTypeFunctions1.tdd using FreeMarker.
- */
+<#-- A utility class that is used to generate java code for aggr functions that maintain a single -->
+<#-- running counter to hold the result.  This includes: MIN, MAX, SUM. -->
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
@@ -54,18 +52,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Param ${type.inputType}Holder in;
   @Workspace ${type.runningType}Holder value;
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
-    @Workspace BigIntHolder nonNullCount;
-  </#if>
+  @Workspace BigIntHolder nonNullCount;
   @Output ${type.outputType}Holder out;
 
   public void setup() {
-	value = new ${type.runningType}Holder();
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+	  value = new ${type.runningType}Holder();
 	  nonNullCount = new BigIntHolder();
 	  nonNullCount.value = 0;
-	</#if>
-	<#if aggrtype.funcName == "sum" || aggrtype.funcName == "count">
+	<#if aggrtype.funcName == "sum">
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "min">
     <#if type.runningType?starts_with("Bit")>
@@ -103,12 +97,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    // processing nullable input and the value is null, so don't do anything...
 		    break sout;
 	    }
-      <#if type.outputType?starts_with("Nullable")>
-        else {
-  	        nonNullCount.value++;
-	      }
-      </#if>
 	  </#if>
+    nonNullCount.value = 1;
 	  <#if aggrtype.funcName == "min">
 	    value.value = Math.min(value.value, in.value);
 	  <#elseif aggrtype.funcName == "max">
@@ -127,23 +117,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {   
-    <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
-      if (nonNullCount.value > 0) {
-        out.value = value.value;
-        out.isSet = 1;
-      } else {
-        out.isSet = 0;
-      }
-    <#else> 
+    if (nonNullCount.value > 0) {
       out.value = value.value;
-    </#if>
+      out.isSet = 1;
+    } else {
+      out.isSet = 0;
+    }
   }
 
   @Override
   public void reset() {
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
     nonNullCount.value = 0;
-  </#if>
 	<#if aggrtype.funcName == "sum" || aggrtype.funcName == "count">
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "min">
