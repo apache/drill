@@ -136,10 +136,10 @@ void protobuf_AddDesc_GeneralRPC_2eproto() {
     "rdination_id\030\002 \001(\005\022\020\n\010rpc_type\030\003 \001(\005\"b\n\022"
     "CompleteRpcMessage\022#\n\006header\030\001 \001(\0132\023.exe"
     "c.rpc.RpcHeader\022\025\n\rprotobuf_body\030\002 \001(\014\022\020"
-    "\n\010raw_body\030\003 \001(\014*:\n\007RpcMode\022\013\n\007REQUEST\020\000"
-    "\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_FAILURE\020\002B1\n\033"
-    "org.apache.drill.exec.protoB\020GeneralRPCP"
-    "rotosH\001", 367);
+    "\n\010raw_body\030\003 \001(\014*N\n\007RpcMode\022\013\n\007REQUEST\020\000"
+    "\022\014\n\010RESPONSE\020\001\022\024\n\020RESPONSE_FAILURE\020\002\022\010\n\004"
+    "PING\020\003\022\010\n\004PONG\020\004B1\n\033org.apache.drill.exe"
+    "c.protoB\020GeneralRPCProtosH\001", 387);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "GeneralRPC.proto", &protobuf_RegisterTypes);
   Ack::default_instance_ = new Ack();
@@ -166,6 +166,8 @@ bool RpcMode_IsValid(int value) {
     case 0:
     case 1:
     case 2:
+    case 3:
+    case 4:
       return true;
     default:
       return false;

@@ -30,6 +30,7 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* DrillPBError_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   DrillPBError_reflection_ = NULL;
+const ::google::protobuf::EnumDescriptor* DrillPBError_ErrorType_descriptor_ = NULL;
 const ::google::protobuf::Descriptor* ExceptionWrapper_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   ExceptionWrapper_reflection_ = NULL;
@@ -145,6 +146,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(DrillPBError));
+  DrillPBError_ErrorType_descriptor_ = DrillPBError_descriptor_->enum_type(0);
   ExceptionWrapper_descriptor_ = file->message_type(3);
   static const int ExceptionWrapper_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExceptionWrapper, exception_class_),
@@ -327,7 +329,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryInfo));
   QueryProfile_descriptor_ = file->message_type(13);
-  static const int QueryProfile_offsets_[11] = {
+  static const int QueryProfile_offsets_[16] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, start_),
@@ -339,6 +341,11 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, total_fragments_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, finished_fragments_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, fragment_profile_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, user_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, error_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, verboseerror_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, error_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryProfile, error_node_),
   };
   QueryProfile_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -368,7 +375,7 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(MajorFragmentProfile));
   MinorFragmentProfile_descriptor_ = file->message_type(15);
-  static const int MinorFragmentProfile_offsets_[9] = {
+  static const int MinorFragmentProfile_offsets_[11] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, state_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, error_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, minor_fragment_id_),
@@ -378,6 +385,8 @@ void protobuf_AssignDesc_UserBitShared_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, memory_used_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, max_memory_used_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, endpoint_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, last_update_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MinorFragmentProfile, last_progress_),
   };
   MinorFragmentProfile_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -531,8 +540,10 @@ void protobuf_ShutdownFile_UserBitShared_2eproto() {
   delete QueryData_reflection_;
   delete QueryInfo::default_instance_;
   delete QueryInfo_reflection_;
+  delete QueryInfo::_default_user_;
   delete QueryProfile::default_instance_;
   delete QueryProfile_reflection_;
+  delete QueryProfile::_default_user_;
   delete MajorFragmentProfile::default_instance_;
   delete MajorFragmentProfile_reflection_;
   delete MinorFragmentProfile::default_instance_;
@@ -559,103 +570,113 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
     "s.proto\032\022Coordination.proto\032\017SchemaDef.p"
     "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001"
     "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 "
-    "\001(\020\"\323\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022("
+    "\001(\020\"\255\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022("
     "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint"
-    "\022\022\n\nerror_type\030\003 \001(\005\022\017\n\007message\030\004 \001(\t\0220\n"
-    "\texception\030\005 \001(\0132\035.exec.shared.Exception"
-    "Wrapper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.sh"
-    "ared.ParsingError\"\246\001\n\020ExceptionWrapper\022\027"
-    "\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001(\t"
-    "\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.Stac"
-    "kTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035.ex"
-    "ec.shared.ExceptionWrapper\"\205\001\n\030StackTrac"
-    "eElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n\tf"
-    "ile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n\013m"
-    "ethod_name\030\004 \001(\t\022\030\n\020is_native_method\030\005 \001"
-    "(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001(\005"
-    "\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022"
-    "\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024\n\014re"
-    "cord_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exec.s"
-    "hared.SerializedField\022)\n!carries_two_byt"
-    "e_selection_vector\030\003 \001(\010\"\205\001\n\010NamePart\022(\n"
-    "\004type\030\001 \001(\0162\032.exec.shared.NamePart.Type\022"
-    "\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shar"
-    "ed.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001"
-    "\"\351\001\n\017SerializedField\022%\n\nmajor_type\030\001 \001(\013"
-    "2\021.common.MajorType\022(\n\tname_part\030\002 \001(\0132\025"
-    ".exec.shared.NamePart\022+\n\005child\030\003 \003(\0132\034.e"
-    "xec.shared.SerializedField\022\023\n\013value_coun"
-    "t\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n\013grou"
-    "p_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\n"
-    "NodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_fo"
-    "otprint\030\002 \001(\003\"\206\002\n\013QueryResult\0228\n\013query_s"
-    "tate\030\001 \001(\0162#.exec.shared.QueryResult.Que"
-    "ryState\022&\n\010query_id\030\002 \001(\0132\024.exec.shared."
-    "QueryId\022(\n\005error\030\003 \003(\0132\031.exec.shared.Dri"
-    "llPBError\"k\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007"
-    "RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n"
-    "\n\006FAILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005\"p"
-    "\n\tQueryData\022&\n\010query_id\030\001 \001(\0132\024.exec.sha"
-    "red.QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 "
-    "\001(\0132\033.exec.shared.RecordBatchDef\"\224\001\n\tQue"
-    "ryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005"
-    "state\030\003 \001(\0162#.exec.shared.QueryResult.Qu"
-    "eryState\022\014\n\004user\030\004 \001(\t\022\'\n\007foreman\030\005 \001(\0132"
-    "\026.exec.DrillbitEndpoint\"\336\002\n\014QueryProfile"
-    "\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004ty"
-    "pe\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005star"
-    "t\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004p"
-    "lan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.Drillb"
-    "itEndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared."
-    "QueryResult.QueryState\022\027\n\017total_fragment"
-    "s\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020f"
-    "ragment_profile\030\013 \003(\0132!.exec.shared.Majo"
-    "rFragmentProfile\"t\n\024MajorFragmentProfile"
-    "\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026minor_fra"
-    "gment_profile\030\002 \003(\0132!.exec.shared.MinorF"
-    "ragmentProfile\"\274\002\n\024MinorFragmentProfile\022"
-    ")\n\005state\030\001 \001(\0162\032.exec.shared.FragmentSta"
-    "te\022(\n\005error\030\002 \001(\0132\031.exec.shared.DrillPBE"
-    "rror\022\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020opera"
-    "tor_profile\030\004 \003(\0132\034.exec.shared.Operator"
-    "Profile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030"
-    "\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory"
-    "_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.Dri"
-    "llbitEndpoint\"\377\001\n\017OperatorProfile\0221\n\rinp"
-    "ut_profile\030\001 \003(\0132\032.exec.shared.StreamPro"
-    "file\022\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_ty"
-    "pe\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess"
-    "_nanos\030\006 \001(\003\022#\n\033peak_local_memory_alloca"
-    "ted\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared."
-    "MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStrea"
-    "mProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001"
-    "(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tme"
-    "tric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014dou"
-    "ble_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CON"
-    "TROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryT"
-    "ype\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*"
-    "k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITIN"
-    "G_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020"
-    "\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\264\005\n\020CoreOpe"
-    "ratorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAS"
-    "T_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE"
-    "\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HAS"
-    "H_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGI"
-    "NG_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDE"
-    "R\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013"
-    "\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECT"
-    "ION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREG"
-    "ATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021"
-    "\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026"
-    "PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCA"
-    "N\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_S"
-    "CAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_"
-    "SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN"
-    "\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB"
-    "_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER"
-    "_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDO"
-    "W\020\"B.\n\033org.apache.drill.exec.protoB\rUser"
-    "BitSharedH\001", 4011);
+    "\0227\n\nerror_type\030\003 \001(\0162#.exec.shared.Drill"
+    "PBError.ErrorType\022\017\n\007message\030\004 \001(\t\0220\n\tex"
+    "ception\030\005 \001(\0132\035.exec.shared.ExceptionWra"
+    "pper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.share"
+    "d.ParsingError\"\262\001\n\tErrorType\022\016\n\nCONNECTI"
+    "ON\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDATA_WRITE\020\002\022\014\n\010F"
+    "UNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPERMISSION\020\005\022\010\n\004"
+    "PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SYSTEM\020\010\022\031\n\025UNSU"
+    "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\"\246\001\n\020"
+    "ExceptionWrapper\022\027\n\017exception_class\030\001 \001("
+    "\t\022\017\n\007message\030\002 \001(\t\022:\n\013stack_trace\030\003 \003(\0132"
+    "%.exec.shared.StackTraceElementWrapper\022,"
+    "\n\005cause\030\004 \001(\0132\035.exec.shared.ExceptionWra"
+    "pper\"\205\001\n\030StackTraceElementWrapper\022\022\n\ncla"
+    "ss_name\030\001 \001(\t\022\021\n\tfile_name\030\002 \001(\t\022\023\n\013line"
+    "_number\030\003 \001(\005\022\023\n\013method_name\030\004 \001(\t\022\030\n\020is"
+    "_native_method\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014"
+    "start_column\030\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n"
+    "\nend_column\030\004 \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016Re"
+    "cordBatchDef\022\024\n\014record_count\030\001 \001(\005\022+\n\005fi"
+    "eld\030\002 \003(\0132\034.exec.shared.SerializedField\022"
+    ")\n!carries_two_byte_selection_vector\030\003 \001"
+    "(\010\"\205\001\n\010NamePart\022(\n\004type\030\001 \001(\0162\032.exec.sha"
+    "red.NamePart.Type\022\014\n\004name\030\002 \001(\t\022$\n\005child"
+    "\030\003 \001(\0132\025.exec.shared.NamePart\"\033\n\004Type\022\010\n"
+    "\004NAME\020\000\022\t\n\005ARRAY\020\001\"\351\001\n\017SerializedField\022%"
+    "\n\nmajor_type\030\001 \001(\0132\021.common.MajorType\022(\n"
+    "\tname_part\030\002 \001(\0132\025.exec.shared.NamePart\022"
+    "+\n\005child\030\003 \003(\0132\034.exec.shared.SerializedF"
+    "ield\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_le"
+    "ngth\030\005 \001(\005\022\023\n\013group_count\030\006 \001(\005\022\025\n\rbuffe"
+    "r_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_id\030"
+    "\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\206\002\n\013Quer"
+    "yResult\0228\n\013query_state\030\001 \001(\0162#.exec.shar"
+    "ed.QueryResult.QueryState\022&\n\010query_id\030\002 "
+    "\001(\0132\024.exec.shared.QueryId\022(\n\005error\030\003 \003(\013"
+    "2\031.exec.shared.DrillPBError\"k\n\nQueryStat"
+    "e\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED"
+    "\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CANCELLA"
+    "TION_REQUESTED\020\005\"p\n\tQueryData\022&\n\010query_i"
+    "d\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n\trow_cou"
+    "nt\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.Reco"
+    "rdBatchDef\"\227\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022"
+    "\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.sha"
+    "red.QueryResult.QueryState\022\017\n\004user\030\004 \001(\t"
+    ":\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.DrillbitEndp"
+    "oint\"\272\003\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec"
+    ".shared.QueryId\022$\n\004type\030\002 \001(\0162\026.exec.sha"
+    "red.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001("
+    "\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007forema"
+    "n\030\007 \001(\0132\026.exec.DrillbitEndpoint\0222\n\005state"
+    "\030\010 \001(\0162#.exec.shared.QueryResult.QuerySt"
+    "ate\022\027\n\017total_fragments\030\t \001(\005\022\032\n\022finished"
+    "_fragments\030\n \001(\005\022;\n\020fragment_profile\030\013 \003"
+    "(\0132!.exec.shared.MajorFragmentProfile\022\017\n"
+    "\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014verbose"
+    "Error\030\016 \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\nerror_n"
+    "ode\030\020 \001(\t\"t\n\024MajorFragmentProfile\022\031\n\021maj"
+    "or_fragment_id\030\001 \001(\005\022A\n\026minor_fragment_p"
+    "rofile\030\002 \003(\0132!.exec.shared.MinorFragment"
+    "Profile\"\350\002\n\024MinorFragmentProfile\022)\n\005stat"
+    "e\030\001 \001(\0162\032.exec.shared.FragmentState\022(\n\005e"
+    "rror\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n"
+    "\021minor_fragment_id\030\003 \001(\005\0226\n\020operator_pro"
+    "file\030\004 \003(\0132\034.exec.shared.OperatorProfile"
+    "\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023"
+    "\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010"
+    " \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEn"
+    "dpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_prog"
+    "ress\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_"
+    "profile\030\001 \003(\0132\032.exec.shared.StreamProfil"
+    "e\022\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030"
+    "\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_na"
+    "nos\030\006 \001(\003\022#\n\033peak_local_memory_allocated"
+    "\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Met"
+    "ricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamPr"
+    "ofile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022"
+    "\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetri"
+    "c_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double"
+    "_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTRO"
+    "L\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType"
+    "\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*\207\001\n"
+    "\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_"
+    "ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022"
+    "\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATI"
+    "ON_REQUESTED\020\006*\335\005\n\020CoreOperatorType\022\021\n\rS"
+    "INGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006"
+    "FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOI"
+    "N\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SE"
+    "NDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022"
+    "\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT"
+    "\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SEND"
+    "ER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REM"
+    "OVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N"
+    "_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n"
+    "\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GR"
+    "OUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_"
+    "TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQU"
+    "ET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT"
+    "_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB"
+    "_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COM"
+    "PLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n"
+    "\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_"
+    "LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033org.ap"
+    "ache.drill.exec.protoB\rUserBitSharedH\001", 4438);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   UserCredentials::default_instance_ = new UserCredentials();
@@ -670,7 +691,11 @@ void protobuf_AddDesc_UserBitShared_2eproto() {
   NodeStatus::default_instance_ = new NodeStatus();
   QueryResult::default_instance_ = new QueryResult();
   QueryData::default_instance_ = new QueryData();
+  QueryInfo::_default_user_ =
+      new ::std::string("-", 1);
   QueryInfo::default_instance_ = new QueryInfo();
+  QueryProfile::_default_user_ =
+      new ::std::string("-", 1);
   QueryProfile::default_instance_ = new QueryProfile();
   MajorFragmentProfile::default_instance_ = new MajorFragmentProfile();
   MinorFragmentProfile::default_instance_ = new MinorFragmentProfile();
@@ -747,6 +772,7 @@ bool FragmentState_IsValid(int value) {
     case 3:
     case 4:
     case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -794,6 +820,8 @@ bool CoreOperatorType_IsValid(int value) {
     case 32:
     case 33:
     case 34:
+    case 35:
+    case 36:
       return true;
     default:
       return false;
@@ -1272,6 +1300,45 @@ void QueryId::Swap(QueryId* other) {
 
 // ===================================================================
 
+const ::google::protobuf::EnumDescriptor* DrillPBError_ErrorType_descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return DrillPBError_ErrorType_descriptor_;
+}
+bool DrillPBError_ErrorType_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#ifndef _MSC_VER
+const DrillPBError_ErrorType DrillPBError::CONNECTION;
+const DrillPBError_ErrorType DrillPBError::DATA_READ;
+const DrillPBError_ErrorType DrillPBError::DATA_WRITE;
+const DrillPBError_ErrorType DrillPBError::FUNCTION;
+const DrillPBError_ErrorType DrillPBError::PARSE;
+const DrillPBError_ErrorType DrillPBError::PERMISSION;
+const DrillPBError_ErrorType DrillPBError::PLAN;
+const DrillPBError_ErrorType DrillPBError::RESOURCE;
+const DrillPBError_ErrorType DrillPBError::SYSTEM;
+const DrillPBError_ErrorType DrillPBError::UNSUPPORTED_OPERATION;
+const DrillPBError_ErrorType DrillPBError::VALIDATION;
+const DrillPBError_ErrorType DrillPBError::ErrorType_MIN;
+const DrillPBError_ErrorType DrillPBError::ErrorType_MAX;
+const int DrillPBError::ErrorType_ARRAYSIZE;
+#endif  // _MSC_VER
 #ifndef _MSC_VER
 const int DrillPBError::kErrorIdFieldNumber;
 const int DrillPBError::kEndpointFieldNumber;
@@ -1406,15 +1473,20 @@ bool DrillPBError::MergePartialFromCodedStream(
         break;
       }
 
-      // optional int32 error_type = 3;
+      // optional .exec.shared.DrillPBError.ErrorType error_type = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_error_type:
+          int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &error_type_)));
-          set_has_error_type();
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::exec::shared::DrillPBError_ErrorType_IsValid(value)) {
+            set_error_type(static_cast< ::exec::shared::DrillPBError_ErrorType >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(3, value);
+          }
         } else {
           goto handle_uninterpreted;
         }
@@ -1501,9 +1573,10 @@ void DrillPBError::SerializeWithCachedSizes(
       2, this->endpoint(), output);
   }
 
-  // optional int32 error_type = 3;
+  // optional .exec.shared.DrillPBError.ErrorType error_type = 3;
   if (has_error_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->error_type(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      3, this->error_type(), output);
   }
 
   // optional string message = 4;
@@ -1552,9 +1625,10 @@ void DrillPBError::SerializeWithCachedSizes(
         2, this->endpoint(), target);
   }
 
-  // optional int32 error_type = 3;
+  // optional .exec.shared.DrillPBError.ErrorType error_type = 3;
   if (has_error_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->error_type(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      3, this->error_type(), target);
   }
 
   // optional string message = 4;
@@ -1606,11 +1680,10 @@ int DrillPBError::ByteSize() const {
           this->endpoint());
     }
 
-    // optional int32 error_type = 3;
+    // optional .exec.shared.DrillPBError.ErrorType error_type = 3;
     if (has_error_type()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->error_type());
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->error_type());
     }
 
     // optional string message = 4;
@@ -4791,6 +4864,7 @@ void QueryData::Swap(QueryData* other) {
 
 // ===================================================================
 
+::std::string* QueryInfo::_default_user_ = NULL;
 #ifndef _MSC_VER
 const int QueryInfo::kQueryFieldNumber;
 const int QueryInfo::kStartFieldNumber;
@@ -4819,7 +4893,7 @@ void QueryInfo::SharedCtor() {
   query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   start_ = GOOGLE_LONGLONG(0);
   state_ = 0;
-  user_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  user_ = const_cast< ::std::string*>(_default_user_);
   foreman_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -4832,7 +4906,7 @@ void QueryInfo::SharedDtor() {
   if (query_ != &::google::protobuf::internal::kEmptyString) {
     delete query_;
   }
-  if (user_ != &::google::protobuf::internal::kEmptyString) {
+  if (user_ != _default_user_) {
     delete user_;
   }
   if (this != default_instance_) {
@@ -4871,8 +4945,8 @@ void QueryInfo::Clear() {
     start_ = GOOGLE_LONGLONG(0);
     state_ = 0;
     if (has_user()) {
-      if (user_ != &::google::protobuf::internal::kEmptyString) {
-        user_->clear();
+      if (user_ != _default_user_) {
+        user_->assign(*_default_user_);
       }
     }
     if (has_foreman()) {
@@ -4942,7 +5016,7 @@ bool QueryInfo::MergePartialFromCodedStream(
         break;
       }
 
-      // optional string user = 4;
+      // optional string user = 4 [default = "-"];
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -5011,7 +5085,7 @@ void QueryInfo::SerializeWithCachedSizes(
       3, this->state(), output);
   }
 
-  // optional string user = 4;
+  // optional string user = 4 [default = "-"];
   if (has_user()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->user().data(), this->user().length(),
@@ -5055,7 +5129,7 @@ void QueryInfo::SerializeWithCachedSizes(
       3, this->state(), target);
   }
 
-  // optional string user = 4;
+  // optional string user = 4 [default = "-"];
   if (has_user()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->user().data(), this->user().length(),
@@ -5103,7 +5177,7 @@ int QueryInfo::ByteSize() const {
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->state());
     }
 
-    // optional string user = 4;
+    // optional string user = 4 [default = "-"];
     if (has_user()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -5204,6 +5278,7 @@ void QueryInfo::Swap(QueryInfo* other) {
 
 // ===================================================================
 
+::std::string* QueryProfile::_default_user_ = NULL;
 #ifndef _MSC_VER
 const int QueryProfile::kIdFieldNumber;
 const int QueryProfile::kTypeFieldNumber;
@@ -5216,6 +5291,11 @@ const int QueryProfile::kStateFieldNumber;
 const int QueryProfile::kTotalFragmentsFieldNumber;
 const int QueryProfile::kFinishedFragmentsFieldNumber;
 const int QueryProfile::kFragmentProfileFieldNumber;
+const int QueryProfile::kUserFieldNumber;
+const int QueryProfile::kErrorFieldNumber;
+const int QueryProfile::kVerboseErrorFieldNumber;
+const int QueryProfile::kErrorIdFieldNumber;
+const int QueryProfile::kErrorNodeFieldNumber;
 #endif  // !_MSC_VER
 
 QueryProfile::QueryProfile()
@@ -5246,6 +5326,11 @@ void QueryProfile::SharedCtor() {
   state_ = 0;
   total_fragments_ = 0;
   finished_fragments_ = 0;
+  user_ = const_cast< ::std::string*>(_default_user_);
+  error_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  verboseerror_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  error_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  error_node_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -5259,6 +5344,21 @@ void QueryProfile::SharedDtor() {
   }
   if (plan_ != &::google::protobuf::internal::kEmptyString) {
     delete plan_;
+  }
+  if (user_ != _default_user_) {
+    delete user_;
+  }
+  if (error_ != &::google::protobuf::internal::kEmptyString) {
+    delete error_;
+  }
+  if (verboseerror_ != &::google::protobuf::internal::kEmptyString) {
+    delete verboseerror_;
+  }
+  if (error_id_ != &::google::protobuf::internal::kEmptyString) {
+    delete error_id_;
+  }
+  if (error_node_ != &::google::protobuf::internal::kEmptyString) {
+    delete error_node_;
   }
   if (this != default_instance_) {
     delete id_;
@@ -5313,6 +5413,31 @@ void QueryProfile::Clear() {
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     total_fragments_ = 0;
     finished_fragments_ = 0;
+    if (has_user()) {
+      if (user_ != _default_user_) {
+        user_->assign(*_default_user_);
+      }
+    }
+    if (has_error()) {
+      if (error_ != &::google::protobuf::internal::kEmptyString) {
+        error_->clear();
+      }
+    }
+    if (has_verboseerror()) {
+      if (verboseerror_ != &::google::protobuf::internal::kEmptyString) {
+        verboseerror_->clear();
+      }
+    }
+    if (has_error_id()) {
+      if (error_id_ != &::google::protobuf::internal::kEmptyString) {
+        error_id_->clear();
+      }
+    }
+    if (has_error_node()) {
+      if (error_node_ != &::google::protobuf::internal::kEmptyString) {
+        error_node_->clear();
+      }
+    }
   }
   fragment_profile_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -5503,6 +5628,91 @@ bool QueryProfile::MergePartialFromCodedStream(
           goto handle_uninterpreted;
         }
         if (input->ExpectTag(90)) goto parse_fragment_profile;
+        if (input->ExpectTag(98)) goto parse_user;
+        break;
+      }
+
+      // optional string user = 12 [default = "-"];
+      case 12: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_user:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_user()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->user().data(), this->user().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(106)) goto parse_error;
+        break;
+      }
+
+      // optional string error = 13;
+      case 13: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_error:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_error()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->error().data(), this->error().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(114)) goto parse_verboseError;
+        break;
+      }
+
+      // optional string verboseError = 14;
+      case 14: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_verboseError:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_verboseerror()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->verboseerror().data(), this->verboseerror().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(122)) goto parse_error_id;
+        break;
+      }
+
+      // optional string error_id = 15;
+      case 15: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_error_id:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_error_id()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->error_id().data(), this->error_id().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(130)) goto parse_error_node;
+        break;
+      }
+
+      // optional string error_node = 16;
+      case 16: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_error_node:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_error_node()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->error_node().data(), this->error_node().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -5593,6 +5803,51 @@ void QueryProfile::SerializeWithCachedSizes(
       11, this->fragment_profile(i), output);
   }
 
+  // optional string user = 12 [default = "-"];
+  if (has_user()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->user().data(), this->user().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      12, this->user(), output);
+  }
+
+  // optional string error = 13;
+  if (has_error()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error().data(), this->error().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      13, this->error(), output);
+  }
+
+  // optional string verboseError = 14;
+  if (has_verboseerror()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->verboseerror().data(), this->verboseerror().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      14, this->verboseerror(), output);
+  }
+
+  // optional string error_id = 15;
+  if (has_error_id()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error_id().data(), this->error_id().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      15, this->error_id(), output);
+  }
+
+  // optional string error_node = 16;
+  if (has_error_node()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error_node().data(), this->error_node().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      16, this->error_node(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -5672,6 +5927,56 @@ void QueryProfile::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         11, this->fragment_profile(i), target);
+  }
+
+  // optional string user = 12 [default = "-"];
+  if (has_user()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->user().data(), this->user().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        12, this->user(), target);
+  }
+
+  // optional string error = 13;
+  if (has_error()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error().data(), this->error().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        13, this->error(), target);
+  }
+
+  // optional string verboseError = 14;
+  if (has_verboseerror()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->verboseerror().data(), this->verboseerror().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        14, this->verboseerror(), target);
+  }
+
+  // optional string error_id = 15;
+  if (has_error_id()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error_id().data(), this->error_id().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        15, this->error_id(), target);
+  }
+
+  // optional string error_node = 16;
+  if (has_error_node()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->error_node().data(), this->error_node().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        16, this->error_node(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -5755,6 +6060,41 @@ int QueryProfile::ByteSize() const {
           this->finished_fragments());
     }
 
+    // optional string user = 12 [default = "-"];
+    if (has_user()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->user());
+    }
+
+    // optional string error = 13;
+    if (has_error()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->error());
+    }
+
+    // optional string verboseError = 14;
+    if (has_verboseerror()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->verboseerror());
+    }
+
+    // optional string error_id = 15;
+    if (has_error_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->error_id());
+    }
+
+    // optional string error_node = 16;
+    if (has_error_node()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->error_node());
+    }
+
   }
   // repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
   total_size += 1 * this->fragment_profile_size();
@@ -5823,6 +6163,21 @@ void QueryProfile::MergeFrom(const QueryProfile& from) {
     if (from.has_finished_fragments()) {
       set_finished_fragments(from.finished_fragments());
     }
+    if (from.has_user()) {
+      set_user(from.user());
+    }
+    if (from.has_error()) {
+      set_error(from.error());
+    }
+    if (from.has_verboseerror()) {
+      set_verboseerror(from.verboseerror());
+    }
+    if (from.has_error_id()) {
+      set_error_id(from.error_id());
+    }
+    if (from.has_error_node()) {
+      set_error_node(from.error_node());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -5857,6 +6212,11 @@ void QueryProfile::Swap(QueryProfile* other) {
     std::swap(total_fragments_, other->total_fragments_);
     std::swap(finished_fragments_, other->finished_fragments_);
     fragment_profile_.Swap(&other->fragment_profile_);
+    std::swap(user_, other->user_);
+    std::swap(error_, other->error_);
+    std::swap(verboseerror_, other->verboseerror_);
+    std::swap(error_id_, other->error_id_);
+    std::swap(error_node_, other->error_node_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -6132,6 +6492,8 @@ const int MinorFragmentProfile::kEndTimeFieldNumber;
 const int MinorFragmentProfile::kMemoryUsedFieldNumber;
 const int MinorFragmentProfile::kMaxMemoryUsedFieldNumber;
 const int MinorFragmentProfile::kEndpointFieldNumber;
+const int MinorFragmentProfile::kLastUpdateFieldNumber;
+const int MinorFragmentProfile::kLastProgressFieldNumber;
 #endif  // !_MSC_VER
 
 MinorFragmentProfile::MinorFragmentProfile()
@@ -6160,6 +6522,8 @@ void MinorFragmentProfile::SharedCtor() {
   memory_used_ = GOOGLE_LONGLONG(0);
   max_memory_used_ = GOOGLE_LONGLONG(0);
   endpoint_ = NULL;
+  last_update_ = GOOGLE_LONGLONG(0);
+  last_progress_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -6211,6 +6575,8 @@ void MinorFragmentProfile::Clear() {
     if (has_endpoint()) {
       if (endpoint_ != NULL) endpoint_->::exec::DrillbitEndpoint::Clear();
     }
+    last_update_ = GOOGLE_LONGLONG(0);
+    last_progress_ = GOOGLE_LONGLONG(0);
   }
   operator_profile_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -6362,6 +6728,38 @@ bool MinorFragmentProfile::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(80)) goto parse_last_update;
+        break;
+      }
+
+      // optional int64 last_update = 10;
+      case 10: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_last_update:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &last_update_)));
+          set_has_last_update();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(88)) goto parse_last_progress;
+        break;
+      }
+
+      // optional int64 last_progress = 11;
+      case 11: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_last_progress:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &last_progress_)));
+          set_has_last_progress();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -6433,6 +6831,16 @@ void MinorFragmentProfile::SerializeWithCachedSizes(
       9, this->endpoint(), output);
   }
 
+  // optional int64 last_update = 10;
+  if (has_last_update()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(10, this->last_update(), output);
+  }
+
+  // optional int64 last_progress = 11;
+  if (has_last_progress()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(11, this->last_progress(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -6491,6 +6899,16 @@ void MinorFragmentProfile::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         9, this->endpoint(), target);
+  }
+
+  // optional int64 last_update = 10;
+  if (has_last_update()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(10, this->last_update(), target);
+  }
+
+  // optional int64 last_progress = 11;
+  if (has_last_progress()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(11, this->last_progress(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -6561,6 +6979,20 @@ int MinorFragmentProfile::ByteSize() const {
           this->endpoint());
     }
 
+    // optional int64 last_update = 10;
+    if (has_last_update()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->last_update());
+    }
+
+    // optional int64 last_progress = 11;
+    if (has_last_progress()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->last_progress());
+    }
+
   }
   // repeated .exec.shared.OperatorProfile operator_profile = 4;
   total_size += 1 * this->operator_profile_size();
@@ -6623,6 +7055,12 @@ void MinorFragmentProfile::MergeFrom(const MinorFragmentProfile& from) {
     if (from.has_endpoint()) {
       mutable_endpoint()->::exec::DrillbitEndpoint::MergeFrom(from.endpoint());
     }
+    if (from.has_last_update()) {
+      set_last_update(from.last_update());
+    }
+    if (from.has_last_progress()) {
+      set_last_progress(from.last_progress());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -6655,6 +7093,8 @@ void MinorFragmentProfile::Swap(MinorFragmentProfile* other) {
     std::swap(memory_used_, other->memory_used_);
     std::swap(max_memory_used_, other->max_memory_used_);
     std::swap(endpoint_, other->endpoint_);
+    std::swap(last_update_, other->last_update_);
+    std::swap(last_progress_, other->last_progress_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

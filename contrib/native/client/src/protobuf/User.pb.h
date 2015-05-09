@@ -51,6 +51,7 @@ enum RpcType {
   RUN_QUERY = 3,
   CANCEL_QUERY = 4,
   REQUEST_RESULTS = 5,
+  RESUME_PAUSED_QUERY = 11,
   QUERY_DATA = 6,
   QUERY_HANDLE = 7,
   REQ_META_FUNCTIONS = 8,
@@ -59,7 +60,7 @@ enum RpcType {
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = QUERY_RESULT;
+const RpcType RpcType_MAX = RESUME_PAUSED_QUERY;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -400,6 +401,13 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline bool support_complex_types() const;
   inline void set_support_complex_types(bool value);
 
+  // optional bool support_timeout = 7 [default = false];
+  inline bool has_support_timeout() const;
+  inline void clear_support_timeout();
+  static const int kSupportTimeoutFieldNumber = 7;
+  inline bool support_timeout() const;
+  inline void set_support_timeout(bool value);
+
   // @@protoc_insertion_point(class_scope:exec.user.UserToBitHandshake)
  private:
   inline void set_has_channel();
@@ -414,6 +422,8 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline void clear_has_properties();
   inline void set_has_support_complex_types();
   inline void clear_has_support_complex_types();
+  inline void set_has_support_timeout();
+  inline void clear_has_support_timeout();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -423,9 +433,10 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   ::exec::user::UserProperties* properties_;
   bool support_listening_;
   bool support_complex_types_;
+  bool support_timeout_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -1100,6 +1111,28 @@ inline bool UserToBitHandshake::support_complex_types() const {
 inline void UserToBitHandshake::set_support_complex_types(bool value) {
   set_has_support_complex_types();
   support_complex_types_ = value;
+}
+
+// optional bool support_timeout = 7 [default = false];
+inline bool UserToBitHandshake::has_support_timeout() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void UserToBitHandshake::set_has_support_timeout() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void UserToBitHandshake::clear_has_support_timeout() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void UserToBitHandshake::clear_support_timeout() {
+  support_timeout_ = false;
+  clear_has_support_timeout();
+}
+inline bool UserToBitHandshake::support_timeout() const {
+  return support_timeout_;
+}
+inline void UserToBitHandshake::set_support_timeout(bool value) {
+  set_has_support_timeout();
+  support_timeout_ = value;
 }
 
 // -------------------------------------------------------------------

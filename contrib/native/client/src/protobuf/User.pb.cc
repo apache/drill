@@ -84,13 +84,14 @@ void protobuf_AssignDesc_User_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(UserProperties));
   UserToBitHandshake_descriptor_ = file->message_type(2);
-  static const int UserToBitHandshake_offsets_[6] = {
+  static const int UserToBitHandshake_offsets_[7] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, channel_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_listening_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, rpc_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, credentials_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, properties_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_complex_types_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(UserToBitHandshake, support_timeout_),
   };
   UserToBitHandshake_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -213,31 +214,32 @@ void protobuf_AddDesc_User_2eproto() {
     "\032\023UserBitShared.proto\"&\n\010Property\022\013\n\003key"
     "\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"9\n\016UserProperties\022"
     "\'\n\nproperties\030\001 \003(\0132\023.exec.user.Property"
-    "\"\374\001\n\022UserToBitHandshake\022.\n\007channel\030\001 \001(\016"
+    "\"\234\002\n\022UserToBitHandshake\022.\n\007channel\030\001 \001(\016"
     "2\027.exec.shared.RpcChannel:\004USER\022\031\n\021suppo"
     "rt_listening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\022"
     "1\n\013credentials\030\004 \001(\0132\034.exec.shared.UserC"
     "redentials\022-\n\nproperties\030\005 \001(\0132\031.exec.us"
     "er.UserProperties\022$\n\025support_complex_typ"
-    "es\030\006 \001(\010:\005false\"S\n\016RequestResults\022&\n\010que"
-    "ry_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021max"
-    "imum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014resu"
-    "lts_mode\030\001 \001(\0162\033.exec.user.QueryResultsM"
-    "ode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryTyp"
-    "e\022\014\n\004plan\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n"
-    "\013rpc_version\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exe"
-    "c.user.HandshakeStatus\022\017\n\007errorId\030\004 \001(\t\022"
-    "\024\n\014errorMessage\030\005 \001(\t*\310\001\n\007RpcType\022\r\n\tHAN"
-    "DSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QU"
-    "ERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESUL"
-    "TS\020\005\022\016\n\nQUERY_DATA\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026"
-    "\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RESP_FUNCTION_"
-    "LIST\020\t\022\020\n\014QUERY_RESULT\020\n*#\n\020QueryResults"
-    "Mode\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus"
-    "\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022"
-    "\017\n\013AUTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n"
-    "\033org.apache.drill.exec.protoB\nUserProtos"
-    "H\001", 1122);
+    "es\030\006 \001(\010:\005false\022\036\n\017support_timeout\030\007 \001(\010"
+    ":\005false\"S\n\016RequestResults\022&\n\010query_id\030\001 "
+    "\001(\0132\024.exec.shared.QueryId\022\031\n\021maximum_res"
+    "ponses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014results_mode"
+    "\030\001 \001(\0162\033.exec.user.QueryResultsMode\022$\n\004t"
+    "ype\030\002 \001(\0162\026.exec.shared.QueryType\022\014\n\004pla"
+    "n\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n\013rpc_ver"
+    "sion\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.H"
+    "andshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n\014error"
+    "Message\030\005 \001(\t*\341\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000"
+    "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n"
+    "\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023"
+    "RESUME_PAUSED_QUERY\020\013\022\016\n\nQUERY_DATA\020\006\022\020\n"
+    "\014QUERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022"
+    "\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020"
+    "\n*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001*^"
+    "\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VE"
+    "RSION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNK"
+    "NOWN_FAILURE\020\004B+\n\033org.apache.drill.exec."
+    "protoB\nUserProtosH\001", 1179);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -278,6 +280,7 @@ bool RpcType_IsValid(int value) {
     case 8:
     case 9:
     case 10:
+    case 11:
       return true;
     default:
       return false;
@@ -812,6 +815,7 @@ const int UserToBitHandshake::kRpcVersionFieldNumber;
 const int UserToBitHandshake::kCredentialsFieldNumber;
 const int UserToBitHandshake::kPropertiesFieldNumber;
 const int UserToBitHandshake::kSupportComplexTypesFieldNumber;
+const int UserToBitHandshake::kSupportTimeoutFieldNumber;
 #endif  // !_MSC_VER
 
 UserToBitHandshake::UserToBitHandshake()
@@ -838,6 +842,7 @@ void UserToBitHandshake::SharedCtor() {
   credentials_ = NULL;
   properties_ = NULL;
   support_complex_types_ = false;
+  support_timeout_ = false;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -885,6 +890,7 @@ void UserToBitHandshake::Clear() {
       if (properties_ != NULL) properties_->::exec::user::UserProperties::Clear();
     }
     support_complex_types_ = false;
+    support_timeout_ = false;
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -988,6 +994,22 @@ bool UserToBitHandshake::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(56)) goto parse_support_timeout;
+        break;
+      }
+
+      // optional bool support_timeout = 7 [default = false];
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_support_timeout:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &support_timeout_)));
+          set_has_support_timeout();
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1043,6 +1065,11 @@ void UserToBitHandshake::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->support_complex_types(), output);
   }
 
+  // optional bool support_timeout = 7 [default = false];
+  if (has_support_timeout()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->support_timeout(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1084,6 +1111,11 @@ void UserToBitHandshake::SerializeWithCachedSizes(
   // optional bool support_complex_types = 6 [default = false];
   if (has_support_complex_types()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->support_complex_types(), target);
+  }
+
+  // optional bool support_timeout = 7 [default = false];
+  if (has_support_timeout()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->support_timeout(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1134,6 +1166,11 @@ int UserToBitHandshake::ByteSize() const {
       total_size += 1 + 1;
     }
 
+    // optional bool support_timeout = 7 [default = false];
+    if (has_support_timeout()) {
+      total_size += 1 + 1;
+    }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
@@ -1179,6 +1216,9 @@ void UserToBitHandshake::MergeFrom(const UserToBitHandshake& from) {
     if (from.has_support_complex_types()) {
       set_support_complex_types(from.support_complex_types());
     }
+    if (from.has_support_timeout()) {
+      set_support_timeout(from.support_timeout());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1211,6 +1251,7 @@ void UserToBitHandshake::Swap(UserToBitHandshake* other) {
     std::swap(credentials_, other->credentials_);
     std::swap(properties_, other->properties_);
     std::swap(support_complex_types_, other->support_complex_types_);
+    std::swap(support_timeout_, other->support_timeout_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

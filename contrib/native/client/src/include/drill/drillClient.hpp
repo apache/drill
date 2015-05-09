@@ -101,9 +101,11 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         static void setSocketTimeout(int32_t l);
         static void setHandshakeTimeout(int32_t l);
         static void setQueryTimeout(int32_t l);
+        static void setHeartbeatFrequency(int32_t l);
         static int32_t getSocketTimeout();
         static int32_t getHandshakeTimeout();
         static int32_t getQueryTimeout();
+        static int32_t getHeartbeatFrequency();
         static logLevel_t getLogLevel();
     private:
         // The logging level
@@ -127,10 +129,14 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
          *
          * s_queryTimeout: (default 180)
          *      place a timeout on waiting result of querying.
+         *
+         * s_heartbeatFrequency: (default 30)
+         *      Seconds of idle activity after which a heartbeat is sent to the drillbit
          */
         static int32_t s_socketTimeout;
         static int32_t s_handshakeTimeout;
         static int32_t s_queryTimeout;
+        static int32_t s_heartbeatFrequency;
         static boost::mutex s_mutex;
 };
 
@@ -215,6 +221,7 @@ class DECLSPEC_DRILL_CLIENT RecordIterator{
 
     void registerSchemaChangeListener(pfnSchemaListener l);
 
+    bool hasError();
     /*
      * Returns the last error message
      */

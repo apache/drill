@@ -43,11 +43,13 @@ class CompleteRpcMessage;
 enum RpcMode {
   REQUEST = 0,
   RESPONSE = 1,
-  RESPONSE_FAILURE = 2
+  RESPONSE_FAILURE = 2,
+  PING = 3,
+  PONG = 4
 };
 bool RpcMode_IsValid(int value);
 const RpcMode RpcMode_MIN = REQUEST;
-const RpcMode RpcMode_MAX = RESPONSE_FAILURE;
+const RpcMode RpcMode_MAX = PONG;
 const int RpcMode_ARRAYSIZE = RpcMode_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcMode_descriptor();

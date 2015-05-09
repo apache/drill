@@ -109,7 +109,8 @@ typedef enum{
     CONN_HANDSHAKE_TIMEOUT=5,
     CONN_HOSTNAME_RESOLUTION_ERROR=6,
     CONN_AUTH_FAILED=7,
-    CONN_BAD_RPC_VER=8
+    CONN_BAD_RPC_VER=8,
+    CONN_DEAD=9
 } connectionStatus_t;
 
 typedef enum{

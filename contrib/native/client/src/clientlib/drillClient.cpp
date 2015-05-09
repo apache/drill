@@ -50,6 +50,8 @@ uint64_t DrillClientConfig::s_bufferLimit=MAX_MEM_ALLOC_SIZE;
 int32_t DrillClientConfig::s_socketTimeout=0;
 int32_t DrillClientConfig::s_handshakeTimeout=5;
 int32_t DrillClientConfig::s_queryTimeout=180;
+int32_t DrillClientConfig::s_heartbeatFrequency=15; // 15 seconds
+
 boost::mutex DrillClientConfig::s_mutex;
 
 DrillClientConfig::DrillClientConfig(){
@@ -100,6 +102,13 @@ void DrillClientConfig::setQueryTimeout(int32_t t){
     }
 }
 
+void DrillClientConfig::setHeartbeatFrequency(int32_t t){
+    if (t>0){
+        boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+        s_heartbeatFrequency=t;
+    }
+}
+
 int32_t DrillClientConfig::getSocketTimeout(){
     boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_socketTimeout;
@@ -113,6 +122,11 @@ int32_t DrillClientConfig::getHandshakeTimeout(){
 int32_t DrillClientConfig::getQueryTimeout(){
     boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_queryTimeout;
+}
+
+int32_t DrillClientConfig::getHeartbeatFrequency(){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    return s_heartbeatFrequency;
 }
 
 logLevel_t DrillClientConfig::getLogLevel(){
@@ -279,6 +293,10 @@ bool RecordIterator::hasSchemaChanged(){
 void RecordIterator::registerSchemaChangeListener(pfnSchemaListener l){
     assert(m_pQueryResult!=NULL);
     this->m_pQueryResult->registerSchemaChangeListener(l);
+}
+
+bool RecordIterator::hasError(){
+    return m_pQueryResult->hasError();
 }
 
 const std::string& RecordIterator::getError(){

@@ -82,6 +82,7 @@ Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::Dr
             }
         }else{
             std::cout << "Query Complete." << std::endl;
+            return Drill::QRY_SUCCESS;
 		}
     }else{
         assert(b==NULL);
@@ -368,7 +369,7 @@ int main(int argc, char* argv[]) {
                 row=0;
                 Drill::RecordIterator* pRecIter=*recordIterIter;
                 Drill::FieldDefPtr fields= pRecIter->getColDefs();
-                while((ret=pRecIter->next()), ret==Drill::QRY_SUCCESS || ret==Drill::QRY_SUCCESS_WITH_INFO){
+                while((ret=pRecIter->next()), (ret==Drill::QRY_SUCCESS || ret==Drill::QRY_SUCCESS_WITH_INFO) && !pRecIter->hasError()){
                     fields = pRecIter->getColDefs();
                     row++;
                     if( (ret==Drill::QRY_SUCCESS_WITH_INFO  && pRecIter->hasSchemaChanged() )|| ( row%100==1)){

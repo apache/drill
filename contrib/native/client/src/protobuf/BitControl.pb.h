@@ -44,6 +44,7 @@ class BitStatus;
 class FragmentStatus;
 class InitializeFragments;
 class PlanFragment;
+class QueryContextInformation;
 class WorkQueueStatus;
 class FinishedReceiver;
 
@@ -51,13 +52,14 @@ enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
   GOODBYE = 2,
-  REQ_INIATILIZE_FRAGMENTS = 3,
+  REQ_INITIALIZE_FRAGMENTS = 3,
   REQ_CANCEL_FRAGMENT = 6,
   REQ_RECEIVER_FINISHED = 7,
   REQ_FRAGMENT_STATUS = 8,
   REQ_BIT_STATUS = 9,
   REQ_QUERY_STATUS = 10,
   REQ_QUERY_CANCEL = 15,
+  REQ_UNPAUSE_FRAGMENT = 16,
   RESP_FRAGMENT_HANDLE = 11,
   RESP_FRAGMENT_STATUS = 12,
   RESP_BIT_STATUS = 13,
@@ -65,7 +67,7 @@ enum RpcType {
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = REQ_QUERY_CANCEL;
+const RpcType RpcType_MAX = REQ_UNPAUSE_FRAGMENT;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -553,6 +555,13 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::std::string* release_fragment_json();
   inline void set_allocated_fragment_json(::std::string* fragment_json);
 
+  // optional bool leaf_fragment = 9;
+  inline bool has_leaf_fragment() const;
+  inline void clear_leaf_fragment();
+  static const int kLeafFragmentFieldNumber = 9;
+  inline bool leaf_fragment() const;
+  inline void set_leaf_fragment(bool value);
+
   // optional .exec.DrillbitEndpoint assignment = 10;
   inline bool has_assignment() const;
   inline void clear_assignment();
@@ -561,13 +570,6 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::exec::DrillbitEndpoint* mutable_assignment();
   inline ::exec::DrillbitEndpoint* release_assignment();
   inline void set_allocated_assignment(::exec::DrillbitEndpoint* assignment);
-
-  // optional bool leaf_fragment = 9;
-  inline bool has_leaf_fragment() const;
-  inline void clear_leaf_fragment();
-  static const int kLeafFragmentFieldNumber = 9;
-  inline bool leaf_fragment() const;
-  inline void set_leaf_fragment(bool value);
 
   // optional .exec.DrillbitEndpoint foreman = 11;
   inline bool has_foreman() const;
@@ -592,33 +594,19 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 mem_max() const;
   inline void set_mem_max(::google::protobuf::int64 value);
 
-  // optional int64 query_start_time = 14;
-  inline bool has_query_start_time() const;
-  inline void clear_query_start_time();
-  static const int kQueryStartTimeFieldNumber = 14;
-  inline ::google::protobuf::int64 query_start_time() const;
-  inline void set_query_start_time(::google::protobuf::int64 value);
-
-  // optional .exec.shared.UserCredentials credentials = 15;
+  // optional .exec.shared.UserCredentials credentials = 14;
   inline bool has_credentials() const;
   inline void clear_credentials();
-  static const int kCredentialsFieldNumber = 15;
+  static const int kCredentialsFieldNumber = 14;
   inline const ::exec::shared::UserCredentials& credentials() const;
   inline ::exec::shared::UserCredentials* mutable_credentials();
   inline ::exec::shared::UserCredentials* release_credentials();
   inline void set_allocated_credentials(::exec::shared::UserCredentials* credentials);
 
-  // optional int32 time_zone = 16;
-  inline bool has_time_zone() const;
-  inline void clear_time_zone();
-  static const int kTimeZoneFieldNumber = 16;
-  inline ::google::protobuf::int32 time_zone() const;
-  inline void set_time_zone(::google::protobuf::int32 value);
-
-  // optional string options_json = 17;
+  // optional string options_json = 15;
   inline bool has_options_json() const;
   inline void clear_options_json();
-  static const int kOptionsJsonFieldNumber = 17;
+  static const int kOptionsJsonFieldNumber = 15;
   inline const ::std::string& options_json() const;
   inline void set_options_json(const ::std::string& value);
   inline void set_options_json(const char* value);
@@ -626,6 +614,15 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::std::string* mutable_options_json();
   inline ::std::string* release_options_json();
   inline void set_allocated_options_json(::std::string* options_json);
+
+  // optional .exec.bit.control.QueryContextInformation context = 16;
+  inline bool has_context() const;
+  inline void clear_context();
+  static const int kContextFieldNumber = 16;
+  inline const ::exec::bit::control::QueryContextInformation& context() const;
+  inline ::exec::bit::control::QueryContextInformation* mutable_context();
+  inline ::exec::bit::control::QueryContextInformation* release_context();
+  inline void set_allocated_context(::exec::bit::control::QueryContextInformation* context);
 
   // @@protoc_insertion_point(class_scope:exec.bit.control.PlanFragment)
  private:
@@ -641,24 +638,22 @@ class PlanFragment : public ::google::protobuf::Message {
   inline void clear_has_memory_cost();
   inline void set_has_fragment_json();
   inline void clear_has_fragment_json();
-  inline void set_has_assignment();
-  inline void clear_has_assignment();
   inline void set_has_leaf_fragment();
   inline void clear_has_leaf_fragment();
+  inline void set_has_assignment();
+  inline void clear_has_assignment();
   inline void set_has_foreman();
   inline void clear_has_foreman();
   inline void set_has_mem_initial();
   inline void clear_has_mem_initial();
   inline void set_has_mem_max();
   inline void clear_has_mem_max();
-  inline void set_has_query_start_time();
-  inline void clear_has_query_start_time();
   inline void set_has_credentials();
   inline void clear_has_credentials();
-  inline void set_has_time_zone();
-  inline void clear_has_time_zone();
   inline void set_has_options_json();
   inline void clear_has_options_json();
+  inline void set_has_context();
+  inline void clear_has_context();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -671,15 +666,14 @@ class PlanFragment : public ::google::protobuf::Message {
   ::exec::DrillbitEndpoint* assignment_;
   ::exec::DrillbitEndpoint* foreman_;
   ::google::protobuf::int64 mem_initial_;
-  bool leaf_fragment_;
-  ::google::protobuf::int32 time_zone_;
   ::google::protobuf::int64 mem_max_;
-  ::google::protobuf::int64 query_start_time_;
   ::exec::shared::UserCredentials* credentials_;
   ::std::string* options_json_;
+  ::exec::bit::control::QueryContextInformation* context_;
+  bool leaf_fragment_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(14 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitControl_2eproto();
   friend void protobuf_AssignDesc_BitControl_2eproto();
@@ -687,6 +681,113 @@ class PlanFragment : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static PlanFragment* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class QueryContextInformation : public ::google::protobuf::Message {
+ public:
+  QueryContextInformation();
+  virtual ~QueryContextInformation();
+
+  QueryContextInformation(const QueryContextInformation& from);
+
+  inline QueryContextInformation& operator=(const QueryContextInformation& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const QueryContextInformation& default_instance();
+
+  void Swap(QueryContextInformation* other);
+
+  // implements Message ----------------------------------------------
+
+  QueryContextInformation* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const QueryContextInformation& from);
+  void MergeFrom(const QueryContextInformation& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 query_start_time = 1;
+  inline bool has_query_start_time() const;
+  inline void clear_query_start_time();
+  static const int kQueryStartTimeFieldNumber = 1;
+  inline ::google::protobuf::int64 query_start_time() const;
+  inline void set_query_start_time(::google::protobuf::int64 value);
+
+  // optional int32 time_zone = 2;
+  inline bool has_time_zone() const;
+  inline void clear_time_zone();
+  static const int kTimeZoneFieldNumber = 2;
+  inline ::google::protobuf::int32 time_zone() const;
+  inline void set_time_zone(::google::protobuf::int32 value);
+
+  // optional string default_schema_name = 3;
+  inline bool has_default_schema_name() const;
+  inline void clear_default_schema_name();
+  static const int kDefaultSchemaNameFieldNumber = 3;
+  inline const ::std::string& default_schema_name() const;
+  inline void set_default_schema_name(const ::std::string& value);
+  inline void set_default_schema_name(const char* value);
+  inline void set_default_schema_name(const char* value, size_t size);
+  inline ::std::string* mutable_default_schema_name();
+  inline ::std::string* release_default_schema_name();
+  inline void set_allocated_default_schema_name(::std::string* default_schema_name);
+
+  // @@protoc_insertion_point(class_scope:exec.bit.control.QueryContextInformation)
+ private:
+  inline void set_has_query_start_time();
+  inline void clear_has_query_start_time();
+  inline void set_has_time_zone();
+  inline void clear_has_time_zone();
+  inline void set_has_default_schema_name();
+  inline void clear_has_default_schema_name();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 query_start_time_;
+  ::std::string* default_schema_name_;
+  ::google::protobuf::int32 time_zone_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitControl_2eproto();
+  friend void protobuf_AssignDesc_BitControl_2eproto();
+  friend void protobuf_ShutdownFile_BitControl_2eproto();
+
+  void InitAsDefaultInstance();
+  static QueryContextInformation* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1316,15 +1417,37 @@ inline void PlanFragment::set_allocated_fragment_json(::std::string* fragment_js
   }
 }
 
-// optional .exec.DrillbitEndpoint assignment = 10;
-inline bool PlanFragment::has_assignment() const {
+// optional bool leaf_fragment = 9;
+inline bool PlanFragment::has_leaf_fragment() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void PlanFragment::set_has_assignment() {
+inline void PlanFragment::set_has_leaf_fragment() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void PlanFragment::clear_has_assignment() {
+inline void PlanFragment::clear_has_leaf_fragment() {
   _has_bits_[0] &= ~0x00000040u;
+}
+inline void PlanFragment::clear_leaf_fragment() {
+  leaf_fragment_ = false;
+  clear_has_leaf_fragment();
+}
+inline bool PlanFragment::leaf_fragment() const {
+  return leaf_fragment_;
+}
+inline void PlanFragment::set_leaf_fragment(bool value) {
+  set_has_leaf_fragment();
+  leaf_fragment_ = value;
+}
+
+// optional .exec.DrillbitEndpoint assignment = 10;
+inline bool PlanFragment::has_assignment() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void PlanFragment::set_has_assignment() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void PlanFragment::clear_has_assignment() {
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void PlanFragment::clear_assignment() {
   if (assignment_ != NULL) assignment_->::exec::DrillbitEndpoint::Clear();
@@ -1352,28 +1475,6 @@ inline void PlanFragment::set_allocated_assignment(::exec::DrillbitEndpoint* ass
   } else {
     clear_has_assignment();
   }
-}
-
-// optional bool leaf_fragment = 9;
-inline bool PlanFragment::has_leaf_fragment() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void PlanFragment::set_has_leaf_fragment() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void PlanFragment::clear_has_leaf_fragment() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void PlanFragment::clear_leaf_fragment() {
-  leaf_fragment_ = false;
-  clear_has_leaf_fragment();
-}
-inline bool PlanFragment::leaf_fragment() const {
-  return leaf_fragment_;
-}
-inline void PlanFragment::set_leaf_fragment(bool value) {
-  set_has_leaf_fragment();
-  leaf_fragment_ = value;
 }
 
 // optional .exec.DrillbitEndpoint foreman = 11;
@@ -1458,37 +1559,15 @@ inline void PlanFragment::set_mem_max(::google::protobuf::int64 value) {
   mem_max_ = value;
 }
 
-// optional int64 query_start_time = 14;
-inline bool PlanFragment::has_query_start_time() const {
+// optional .exec.shared.UserCredentials credentials = 14;
+inline bool PlanFragment::has_credentials() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
-inline void PlanFragment::set_has_query_start_time() {
+inline void PlanFragment::set_has_credentials() {
   _has_bits_[0] |= 0x00000800u;
 }
-inline void PlanFragment::clear_has_query_start_time() {
-  _has_bits_[0] &= ~0x00000800u;
-}
-inline void PlanFragment::clear_query_start_time() {
-  query_start_time_ = GOOGLE_LONGLONG(0);
-  clear_has_query_start_time();
-}
-inline ::google::protobuf::int64 PlanFragment::query_start_time() const {
-  return query_start_time_;
-}
-inline void PlanFragment::set_query_start_time(::google::protobuf::int64 value) {
-  set_has_query_start_time();
-  query_start_time_ = value;
-}
-
-// optional .exec.shared.UserCredentials credentials = 15;
-inline bool PlanFragment::has_credentials() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
-}
-inline void PlanFragment::set_has_credentials() {
-  _has_bits_[0] |= 0x00001000u;
-}
 inline void PlanFragment::clear_has_credentials() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void PlanFragment::clear_credentials() {
   if (credentials_ != NULL) credentials_->::exec::shared::UserCredentials::Clear();
@@ -1518,37 +1597,15 @@ inline void PlanFragment::set_allocated_credentials(::exec::shared::UserCredenti
   }
 }
 
-// optional int32 time_zone = 16;
-inline bool PlanFragment::has_time_zone() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
-}
-inline void PlanFragment::set_has_time_zone() {
-  _has_bits_[0] |= 0x00002000u;
-}
-inline void PlanFragment::clear_has_time_zone() {
-  _has_bits_[0] &= ~0x00002000u;
-}
-inline void PlanFragment::clear_time_zone() {
-  time_zone_ = 0;
-  clear_has_time_zone();
-}
-inline ::google::protobuf::int32 PlanFragment::time_zone() const {
-  return time_zone_;
-}
-inline void PlanFragment::set_time_zone(::google::protobuf::int32 value) {
-  set_has_time_zone();
-  time_zone_ = value;
-}
-
-// optional string options_json = 17;
+// optional string options_json = 15;
 inline bool PlanFragment::has_options_json() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void PlanFragment::set_has_options_json() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void PlanFragment::clear_has_options_json() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void PlanFragment::clear_options_json() {
   if (options_json_ != &::google::protobuf::internal::kEmptyString) {
@@ -1607,6 +1664,162 @@ inline void PlanFragment::set_allocated_options_json(::std::string* options_json
   } else {
     clear_has_options_json();
     options_json_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional .exec.bit.control.QueryContextInformation context = 16;
+inline bool PlanFragment::has_context() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void PlanFragment::set_has_context() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void PlanFragment::clear_has_context() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void PlanFragment::clear_context() {
+  if (context_ != NULL) context_->::exec::bit::control::QueryContextInformation::Clear();
+  clear_has_context();
+}
+inline const ::exec::bit::control::QueryContextInformation& PlanFragment::context() const {
+  return context_ != NULL ? *context_ : *default_instance_->context_;
+}
+inline ::exec::bit::control::QueryContextInformation* PlanFragment::mutable_context() {
+  set_has_context();
+  if (context_ == NULL) context_ = new ::exec::bit::control::QueryContextInformation;
+  return context_;
+}
+inline ::exec::bit::control::QueryContextInformation* PlanFragment::release_context() {
+  clear_has_context();
+  ::exec::bit::control::QueryContextInformation* temp = context_;
+  context_ = NULL;
+  return temp;
+}
+inline void PlanFragment::set_allocated_context(::exec::bit::control::QueryContextInformation* context) {
+  delete context_;
+  context_ = context;
+  if (context) {
+    set_has_context();
+  } else {
+    clear_has_context();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// QueryContextInformation
+
+// optional int64 query_start_time = 1;
+inline bool QueryContextInformation::has_query_start_time() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void QueryContextInformation::set_has_query_start_time() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void QueryContextInformation::clear_has_query_start_time() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void QueryContextInformation::clear_query_start_time() {
+  query_start_time_ = GOOGLE_LONGLONG(0);
+  clear_has_query_start_time();
+}
+inline ::google::protobuf::int64 QueryContextInformation::query_start_time() const {
+  return query_start_time_;
+}
+inline void QueryContextInformation::set_query_start_time(::google::protobuf::int64 value) {
+  set_has_query_start_time();
+  query_start_time_ = value;
+}
+
+// optional int32 time_zone = 2;
+inline bool QueryContextInformation::has_time_zone() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void QueryContextInformation::set_has_time_zone() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void QueryContextInformation::clear_has_time_zone() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void QueryContextInformation::clear_time_zone() {
+  time_zone_ = 0;
+  clear_has_time_zone();
+}
+inline ::google::protobuf::int32 QueryContextInformation::time_zone() const {
+  return time_zone_;
+}
+inline void QueryContextInformation::set_time_zone(::google::protobuf::int32 value) {
+  set_has_time_zone();
+  time_zone_ = value;
+}
+
+// optional string default_schema_name = 3;
+inline bool QueryContextInformation::has_default_schema_name() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void QueryContextInformation::set_has_default_schema_name() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void QueryContextInformation::clear_has_default_schema_name() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void QueryContextInformation::clear_default_schema_name() {
+  if (default_schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    default_schema_name_->clear();
+  }
+  clear_has_default_schema_name();
+}
+inline const ::std::string& QueryContextInformation::default_schema_name() const {
+  return *default_schema_name_;
+}
+inline void QueryContextInformation::set_default_schema_name(const ::std::string& value) {
+  set_has_default_schema_name();
+  if (default_schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    default_schema_name_ = new ::std::string;
+  }
+  default_schema_name_->assign(value);
+}
+inline void QueryContextInformation::set_default_schema_name(const char* value) {
+  set_has_default_schema_name();
+  if (default_schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    default_schema_name_ = new ::std::string;
+  }
+  default_schema_name_->assign(value);
+}
+inline void QueryContextInformation::set_default_schema_name(const char* value, size_t size) {
+  set_has_default_schema_name();
+  if (default_schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    default_schema_name_ = new ::std::string;
+  }
+  default_schema_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryContextInformation::mutable_default_schema_name() {
+  set_has_default_schema_name();
+  if (default_schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    default_schema_name_ = new ::std::string;
+  }
+  return default_schema_name_;
+}
+inline ::std::string* QueryContextInformation::release_default_schema_name() {
+  clear_has_default_schema_name();
+  if (default_schema_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = default_schema_name_;
+    default_schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryContextInformation::set_allocated_default_schema_name(::std::string* default_schema_name) {
+  if (default_schema_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete default_schema_name_;
+  }
+  if (default_schema_name) {
+    set_has_default_schema_name();
+    default_schema_name_ = default_schema_name;
+  } else {
+    clear_has_default_schema_name();
+    default_schema_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
