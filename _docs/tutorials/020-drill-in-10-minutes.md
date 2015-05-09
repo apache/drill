@@ -58,7 +58,7 @@ The extraction process creates the installation directory named apache-drill-0.9
 At this point, you can [start Drill]({{site.baseurl}}/docs/drill-in-10-minutes/#start-drill).
 
 ## Start Drill on Linux and Mac OS X
-Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The zk=local means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
+Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The zk=local means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
 
 1. Navigate to the Drill installation directory. For example:  
 
@@ -83,7 +83,7 @@ You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment va
    At this point, you can start Drill.  
 
 ## Start Drill on Windows
-Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
+Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
 
 1. Open the apache-drill-0.9.0 folder.  
 2. Open the bin folder, and double-click the `sqlline.bat` file:

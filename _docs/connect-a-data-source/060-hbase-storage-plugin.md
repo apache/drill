@@ -2,7 +2,7 @@
 title: "HBase Storage Plugin"
 parent: "Storage Plugin Configuration"
 ---
-Register a storage plugin instance and specify a zookeeper quorum to connect
+Register a storage plugin instance and specify a ZooKeeper quorum to connect
 Drill to an HBase data source. When you register a storage plugin instance for
 an HBase data source, provide a unique name for the instance, and identify the
 type as “hbase” in the Drill Web UI.
@@ -13,7 +13,7 @@ To register HBase with Drill, complete the following steps:
 
   1. Navigate to [http://localhost:8047](http://localhost:8047/), and select the **Storage** tab
   2. In the disabled storage plugins section, click **Update** next to the `hbase` instance.
-  3. In the Configuration window, specify the Zookeeper quorum and port. 
+  3. In the Configuration window, specify the ZooKeeper quorum and port. 
   
 
      **Example**  

@@ -31,8 +31,8 @@ To start SQLLine, use the following **sqlline command** syntax:
 * `-u` is the option that precedes a connection string. Required.  
 * `jdbc` is the connection protocol. Required.  
 * `schema` is the name of a [storage plugin]({{site.baseurl}}/docs/storage-plugin-registration) to use for queries. Optional.  
-* `Zk=zkname` is one or more zookeeper host names or IP addresses. Optional if you are running SQLLine and zookeeper on the local node.  
-* `port` is the zookeeper port number. Optional. Port 2181 is the default.  
+* `Zk=zkname` is one or more ZooKeeper host names or IP addresses. Optional if you are running SQLLine and ZooKeeper on the local node.  
+* `port` is the ZooKeeper port number. Optional. Port 2181 is the default.  
 
 #### Examples of Starting Drill
 This example also starts SQLLine using the `dfs` storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query:
@@ -40,7 +40,7 @@ This example also starts SQLLine using the `dfs` storage plugin. Specifying the 
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=centos26
 
-This command starts SQLLine in a cluster configured to run zookeeper on three nodes:
+This command starts SQLLine in a cluster configured to run ZooKeeper on three nodes:
 
     bin/sqlline –u jdbc:drill:zk=cento23,zk=centos24,zk=centos26:5181
 
@@ -51,7 +51,7 @@ Complete the following steps to start Drill:
   1. Navigate to the Drill installation directory, and issue the following command to start a Drillbit:
   
         bin/drillbit.sh restart
-  2. Issue the following command to invoke SQLLine and start Drill if zookeeper is running on the same node as SQLLine:
+  2. Issue the following command to invoke SQLLine and start Drill if ZooKeeper is running on the same node as SQLLine:
   
         bin/sqlline -u jdbc:drill:
      

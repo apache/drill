@@ -2,7 +2,7 @@
 title: "Starting Drill on Linux and Mac OS X"
 parent: "Installing Drill in Embedded Mode"
 ---
-Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill using jdbc. The zk=local means the local node is the zookeeper node. Complete the following steps to launch SQLLine and start Drill:
+Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill using jdbc. The zk=local means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
 
 1. Navigate to the Drill installation directory. For example:  
 
@@ -18,7 +18,7 @@ Launch SQLLine using the sqlline command to start to Drill in embedded mode. The
 
 ## Example of Starting Drill
 
-The simplest example of how to start SQLLine is to identify the protocol, JDBC, and zookeeper node or nodes in the **sqlline** command. This example starts SQLLine on a node in an embedded, single-node cluster:
+The simplest example of how to start SQLLine is to identify the protocol, JDBC, and ZooKeeper node or nodes in the **sqlline** command. This example starts SQLLine on a node in an embedded, single-node cluster:
 
     sqlline -u jdbc:drill:zk=local
 
