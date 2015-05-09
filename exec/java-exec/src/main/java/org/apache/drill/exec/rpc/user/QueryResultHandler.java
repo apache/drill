@@ -25,6 +25,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -279,6 +280,7 @@ public class QueryResultHandler {
     private final RemoteConnection connection;
     private final ChannelFuture closeFuture;
     private final ChannelClosedListener closeListener;
+    private final AtomicBoolean isTerminal = new AtomicBoolean(false);
 
     public SubmissionListener(RemoteConnection connection, UserResultsListener resultsListener) {
       super();
@@ -302,11 +304,22 @@ public class QueryResultHandler {
 
     @Override
     public void failed(RpcException ex) {
+      if (!isTerminal.compareAndSet(false, true)) {
+        return;
+      }
+
+      closeFuture.removeListener(closeListener);
       resultsListener.submissionFailed(UserException.systemError(ex).build());
+
     }
 
     @Override
     public void success(QueryId queryId, ByteBuf buf) {
+      if (!isTerminal.compareAndSet(false, true)) {
+        return;
+      }
+
+      closeFuture.removeListener(closeListener);
       resultsListener.queryIdArrived(queryId);
       if (logger.isDebugEnabled()) {
         logger.debug("Received QueryId {} successfully. Adding results listener {}.",
