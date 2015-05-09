@@ -124,20 +124,15 @@ public class DrillRuleSets {
       DrillPushFilterPastProjectRule.INSTANCE,
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
-//      JoinPushThroughJoinRule.RIGHT,
-//      JoinPushThroughJoinRule.LEFT,
       // End support for WHERE style joins.
 
       FilterMergeRule.INSTANCE,
-//      SwapJoinRule.INSTANCE,
-      AggregateRemoveRule.INSTANCE,   // RemoveDistinctRule
-//      UnionToDistinctRule.INSTANCE,
-      ProjectRemoveRule.NAME_CALC_INSTANCE,     // RemoveTrivialProjectRule
-//      RemoveTrivialCalcRule.INSTANCE,
-      SortRemoveRule.INSTANCE,      //RemoveSortRule.INSTANCE,
+      AggregateRemoveRule.INSTANCE,
+      ProjectRemoveRule.NAME_CALC_INSTANCE,
+      SortRemoveRule.INSTANCE,
 
       DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
-      AggregateExpandDistinctAggregatesRule.INSTANCE, //RemoveDistinctAggregateRule.INSTANCE, //
+      AggregateExpandDistinctAggregatesRule.INSTANCE,
       DrillReduceAggregatesRule.INSTANCE,
 
       /*
