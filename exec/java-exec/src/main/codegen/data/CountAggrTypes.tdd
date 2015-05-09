@@ -1,0 +1,39 @@
+{
+  countFunctionsInput: [
+    "Bit",
+    "NullableBit",
+    "Int",
+    "NullableInt",
+    "BigInt",
+    "NullableBigInt",
+    "Float4",
+    "NullableFloat4",
+    "Float8",
+    "NullableFloat8",
+    "Date",
+    "NullableDate",
+    "TimeStamp",
+    "NullableTimeStamp",
+    "Time",
+    "NullableTime",
+    "IntervalDay",
+    "NullableIntervalDay",
+    "IntervalYear",
+    "NullableIntervalYear",
+    "Interval",
+    "NullableInterval",
+    "VarChar",
+    "NullableVarChar",
+    "VarBinary"
+    "NullableVarBinary",
+    "Decimal9",
+    "NullableDecimal9",
+    "Decimal18",
+    "NullableDecimal18",
+    "Decimal28Sparse",
+    "NullableDecimal28Sparse",
+    "Decimal38Sparse",
+    "NullableDecimal38Sparse"
+  ]
+}
+

@@ -88,35 +88,6 @@
       {inputType: "Interval", outputType: "Interval", runningType: "Interval", major: "Date", initialValue: "0"},
       {inputType: "NullableInterval", outputType: "Interval", runningType: "Interval", major: "Date", initialValue: "0"}
      ]
-   },
-   {className: "Count", funcName: "count", types: [
-      {inputType: "Bit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "Float4", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "Float8", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableFloat4", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableFloat8", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "Date", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableDate", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "TimeStamp", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableTimeStamp", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "Time", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableTime", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "IntervalDay", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableIntervalDay", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "IntervalYear", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableIntervalYear", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "Interval", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableInterval", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "VarChar", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
-      {inputType: "NullableVarChar", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
-      {inputType: "VarBinary", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
-      {inputType: "NullableVarBinary", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"}
-     ]
    }
   ]
 }
