@@ -52,6 +52,7 @@ public class DrillFunctionRegistry {
     FunctionConverter converter = new FunctionConverter();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
+      logger.trace( "Registering {}:", clazz.getName() );
       DrillFuncHolder holder = converter.getHolder(clazz);
       if (holder != null) {
         // register handle for each name the function can be referred to
@@ -63,6 +64,7 @@ public class DrillFunctionRegistry {
           functionInput += ref.getType().toString();
         }
         for (String name : names) {
+          logger.trace( "Registering {} under \"{}\"", clazz.getName(), name );
           String functionName = name.toLowerCase();
           methods.put(functionName, holder);
           String functionSignature = functionName + functionInput;

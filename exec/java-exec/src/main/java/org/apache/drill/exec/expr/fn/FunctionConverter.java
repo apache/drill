@@ -75,7 +75,7 @@ public class FunctionConverter {
     }
 
     URL u = Resources.getResource(c, path);
-    logger.debug( "Parsing {} for {}.", u, c );
+    logger.trace( "Parsing {} for {}.", u, c );
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
     try (InputStream is = supplier.getInput()) {
       if (is == null) {
