@@ -197,6 +197,13 @@ if $is_cygwin; then
   fi
 fi
 
+# make sure allocator chunks are done as mmap'd memory (and reduce arena overhead)
+export MALLOC_ARENA_MAX=4
+export MALLOC_MMAP_THRESHOLD_=131072
+export MALLOC_TRIM_THRESHOLD_=131072
+export MALLOC_TOP_PAD_=131072
+export MALLOC_MMAP_MAX_=65536
+
 # Variables exported form this script
 export HADOOP_HOME
 export is_cygwin
