@@ -344,7 +344,10 @@ public class HiveRecordReader extends AbstractRecordReader {
   @Override
   public void cleanup() {
     try {
-      reader.close();
+      if (reader != null) {
+        reader.close();
+        reader = null;
+      }
     } catch (Exception e) {
       logger.warn("Failure while closing Hive Record reader.", e);
     }

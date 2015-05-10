@@ -59,6 +59,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
@@ -319,7 +323,7 @@ public class BaseTestQuery extends ExecTest {
 
   protected static void testNoResult(int interation, String query, Object... args) throws Exception {
     query = String.format(query, args);
-    logger.debug("Running query:\n--------------\n"+query);
+    logger.debug("Running query:\n--------------\n" + query);
     for (int i = 0; i < interation; i++) {
       List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
       for (QueryDataBatch queryDataBatch : results) {
@@ -362,6 +366,24 @@ public class BaseTestQuery extends ExecTest {
 
   protected static void testSqlFromFile(String file) throws Exception{
     test(getFile(file));
+  }
+
+  /**
+   * Utility method which tests given query produces a {@link UserException} and the exception message contains
+   * the given message.
+   * @param testSqlQuery Test query
+   * @param expectedErrorMsg Expected error message.
+   */
+  protected static void errorMsgTestHelper(final String testSqlQuery, final String expectedErrorMsg) throws Exception {
+    UserException expException = null;
+    try {
+      test(testSqlQuery);
+    } catch (final UserException ex) {
+      expException = ex;
+    }
+
+    assertNotNull("Expected a UserException", expException);
+    assertThat(expException.getMessage(), containsString(expectedErrorMsg));
   }
 
   public static String getFile(String resource) throws IOException{

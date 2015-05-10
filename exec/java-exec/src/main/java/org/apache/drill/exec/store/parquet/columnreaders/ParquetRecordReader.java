@@ -455,17 +455,22 @@ public class ParquetRecordReader extends AbstractRecordReader {
     // enable this for debugging when it is know that a whole file will be read
     // limit kills upstream operators once it has enough records, so this assert will fail
 //    assert totalRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount();
-    for (ColumnReader column : columnStatuses) {
-      column.clear();
+    if (columnStatuses != null) {
+      for (ColumnReader column : columnStatuses) {
+        column.clear();
+      }
+      columnStatuses.clear();
+      columnStatuses = null;
     }
-    columnStatuses.clear();
 
     codecFactory.close();
 
-    for (VarLengthColumn r : varLengthReader.columns) {
-      r.clear();
+    if (varLengthReader != null) {
+      for (VarLengthColumn r : varLengthReader.columns) {
+        r.clear();
+      }
+      varLengthReader.columns.clear();
+      varLengthReader = null;
     }
-    varLengthReader.columns.clear();
   }
-
 }

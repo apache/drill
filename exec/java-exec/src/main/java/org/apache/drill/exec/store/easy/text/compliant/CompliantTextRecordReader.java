@@ -144,7 +144,10 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   @Override
   public void cleanup() {
     try {
-      reader.close();
+      if (reader != null) {
+        reader.close();
+        reader = null;
+      }
     } catch (IOException e) {
       logger.warn("Exception while closing stream.", e);
     }

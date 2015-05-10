@@ -18,6 +18,7 @@
 package org.apache.drill;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedDataTypeException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -355,13 +356,15 @@ public class TestDisabledFunctionality extends BaseTestQuery{
     }
   }
 
-  @Test(expected =  UserException.class) // DRILL-2848
+  @Test // DRILL-2848
   public void testDisableDecimalCasts() throws Exception {
-    test("select cast('1.2' as decimal(9, 2)) from cp.`employee.json` limit 1");
+    final String query = "select cast('1.2' as decimal(9, 2)) from cp.`employee.json` limit 1";
+    errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
   }
 
-  @Test(expected = UserException.class) // DRILL-2848
+  @Test // DRILL-2848
   public void testDisableDecimalFromParquet() throws Exception {
-    test("select * from cp.`parquet/decimal_dictionary.parquet`");
+    final String query = "select * from cp.`parquet/decimal_dictionary.parquet`";
+    errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
   }
 }

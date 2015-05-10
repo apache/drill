@@ -231,7 +231,10 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   @Override
   public void cleanup() {
     try {
-      reader.close();
+      if (reader != null) {
+        reader.close();
+        reader = null;
+      }
     } catch (IOException e) {
       logger.warn("Exception closing reader: {}", e);
     }

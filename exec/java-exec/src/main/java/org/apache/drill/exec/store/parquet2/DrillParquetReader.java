@@ -342,7 +342,10 @@ public class DrillParquetReader extends AbstractRecordReader {
   @Override
   public void cleanup() {
     try {
-      pageReadStore.close();
+      if (pageReadStore != null) {
+        pageReadStore.close();
+        pageReadStore = null;
+      }
     } catch (IOException e) {
       logger.warn("Failure while closing PageReadStore", e);
     }
