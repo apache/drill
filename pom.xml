@@ -288,7 +288,7 @@
                   <excludes>
                     <exclude>commons-logging</exclude>
                     <exclude>javax.servlet:servlet-api</exclude>
-                    <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
+                    <exclude>org.mortbay.jetty:servlet-api:2.5</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
