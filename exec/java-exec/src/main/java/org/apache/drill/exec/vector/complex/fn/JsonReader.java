@@ -433,6 +433,7 @@ public class JsonReader extends BaseJsonProcessor {
    */
   private boolean writeMapDataIfTyped(MapWriter writer, String fieldName) throws IOException {
     if (extended) {
+      atLeastOneWrite = true;
       return mapOutput.run(writer, fieldName);
     } else {
       parser.nextToken();
@@ -448,6 +449,7 @@ public class JsonReader extends BaseJsonProcessor {
    */
   private boolean writeListDataIfTyped(ListWriter writer) throws IOException {
     if (extended) {
+      atLeastOneWrite = true;
       return listOutput.run(writer);
     } else {
       parser.nextToken();

@@ -75,4 +75,23 @@ public class TestLargeInClause extends BaseTestQuery {
 
   }
 
+  @Test // DRILL-3019
+  public void testExprsInInList() throws Exception{
+    String query = "select r_regionkey \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "where r_regionkey in \n" +
+        "(1, 1 + 1, 1, 1, 1, \n" +
+        "1, 1 , 1, 1 , 1, \n" +
+        "1, 1 , 1, 1 , 1, \n" +
+        "1, 1 , 1, 1 , 1)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("r_regionkey")
+        .baselineValues(1)
+        .baselineValues(2)
+        .build()
+        .run();
+  }
 }
