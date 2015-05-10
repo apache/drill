@@ -19,11 +19,11 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 
+import org.apache.calcite.plan.Convention;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.calcite.plan.Convention;
 
 public interface Prel extends DrillRelNode, Iterable<Prel>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Prel.class);
@@ -45,4 +45,6 @@ public interface Prel extends DrillRelNode, Iterable<Prel>{
   public SelectionVectorMode getEncoding();
   boolean needsFinalColumnReordering();
 
+  // DRILL-3011
+  // public abstract Prel copy(RelTraitSet paramRelTraitSet, List<RelNode> paramList);
 }

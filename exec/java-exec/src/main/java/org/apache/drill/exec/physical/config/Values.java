@@ -55,7 +55,7 @@ public class Values extends AbstractBase implements Leaf {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children.isEmpty();
-    return this;
+    return new Values(content);
   }
 
   @Override
