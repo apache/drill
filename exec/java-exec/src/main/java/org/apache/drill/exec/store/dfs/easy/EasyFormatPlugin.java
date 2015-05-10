@@ -162,7 +162,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
                                                                        */);
     final DrillFileSystem dfs;
     try {
-      dfs = new DrillFileSystem(fsConf, oContext.getStats());
+      dfs = oContext.newFileSystem(fsConf);
     } catch (IOException e) {
       throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
     }

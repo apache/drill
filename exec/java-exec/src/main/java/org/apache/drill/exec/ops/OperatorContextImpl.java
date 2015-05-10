@@ -17,14 +17,20 @@
  */
 package org.apache.drill.exec.ops;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 import com.carrotsearch.hppc.LongObjectOpenHashMap;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.hadoop.conf.Configuration;
+
+import java.io.IOException;
 
 class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
@@ -36,6 +42,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   private OperatorStats stats;
   private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
   private final boolean applyFragmentLimit;
+  private DrillFileSystem fs;
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) throws OutOfMemoryException {
     this.applyFragmentLimit=applyFragmentLimit;
@@ -108,11 +115,26 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     if (allocator != null) {
       allocator.close();
     }
+
+    if (fs != null) {
+      try {
+        fs.close();
+      } catch (IOException e) {
+        throw new DrillRuntimeException(e);
+      }
+    }
     closed = true;
   }
 
   public OperatorStats getStats() {
     return stats;
+  }
+
+  @Override
+  public DrillFileSystem newFileSystem(Configuration conf) throws IOException {
+    Preconditions.checkState(fs == null, "Tried to create a second FileSystem. Can only be called once per OperatorContext");
+    fs = new DrillFileSystem(conf, getStats());
+    return fs;
   }
 
 }

@@ -228,7 +228,6 @@ public class FragmentExecutor implements Runnable {
         }
       });
 
-      updateState(FragmentState.FINISHED);
     } catch (OutOfMemoryError | OutOfMemoryRuntimeException e) {
       if (!(e instanceof OutOfMemoryError) || "Direct buffer memory".equals(e.getMessage())) {
         fail(UserException.memoryError(e).build());
@@ -249,6 +248,7 @@ public class FragmentExecutor implements Runnable {
 
       closeOutResources();
 
+      updateState(FragmentState.FINISHED);
       // send the final state of the fragment. only the main execution thread can send the final state and it can
       // only be sent once.
       sendFinalState();

@@ -71,30 +71,7 @@ import com.google.common.collect.Maps;
 public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFileSystem.class);
   private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
-  private final static ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
-
-  static {
-    if (TRACKING_ENABLED) {
-      Runtime.getRuntime().addShutdownHook(new Thread() {
-        public void run() {
-          if (openedFiles.size() != 0) {
-            final StringBuffer errMsgBuilder = new StringBuffer();
-
-            errMsgBuilder.append(String.format("Not all files opened using this FileSystem are closed. " + "There are" +
-                " still [%d] files open.\n", openedFiles.size()));
-
-            for(DebugStackTrace stackTrace : openedFiles.values()) {
-              stackTrace.addToStringBuilder(errMsgBuilder);
-            }
-
-            final String errMsg = errMsgBuilder.toString();
-            logger.error(errMsg);
-            throw new IllegalStateException(errMsg);
-          }
-        }
-      });
-    }
-  }
+  private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
 
   private final FileSystem underlyingFs;
   private final OperatorStats operatorStats;
@@ -420,7 +397,22 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
 
   @Override
   public void close() throws IOException {
-    underlyingFs.close();
+    if (TRACKING_ENABLED) {
+      if (openedFiles.size() != 0) {
+        final StringBuffer errMsgBuilder = new StringBuffer();
+
+        errMsgBuilder.append(String.format("Not all files opened using this FileSystem are closed. " + "There are" +
+            " still [%d] files open.\n", openedFiles.size()));
+
+        for (DebugStackTrace stackTrace : openedFiles.values()) {
+          stackTrace.addToStringBuilder(errMsgBuilder);
+        }
+
+        final String errMsg = errMsgBuilder.toString();
+        logger.error(errMsg);
+        throw new IllegalStateException(errMsg);
+      }
+    }
   }
 
   @Override
