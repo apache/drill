@@ -155,7 +155,7 @@ public class DrillCursor implements Cursor {
       catch ( UserException e ) {
         // A normally expected case--for any server-side error (e.g., syntax
         // error in SQL statement).
-        // Contruct SQLException with message text from the UserException.
+        // Construct SQLException with message text from the UserException.
         // TODO:  Map UserException error type to SQLException subclass (once
         // error type is accessible, of course. :-( )
         throw new SQLException( e.getMessage(), e );
@@ -172,7 +172,7 @@ public class DrillCursor implements Cursor {
             "Unexpected SchemaChangeException from RecordBatchLoader.load(...)" );
       }
       catch ( RuntimeException e ) {
-        throw new SQLException( "Unexpected exception: " + e.toString(), e );
+        throw new SQLException( "Unexpected RuntimeException: " + e.toString(), e );
       }
 
     }

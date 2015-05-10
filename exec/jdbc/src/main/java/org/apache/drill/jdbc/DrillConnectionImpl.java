@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.Savepoint;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -78,8 +79,10 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
       if (config.isLocal()) {
         try {
           Class.forName("org.eclipse.jetty.server.Handler");
-        } catch (ClassNotFoundException e1) {
-          throw new SQLException("Running Drill in embedded mode using the JDBC jar alone is not supported.");
+        } catch (final ClassNotFoundException e) {
+          throw new SQLNonTransientConnectionException(
+              "Running Drill in embedded mode using Drill's jdbc-all JDBC"
+              + " driver Jar file alone is not supported.",  e);
         }
 
         final DrillConfig dConfig = DrillConfig.create(info);
@@ -93,7 +96,10 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
             bit = new Drillbit(dConfig, serviceSet);
             bit.run();
           } catch (Exception e) {
-            throw new SQLException("Failure while attempting to start Drillbit in embedded mode.", e);
+            // (Include cause exception's text in wrapping exception's text so
+            // it's more likely to get to user (e.g., via SQLLine), and use
+            // toString() since getMessage() text doesn't always mention error:)
+            throw new SQLException("Failure in starting embedded Drillbit: " + e, e);
           }
         } else {
           serviceSet = null;
@@ -120,7 +126,10 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
     } catch (RpcException e) {
-      throw new SQLException("Failure while attempting to connect to Drill: " + e.getMessage(), e);
+      // (Include cause exception's text in wrapping exception's text so
+      // it's more likely to get to user (e.g., via SQLLine), and use
+      // toString() since getMessage() text doesn't always mention error:)
+      throw new SQLException("Failure in connecting to Drill: " + e, e);
     }
   }
 
