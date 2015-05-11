@@ -24,11 +24,14 @@ import java.math.BigDecimal;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.IntervalHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
+import org.apache.drill.exec.vector.IntervalVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.joda.time.DateTimeUtils;
@@ -36,6 +39,7 @@ import org.joda.time.DateTimeUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.io.api.Binary;
 
 class FixedByteAlignedReader extends ColumnReader {
 
@@ -177,6 +181,28 @@ class FixedByteAlignedReader extends ColumnReader {
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
+    }
+  }
+
+  public static class IntervalReader extends ConvertedReader {
+    IntervalVector intervalVector;
+
+    IntervalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                   boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      intervalVector = (IntervalVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      if (usingDictionary) {
+        byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
+        intervalVector.getMutator().setSafe(index * 12,
+            ParquetReaderUtility.getIntFromLEBytes(input, 0),
+            ParquetReaderUtility.getIntFromLEBytes(input, 4),
+            ParquetReaderUtility.getIntFromLEBytes(input, 8));
+      }
+      intervalVector.getMutator().setSafe(index, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
 }

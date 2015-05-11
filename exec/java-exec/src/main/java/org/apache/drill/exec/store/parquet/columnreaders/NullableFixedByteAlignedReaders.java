@@ -25,7 +25,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.IntervalVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal18Vector;
@@ -35,6 +37,7 @@ import org.apache.drill.exec.vector.NullableDecimal9Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -43,6 +46,7 @@ import org.joda.time.DateTimeUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.io.api.Binary;
 
 public class NullableFixedByteAlignedReaders {
 
@@ -330,6 +334,28 @@ public class NullableFixedByteAlignedReaders {
           schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getBuffer(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
+    }
+  }
+
+  public static class NullableIntervalReader extends NullableConvertedReader {
+    NullableIntervalVector nullableIntervalVector;
+
+    NullableIntervalReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                   boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      nullableIntervalVector = (NullableIntervalVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      if (usingDictionary) {
+        byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
+        nullableIntervalVector.getMutator().setSafe(index * 12, 1,
+            ParquetReaderUtility.getIntFromLEBytes(input, 0),
+            ParquetReaderUtility.getIntFromLEBytes(input, 4),
+            ParquetReaderUtility.getIntFromLEBytes(input, 8));
+      }
+      nullableIntervalVector.getMutator().set(index, 1, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
 

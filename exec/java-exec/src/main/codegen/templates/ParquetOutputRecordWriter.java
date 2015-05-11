@@ -21,6 +21,7 @@ import parquet.io.api.Binary;
 
 import java.lang.Override;
 import java.lang.RuntimeException;
+import java.util.Arrays;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/ParquetOutputRecordWriter.java" />
@@ -86,6 +87,9 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
 
   public class ${mode.prefix}${minor.class}ParquetConverter extends FieldConverter {
     private Nullable${minor.class}Holder holder = new Nullable${minor.class}Holder();
+    <#if minor.class?contains("Interval")>
+      private final byte[] output = new byte[12];
+    </#if>
 
     public ${mode.prefix}${minor.class}ParquetConverter(int fieldId, String fieldName, FieldReader reader) {
       super(fieldId, fieldName, reader);
@@ -112,7 +116,6 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
         minor.class == "SmallInt" ||
         minor.class == "Int" ||
         minor.class == "Time" ||
-        minor.class == "IntervalYear" ||
         minor.class == "Decimal9" ||
         minor.class == "UInt4">
     <#if mode.prefix == "Repeated" >
@@ -201,13 +204,29 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       consumer.addBinary(Binary.fromByteArray(output));
       consumer.endField(fieldName, fieldId);
       </#if>
+  <#elseif minor.class?contains("Interval")>
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
+      <#if minor.class == "IntervalDay">
+        Arrays.fill(output, 0, 4, (byte) 0);
+        IntervalUtility.intToLEByteArray(holder.days, output, 4);
+        IntervalUtility.intToLEByteArray(holder.milliseconds, output, 8);
+      <#elseif minor.class == "IntervalYear">
+        IntervalUtility.intToLEByteArray(holder.value, output, 0);
+        Arrays.fill(output, 4, 8, (byte) 0);
+        Arrays.fill(output, 8, 12, (byte) 0);
+      <#elseif minor.class == "Interval">
+        IntervalUtility.intToLEByteArray(holder.months, output, 0);
+        IntervalUtility.intToLEByteArray(holder.days, output, 4);
+        IntervalUtility.intToLEByteArray(holder.milliseconds, output, 8);
+      </#if>
+      consumer.addBinary(Binary.fromByteArray(output));
+      consumer.endField(fieldName, fieldId);
+
   <#elseif
         minor.class == "TimeTZ" ||
-        minor.class == "IntervalDay" ||
-        minor.class == "Interval" ||
         minor.class == "Decimal28Dense" ||
         minor.class == "Decimal38Dense">
-
       <#if mode.prefix == "Repeated" >
       <#else>
 
@@ -235,5 +254,13 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
     </#list>
   </#list>
 </#list>
-
+  private static class IntervalUtility {
+    private static void intToLEByteArray(final int value, final byte[] output, final int outputIndex) {
+      int shiftOrder = 0;
+      for (int i = outputIndex; i < outputIndex + 4; i++) {
+        output[i] = (byte) (value >> shiftOrder);
+        shiftOrder += 8;
+      }
+    }
+  }
 }

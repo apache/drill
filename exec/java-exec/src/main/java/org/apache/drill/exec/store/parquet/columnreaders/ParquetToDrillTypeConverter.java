@@ -106,6 +106,8 @@ public class ParquetToDrillTypeConverter {
         } else if (convertedType == ConvertedType.DECIMAL) {
           ParquetReaderUtility.checkDecimalTypeEnabled(options);
           return getDecimalType(schemaElement);
+        } else if (convertedType == ConvertedType.INTERVAL) {
+          return TypeProtos.MinorType.INTERVAL;
         }
       default:
         throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName);

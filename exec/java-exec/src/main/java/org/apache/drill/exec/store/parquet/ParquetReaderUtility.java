@@ -34,4 +34,14 @@ public class ParquetReaderUtility {
           .build();
     }
   }
+
+  public static int getIntFromLEBytes(byte[] input, int start) {
+    int out = 0;
+    int shiftOrder = 0;
+    for (int i = start; i < start + 4; i++) {
+      out |= (((input[i]) & 0xFF) << shiftOrder);
+      shiftOrder += 8;
+    }
+    return out;
+  }
 }

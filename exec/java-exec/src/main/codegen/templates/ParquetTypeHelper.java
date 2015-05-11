@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+import org.apache.drill.common.types.MinorType;
 import parquet.format.ConvertedType;
 import parquet.schema.DecimalMetadata;
 import parquet.schema.OriginalType;
@@ -54,7 +55,6 @@ public class ParquetTypeHelper {
             minor.class == "SmallInt" ||
             minor.class == "Int" ||
             minor.class == "Time" ||
-            minor.class == "IntervalYear" ||
             minor.class == "Decimal9" ||
             minor.class == "Date" ||
             minor.class == "UInt4">
@@ -77,6 +77,7 @@ public class ParquetTypeHelper {
     <#elseif
             minor.class == "TimeTZ" ||
             minor.class == "IntervalDay" ||
+            minor.class == "IntervalYear" ||
             minor.class == "Interval" ||
             minor.class == "Decimal28Dense" ||
             minor.class == "Decimal38Dense" ||
@@ -111,6 +112,9 @@ public class ParquetTypeHelper {
             originalTypeMap.put(MinorType.DATE, OriginalType.DATE);
             originalTypeMap.put(MinorType.TIME, OriginalType.TIME_MILLIS);
             originalTypeMap.put(MinorType.TIMESTAMP, OriginalType.TIMESTAMP_MILLIS);
+            originalTypeMap.put(MinorType.INTERVALDAY, OriginalType.INTERVAL);
+            originalTypeMap.put(MinorType.INTERVALYEAR, OriginalType.INTERVAL);
+            originalTypeMap.put(MinorType.INTERVAL, OriginalType.INTERVAL);
 //            originalTypeMap.put(MinorType.TIMESTAMPTZ, OriginalType.TIMESTAMPTZ);
   }
 
@@ -142,6 +146,10 @@ public class ParquetTypeHelper {
 
   public static int getLengthForMinorType(MinorType minorType) {
     switch(minorType) {
+      case INTERVALDAY:
+      case INTERVALYEAR:
+      case INTERVAL:
+        return 12;
       case DECIMAL28SPARSE:
         return 12;
       case DECIMAL38SPARSE:

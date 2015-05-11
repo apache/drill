@@ -28,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -475,6 +476,97 @@ public class TestParquetWriter extends BaseTestQuery {
     } finally {
       deleteTableIfExists(newTblName);
     }
+  }
+
+  /*
+ * Method tests CTAS with interval data type. We also verify reading back the data to ensure we
+ * have written the correct type. For every CTAS operation we use both the readers to verify results.
+ */
+  @Test
+  public void testCTASWithIntervalTypes() throws Exception {
+    test("use dfs_test.tmp");
+
+    String tableName = "drill_1980_t1";
+    // test required interval day type
+    test(String.format("create table %s as " +
+        "select " +
+        "interval '10 20:30:40.123' day to second col1, " +
+        "interval '-1000000000 20:12:23.999' day(10) to second col2 " +
+        "from cp.`employee.json` limit 2", tableName));
+
+    Period row1Col1 = new Period(0, 0, 0, 10, 0, 0, 0, 73840123);
+    Period row1Col2 = new Period(0, 0, 0, -1000000000, 0, 0, 0, -72743999);
+    testParquetReaderHelper(tableName, row1Col1, row1Col2, row1Col1, row1Col2);
+
+    tableName = "drill_1980_2";
+
+    // test required interval year type
+    test(String.format("create table %s as " +
+        "select " +
+        "interval '10-2' year to month col1, " +
+        "interval '-100-8' year(3) to month col2 " +
+        "from cp.`employee.json` limit 2", tableName));
+
+    row1Col1 = new Period(0, 122, 0, 0, 0, 0, 0, 0);
+    row1Col2 = new Period(0, -1208, 0, 0, 0, 0, 0, 0);
+
+    testParquetReaderHelper(tableName, row1Col1, row1Col2, row1Col1, row1Col2);
+    // test nullable interval year type
+    tableName = "drill_1980_t3";
+    test(String.format("create table %s as " +
+        "select " +
+        "cast (intervalyear_col as interval year) col1," +
+        "cast(intervalyear_col as interval year) + interval '2' year col2 " +
+        "from cp.`parquet/alltypes.json` where tinyint_col = 1 or tinyint_col = 2", tableName));
+
+    row1Col1 = new Period(0, 12, 0, 0, 0, 0, 0, 0);
+    row1Col2 = new Period(0, 36, 0, 0, 0, 0, 0, 0);
+    Period row2Col1 = new Period(0, 24, 0, 0, 0, 0, 0, 0);
+    Period row2Col2 = new Period(0, 48, 0, 0, 0, 0, 0, 0);
+
+    testParquetReaderHelper(tableName, row1Col1, row1Col2, row2Col1, row2Col2);
+
+    // test nullable interval day type
+    tableName = "drill_1980_t4";
+    test(String.format("create table %s as " +
+        "select " +
+        "cast(intervalday_col as interval day) col1, " +
+        "cast(intervalday_col as interval day) + interval '1' day col2 " +
+        "from cp.`parquet/alltypes.json` where tinyint_col = 1 or tinyint_col = 2", tableName));
+
+    row1Col1 = new Period(0, 0, 0, 1, 0, 0, 0, 0);
+    row1Col2 = new Period(0, 0, 0, 2, 0, 0, 0, 0);
+    row2Col1 = new Period(0, 0, 0, 2, 0, 0, 0, 0);
+    row2Col2 = new Period(0, 0, 0, 3, 0, 0, 0, 0);
+
+    testParquetReaderHelper(tableName, row1Col1, row1Col2, row2Col1, row2Col2);
+  }
+
+  private void testParquetReaderHelper(String tableName, Period row1Col1, Period row1Col2,
+                                       Period row2Col1, Period row2Col2) throws Exception {
+
+    final String switchReader = "alter session set `store.parquet.use_new_reader` = %s; ";
+    final String enableVectorizedReader = String.format(switchReader, true);
+    final String disableVectorizedReader = String.format(switchReader, false);
+    String query = String.format("select * from %s", tableName);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery(enableVectorizedReader)
+        .baselineColumns("col1", "col2")
+        .baselineValues(row1Col1, row1Col2)
+        .baselineValues(row2Col1, row2Col2)
+        .go();
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .optionSettingQueriesForTestQuery(disableVectorizedReader)
+        .baselineColumns("col1", "col2")
+        .baselineValues(row1Col1, row1Col2)
+        .baselineValues(row2Col1, row2Col2)
+        .go();
   }
 
   private static void deleteTableIfExists(String tableName) {

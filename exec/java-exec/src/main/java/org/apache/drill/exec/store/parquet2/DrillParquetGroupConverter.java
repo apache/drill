@@ -38,6 +38,7 @@ import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.IntervalHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
@@ -60,6 +61,7 @@ import org.apache.drill.exec.vector.complex.writer.Decimal9Writer;
 import org.apache.drill.exec.vector.complex.writer.Float4Writer;
 import org.apache.drill.exec.vector.complex.writer.Float8Writer;
 import org.apache.drill.exec.vector.complex.writer.IntWriter;
+import org.apache.drill.exec.vector.complex.writer.IntervalWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
@@ -254,7 +256,13 @@ public class DrillParquetGroupConverter extends GroupConverter {
             Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
             return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
           }
-        } else {
+        } else if (type.getOriginalType() == OriginalType.INTERVAL) {
+          IntervalWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).interval()
+              : mapWriter.interval(name);
+          return new DrillFixedLengthByteArrayToInterval(writer);
+
+        }
+        else {
           throw new UnsupportedOperationException("Unsupported type " + type.getOriginalType());
         }
       default:
@@ -509,9 +517,27 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addBinary(Binary value) {
-      BigDecimal bigDecimal = DecimalUtility.getBigDecimalFromByteArray(value.getBytes(), 0, value.length(), holder.scale);
+       BigDecimal bigDecimal = DecimalUtility.getBigDecimalFromByteArray(value.getBytes(), 0, value.length(), holder.scale);
       DecimalUtility.getSparseFromBigDecimal(bigDecimal, buf, 0, holder.scale, holder.precision, Decimal38SparseHolder.nDecimalDigits);
       holder.buffer = buf;
+      writer.write(holder);
+    }
+  }
+
+  public static class DrillFixedLengthByteArrayToInterval extends PrimitiveConverter {
+    final private IntervalWriter writer;
+    final private IntervalHolder holder = new IntervalHolder();
+
+    public DrillFixedLengthByteArrayToInterval(IntervalWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addBinary(Binary value) {
+      final byte[] input = value.getBytes();
+      holder.months = ParquetReaderUtility.getIntFromLEBytes(input, 0);
+      holder.days = ParquetReaderUtility.getIntFromLEBytes(input, 4);
+      holder.milliseconds = ParquetReaderUtility.getIntFromLEBytes(input, 8);
       writer.write(holder);
     }
   }
