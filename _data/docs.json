@@ -4551,8 +4551,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using MicroStrategy Analytics with Drill", 
-                            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
@@ -4584,8 +4584,8 @@
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
-                    "title": "Using MicroStrategy Analytics with Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-drill/"
+                    "title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4598,8 +4598,8 @@
                     "next_title": "Using Apache Drill with Tableau 9 Desktop", 
                     "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using MicroStrategy Analytics with Drill", 
-                    "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
                     "title": "Using Tibco Spotfire with Drill", 
                     "url": "/docs/using-tibco-spotfire-with-drill/"
@@ -8224,8 +8224,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using MicroStrategy Analytics with Drill", 
-            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
             "parent": "Using ODBC on Windows", 
             "previous_title": "Tableau Examples", 
             "previous_url": "/docs/tableau-examples/", 
@@ -8250,7 +8250,7 @@
             "title": "Using JDBC", 
             "url": "/docs/using-jdbc/"
         }, 
-        "Using MicroStrategy Analytics with Drill": {
+        "Using MicroStrategy Analytics with Apache Drill": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -8264,8 +8264,8 @@
             "previous_title": "Using Drill Explorer on Windows", 
             "previous_url": "/docs/using-drill-explorer-on-windows/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
-            "title": "Using MicroStrategy Analytics with Drill", 
-            "url": "/docs/using-microstrategy-analytics-with-drill/"
+            "title": "Using MicroStrategy Analytics with Apache Drill", 
+            "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
         }, 
         "Using ODBC on Linux and Mac OS X": {
             "breadcrumbs": [
@@ -8557,8 +8557,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using MicroStrategy Analytics with Drill", 
-                    "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                     "parent": "Using ODBC on Windows", 
                     "previous_title": "Tableau Examples", 
                     "previous_url": "/docs/tableau-examples/", 
@@ -8608,8 +8608,8 @@
             "next_title": "Using Apache Drill with Tableau 9 Desktop", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using MicroStrategy Analytics with Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
             "title": "Using Tibco Spotfire with Drill", 
             "url": "/docs/using-tibco-spotfire-with-drill/"
@@ -10231,8 +10231,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using MicroStrategy Analytics with Drill", 
-                            "next_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                             "parent": "Using ODBC on Windows", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
@@ -10264,8 +10264,8 @@
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
-                    "title": "Using MicroStrategy Analytics with Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-drill/"
+                    "title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10278,8 +10278,8 @@
                     "next_title": "Using Apache Drill with Tableau 9 Desktop", 
                     "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using MicroStrategy Analytics with Drill", 
-                    "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
+                    "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
                     "title": "Using Tibco Spotfire with Drill", 
                     "url": "/docs/using-tibco-spotfire-with-drill/"
