@@ -326,7 +326,9 @@ public class Drillbit implements AutoCloseable {
     public void run() {
       logger.info("Received shutdown request.");
       try {
-        drillbit.close();
+        synchronized (idCounter) {
+          drillbit.close();
+        }
       } catch(final Exception e) {
         throw new RuntimeException("Caught exception closing Drillbit started from\n" + stackTrace, e);
       }
