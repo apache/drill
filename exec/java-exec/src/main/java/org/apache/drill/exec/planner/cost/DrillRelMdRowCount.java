@@ -17,35 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.cost;
 
-import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
-import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
+import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
-import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 
-public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
-  private static final DrillRelMdDistinctRowCount INSTANCE =
-      new DrillRelMdDistinctRowCount();
+public class DrillRelMdRowCount extends RelMdRowCount{
+  private static final DrillRelMdRowCount INSTANCE = new DrillRelMdRowCount();
 
-  public static final RelMetadataProvider SOURCE =
-      ReflectiveRelMetadataProvider.reflectiveSource(
-          BuiltInMethod.DISTINCT_ROW_COUNT.method, INSTANCE);
+  public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.ROW_COUNT.method, INSTANCE);
 
   @Override
-  public Double getDistinctRowCount(RelNode rel, ImmutableBitSet groupKey, RexNode predicate) {
-    if (rel instanceof DrillScanRel) {
-      return getDistinctRowCount((DrillScanRel) rel, groupKey, predicate);
+  public Double getRowCount(Aggregate rel) {
+    ImmutableBitSet groupKey = ImmutableBitSet.range(rel.getGroupCount());
+
+    if (groupKey.isEmpty()) {
+      return 1.0;
     } else {
-      return super.getDistinctRowCount(rel, groupKey, predicate);
+      return super.getRowCount(rel);
     }
   }
-
-  private Double getDistinctRowCount(DrillScanRel scan, ImmutableBitSet groupKey, RexNode predicate) {
-    // Consistent with the estimation of Aggregate row count in RelMdRowCount : distinctRowCount = rowCount * 10%.
-    return scan.getRows() * 0.1;
-  }
-
 }

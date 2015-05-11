@@ -950,4 +950,15 @@ public class TestExampleQueries extends BaseTestQuery{
         .build()
         .run();
   }
+
+  @Test  //DRILL-3018
+  public void testNestLoopJoinScalarSubQ() throws Exception {
+    testBuilder()
+        .sqlQuery("select n_nationkey from cp.`tpch/nation.parquet` where n_nationkey >= (select min(c_nationkey) from cp.`tpch/customer.parquet`)")
+        .unOrdered()
+        .sqlBaselineQuery("select n_nationkey from cp.`tpch/nation.parquet`")
+        .build()
+        .run();
+  }
+
 }
