@@ -67,6 +67,7 @@ public class RootFragmentManager implements FragmentManager {
   @Override
   public void cancel() {
     cancel = true;
+    runner.cancel();
   }
 
   @Override

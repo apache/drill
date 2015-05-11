@@ -159,21 +159,32 @@ public class ControlMessageHandler {
    * @see org.apache.drill.exec.work.batch.BitComHandler#cancelFragment(org.apache.drill.exec.proto.ExecProtos.FragmentHandle)
    */
   private Ack cancelFragment(final FragmentHandle handle) {
-    // cancel a pending fragment
-    final FragmentManager manager = bee.getContext().getWorkBus().getFragmentManagerIfExists(handle);
-    if (manager != null) {
-      manager.cancel();
+    /**
+     * For case 1, see {@link org.apache.drill.exec.work.foreman.QueryManager#cancelExecutingFragments}.
+     * In comments below, "active" refers to fragment states: SENDING, AWAITING_ALLOCATION, RUNNING and
+     * "inactive" refers to FINISHED, CANCELLATION_REQUESTED, CANCELLED, FAILED
+     */
+
+    // Case 2: Cancel active intermediate fragment. Such a fragment will be in the work bus. Delegate cancel to the
+    // work bus.
+    final boolean removed = bee.getContext().getWorkBus().cancelAndRemoveFragmentManagerIfExists(handle);
+    if (removed) {
       return Acks.OK;
     }
 
-    // cancel a running fragment
+    // Case 3: Cancel active leaf fragment. Such a fragment will be with the worker bee if and only if it is running.
+    // Cancel directly in this case.
     final FragmentExecutor runner = bee.getFragmentRunner(handle);
     if (runner != null) {
       runner.cancel();
       return Acks.OK;
     }
 
-    // fragment completed or does not exist
+    // Other cases: Fragment completed or does not exist. Currently known cases:
+    // (1) Leaf or intermediate fragment that is inactive: although we should not receive a cancellation
+    //     request; it is possible that before the fragment state was updated in the QueryManager, this handler
+    //     received a cancel signal.
+    // (2) Unknown fragment.
     logger.warn("Dropping request to cancel fragment. {} does not exist.", QueryIdHelper.getFragmentId(handle));
     return Acks.OK;
   }

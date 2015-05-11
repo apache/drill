@@ -49,6 +49,7 @@ import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
+import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
@@ -174,7 +175,16 @@ public class QueryManager {
   }
 
   /**
-   * Stop all fragments with a currently active status.
+   * Stop all fragments with currently *known* active status (active as in SENDING, AWAITING_ALLOCATION, RUNNING).
+   * (1) Root fragment
+   *    (a) If the root is pending, delegate the cancellation to local work bus.
+   *    (b) If the root is running, cancel the fragment directly.
+   *
+   * For the actual cancel calls for intermediate and leaf fragments, see
+   * {@link org.apache.drill.exec.work.batch.ControlMessageHandler#cancelFragment}
+   * (2) Intermediate fragment: pending or running, send the cancel signal through a tunnel (for local and remote
+   *    fragments). The actual cancel is done by delegating the cancel to the work bus.
+   * (3) Leaf fragment: running, send the cancel signal through a tunnel. The cancel is done directly.
    */
   void cancelExecutingFragments(final DrillbitContext drillbitContext, final FragmentExecutor rootRunner) {
     final Controller controller = drillbitContext.getController();
@@ -183,11 +193,16 @@ public class QueryManager {
       case SENDING:
       case AWAITING_ALLOCATION:
       case RUNNING:
-        if (rootRunner.getContext().getHandle().equals(data.getHandle())) {
+        final FragmentHandle handle = data.getHandle();
+        if (rootRunner.getContext().getHandle().equals(handle)) {
+          // Case 1.a: pending root is in the work bus. Delegate the cancel to the work bus.
+          final boolean removed = drillbitContext.getWorkBus().cancelAndRemoveFragmentManagerIfExists(handle);
+          // Case 1.b: running root. Cancel directly.
+          if (!removed) {
             rootRunner.cancel();
+          }
         } else {
           final DrillbitEndpoint endpoint = data.getEndpoint();
-          final FragmentHandle handle = data.getHandle();
           // TODO is the CancelListener redundant? Does the FragmentStatusListener get notified of the same?
           controller.getTunnel(endpoint).cancelFragment(new SignalListener(endpoint, handle,
             SignalListener.Signal.CANCEL), handle);

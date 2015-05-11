@@ -34,6 +34,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.RpcException;
@@ -178,6 +179,16 @@ public class WorkManager implements AutoCloseable {
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
     }
+
+    if (!runningFragments.isEmpty()) {
+      logger.warn("Closing WorkManager but there are {} running fragments.", runningFragments.size());
+      if (logger.isDebugEnabled()) {
+        for (final FragmentHandle handle : runningFragments.keySet()) {
+          logger.debug("Fragment still running: {} status: {}", QueryIdHelper.getQueryIdentifier(handle),
+            runningFragments.get(handle).getStatus());
+        }
+      }
+    }
   }
 
   public DrillbitContext getContext() {
@@ -261,16 +272,34 @@ public class WorkManager implements AutoCloseable {
       return dContext;
     }
 
-    public void startFragmentPendingRemote(final FragmentManager handler) {
-      final FragmentExecutor fragmentExecutor = handler.getRunnable();
-      // cancelled fragment managers will return null fragment executors
-      if (fragmentExecutor != null) {
-        executor.execute(fragmentExecutor);
-      }
-    }
-
+    /**
+     * Currently used to start a root fragment that is not blocked on data, and leaf fragments.
+     * @param fragmentExecutor the executor to run
+     */
     public void addFragmentRunner(final FragmentExecutor fragmentExecutor) {
       final FragmentHandle fragmentHandle = fragmentExecutor.getContext().getHandle();
+      runningFragments.put(fragmentHandle, fragmentExecutor);
+      executor.execute(new SelfCleaningRunnable(fragmentExecutor) {
+        @Override
+        protected void cleanup() {
+          runningFragments.remove(fragmentHandle);
+          indicateIfSafeToExit();
+        }
+      });
+    }
+
+    /**
+     * Currently used to start a root fragment that is blocked on data, and intermediate fragments. This method is
+     * called, when the first batch arrives, by {@link org.apache.drill.exec.rpc.data.DataResponseHandlerImpl#handle}
+     * @param fragmentManager the manager for the fragment
+     */
+    public void startFragmentPendingRemote(final FragmentManager fragmentManager) {
+      final FragmentHandle fragmentHandle = fragmentManager.getHandle();
+      final FragmentExecutor fragmentExecutor = fragmentManager.getRunnable();
+      if (fragmentExecutor == null) {
+        // the fragment was most likely cancelled
+        return;
+      }
       runningFragments.put(fragmentHandle, fragmentExecutor);
       executor.execute(new SelfCleaningRunnable(fragmentExecutor) {
         @Override

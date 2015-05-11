@@ -84,11 +84,13 @@ public class WorkEventBus {
   }
 
   public FragmentManager getFragmentManagerIfExists(final FragmentHandle handle) {
-    return managers.get(handle);
+    synchronized (this) {
+      return managers.get(handle);
+    }
   }
 
   public FragmentManager getFragmentManager(final FragmentHandle handle) throws FragmentSetupException {
-    // check if this was a recently canceled fragment.  If so, throw away message.
+    // Check if this was a recently finished (completed or cancelled) fragment.  If so, throw away message.
     if (recentlyFinishedFragments.asMap().containsKey(handle)) {
       if (logger.isDebugEnabled()) {
         logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
@@ -97,19 +99,58 @@ public class WorkEventBus {
     }
 
     // since non-leaf fragments are sent first, it is an error condition if the manager is unavailable.
-    final FragmentManager m = managers.get(handle);
-    if(m != null) {
-      return m;
+    synchronized (this) {
+      final FragmentManager m = managers.get(handle);
+      if (m != null) {
+        return m;
+      }
     }
     throw new FragmentSetupException("Failed to receive plan fragment that was required for id: "
         + QueryIdHelper.getQueryIdentifier(handle));
   }
 
+  /**
+   * Removes fragment manager (for the corresponding the handle) from the work event bus. This method can be called
+   * multiple times. The manager will be removed only once (the first call).
+   * @param handle the handle to the fragment
+   */
   public void removeFragmentManager(final FragmentHandle handle) {
     if (logger.isDebugEnabled()) {
       logger.debug("Removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
     }
-    recentlyFinishedFragments.put(handle,  1);
-    managers.remove(handle);
+
+    synchronized (this) {
+      final FragmentManager manager = managers.get(handle);
+      if (manager != null) {
+        recentlyFinishedFragments.put(handle, 1);
+        managers.remove(handle);
+      } else {
+        logger.warn("Fragment {} not found in the work bus.", QueryIdHelper.getQueryIdentifier(handle));
+      }
+    }
+  }
+
+  /**
+   * Cancels and removes fragment manager (for the corresponding the handle) from the work event bus, Currently, used
+   * for fragments waiting on data (root and intermediate).
+   * @param handle the handle to the fragment
+   * @return if the fragment was found and removed from the event bus
+   */
+  public boolean cancelAndRemoveFragmentManagerIfExists(final FragmentHandle handle) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Cancelling and removing fragment manager: {}", QueryIdHelper.getQueryIdentifier(handle));
+    }
+
+    synchronized (this) {
+      final FragmentManager manager = managers.get(handle);
+      if (manager == null) {
+        return false;
+      }
+
+      manager.cancel();
+      recentlyFinishedFragments.put(handle, 1);
+      managers.remove(handle);
+      return true;
+    }
   }
 }
