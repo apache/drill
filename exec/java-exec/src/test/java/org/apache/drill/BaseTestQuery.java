@@ -246,40 +246,6 @@ public class BaseTestQuery extends ExecTest {
     }
   }
 
-  private Object wrapStringInHadoopTextObject(Object o) {
-    if (o instanceof String) {
-      o = new Text((String)o);
-    }
-    return o;
-  }
-
-  // convenience method for making a list
-  protected JsonStringArrayList list(Object... values) {
-    JsonStringArrayList ret = new JsonStringArrayList<>();
-    for (int i = 0; i < values.length; i++) {
-      values[i] = wrapStringInHadoopTextObject(values[i]);
-    }
-    ret.addAll(Arrays.asList(values));
-    return ret;
-  }
-
-  protected JsonStringHashMap map(Object... keysAndValues) {
-    JsonStringHashMap ret = new JsonStringHashMap();
-    final String errorMsg = "Must provide a list of keys and values to construct a map, expects" +
-          "an even number or arguments, alternating strings for key names and objects for values.";
-    if (keysAndValues.length % 2 != 0) {
-      throw new RuntimeException(errorMsg);
-    }
-    for (int i = 0; i < keysAndValues.length - 1; i += 2) {
-      if ( ! (keysAndValues[i] instanceof String) )  {
-        throw new RuntimeException(errorMsg);
-      }
-      keysAndValues[i + 1] = wrapStringInHadoopTextObject(keysAndValues[i + 1]);
-      ret.put(keysAndValues[i], keysAndValues[i + 1]);
-    }
-    return ret;
-  }
-
   @AfterClass
   public static void resetDrillbitCount() {
     // some test classes assume this value to be 1 and will fail if run along other tests that increase it

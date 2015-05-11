@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector.complex.writer;
 
+import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -67,24 +69,24 @@ public class TestJsonReader extends BaseTestQuery {
         .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list.json`")
         .ordered()
         .baselineColumns("flat")
-        .baselineValues(list())
-        .baselineValues(list(testVal))
+        .baselineValues(listOf())
+        .baselineValues(listOf(testVal))
         .go();
 
     testBuilder()
         .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`")
         .ordered()
         .baselineColumns("flat")
-        .baselineValues(map("repeated_varchar", list()))
-        .baselineValues(map("repeated_varchar", list(testVal)))
+        .baselineValues(mapOf("repeated_varchar", listOf()))
+        .baselineValues(mapOf("repeated_varchar", listOf(testVal)))
         .go();
 
     testBuilder()
         .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v3.json`")
         .ordered()
         .baselineColumns("flat")
-        .baselineValues(map("repeated_map", list(map("repeated_varchar", list()))))
-        .baselineValues(map("repeated_map", list(map("repeated_varchar", list(testVal)))))
+        .baselineValues(mapOf("repeated_map", listOf(mapOf("repeated_varchar", listOf()))))
+        .baselineValues(mapOf("repeated_map", listOf(mapOf("repeated_varchar", listOf(testVal)))))
         .go();
   }
 

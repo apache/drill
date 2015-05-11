@@ -17,15 +17,12 @@
  ******************************************************************************/
 package org.apache.drill;
 
+import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.TestBuilder.mapOf;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.drill.exec.util.JsonStringHashMap;
-import org.apache.hadoop.io.Text;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -146,14 +143,14 @@ public class TestFrameworkTest extends BaseTestQuery{
         .baselineColumns("integer", "float", "x", "z", "l", "rl")
         .baselineValues(2010l,
                         17.4,
-                        map("y", "kevin",
+                        mapOf("y", "kevin",
                             "z", "paul"),
-                        list(map("orange", "yellow",
-                                 "pink", "red"),
-                             map("pink", "purple")),
-                        list(4l, 2l),
-                        list(list(2l, 1l),
-                             list(4l, 6l)))
+                        listOf(mapOf("orange", "yellow",
+                                "pink", "red"),
+                            mapOf("pink", "purple")),
+                        listOf(4l, 2l),
+                        listOf(listOf(2l, 1l),
+                            listOf(4l, 6l)))
         .build().run();
   }
 

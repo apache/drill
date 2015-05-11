@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import com.google.common.base.Joiner;
 
+import com.google.common.base.Preconditions;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -29,6 +30,9 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -366,8 +370,8 @@ public class TestBuilder {
     private TypeProtos.MajorType[] baselineTypes;
 
     CSVTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
-                     boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                     String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                   boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                   String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
           highPerformanceComparison);
       this.baselineFilePath = baselineFile;
@@ -434,7 +438,7 @@ public class TestBuilder {
         // set default cast size for varchar, the cast function will take the lesser of this passed value and the
         // length of the incoming data when choosing the length for the outgoing data
         if (majorType.getMinorType() == TypeProtos.MinorType.VARCHAR ||
-          majorType.getMinorType() == TypeProtos.MinorType.VARBINARY) {
+            majorType.getMinorType() == TypeProtos.MinorType.VARBINARY) {
           precision = "(65000)";
         }
         aliasedExpectedColumns[i] = "cast(" + aliasedExpectedColumns[i] + " as " +
@@ -456,8 +460,8 @@ public class TestBuilder {
     private String baselineFilePath;
 
     JSONTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
-                   boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                   String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                    boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
+                    String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
           highPerformanceComparison);
       this.baselineFilePath = baselineFile;
@@ -504,5 +508,40 @@ public class TestBuilder {
       return true;
     }
 
+  }
+
+  /**
+   * Convenience method to create a {@link JsonStringArrayList list} from the given values.
+   */
+  public static JsonStringArrayList listOf(Object... values) {
+    final JsonStringArrayList list = new JsonStringArrayList<>();
+    for (Object value:values) {
+      if (value instanceof CharSequence) {
+        list.add(new Text(value.toString()));
+      } else {
+        list.add(value);
+      }
+    }
+    return list;
+  }
+
+  /**
+   * Convenience method to create a {@link JsonStringHashMap<String, Object> map} instance with the given key value sequence.
+   *
+   * Key value sequence consists of key - value pairs such that a key precedes its value. For instance:
+   *
+   * mapOf("name", "Adam", "age", 41) corresponds to {"name": "Adam", "age": 41} in JSON.
+   */
+  public static JsonStringHashMap<String, Object> mapOf(Object... keyValueSequence) {
+    Preconditions.checkArgument(keyValueSequence.length%2==0, "Length of key value sequence must be even");
+    final JsonStringHashMap<String, Object> map = new JsonStringHashMap<>();
+    for (int i=0; i<keyValueSequence.length; i+=2) {
+      Object value = keyValueSequence[i+1];
+      if (value instanceof CharSequence) {
+        value = new Text(value.toString());
+      }
+      map.put(String.class.cast(keyValueSequence[i]), value);
+    }
+    return map;
   }
 }
