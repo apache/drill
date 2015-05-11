@@ -382,7 +382,7 @@ workspace, so the query specifies the full path to the file:
 
 ## What's Next
 
-Go to [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lession-3-run-queries-on-complex-data-types). 
+Go to [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lesson-3-run-queries-on-complex-data-types). 
 
 
 

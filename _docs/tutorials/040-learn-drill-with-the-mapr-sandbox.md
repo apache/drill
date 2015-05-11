@@ -10,9 +10,9 @@ the following pages in order:
 
   * [Installing the Apache Drill Sandbox]({{ site.baseurl }}/docs/installing-the-apache-drill-sandbox)
   * [Getting to Know the Drill Setup]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox)
-  * [Lesson 1: Learn About the Data Set]({{ site.baseurl }}/docs/lession-1-learn-about-the-data-set)
-  * [Lesson 2: Run Queries with ANSI SQL]({{ site.baseurl }}/docs/lession-2-run-queries-with-ansi-sql)
-  * [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lession-3-run-queries-on-complex-data-types)
+  * [Lesson 1: Learn About the Data Set]({{ site.baseurl }}/docs/lesson-1-learn-about-the-data-set)
+  * [Lesson 2: Run Queries with ANSI SQL]({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql)
+  * [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lesson-3-run-queries-on-complex-data-types)
   * [Summary]({{ site.baseurl }}/docs/summary)
 
 ## About Apache Drill

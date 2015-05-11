@@ -139,5 +139,5 @@ You have a number of data sources to explore.  For example, analyzing customer r
 # What's Next
 
 Start running queries by going to [Lesson 1: Learn About the Data
-Set]({{ site.baseurl }}/docs/lession-1-learn-about-the-data-set).
+Set]({{ site.baseurl }}/docs/lesson-1-learn-about-the-data-set).
 
