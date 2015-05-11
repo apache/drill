@@ -14,7 +14,7 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Delve into changing data without creating a schema or going through an ETL phase.
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables in Tableau.  
-* [Using MicroStrategy Analytics with Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-drill/)  
+* [Using MicroStrategy Analytics with Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with--apache-drill/)  
   Use the Drill ODBC driver from MapR to analyze data and generate a report using Drill from the MicroStrategy UI.  
 * [Using Drill to Analyze Amazon Spot Prices](https://github.com/vicenteg/spot-price-history#drill-workshop---amazon-spot-prices)  
   A Drill workshop on github that covers views of JSON and Parquet data.  

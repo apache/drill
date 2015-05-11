@@ -185,14 +185,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Analyzing Social Media with MicroStrategy", 
+            "next_url": "/docs/analyzing-social-media-with-microstrategy/", 
             "parent": "Tutorials", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
             "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
             "title": "Analyzing Highly Dynamic Datasets", 
             "url": "/docs/analyzing-highly-dynamic-datasets/"
+        }, 
+        "Analyzing Social Media with MicroStrategy": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Tutorials", 
+            "previous_title": "Analyzing Highly Dynamic Datasets", 
+            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "relative_path": "_docs/tutorials/060-analyzing-social-media-with-microstrategy.md", 
+            "title": "Analyzing Social Media with MicroStrategy", 
+            "url": "/docs/analyzing-social-media-with-microstrategy/"
         }, 
         "Analyzing the Yelp Academic Dataset": {
             "breadcrumbs": [
@@ -3296,8 +3313,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media with MicroStrategy", 
+            "previous_url": "/docs/analyzing-social-media-with-microstrategy/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -4566,7 +4583,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-drill.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
                     "title": "Using MicroStrategy Analytics with Drill", 
                     "url": "/docs/using-microstrategy-analytics-with-drill/"
                 }, 
@@ -4583,7 +4600,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire with Drill.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
                     "title": "Using Tibco Spotfire with Drill", 
                     "url": "/docs/using-tibco-spotfire-with-drill/"
                 }, 
@@ -8066,14 +8083,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media with MicroStrategy", 
+                    "next_url": "/docs/analyzing-social-media-with-microstrategy/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media-with-microstrategy.md", 
+                    "title": "Analyzing Social Media with MicroStrategy", 
+                    "url": "/docs/analyzing-social-media-with-microstrategy/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8229,7 +8263,7 @@
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using Drill Explorer on Windows", 
             "previous_url": "/docs/using-drill-explorer-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-drill.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
             "title": "Using MicroStrategy Analytics with Drill", 
             "url": "/docs/using-microstrategy-analytics-with-drill/"
         }, 
@@ -8576,7 +8610,7 @@
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using MicroStrategy Analytics with Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire with Drill.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
             "title": "Using Tibco Spotfire with Drill", 
             "url": "/docs/using-tibco-spotfire-with-drill/"
         }, 
@@ -9077,14 +9111,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media with MicroStrategy", 
+                    "next_url": "/docs/analyzing-social-media-with-microstrategy/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media-with-microstrategy.md", 
+                    "title": "Analyzing Social Media with MicroStrategy", 
+                    "url": "/docs/analyzing-social-media-with-microstrategy/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -9324,8 +9375,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media with MicroStrategy", 
+            "previous_url": "/docs/analyzing-social-media-with-microstrategy/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -10212,7 +10263,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-drill.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
                     "title": "Using MicroStrategy Analytics with Drill", 
                     "url": "/docs/using-microstrategy-analytics-with-drill/"
                 }, 
@@ -10229,7 +10280,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-tibco-spotfire with Drill.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
                     "title": "Using Tibco Spotfire with Drill", 
                     "url": "/docs/using-tibco-spotfire-with-drill/"
                 }, 
