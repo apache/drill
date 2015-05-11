@@ -23,6 +23,7 @@ import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
@@ -58,7 +59,7 @@ public class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRule {
       return;
     }
 
-    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(), scan, condition);
+    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     MapRDBFilterBuilder hbaseFilterBuilder = new MapRDBFilterBuilder(groupScan, conditionExp);
     HBaseScanSpec newScanSpec = hbaseFilterBuilder.parseTree();
     if (newScanSpec == null) {
