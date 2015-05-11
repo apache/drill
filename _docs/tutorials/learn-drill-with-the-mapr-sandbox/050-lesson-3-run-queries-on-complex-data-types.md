@@ -1,5 +1,5 @@
 ---
-title: "Lession 3: Run Queries on Complex Data Types"
+title: "Lesson 3: Run Queries on Complex Data Types"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal

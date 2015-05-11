@@ -1,5 +1,5 @@
 ---
-title: "Lession 2: Run Queries with ANSI SQL"
+title: "Lesson 2: Run Queries with ANSI SQL"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal

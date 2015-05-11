@@ -2979,8 +2979,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Lession 1: Learn about the Data Set", 
-            "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+            "next_title": "Lesson 1: Learn about the Data Set", 
+            "next_url": "/docs/lesson-1-learn-about-the-data-set/", 
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Installing the Apache Drill Sandbox", 
             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
@@ -3804,8 +3804,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Lession 1: Learn about the Data Set", 
-                    "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                    "next_title": "Lesson 1: Learn about the Data Set", 
+                    "next_url": "/docs/lesson-1-learn-about-the-data-set/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Installing the Apache Drill Sandbox", 
                     "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
@@ -3825,14 +3825,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                    "next_title": "Lesson 2: Run Queries with ANSI SQL", 
+                    "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
                     "previous_title": "Getting to Know the Drill Sandbox", 
                     "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
                     "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
-                    "title": "Lession 1: Learn about the Data Set", 
-                    "url": "/docs/lession-1-learn-about-the-data-set/"
+                    "title": "Lesson 1: Learn about the Data Set", 
+                    "url": "/docs/lesson-1-learn-about-the-data-set/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3846,14 +3846,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                    "next_title": "Lesson 3: Run Queries on Complex Data Types", 
+                    "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
-                    "previous_title": "Lession 1: Learn about the Data Set", 
-                    "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                    "previous_title": "Lesson 1: Learn about the Data Set", 
+                    "previous_url": "/docs/lesson-1-learn-about-the-data-set/", 
                     "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
-                    "title": "Lession 2: Run Queries with ANSI SQL", 
-                    "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                    "title": "Lesson 2: Run Queries with ANSI SQL", 
+                    "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3870,11 +3870,11 @@
                     "next_title": "Summary", 
                     "next_url": "/docs/summary/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
-                    "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-                    "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                    "previous_title": "Lesson 2: Run Queries with ANSI SQL", 
+                    "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                     "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
-                    "title": "Lession 3: Run Queries on Complex Data Types", 
-                    "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                    "title": "Lesson 3: Run Queries on Complex Data Types", 
+                    "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3891,8 +3891,8 @@
                     "next_title": "Analyzing Highly Dynamic Datasets", 
                     "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                     "parent": "Learn Drill with the MapR Sandbox", 
-                    "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-                    "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                    "previous_title": "Lesson 3: Run Queries on Complex Data Types", 
+                    "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                     "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                     "title": "Summary", 
                     "url": "/docs/summary/"
@@ -3907,7 +3907,7 @@
             "title": "Learn Drill with the MapR Sandbox", 
             "url": "/docs/learn-drill-with-the-mapr-sandbox/"
         }, 
-        "Lession 1: Learn about the Data Set": {
+        "Lesson 1: Learn about the Data Set": {
             "breadcrumbs": [
                 {
                     "title": "Learn Drill with the MapR Sandbox", 
@@ -3919,16 +3919,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Lession 2: Run Queries with ANSI SQL", 
-            "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+            "next_title": "Lesson 2: Run Queries with ANSI SQL", 
+            "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
             "parent": "Learn Drill with the MapR Sandbox", 
             "previous_title": "Getting to Know the Drill Sandbox", 
             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
-            "title": "Lession 1: Learn about the Data Set", 
-            "url": "/docs/lession-1-learn-about-the-data-set/"
+            "title": "Lesson 1: Learn about the Data Set", 
+            "url": "/docs/lesson-1-learn-about-the-data-set/"
         }, 
-        "Lession 2: Run Queries with ANSI SQL": {
+        "Lesson 2: Run Queries with ANSI SQL": {
             "breadcrumbs": [
                 {
                     "title": "Learn Drill with the MapR Sandbox", 
@@ -3940,16 +3940,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Lession 3: Run Queries on Complex Data Types", 
-            "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+            "next_title": "Lesson 3: Run Queries on Complex Data Types", 
+            "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
             "parent": "Learn Drill with the MapR Sandbox", 
-            "previous_title": "Lession 1: Learn about the Data Set", 
-            "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+            "previous_title": "Lesson 1: Learn about the Data Set", 
+            "previous_url": "/docs/lesson-1-learn-about-the-data-set/", 
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
-            "title": "Lession 2: Run Queries with ANSI SQL", 
-            "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+            "title": "Lesson 2: Run Queries with ANSI SQL", 
+            "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
         }, 
-        "Lession 3: Run Queries on Complex Data Types": {
+        "Lesson 3: Run Queries on Complex Data Types": {
             "breadcrumbs": [
                 {
                     "title": "Learn Drill with the MapR Sandbox", 
@@ -3964,11 +3964,11 @@
             "next_title": "Summary", 
             "next_url": "/docs/summary/", 
             "parent": "Learn Drill with the MapR Sandbox", 
-            "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-            "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+            "previous_title": "Lesson 2: Run Queries with ANSI SQL", 
+            "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
-            "title": "Lession 3: Run Queries on Complex Data Types", 
-            "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+            "title": "Lesson 3: Run Queries on Complex Data Types", 
+            "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
         }, 
         "Lexical Structure": {
             "breadcrumbs": [
@@ -7766,8 +7766,8 @@
             "next_title": "Analyzing Highly Dynamic Datasets", 
             "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
             "parent": "Learn Drill with the MapR Sandbox", 
-            "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-            "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+            "previous_title": "Lesson 3: Run Queries on Complex Data Types", 
+            "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
             "title": "Summary", 
             "url": "/docs/summary/"
@@ -7972,8 +7972,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 1: Learn about the Data Set", 
-                            "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "next_title": "Lesson 1: Learn about the Data Set", 
+                            "next_url": "/docs/lesson-1-learn-about-the-data-set/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Installing the Apache Drill Sandbox", 
                             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
@@ -7993,14 +7993,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 2: Run Queries with ANSI SQL", 
-                            "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "next_title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Getting to Know the Drill Sandbox", 
                             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
-                            "title": "Lession 1: Learn about the Data Set", 
-                            "url": "/docs/lession-1-learn-about-the-data-set/"
+                            "title": "Lesson 1: Learn about the Data Set", 
+                            "url": "/docs/lesson-1-learn-about-the-data-set/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8014,14 +8014,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 3: Run Queries on Complex Data Types", 
-                            "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "next_title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 1: Learn about the Data Set", 
-                            "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "previous_title": "Lesson 1: Learn about the Data Set", 
+                            "previous_url": "/docs/lesson-1-learn-about-the-data-set/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
-                            "title": "Lession 2: Run Queries with ANSI SQL", 
-                            "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                            "title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8038,11 +8038,11 @@
                             "next_title": "Summary", 
                             "next_url": "/docs/summary/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-                            "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "previous_title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
-                            "title": "Lession 3: Run Queries on Complex Data Types", 
-                            "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                            "title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8059,8 +8059,8 @@
                             "next_title": "Analyzing Highly Dynamic Datasets", 
                             "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-                            "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "previous_title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                             "title": "Summary", 
                             "url": "/docs/summary/"
@@ -9000,8 +9000,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 1: Learn about the Data Set", 
-                            "next_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "next_title": "Lesson 1: Learn about the Data Set", 
+                            "next_url": "/docs/lesson-1-learn-about-the-data-set/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Installing the Apache Drill Sandbox", 
                             "previous_url": "/docs/installing-the-apache-drill-sandbox/", 
@@ -9021,14 +9021,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 2: Run Queries with ANSI SQL", 
-                            "next_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "next_title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
                             "previous_title": "Getting to Know the Drill Sandbox", 
                             "previous_url": "/docs/getting-to-know-the-drill-sandbox/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md", 
-                            "title": "Lession 1: Learn about the Data Set", 
-                            "url": "/docs/lession-1-learn-about-the-data-set/"
+                            "title": "Lesson 1: Learn about the Data Set", 
+                            "url": "/docs/lesson-1-learn-about-the-data-set/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9042,14 +9042,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Lession 3: Run Queries on Complex Data Types", 
-                            "next_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "next_title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 1: Learn about the Data Set", 
-                            "previous_url": "/docs/lession-1-learn-about-the-data-set/", 
+                            "previous_title": "Lesson 1: Learn about the Data Set", 
+                            "previous_url": "/docs/lesson-1-learn-about-the-data-set/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md", 
-                            "title": "Lession 2: Run Queries with ANSI SQL", 
-                            "url": "/docs/lession-2-run-queries-with-ansi-sql/"
+                            "title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9066,11 +9066,11 @@
                             "next_title": "Summary", 
                             "next_url": "/docs/summary/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 2: Run Queries with ANSI SQL", 
-                            "previous_url": "/docs/lession-2-run-queries-with-ansi-sql/", 
+                            "previous_title": "Lesson 2: Run Queries with ANSI SQL", 
+                            "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md", 
-                            "title": "Lession 3: Run Queries on Complex Data Types", 
-                            "url": "/docs/lession-3-run-queries-on-complex-data-types/"
+                            "title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9087,8 +9087,8 @@
                             "next_title": "Analyzing Highly Dynamic Datasets", 
                             "next_url": "/docs/analyzing-highly-dynamic-datasets/", 
                             "parent": "Learn Drill with the MapR Sandbox", 
-                            "previous_title": "Lession 3: Run Queries on Complex Data Types", 
-                            "previous_url": "/docs/lession-3-run-queries-on-complex-data-types/", 
+                            "previous_title": "Lesson 3: Run Queries on Complex Data Types", 
+                            "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/", 
                             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md", 
                             "title": "Summary", 
                             "url": "/docs/summary/"

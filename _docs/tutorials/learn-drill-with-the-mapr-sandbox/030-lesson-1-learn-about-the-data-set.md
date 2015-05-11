@@ -1,5 +1,5 @@
 ---
-title: "Lession 1: Learn about the Data Set"
+title: "Lesson 1: Learn about the Data Set"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
@@ -380,7 +380,7 @@ subdirectories to return the total number of rows in those files.
 # What's Next
 
 Go to [Lesson 2: Run Queries with ANSI
-SQL]({{ site.baseurl }}/docs/lession-2-run-queries-with-ansi-sql).
+SQL]({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql).
 
 
 
