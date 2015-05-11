@@ -58,8 +58,12 @@ public class ProjectPrule extends Prule {
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
 
-    Map<Integer, Integer> inToOut = getProjectMap(project);
-    boolean traitPull = new ProjectTraitPull(call, inToOut).go(project, convertedInput);
+    // Maintain two different map for distribution trait and collation trait.
+    // For now, the only difference comes from the way how cast function impacts propagating trait.
+    final Map<Integer, Integer> distributionMap = getDistributionMap(project);
+    final Map<Integer, Integer> collationMap = getCollationMap(project);
+
+    boolean traitPull = new ProjectTraitPull(call, distributionMap, collationMap).go(project, convertedInput);
 
     if(!traitPull){
       call.transformTo(new ProjectPrel(project.getCluster(), convertedInput.getTraitSet(), convertedInput, project.getProjects(), project.getRowType()));
@@ -67,11 +71,13 @@ public class ProjectPrule extends Prule {
   }
 
   private class ProjectTraitPull extends SubsetTransformer<DrillProjectRel, RuntimeException> {
-    final Map<Integer, Integer> inToOut;
+    final Map<Integer, Integer> distributionMap;
+    final Map<Integer, Integer> collationMap;
 
-    public ProjectTraitPull(RelOptRuleCall call, Map<Integer, Integer> inToOut) {
+    public ProjectTraitPull(RelOptRuleCall call, Map<Integer, Integer> distributionMap, Map<Integer, Integer> collationMap) {
       super(call);
-      this.inToOut = inToOut;
+      this.distributionMap = distributionMap;
+      this.collationMap = collationMap;
     }
 
     @Override
@@ -80,8 +86,8 @@ public class ProjectPrule extends Prule {
       RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
 
 
-      DrillDistributionTrait newDist = convertDist(childDist, inToOut);
-      RelCollation newCollation = convertRelCollation(childCollation, inToOut);
+      DrillDistributionTrait newDist = convertDist(childDist, distributionMap);
+      RelCollation newCollation = convertRelCollation(childCollation, collationMap);
       RelTraitSet newProjectTraits = newTraitSet(Prel.DRILL_PHYSICAL, newDist, newCollation);
       return new ProjectPrel(project.getCluster(), newProjectTraits, rel, project.getProjects(), project.getRowType());
     }
@@ -126,18 +132,31 @@ public class ProjectPrule extends Prule {
     }
   }
 
-  private Map<Integer, Integer> getProjectMap(DrillProjectRel project) {
+  private Map<Integer, Integer> getDistributionMap(DrillProjectRel project) {
     Map<Integer, Integer> m = new HashMap<Integer, Integer>();
 
     for (Ord<RexNode> node : Ord.zip(project.getProjects())) {
+      // For distribution, either $0 or cast($0 as ...) would keep the distribution after projection.
       if (node.e instanceof RexInputRef) {
         m.put( ((RexInputRef) node.e).getIndex(), node.i);
       } else if (node.e.isA(SqlKind.CAST)) {
         RexNode operand = ((RexCall) node.e).getOperands().get(0);
         if (operand instanceof RexInputRef) {
-          m.put(
-              ((RexInputRef) operand).getIndex(), node.i);
+          m.put(((RexInputRef) operand).getIndex(), node.i);
         }
+      }
+    }
+    return m;
+
+  }
+
+  private Map<Integer, Integer> getCollationMap(DrillProjectRel project) {
+    Map<Integer, Integer> m = new HashMap<Integer, Integer>();
+
+    for (Ord<RexNode> node : Ord.zip(project.getProjects())) {
+      // For collation, only $0 will keep the sort-ness after projection.
+      if (node.e instanceof RexInputRef) {
+        m.put( ((RexInputRef) node.e).getIndex(), node.i);
       }
     }
     return m;

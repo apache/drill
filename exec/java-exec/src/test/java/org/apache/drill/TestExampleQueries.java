@@ -961,4 +961,38 @@ public class TestExampleQueries extends BaseTestQuery{
         .run();
   }
 
+  @Test //DRILL-2953
+  public void testGbAndObDifferentExp() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
+    String query = String.format(
+        "select cast(columns[0] as int) as nation_key " +
+        " from dfs_test.`%s` " +
+        " group by columns[0] " +
+        " order by cast(columns[0] as int)", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("nation_key")
+        .build()
+        .run();
+
+    String query2 = String.format(
+        "select cast(columns[0] as int) as nation_key " +
+            " from dfs_test.`%s` " +
+            " group by cast(columns[0] as int) " +
+            " order by cast(columns[0] as int)", root);
+
+    testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .csvBaselineFile("testframework/testExampleQueries/testGroupByStarSchemaless.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("nation_key")
+        .build()
+        .run();
+
+  }
 }
