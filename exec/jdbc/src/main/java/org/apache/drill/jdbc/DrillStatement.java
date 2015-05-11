@@ -114,4 +114,8 @@ public abstract class DrillStatement extends AvaticaStatement
     connection1.openStatementsRegistry.removeStatement(this);
   }
 
+  @Override
+  public void setQueryTimeout(int seconds) throws SQLException {
+	throw new SQLException("Method is not supported");
+  }
 }
