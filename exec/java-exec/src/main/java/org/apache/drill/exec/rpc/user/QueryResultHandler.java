@@ -349,9 +349,21 @@ public class QueryResultHandler {
           throw new IllegalStateException("Trying to replace a non-buffering User Results listener.");
         }
       }
-
     }
 
+    @Override
+    public void interrupted(final InterruptedException ex) {
+      logger.warn("Interrupted while waiting for query results from Drillbit", ex);
+
+      if (!isTerminal.compareAndSet(false, true)) {
+        return;
+      }
+
+      closeFuture.removeListener(closeListener);
+
+      // Throw an interrupted UserException?
+      resultsListener.submissionFailed(UserException.systemError(ex).build());
+    }
   }
 
 }

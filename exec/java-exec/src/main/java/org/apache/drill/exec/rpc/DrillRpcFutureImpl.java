@@ -31,17 +31,6 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
     super(new InnerFuture<V>());
   }
 
-  /**
-   * Drill doesn't currently support rpc cancellations since nearly all requests should be either instance of
-   * asynchronous. Business level cancellation is managed a separate call (e.g. canceling a query.). Calling this method
-   * will result in an UnsupportedOperationException.
-   */
-  @Override
-  public boolean cancel(boolean mayInterruptIfRunning) {
-    throw new UnsupportedOperationException(
-        "Drill doesn't currently support rpc cancellations. See javadocs for more detail.");
-  }
-
   @Override
   protected RpcException mapException(Exception ex) {
     return RpcException.mapException(ex);
@@ -69,6 +58,12 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
   public void success(V value, ByteBuf buffer) {
     this.buffer = buffer;
     ( (InnerFuture<V>)delegate()).setValue(value);
+  }
+
+  @Override
+  public void interrupted(final InterruptedException ex) {
+    // Propagate the interrupt to inner future
+    ( (InnerFuture<V>)delegate()).cancel(true);
   }
 
   @Override

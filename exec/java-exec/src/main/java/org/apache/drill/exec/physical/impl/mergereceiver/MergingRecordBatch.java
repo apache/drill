@@ -534,6 +534,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     }
   }
 
+  // TODO: Code duplication. UnorderedReceiverBatch has the same implementation.
   private class OutcomeListener implements RpcOutcomeListener<Ack> {
 
     @Override
@@ -544,6 +545,15 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     @Override
     public void success(final Ack value, final ByteBuf buffer) {
       // Do nothing
+    }
+
+    @Override
+    public void interrupted(final InterruptedException e) {
+      if (context.shouldContinue()) {
+        final String errMsg = "Received an interrupt RPC outcome while sending ReceiverFinished message";
+        logger.error(errMsg, e);
+        context.fail(new RpcException(errMsg, e));
+      }
     }
   }
 

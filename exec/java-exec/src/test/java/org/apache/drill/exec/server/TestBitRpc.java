@@ -148,6 +148,10 @@ public class TestBitRpc extends ExecTest {
       }
     }
 
+    @Override
+    public void interrupted(final InterruptedException e) {
+      // TODO(We don't have any interrupts in test code)
+    }
   }
 
   private class BitComTestHandler implements DataResponseHandler {

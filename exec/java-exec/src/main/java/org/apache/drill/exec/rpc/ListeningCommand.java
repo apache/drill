@@ -55,6 +55,10 @@ public abstract class ListeningCommand<T extends MessageLite, C extends RemoteCo
       listener.success(value, buf);
     }
 
+    @Override
+    public void interrupted(final InterruptedException e) {
+      listener.interrupted(e);
+    }
   }
 
   @Override

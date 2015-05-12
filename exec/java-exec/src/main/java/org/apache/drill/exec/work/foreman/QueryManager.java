@@ -267,6 +267,12 @@ public class QueryManager {
           ack);
       }
     }
+
+    @Override
+    public void interrupted(final InterruptedException ex) {
+      logger.error("Interrupted while waiting for RPC outcome of action fragment {}. " +
+          "Endpoint {}, Fragment handle {}", signal, endpoint, value, ex);
+    }
   }
 
   QueryState updateEphemeralState(final QueryState queryState) {

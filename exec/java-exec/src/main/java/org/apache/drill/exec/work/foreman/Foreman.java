@@ -610,6 +610,18 @@ public class Foreman implements Runnable {
     }
 
     /**
+     * Ignore the current status and force the given failure as current status.
+     * NOTE: Used only for testing purposes. Shouldn't be used in production.
+     */
+    public void setForceFailure(final Exception exception) {
+      Preconditions.checkArgument(exception != null);
+      Preconditions.checkState(!isClosed);
+
+      resultState = QueryState.FAILED;
+      resultException = exception;
+    }
+
+    /**
      * Add an exception to the result. All exceptions after the first become suppressed
      * exceptions hanging off the first.
      *
@@ -837,6 +849,14 @@ public class Foreman implements Runnable {
         if ((newState == QueryState.CANCELED)
             || (newState == QueryState.COMPLETED)
             || (newState == QueryState.FAILED)) {
+
+          if (drillbitContext.getConfig().getBoolean(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS)) {
+            if (newState == QueryState.FAILED) {
+              assert exception != null;
+              recordNewState(QueryState.FAILED);
+              foremanResult.setForceFailure(exception);
+            }
+          }
           /*
            * These amount to a completion of the cancellation requests' cleanup;
            * now we can clean up and send the result.
@@ -1109,6 +1129,15 @@ public class Foreman implements Runnable {
         stateListener.moveToState(QueryState.FAILED, ex);
       }
     }
+
+    @Override
+    public void interrupted(final InterruptedException e) {
+      // Foreman shouldn't get interrupted while waiting for the RPC outcome of fragment submission.
+      // Consider the interrupt as failure.
+      final String errMsg = "Interrupted while waiting for the RPC outcome of fragment submission.";
+      logger.error(errMsg, e);
+      failed(new RpcException(errMsg, e));
+    }
   }
 
   /**
@@ -1139,10 +1168,15 @@ public class Foreman implements Runnable {
   private class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
     @Override
     public void failed(final RpcException ex) {
-      logger.info(
-          "Failure while trying communicate query result to initating client. This would happen if a client is disconnected before response notice can be sent.",
-          ex);
+      logger.info("Failure while trying communicate query result to initiating client. " +
+              "This would happen if a client is disconnected before response notice can be sent.", ex);
       stateListener.moveToState(QueryState.FAILED, ex);
+    }
+
+    @Override
+    public void interrupted(final InterruptedException e) {
+      logger.warn("Interrupted while waiting for RPC outcome of sending final query result to initiating client.");
+      stateListener.moveToState(QueryState.FAILED, e);
     }
   }
 }

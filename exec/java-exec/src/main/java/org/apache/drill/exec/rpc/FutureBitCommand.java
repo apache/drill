@@ -58,6 +58,12 @@ public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteCo
       settableFuture.set(value);
     }
 
+    @Override
+    public void interrupted(final InterruptedException e) {
+      // If we are interrupted while performing the command, consider as failure.
+      logger.warn("Interrupted while running the command", e);
+      failed(new RpcException(e));
+    }
   }
 
   public DrillRpcFuture<T> getFuture() {

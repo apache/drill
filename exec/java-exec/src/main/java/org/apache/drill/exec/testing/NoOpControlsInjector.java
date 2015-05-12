@@ -42,6 +42,11 @@ public final class NoOpControlsInjector extends ExecutionControlsInjector {
                                                final Logger logger) {
   }
 
+  @Override
+  public void injectInterruptiblePause(ExecutionControls executionControls, String desc, Logger logger)
+      throws InterruptedException {
+  }
+
   /**
    * When assertions are not enabled, this count down latch that does nothing is injected.
    */

@@ -90,6 +90,14 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     public void accept(final RpcException e) {
       fail(e);
     }
+
+    @Override
+    public void interrupt(final InterruptedException e) {
+      if (shouldContinue()) {
+        logger.error("Received an unexpected interrupt while waiting for the data send to complete.", e);
+        fail(e);
+      }
+    }
   };
 
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);

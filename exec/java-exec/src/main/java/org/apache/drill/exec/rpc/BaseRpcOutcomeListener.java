@@ -32,5 +32,10 @@ public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
   public void success(T value, ByteBuf buffer) {
   }
 
-
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void interrupted(final InterruptedException ex) {
+  }
 }

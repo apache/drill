@@ -145,6 +145,7 @@ public class FragmentExecutor implements Runnable {
        */
       final Thread myThread = myThreadRef.get();
       if (myThread != null) {
+        logger.debug("Interrupting fragment thread {}", myThread.getName());
         myThread.interrupt();
       }
     }
@@ -343,6 +344,8 @@ public class FragmentExecutor implements Runnable {
     case FINISHED:
       if(current == FragmentState.CANCELLATION_REQUESTED){
         target = FragmentState.CANCELLED;
+      } else if (current == FragmentState.FAILED) {
+        target = FragmentState.FAILED;
       }
       // fall-through
     case FAILED:

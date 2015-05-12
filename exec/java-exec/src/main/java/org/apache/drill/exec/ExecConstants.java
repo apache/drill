@@ -86,6 +86,15 @@ public interface ExecConstants {
   public static final String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
   public static final String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
   public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
+
+  /**
+   * Currently if a query is cancelled, but one of the fragments reports the status as FAILED instead of CANCELLED or
+   * FINISHED we report the query result as CANCELLED by swallowing the failures occurred in fragments. This BOOT
+   * setting allows the user to see the query status as failure. Useful for developers/testers.
+   */
+  public static final String RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS =
+      "drill.exec.debug.return_error_for_failure_in_cancelled_fragments";
+
   /** Fragment memory planning */
   public static final String ENABLE_FRAGMENT_MEMORY_LIMIT = "drill.exec.memory.enable_frag_limit";
   public static final String FRAGMENT_MEM_OVERCOMMIT_FACTOR = "drill.exec.memory.frag_mem_overcommit_factor";

@@ -194,19 +194,45 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
       @Override
       public void operationComplete(ChannelFuture future) throws Exception {
+        boolean isInterrupted = false;
+
+        final long timeoutMills = 30000;
+
+        // We want to wait for at least 30 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
+        // So there is no point propagating the interruption as failure immediately.
+        final long targetMillis = System.currentTimeMillis() + timeoutMills;
+
         // logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
-        try {
-          future.get();
-          if (future.isSuccess()) {
-            // send a handshake on the current thread. This is the only time we will send from within the event thread.
-            // We can do this because the connection will not be backed up.
-            send(handshakeSendHandler, connection, handshakeType, handshakeValue, responseClass, true);
-          } else {
-            l.connectionFailed(FailureType.CONNECTION, new RpcException("General connection failure."));
+        while(true) {
+          try {
+            future.get(timeoutMills, TimeUnit.MILLISECONDS);
+            if (future.isSuccess()) {
+              // send a handshake on the current thread. This is the only time we will send from within the event thread.
+              // We can do this because the connection will not be backed up.
+              send(handshakeSendHandler, connection, handshakeType, handshakeValue, responseClass, true);
+            } else {
+              l.connectionFailed(FailureType.CONNECTION, new RpcException("General connection failure."));
+            }
+            // logger.debug("Handshake queued for send.");
+            break;
+          } catch (final InterruptedException interruptEx) {
+            // Ignore the interrupt and continue to wait until targetMillis has elapsed.
+            isInterrupted = true;
+            final long wait = targetMillis - System.currentTimeMillis();
+            if (wait < 1) {
+              l.connectionFailed(FailureType.CONNECTION, interruptEx);
+              break;
+            }
+          } catch (final Exception ex) {
+            l.connectionFailed(FailureType.CONNECTION, ex);
+            break;
           }
-          // logger.debug("Handshake queued for send.");
-        } catch (Exception ex) {
-          l.connectionFailed(FailureType.CONNECTION, ex);
+        }
+
+        if (isInterrupted) {
+          // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+          // interruption and respond to it if it wants to.
+          Thread.currentThread().interrupt();
         }
       }
     }
@@ -235,6 +261,11 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
         }
       }
 
+      @Override
+      public void interrupted(final InterruptedException ex) {
+        logger.warn("Interrupted while waiting for handshake response", ex);
+        l.connectionFailed(FailureType.HANDSHAKE_COMMUNICATION, ex);
+      }
     }
 
   }

@@ -21,6 +21,7 @@ import static com.google.common.base.Throwables.propagate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.util.MiniZooKeeperCluster;
@@ -45,7 +46,11 @@ public class ZookeeperHelper {
    * <p>Will create a "test-data" directory for Zookeeper's use if one doesn't already exist.
    */
   public ZookeeperHelper() {
-    config = DrillConfig.create();
+    final Properties overrideProps = new Properties();
+    // Forced to disable this, because currently we leak memory which is a known issue for query cancellations.
+    // Setting this causes unittests to fail.
+    // overrideProps.setProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, "true");
+    config = DrillConfig.create(overrideProps);
     zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
 
     if (!testDir.exists()) {

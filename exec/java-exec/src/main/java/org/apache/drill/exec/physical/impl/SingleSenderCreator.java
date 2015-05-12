@@ -31,6 +31,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
@@ -41,8 +42,10 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     return new SingleSenderRootExec(context, children.iterator().next(), config);
   }
 
-  private static class SingleSenderRootExec extends BaseRootExec {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
+  public static class SingleSenderRootExec extends BaseRootExec {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
+    private static final ExecutionControlsInjector injector =
+        ExecutionControlsInjector.getInjector(SingleSenderRootExec.class);
 
     private final FragmentHandle oppositeHandle;
 
@@ -76,6 +79,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
           .setMinorFragmentId(config.getOppositeMinorFragmentId())
           .build();
       tunnel = context.getDataTunnel(config.getDestination());
+      tunnel.setTestInjectionControls(injector, context.getExecutionControls(), logger);
     }
 
     @Override

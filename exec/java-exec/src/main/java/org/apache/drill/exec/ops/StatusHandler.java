@@ -53,4 +53,10 @@ public class StatusHandler implements RpcOutcomeListener<Ack> {
     // if we didn't get ack ok, we'll need to kill the query.
     consumer.accept(new RpcException("Data not accepted downstream."));
   }
+
+  @Override
+  public void interrupted(final InterruptedException e) {
+    sendingAccountor.decrement();
+    consumer.interrupt(e);
+  }
 }

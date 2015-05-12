@@ -21,6 +21,9 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.data.DataTunnel;
+import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.slf4j.Logger;
 
 /**
  * Wrapper around a {@link org.apache.drill.exec.rpc.data.DataTunnel} that tracks the status of batches sent to
@@ -40,5 +43,13 @@ public class AccountingDataTunnel {
   public void sendRecordBatch(FragmentWritableBatch batch) {
     sendingAccountor.increment();
     tunnel.sendRecordBatch(statusHandler, batch);
+  }
+
+  /**
+   * See {@link DataTunnel#setTestInjectionControls(ExecutionControlsInjector, ExecutionControls, Logger)}.
+   */
+  public void setTestInjectionControls(final ExecutionControlsInjector testInjector,
+      final ExecutionControls testControls, final org.slf4j.Logger testLogger) {
+    tunnel.setTestInjectionControls(testInjector, testControls, testLogger);
   }
 }

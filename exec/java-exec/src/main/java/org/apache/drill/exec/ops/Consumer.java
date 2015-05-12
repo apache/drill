@@ -19,5 +19,8 @@ package org.apache.drill.exec.ops;
 
 //TODO replace this when we switch to JDK8, which includes this
 public interface Consumer<T> {
-  public void accept(T t);
+
+  void accept(T t);
+
+  void interrupt(final InterruptedException e);
 }

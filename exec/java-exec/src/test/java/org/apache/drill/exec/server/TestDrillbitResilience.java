@@ -47,6 +47,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
+import org.apache.drill.exec.physical.impl.SingleSenderCreator.SingleSenderRootExec;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionerDecorator;
@@ -779,5 +780,12 @@ public class TestDrillbitResilience {
       setSessionOption(PARTITION_SENDER_SET_THREADS.getOptionName(),
           Long.toString(PARTITION_SENDER_SET_THREADS.getDefault().num_val));
     }
+  }
+
+  @Test
+  public void testInterruptingWhileFragmentIsBlockedInAcquiringSendingTicket() throws Exception {
+    final String control =
+        createPauseInjection(SingleSenderRootExec.class, "data-tunnel-send-batch-wait-for-interrupt", 1);
+    assertCancelled(control, TEST_QUERY, new ListenerThatCancelsQueryAfterFirstBatchOfData());
   }
 }

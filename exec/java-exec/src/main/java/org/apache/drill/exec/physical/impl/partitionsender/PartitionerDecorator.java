@@ -178,6 +178,7 @@ public class PartitionerDecorator {
         } catch (final InterruptedException e) {
           // If the fragment state says we shouldn't continue, cancel or interrupt partitioner threads
           if (!context.shouldContinue()) {
+            logger.debug("Interrupting partioner threads. Fragment thread {}", tName);
             for(Future f : taskFutures) {
               f.cancel(true);
             }

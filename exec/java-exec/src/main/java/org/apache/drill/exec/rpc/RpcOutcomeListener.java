@@ -21,9 +21,19 @@ import io.netty.buffer.ByteBuf;
 
 public interface RpcOutcomeListener<V> {
 
-  public void failed(RpcException ex);
-  public void success(V value, ByteBuf buffer);
+  /**
+   * Called when an error occurred while waiting for the RPC outcome.
+   * @param ex
+   */
+  void failed(RpcException ex);
 
 
+  void success(V value, ByteBuf buffer);
+
+  /**
+   * Called when the sending thread is interrupted. Possible when the fragment is cancelled due to query cancellations or
+   * failures.
+   */
+  void interrupted(final InterruptedException e);
 
 }
