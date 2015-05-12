@@ -90,16 +90,16 @@ public class WorkEventBus {
   }
 
   public FragmentManager getFragmentManager(final FragmentHandle handle) throws FragmentSetupException {
-    // Check if this was a recently finished (completed or cancelled) fragment.  If so, throw away message.
-    if (recentlyFinishedFragments.asMap().containsKey(handle)) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
-      }
-      return null;
-    }
-
-    // since non-leaf fragments are sent first, it is an error condition if the manager is unavailable.
     synchronized (this) {
+      // Check if this was a recently finished (completed or cancelled) fragment.  If so, throw away message.
+      if (recentlyFinishedFragments.asMap().containsKey(handle)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
+        }
+        return null;
+      }
+
+      // since non-leaf fragments are sent first, it is an error condition if the manager is unavailable.
       final FragmentManager m = managers.get(handle);
       if (m != null) {
         return m;

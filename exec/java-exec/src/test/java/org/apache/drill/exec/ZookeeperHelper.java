@@ -46,10 +46,22 @@ public class ZookeeperHelper {
    * <p>Will create a "test-data" directory for Zookeeper's use if one doesn't already exist.
    */
   public ZookeeperHelper() {
+    this(false);
+  }
+
+  /**
+   * Constructor.
+   *
+   * <p>Will create a "test-data" directory for Zookeeper's use if one doesn't already exist.
+   * @param failureInCancelled pass true if you want failures in cancelled fragments to be reported as failures
+   */
+  public ZookeeperHelper(boolean failureInCancelled) {
     final Properties overrideProps = new Properties();
     // Forced to disable this, because currently we leak memory which is a known issue for query cancellations.
     // Setting this causes unittests to fail.
-    // overrideProps.setProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, "true");
+    if (failureInCancelled) {
+      overrideProps.setProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, "true");
+    }
     config = DrillConfig.create(overrideProps);
     zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
 

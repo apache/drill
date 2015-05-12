@@ -150,7 +150,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
       logger.error("Failure while getting fragment manager. {}",
           QueryIdHelper.getQueryIdentifiers(fragmentBatch.getQueryId(),
               fragmentBatch.getReceivingMajorFragmentId(),
-              fragmentBatch.getReceivingMinorFragmentIdList()));
+              fragmentBatch.getReceivingMinorFragmentIdList()), e);
       ack.clear();
       sender.send(new Response(RpcType.ACK, Acks.FAIL));
     } finally {
