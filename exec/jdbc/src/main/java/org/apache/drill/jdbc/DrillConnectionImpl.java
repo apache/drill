@@ -35,6 +35,7 @@ import net.hydromatic.avatica.UnregisteredDriver;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -95,6 +96,10 @@ public abstract class DrillConnectionImpl extends AvaticaConnection
           try {
             bit = new Drillbit(dConfig, serviceSet);
             bit.run();
+          } catch (final UserException e) {
+            throw new SQLException(
+                "Failure in starting embedded Drillbit: " + e.getMessage(),
+                e);
           } catch (Exception e) {
             // (Include cause exception's text in wrapping exception's text so
             // it's more likely to get to user (e.g., via SQLLine), and use

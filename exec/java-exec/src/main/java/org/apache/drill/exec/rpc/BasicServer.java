@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
@@ -190,15 +191,24 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
         b.bind(++port).sync();
         break;
       } catch (Exception e) {
+        // TODO(DRILL-3026):  Revisit:  Exception is not (always) BindException.
+        // One case is "java.io.IOException: bind() failed: Address already in
+        // use".
         if (e instanceof BindException && allowPortHunting) {
           continue;
         }
-        throw new DrillbitStartupException("Could not bind Drillbit", e);
+        final UserException bindException =
+            UserException
+              .resourceError( e )
+              .addContext( "Server type", getClass().getSimpleName() )
+              .message( "Drillbit could not bind to port %s.", port )
+              .build();
+        throw bindException;
       }
     }
 
     connect = !connect;
-    logger.debug("Server started on port {} of type {} ", port, this.getClass().getSimpleName());
+    logger.debug("Server of type {} started on port {}.", getClass().getSimpleName(), port);
     return port;
   }
 
