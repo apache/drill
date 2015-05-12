@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.List;
 
 import javax.inject.Named;
@@ -47,9 +49,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     this.outgoing = outgoing;
     this.size = batchGroups.size();
 
-    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
-    preAlloc.preAllocate(4 * size);
-    vector4 = new SelectionVector4(preAlloc.getAllocation(), size, Character.MAX_VALUE);
+    final DrillBuf drillBuf = allocator.buffer(4 * size);
+    vector4 = new SelectionVector4(drillBuf, size, Character.MAX_VALUE);
     doSetup(context, hyperBatch, outgoing);
 
     queueSize = 0;

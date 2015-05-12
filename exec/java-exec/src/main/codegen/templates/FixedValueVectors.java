@@ -50,7 +50,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
   private int allocationMonitor = 0;
-  
+
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
   }
@@ -187,6 +187,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     int currentWriterIndex = data.writerIndex();
     int startPoint = startIndex * ${type.width};
     int sliceLength = length * ${type.width};
+    target.clear();
     target.data = this.data.slice(startPoint, sliceLength);
     target.data.writerIndex(sliceLength);
     target.data.retain();
@@ -749,9 +750,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
   </#if> <#-- type.width -->
-  
 
-  
+
+
    public void setValueCount(int valueCount) {
      int currentValueCapacity = getValueCapacity();
      int idx = (${type.width} * valueCount);
@@ -770,7 +771,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
 
 
-  
+
  }
 }
 

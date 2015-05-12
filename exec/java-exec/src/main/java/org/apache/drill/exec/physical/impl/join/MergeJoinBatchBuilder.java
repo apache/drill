@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -33,7 +35,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
 
-public class MergeJoinBatchBuilder {
+public class MergeJoinBatchBuilder implements AutoCloseable {
 
   private final ArrayListMultimap<BatchSchema, RecordBatchData> queuedRightBatches = ArrayListMultimap.create();
   private VectorContainer container;
@@ -41,6 +43,7 @@ public class MergeJoinBatchBuilder {
   private int runningBatches;
   private int recordCount;
   private PreAllocator svAllocator;
+  private boolean svAllocatorUsed = false;
   private JoinStatus status;
 
   public MergeJoinBatchBuilder(BufferAllocator allocator, JoinStatus status) {
@@ -90,7 +93,9 @@ public class MergeJoinBatchBuilder {
     if (queuedRightBatches.size() > Character.MAX_VALUE) {
       throw new SchemaChangeException("Join cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
     }
-    status.sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
+    final DrillBuf drillBuf = svAllocator.getAllocation();
+    svAllocatorUsed = true;
+    status.sv4 = new SelectionVector4(drillBuf, recordCount, Character.MAX_VALUE);
     BatchSchema schema = queuedRightBatches.keySet().iterator().next();
     List<RecordBatchData> data = queuedRightBatches.get(schema);
 
@@ -140,4 +145,13 @@ public class MergeJoinBatchBuilder {
     container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
   }
 
+  @Override
+  public void close() {
+    if (!svAllocatorUsed) {
+      final DrillBuf drillBuf = svAllocator.getAllocation();
+      if (drillBuf != null) {
+        drillBuf.release();
+      }
+    }
+  }
 }

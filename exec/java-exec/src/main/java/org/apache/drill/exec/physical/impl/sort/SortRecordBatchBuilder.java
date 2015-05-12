@@ -39,7 +39,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 
-public class SortRecordBatchBuilder {
+public class SortRecordBatchBuilder implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
 
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
@@ -50,6 +50,7 @@ public class SortRecordBatchBuilder {
   private final long maxBytes;
   private SelectionVector4 sv4;
   final PreAllocator svAllocator;
+  private boolean svAllocatorUsed = false;
 
   public SortRecordBatchBuilder(BufferAllocator a, long maxBytes) {
     this.maxBytes = maxBytes;
@@ -165,6 +166,7 @@ public class SortRecordBatchBuilder {
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
+    svAllocatorUsed = true;
     sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
@@ -225,6 +227,17 @@ public class SortRecordBatchBuilder {
     }
     if (sv4 != null) {
       sv4.clear();
+    }
+  }
+
+  @Override
+  public void close() {
+    // Don't leak unused pre-allocated memory.
+    if (!svAllocatorUsed) {
+      final DrillBuf drillBuf = svAllocator.getAllocation();
+      if (drillBuf != null) {
+        drillBuf.release();
+      }
     }
   }
 

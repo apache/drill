@@ -101,6 +101,9 @@ public interface BufferAllocator extends Closeable {
 
   /**
    * Not thread safe.
+   *
+   * WARNING: unclaimed pre-allocations leak memory. If you call preAllocate(), you must
+   * make sure to ultimately try to get the buffer and release it.
    */
   public interface PreAllocator {
     public boolean preAllocate(int bytes);

@@ -68,33 +68,36 @@ public class WritableBatch {
       }
 
       DrillBuf newBuf = buffers[0].getAllocator().buffer(len);
+      try {
+        /* Copy data from each buffer into the compound buffer */
+        int offset = 0;
+        for (DrillBuf buf : buffers) {
+          newBuf.setBytes(offset, buf);
+          offset += buf.capacity();
+          buf.release();
+        }
 
-      /* Copy data from each buffer into the compound buffer */
-      int offset = 0;
-      for (DrillBuf buf : buffers) {
-        newBuf.setBytes(offset, buf);
-        offset += buf.capacity();
-        buf.release();
-      }
+        List<SerializedField> fields = def.getFieldList();
 
-      List<SerializedField> fields = def.getFieldList();
+        int bufferOffset = 0;
 
-      int bufferOffset = 0;
+        /*
+         * For each value vector slice up the appropriate size from the compound buffer and load it into the value vector
+         */
+        int vectorIndex = 0;
 
-      /*
-       * For each value vector slice up the appropriate size from the compound buffer and load it into the value vector
-       */
-      int vectorIndex = 0;
-
-      for (VectorWrapper<?> vv : container) {
-        SerializedField fmd = fields.get(vectorIndex);
-        ValueVector v = vv.getValueVector();
-        DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
+        for (VectorWrapper<?> vv : container) {
+          SerializedField fmd = fields.get(vectorIndex);
+          ValueVector v = vv.getValueVector();
+          DrillBuf bb = newBuf.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
-        v.load(fmd, bb);
-        bb.release();
-        vectorIndex++;
-        bufferOffset += fmd.getBufferLength();
+          v.load(fmd, bb);
+          vectorIndex++;
+          bufferOffset += fmd.getBufferLength();
+        }
+      } finally {
+        // Any vectors that loaded material from newBuf slices above will retain those.
+        newBuf.release(1);
       }
     }
 

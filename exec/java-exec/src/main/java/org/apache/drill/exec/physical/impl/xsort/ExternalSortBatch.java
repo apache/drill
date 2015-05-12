@@ -160,6 +160,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
     if (builder != null) {
       builder.clear();
+      builder.close();
     }
     if (sv4 != null) {
       sv4.clear();
@@ -346,6 +347,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         Stopwatch watch = new Stopwatch();
         watch.start();
 
+        if (builder != null) {
+          builder.clear();
+          builder.close();
+        }
         builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
 
         for (BatchGroup group : batchGroups) {

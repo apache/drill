@@ -200,6 +200,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
 
   public void transferTo(BitVector target) {
+    target.clear();
     target.data = data;
     target.data.retain();
     target.valueCount = valueCount;
@@ -212,6 +213,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     int byteSize = getSizeFromCount(length);
     int offset = startIndex % 8;
     if (offset == 0) {
+      target.clear();
       // slice
       target.data = (DrillBuf) this.data.slice(firstByte, byteSize);
       target.data.retain();

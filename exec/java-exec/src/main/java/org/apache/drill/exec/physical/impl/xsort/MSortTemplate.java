@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Queue;
 
 import javax.inject.Named;
@@ -53,7 +55,8 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     doSetup(context, hyperBatch, null);
     runStarts.add(0);
     int batch = 0;
-    for (int i = 0; i < this.vector4.getTotalCount(); i++) {
+    final int totalCount = this.vector4.getTotalCount();
+    for (int i = 0; i < totalCount; i++) {
       final int newBatch = this.vector4.get(i) >>> 16;
       if (newBatch == batch) {
         continue;
@@ -64,9 +67,8 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
         throw new UnsupportedOperationException("Missing batch");
       }
     }
-    final BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
-    preAlloc.preAllocate(4 * this.vector4.getTotalCount());
-    aux = new SelectionVector4(preAlloc.getAllocation(), this.vector4.getTotalCount(), Character.MAX_VALUE);
+    final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
+    aux = new SelectionVector4(drillBuf, totalCount, Character.MAX_VALUE);
   }
 
   /**

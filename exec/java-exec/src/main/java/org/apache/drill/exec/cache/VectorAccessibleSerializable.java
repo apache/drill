@@ -117,10 +117,14 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       if (buf == null) {
         throw new IOException(new OutOfMemoryException());
       }
-      buf.writeBytes(input, dataLength);
-      ValueVector vector = TypeHelper.getNewVector(field, allocator);
-      vector.load(metaData, buf);
-      buf.release();
+      final ValueVector vector;
+      try {
+        buf.writeBytes(input, dataLength);
+        vector = TypeHelper.getNewVector(field, allocator);
+        vector.load(metaData, buf);
+      } finally {
+        buf.release();
+      }
       vectorList.add(vector);
     }
     container.addCollection(vectorList);

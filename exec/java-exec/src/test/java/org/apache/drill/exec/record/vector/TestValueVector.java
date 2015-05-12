@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 
@@ -102,12 +103,10 @@ public class TestValueVector extends ExecTest {
     boolean b = false;
     try {
       v.getAccessor().get(3);
-    } catch(AssertionError e) {
+    } catch(IllegalStateException e) {
       b = true;
     }finally{
-      if(!b){
-        assert false;
-      }
+      assertTrue(b);
     }
 
   }
@@ -139,12 +138,10 @@ public class TestValueVector extends ExecTest {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) {
+      } catch(IllegalStateException e) {
         b = true;
       }finally{
-        if(!b){
-          assert false;
-        }
+        assertTrue(b);
       }
     }
 
@@ -154,12 +151,10 @@ public class TestValueVector extends ExecTest {
       boolean b = false;
       try {
         v.getAccessor().get(0);
-      } catch(AssertionError e) {
+      } catch(IllegalStateException e) {
         b = true;
       }finally{
-        if(!b){
-          assert false;
-        }
+        assertTrue(b);
       }
     }
 
@@ -180,12 +175,10 @@ public class TestValueVector extends ExecTest {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) {
+      } catch(IllegalStateException e) {
         b = true;
       }finally{
-        if(!b){
-          assert false;
-        }
+        assertTrue(b);
       }
     }
 
@@ -217,12 +210,10 @@ public class TestValueVector extends ExecTest {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) {
+      } catch(IllegalStateException e) {
         b = true;
       }finally{
-        if(!b){
-          assert false;
-        }
+        assertTrue(b);
       }
     }
 
@@ -231,12 +222,10 @@ public class TestValueVector extends ExecTest {
       boolean b = false;
       try {
         v.getAccessor().get(0);
-      } catch(AssertionError e) {
+      } catch(IllegalStateException e) {
         b = true;
       }finally{
-        if(!b){
-          assert false;
-        }
+        assertTrue(b);
       }
     }
   }

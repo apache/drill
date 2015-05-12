@@ -242,4 +242,13 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     }
     return actualBufSize;
   }
+
+  @Override
+  public void close() {
+   for(final ValueVector valueVector : vectors.values()) {
+     valueVector.close();
+   }
+
+   super.close();
+  }
 }

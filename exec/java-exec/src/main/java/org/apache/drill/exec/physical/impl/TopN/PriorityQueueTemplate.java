@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -53,9 +55,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     this.limit = limit;
     this.context = context;
     this.allocator = allocator;
-    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
-    preAlloc.preAllocate(4 * (limit + 1));
-    heapSv4 = new SelectionVector4(preAlloc.getAllocation(), limit, Character.MAX_VALUE);
+    final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
+    heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     this.hasSv2 = hasSv2;
   }
 
@@ -70,9 +71,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
     this.hyperBatch = new ExpandableHyperContainer(newContainer);
     this.batchCount = hyperBatch.iterator().next().getValueVectors().length;
-    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
-    preAlloc.preAllocate(4 * (limit + 1));
-    this.heapSv4 = new SelectionVector4(preAlloc.getAllocation(), limit, Character.MAX_VALUE);
+    final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
+    this.heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     for (int i = 0; i < v4.getTotalCount(); i++) {
       heapSv4.set(i, v4.get(i));
     }
@@ -120,9 +120,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void generate() throws SchemaChangeException {
     Stopwatch watch = new Stopwatch();
     watch.start();
-    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
-    preAlloc.preAllocate(4 * queueSize);
-    finalSv4 = new SelectionVector4(preAlloc.getAllocation(), queueSize, 4000);
+    final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
+    finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
       finalSv4.set(i, pop());
     }

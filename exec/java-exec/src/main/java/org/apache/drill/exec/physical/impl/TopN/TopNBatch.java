@@ -278,26 +278,30 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       copier.setupRemover(context, batch, newBatch);
     }
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
-    do {
-      int count = selectionVector4.getCount();
-      int copiedRecords = copier.copyRecords(0, count);
-      assert copiedRecords == count;
-      for (VectorWrapper<?> v : newContainer) {
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(count);
-      }
-      newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      newContainer.setRecordCount(count);
-      builder.add(newBatch);
-    } while (selectionVector4.next());
-    selectionVector4.clear();
-    c.clear();
-    VectorContainer newQueue = new VectorContainer();
-    builder.canonicalize();
-    builder.build(context, newQueue);
-    priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
-    builder.getSv4().clear();
-    selectionVector4.clear();
+    try {
+      do {
+        int count = selectionVector4.getCount();
+        int copiedRecords = copier.copyRecords(0, count);
+        assert copiedRecords == count;
+        for (VectorWrapper<?> v : newContainer) {
+          ValueVector.Mutator m = v.getValueVector().getMutator();
+          m.setValueCount(count);
+        }
+        newContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+        newContainer.setRecordCount(count);
+        builder.add(newBatch);
+      } while (selectionVector4.next());
+      selectionVector4.clear();
+      c.clear();
+      VectorContainer newQueue = new VectorContainer();
+      builder.canonicalize();
+      builder.build(context, newQueue);
+      priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
+      builder.getSv4().clear();
+      selectionVector4.clear();
+    } finally {
+      builder.close();
+    }
     logger.debug("Took {} us to purge", watch.elapsed(TimeUnit.MICROSECONDS));
   }
 

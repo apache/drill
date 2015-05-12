@@ -342,4 +342,14 @@ public class MapVector extends AbstractMapVector {
       v.clear();
     }
   }
+
+  @Override
+  public void close() {
+    for (final ValueVector v : getChildren()) {
+      v.close();
+    }
+    valueCount = 0;
+
+    super.close();
+ }
 }

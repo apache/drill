@@ -85,6 +85,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   @Override
   public void close() {
     builder.clear();
+    builder.close();
     super.close();
   }
 
