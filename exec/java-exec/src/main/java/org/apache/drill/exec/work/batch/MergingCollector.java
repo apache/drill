@@ -20,12 +20,12 @@ package org.apache.drill.exec.work.batch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.Receiver;
+import org.apache.drill.exec.proto.BitControl.Collector;
 
 public class MergingCollector extends AbstractDataCollector{
 
-  public MergingCollector(AtomicInteger parentAccounter, Receiver receiver, FragmentContext context) {
-    super(parentAccounter, receiver, 1, receiver.getProvidingEndpoints().size(), context);
+  public MergingCollector(AtomicInteger parentAccounter, Collector collector, FragmentContext context) {
+    super(parentAccounter, 1, collector, collector.getIncomingMinorFragmentCount(), context);
   }
 
   @Override

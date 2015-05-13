@@ -24,9 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Receiver;
+import org.apache.drill.exec.proto.BitControl.Collector;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
 import com.google.common.collect.ImmutableMap;
@@ -39,18 +38,24 @@ public class IncomingBuffers implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IncomingBuffers.class);
 
   private final AtomicInteger streamsRemaining = new AtomicInteger(0);
-  private final AtomicInteger remainingRequired = new AtomicInteger(0);
+  private final AtomicInteger remainingRequired;
   private final Map<Integer, DataCollector> fragCounts;
   private final FragmentContext context;
 
-  public IncomingBuffers(PhysicalOperator root, FragmentContext context) {
+  public IncomingBuffers(PlanFragment fragment, FragmentContext context) {
     this.context = context;
-    Map<Integer, DataCollector> counts = Maps.newHashMap();
-    CountRequiredFragments reqFrags = new CountRequiredFragments();
-    root.accept(reqFrags, counts);
+    Map<Integer, DataCollector> collectors = Maps.newHashMap();
+    remainingRequired = new AtomicInteger(fragment.getCollectorCount());
+    for(int i =0; i < fragment.getCollectorCount(); i++){
+      Collector collector = fragment.getCollector(i);
+      DataCollector newCollector = collector.getSupportsOutOfOrder() ?
+          new MergingCollector(remainingRequired, collector, context) :
+          new PartitionedCollector(remainingRequired, collector, context);
+      collectors.put(collector.getOppositeMajorFragmentId(), newCollector);
+    }
 
-    logger.debug("Came up with a list of {} required fragments.  Fragments {}", remainingRequired.get(), counts);
-    fragCounts = ImmutableMap.copyOf(counts);
+    logger.debug("Came up with a list of {} required fragments.  Fragments {}", remainingRequired.get(), collectors);
+    fragCounts = ImmutableMap.copyOf(collectors);
 
     // Determine the total number of incoming streams that will need to be completed before we are finished.
     int totalStreams = 0;
@@ -98,34 +103,7 @@ public class IncomingBuffers implements AutoCloseable {
   }
 
 
-  /**
-   * Designed to setup initial values for arriving fragment accounting.
-   */
-  public class CountRequiredFragments extends AbstractPhysicalVisitor<Void, Map<Integer, DataCollector>, RuntimeException> {
 
-    @Override
-    public Void visitReceiver(Receiver receiver, Map<Integer, DataCollector> counts) throws RuntimeException {
-      DataCollector set;
-      if (receiver.supportsOutOfOrderExchange()) {
-        set = new MergingCollector(remainingRequired, receiver, context);
-      } else {
-        set = new PartitionedCollector(remainingRequired, receiver, context);
-      }
-
-      counts.put(set.getOppositeMajorFragmentId(), set);
-      remainingRequired.incrementAndGet();
-      return null;
-    }
-
-    @Override
-    public Void visitOp(PhysicalOperator op, Map<Integer, DataCollector> value) throws RuntimeException {
-      for (PhysicalOperator o : op) {
-        o.accept(this, value);
-      }
-      return null;
-    }
-
-  }
 
   public boolean isDone() {
     return streamsRemaining.get() < 1;

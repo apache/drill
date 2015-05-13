@@ -20,12 +20,12 @@ package org.apache.drill.exec.work.batch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.Receiver;
+import org.apache.drill.exec.proto.BitControl.Collector;
 
 public class PartitionedCollector extends AbstractDataCollector{
 
-  public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver, FragmentContext context) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size(), 1, context);
+  public PartitionedCollector(AtomicInteger parentAccounter, Collector collector, FragmentContext context) {
+    super(parentAccounter, collector.getIncomingMinorFragmentCount(), collector, 1, context);
   }
 
   @Override

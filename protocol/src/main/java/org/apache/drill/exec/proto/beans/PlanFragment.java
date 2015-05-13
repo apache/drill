@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -63,6 +65,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
     private UserCredentials credentials;
     private String optionsJson;
     private QueryContextInformation context;
+    private List<Collector> collector;
 
     public PlanFragment()
     {
@@ -253,6 +256,19 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         return this;
     }
 
+    // collector
+
+    public List<Collector> getCollectorList()
+    {
+        return collector;
+    }
+
+    public PlanFragment setCollectorList(List<Collector> collector)
+    {
+        this.collector = collector;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -354,6 +370,12 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
                     message.context = input.mergeObject(message.context, QueryContextInformation.getSchema());
                     break;
 
+                case 17:
+                    if(message.collector == null)
+                        message.collector = new ArrayList<Collector>();
+                    message.collector.add(input.mergeObject(null, Collector.getSchema()));
+                    break;
+
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -409,6 +431,16 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         if(message.context != null)
              output.writeObject(16, message.context, QueryContextInformation.getSchema(), false);
 
+
+        if(message.collector != null)
+        {
+            for(Collector collector : message.collector)
+            {
+                if(collector != null)
+                    output.writeObject(17, collector, Collector.getSchema(), true);
+            }
+        }
+
     }
 
     public String getFieldName(int number)
@@ -429,6 +461,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
             case 14: return "credentials";
             case 15: return "optionsJson";
             case 16: return "context";
+            case 17: return "collector";
             default: return null;
         }
     }
@@ -456,6 +489,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         __fieldMap.put("credentials", 14);
         __fieldMap.put("optionsJson", 15);
         __fieldMap.put("context", 16);
+        __fieldMap.put("collector", 17);
     }
     
 }

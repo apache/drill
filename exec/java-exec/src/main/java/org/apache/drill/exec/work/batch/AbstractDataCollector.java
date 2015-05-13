@@ -18,30 +18,25 @@
 package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.MinorFragmentEndpoint;
-import org.apache.drill.exec.physical.base.Receiver;
+import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.util.ArrayWrappedIntIntMap;
 
 import com.google.common.base.Preconditions;
-import org.apache.drill.exec.util.ArrayWrappedIntIntMap;
 
 public abstract class AbstractDataCollector implements DataCollector{
 
-  private final List<MinorFragmentEndpoint> incoming;
+  // private final List<MinorFragmentEndpoint> incoming;
   private final int oppositeMajorFragmentId;
   private final AtomicIntegerArray remainders;
   private final AtomicInteger remainingRequired;
   private final AtomicInteger parentAccounter;
-
+  private final int incomingStreams;
   protected final RawBatchBuffer[] buffers;
   protected final ArrayWrappedIntIntMap fragmentMap;
 
@@ -52,37 +47,36 @@ public abstract class AbstractDataCollector implements DataCollector{
    * @param bufferCapacity Capacity of each RawBatchBuffer.
    * @param context
    */
-  public AbstractDataCollector(AtomicInteger parentAccounter, Receiver receiver,
-      final int numBuffers, final int bufferCapacity, FragmentContext context) {
-    Preconditions.checkNotNull(receiver);
+  public AbstractDataCollector(AtomicInteger parentAccounter,
+      final int numBuffers, Collector collector, final int bufferCapacity, FragmentContext context) {
+    Preconditions.checkNotNull(collector);
     Preconditions.checkNotNull(parentAccounter);
 
+    this.incomingStreams = collector.getIncomingMinorFragmentCount();
     this.parentAccounter = parentAccounter;
-    this.incoming = receiver.getProvidingEndpoints();
-    this.remainders = new AtomicIntegerArray(incoming.size());
-    this.oppositeMajorFragmentId = receiver.getOppositeMajorFragmentId();
-
+    this.remainders = new AtomicIntegerArray(incomingStreams);
+    this.oppositeMajorFragmentId = collector.getOppositeMajorFragmentId();
     // Create fragmentId to index that is within the range [0, incoming.size()-1]
     // We use this mapping to find objects belonging to the fragment in buffers and remainders arrays.
     fragmentMap = new ArrayWrappedIntIntMap();
     int index = 0;
-    for(MinorFragmentEndpoint endpoint : incoming) {
-      fragmentMap.put(endpoint.getId(), index);
+    for (Integer endpoint : collector.getIncomingMinorFragmentList()) {
+      fragmentMap.put(endpoint, index);
       index++;
     }
 
     buffers = new RawBatchBuffer[numBuffers];
     remainingRequired = new AtomicInteger(numBuffers);
 
-    final boolean spooling = receiver.isSpooling();
+    final boolean spooling = collector.getIsSpooling();
 
     try {
 
       for (int i = 0; i < numBuffers; i++) {
         if (spooling) {
-          buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, receiver.getOppositeMajorFragmentId(), i);
+          buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
         } else {
-          buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, receiver.getOppositeMajorFragmentId());
+          buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId());
         }
       }
     } catch (IOException | OutOfMemoryException e) {
@@ -129,7 +123,7 @@ public abstract class AbstractDataCollector implements DataCollector{
 
   @Override
   public int getTotalIncomingFragments() {
-    return incoming.size();
+    return incomingStreams;
   }
 
   protected abstract RawBatchBuffer getBuffer(int minorFragmentId);

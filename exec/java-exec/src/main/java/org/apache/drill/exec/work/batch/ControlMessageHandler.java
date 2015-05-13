@@ -21,7 +21,6 @@ import static org.apache.drill.exec.rpc.RpcBus.get;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -132,9 +131,7 @@ public class ControlMessageHandler {
             drillbitContext.getFunctionImplementationRegistry());
         final ControlTunnel tunnel = drillbitContext.getController().getTunnel(fragment.getForeman());
         final NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
-        final FragmentRoot rootOperator = drillbitContext.getPlanReader().readFragmentOperator(
-            fragment.getFragmentJson());
-        final FragmentExecutor fr = new FragmentExecutor(context, rootOperator, listener);
+        final FragmentExecutor fr = new FragmentExecutor(context, fragment, listener);
         bee.addFragmentRunner(fr);
       } else {
         // isIntermediate, store for incoming data.

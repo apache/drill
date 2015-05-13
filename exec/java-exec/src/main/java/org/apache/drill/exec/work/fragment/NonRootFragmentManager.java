@@ -24,7 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -42,10 +41,9 @@ import com.google.common.base.Preconditions;
 public class NonRootFragmentManager implements FragmentManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NonRootFragmentManager.class);
 
-  private final PlanFragment fragment;
-  private FragmentRoot root;
   private final IncomingBuffers buffers;
   private final FragmentExecutor runner;
+  private final FragmentHandle handle;
   private volatile boolean cancel = false;
   private final FragmentContext context;
   private final List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
@@ -54,16 +52,15 @@ public class NonRootFragmentManager implements FragmentManager {
   public NonRootFragmentManager(final PlanFragment fragment, final DrillbitContext context)
       throws ExecutionSetupException {
     try {
-      this.fragment = fragment;
-      this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
+      this.handle = fragment.getHandle();
       this.context = new FragmentContext(context, fragment, context.getFunctionImplementationRegistry());
-      this.buffers = new IncomingBuffers(root, this.context);
+      this.buffers = new IncomingBuffers(fragment, this.context);
       final StatusReporter reporter = new NonRootStatusReporter(this.context, context.getController().getTunnel(
           fragment.getForeman()));
-      this.runner = new FragmentExecutor(this.context, root, reporter);
+      this.runner = new FragmentExecutor(this.context, fragment, reporter);
       this.context.setBuffers(buffers);
 
-    } catch (ForemanException | IOException e) {
+    } catch (ForemanException e) {
       throw new FragmentSetupException("Failure while decoding fragment.", e);
     }
   }
@@ -118,7 +115,7 @@ public class NonRootFragmentManager implements FragmentManager {
 
   @Override
   public FragmentHandle getHandle() {
-    return fragment.getHandle();
+    return handle;
   }
 
   @Override

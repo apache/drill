@@ -929,15 +929,14 @@ public class Foreman implements Runnable {
     final FragmentContext rootContext = new FragmentContext(drillbitContext, rootFragment, queryContext,
         initiatingClient, drillbitContext.getFunctionImplementationRegistry());
     @SuppressWarnings("resource")
-    final IncomingBuffers buffers = new IncomingBuffers(rootOperator, rootContext);
+    final IncomingBuffers buffers = new IncomingBuffers(rootFragment, rootContext);
     rootContext.setBuffers(buffers);
 
     queryManager.addFragmentStatusTracker(rootFragment, true);
 
-    rootRunner = new FragmentExecutor(rootContext, rootOperator,
-        queryManager.newRootStatusHandler(rootContext));
-    final RootFragmentManager fragmentManager =
-        new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
+    rootRunner = new FragmentExecutor(rootContext, rootFragment, queryManager.newRootStatusHandler(rootContext),
+        rootOperator);
+    final RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
 
     if (buffers.isDone()) {
       // if we don't have to wait for any incoming data, start the fragment runner.

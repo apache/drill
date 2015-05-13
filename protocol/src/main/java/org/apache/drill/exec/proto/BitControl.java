@@ -3189,6 +3189,31 @@ public final class BitControl {
      * <code>optional .exec.bit.control.QueryContextInformation context = 16;</code>
      */
     org.apache.drill.exec.proto.BitControl.QueryContextInformationOrBuilder getContextOrBuilder();
+
+    // repeated .exec.bit.control.Collector collector = 17;
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.BitControl.Collector> 
+        getCollectorList();
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    org.apache.drill.exec.proto.BitControl.Collector getCollector(int index);
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    int getCollectorCount();
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> 
+        getCollectorOrBuilderList();
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    org.apache.drill.exec.proto.BitControl.CollectorOrBuilder getCollectorOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code exec.bit.control.PlanFragment}
@@ -3351,6 +3376,14 @@ public final class BitControl {
               bitField0_ |= 0x00002000;
               break;
             }
+            case 138: {
+              if (!((mutable_bitField0_ & 0x00004000) == 0x00004000)) {
+                collector_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.Collector>();
+                mutable_bitField0_ |= 0x00004000;
+              }
+              collector_.add(input.readMessage(org.apache.drill.exec.proto.BitControl.Collector.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3359,6 +3392,9 @@ public final class BitControl {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00004000) == 0x00004000)) {
+          collector_ = java.util.Collections.unmodifiableList(collector_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -3715,6 +3751,42 @@ public final class BitControl {
       return context_;
     }
 
+    // repeated .exec.bit.control.Collector collector = 17;
+    public static final int COLLECTOR_FIELD_NUMBER = 17;
+    private java.util.List<org.apache.drill.exec.proto.BitControl.Collector> collector_;
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.BitControl.Collector> getCollectorList() {
+      return collector_;
+    }
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> 
+        getCollectorOrBuilderList() {
+      return collector_;
+    }
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    public int getCollectorCount() {
+      return collector_.size();
+    }
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    public org.apache.drill.exec.proto.BitControl.Collector getCollector(int index) {
+      return collector_.get(index);
+    }
+    /**
+     * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+     */
+    public org.apache.drill.exec.proto.BitControl.CollectorOrBuilder getCollectorOrBuilder(
+        int index) {
+      return collector_.get(index);
+    }
+
     private void initFields() {
       handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       networkCost_ = 0F;
@@ -3730,6 +3802,7 @@ public final class BitControl {
       credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
       optionsJson_ = "";
       context_ = org.apache.drill.exec.proto.BitControl.QueryContextInformation.getDefaultInstance();
+      collector_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3784,6 +3857,9 @@ public final class BitControl {
       }
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeMessage(16, context_);
+      }
+      for (int i = 0; i < collector_.size(); i++) {
+        output.writeMessage(17, collector_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -3849,6 +3925,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(16, context_);
+      }
+      for (int i = 0; i < collector_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(17, collector_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3963,6 +4043,7 @@ public final class BitControl {
           getForemanFieldBuilder();
           getCredentialsFieldBuilder();
           getContextFieldBuilder();
+          getCollectorFieldBuilder();
         }
       }
       private static Builder create() {
@@ -4019,6 +4100,12 @@ public final class BitControl {
           contextBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00002000);
+        if (collectorBuilder_ == null) {
+          collector_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00004000);
+        } else {
+          collectorBuilder_.clear();
+        }
         return this;
       }
 
@@ -4123,6 +4210,15 @@ public final class BitControl {
         } else {
           result.context_ = contextBuilder_.build();
         }
+        if (collectorBuilder_ == null) {
+          if (((bitField0_ & 0x00004000) == 0x00004000)) {
+            collector_ = java.util.Collections.unmodifiableList(collector_);
+            bitField0_ = (bitField0_ & ~0x00004000);
+          }
+          result.collector_ = collector_;
+        } else {
+          result.collector_ = collectorBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4184,6 +4280,32 @@ public final class BitControl {
         }
         if (other.hasContext()) {
           mergeContext(other.getContext());
+        }
+        if (collectorBuilder_ == null) {
+          if (!other.collector_.isEmpty()) {
+            if (collector_.isEmpty()) {
+              collector_ = other.collector_;
+              bitField0_ = (bitField0_ & ~0x00004000);
+            } else {
+              ensureCollectorIsMutable();
+              collector_.addAll(other.collector_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.collector_.isEmpty()) {
+            if (collectorBuilder_.isEmpty()) {
+              collectorBuilder_.dispose();
+              collectorBuilder_ = null;
+              collector_ = other.collector_;
+              bitField0_ = (bitField0_ & ~0x00004000);
+              collectorBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getCollectorFieldBuilder() : null;
+            } else {
+              collectorBuilder_.addAllMessages(other.collector_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5208,6 +5330,246 @@ public final class BitControl {
         return contextBuilder_;
       }
 
+      // repeated .exec.bit.control.Collector collector = 17;
+      private java.util.List<org.apache.drill.exec.proto.BitControl.Collector> collector_ =
+        java.util.Collections.emptyList();
+      private void ensureCollectorIsMutable() {
+        if (!((bitField0_ & 0x00004000) == 0x00004000)) {
+          collector_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.Collector>(collector_);
+          bitField0_ |= 0x00004000;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.BitControl.Collector, org.apache.drill.exec.proto.BitControl.Collector.Builder, org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> collectorBuilder_;
+
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.BitControl.Collector> getCollectorList() {
+        if (collectorBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(collector_);
+        } else {
+          return collectorBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public int getCollectorCount() {
+        if (collectorBuilder_ == null) {
+          return collector_.size();
+        } else {
+          return collectorBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.Collector getCollector(int index) {
+        if (collectorBuilder_ == null) {
+          return collector_.get(index);
+        } else {
+          return collectorBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder setCollector(
+          int index, org.apache.drill.exec.proto.BitControl.Collector value) {
+        if (collectorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCollectorIsMutable();
+          collector_.set(index, value);
+          onChanged();
+        } else {
+          collectorBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder setCollector(
+          int index, org.apache.drill.exec.proto.BitControl.Collector.Builder builderForValue) {
+        if (collectorBuilder_ == null) {
+          ensureCollectorIsMutable();
+          collector_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          collectorBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder addCollector(org.apache.drill.exec.proto.BitControl.Collector value) {
+        if (collectorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCollectorIsMutable();
+          collector_.add(value);
+          onChanged();
+        } else {
+          collectorBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder addCollector(
+          int index, org.apache.drill.exec.proto.BitControl.Collector value) {
+        if (collectorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCollectorIsMutable();
+          collector_.add(index, value);
+          onChanged();
+        } else {
+          collectorBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder addCollector(
+          org.apache.drill.exec.proto.BitControl.Collector.Builder builderForValue) {
+        if (collectorBuilder_ == null) {
+          ensureCollectorIsMutable();
+          collector_.add(builderForValue.build());
+          onChanged();
+        } else {
+          collectorBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder addCollector(
+          int index, org.apache.drill.exec.proto.BitControl.Collector.Builder builderForValue) {
+        if (collectorBuilder_ == null) {
+          ensureCollectorIsMutable();
+          collector_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          collectorBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder addAllCollector(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.BitControl.Collector> values) {
+        if (collectorBuilder_ == null) {
+          ensureCollectorIsMutable();
+          super.addAll(values, collector_);
+          onChanged();
+        } else {
+          collectorBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder clearCollector() {
+        if (collectorBuilder_ == null) {
+          collector_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00004000);
+          onChanged();
+        } else {
+          collectorBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public Builder removeCollector(int index) {
+        if (collectorBuilder_ == null) {
+          ensureCollectorIsMutable();
+          collector_.remove(index);
+          onChanged();
+        } else {
+          collectorBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.Collector.Builder getCollectorBuilder(
+          int index) {
+        return getCollectorFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.CollectorOrBuilder getCollectorOrBuilder(
+          int index) {
+        if (collectorBuilder_ == null) {
+          return collector_.get(index);  } else {
+          return collectorBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> 
+           getCollectorOrBuilderList() {
+        if (collectorBuilder_ != null) {
+          return collectorBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(collector_);
+        }
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.Collector.Builder addCollectorBuilder() {
+        return getCollectorFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.BitControl.Collector.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public org.apache.drill.exec.proto.BitControl.Collector.Builder addCollectorBuilder(
+          int index) {
+        return getCollectorFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.BitControl.Collector.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.bit.control.Collector collector = 17;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.BitControl.Collector.Builder> 
+           getCollectorBuilderList() {
+        return getCollectorFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.BitControl.Collector, org.apache.drill.exec.proto.BitControl.Collector.Builder, org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> 
+          getCollectorFieldBuilder() {
+        if (collectorBuilder_ == null) {
+          collectorBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.BitControl.Collector, org.apache.drill.exec.proto.BitControl.Collector.Builder, org.apache.drill.exec.proto.BitControl.CollectorOrBuilder>(
+                  collector_,
+                  ((bitField0_ & 0x00004000) == 0x00004000),
+                  getParentForChildren(),
+                  isClean());
+          collector_ = null;
+        }
+        return collectorBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.bit.control.PlanFragment)
     }
 
@@ -5217,6 +5579,731 @@ public final class BitControl {
     }
 
     // @@protoc_insertion_point(class_scope:exec.bit.control.PlanFragment)
+  }
+
+  public interface CollectorOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int32 opposite_major_fragment_id = 1;
+    /**
+     * <code>optional int32 opposite_major_fragment_id = 1;</code>
+     */
+    boolean hasOppositeMajorFragmentId();
+    /**
+     * <code>optional int32 opposite_major_fragment_id = 1;</code>
+     */
+    int getOppositeMajorFragmentId();
+
+    // repeated int32 incoming_minor_fragment = 2 [packed = true];
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    java.util.List<java.lang.Integer> getIncomingMinorFragmentList();
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    int getIncomingMinorFragmentCount();
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    int getIncomingMinorFragment(int index);
+
+    // optional bool supports_out_of_order = 3;
+    /**
+     * <code>optional bool supports_out_of_order = 3;</code>
+     */
+    boolean hasSupportsOutOfOrder();
+    /**
+     * <code>optional bool supports_out_of_order = 3;</code>
+     */
+    boolean getSupportsOutOfOrder();
+
+    // optional bool is_spooling = 4;
+    /**
+     * <code>optional bool is_spooling = 4;</code>
+     */
+    boolean hasIsSpooling();
+    /**
+     * <code>optional bool is_spooling = 4;</code>
+     */
+    boolean getIsSpooling();
+  }
+  /**
+   * Protobuf type {@code exec.bit.control.Collector}
+   */
+  public static final class Collector extends
+      com.google.protobuf.GeneratedMessage
+      implements CollectorOrBuilder {
+    // Use Collector.newBuilder() to construct.
+    private Collector(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Collector(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Collector defaultInstance;
+    public static Collector getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Collector getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Collector(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              oppositeMajorFragmentId_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                incomingMinorFragment_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              incomingMinorFragment_.add(input.readInt32());
+              break;
+            }
+            case 18: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002) && input.getBytesUntilLimit() > 0) {
+                incomingMinorFragment_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                incomingMinorFragment_.add(input.readInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000002;
+              supportsOutOfOrder_ = input.readBool();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000004;
+              isSpooling_ = input.readBool();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          incomingMinorFragment_ = java.util.Collections.unmodifiableList(incomingMinorFragment_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_Collector_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_Collector_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.BitControl.Collector.class, org.apache.drill.exec.proto.BitControl.Collector.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Collector> PARSER =
+        new com.google.protobuf.AbstractParser<Collector>() {
+      public Collector parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Collector(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Collector> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional int32 opposite_major_fragment_id = 1;
+    public static final int OPPOSITE_MAJOR_FRAGMENT_ID_FIELD_NUMBER = 1;
+    private int oppositeMajorFragmentId_;
+    /**
+     * <code>optional int32 opposite_major_fragment_id = 1;</code>
+     */
+    public boolean hasOppositeMajorFragmentId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int32 opposite_major_fragment_id = 1;</code>
+     */
+    public int getOppositeMajorFragmentId() {
+      return oppositeMajorFragmentId_;
+    }
+
+    // repeated int32 incoming_minor_fragment = 2 [packed = true];
+    public static final int INCOMING_MINOR_FRAGMENT_FIELD_NUMBER = 2;
+    private java.util.List<java.lang.Integer> incomingMinorFragment_;
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getIncomingMinorFragmentList() {
+      return incomingMinorFragment_;
+    }
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    public int getIncomingMinorFragmentCount() {
+      return incomingMinorFragment_.size();
+    }
+    /**
+     * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+     */
+    public int getIncomingMinorFragment(int index) {
+      return incomingMinorFragment_.get(index);
+    }
+    private int incomingMinorFragmentMemoizedSerializedSize = -1;
+
+    // optional bool supports_out_of_order = 3;
+    public static final int SUPPORTS_OUT_OF_ORDER_FIELD_NUMBER = 3;
+    private boolean supportsOutOfOrder_;
+    /**
+     * <code>optional bool supports_out_of_order = 3;</code>
+     */
+    public boolean hasSupportsOutOfOrder() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bool supports_out_of_order = 3;</code>
+     */
+    public boolean getSupportsOutOfOrder() {
+      return supportsOutOfOrder_;
+    }
+
+    // optional bool is_spooling = 4;
+    public static final int IS_SPOOLING_FIELD_NUMBER = 4;
+    private boolean isSpooling_;
+    /**
+     * <code>optional bool is_spooling = 4;</code>
+     */
+    public boolean hasIsSpooling() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bool is_spooling = 4;</code>
+     */
+    public boolean getIsSpooling() {
+      return isSpooling_;
+    }
+
+    private void initFields() {
+      oppositeMajorFragmentId_ = 0;
+      incomingMinorFragment_ = java.util.Collections.emptyList();
+      supportsOutOfOrder_ = false;
+      isSpooling_ = false;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, oppositeMajorFragmentId_);
+      }
+      if (getIncomingMinorFragmentList().size() > 0) {
+        output.writeRawVarint32(18);
+        output.writeRawVarint32(incomingMinorFragmentMemoizedSerializedSize);
+      }
+      for (int i = 0; i < incomingMinorFragment_.size(); i++) {
+        output.writeInt32NoTag(incomingMinorFragment_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(3, supportsOutOfOrder_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBool(4, isSpooling_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, oppositeMajorFragmentId_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < incomingMinorFragment_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeInt32SizeNoTag(incomingMinorFragment_.get(i));
+        }
+        size += dataSize;
+        if (!getIncomingMinorFragmentList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        incomingMinorFragmentMemoizedSerializedSize = dataSize;
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, supportsOutOfOrder_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(4, isSpooling_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.Collector parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.BitControl.Collector prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.bit.control.Collector}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.CollectorOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_Collector_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_Collector_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.BitControl.Collector.class, org.apache.drill.exec.proto.BitControl.Collector.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.BitControl.Collector.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        oppositeMajorFragmentId_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        incomingMinorFragment_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        supportsOutOfOrder_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        isSpooling_ = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_Collector_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.Collector getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.BitControl.Collector.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.BitControl.Collector build() {
+        org.apache.drill.exec.proto.BitControl.Collector result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.Collector buildPartial() {
+        org.apache.drill.exec.proto.BitControl.Collector result = new org.apache.drill.exec.proto.BitControl.Collector(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.oppositeMajorFragmentId_ = oppositeMajorFragmentId_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          incomingMinorFragment_ = java.util.Collections.unmodifiableList(incomingMinorFragment_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.incomingMinorFragment_ = incomingMinorFragment_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.supportsOutOfOrder_ = supportsOutOfOrder_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.isSpooling_ = isSpooling_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.BitControl.Collector) {
+          return mergeFrom((org.apache.drill.exec.proto.BitControl.Collector)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.BitControl.Collector other) {
+        if (other == org.apache.drill.exec.proto.BitControl.Collector.getDefaultInstance()) return this;
+        if (other.hasOppositeMajorFragmentId()) {
+          setOppositeMajorFragmentId(other.getOppositeMajorFragmentId());
+        }
+        if (!other.incomingMinorFragment_.isEmpty()) {
+          if (incomingMinorFragment_.isEmpty()) {
+            incomingMinorFragment_ = other.incomingMinorFragment_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureIncomingMinorFragmentIsMutable();
+            incomingMinorFragment_.addAll(other.incomingMinorFragment_);
+          }
+          onChanged();
+        }
+        if (other.hasSupportsOutOfOrder()) {
+          setSupportsOutOfOrder(other.getSupportsOutOfOrder());
+        }
+        if (other.hasIsSpooling()) {
+          setIsSpooling(other.getIsSpooling());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.BitControl.Collector parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.BitControl.Collector) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int32 opposite_major_fragment_id = 1;
+      private int oppositeMajorFragmentId_ ;
+      /**
+       * <code>optional int32 opposite_major_fragment_id = 1;</code>
+       */
+      public boolean hasOppositeMajorFragmentId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 opposite_major_fragment_id = 1;</code>
+       */
+      public int getOppositeMajorFragmentId() {
+        return oppositeMajorFragmentId_;
+      }
+      /**
+       * <code>optional int32 opposite_major_fragment_id = 1;</code>
+       */
+      public Builder setOppositeMajorFragmentId(int value) {
+        bitField0_ |= 0x00000001;
+        oppositeMajorFragmentId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 opposite_major_fragment_id = 1;</code>
+       */
+      public Builder clearOppositeMajorFragmentId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        oppositeMajorFragmentId_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // repeated int32 incoming_minor_fragment = 2 [packed = true];
+      private java.util.List<java.lang.Integer> incomingMinorFragment_ = java.util.Collections.emptyList();
+      private void ensureIncomingMinorFragmentIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          incomingMinorFragment_ = new java.util.ArrayList<java.lang.Integer>(incomingMinorFragment_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getIncomingMinorFragmentList() {
+        return java.util.Collections.unmodifiableList(incomingMinorFragment_);
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public int getIncomingMinorFragmentCount() {
+        return incomingMinorFragment_.size();
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public int getIncomingMinorFragment(int index) {
+        return incomingMinorFragment_.get(index);
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public Builder setIncomingMinorFragment(
+          int index, int value) {
+        ensureIncomingMinorFragmentIsMutable();
+        incomingMinorFragment_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public Builder addIncomingMinorFragment(int value) {
+        ensureIncomingMinorFragmentIsMutable();
+        incomingMinorFragment_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public Builder addAllIncomingMinorFragment(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureIncomingMinorFragmentIsMutable();
+        super.addAll(values, incomingMinorFragment_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
+       */
+      public Builder clearIncomingMinorFragment() {
+        incomingMinorFragment_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+
+      // optional bool supports_out_of_order = 3;
+      private boolean supportsOutOfOrder_ ;
+      /**
+       * <code>optional bool supports_out_of_order = 3;</code>
+       */
+      public boolean hasSupportsOutOfOrder() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bool supports_out_of_order = 3;</code>
+       */
+      public boolean getSupportsOutOfOrder() {
+        return supportsOutOfOrder_;
+      }
+      /**
+       * <code>optional bool supports_out_of_order = 3;</code>
+       */
+      public Builder setSupportsOutOfOrder(boolean value) {
+        bitField0_ |= 0x00000004;
+        supportsOutOfOrder_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool supports_out_of_order = 3;</code>
+       */
+      public Builder clearSupportsOutOfOrder() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        supportsOutOfOrder_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional bool is_spooling = 4;
+      private boolean isSpooling_ ;
+      /**
+       * <code>optional bool is_spooling = 4;</code>
+       */
+      public boolean hasIsSpooling() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bool is_spooling = 4;</code>
+       */
+      public boolean getIsSpooling() {
+        return isSpooling_;
+      }
+      /**
+       * <code>optional bool is_spooling = 4;</code>
+       */
+      public Builder setIsSpooling(boolean value) {
+        bitField0_ |= 0x00000008;
+        isSpooling_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool is_spooling = 4;</code>
+       */
+      public Builder clearIsSpooling() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        isSpooling_ = false;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.bit.control.Collector)
+    }
+
+    static {
+      defaultInstance = new Collector(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.bit.control.Collector)
   }
 
   public interface QueryContextInformationOrBuilder
@@ -7358,6 +8445,11 @@ public final class BitControl {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_PlanFragment_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_bit_control_Collector_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_bit_control_Collector_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_QueryContextInformation_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -7393,7 +8485,7 @@ public final class BitControl {
       "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013",
       "2\030.exec.bit.FragmentHandle\"G\n\023Initialize" +
       "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c" +
-      "ontrol.PlanFragment\"\314\003\n\014PlanFragment\022(\n\006" +
+      "ontrol.PlanFragment\"\374\003\n\014PlanFragment\022(\n\006" +
       "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024" +
       "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021" +
       "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025" +
@@ -7405,24 +8497,29 @@ public final class BitControl {
       "ials\030\016 \001(\0132\034.exec.shared.UserCredentials" +
       "\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001(\0132" +
       ").exec.bit.control.QueryContextInformati" +
-      "on\"c\n\027QueryContextInformation\022\030\n\020query_s" +
-      "tart_time\030\001 \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023de" +
-      "fault_schema_name\030\003 \001(\t\"f\n\017WorkQueueStat" +
-      "us\022(\n\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndp" +
-      "oint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_tim" +
-      "e\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030",
-      "\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006sende" +
-      "r\030\002 \001(\0132\030.exec.bit.FragmentHandle*\323\002\n\007Rp" +
-      "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
-      "\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_" +
-      "CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISH" +
-      "ED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT" +
-      "_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_Q" +
-      "UERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022" +
-      "\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGME" +
-      "NT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP",
-      "_QUERY_STATUS\020\016B+\n\033org.apache.drill.exec" +
-      ".protoB\nBitControlH\001"
+      "on\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.control" +
+      ".Collector\"\210\001\n\tCollector\022\"\n\032opposite_maj" +
+      "or_fragment_id\030\001 \001(\005\022#\n\027incoming_minor_f" +
+      "ragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_ord" +
+      "er\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n\027QueryCo" +
+      "ntextInformation\022\030\n\020query_start_time\030\001 \001",
+      "(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schema_" +
+      "name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n\010endpoin" +
+      "t\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014queue" +
+      "_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003\"h\n\020Fi" +
+      "nishedReceiver\022*\n\010receiver\030\001 \001(\0132\030.exec." +
+      "bit.FragmentHandle\022(\n\006sender\030\002 \001(\0132\030.exe" +
+      "c.bit.FragmentHandle*\323\002\n\007RpcType\022\r\n\tHAND" +
+      "SHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n\030REQ_INI" +
+      "TIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCEL_FRAGME" +
+      "NT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022\027\n\023REQ_F",
+      "RAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020" +
+      "REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_CANCEL\020\017" +
+      "\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\030\n\024RESP_FRAGM" +
+      "ENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023" +
+      "\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS" +
+      "\020\016B+\n\033org.apache.drill.exec.protoB\nBitCo" +
+      "ntrolH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7458,21 +8555,27 @@ public final class BitControl {
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_PlanFragment_descriptor,
-              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "LeafFragment", "Assignment", "Foreman", "MemInitial", "MemMax", "Credentials", "OptionsJson", "Context", });
-          internal_static_exec_bit_control_QueryContextInformation_descriptor =
+              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "LeafFragment", "Assignment", "Foreman", "MemInitial", "MemMax", "Credentials", "OptionsJson", "Context", "Collector", });
+          internal_static_exec_bit_control_Collector_descriptor =
             getDescriptor().getMessageTypes().get(5);
+          internal_static_exec_bit_control_Collector_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_Collector_descriptor,
+              new java.lang.String[] { "OppositeMajorFragmentId", "IncomingMinorFragment", "SupportsOutOfOrder", "IsSpooling", });
+          internal_static_exec_bit_control_QueryContextInformation_descriptor =
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_bit_control_QueryContextInformation_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_QueryContextInformation_descriptor,
               new java.lang.String[] { "QueryStartTime", "TimeZone", "DefaultSchemaName", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_WorkQueueStatus_descriptor,
               new java.lang.String[] { "Endpoint", "QueueLength", "ReportTime", });
           internal_static_exec_bit_control_FinishedReceiver_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_exec_bit_control_FinishedReceiver_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_FinishedReceiver_descriptor,

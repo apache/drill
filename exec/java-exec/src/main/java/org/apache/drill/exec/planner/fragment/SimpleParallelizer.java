@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,22 +27,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Ordering;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
+import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange.ParallelizationDependency;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
+import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -54,8 +55,12 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 /**
  * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
@@ -367,6 +372,7 @@ public class SimpleParallelizer {
             .setMinorFragmentId(minorFragmentId) //
             .setQueryId(queryId) //
             .build();
+
         PlanFragment fragment = PlanFragment.newBuilder() //
             .setForeman(foremanNode) //
             .setFragmentJson(plan) //
@@ -378,6 +384,7 @@ public class SimpleParallelizer {
             .setMemMax(wrapper.getMaxAllocation())
             .setOptionsJson(optionsData)
             .setCredentials(session.getCredentials())
+            .addAllCollector(CountRequiredFragments.getCollectors(root))
             .build();
 
         if (isRootNode) {
@@ -392,5 +399,45 @@ public class SimpleParallelizer {
     }
 
     return new QueryWorkUnit(rootOperator, rootFragment, fragments);
+  }
+
+  /**
+   * Designed to setup initial values for arriving fragment accounting.
+   */
+  private static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
+    private static final CountRequiredFragments INSTANCE = new CountRequiredFragments();
+
+    public static List<Collector> getCollectors(PhysicalOperator root) {
+      List<Collector> collectors = Lists.newArrayList();
+      root.accept(INSTANCE, collectors);
+      return collectors;
+    }
+
+    @Override
+    public Void visitReceiver(Receiver receiver, List<Collector> collectors) throws RuntimeException {
+      List<MinorFragmentEndpoint> endpoints = receiver.getProvidingEndpoints();
+      List<Integer> list = new ArrayList<>(endpoints.size());
+      for (MinorFragmentEndpoint ep : endpoints) {
+        list.add(ep.getId());
+      }
+
+
+      collectors.add(Collector.newBuilder()
+        .setIsSpooling(receiver.isSpooling())
+        .setOppositeMajorFragmentId(receiver.getOppositeMajorFragmentId())
+        .setSupportsOutOfOrder(receiver.supportsOutOfOrderExchange())
+          .addAllIncomingMinorFragment(list)
+          .build());
+      return null;
+    }
+
+    @Override
+    public Void visitOp(PhysicalOperator op, List<Collector> collectors) throws RuntimeException {
+      for (PhysicalOperator o : op) {
+        o.accept(this, collectors);
+      }
+      return null;
+    }
+
   }
 }

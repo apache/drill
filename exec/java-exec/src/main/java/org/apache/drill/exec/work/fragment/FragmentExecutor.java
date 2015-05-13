@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -53,10 +54,11 @@ public class FragmentExecutor implements Runnable {
   private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(FragmentExecutor.class);
 
   private final String fragmentName;
-  private final FragmentRoot rootOperator;
   private final FragmentContext fragmentContext;
   private final StatusReporter listener;
   private final DeferredException deferredException = new DeferredException();
+  private final PlanFragment fragment;
+  private final FragmentRoot rootOperator;
 
   private volatile RootExec root;
   private final AtomicReference<FragmentState> fragmentState = new AtomicReference<>(FragmentState.AWAITING_ALLOCATION);
@@ -65,11 +67,33 @@ public class FragmentExecutor implements Runnable {
   // Thread that is currently executing the Fragment. Value is null if the fragment hasn't started running or finished
   private final AtomicReference<Thread> myThreadRef = new AtomicReference<>(null);
 
-  public FragmentExecutor(final FragmentContext context, final FragmentRoot rootOperator,
-                          final StatusReporter listener) {
+  /**
+   * Create a FragmentExecutor where we need to parse and materialize the root operator.
+   *
+   * @param context
+   * @param fragment
+   * @param listener
+   * @param rootOperator
+   */
+  public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
+      final StatusReporter listener) {
+    this(context, fragment, listener, null);
+  }
+
+  /**
+   * Create a FragmentExecutor where we already have a root operator in memory.
+   *
+   * @param context
+   * @param fragment
+   * @param listener
+   * @param rootOperator
+   */
+  public FragmentExecutor(final FragmentContext context, final PlanFragment fragment,
+      final StatusReporter listener, final FragmentRoot rootOperator) {
     this.fragmentContext = context;
-    this.rootOperator = rootOperator;
     this.listener = listener;
+    this.fragment = fragment;
+    this.rootOperator = rootOperator;
     this.fragmentName = QueryIdHelper.getQueryIdentifier(context.getHandle());
 
     context.setExecutorState(new ExecutorStateImpl());
@@ -197,6 +221,10 @@ public class FragmentExecutor implements Runnable {
          * fragmentState might have changed even before this method is called e.g. cancel()
          */
         if (shouldContinue()) {
+          // if we didn't get the root operator when the executor was created, create it now.
+          final FragmentRoot rootOperator = this.rootOperator != null ? this.rootOperator :
+              drillbitContext.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
+
           root = ImplCreator.getExec(fragmentContext, rootOperator);
 
           clusterCoordinator.addDrillbitStatusListener(drillbitStatusListener);

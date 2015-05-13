@@ -543,6 +543,9 @@ public final class SchemaBitControl
                 if(message.hasContext())
                     output.writeObject(16, message.getContext(), org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.WRITE, false);
 
+                for(org.apache.drill.exec.proto.BitControl.Collector collector : message.getCollectorList())
+                    output.writeObject(17, collector, org.apache.drill.exec.proto.SchemaBitControl.Collector.WRITE, true);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.PlanFragment message)
             {
@@ -629,6 +632,10 @@ public final class SchemaBitControl
                             builder.setContext(input.mergeObject(org.apache.drill.exec.proto.BitControl.QueryContextInformation.newBuilder(), org.apache.drill.exec.proto.SchemaBitControl.QueryContextInformation.MERGE));
 
                             break;
+                        case 17:
+                            builder.addCollector(input.mergeObject(org.apache.drill.exec.proto.BitControl.Collector.newBuilder(), org.apache.drill.exec.proto.SchemaBitControl.Collector.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -683,6 +690,7 @@ public final class SchemaBitControl
                 case 14: return "credentials";
                 case 15: return "optionsJson";
                 case 16: return "context";
+                case 17: return "collector";
                 default: return null;
             }
         }
@@ -708,6 +716,139 @@ public final class SchemaBitControl
             fieldMap.put("credentials", 14);
             fieldMap.put("optionsJson", 15);
             fieldMap.put("context", 16);
+            fieldMap.put("collector", 17);
+        }
+    }
+
+    public static final class Collector
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitControl.Collector.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitControl.Collector.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitControl.Collector.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitControl.Collector.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.Collector>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.Collector message) throws java.io.IOException
+            {
+                if(message.hasOppositeMajorFragmentId())
+                    output.writeInt32(1, message.getOppositeMajorFragmentId(), false);
+                for(int incomingMinorFragment : message.getIncomingMinorFragmentList())
+                    output.writeInt32(2, incomingMinorFragment, true);
+                if(message.hasSupportsOutOfOrder())
+                    output.writeBool(3, message.getSupportsOutOfOrder(), false);
+                if(message.hasIsSpooling())
+                    output.writeBool(4, message.getIsSpooling(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.Collector message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.Collector.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.Collector.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.Collector> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.Collector message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitControl.Collector newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.Collector.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.Collector.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setOppositeMajorFragmentId(input.readInt32());
+                            break;
+                        case 2:
+                            builder.addIncomingMinorFragment(input.readInt32());
+                            break;
+                        case 3:
+                            builder.setSupportsOutOfOrder(input.readBool());
+                            break;
+                        case 4:
+                            builder.setIsSpooling(input.readBool());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.Collector.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitControl.Collector.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.Collector.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.Collector.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.Collector.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.Collector.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.Collector.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "oppositeMajorFragmentId";
+                case 2: return "incomingMinorFragment";
+                case 3: return "supportsOutOfOrder";
+                case 4: return "isSpooling";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("oppositeMajorFragmentId", 1);
+            fieldMap.put("incomingMinorFragment", 2);
+            fieldMap.put("supportsOutOfOrder", 3);
+            fieldMap.put("isSpooling", 4);
         }
     }
 
