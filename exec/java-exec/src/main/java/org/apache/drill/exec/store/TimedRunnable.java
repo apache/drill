@@ -44,12 +44,14 @@ public abstract class TimedRunnable<V> implements Runnable {
   private static long TIMEOUT_PER_RUNNABLE_IN_MSECS = 15000;
 
   private volatile Exception e;
+  private volatile long threadStart;
   private volatile long timeNanos;
   private volatile V value;
 
   @Override
   public final void run() {
     long start = System.nanoTime();
+    threadStart=start;
     try{
       value = runInner();
     }catch(Exception e){
@@ -62,6 +64,9 @@ public abstract class TimedRunnable<V> implements Runnable {
   protected abstract V runInner() throws Exception ;
   protected abstract IOException convertToIOException(Exception e);
 
+  public long getThreadStart(){
+    return threadStart;
+  }
   public long getTimeSpentNanos(){
     return timeNanos;
   }
@@ -111,7 +116,7 @@ public abstract class TimedRunnable<V> implements Runnable {
    */
   public static <V> List<V> run(final String activity, final Logger logger, final List<TimedRunnable<V>> runnables, int parallelism) throws IOException {
     Stopwatch watch = new Stopwatch().start();
-
+    long timedRunnableStart=System.nanoTime();
     if(runnables.size() == 1){
       parallelism = 1;
       runnables.get(0).run();
@@ -158,6 +163,10 @@ public abstract class TimedRunnable<V> implements Runnable {
     long sum = 0;
     long max = 0;
     long count = 0;
+    // measure thread creation times
+    long earliestStart=Long.MAX_VALUE;
+    long latestStart=0;
+    long totalStart=0;
     IOException excep = null;
     for(final TimedRunnable<V> reader : runnables){
       try{
@@ -165,6 +174,9 @@ public abstract class TimedRunnable<V> implements Runnable {
         sum += reader.getTimeSpentNanos();
         count++;
         max = Math.max(max, reader.getTimeSpentNanos());
+        earliestStart=Math.min(earliestStart, reader.getThreadStart() - timedRunnableStart);
+        latestStart=Math.max(latestStart, reader.getThreadStart()-timedRunnableStart);
+        totalStart+=latestStart=Math.max(latestStart, reader.getThreadStart()-timedRunnableStart);
       }catch(IOException e){
         if(excep == null){
           excep = e;
@@ -176,11 +188,16 @@ public abstract class TimedRunnable<V> implements Runnable {
 
     if(logger.isInfoEnabled()){
       double avg = (sum/1000.0/1000.0)/(count*1.0d);
+      double avgStart = (totalStart/1000.0)/(count*1.0d);
 
       logger.info(
           String.format("%s: Executed %d out of %d using %d threads. "
               + "Time: %dms total, %fms avg, %dms max.",
               activity, count, runnables.size(), parallelism, watch.elapsed(TimeUnit.MILLISECONDS), avg, max/1000/1000));
+      logger.info(
+              String.format("%s: Executed %d out of %d using %d threads. "
+                              + "Earliest start: %f \u03BCs, Latest start: %f \u03BCs, Average start: %f \u03BCs .",
+                      activity, count, runnables.size(), parallelism, earliestStart/1000.0, latestStart/1000.0, avgStart));
     }
 
     if(excep != null) {
