@@ -128,7 +128,8 @@
     display: block;
   }
   table.intro {
-    width: 768px;
+    width: 100%;
+    background: none;
   }
   
   img {
