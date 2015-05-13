@@ -104,6 +104,20 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     createAndAddWorkspace(fs, "drillTestGrp1_700", "/drillTestGrp1_700", (short)0700, user1, group1, workspaces);
   }
 
+  @Test // DRILL-3037
+  public void testImpersonatingProcessUser() throws Exception {
+    updateClient(processUser);
+
+    // Process user start the mini dfs, he has read/write permissions by default
+    final String viewName = String.format("%s.drillTestGrp0_700.testView", MINIDFS_STORAGE_PLUGIN_NAME);
+    try {
+      test("CREATE VIEW " + viewName + " AS SELECT * FROM cp.`region.json`");
+      test("SELECT * FROM " + viewName + " LIMIT 2");
+    } finally {
+      test("DROP VIEW " + viewName);
+    }
+  }
+
   @Test
   public void testShowFilesInWSWithUserAndGroupPermissionsForQueryUser() throws Exception {
     updateClient(user1);

@@ -73,6 +73,11 @@ public class ImpersonationUtil {
         throw new DrillRuntimeException("Invalid value for proxy user name");
       }
 
+      // If the request proxy user is same as process user name, return the process UGI.
+      if (proxyUserName.equals(getProcessUserName())) {
+        return getProcessUserUGI();
+      }
+
       return UserGroupInformation.createProxyUser(proxyUserName, UserGroupInformation.getLoginUser());
     } catch(IOException e) {
       final String errMsg = "Failed to create proxy user UserGroupInformation object: " + e.getMessage();

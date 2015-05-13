@@ -41,7 +41,23 @@ public class BaseTestImpersonation extends PlanTestBase {
   protected static Configuration conf;
   protected static String miniDfsStoragePath;
 
+  /**
+   * Start a MiniDFS cluster backed Drillbit cluster with impersonation enabled.
+   * @param testClass
+   * @throws Exception
+   */
   protected static void startMiniDfsCluster(String testClass) throws Exception {
+    startMiniDfsCluster(testClass, true);
+  }
+
+  /**
+   * Start a MiniDFS cluster backed Drillbit cluster
+   * @param testClass
+   * @param isImpersonationEnabled Enable impersonation in the cluster?
+   * @throws Exception
+   */
+  protected static void startMiniDfsCluster(
+      final String testClass, final boolean isImpersonationEnabled) throws Exception {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(testClass), "Expected a non-null and non-empty test class name");
     conf = new Configuration();
 
@@ -50,9 +66,11 @@ public class BaseTestImpersonation extends PlanTestBase {
     miniDfsStoragePath = System.getProperty("java.io.tmpdir") + Path.SEPARATOR + testClass;
     conf.set("hdfs.minidfs.basedir", miniDfsStoragePath);
 
-    // Set the proxyuser settings so that the user who is running the Drillbits/MiniDfs can impersonate other users.
-    conf.set(String.format("hadoop.proxyuser.%s.hosts", processUser), "*");
-    conf.set(String.format("hadoop.proxyuser.%s.groups", processUser), "*");
+    if (isImpersonationEnabled) {
+      // Set the proxyuser settings so that the user who is running the Drillbits/MiniDfs can impersonate other users.
+      conf.set(String.format("hadoop.proxyuser.%s.hosts", processUser), "*");
+      conf.set(String.format("hadoop.proxyuser.%s.groups", processUser), "*");
+    }
 
     // Start the MiniDfs cluster
     dfsCluster = new MiniDFSCluster.Builder(conf)
@@ -61,7 +79,7 @@ public class BaseTestImpersonation extends PlanTestBase {
         .build();
 
     final Properties props = cloneDefaultTestConfigProperties();
-    props.setProperty(ExecConstants.IMPERSONATION_ENABLED, "true");
+    props.setProperty(ExecConstants.IMPERSONATION_ENABLED, Boolean.toString(isImpersonationEnabled));
 
     updateTestCluster(1, DrillConfig.create(props));
   }
