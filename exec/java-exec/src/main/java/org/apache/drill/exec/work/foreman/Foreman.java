@@ -109,7 +109,7 @@ public class Foreman implements Runnable {
   private static final org.slf4j.Logger queryLogger = org.slf4j.LoggerFactory.getLogger("query.logger");
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(Foreman.class);
-  private static final int RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
+  private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
 
   private final QueryId queryId;
   private final RunQuery queryRequest;

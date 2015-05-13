@@ -100,4 +100,16 @@ public class TestTimedRunnable extends DrillTest {
         containsString("Waited for 93750ms, but tasks for 'Execution with some tasks triggering timeout' are not " +
             "complete. Total runnable size 100, parallelism 16."));
   }
+
+  @Test
+  public void withManyTasks() throws Exception {
+
+    List<TimedRunnable<TestTask>> tasks = Lists.newArrayList();
+
+    for (int i = 0; i < 150000; i++) {
+      tasks.add(new TestTask(0));
+    }
+
+    TimedRunnable.run("Execution with lots of tasks", logger, tasks, 16);
+  }
 }

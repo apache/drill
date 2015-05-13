@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
  */
 public abstract class TimedRunnable<V> implements Runnable {
 
-  private static int TIMEOUT_PER_RUNNABLE_IN_MSECS = 15000;
+  private static long TIMEOUT_PER_RUNNABLE_IN_MSECS = 15000;
 
   private volatile Exception e;
   private volatile long timeNanos;
