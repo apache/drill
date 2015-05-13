@@ -83,6 +83,11 @@ public class DataTunnel {
       sendingSemaphore.acquire();
       manager.runCommand(b);
     }catch(final InterruptedException e){
+      // Release the buffers first before informing the listener about the interrupt.
+      for(ByteBuf buffer : batch.getBuffers()) {
+        buffer.release();
+      }
+
       outcomeListener.interrupted(e);
 
       // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
