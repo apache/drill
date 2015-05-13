@@ -289,7 +289,7 @@ public class TopLevelAllocator implements BufferAllocator {
           if (!child.isClosed()) {
             StringBuilder sb = new StringBuilder();
             StackTraceElement[] elements = children.get(child);
-            for (int i = 3; i < elements.length; i++) {
+            for (int i = 1; i < elements.length; i++) {
               sb.append("\t\t");
               sb.append(elements[i]);
               sb.append("\n");

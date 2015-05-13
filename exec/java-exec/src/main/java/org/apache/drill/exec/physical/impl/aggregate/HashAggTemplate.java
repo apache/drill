@@ -128,34 +128,41 @@ public abstract class HashAggTemplate implements HashAggregator {
     private BatchHolder() {
 
       aggrValuesContainer = new VectorContainer();
+      boolean success = false;
+      try {
+        ValueVector vector;
 
-      ValueVector vector;
+        for (int i = 0; i < materializedValueFields.length; i++) {
+          MaterializedField outputField = materializedValueFields[i];
+          // Create a type-specific ValueVector for this value
+          vector = TypeHelper.getNewVector(outputField, allocator);
 
-      for (int i = 0; i < materializedValueFields.length; i++) {
-        MaterializedField outputField = materializedValueFields[i];
-        // Create a type-specific ValueVector for this value
-        vector = TypeHelper.getNewVector(outputField, allocator);
+          // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
+          // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
+          // BatchHolders. Whenever a BatchHolder in HashAgg reaches its capacity, a new BatchHolder is added to
+          // HashTable. If HashAgg can't store BATCH_SIZE records in a BatchHolder, it leaves empty slots in current
+          // BatchHolder in HashTable, causing the HashTable to be space inefficient. So it is better to allocate space
+          // to fit as close to as BATCH_SIZE records.
+          if (vector instanceof FixedWidthVector) {
+            ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
+          } else if (vector instanceof VariableWidthVector) {
+            ((VariableWidthVector) vector).allocateNew(HashTable.VARIABLE_WIDTH_VECTOR_SIZE * HashTable.BATCH_SIZE,
+                HashTable.BATCH_SIZE);
+          } else if (vector instanceof ObjectVector) {
+            ((ObjectVector) vector).allocateNew(HashTable.BATCH_SIZE);
+          } else {
+            vector.allocateNew();
+          }
 
-        // Try to allocate space to store BATCH_SIZE records. Key stored at index i in HashTable has its workspace
-        // variables (such as count, sum etc) stored at index i in HashAgg. HashTable and HashAgg both have
-        // BatchHolders. Whenever a BatchHolder in HashAgg reaches its capacity, a new BatchHolder is added to
-        // HashTable. If HashAgg can't store BATCH_SIZE records in a BatchHolder, it leaves empty slots in current
-        // BatchHolder in HashTable, causing the HashTable to be space inefficient. So it is better to allocate space
-        // to fit as close to as BATCH_SIZE records.
-        if (vector instanceof FixedWidthVector) {
-          ((FixedWidthVector) vector).allocateNew(HashTable.BATCH_SIZE);
-        } else if (vector instanceof VariableWidthVector) {
-          ((VariableWidthVector) vector).allocateNew(HashTable.VARIABLE_WIDTH_VECTOR_SIZE * HashTable.BATCH_SIZE,
-              HashTable.BATCH_SIZE);
-        } else if (vector instanceof ObjectVector) {
-          ((ObjectVector) vector).allocateNew(HashTable.BATCH_SIZE);
-        } else {
-          vector.allocateNew();
+          capacity = Math.min(capacity, vector.getValueCapacity());
+
+          aggrValuesContainer.add(vector);
         }
-
-        capacity = Math.min(capacity, vector.getValueCapacity());
-
-        aggrValuesContainer.add(vector);
+        success = true;
+      } finally {
+        if (!success) {
+          aggrValuesContainer.clear();
+        }
       }
     }
 

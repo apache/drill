@@ -123,27 +123,38 @@ public abstract class HashTableTemplate implements HashTable {
       this.batchIndex = idx;
 
       htContainer = new VectorContainer();
-      for (VectorWrapper<?> w : htContainerOrig) {
-        ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
+      boolean success = false;
+      try {
+        for (VectorWrapper<?> w : htContainerOrig) {
+          ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
 
-        // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
-        // "key" vectors to store as close to as BATCH_SIZE records. A new BatchHolder is created when either BATCH_SIZE
-        // records are inserted or "key" vectors ran out of space. Allocating too less space for "key" vectors will
-        // result in unused space in "hashValues" and "links" vectors in the BatchHolder. Also for each new
-        // BatchHolder we create a SV4 vector of BATCH_SIZE in HashJoinHelper.
-        if (vv instanceof FixedWidthVector) {
-          ((FixedWidthVector) vv).allocateNew(BATCH_SIZE);
-        } else if (vv instanceof VariableWidthVector) {
-          ((VariableWidthVector) vv).allocateNew(VARIABLE_WIDTH_VECTOR_SIZE, BATCH_SIZE);
-        } else {
-          vv.allocateNew();
+          // Capacity for "hashValues" and "links" vectors is BATCH_SIZE records. It is better to allocate space for
+          // "key" vectors to store as close to as BATCH_SIZE records. A new BatchHolder is created when either BATCH_SIZE
+          // records are inserted or "key" vectors ran out of space. Allocating too less space for "key" vectors will
+          // result in unused space in "hashValues" and "links" vectors in the BatchHolder. Also for each new
+          // BatchHolder we create a SV4 vector of BATCH_SIZE in HashJoinHelper.
+          if (vv instanceof FixedWidthVector) {
+            ((FixedWidthVector) vv).allocateNew(BATCH_SIZE);
+          } else if (vv instanceof VariableWidthVector) {
+            ((VariableWidthVector) vv).allocateNew(VARIABLE_WIDTH_VECTOR_SIZE, BATCH_SIZE);
+          } else {
+            vv.allocateNew();
+          }
+
+          htContainer.add(vv);
         }
 
-        htContainer.add(vv);
+        links = allocMetadataVector(HashTable.BATCH_SIZE, EMPTY_SLOT);
+        hashValues = allocMetadataVector(HashTable.BATCH_SIZE, 0);
+        success = true;
+      } finally {
+        if (!success) {
+          htContainer.clear();
+          if (links != null) {
+            links.clear();
+          }
+        }
       }
-
-      links = allocMetadataVector(HashTable.BATCH_SIZE, EMPTY_SLOT);
-      hashValues = allocMetadataVector(HashTable.BATCH_SIZE, 0);
     }
 
     private void init(IntVector links, IntVector hashValues, int size) {

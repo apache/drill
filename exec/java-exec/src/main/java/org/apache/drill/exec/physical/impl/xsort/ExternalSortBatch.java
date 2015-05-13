@@ -149,27 +149,30 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   @Override
   public void close() {
-    if (batchGroups != null) {
-      for (BatchGroup group: batchGroups) {
-        try {
-          group.cleanup();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
+    try {
+      if (batchGroups != null) {
+        for (BatchGroup group: batchGroups) {
+          try {
+            group.cleanup();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
         }
       }
+    } finally {
+      if (builder != null) {
+        builder.clear();
+        builder.close();
+      }
+      if (sv4 != null) {
+        sv4.clear();
+      }
+      if (copier != null) {
+        copier.cleanup();
+      }
+      copierAllocator.close();
+      super.close();
     }
-    if (builder != null) {
-      builder.clear();
-      builder.close();
-    }
-    if (sv4 != null) {
-      sv4.clear();
-    }
-    if (copier != null) {
-      copier.cleanup();
-    }
-    copierAllocator.close();
-    super.close();
   }
 
   @Override

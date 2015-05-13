@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -74,21 +76,30 @@ public class ImplCreator {
     final ImplCreator creator = new ImplCreator();
     Stopwatch watch = new Stopwatch();
     watch.start();
-    final RootExec rootExec = creator.getRootExec(root, context);
 
-    // skip over this for SimpleRootExec (testing)
-    if (rootExec instanceof BaseRootExec) {
-      ((BaseRootExec) rootExec).setOperators(creator.getOperators());
+    boolean success = false;
+    try {
+      final RootExec rootExec = creator.getRootExec(root, context);
+      // skip over this for SimpleRootExec (testing)
+      if (rootExec instanceof BaseRootExec) {
+        ((BaseRootExec) rootExec).setOperators(creator.getOperators());
+      }
+
+      logger.debug("Took {} ms to create RecordBatch tree", watch.elapsed(TimeUnit.MILLISECONDS));
+      if (rootExec == null) {
+        throw new ExecutionSetupException(
+            "The provided fragment did not have a root node that correctly created a RootExec value.");
+      }
+
+      success = true;
+      return rootExec;
+    } finally {
+      if (!success) {
+        for(final CloseableRecordBatch crb : creator.getOperators()) {
+          AutoCloseables.close(crb, logger);
+        }
+      }
     }
-
-    logger.debug("Took {} ms to create RecordBatch tree", watch.elapsed(TimeUnit.MILLISECONDS));
-    if (rootExec == null) {
-      throw new ExecutionSetupException(
-          "The provided fragment did not have a root node that correctly created a RootExec value.");
-    }
-
-    return rootExec;
-
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */

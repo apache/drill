@@ -39,7 +39,7 @@ public class AutoCloseables {
     try {
       ac.close();
     } catch(Exception e) {
-      logger.info("Failure on close(): " + e);
+      logger.warn("Failure on close(): " + e);
     }
   }
 }
