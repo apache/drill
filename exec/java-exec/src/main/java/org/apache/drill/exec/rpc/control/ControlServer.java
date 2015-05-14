@@ -69,6 +69,7 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
 
   @Override
   public ControlConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
     return new ControlConnection("control server", channel, this, allocator);
   }
 

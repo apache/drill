@@ -19,23 +19,24 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import org.eclipse.jetty.io.Connection;
 
-public class RpcExceptionHandler implements ChannelHandler{
+public class RpcExceptionHandler<C extends RemoteConnection> implements ChannelHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcExceptionHandler.class);
 
-  private final String name;
+  private final C connection;
 
-  public RpcExceptionHandler(String name) {
-    this.name = name;
+  public RpcExceptionHandler(C connection){
+    this.connection = connection;
   }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if(!ctx.channel().isOpen() || cause.getMessage().equals("Connection reset by peer")){
-      logger.warn("Exception occurred with closed channel.  Connection: {}", name, cause);
+      logger.warn("Exception occurred with closed channel.  Connection: {}", connection.getName(), cause);
       return;
     }else{
-      logger.error("Exception in RPC communication.  Connection: {}.  Closing connection.", name, cause);
+      logger.error("Exception in RPC communication.  Connection: {}.  Closing connection.", connection.getName(), cause);
       ctx.close();
     }
   }

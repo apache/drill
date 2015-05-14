@@ -85,11 +85,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
             if (rpcMapping.hasTimeout()) {
               pipe.addLast(TIMEOUT_HANDLER,
-                  new LogggingReadTimeoutHandler(connection.getName(), rpcMapping.getTimeout()));
+                  new LogggingReadTimeoutHandler(connection, rpcMapping.getTimeout()));
             }
 
             pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler(connection.getName()));
+            pipe.addLast("exception-handler", new RpcExceptionHandler(connection));
 
             connect = true;
 //            logger.debug("Server connection initialization completed.");
@@ -101,19 +101,19 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 //     }
   }
 
-  private class LogggingReadTimeoutHandler extends ReadTimeoutHandler {
+  private class LogggingReadTimeoutHandler<C extends RemoteConnection> extends ReadTimeoutHandler {
 
-    private final String name;
+    private final C connection;
     private final int timeoutSeconds;
-    public LogggingReadTimeoutHandler(String name, int timeoutSeconds) {
+    public LogggingReadTimeoutHandler(C connection, int timeoutSeconds) {
       super(timeoutSeconds);
-      this.name = name;
+      this.connection = connection;
       this.timeoutSeconds = timeoutSeconds;
     }
 
     @Override
     protected void readTimedOut(ChannelHandlerContext ctx) throws Exception {
-      logger.info("RPC connection {} timed out.  Timeout was set to {} seconds. Closing connection.", name,
+      logger.info("RPC connection {} timed out.  Timeout was set to {} seconds. Closing connection.", connection.getName(),
           timeoutSeconds);
       super.readTimedOut(ctx);
     }
@@ -178,6 +178,8 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
   @Override
   public C initRemoteConnection(SocketChannel channel) {
+    local = channel.localAddress();
+    remote = channel.remoteAddress();
     return null;
   }
 

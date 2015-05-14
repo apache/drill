@@ -175,6 +175,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   public UserClientConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
     return new UserClientConnection(channel);
   }
 

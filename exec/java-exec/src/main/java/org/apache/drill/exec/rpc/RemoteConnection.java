@@ -33,7 +33,8 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
   private final Channel channel;
   private final WriteManager writeManager;
-  private final String name;
+  private String name;
+  private final String clientName;
 
   public boolean inEventLoop(){
     return channel.eventLoop().inEventLoop();
@@ -42,7 +43,7 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
   public RemoteConnection(SocketChannel channel, String name) {
     super();
     this.channel = channel;
-    this.name = String.format("%s <--> %s (%s)", channel.localAddress(), channel.remoteAddress(), name);
+    this.clientName = name;
     this.writeManager = new WriteManager();
     channel.pipeline().addLast(new BackPressureHandler());
     channel.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
@@ -57,6 +58,9 @@ public abstract class RemoteConnection implements ConnectionThrottle, AutoClosea
   }
 
   public String getName() {
+    if(name == null){
+      name = String.format("%s <--> %s (%s)", channel.localAddress(), channel.remoteAddress(), clientName);
+    }
     return name;
   }
 

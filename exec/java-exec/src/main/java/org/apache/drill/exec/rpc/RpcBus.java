@@ -29,6 +29,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -67,8 +68,17 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   protected final RpcConfig rpcConfig;
 
+  protected volatile SocketAddress local;
+  protected volatile SocketAddress remote;
+
+
   public RpcBus(RpcConfig rpcConfig) {
     this.rpcConfig = rpcConfig;
+  }
+
+  protected void setAddresses(SocketAddress remote, SocketAddress local){
+    this.remote = remote;
+    this.local = local;
   }
 
   <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
@@ -133,21 +143,27 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   public class ChannelClosedHandler implements GenericFutureListener<ChannelFuture> {
 
-    final InetSocketAddress local;
-    final InetSocketAddress remote;
     final C clientConnection;
+    private final Channel channel;
 
-    public ChannelClosedHandler(C clientConnection, InetSocketAddress local, InetSocketAddress remote) {
-      this.local = local;
-      this.remote = remote;
+    public ChannelClosedHandler(C clientConnection, Channel channel) {
+      this.channel = channel;
       this.clientConnection = clientConnection;
     }
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      String msg = String.format("Channel closed %s <--> %s.", local, remote);
+      String msg;
+      if(local!=null) {
+        msg = String.format("Channel closed %s <--> %s.", local, remote);
+      }else{
+        msg = String.format("Channel closed %s <--> %s.", future.channel().localAddress(), future.channel().remoteAddress());
+      }
+
       if (RpcBus.this.isClient()) {
-        logger.info(String.format(msg));
+        if(local != null) {
+          logger.info(String.format(msg));
+        }
       } else {
         queue.channelClosed(new ChannelClosedException(msg));
       }
@@ -158,7 +174,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   }
 
   protected GenericFutureListener<ChannelFuture> getCloseHandler(SocketChannel channel, C clientConnection) {
-    return new ChannelClosedHandler(clientConnection, channel.localAddress(), channel.remoteAddress());
+    return new ChannelClosedHandler(clientConnection, channel);
   }
 
   private class ResponseSenderImpl implements ResponseSender {

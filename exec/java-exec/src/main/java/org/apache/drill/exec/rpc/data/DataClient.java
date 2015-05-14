@@ -56,6 +56,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
 
   @Override
   public DataClientConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
     this.connection = new DataClientConnection(channel, this);
     return connection;
   }

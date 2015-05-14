@@ -77,6 +77,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   @Override
   public BitServerConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
     return new BitServerConnection(channel, context.getAllocator());
   }
 

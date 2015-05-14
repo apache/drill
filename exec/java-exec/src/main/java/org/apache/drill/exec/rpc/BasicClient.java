@@ -33,6 +33,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import java.net.SocketAddress;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +47,7 @@ import com.google.protobuf.Parser;
 
 public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection, HANDSHAKE_SEND extends MessageLite, HANDSHAKE_RESPONSE extends MessageLite>
     extends RpcBus<T, R> {
-  final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClient.class);
 
   // The percentage of time that should pass before sending a ping message to ensure server doesn't time us out. For
   // example, if timeout is set to 30 seconds and we set percentage to 0.5, then if no write has happened within 15
@@ -101,7 +102,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             }
 
             pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler(connection.getName()));
+            pipe.addLast("exception-handler", new RpcExceptionHandler(connection));
           }
         }); //
 
@@ -109,6 +110,12 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     // b.option(EpollChannelOption.SO_REUSEPORT, true); //
     // }
   }
+
+  public R initRemoteConnection(SocketChannel channel){
+    local=channel.localAddress();
+    remote=channel.remoteAddress();
+    return null;
+  };
 
   private static final OutboundRpcMessage PING_MESSAGE = new OutboundRpcMessage(RpcMode.PING, 0, 0, Acks.OK);
 
@@ -200,12 +207,14 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
         // So there is no point propagating the interruption as failure immediately.
         long remainingWaitTimeMills = 120000;
         long startTime = System.currentTimeMillis();
-
         // logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
         while(true) {
           try {
             future.get(remainingWaitTimeMills, TimeUnit.MILLISECONDS);
             if (future.isSuccess()) {
+              SocketAddress remote = future.channel().remoteAddress();
+              SocketAddress local = future.channel().localAddress();
+              setAddresses(remote, local);
               // send a handshake on the current thread. This is the only time we will send from within the event thread.
               // We can do this because the connection will not be backed up.
               send(handshakeSendHandler, connection, handshakeType, handshakeValue, responseClass, true);

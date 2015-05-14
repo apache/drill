@@ -40,7 +40,7 @@ import com.google.protobuf.MessageLite;
 
 public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake>{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
 
   private final ControlMessageHandler handler;
   private final DrillbitEndpoint remoteEndpoint;
@@ -66,6 +66,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   @SuppressWarnings("unchecked")
   @Override
   public ControlConnection initRemoteConnection(SocketChannel channel) {
+    super.initRemoteConnection(channel);
     this.connection = new ControlConnection("control client", channel,
         (RpcBus<RpcType, ControlConnection>) (RpcBus<?, ?>) this, allocator);
     return connection;
