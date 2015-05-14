@@ -22,9 +22,22 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
 | CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR*** | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647. | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
-\* In this release, the NUMERIC data type is an alias for the DECIMAL data type.  
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.
 \*\* Not currently supported.  
 \*\*\* Currently, Drill supports only variable-length strings.  
+
+## Enabling the DECIMAL Type
+
+To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`. Enable the DECIMAL data type if performance is not an issue.
+
+     ALTER SYSTEM SET `planner.enable_decimal_data_type` = true;
+
+     +------------+------------+
+     |     ok     |  summary   |
+     +------------+------------+
+     | true       | planner.enable_decimal_data_type updated. |
+     +------------+------------+
+     1 row selected (1.191 seconds)
 
 ## Casting and Converting Data Types
 

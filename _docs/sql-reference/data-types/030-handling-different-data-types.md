@@ -11,8 +11,7 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
 ## Handling JSON and Parquet Data
 Complex and nested data structures in JSON and Parquet files are of map and array types.
 
-A map is a set of name/value pairs. A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map.
-An array is a repeated list of values. A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
+A map is a set of name/value pairs. A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map. An array is a repeated list of values. A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
 
 Drill reads/writes maps and arrays from/to JSON and Parquet files. In Drill, you do not cast a map or array to another type.
 
@@ -58,15 +57,15 @@ The following example shows a JSON array having complex type values:
 
 ## Reading numbers of different types from JSON
 
-The `store.json.read_numbers_as_double` and `store.json.all_text_mode` system/session options control how Drill implicitly casts JSON data. By default, when reading numerical values from a JSON file, Drill implicitly casts a number to the DOUBLE or BIGINT type depending on the presence or absence a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error. By default, Drill reads numbers without decimal point as BIGINT values by default. The range of BIGINT is -9223372036854775808 to 9223372036854775807. A BIGINT result outside this range produces an error. 
+The `store.json.read_numbers_as_double` and `store.json.all_text_mode` system/session options control how Drill implicitly casts JSON data. By default, when reading numerical values from a JSON file, Drill implicitly casts a number to the DOUBLE or BIGINT type depending on the presence or absence of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error. By default, Drill reads numbers without decimal point as BIGINT values. The range of BIGINT is -9223372036854775808 to 9223372036854775807. A BIGINT result outside this range produces an error. 
 
-To prevent Drill from attempting to read such data, set `store.json.read_numbers_as_double` or `store.json.all_text_mode` to true. Using `store.json.all_text_mode` set to true, Drill implicitly casts JSON data to VARCHAR. You need to cast the VARCHAR values to other types you want the returned data to represent. Using `store.json.read_numbers_as_double` set to true, Drill casts numbers in the JSON file to DOUBLE. You need to cast the DOUBLE to any other types of numbers, such as FLOAT and INTEGER, you want the returned data to represent. Using `store.json.read_numbers_as_double` typically involves less casting on your part than using `store.json.all_text_mode`.
+To prevent Drill from attempting to read such data, set `store.json.read_numbers_as_double` or `store.json.all_text_mode` to true. Using `store.json.all_text_mode` set to true, Drill implicitly casts JSON data to VARCHAR. You need to cast the VARCHAR values to other types. Using `store.json.read_numbers_as_double` set to true, Drill implicitly casts numbers in the JSON file to DOUBLE. You need to cast the DOUBLE type to other types, such as FLOAT and INTEGER. Using `store.json.read_numbers_as_double` typically involves less explicit casting than using `store.json.all_text_mode` because you can often use the numerical data as is (DOUBLE).
 
 ## Guidelines for Using Float and Double
 
 FLOAT and DOUBLE yield approximate results. These are variable-precision numeric types. Drill does not cast/convert all values precisely to the internal format, but instead stores approximations. Slight differences can occur in the value stored and retrieved. The following guidelines are recommended:
 
-* For conversions involving monetary calculations, for example, that require precise results use the decimal type instead of float or double.
+* For conversions involving monetary calculations, for example, that require precise results use the DECIMAL type instead of FLOAT or DOUBLE. In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. [Enable the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type)) if performance is not an issue.
 * For complex calculations or mission-critical applications, especially those involving infinity and underflow situations, carefully consider the limitations of type casting that involves FLOAT or DOUBLE.
 * Equality comparisons between floating-point values can produce unexpected results.
 
