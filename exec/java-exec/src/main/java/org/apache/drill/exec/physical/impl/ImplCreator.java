@@ -77,7 +77,6 @@ public class ImplCreator {
     Stopwatch watch = new Stopwatch();
     watch.start();
 
-    boolean success = false;
     try {
       final RootExec rootExec = creator.getRootExec(root, context);
       // skip over this for SimpleRootExec (testing)
@@ -91,15 +90,15 @@ public class ImplCreator {
             "The provided fragment did not have a root node that correctly created a RootExec value.");
       }
 
-      success = true;
       return rootExec;
-    } finally {
-      if (!success) {
-        for(final CloseableRecordBatch crb : creator.getOperators()) {
-          AutoCloseables.close(crb, logger);
-        }
+    } catch(Exception e) {
+      context.fail(e);
+      for(final CloseableRecordBatch crb : creator.getOperators()) {
+        AutoCloseables.close(crb, logger);
       }
     }
+
+    return null;
   }
 
   /** Create RootExec and its children (RecordBatches) for given FragmentRoot */

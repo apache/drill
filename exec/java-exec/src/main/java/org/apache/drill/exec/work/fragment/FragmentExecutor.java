@@ -226,6 +226,9 @@ public class FragmentExecutor implements Runnable {
               drillbitContext.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
 
           root = ImplCreator.getExec(fragmentContext, rootOperator);
+          if (root == null) {
+            return;
+          }
 
           clusterCoordinator.addDrillbitStatusListener(drillbitStatusListener);
           updateState(FragmentState.RUNNING);
