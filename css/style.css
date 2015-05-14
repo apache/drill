@@ -824,3 +824,31 @@ li p {
 .int_text table-bordered tbody>tr:last-child>td{border-bottom-width:0}
 .int_text table-horizontal td, .int_text table-horizontal th{border-width:0 0 1px;border-bottom:1px solid #cbcbcb}
 .int_text table-horizontal tbody>tr:last-child>td{border-bottom-width:0}
+
+
+div.alertbar{
+  line-height:1;
+  text-align: center;
+}
+
+div.alertbar div{
+  display: inline-block;
+  vertical-align: middle;
+  padding:0 10px;
+}
+
+div.alertbar div:nth-child(2){
+  border-right:solid 1px #cc9;
+}
+
+div.alertbar div.news{
+  font-weight:bold;
+}
+
+div.alertbar a{
+  
+}
+div.alertbar div span{
+  font-size:65%;
+  color:#aa7;
+}

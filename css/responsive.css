@@ -191,18 +191,21 @@
   }
   #header .scroller .item div.headlines .btn { font-size: 16px; }
 
-  div.alertbar .hor-bar:after {
-    content: "";
-  }
   div.alertbar {
     text-align: left;
-    padding-left: 25px;
+    padding:0 25px;
   }
-  div.alertbar a {
-    display:block;
-  }
-  div.alertbar span.strong {
+  div.alertbar div {
     display: block;
+    padding:10px 0;
+  }
+  div.alertbar div:nth-child(1){
+    border-right:none;
+    border-bottom:solid 1px #cc9;
+  }
+  div.alertbar div:nth-child(2){
+    border-right:none;
+    border-bottom:solid 1px #cc9;
   }
   table.intro {
     width: 100%;
