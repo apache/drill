@@ -33,6 +33,7 @@
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
+    <forkCount>2</forkCount>
     <parquet.version>1.6.0rc3-drill-r0.3</parquet.version>
   </properties>
 
@@ -370,7 +371,7 @@
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
               -XX:+CMSClassUnloadingEnabled -ea</argLine>
-            <forkCount>1C</forkCount>
+            <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
               <additionalClasspathElement>./exec/jdbc/src/test/resources/storage-plugins.json</additionalClasspathElement>
