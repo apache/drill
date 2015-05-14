@@ -28,7 +28,7 @@ JSON data consists of the following types:
 * Value: a string, number, true, false, null
 * Whitespace: used between tokens
 
-The following table shows SQL-JSON data type mapping, assuming you use the default `all_text_mode` option setting, false: 
+The following table shows SQL-JSON data type mapping: 
 
 | SQL Type | JSON Type | Description                                                                                   |
 |----------|-----------|-----------------------------------------------------------------------------------------------|
@@ -37,16 +37,23 @@ The following table shows SQL-JSON data type mapping, assuming you use the defau
 | DOUBLE   | Numeric   | Number having a decimal point in JSON, 8-byte double precision floating point number in Drill |
 | VARCHAR  | String    | Character string of variable length                                                           |
 
-Drill does not support JSON lists of different types. For example, JSON does not enforce types or distinguish between integers and floating point values. When reading numerical values from a JSON file, Drill distinguishes integers from floating point numbers by the presence or lack of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error.
+By default, Drill does not support JSON lists of different types. For example, JSON does not enforce types or distinguish between integers and floating point values. When reading numerical values from a JSON file, Drill distinguishes integers from floating point numbers by the presence or lack of a decimal point. If some numbers in a JSON map or array appear with and without a decimal point, such as 0 and 0.0, Drill throws a schema change error. You use the following options to read JSON lists of different types:
+
+* `store.json.read_numbers_as_double`  
+  Reads numbers from JSON files with or without a decimal point as DOUBLE.
+* `store.json.all_text_mode`
+  Reads all data from JSON files as VARCHAR.
+
+The following session/system options for `store.json.all_text_mode` and `store.json.read_numbers_as_double` options is false. Enable the latter if the JSON contains integers and floating point numbers. Using either option prevents schema errors, but using `store.json.read_numbers_as_double` has an advantage over `store.json.all_text_mode`: You do not have to cast every number from VARCHAR to DOUBLE or BIGINT when you query the JSON file.
 
 ### Handling Type Differences
-Use the all text mode to prevent the schema change error that occurs from when a JSON list includes different types, as described in the previous section. Set the `store.json.all_text_mode` property to true.
+Set the `store.json.read_numbers_as_double` property to true.
 
-    ALTER SYSTEM SET `store.json.all_text_mode` = true;
+    ALTER SYSTEM SET `store.json.read_numbers_as_double` = true;
 
-When you set this option, Drill reads all data from the JSON files as VARCHAR. After reading the data, use a SELECT statement in Drill to cast data as follows:
+When you set this option, Drill reads all numbers from the JSON files as DOUBLE. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
-* Cast JSON values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, DECIMAL, FLOAT, and INTEGER.
+* Cast JSON values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, FLOAT, and INTEGER.
 * Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/supported-date-time-data-type-formats).
 
 Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
@@ -472,9 +479,9 @@ Drill cannot read JSON files containing changes in the schema. For example, atte
 
 Drill interprets numbers that do not have a decimal point as BigInt values. In this example, Drill recognizes the first two coordinates as doubles and the third coordinate as a BigInt, which causes an error. 
                 
-Workaround: Set the `store.json.all_text_mode` property, described earlier, to true.
+Workaround: Set the `store.json.read_numbers_as_double` property, described earlier, to true.
 
-    ALTER SYSTEM SET `store.json.all_text_mode` = true;
+    ALTER SYSTEM SET `store.json.read_numbers_as_double` = true;
 
 ### Selecting all in a JSON directory query
 Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/querying-directories) that selects all (SELECT *) JSON files.
