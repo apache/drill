@@ -39,7 +39,9 @@ bin=`cd "$bin">/dev/null; pwd`
 # is.) 
 # Put our property specification before previous value of DRILL_SHELL_JAVA_OPTS
 # so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
-DRILL_SHELL_JAVA_OPTS="-Dsqlline.isolation=TRANSACTION_NONE $DRILL_SHELL_JAVA_OPTS"
+#
+# This is not currently needed as the new SQLLine we are using doesn't isolate.
+# DRILL_SHELL_JAVA_OPTS="-Dsqlline.isolation=TRANSACTION_NONE $DRILL_SHELL_JAVA_OPTS"
 
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json"
 
