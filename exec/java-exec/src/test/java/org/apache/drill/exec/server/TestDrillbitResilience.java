@@ -48,10 +48,13 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator.SingleSenderRootExec;
+import org.apache.drill.exec.physical.impl.filter.FilterRecordBatch;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionerDecorator;
+import org.apache.drill.exec.physical.impl.union.UnionAllRecordBatch;
 import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
+import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -682,14 +685,19 @@ public class TestDrillbitResilience extends DrillTest {
    * Given a set of controls, this method ensures TEST_QUERY fails with the given class and desc.
    */
   private static void assertFailsWithException(final String controls, final Class<? extends Throwable> exceptionClass,
-                                               final String exceptionDesc) {
+                                               final String exceptionDesc, final String query) {
     setControls(controls);
     final WaitUntilCompleteListener listener = new WaitUntilCompleteListener();
-    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, TEST_QUERY, listener);
+    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, query, listener);
     final Pair<QueryState, Exception> result = listener.waitForCompletion();
     final QueryState state = result.getFirst();
     assertTrue(String.format("Query state should be FAILED (and not %s).", state), state == QueryState.FAILED);
     assertExceptionInjected(result.getSecond(), exceptionClass, exceptionDesc);
+  }
+
+  private static void assertFailsWithException(final String controls, final Class<? extends Throwable> exceptionClass,
+      final String exceptionDesc) {
+    assertFailsWithException(controls, exceptionClass, exceptionDesc, TEST_QUERY);
   }
 
   @Test // Completion TC 2: failed query - before query is executed - while sql parsing
@@ -790,5 +798,47 @@ public class TestDrillbitResilience extends DrillTest {
     final String control =
         createPauseInjection(SingleSenderRootExec.class, "data-tunnel-send-batch-wait-for-interrupt", 1);
     assertCancelled(control, TEST_QUERY, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+  }
+
+  @Test // DRILL-3065
+  public void testInterruptingAfterMSorterSorting() {
+    final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
+    Class<? extends Exception> typeOfException = RuntimeException.class;
+
+    final long before = countAllocatedMemory();
+    final String controls = createSingleException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SORT, typeOfException);
+    assertFailsWithException(controls, typeOfException, ExternalSortBatch.INTERRUPTION_AFTER_SORT, query);
+
+    final long after = countAllocatedMemory();
+    assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
+  }
+
+  @Test // DRILL-3085
+  public void testInterruptingAfterMSorterSetup() {
+    final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
+    Class<? extends Exception> typeOfException = RuntimeException.class;
+
+    final long before = countAllocatedMemory();
+    final String controls = createSingleException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SETUP, typeOfException);
+    assertFailsWithException(controls, typeOfException, ExternalSortBatch.INTERRUPTION_AFTER_SETUP, query);
+
+    final long after = countAllocatedMemory();
+    assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
+  }
+
+  private long countAllocatedMemory() {
+    // wait to make sure all fragments finished cleaning up
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      // just ignore
+    }
+
+    long allocated = 0;
+    for (String name : drillbits.keySet()) {
+      allocated += drillbits.get(name).getContext().getAllocator().getAllocatedMemory();
+    }
+
+    return allocated;
   }
 }

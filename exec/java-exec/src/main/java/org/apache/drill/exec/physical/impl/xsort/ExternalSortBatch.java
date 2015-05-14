@@ -63,6 +63,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.ischema.Records;
+import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -111,6 +112,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private int targetRecordCount;
   private final String fileName;
   private int firstSpillBatchCount = 0;
+
+  public static final String INTERRUPTION_AFTER_SORT = "after-sort";
+  public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
+  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ExternalSortBatch.class);
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, true);
@@ -172,6 +177,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
       copierAllocator.close();
       super.close();
+
+      if(mSorter != null) {
+        mSorter.clear();
+      }
     }
   }
 
@@ -366,12 +375,18 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         sv4 = builder.getSv4();
         mSorter = createNewMSorter();
         mSorter.setup(context, oContext.getAllocator(), getSelectionVector4(), this.container);
+
+        // For testing memory-leak purpose, inject exception after mSorter finishes setup
+        injector.injectUnchecked(context.getExecutionControls(), INTERRUPTION_AFTER_SETUP);
         mSorter.sort(this.container);
 
         // sort may have prematurely exited due to should continue returning false.
         if (!context.shouldContinue()) {
           return IterOutcome.STOP;
         }
+
+        // For testing memory-leak purpose, inject exception after mSorter finishes sorting
+        injector.injectUnchecked(context.getExecutionControls(), INTERRUPTION_AFTER_SORT);
         sv4 = mSorter.getSV4();
 
         long t = watch.elapsed(TimeUnit.MICROSECONDS);

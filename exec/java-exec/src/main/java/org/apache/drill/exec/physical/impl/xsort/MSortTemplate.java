@@ -171,6 +171,17 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     return doEval(sv1, sv2);
   }
 
+  @Override
+  public void clear() {
+    if(vector4 != null) {
+      vector4.clear();
+    }
+
+    if(aux != null) {
+      aux.clear();
+    }
+  }
+
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
 

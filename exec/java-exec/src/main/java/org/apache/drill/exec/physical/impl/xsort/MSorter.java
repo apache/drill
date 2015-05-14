@@ -33,4 +33,5 @@ public interface MSorter {
 
   public static TemplateClassDefinition<MSorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<MSorter>(MSorter.class, MSortTemplate.class);
 
+  public void clear();
 }
