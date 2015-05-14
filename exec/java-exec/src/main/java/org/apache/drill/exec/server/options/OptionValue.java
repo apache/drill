@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Preconditions;
 
 @JsonInclude(Include.NON_NULL)
-public class OptionValue {
+public class OptionValue implements Comparable<OptionValue> {
 
   public static enum OptionType {
     BOOT, SYSTEM, SESSION, QUERY
@@ -176,6 +176,11 @@ public class OptionValue {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public int compareTo(OptionValue o) {
+    return this.name.compareTo(o.name);
   }
 
   @Override
