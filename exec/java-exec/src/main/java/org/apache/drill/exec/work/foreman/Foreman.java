@@ -493,7 +493,7 @@ public class Foreman implements Runnable {
             .resourceError()
             .message(
                 "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
-                queueTimeout / 1000, queueName)
+                queueName, queueTimeout / 1000)
             .build();
       }
 
