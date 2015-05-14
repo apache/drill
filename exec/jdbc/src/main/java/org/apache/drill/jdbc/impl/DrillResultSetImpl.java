@@ -31,6 +31,7 @@ import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -63,7 +64,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   public SchemaChangeListener changeListener;
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
-  public final ResultsListener resultsListener = new ResultsListener();
+  public final ResultsListener resultsListener;
   private final DrillClient client;
   // (Public until JDBC impl. classes moved out of published-intf. package. (DRILL-2089).)
   // TODO:  Resolve:  Since is barely manipulated here in DrillResultSetImpl,
@@ -77,6 +78,10 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
                             ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
     super(statement, prepareResult, resultSetMetaData, timeZone);
     this.statement = statement;
+    final int batchQueueThrottlingThreshold =
+        this.getStatement().getConnection().getClient().getConfig().getInt(
+            ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
+    resultsListener = new ResultsListener( batchQueueThrottlingThreshold );
     DrillConnection c = (DrillConnection) statement.getConnection();
     DrillClient client = c.getClient();
     currentBatch = new RecordBatchLoader(client.getAllocator());
@@ -188,11 +193,12 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   public static class ResultsListener implements UserResultsListener {
     private static final Logger logger = getLogger( ResultsListener.class );
 
-    private static final int THROTTLING_QUEUE_SIZE_THRESHOLD = 100;
     private static volatile int nextInstanceId = 1;
 
     /** (Just for logging.) */
     private final int instanceId;
+
+    private final int batchQueueThrottlingThreshold;
 
     /** (Just for logging.) */
     private volatile QueryId queryId;
@@ -225,8 +231,14 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
         Queues.newLinkedBlockingDeque();
 
 
-    ResultsListener() {
+    /**
+     * ...
+     * @param  batchQueueThrottlingThreshold
+     *         queue size threshold for throttling server
+     */
+    ResultsListener( int batchQueueThrottlingThreshold ) {
       instanceId = nextInstanceId++;
+      this.batchQueueThrottlingThreshold = batchQueueThrottlingThreshold;
       logger.debug( "[#{}] Query listener created.", instanceId );
     }
 
@@ -245,7 +257,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     }
 
     /**
-     * Stops throttling if currently active.
+     * Stops throttling if currently throttling.
      * @return  true if actually stopped (was throttling)
      */
     private boolean stopThrottlingIfSo() {
@@ -300,7 +312,9 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
 
       // We're active; let's add to the queue.
       batchQueue.add(result);
-      if (batchQueue.size() >= THROTTLING_QUEUE_SIZE_THRESHOLD - 1) {
+
+      // Throttle server if queue size has exceed threshold.
+      if (batchQueue.size() > batchQueueThrottlingThreshold ) {
         if ( startThrottlingIfNot( throttle ) ) {
           logger.debug( "[#{}] Throttling started at queue size {}.",
                         instanceId, batchQueue.size() );

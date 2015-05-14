@@ -87,6 +87,9 @@ public interface ExecConstants {
   public static final String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
   public static final String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
   public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
+  /** Size of JDBC batch queue (in batches) above which throttling begins. */
+  public static final String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
+      "drill.jdbc.batch_queue_throttling_threshold";
 
   /**
    * Currently if a query is cancelled, but one of the fragments reports the status as FAILED instead of CANCELLED or
