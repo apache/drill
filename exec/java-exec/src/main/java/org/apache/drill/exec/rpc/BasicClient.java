@@ -196,16 +196,15 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
       public void operationComplete(ChannelFuture future) throws Exception {
         boolean isInterrupted = false;
 
-        final long timeoutMills = 30000;
-
-        // We want to wait for at least 30 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
+        // We want to wait for at least 120 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
         // So there is no point propagating the interruption as failure immediately.
-        final long targetMillis = System.currentTimeMillis() + timeoutMills;
+        long remainingWaitTimeMills = 120000;
+        long startTime = System.currentTimeMillis();
 
         // logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
         while(true) {
           try {
-            future.get(timeoutMills, TimeUnit.MILLISECONDS);
+            future.get(remainingWaitTimeMills, TimeUnit.MILLISECONDS);
             if (future.isSuccess()) {
               // send a handshake on the current thread. This is the only time we will send from within the event thread.
               // We can do this because the connection will not be backed up.
@@ -216,14 +215,16 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             // logger.debug("Handshake queued for send.");
             break;
           } catch (final InterruptedException interruptEx) {
-            // Ignore the interrupt and continue to wait until targetMillis has elapsed.
+            remainingWaitTimeMills -= (System.currentTimeMillis() - startTime);
+            startTime = System.currentTimeMillis();
             isInterrupted = true;
-            final long wait = targetMillis - System.currentTimeMillis();
-            if (wait < 1) {
+            if (remainingWaitTimeMills < 1) {
               l.connectionFailed(FailureType.CONNECTION, interruptEx);
               break;
             }
+            // Ignore the interrupt and continue to wait until we elapse remainingWaitTimeMills.
           } catch (final Exception ex) {
+            logger.error("Failed to establish connection", ex);
             l.connectionFailed(FailureType.CONNECTION, ex);
             break;
           }

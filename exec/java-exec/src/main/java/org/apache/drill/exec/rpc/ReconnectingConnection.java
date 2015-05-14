@@ -104,15 +104,15 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
     public void waitAndRun() {
       boolean isInterrupted = false;
 
-      final long timeoutMills = 30000;
-      // We want to wait for at least 30 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
+      // We want to wait for at least 120 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
       // So there is no point propagating the interruption as failure immediately.
-      final long targetMillis = System.currentTimeMillis() + timeoutMills;
+      long remainingWaitTimeMills = 120000;
+      long startTime = System.currentTimeMillis();
 
       while(true) {
         try {
           //        logger.debug("Waiting for connection.");
-          CONNECTION_TYPE connection = this.get(timeoutMills, TimeUnit.MILLISECONDS);
+          CONNECTION_TYPE connection = this.get(remainingWaitTimeMills, TimeUnit.MILLISECONDS);
 
           if (connection == null) {
             //          logger.debug("Connection failed.");
@@ -123,15 +123,18 @@ public abstract class ReconnectingConnection<CONNECTION_TYPE extends RemoteConne
           }
           break;
         } catch (final InterruptedException interruptEx) {
-          // Ignore the interrupt and continue to wait until targetMillis has elapsed.
+          remainingWaitTimeMills -= (System.currentTimeMillis() - startTime);
+          startTime = System.currentTimeMillis();
           isInterrupted = true;
-          final long wait = targetMillis - System.currentTimeMillis();
-          if (wait < 1) {
+          if (remainingWaitTimeMills < 1) {
             cmd.connectionFailed(FailureType.CONNECTION, interruptEx);
             break;
           }
+          // Ignore the interrupt and continue to wait until we elapse remainingWaitTimeMills.
         } catch (final ExecutionException | TimeoutException ex) {
+          logger.error("Failed to establish connection", ex);
           cmd.connectionFailed(FailureType.CONNECTION, ex);
+          break;
         }
       }
 
