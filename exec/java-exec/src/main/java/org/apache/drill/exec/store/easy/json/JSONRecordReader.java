@@ -55,6 +55,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final DrillFileSystem fileSystem;
   private JsonProcessor jsonReader;
   private int recordCount;
+  private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;
   private OperatorContext operatorContext;
   private final boolean enableAllTextMode;
@@ -154,10 +155,14 @@ public class JSONRecordReader extends AbstractRecordReader {
     if (columnNr > 0) {
       exceptionBuilder.pushContext("Column ", columnNr);
     }
-    exceptionBuilder.pushContext("Record ", recordCount + 1)
+    exceptionBuilder.pushContext("Record ", currentRecordNumberInFile())
             .pushContext("File ", hadoopPath.toUri().getPath());
 
     throw exceptionBuilder.build();
+  }
+
+  private long currentRecordNumberInFile() {
+    return runningRecordCount + recordCount + 1;
   }
 
   @Override
@@ -189,6 +194,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 //      p.stop();
 //      System.out.println(String.format("Wrote %d records in %dms.", recordCount, p.elapsed(TimeUnit.MILLISECONDS)));
 
+      updateRunningCount();
 
       return recordCount;
 
@@ -197,6 +203,10 @@ public class JSONRecordReader extends AbstractRecordReader {
     }
     // this is never reached
     return 0;
+  }
+
+  private void updateRunningCount() {
+    runningRecordCount += recordCount;
   }
 
   @Override
