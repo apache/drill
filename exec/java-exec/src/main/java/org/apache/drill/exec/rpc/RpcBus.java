@@ -31,12 +31,14 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
@@ -203,8 +205,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         logger.debug("Received message {}", msg);
       }
       final Channel channel = connection.getChannel();
+      final Stopwatch watch = new Stopwatch().start();
 
       try{
+
         switch (msg.mode) {
         case REQUEST: {
           // handle message and ack.
@@ -270,6 +274,13 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           throw new UnsupportedOperationException();
         }
       } finally {
+        long time = watch.elapsed(TimeUnit.MILLISECONDS);
+        long delayThreshold = Integer.parseInt(System.getProperty("drill.exec.rpcDelayWarning", "500"));
+        if (time > delayThreshold) {
+          logger.warn(String.format(
+              "Message of mode %s of rpc type %d took longer than %dms.  Actual duration was %dms.",
+              msg.mode, msg.rpcType, delayThreshold, time));
+        }
         msg.release();
       }
     }
