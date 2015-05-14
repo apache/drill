@@ -205,7 +205,7 @@ public class Foreman implements Runnable {
     // resume all pauses through query context
     queryContext.getExecutionControls().unpauseAll();
     // resume all pauses through all fragment contexts
-    queryManager.unpauseExecutingFragments(drillbitContext, rootRunner);
+    queryManager.unpauseExecutingFragments(drillbitContext);
   }
 
   /**
@@ -810,7 +810,7 @@ public class Foreman implements Runnable {
           assert exception == null;
           queryManager.markEndTime();
           recordNewState(QueryState.CANCELLATION_REQUESTED);
-          queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
+          queryManager.cancelExecutingFragments(drillbitContext);
           foremanResult.setCompleted(QueryState.CANCELED);
           /*
            * We don't close the foremanResult until we've gotten
@@ -833,7 +833,7 @@ public class Foreman implements Runnable {
           assert exception != null;
           queryManager.markEndTime();
           recordNewState(QueryState.FAILED);
-          queryManager.cancelExecutingFragments(drillbitContext, rootRunner);
+          queryManager.cancelExecutingFragments(drillbitContext);
           foremanResult.setFailed(exception);
           foremanResult.close();
           return;
@@ -934,7 +934,8 @@ public class Foreman implements Runnable {
 
     queryManager.addFragmentStatusTracker(rootFragment, true);
 
-    rootRunner = new FragmentExecutor(rootContext, rootFragment, queryManager.newRootStatusHandler(rootContext),
+    rootRunner = new FragmentExecutor(rootContext, rootFragment,
+        queryManager.newRootStatusHandler(rootContext, drillbitContext),
         rootOperator);
     final RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
 

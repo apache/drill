@@ -43,6 +43,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.PStore;
@@ -53,6 +54,7 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
+import org.apache.drill.exec.work.fragment.NonRootStatusReporter;
 import org.apache.drill.exec.work.fragment.StatusReporter;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
@@ -176,17 +178,15 @@ public class QueryManager {
 
   /**
    * Stop all fragments with currently *known* active status (active as in SENDING, AWAITING_ALLOCATION, RUNNING).
-   * (1) Root fragment
-   *    (a) If the root is pending, delegate the cancellation to local work bus.
-   *    (b) If the root is running, cancel the fragment directly.
    *
    * For the actual cancel calls for intermediate and leaf fragments, see
    * {@link org.apache.drill.exec.work.batch.ControlMessageHandler#cancelFragment}
+   * (1) Root fragment: pending or running, send the cancel signal through a tunnel.
    * (2) Intermediate fragment: pending or running, send the cancel signal through a tunnel (for local and remote
    *    fragments). The actual cancel is done by delegating the cancel to the work bus.
    * (3) Leaf fragment: running, send the cancel signal through a tunnel. The cancel is done directly.
    */
-  void cancelExecutingFragments(final DrillbitContext drillbitContext, final FragmentExecutor rootRunner) {
+  void cancelExecutingFragments(final DrillbitContext drillbitContext) {
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       switch(data.getState()) {
@@ -194,19 +194,10 @@ public class QueryManager {
       case AWAITING_ALLOCATION:
       case RUNNING:
         final FragmentHandle handle = data.getHandle();
-        if (rootRunner.getContext().getHandle().equals(handle)) {
-          // Case 1.a: pending root is in the work bus. Delegate the cancel to the work bus.
-          final boolean removed = drillbitContext.getWorkBus().cancelAndRemoveFragmentManagerIfExists(handle);
-          // Case 1.b: running root. Cancel directly.
-          if (!removed) {
-            rootRunner.cancel();
-          }
-        } else {
-          final DrillbitEndpoint endpoint = data.getEndpoint();
-          // TODO is the CancelListener redundant? Does the FragmentStatusListener get notified of the same?
-          controller.getTunnel(endpoint).cancelFragment(new SignalListener(endpoint, handle,
+        final DrillbitEndpoint endpoint = data.getEndpoint();
+        // TODO is the CancelListener redundant? Does the FragmentStatusListener get notified of the same?
+        controller.getTunnel(endpoint).cancelFragment(new SignalListener(endpoint, handle,
             SignalListener.Signal.CANCEL), handle);
-        }
         break;
 
       case FINISHED:
@@ -221,13 +212,9 @@ public class QueryManager {
 
   /**
    * Sends a resume signal to all fragments, regardless of their state, since the fragment might have paused before
-   * sending any message. Resume the root fragment directly and all other (local and remote) fragments through the
-   * control tunnel.
+   * sending any message. Resume all fragments through the control tunnel.
    */
-  void unpauseExecutingFragments(final DrillbitContext drillbitContext, final FragmentExecutor rootRunner) {
-    if (rootRunner != null) {
-      rootRunner.unpause();
-    }
+  void unpauseExecutingFragments(final DrillbitContext drillbitContext) {
     final Controller controller = drillbitContext.getController();
     for(final FragmentData data : fragmentDataSet) {
       final DrillbitEndpoint endpoint = data.getEndpoint();
@@ -447,19 +434,9 @@ public class QueryManager {
     }
   }
 
-  public StatusReporter newRootStatusHandler(final FragmentContext context) {
-    return new RootStatusReporter(context);
-  }
-
-  private class RootStatusReporter extends AbstractStatusReporter {
-    private RootStatusReporter(final FragmentContext context) {
-      super(context);
-    }
-
-    @Override
-    protected void statusChange(final FragmentHandle handle, final FragmentStatus status) {
-      fragmentStatusListener.statusUpdate(status);
-    }
+  public StatusReporter newRootStatusHandler(final FragmentContext context, final DrillbitContext dContext) {
+    final ControlTunnel tunnel = dContext.getController().getTunnel(foreman.getQueryContext().getCurrentEndpoint());
+    return new NonRootStatusReporter(context, tunnel);
   }
 
   public FragmentStatusListener getFragmentStatusListener(){
