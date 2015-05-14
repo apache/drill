@@ -245,6 +245,21 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
+      <source>src/resources/drill-conf</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-embedded</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/drill-localhost</source>
+      <fileMode>0755</fileMode>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-config.sh</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
@@ -264,7 +279,7 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill_dumpcat</source>
+      <source>src/resources/dumpcat</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
