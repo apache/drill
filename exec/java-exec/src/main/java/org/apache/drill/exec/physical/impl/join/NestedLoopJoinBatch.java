@@ -39,6 +39,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.server.options.DrillConfigIterator.Iter;
 import org.apache.drill.exec.vector.AllocationHelper;
 
 import com.google.common.base.Preconditions;
@@ -143,6 +144,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
       // exit if we have an empty left batch
       if (leftUpstream == IterOutcome.NONE) {
+        // inform upstream that we don't need anymore data and make sure we clean up any batches already in queue
+        killAndDrainRight();
         return IterOutcome.NONE;
       }
 
@@ -191,6 +194,23 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     logger.debug("Number of records emitted: " + outputRecords);
 
     return (outputRecords > 0) ? IterOutcome.OK : IterOutcome.NONE;
+  }
+
+  private void killAndDrainRight() {
+    if (!hasMore(rightUpstream)) {
+      return;
+    }
+    right.kill(true);
+    while (hasMore(rightUpstream)) {
+      for (VectorWrapper<?> wrapper : right) {
+        wrapper.getValueVector().clear();
+      }
+      rightUpstream = next(HashJoinHelper.RIGHT_INPUT, right);
+    }
+  }
+
+  private boolean hasMore(IterOutcome outcome) {
+    return outcome == IterOutcome.OK || outcome == IterOutcome.OK_NEW_SCHEMA;
   }
 
   /**
