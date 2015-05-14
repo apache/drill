@@ -12,7 +12,7 @@ Semi-structured JSON data often consists of complex, nested elements having sche
 
 Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table. 
 
-Drill 0.8 and higher can [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files. 
+You can also [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files. 
 
 In addition to the examples presented later in this section, see ["How to Analyze Highly Dynamic Datasets with Apache Drill"](https://www.mapr.com/blog/how-analyze-highly-dynamic-datasets-apache-drill) for information about how to analyze a JSON data set.
 
@@ -56,7 +56,7 @@ When you set this option, Drill reads all numbers from the JSON files as DOUBLE.
 * Cast JSON values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, FLOAT, and INTEGER.
 * Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/supported-date-time-data-type-formats).
 
-Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql). “Query Complex Data” shows how to access nested arrays.
+Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
 
 ## Reading JSON
 To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/connect-to-a-data-source) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 

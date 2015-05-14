@@ -142,12 +142,11 @@ In this scenario, you learned how to configure MicroStrategy Analytics Enterpris
 
 ### Certification Links
 
-MicroStrategy announced post certification of Drill 0.6 and 0.7 with MicroStrategy Analytics Enterprise 9.4.1
+* MicroStrategy certifies its analytics platform with Apache Drill: http://ir.microstrategy.com/releasedetail.cfm?releaseid=902795
 
+* http://community.microstrategy.com/t5/Database/TN225724-Post-Certification-of-MapR-Drill-0-6-and-0-7-with/ta-p/225724
 
-http://community.microstrategy.com/t5/Database/TN225724-Post-Certification-of-MapR-Drill-0-6-and-0-7-with/ta-p/225724
+* http://community.microstrategy.com/t5/Release-Notes/TN231092-Certified-Database-and-ODBC-configurations-for/ta-p/231092
 
-http://community.microstrategy.com/t5/Release-Notes/TN231092-Certified-Database-and-ODBC-configurations-for/ta-p/231092
-
-http://community.microstrategy.com/t5/Release-Notes/TN231094-Certified-Database-and-ODBC-configurations-for/ta-p/231094   
+* http://community.microstrategy.com/t5/Release-Notes/TN231094-Certified-Database-and-ODBC-configurations-for/ta-p/231094   
 

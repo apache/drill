@@ -33,7 +33,7 @@ want to scale your environment.
 
 ### Step 2 : Open the Drill tar file
 
-    tar -xvf apache-drill-0.6.0-incubating.tar
+    tar -xvf apache-drill-0.1.0.tar.gz
 
 ### Step 3: Launch SQLLine, a JDBC application that ships with Drill
 
@@ -352,8 +352,7 @@ exploring data in ways we have never seen before with SQL technologies. The
 community is working on more exciting features around nested data and
 supporting data with changing schemas in upcoming releases.
 
-As an example, a new FLATTEN function is in development (an upcoming feature
-in 0.7). This function can be used to dynamically rationalize semi-structured
+The FLATTEN function can be used to dynamically rationalize semi-structured
 data so you can apply even deeper SQL functionality. Here is a sample query:
 
 #### Get a flattened list of categories for each business

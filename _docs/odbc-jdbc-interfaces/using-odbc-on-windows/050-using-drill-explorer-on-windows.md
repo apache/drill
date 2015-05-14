@@ -39,9 +39,9 @@ Preview again.
   9. Click **Create As**.  
      The _Create As_ dialog displays.
   10. In the **Schema** field, select the schema where you want to save the view.
-      As of 0.4.0, you can only save views to file-based schemas.
+      You can save views only to file-based schemas.
   11. In the **View Name** field, enter a descriptive name for the view.
-      As of 0.4.0, do not include spaces in the view name.
+      Do not include spaces in the view name.
   12. Click **Save**.   
       The status and any error message associated with the view creation displays in
 the Create As dialog. When a view saves successfully, the Save button changes
