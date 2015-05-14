@@ -59,4 +59,20 @@ public class TestLargeInClause extends BaseTestQuery {
     test("select * from cp.`employee.json` where cast(birth_date as date) in (" + getInDateList(500) + ")");
   }
 
+  @Test // DRILL-3062
+  public void testStringLiterals() throws Exception {
+    String query = "select count(*) as cnt from (select n_name from cp.`tpch/nation.parquet` "
+        + " where n_name in ('ALGERIA', 'ARGENTINA', 'BRAZIL', 'CANADA', 'EGYPT', 'ETHIOPIA', 'FRANCE', "
+        + "'GERMANY', 'INDIA', 'INDONESIA', 'IRAN', 'IRAQ', 'JAPAN', 'JORDAN', 'KENYA', 'MOROCCO', 'MOZAMBIQUE', "
+        + "'PERU', 'CHINA', 'ROMANIA', 'SAUDI ARABIA', 'VIETNAM'))";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(22l)
+      .go();
+
+  }
+
 }

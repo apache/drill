@@ -183,7 +183,12 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
       if (isLiteralNull(literal)) {
         out.writeVarcharNull();
       }else{
-        out.writeVarChar(((NlsString)literal.getValue()).getValue());
+        // Since Calcite treats string literals as fixed char and adds trailing spaces to the strings to make them the
+        // same length, here we do an rtrim() to get the string without the trailing spaces. If we don't rtrim, the comparison
+        // with Drill's varchar column values would not return a match.
+        // TODO: However, note that if the user had explicitly added spaces in the string literals then even those would get
+        // trimmed, so this exposes another issue that needs to be resolved.
+        out.writeVarChar(((NlsString)literal.getValue()).rtrim().getValue());
       }
       return ;
 
