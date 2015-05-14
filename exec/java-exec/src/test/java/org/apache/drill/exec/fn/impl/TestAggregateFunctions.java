@@ -19,10 +19,13 @@ package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestAggregateFunctions extends BaseTestQuery {
+
+  private static final String TEST_RES_PATH =   TestTools.getWorkingPath() + "/src/test/resources";
 
   /*
    * Test checks the count of a nullable column within a map
@@ -288,5 +291,36 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(null, null, null, null, null)
         .go();
 
+  }
+
+  /*
+   * Streaming agg on top of a filter produces wrong results if the first two batches are filtered out.
+   * In the below test we have three files in the input directory and since the ordering of reading
+   * of these files may not be deterministic, we have three tests to make sure we test the case where
+   * streaming agg gets two empty batches.
+   */
+  @Test
+  public void drill3069() throws Exception {
+    final String query = "select max(foo) col1 from dfs_test.`%s/agg/bugs/drill3069` where foo = %d";
+    testBuilder()
+        .sqlQuery(String.format(query, TEST_RES_PATH, 2))
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(2l)
+        .go();
+
+    testBuilder()
+        .sqlQuery(String.format(query, TEST_RES_PATH, 4))
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(4l)
+        .go();
+
+    testBuilder()
+        .sqlQuery(String.format(query, TEST_RES_PATH, 6))
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(6l)
+        .go();
   }
 }
