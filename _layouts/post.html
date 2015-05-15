@@ -19,9 +19,9 @@ layout: default
     {% else %}
       {% assign alias = page.authors[0] %}
       {% assign author = site.data.authors[alias] %}
-      <strong>Author:</strong> {{ author.name }} ({{ author.title}}, {{ author.org}})
+      <strong>Author:</strong> {{ author.name }} ({{ author.title}}, {{ author.org}})<br />
     {% endif %}
-{% unless page.nodate %}<br/><strong>Date:</strong> {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
+{% unless page.nodate %}<strong>Date:</strong> {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
 {% if page.meta %}{{ page.meta }}{% endif %}</p>
   </header>
   <div class="addthis_sharing_toolbox"></div>

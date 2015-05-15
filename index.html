@@ -49,7 +49,7 @@ $(document).ready(function() {
         <div class="slide"><a class="various fancybox.iframe" href="//www.youtube.com/watch?v=6pGeQOXDdD8"><img src="{{ site.baseurl }}/images/thumbnail-6pGeQOXDdD8.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">High Performance with a JSON Data Model</div></div>
       </div>
       <h1 class="main-headline">Apache Drill</h1>
-      <h2 id="sub-headline">Schema-free SQL Query Engine <br class="mobile-break" /> for Hadoop and NoSQL</h2>
+      <h2 id="sub-headline">Schema-free SQL Query Engine <br class="mobile-break" /> for Hadoop, NoSQL and Cloud Storage</h2>
       <a href="{{ site.baseurl }}/download/" class="download-headline btn btn-1 btn-1c"><span>DOWNLOAD NOW</span></a>
     </div>
   </div>
@@ -66,17 +66,17 @@ $(document).ready(function() {
       <tr>
         <td class="ag">
           <h1>Agility</h1>
-          <p>Get faster insights from big data with no IT intervention</p>
+          <p>Get faster insights without the overhead (data loading, schema creation and maintenance, transformations, etc.)</p>
           <span><a href="#agility">LEARN MORE</a></span>
         </td>
         <td class="fl">
           <h1>Flexibility</h1>
-          <p>Analyze semi-structured/nested data coming from NoSQL applications</p>
+          <p>Analyze the multi-structured and nested data in non-relational datatastores directly without transforming or restricting the data</p>
           <span><a href="#flexibility">LEARN MORE</a></span>
         </td>
         <td class="fam">
           <h1>Familiarity</h1>
-          <p>Leverage existing SQL skillsets, BI tools and Apache Hive deployments</p>
+          <p>Leverage your existing SQL skillsets and BI tools including Tableau, Qlikview, MicroStrategy, Spotfire, Excel and more</p>
           <span><a href="#familiarity">LEARN MORE</a></span>
         </td>
       </tr>
@@ -85,25 +85,21 @@ $(document).ready(function() {
 </div>
 
 <div class="home_txt mw">
-  <h2>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</h2>
-  <p>Modern big data applications such as social, mobile, web and IoT deal with a larger number of users and larger amount of data than the traditional transactional applications. The datasets associated with these applications evolve rapidly, are often self-describing and can include complex types such as JSON and Parquet. Apache Drill is built from the ground up to provide low latency queries natively on such rapidly evolving multi-structured datasets at scale.</p>
+  <p>The 40-year monopoly of the relational database is over. The explosion of data in recent years and the shift towards rapid application development have led to the rise of non-relational datastores including Hadoop, NoSQL and cloud storage. Organizations are increasingly leveraging these systems for new and existing applications due to their flexibility, scalability and price advantages. Drill is built from the ground up to enable business users, analysts, data scientists and developers to explore and analyze the data in these systems while maintaining their unique agility and flexibility advantages.</p>
+
   <a name="agility" class="anchor"></a>
-  <h1>Day-zero analytics &amp; rapid<br>application development</h1>
-  <!-- <h2>Evolution towards Self-Service Data Exploration</h2> -->
-  <img src="images/home-img1.jpg" alt="Day-zero analytics & rapid application development" width="606">
+  <h1>Agility</h1>
+  <img src="images/home-img1.jpg" alt="Agility" width="606" />
 
-  <p>Apache Drill provides direct queries on self-describing and semi-structured data in files (such as JSON, Parquet) and HBase tables without needing to define and maintain schemas in a centralized store such as Hive metastore. This means that  users can explore live data on their own as it arrives versus spending weeks or months on data preparation, modeling, ETL and subsequent schema management.</p>
+  <p>Drill is unlike any other query engine. Traditional query engines demand significant IT intervention before data can be queried. Drill gets rid of all that overhead so that users can just query the raw data in-situ at record speeds. There's no need to load the data, create and maintain schemas, or transform the data before it can be processed. For example, the user can directly query Hadoop directories, MongoDB collections, S3 buckets and more. Drill leverages advanced query compilation and re-compilation techniques to maximize performance without requiring up-front schema knowledge.</p>
+  
   <a name="flexibility" class="anchor"></a>
-  <h1>Purpose-built for semi-structured/nested data</h1>
-  <!-- <h2>A Flexible Data Model for Modern Apps</h2> -->
+  <h1>Flexibility</h1>
+  <img src="images/home-img2.jpg" alt="Agility" width="635" />
 
-  <img src="images/home-img2.jpg" alt="Purpose-built for semi-structured/nested data" width="635">
-
-  <p>Drill provides a JSON-like internal data model to represent and process data. The flexibility of this data model allows Drill to query, without flattening, both simple and complex/nested data types as well as constantly changing application-driven schemas commonly seen with Hadoop/NoSQL applications. Drill also provides intuitive extensions to SQL to work with complex/nested data types.</p>
-
+  <p>Drill features a JSON data model that allows it to query, without flattening, both simple and complex/nested data as well as rapidly evolving structures commonly seen with modern applications and non-relational datastores. Drill also provides intuitive extensions to SQL to work with complex/nested data. Drill achieves high performance via an in-memory shredded columnar representation for complex data. In fact, Drill is the only columnar query engine that supports complex data.</p>
   <a name="familiarity" class="anchor"></a>
-  <h1>Compatibility with existing SQL environments<br>and Apache Hive deployments</h1>
-  <br><br>
-  <img src="images/home-img3.jpg" width="380" alt="Compatibility with existing SQL environments and Apache Hive deployments">
-  <p>With Drill, businesses can minimize switching costs and learning curves for users with the familiar ANSI SQL syntax. Analysts can continue to use familiar BI/analytics tools that assume and auto-generate ANSI SQL code to interact with Hadoop data by leveraging the standard JDBC/ODBC interfaces that Drill exposes. Users can also plug-and-play with Hive environments to enable ad-hoc low latency queries on existing Hive tables and reuse Hive's metadata, hundreds of file formats and UDFs out of the box.</p>
+  <h1>Familiarity</h1>
+  <img src="images/home-img3.jpg" alt="familiarity" width="380" />
+  <p>Drill supports standard SQL. Business users, analysts and data scientists can use standard BI/analytics tools such as Tableau, QlikView, MicroStrategy, Spotfire, SAS and Excel to interact with non-relational datastores by leveraging Drill's JDBC and ODBC drivers. Developers can leverage Drill's simple REST API in their custom applications to create beautiful visualizations based on data in their non-relational datastores. Users can also plug-and-play with Hive environments to enable ad-hoc low latency queries on existing Hive tables and reuse Hive's metadata, hundreds of file formats and UDFs out of the box.</p>
 </div>
