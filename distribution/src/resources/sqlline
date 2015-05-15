@@ -45,10 +45,14 @@ bin=`cd "$bin">/dev/null; pwd`
 
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log -Dlog.query.path=$DRILL_LOG_DIR/sqlline_queries.json"
 
+if ! $is_cygwin; then
+  DRILL_SHELL_OPTS="$DRILL_SHELL_OPTS --color=true"
+fi
+
 if [ -n "$QUERY" ] ; then
   echo $QUERY | exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}"
 elif [ -n "$FILE" ] ; then
   exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver  --maxWidth=10000 "${ARGS[@]}" --run=$FILE
 else
-  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine --color=true -d org.apache.drill.jdbc.Driver --maxWidth=10000 "${ARGS[@]}"
+  exec "$JAVA" $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver --maxWidth=10000 $DRILL_SHELL_OPTS "${ARGS[@]}"
 fi
