@@ -19,7 +19,7 @@
   </div>
   <h4>System options</h4>
   <div align="right">
-    <a href="https://cwiki.apache.org/confluence/display/DRILL/Planning+and+Execution+Options">Documentation</a>
+    <a href="http://drill.apache.org/docs/planning-and-execution-options/">Documentation</a>
   </div>
   <div class="table-responsive">
     <table class="table table-hover">

@@ -7,7 +7,7 @@ Apache Drill is a distributed MPP query layer that supports SQL and alternative 
 Please read INSTALL.md for setting up and running Apache Drill.
 
 ## More Information
-Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache Drill Wiki](https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Wiki) for more information including:
+Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache Drill Documentation](http://drill.apache.org/docs/) for more information including:
 
  * Remote Execution Installation Instructions
  * Information about how to submit logical and distributed physical plans

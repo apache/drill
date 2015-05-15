@@ -43,5 +43,4 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
     
 ## More information 
 
-For more information including how to run a Apache Drill cluster, visit the [Apache Drill Wiki](https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Wiki)
-
+For more information including how to run a Apache Drill cluster, visit the [Apache Drill Documentation](http://drill.apache.org/docs/)

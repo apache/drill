@@ -62,7 +62,7 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li><a href="/options">Options</a></li>
-              <li><a href="https://cwiki.apache.org/confluence/display/DRILL/Apache+Drill+Wiki">Wiki</a>
+              <li><a href="http://drill.apache.org/docs/">Documentation</a>
             </ul>
           </div>
         </div>
