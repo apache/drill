@@ -95,10 +95,20 @@ public class TopLevelAllocator implements BufferAllocator {
     if(!acct.reserve(min)) {
       return null;
     }
-    UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(min, max);
-    DrillBuf wrapped = new DrillBuf(this, acct, buffer);
-    acct.reserved(min, wrapped);
-    return wrapped;
+
+    try {
+      UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(min, max);
+      DrillBuf wrapped = new DrillBuf(this, acct, buffer);
+      acct.reserved(min, wrapped);
+      return wrapped;
+    } catch (OutOfMemoryError e) {
+      if ("Direct buffer memory".equals(e.getMessage())) {
+        acct.release(min);
+        return null;
+      } else {
+        throw e;
+      }
+    }
   }
 
   @Override
@@ -244,10 +254,19 @@ public class TopLevelAllocator implements BufferAllocator {
         return null;
       }
 
-      UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(size, max);
-      DrillBuf wrapped = new DrillBuf(this, childAcct, buffer);
-      childAcct.reserved(buffer.capacity(), wrapped);
-      return wrapped;
+      try {
+        UnsafeDirectLittleEndian buffer = innerAllocator.directBuffer(size, max);
+        DrillBuf wrapped = new DrillBuf(this, childAcct, buffer);
+        childAcct.reserved(buffer.capacity(), wrapped);
+        return wrapped;
+      } catch (OutOfMemoryError e) {
+        if ("Direct buffer memory".equals(e.getMessage())) {
+          childAcct.release(size);
+          return null;
+        } else {
+          throw e;
+        }
+      }
     }
 
     public DrillBuf buffer(int size) {

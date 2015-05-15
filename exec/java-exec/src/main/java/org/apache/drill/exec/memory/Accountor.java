@@ -197,6 +197,10 @@ public class Accountor {
     }
   }
 
+  void release(long size) {
+    remainder.returnAllocation(size);
+  }
+
   public void release(DrillBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
