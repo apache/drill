@@ -28,7 +28,6 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -96,20 +95,20 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
 
-    if (!allowInEventLoop) {
-      if (connection.inEventLoop()) {
-        throw new IllegalStateException("You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
-      }
-
-      if (!connection.blockOnNotWritable(listener)) {
-        return;
-      }
-    }
+    Preconditions
+        .checkArgument(
+            allowInEventLoop || !connection.inEventLoop(),
+            "You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
 
     ByteBuf pBuffer = null;
     boolean completed = false;
 
     try {
+
+      if (!allowInEventLoop && !connection.blockOnNotWritable(listener)) {
+        // if we're in not in the event loop and we're interrupted while blocking, skip sending this message.
+        return;
+      }
 
       assert !Arrays.asList(dataBodies).contains(null);
       assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
