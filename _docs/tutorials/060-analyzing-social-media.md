@@ -86,7 +86,7 @@ MicroStrategy provides an AWS instance of various sizes. It comes with a free 30
 
 To provision the MicroStrategy node in AWS:
 
-1. On the [MicroStrategy website](http://www.microstrategy.com/us/analytics/analytics-on-aws), click *Get started*.  
+1. On the [MicroStrategy website](http://www.microstrategy.com/us/analytics/analytics-on-aws), click **Get started**.  
 2. Select some number of users, for example, select 25 users.  
 3. Select the AWS region. Using a MapR node and MicroStrategy instance in the same AWS region is highly recommended.
 4. Click **Continue**.  
