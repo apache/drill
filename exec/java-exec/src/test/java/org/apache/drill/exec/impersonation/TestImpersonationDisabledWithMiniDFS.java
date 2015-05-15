@@ -46,6 +46,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
     miniDfsPluginConfig.connection = conf.get(FileSystem.FS_DEFAULT_NAME_KEY);
 
     Map<String, WorkspaceConfig> workspaces = Maps.newHashMap(lfsPluginConfig.workspaces);
+    createAndAddWorkspace(dfsCluster.getFileSystem(), "dfstemp", "/tmp", (short)0777, processUser, processUser, workspaces);
 
     miniDfsPluginConfig.workspaces = workspaces;
     miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
@@ -54,13 +55,13 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
     pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
 
     // Create test table in minidfs.tmp schema for use in test queries
-    test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test(String.format("CREATE TABLE %s.dfstemp.dfsRegion AS SELECT * FROM cp.`region.json`", MINIDFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test // DRILL-3037
   public void testSimpleQuery() throws Exception {
     final String query =
-        String.format("SELECT sales_city, sales_country FROM tmp.dfsRegion ORDER BY region_id DESC LIMIT 2");
+        String.format("SELECT sales_city, sales_country FROM dfstemp.dfsRegion ORDER BY region_id DESC LIMIT 2");
 
     testBuilder()
         .optionSettingQueriesForTestQuery(String.format("USE %s", MINIDFS_STORAGE_PLUGIN_NAME))
