@@ -230,25 +230,36 @@ public class PartitionSenderRootExec extends BaseRootExec {
     final List<Partitioner> subPartitioners = createClassInstances(actualPartitions);
     int startIndex = 0;
     int endIndex = 0;
-    for (int i = 0; i < actualPartitions; i++) {
-      startIndex = endIndex;
-      endIndex = (i < actualPartitions - 1 ) ? startIndex + divisor : outGoingBatchCount;
-      if ( i < longTail ) {
-        endIndex++;
-      }
-      final OperatorStats partitionStats = new OperatorStats(stats, true);
-      subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
-        startIndex, endIndex);
-    }
 
-    synchronized(this){
-      partitioner = new PartitionerDecorator(subPartitioners, stats, context);
-      for (int index = 0; index < terminations.size(); index++) {
-        partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
+    boolean success = false;
+    try {
+      for (int i = 0; i < actualPartitions; i++) {
+        startIndex = endIndex;
+        endIndex = (i < actualPartitions - 1) ? startIndex + divisor : outGoingBatchCount;
+        if (i < longTail) {
+          endIndex++;
+        }
+        final OperatorStats partitionStats = new OperatorStats(stats, true);
+        subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
+            startIndex, endIndex);
       }
-      terminations.clear();
-    }
 
+      synchronized (this) {
+        partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+        for (int index = 0; index < terminations.size(); index++) {
+          partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
+        }
+        terminations.clear();
+      }
+
+      success = true;
+    } finally {
+      if (!success) {
+        for (Partitioner p : subPartitioners) {
+          p.clear();
+        }
+      }
+    }
   }
 
   private List<Partitioner> createClassInstances(int actualPartitions) throws SchemaChangeException {
