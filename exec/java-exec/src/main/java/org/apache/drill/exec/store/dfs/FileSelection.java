@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -127,29 +128,30 @@ public class FileSelection {
     return statuses;
   }
 
-  public static String commonPath(FileStatus... paths){
+  private static String commonPath(FileStatus... paths) {
     String commonPath = "";
     String[][] folders = new String[paths.length][];
-    for(int i = 0; i < paths.length; i++){
+    for (int i = 0; i < paths.length; i++) {
       folders[i] = Path.getPathWithoutSchemeAndAuthority(paths[i].getPath()).toString().split("/");
     }
-    for(int j = 0; j < folders[0].length; j++){
+    for (int j = 0; j < folders[0].length; j++) {
       String thisFolder = folders[0][j];
       boolean allMatched = true;
-      for(int i = 1; i < folders.length && allMatched; i++){
-        if(folders[i].length < j){
+      for (int i = 1; i < folders.length && allMatched; i++) {
+        if (folders[i].length < j) {
           allMatched = false;
           break;
         }
         allMatched &= folders[i][j].equals(thisFolder);
       }
-      if(allMatched){
+      if (allMatched) {
         commonPath += thisFolder + "/";
-      }else{
+      } else {
         break;
       }
     }
-    return commonPath;
+    URI oneURI = paths[0].getPath().toUri();
+    return new Path(oneURI.getScheme(), oneURI.getAuthority(), commonPath).toString();
   }
 
   public static FileSelection create(DrillFileSystem fs, String parent, String path) throws IOException {
