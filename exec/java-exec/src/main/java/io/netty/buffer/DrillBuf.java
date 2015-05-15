@@ -615,6 +615,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   public void setByte(int index, byte b){
+    chk(index, 1);
     PlatformDependent.putByte(addr(index), b);
   }
 
