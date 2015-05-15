@@ -23,7 +23,6 @@ import java.util.Iterator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ObjectArrays;
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
@@ -32,8 +31,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 
-public abstract class BaseRepeatedValueVector<A extends RepeatedValueVector.RepeatedAccessor, M extends RepeatedValueVector.RepeatedMutator>
-  extends BaseValueVector<A, M> implements RepeatedValueVector<A, M> {
+public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
 
   public final static ValueVector DEFAULT_DATA_VECTOR = ZeroVector.INSTANCE;
   public final static String OFFSETS_VECTOR_NAME = "offsets";

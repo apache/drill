@@ -37,11 +37,8 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
  * that vector is allocated before attempting to read or write.
  *
- * @param <A>  accessor type that supports reading from this vector
- * @param <M>  mutator type that supports writing to this vector
  */
-public interface ValueVector<A extends ValueVector.Accessor, M extends ValueVector.Mutator>
-    extends Closeable, Iterable<ValueVector> {
+public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
@@ -59,7 +56,7 @@ public interface ValueVector<A extends ValueVector.Accessor, M extends ValueVect
    * Set the initial record capacity
    * @param numRecords
    */
-  public void setInitialCapacity(int numRecords);
+  void setInitialCapacity(int numRecords);
 
   /**
    * Returns the maximum number of values that can be stored in this vector instance.
@@ -99,13 +96,13 @@ public interface ValueVector<A extends ValueVector.Accessor, M extends ValueVect
    * Returns an {@link org.apache.drill.exec.vector.ValueVector.Accessor accessor} that is used to read from this vector
    * instance.
    */
-  A getAccessor();
+  Accessor getAccessor();
 
   /**
    * Returns an {@link org.apache.drill.exec.vector.ValueVector.Mutator mutator} that is used to write to this vector
    * instance.
    */
-  M getMutator();
+  Mutator getMutator();
 
   /**
    * Returns a {@link org.apache.drill.exec.vector.complex.reader.FieldReader field reader} that supports reading values
@@ -149,17 +146,15 @@ public interface ValueVector<A extends ValueVector.Accessor, M extends ValueVect
 
   /**
    * An abstraction that is used to read from this vector instance.
-   *
-   * @param <BT>  boxed value type that is stored in this vector.
    */
-  interface Accessor<BT> {
+  interface Accessor {
     /**
      * Get the Java Object representation of the element at the specified position. Useful for testing.
      *
      * @param index
      *          Index of the value to get
      */
-    BT getObject(int index);
+    Object getObject(int index);
 
     /**
      * Returns the number of values that is stored in this vector.

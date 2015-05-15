@@ -58,8 +58,7 @@ public class RepeatedListVector extends AbstractContainerVector
   private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
   private final DelegateRepeatedVector delegate;
 
-  protected static class DelegateRepeatedVector
-      extends BaseRepeatedValueVector<DelegateRepeatedVector.RepeatedListAccessor, DelegateRepeatedVector.RepeatedListMutator> {
+  protected static class DelegateRepeatedVector extends BaseRepeatedValueVector {
 
     private final RepeatedListAccessor accessor = new RepeatedListAccessor();
     private final RepeatedListMutator mutator = new RepeatedListMutator();

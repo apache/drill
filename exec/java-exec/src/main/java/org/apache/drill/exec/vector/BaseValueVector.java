@@ -27,8 +27,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 
-public abstract class BaseValueVector<A extends ValueVector.Accessor, M extends ValueVector.Mutator>
-    implements ValueVector<A, M> {
+public abstract class BaseValueVector implements ValueVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
 
   protected final BufferAllocator allocator;

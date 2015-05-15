@@ -22,8 +22,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
 
-public abstract class BaseDataValueVector<A extends BaseValueVector.BaseAccessor, M extends BaseValueVector.BaseMutator>
-    extends BaseValueVector<A, M> {
+public abstract class BaseDataValueVector extends BaseValueVector{
 
   protected DrillBuf data;
 

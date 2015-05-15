@@ -24,11 +24,8 @@ package org.apache.drill.exec.vector;
  * Current design maintains data and offsets vectors. Each cell is stored in the data vector. Repeated vector
  * uses the offset vector to determine the sequence of cells pertaining to an individual value.
  *
- * @param <A>  repeated accessor type
- * @param <M>  repeated mutator type
  */
-public interface RepeatedValueVector<A extends RepeatedValueVector.RepeatedAccessor, M extends RepeatedValueVector.RepeatedMutator>
-    extends ValueVector<A, M>, ContainerVectorLike {
+public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
 
   final static int DEFAULT_REPEAT_PER_RECORD = 5;
 
@@ -45,10 +42,10 @@ public interface RepeatedValueVector<A extends RepeatedValueVector.RepeatedAcces
   ValueVector getDataVector();
 
   @Override
-  A getAccessor();
+  RepeatedAccessor getAccessor();
 
   @Override
-  M getMutator();
+  RepeatedMutator getMutator();
 
   interface RepeatedAccessor extends ValueVector.Accessor {
     /**
