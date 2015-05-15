@@ -40,7 +40,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class DrillTest {
   static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
 
-  protected static final ObjectMapper objectMapper = new ObjectMapper();
+  protected static final ObjectMapper objectMapper;
+  static {
+    System.setProperty("line.separator", "\n");
+    objectMapper = new ObjectMapper();
+  }
 
   static final SystemManager manager = new SystemManager();
 
