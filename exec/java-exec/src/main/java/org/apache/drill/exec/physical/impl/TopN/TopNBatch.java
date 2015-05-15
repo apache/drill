@@ -217,15 +217,23 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           countSincePurge += incoming.getRecordCount();
           batchCount++;
           RecordBatchData batch = new RecordBatchData(incoming);
-          batch.canonicalize();
-          if (priorityQueue == null) {
-            priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(batch.getContainer()), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
-          }
-          priorityQueue.add(context, batch);
-          if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
-            purge();
-            countSincePurge = 0;
-            batchCount = 0;
+          boolean success = false;
+          try {
+            batch.canonicalize();
+            if (priorityQueue == null) {
+              priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(batch.getContainer()), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+            }
+            priorityQueue.add(context, batch);
+            if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
+              purge();
+              countSincePurge = 0;
+              batchCount = 0;
+            }
+            success = true;
+          } finally {
+            if (!success) {
+              batch.clear();
+            }
           }
           break;
         default:

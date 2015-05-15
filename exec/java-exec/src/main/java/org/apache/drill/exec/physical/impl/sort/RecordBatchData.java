@@ -96,4 +96,11 @@ public class RecordBatchData {
     return container;
   }
 
+  public void clear() {
+    if (sv2 != null) {
+      sv2.clear();
+    }
+    container.clear();
+  }
+
 }

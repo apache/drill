@@ -389,14 +389,22 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                      * records that have matching keys on the probe side.
                      */
         RecordBatchData nextBatch = new RecordBatchData(right);
-        if (hyperContainer == null) {
-          hyperContainer = new ExpandableHyperContainer(nextBatch.getContainer());
-        } else {
-          hyperContainer.addBatch(nextBatch.getContainer());
-        }
+        boolean success = false;
+        try {
+          if (hyperContainer == null) {
+            hyperContainer = new ExpandableHyperContainer(nextBatch.getContainer());
+          } else {
+            hyperContainer.addBatch(nextBatch.getContainer());
+          }
 
-        // completed processing a batch, increment batch index
-        buildBatchIndex++;
+          // completed processing a batch, increment batch index
+          buildBatchIndex++;
+          success = true;
+        } finally {
+          if (!success) {
+            nextBatch.clear();
+          }
+        }
         break;
       }
       // Get the next record batch

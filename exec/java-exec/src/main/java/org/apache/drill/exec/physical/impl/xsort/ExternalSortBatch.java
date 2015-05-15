@@ -305,36 +305,44 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           sorter.sort(sv2);
 //          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), count);
           RecordBatchData rbd = new RecordBatchData(incoming);
-          if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE) {
-            rbd.setSv2(sv2);
-          }
-          batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
-          batchesSinceLastSpill++;
-          if (// We have spilled at least once and the current memory used is more than the 75% of peak memory used.
-              (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
-              // If we haven't spilled so far, do we have enough memory for MSorter if this turns out to be the last incoming batch?
-              (spillCount == 0 && !hasMemoryForInMemorySort(totalCount)) ||
-              // current memory used is more than 95% of memory usage limit of this operator
-              (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
-              // current memory used is more than 95% of memory usage limit of this fragment
-              (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
-              // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
-              // since the last spill exceed the defined limit
-              (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
-
-            if (firstSpillBatchCount == 0) {
-              firstSpillBatchCount = batchGroups.size();
+          boolean success = false;
+          try {
+            if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE) {
+              rbd.setSv2(sv2);
             }
+            batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
+            batchesSinceLastSpill++;
+            if (// We have spilled at least once and the current memory used is more than the 75% of peak memory used.
+                (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
+                // If we haven't spilled so far, do we have enough memory for MSorter if this turns out to be the last incoming batch?
+                (spillCount == 0 && !hasMemoryForInMemorySort(totalCount)) ||
+                // current memory used is more than 95% of memory usage limit of this operator
+                (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
+                // current memory used is more than 95% of memory usage limit of this fragment
+                (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
+                // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
+                // since the last spill exceed the defined limit
+                (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
 
-            if (spilledBatchGroups.size() > firstSpillBatchCount / 2) {
-              logger.info("Merging spills");
-              spilledBatchGroups.addFirst(mergeAndSpill(spilledBatchGroups));
+              if (firstSpillBatchCount == 0) {
+                firstSpillBatchCount = batchGroups.size();
+              }
+
+              if (spilledBatchGroups.size() > firstSpillBatchCount / 2) {
+                logger.info("Merging spills");
+                spilledBatchGroups.addFirst(mergeAndSpill(spilledBatchGroups));
+              }
+              spilledBatchGroups.add(mergeAndSpill(batchGroups));
+              batchesSinceLastSpill = 0;
             }
-            spilledBatchGroups.add(mergeAndSpill(batchGroups));
-            batchesSinceLastSpill = 0;
-          }
-          long t = w.elapsed(TimeUnit.MICROSECONDS);
+            long t = w.elapsed(TimeUnit.MICROSECONDS);
 //          logger.debug("Took {} us to sort {} records", t, count);
+            success = true;
+          } finally {
+            if (!success) {
+              rbd.clear();
+            }
+          }
           break;
         case OUT_OF_MEMORY:
           logger.debug("received OUT_OF_MEMORY, trying to spill");

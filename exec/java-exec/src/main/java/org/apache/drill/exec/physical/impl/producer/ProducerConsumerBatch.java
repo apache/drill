@@ -171,7 +171,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
           }
         }
         if (wrapper!=null) {
-          wrapper.batch.getContainer().zeroVectors();
+          wrapper.batch.clear();
         }
         cleanUpLatch.countDown();
       }
