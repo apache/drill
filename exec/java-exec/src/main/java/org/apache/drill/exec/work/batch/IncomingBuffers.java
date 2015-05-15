@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
@@ -110,10 +111,8 @@ public class IncomingBuffers implements AutoCloseable {
   }
 
   @Override
-  public void close() {
-    for (DataCollector fragment : fragCounts.values()) {
-      fragment.close();
-    }
+  public void close() throws Exception {
+    AutoCloseables.close(fragCounts.values().toArray(new AutoCloseable[0]));
   }
 
 }

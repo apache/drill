@@ -110,7 +110,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
 //  ## Add assertion that all acks have been sent. TODO
   @Override
-  public void cleanup() {
+  public void close() {
     if (!isTerminated() && context.shouldContinue()) {
       final String msg = String.format("Cleanup before finished. %d out of %d strams have finished", completedStreams(), fragmentCount);
       final IllegalStateException e = new IllegalStateException(msg);

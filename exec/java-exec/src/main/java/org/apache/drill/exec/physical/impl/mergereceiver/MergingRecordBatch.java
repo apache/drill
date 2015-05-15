@@ -738,12 +738,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
       }
     }
-    if (fragProviders != null) {
-      for (final RawFragmentBatchProvider f : fragProviders) {
-        f.cleanup();
-      }
-    }
-
     super.close();
   }
 

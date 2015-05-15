@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
@@ -129,7 +130,8 @@ public abstract class AbstractDataCollector implements DataCollector{
   protected abstract RawBatchBuffer getBuffer(int minorFragmentId);
 
   @Override
-  public void close() {
+  public void close() throws Exception {
+    AutoCloseables.close(buffers);
   }
 
 }

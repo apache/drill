@@ -21,9 +21,8 @@ import java.io.IOException;
 
 import org.apache.drill.exec.ops.FragmentContext;
 
-public interface RawFragmentBatchProvider {
+public interface RawFragmentBatchProvider extends AutoCloseable{
 
   public RawFragmentBatch getNext() throws IOException, InterruptedException;
   public void kill(FragmentContext context);
-  public void cleanup();
 }

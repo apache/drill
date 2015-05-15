@@ -240,7 +240,8 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     logger.debug("Got batch. Current buffer size: {}", bufferQueue.size());
   }
 
-  public void cleanup() {
+  @Override
+  public void close() {
     if (spooler != null) {
       spooler.terminate();
       while (spooler.isAlive()) {
@@ -270,7 +271,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
         logger.warn("Failed to delete temporary files", e);
       }
     }
-    super.cleanup();
+    super.close();
   }
 
   private class Spooler extends Thread {

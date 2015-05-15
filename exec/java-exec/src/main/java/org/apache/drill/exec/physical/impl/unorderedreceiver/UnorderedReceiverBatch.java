@@ -214,7 +214,6 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
   @Override
   public void close() {
     batchLoader.clear();
-    fragProvider.cleanup();
   }
 
   @Override
