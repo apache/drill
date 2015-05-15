@@ -36,6 +36,10 @@
     <level value="info" />
   </logger>
 
+  <logger name="drill.allocator">
+    <level value="debug" />
+  </logger>
+
   <!--logger name="org" additivity="false">
     <level value="trace" />
     <appender-ref ref="SOCKET" />
@@ -73,11 +77,11 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 <!---->
-  <!--logger name="org.apache.drill.common.JSONOptions" additivity="false">
+  <logger name="org.apache.drill.common.JSONOptions" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <logger name="org.apache.drill.common.config" additivity="false">
     <level value="info" />
@@ -91,8 +95,13 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <logger name="org.apache.drill.common.util.PathScanner" additivity="false">
+  <!--logger name="org.apache.drill.common.util.PathScanner" additivity="false">
     <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger-->
+  <logger name="org.apache.drill.common.util.PathScanner" additivity="false">
+    <level value="trace" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
   </logger>
@@ -229,6 +238,12 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
+  <logger name="org.apache.drill.exec.physical.impl.svremover" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="org.apache.drill.exec.physical.impl.ScreenCreator" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />
@@ -273,6 +288,12 @@
 
   <logger name="org.apache.drill.exec.rpc" additivity="false">
     <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.record.RecordBatchLoader" additivity="false">
+    <level value="debug" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
   </logger>
@@ -338,6 +359,17 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
+  <logger name="org.apache.drill.exec.store.schedule.BlockMapBuilder" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="org.apache.drill.exec.store.schedule.AffinityCreator" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <!--logger name="org.apache.drill.exec.server" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
@@ -396,11 +428,11 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
-  <!--logger name="org.apache.drill.exec.work.foreman.QueryManager" additivity="false">
+  <logger name="org.apache.drill.exec.work.foreman.QueryManager" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <!--logger name="org.apache.drill.exec.work.fragment" additivity="false">
     <level value="info" />
