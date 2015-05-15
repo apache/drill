@@ -44,7 +44,7 @@ By default, Drill does not support JSON lists of different types. For example, J
 * `store.json.all_text_mode`  
   Reads all data from JSON files as VARCHAR. You need to cast numbers from VARCHAR to numerical data types, such as DOUBLE or INTEGER.
 
-The default setting of `store.json.all_text_mode` and `store.json.read_numbers_as_double` options is false. Using either option prevents schema errors, but using `store.json.read_numbers_as_double` has an advantage over `store.json.all_text_mode`. Using `store.json.read_numbers_as_double` typically involves less explicit casting than using `store.json.all_text_mode` because you can often use the numerical data as is -\-DOUBLE.
+The default setting of `store.json.all_text_mode` and `store.json.read_numbers_as_double` options is false. Using either option prevents schema errors, but using `store.json.read_numbers_as_double` has an advantage over `store.json.all_text_mode`. Using `store.json.read_numbers_as_double` typically involves less explicit casting than using `store.json.all_text_mode` because you can often use the numerical data as is-\-DOUBLE.
 
 ### Handling Type Differences
 Set the `store.json.read_numbers_as_double` property to true.

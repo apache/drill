@@ -185,14 +185,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Analyzing Social Media", 
+            "next_url": "/docs/analyzing-social-media/", 
             "parent": "Tutorials", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
             "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
             "title": "Analyzing Highly Dynamic Datasets", 
             "url": "/docs/analyzing-highly-dynamic-datasets/"
+        }, 
+        "Analyzing Social Media": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Tutorials", 
+            "previous_title": "Analyzing Highly Dynamic Datasets", 
+            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+            "title": "Analyzing Social Media", 
+            "url": "/docs/analyzing-social-media/"
         }, 
         "Analyzing the Yelp Academic Dataset": {
             "breadcrumbs": [
@@ -3296,8 +3313,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media", 
+            "previous_url": "/docs/analyzing-social-media/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -8083,14 +8100,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media", 
+                    "next_url": "/docs/analyzing-social-media/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+                    "title": "Analyzing Social Media", 
+                    "url": "/docs/analyzing-social-media/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -9111,14 +9145,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media", 
+                    "next_url": "/docs/analyzing-social-media/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+                    "title": "Analyzing Social Media", 
+                    "url": "/docs/analyzing-social-media/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -9358,8 +9409,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media", 
+            "previous_url": "/docs/analyzing-social-media/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"

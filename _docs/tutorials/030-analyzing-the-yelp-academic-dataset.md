@@ -106,7 +106,7 @@ analysis extremely easy.
 
     0: jdbc:drill:zk=local> select stars,trunc(avg(review_count)) reviewsavg 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
-    group by stars order by stars desc;``
+    group by stars order by stars desc;
 
     +------------+------------+
     |   stars    | reviewsavg |
@@ -263,7 +263,7 @@ on data.
 #### Top first categories in number of review counts
 
     0: jdbc:drill:zk=local> select categories[0], count(categories[0]) as categorycount 
-    from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` 
+    from dfs.`/users/nrentachintala/Downloads/yelp_academic_dataset_business.json` 
     group by categories[0] 
     order by count(categories[0]) desc limit 10;
     +------------+---------------+
@@ -387,7 +387,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
 #### Top categories used in business reviews
 
     0: jdbc:drill:zk=local> select celltbl.catl, count(celltbl.catl) categorycnt 
-    from (select flatten(categories) catl from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` ) celltbl 
+    from (select flatten(categories) catl from dfs.`/yelp_academic_dataset_business.json` ) celltbl 
     group by celltbl.catl 
     order by count(celltbl.catl) desc limit 10 ;
     +------------+-------------+
