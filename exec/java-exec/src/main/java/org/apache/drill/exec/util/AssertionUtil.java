@@ -28,7 +28,7 @@ public class AssertionUtil {
     boolean isAssertEnabled = false;
     assert isAssertEnabled = true;
     ASSERT_ENABLED = isAssertEnabled;
-    BOUNDS_CHECKING_ENABLED = ASSERT_ENABLED || !"false".equals(System.getProperty("bounds"));
+    BOUNDS_CHECKING_ENABLED = ASSERT_ENABLED || !"true".equals(System.getProperty("drill.enable_unsafe_memory_access"));
   }
 
   public static boolean isAssertionsEnabled(){
