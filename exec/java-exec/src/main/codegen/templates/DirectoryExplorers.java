@@ -38,6 +38,7 @@ import javax.inject.Inject;
  */
 public class DirectoryExplorers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectoryExplorers.class);
+  private static final String FILE_SEPARATOR = "/";
 
   <#list [ { "name" : "\"maxdir\"", "functionClassName" : "MaxDir", "comparison" : "compareTo(curr) < 0", "goal" : "maximum", "comparisonType" : "case-sensitive"},
            { "name" : "\"imaxdir\"", "functionClassName" : "IMaxDir", "comparison" : "compareToIgnoreCase(curr) < 0", "goal" : "maximum", "comparisonType" : "case-insensitive"},
@@ -93,7 +94,7 @@ public class DirectoryExplorers {
           subPartitionStr = curr;
         }
       }
-      String[] subPartitionParts = subPartitionStr.split(java.io.File.separator);
+      String[] subPartitionParts = subPartitionStr.split(FILE_SEPARATOR);
       subPartitionStr = subPartitionParts[subPartitionParts.length - 1];
       byte[] result = subPartitionStr.getBytes();
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);
