@@ -1243,6 +1243,23 @@
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
+        "Configuring Tibco Spotfire Server with Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using Tibco Spotfire with Drill", 
+            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+            "title": "Configuring Tibco Spotfire Server with Drill", 
+            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+        }, 
         "Configuring User Authentication": {
             "breadcrumbs": [
                 {
@@ -4595,8 +4612,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -4612,11 +4629,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Tibco Spotfire with Drill", 
                     "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+                    "title": "Configuring Tibco Spotfire Server with Drill", 
+                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -8206,8 +8240,8 @@
             "next_title": "Using Apache Drill with Tableau 9 Server", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Tibco Spotfire with Drill", 
-            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
             "title": "Using Apache Drill with Tableau 9 Desktop", 
             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -8639,8 +8673,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -10309,8 +10343,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -10326,11 +10360,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Tibco Spotfire with Drill", 
                     "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+                    "title": "Configuring Tibco Spotfire Server with Drill", 
+                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
