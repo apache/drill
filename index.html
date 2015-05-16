@@ -97,15 +97,14 @@ $(document).ready(function() {
     <p>Traditional query engines demand significant IT intervention before data can be queried. Drill gets rid of all that overhead so that users can just query the raw data in-situ. There's no need to load the data, create and maintain schemas, or transform the data before it can be processed. Instead, simply include the path to a Hadoop directory, MongoDB collection or S3 bucket in the SQL query.</p>
     <p>Drill leverages advanced query compilation and re-compilation techniques to maximize performance without requiring up-front schema knowledge.</p>
   </div>
-  <div class="small big"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
-  line-height: 1.5;'>SELECT * FROM <span style="font-weight:bold;color:#000;text-decoration: underline">dfs.root.`/web/logs`</span>;
+  <div class="small big"><pre>SELECT * FROM <span class="code-underline">dfs.root.`/web/logs`</span>;
   
 SELECT country, count(*)
-  FROM <span style="font-weight:bold;color:#000;text-decoration: underline;">mongodb.web.users</span>
+  FROM <span class="code-underline">mongodb.web.users</span>
   GROUP BY country;
 
 SELECT timestamp
-  FROM <span style="font-weight:bold;color:#000;text-decoration: underline">s3.root.`clicks.json`</span>
+  FROM <span class="code-underline">s3.root.`clicks.json`</span>
   WHERE user_id = 'jdoe';</pre></div>
 </div>
 
@@ -129,8 +128,7 @@ SELECT timestamp
 </div>
 
 <div class="home-row">
-  <div class="big"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
-  line-height: 1.5;'>$ curl j.mp/drill-latest -o drill.tgz
+  <div class="big"><pre>$ curl j.mp/drill-latest -o drill.tgz
 $ tar xzf drill.tgz
 $ cd apache-drill-1.0.0
 $ bin/drill-embedded
@@ -140,8 +138,7 @@ $ bin/drill-embedded
     <p>We made it easy to download and run Drill on your laptop. It runs on Mac, Windows and Linux, and within a minute or two you’ll be exploring your data. When you’re ready for prime time, deploy Drill on a cluster of commodity servers and take advantage of the world’s most scalable and high performance execution engine.
     <p>Drill’s symmetrical architecture (all nodes are the same) and simple installation makes it easy to deploy and operate very large clusters.</p>
   </div>
-  <div class="small"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
-    line-height: 1.5;'>$ curl j.mp/drill-latest -o drill.tgz
+  <div class="small"><pre>$ curl j.mp/drill-latest -o drill.tgz
   $ tar xzf drill.tgz
   $ cd apache-drill-1.0.0
   $ bin/drill-embedded

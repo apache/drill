@@ -880,3 +880,18 @@ div.home-row:nth-child(even) div.big{
 .home-row div.big{
   display:inline-block;
 }
+
+div.home-row div pre{
+  background:#f3f5f7;
+  color:#2a333c;
+  border:solid 1px #aaa;
+  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+div.home-row div pre span.code-underline{
+  font-weight:bold;
+  color:#000;
+  text-decoration: underline;
+}
