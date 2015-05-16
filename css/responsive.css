@@ -109,6 +109,43 @@
   div.post .post-header .int_title {
     margin-left: 0px;
   }
+  
+  
+  div.home-row{
+    width:100%;
+  }
+  
+  div.home-row:nth-child(odd) div.small{
+    width:300px;
+  }
+
+  div.home-row:nth-child(odd) div.description{
+    margin-left:20px;
+    width:auto;
+  }
+
+  div.home-row:nth-child(even) div.description{
+    margin-left:20px;
+    width:auto;
+  }
+
+  div.home-row:nth-child(even) div.small{
+    margin:0 0 15px 0;
+    width:300px;
+  }
+  
+  div.home-row div.big{
+    display:none;
+  }
+  
+  div.home-row div.small{
+    display:inline-block;
+  }
+  
+  table.intro {
+    width: 100%;
+    background: none;
+  }
 
 }
 @media (max-width: 768px) {
@@ -126,10 +163,6 @@
   }
   br.mobile-break {
     display: block;
-  }
-  table.intro {
-    width: 100%;
-    background: none;
   }
   
   img {
@@ -219,36 +252,22 @@
   table.intro td h1 {
     font-size: 24px;
     text-align: left;
-    padding-left: 70px;
+    padding-left: 60px;
   }
   table.intro td.ag, table.intro td.fl, table.intro td.fam {
-    background-position: 30px 23%;
+    background-position: 20px 23%;
   }
   table.intro p {
     font-size: 16px;
     line-height: 24px;
-    padding: 2px 25px 15px 30px;
+    padding: 2px 25px 15px 20px;
     text-align: left;
   }
   table.intro span {
     position: relative;
     bottom: 10px;
-    padding-left: 30px;
+    padding-left: 20px;
     text-align: left;
-  }
-
-  .home_txt p {
-    margin: 20px 10px 20px 10px;
-  }
-  .home_txt h1 {
-    font-size: 32px;
-    margin: 20px 10px 20px 10px;
-  }
-
-  .home_txt h2 {
-    font-size: 20px;
-    margin: 20px 10px 20px 10px;
-
   }
 
 }

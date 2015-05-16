@@ -82,21 +82,22 @@ $(document).ready(function() {
 </div>
 
 <div class="home-row">
-  <div><img src="{{ site.baseurl }}/images/home-any.png" style="width:300px" /></div>
-  <div>
+  <div class="big"><img src="{{ site.baseurl }}/images/home-any.png" style="width:300px" /></div>
+  <div class="description">
     <h1>Query any non-relational datastore (well, almost...)</h1>
     <p>Drill supports a variety of NoSQL databases and file systems, including HBase, MongoDB, MapR-DB, HDFS, MapR-FS, S3, Azure Blob Storage, Google Cloud Storage, Swift, NAS and local files. A single query can join data from multiple datastores. For example, you could join a user profile collection in MongoDB with a directory of event logs in Hadoop.</p>
     <p>Drill’s datastore-aware optimizer automatically restructures a query plan to leverage the datastore’s internal processing capabilities. In addition, Drill supports 'data locality', so it’s a good idea to co-locate Drill and the datastore on the same nodes.</p>
   </div>
+  <div class="small"><img src="{{ site.baseurl }}/images/home-any.png" style="width:300px" /></div>
 </div>
 
 <div class="home-row">
-  <div>
+  <div class="description">
     <h1>Kiss the overhead goodbye and enjoy data agility</h1>
     <p>Traditional query engines demand significant IT intervention before data can be queried. Drill gets rid of all that overhead so that users can just query the raw data in-situ. There's no need to load the data, create and maintain schemas, or transform the data before it can be processed. Instead, simply include the path to a Hadoop directory, MongoDB collection or S3 bucket in the SQL query.</p>
     <p>Drill leverages advanced query compilation and re-compilation techniques to maximize performance without requiring up-front schema knowledge.</p>
   </div>
-  <div><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
+  <div class="small big"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
   line-height: 1.5;'>SELECT * FROM <span style="font-weight:bold;color:#000;text-decoration: underline">dfs.root.`/web/logs`</span>;
   
 SELECT country, count(*)
@@ -109,39 +110,46 @@ SELECT timestamp
 </div>
 
 <div class="home-row">
-  <div><img src="{{ site.baseurl }}/images/home-json.png" style="width:250px" /></div>
-  <div>
+  <div class="big"><img src="{{ site.baseurl }}/images/home-json.png" style="width:250px" /></div>
+  <div class="description">
     <h1>Treat your data like a table even when it’s not</h1>
     <p>Drill features a JSON data model that enables it to query complex/nested data and rapidly evolving structure commonly seen in modern applications and non-relational datastores. Drill also provides intuitive extensions to SQL so that the user can easily query complex data.
     <p>Drill is the only columnar query engine that supports complex data. It features an in-memory shredded columnar representation for complex data which allows Drill to achieve columnar speed with the flexibility of an internal JSON document model.</p>
   </div>
+  <div class="small"><img src="{{ site.baseurl }}/images/home-json.png" style="width:250px" /></div>
 </div>
 
 <div class="home-row">
-  <div>
+  <div class="description">
     <h1>Keep using the BI tools you love</h1>
     <p>Drill supports standard SQL. Business users, analysts and data scientists can use standard BI/analytics tools such as Tableau, Qlik, MicroStrategy, Spotfire, SAS and Excel to interact with non-relational datastores by leveraging Drill's JDBC and ODBC drivers. Developers can leverage Drill's simple REST API in their custom applications to create beautiful visualizations.</p>
     <p>Drill’s virtual datasets allow even the most complex, non-relational data to be mapped into BI-friendly structures which users can explore and visualize using their tool of choice.</p>
   </div>
-  <div><img src="{{ site.baseurl }}/images/home-bi.png" style="width:300px" /></div>
+  <div class="small big"><img src="{{ site.baseurl }}/images/home-bi.png" style="width:300px" /></div>
 </div>
 
 <div class="home-row">
-  <div><div><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
+  <div class="big"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
   line-height: 1.5;'>$ curl j.mp/drill-latest -o drill.tgz
 $ tar xzf drill.tgz
 $ cd apache-drill-1.0.0
 $ bin/drill-embedded
-</pre></div></div>
-  <div>
+</pre></div>
+  <div class="description">
     <h1>Scale from one laptop to 1000s of servers</h1>
     <p>We made it easy to download and run Drill on your laptop. It runs on Mac, Windows and Linux, and within a minute or two you’ll be exploring your data. When you’re ready for prime time, deploy Drill on a cluster of commodity servers and take advantage of the world’s most scalable and high performance execution engine.
     <p>Drill’s symmetrical architecture (all nodes are the same) and simple installation makes it easy to deploy and operate very large clusters.</p>
   </div>
+  <div class="small"><pre style='background:#f3f5f7;color:#2a333c;border:solid 1px #aaa;  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;  font-size: 12px;
+    line-height: 1.5;'>$ curl j.mp/drill-latest -o drill.tgz
+  $ tar xzf drill.tgz
+  $ cd apache-drill-1.0.0
+  $ bin/drill-embedded
+  </pre></div>
 </div>
 
 <div class="home-row">
-  <div>
+  <div class="description">
     <h1>No more waiting for coffee</h1>
     <p>Drill isn’t the world’s first query engine, but it’s the first that combines both flexibility and speed. To achieve this, Drill features a radically different architecture that enables record-breaking performance without sacrificing the flexibility offered by the JSON document model. For example:<ul>
 <li>Columnar execution engine (the first ever to support complex data!)</li>
@@ -150,29 +158,6 @@ $ bin/drill-embedded
 <li>Locality-aware exeucution that reduces network traffic when Drill is co-located with the datastore</li>
 <li>Advanced cost-based optimizer that pushes processing into the datastore when possible</li></ul></p>
   </div>
-  <div><img src="{{ site.baseurl }}/images/home-coffee.jpg" style="width:300px" /></div>
+  <div class="small big"><img src="{{ site.baseurl }}/images/home-coffee.jpg" style="width:300px" /></div>
 </div>
 
-
-
-<!--
-<div class="home_txt mw">
-  <p>The 40-year monopoly of the relational database is over. The explosion of data in recent years and the shift towards rapid application development have led to the rise of non-relational datastores including Hadoop, NoSQL and cloud storage. Organizations are increasingly leveraging these systems for new and existing applications due to their flexibility, scalability and price advantages. Drill is built from the ground up to enable business users, analysts, data scientists and developers to explore and analyze the data in these systems while maintaining their unique agility and flexibility advantages.</p>
-
-  <a name="agility" class="anchor"></a>
-  <h1>Agility</h1>
-  <img src="images/home-img1.jpg" alt="Agility" width="606" />
-
-  <p>Drill is unlike any other query engine. Traditional query engines demand significant IT intervention before data can be queried. Drill gets rid of all that overhead so that users can just query the raw data in-situ at record speeds. There's no need to load the data, create and maintain schemas, or transform the data before it can be processed. For example, the user can directly query Hadoop directories, MongoDB collections, S3 buckets and more. Drill leverages advanced query compilation and re-compilation techniques to maximize performance without requiring up-front schema knowledge.</p>
-  
-  <a name="flexibility" class="anchor"></a>
-  <h1>Flexibility</h1>
-  <img src="images/home-img2.jpg" alt="Agility" width="635" />
-
-  <p>Drill features a JSON data model that allows it to query, without flattening, both simple and complex/nested data as well as rapidly evolving structures commonly seen with modern applications and non-relational datastores. Drill also provides intuitive extensions to SQL to work with complex/nested data. Drill achieves high performance via an in-memory shredded columnar representation for complex data. In fact, Drill is the only columnar query engine that supports complex data.</p>
-  <a name="familiarity" class="anchor"></a>
-  <h1>Familiarity</h1>
-  <img src="images/home-img3.jpg" alt="familiarity" width="380" />
-  <p>Drill supports standard SQL. Business users, analysts and data scientists can use standard BI/analytics tools such as Tableau, QlikView, MicroStrategy, Spotfire, SAS and Excel to interact with non-relational datastores by leveraging Drill's JDBC and ODBC drivers. Developers can leverage Drill's simple REST API in their custom applications to create beautiful visualizations based on data in their non-relational datastores. Users can also plug-and-play with Hive environments to enable ad-hoc low latency queries on existing Hive tables and reuse Hive's metadata, hundreds of file formats and UDFs out of the box.</p>
-</div>
--->

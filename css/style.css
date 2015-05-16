@@ -838,20 +838,20 @@ div.home-row div{
   text-align:left;
 }
 
-div.home-row:nth-child(odd) div:nth-child(1){
+div.home-row:nth-child(odd) div.big{
   width:300px;
 }
 
-div.home-row:nth-child(odd) div:nth-child(2){
+div.home-row:nth-child(odd) div.description{
   margin-left:40px;
   width:580px;
 }
 
-div.home-row:nth-child(even) div:nth-child(1){
+div.home-row:nth-child(even) div.description{
   width:580px;
 }
 
-div.home-row:nth-child(even) div:nth-child(2){
+div.home-row:nth-child(even) div.big{
   margin-left:40px;
   width:300px;
 }
@@ -871,4 +871,12 @@ div.home-row:nth-child(even) div:nth-child(2){
 .home-row p {
   font-size:16px;
   line-height:22px;
+}
+
+.home-row div.small{
+  display:none;
+}
+
+.home-row div.big{
+  display:inline-block;
 }
