@@ -11,8 +11,8 @@ Using Drill you can read tables created in Hive that use data types compatible w
 | BIGINT             | BIGINT    | 8-byte signed integer                                      |
 | BOOLEAN            | BOOLEAN   | TRUE (1) or FALSE (0)                                      |
 | CHAR               | CHAR      | Character string, fixed-length max 255                     |
-| DATE               | DATE      | Years months and days in the form in the form YYYY-­MM-­DD |
-| DECIMAL            | DECIMAL   | 38-digit precision                                         |
+| DATE               | DATE      | Years months and days in the form in the form YYYY-­MM-­DD   |
+| DECIMAL*           | DECIMAL   | 38-digit precision                                         |
 | FLOAT              | FLOAT     | 4-byte single precision floating point number              |
 | DOUBLE             | DOUBLE    | 8-byte double precision floating point number              |
 | INT or INTEGER     | INT       | 4-byte signed integer                                      |
@@ -24,6 +24,8 @@ Using Drill you can read tables created in Hive that use data types compatible w
 | TIMESTAMP          | TIMESTAMP | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
 | None               | STRING    | Binary string (16)                                         |
 | VARCHAR            | VARCHAR   | Character string variable length                           |
+
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
 
 ## Unsupported Types
 Drill does not support the following Hive types:
@@ -41,8 +43,14 @@ This example demonstrates the mapping of Hive data types to Drill data types. Us
 
      8223372036854775807,true,3.5,-1231.4,3.14,42,"SomeText",2015-03-25,2015-03-25 01:23:15 
 
-The example assumes that the CSV resides on the MapR file system (MapRFS) in the Drill sandbox: `/mapr/demo.mapr.com/data/`
- 
+### Example Assumptions
+The example makes the following assumptions:
+
+* The CSV resides on the MapR file system (MapRFS) in the Drill sandbox: `/mapr/demo.mapr.com/data/`  
+* You [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type) in Drill.  
+
+### Define an External Table in Hive
+
 In Hive, you define an external table using the following query:
 
     hive> CREATE EXTERNAL TABLE types_demo ( 
@@ -59,12 +67,16 @@ In Hive, you define an external table using the following query:
           LINES TERMINATED BY '\n' 
           STORED AS TEXTFILE LOCATION '/mapr/demo.mapr.com/data/mytypes.csv';
 
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
+
 You check that Hive mapped the data from the CSV to the typed values as as expected:
 
     hive> SELECT * FROM types_demo;
     OK
     8223372036854775807	true	3.5	-1231.4	3.14	42	"SomeText"	2015-03-25   2015-03-25 01:23:15
     Time taken: 0.524 seconds, Fetched: 1 row(s)
+
+### Connect Drill to Hive and Query the Data
 
 In Drill, you use the Hive storage plugin that has the following definition.
 

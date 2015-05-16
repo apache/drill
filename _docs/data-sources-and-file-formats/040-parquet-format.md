@@ -144,10 +144,12 @@ Parquet also supports logical types, fully described on the [Apache Parquet site
 | None                         |                                                                                | UINT_16              | 16 bits, unsigned                                                                                                                          |
 | None                         |                                                                                | UINT_32              | 32 bits, unsigned                                                                                                                          |
 | None                         |                                                                                | UINT_64              | 64 bits, unsigned                                                                                                                          |
-| DECIMAL                      | 38-digit precision                                                             | DECIMAL              | Arbitrary-precision signed decimal numbers of the form unscaledValue * 10^(-scale)                                                         |
+| DECIMAL*                     | 38-digit precision                                                             | DECIMAL              | Arbitrary-precision signed decimal numbers of the form unscaledValue * 10^(-scale)                                                         |
 | TIME                         | Hours, minutes, seconds, milliseconds; 24-hour basis                           | TIME_MILLIS          | Logical time, not including the date. Annotates int32. Number of milliseconds after midnight.                                              |
 | TIMESTAMP                    | Year, month, day, and seconds                                                  | TIMESTAMP_MILLIS     | Logical date and time. Annotates an int64 that stores the number of milliseconds from the Unix epoch, 00:00:00.000 on 1 January 1970, UTC. |
 | INTERVALDAY and INTERVALYEAR | Integer fields representing a period of time depending on the type of interval | INTERVAL             | An interval of time. Annotates a fixed_len_byte_array of length 12. Months, days, and ms in unsigned little-endian format.                 |
+
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
 
 ## Data Description Language Support
 Parquet supports the following data description languages:

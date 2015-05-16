@@ -15,23 +15,6 @@ the following pages in order:
   * [Lesson 3: Run Queries on Complex Data Types]({{ site.baseurl }}/docs/lesson-3-run-queries-on-complex-data-types)
   * [Summary]({{ site.baseurl }}/docs/summary)
 
-## About Apache Drill
-
-Drill is an Apache open-source SQL query engine for Big Data exploration.
-Drill is designed from the ground up to support high-performance analysis on
-the semi-structured and rapidly evolving data coming from modern Big Data
-applications, while still providing the familiarity and ecosystem of ANSI SQL,
-the industry-standard query language. Drill provides plug-and-play integration
-with existing Apache Hive and Apache HBase deployments.Apache Drill 0.5 offers
-the following key features:
-
-  * Low-latency SQL queries
-  * Dynamic queries on self-describing data in files (such as JSON, Parquet, text) and MapR-DB/HBase tables, without requiring metadata definitions in the Hive metastore.
-  * ANSI SQL
-  * Nested data support
-  * Integration with Apache Hive (queries on Hive tables and views, support for all Hive file formats and Hive UDFs)
-  * BI/SQL tool integration using standard JDBC/ODBC drivers
-
 ## MapR Sandbox with Apache Drill
 
 MapR includes Apache Drill as part of the Hadoop distribution. The MapR
@@ -45,7 +28,7 @@ refer to the [Apache Drill web site](http://drill.apache.org) and
 ]({{ site.baseurl }}/docs)for more
 details.
 
-Note that Hadoop is not a prerequisite for Drill and users can start ramping
+Hadoop is not a prerequisite for Drill and users can start ramping
 up with Drill by running SQL queries directly on the local file system. Refer
 to [Apache Drill in 10 minutes]({{ site.baseurl }}/docs/drill-in-10-minutes) for an introduction to using Drill in local
 (embedded) mode.

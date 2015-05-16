@@ -113,7 +113,7 @@ VirtualBox adapter.
 9. Click Settings.
 
     ![settings icon]({{ site.baseurl }}/docs/img/settings.png)  
-   The MapR-Sandbox-For-Apache-Drill-0.6.0-r2-4.0.1 - Settings dialog appears.
+   The MapR-Sandbox-For-Apache-Drill - Settings dialog appears.
      
      ![drill query flow]({{ site.baseurl }}/docs/img/vbGenSettings.png)    
 10. Click **OK** to continue.

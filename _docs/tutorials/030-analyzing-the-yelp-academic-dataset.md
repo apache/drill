@@ -33,7 +33,7 @@ want to scale your environment.
 
 ### Step 2 : Open the Drill tar file
 
-    tar -xvf apache-drill-0.6.0-incubating.tar
+    tar -xvf apache-drill-0.1.0.tar.gz
 
 ### Step 3: Launch SQLLine, a JDBC application that ships with Drill
 
@@ -106,7 +106,7 @@ analysis extremely easy.
 
     0: jdbc:drill:zk=local> select stars,trunc(avg(review_count)) reviewsavg 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
-    group by stars order by stars desc;``
+    group by stars order by stars desc;
 
     +------------+------------+
     |   stars    | reviewsavg |
@@ -263,7 +263,7 @@ on data.
 #### Top first categories in number of review counts
 
     0: jdbc:drill:zk=local> select categories[0], count(categories[0]) as categorycount 
-    from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` 
+    from dfs.`/users/nrentachintala/Downloads/yelp_academic_dataset_business.json` 
     group by categories[0] 
     order by count(categories[0]) desc limit 10;
     +------------+---------------+
@@ -352,8 +352,7 @@ exploring data in ways we have never seen before with SQL technologies. The
 community is working on more exciting features around nested data and
 supporting data with changing schemas in upcoming releases.
 
-As an example, a new FLATTEN function is in development (an upcoming feature
-in 0.7). This function can be used to dynamically rationalize semi-structured
+The FLATTEN function can be used to dynamically rationalize semi-structured
 data so you can apply even deeper SQL functionality. Here is a sample query:
 
 #### Get a flattened list of categories for each business
@@ -388,7 +387,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
 #### Top categories used in business reviews
 
     0: jdbc:drill:zk=local> select celltbl.catl, count(celltbl.catl) categorycnt 
-    from (select flatten(categories) catl from dfs.`/users/nrentachintala/Downloads/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json` ) celltbl 
+    from (select flatten(categories) catl from dfs.`/yelp_academic_dataset_business.json` ) celltbl 
     group by celltbl.catl 
     order by count(celltbl.catl) desc limit 10 ;
     +------------+-------------+

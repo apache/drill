@@ -185,14 +185,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Analyzing Social Media", 
+            "next_url": "/docs/analyzing-social-media/", 
             "parent": "Tutorials", 
             "previous_title": "Summary", 
             "previous_url": "/docs/summary/", 
             "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
             "title": "Analyzing Highly Dynamic Datasets", 
             "url": "/docs/analyzing-highly-dynamic-datasets/"
+        }, 
+        "Analyzing Social Media": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Tutorials", 
+            "previous_title": "Analyzing Highly Dynamic Datasets", 
+            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+            "title": "Analyzing Social Media", 
+            "url": "/docs/analyzing-social-media/"
         }, 
         "Analyzing the Yelp Academic Dataset": {
             "breadcrumbs": [
@@ -1225,6 +1242,23 @@
             "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
+        }, 
+        "Configuring Tibco Spotfire Server with Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using Tibco Spotfire with Drill", 
+            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+            "title": "Configuring Tibco Spotfire Server with Drill", 
+            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
         }, 
         "Configuring User Authentication": {
             "breadcrumbs": [
@@ -3296,8 +3330,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media", 
+            "previous_url": "/docs/analyzing-social-media/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -4578,8 +4612,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -4595,11 +4629,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Tibco Spotfire with Drill", 
                     "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+                    "title": "Configuring Tibco Spotfire Server with Drill", 
+                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -8083,14 +8134,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media", 
+                    "next_url": "/docs/analyzing-social-media/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+                    "title": "Analyzing Social Media", 
+                    "url": "/docs/analyzing-social-media/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -8172,8 +8240,8 @@
             "next_title": "Using Apache Drill with Tableau 9 Server", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Tibco Spotfire with Drill", 
-            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
             "title": "Using Apache Drill with Tableau 9 Desktop", 
             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -8605,8 +8673,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -9111,14 +9179,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Social Media", 
+                    "next_url": "/docs/analyzing-social-media/", 
                     "parent": "Tutorials", 
                     "previous_title": "Summary", 
                     "previous_url": "/docs/summary/", 
                     "relative_path": "_docs/tutorials/050-analyzing-highly-dynamic-datasets.md", 
                     "title": "Analyzing Highly Dynamic Datasets", 
                     "url": "/docs/analyzing-highly-dynamic-datasets/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Highly Dynamic Datasets", 
+                    "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+                    "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
+                    "title": "Analyzing Social Media", 
+                    "url": "/docs/analyzing-social-media/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -9358,8 +9443,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Highly Dynamic Datasets", 
-            "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
+            "previous_title": "Analyzing Social Media", 
+            "previous_url": "/docs/analyzing-social-media/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -10258,8 +10343,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
@@ -10275,11 +10360,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Tibco Spotfire with Drill", 
                     "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
+                    "title": "Configuring Tibco Spotfire Server with Drill", 
+                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
