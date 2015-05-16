@@ -129,8 +129,7 @@
       <dependencies>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-          <version>2.4.1-mapr-1408-SNAPSHOT</version>
+          <artifactId>hadoop-common</artifactId>
           <exclusions>
             <exclusion>
               <artifactId>commons-logging</artifactId>
@@ -141,7 +140,6 @@
               <artifactId>servlet-api-2.5</artifactId>
             </exclusion>
           </exclusions>
-          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>

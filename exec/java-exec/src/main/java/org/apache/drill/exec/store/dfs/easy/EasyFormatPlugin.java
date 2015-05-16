@@ -56,6 +56,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
@@ -171,7 +172,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       readers.add(getRecordReader(context, dfs, work, scan.getColumns()));
       if (scan.getSelectionRoot() != null) {
         String[] r = scan.getSelectionRoot().split("/");
-        String[] p = work.getPath().split("/");
+        String[] p = Path.getPathWithoutSchemeAndAuthority(new Path(work.getPath())).toString().split("/");
         if (p.length > r.length) {
           String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
           partitionColumns.add(q);
