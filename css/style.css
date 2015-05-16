@@ -442,7 +442,6 @@ span.strong {
 
 .introWrapper {
   border-bottom:1px solid #CCC;
-  margin-bottom:50px;  
 }
 
 table.intro {
@@ -456,7 +455,7 @@ table.intro td {
   background-position:center 25px;
   background-repeat:no-repeat;
   background-size:25px auto;
-  padding:65px 0 40px 0;
+  padding:65px 0 0 0;
   position:relative;
   vertical-align:top;
 }
@@ -499,32 +498,6 @@ table.intro a {
   color:#1a6bc7;
   font-size:12px;  
   font-weight: bold;
-}
-
-.home_txt { 
-  text-align:center;
-  padding-bottom:25px;
-}
-
-.home_txt h1 {
-  font-size:36px;
-  font-weight:normal;
-  line-height:44px;  
-  margin:0;
-}
-
-.home_txt h2 {
-  font-size:16px;
-  font-weight:normal;
-  line-height:24px;  
-}
-
-.home_txt p {
-  font-size:16px;
-  font-weight:lighter;
-  line-height:24px;
-  margin:40px auto;
-  width:770px;  
 }
 
 #blu {
@@ -851,4 +824,51 @@ div.alertbar a{
 div.alertbar div span{
   font-size:65%;
   color:#aa7;
+}
+
+div.home-row{
+  border-bottom:solid 1px #ccc;
+  margin:0 auto;
+  text-align:center;
+}
+
+div.home-row div{
+  display:inline-block;
+  vertical-align:middle;
+  text-align:left;
+}
+
+div.home-row:nth-child(odd) div:nth-child(1){
+  width:300px;
+}
+
+div.home-row:nth-child(odd) div:nth-child(2){
+  margin-left:40px;
+  width:580px;
+}
+
+div.home-row:nth-child(even) div:nth-child(1){
+  width:580px;
+}
+
+div.home-row:nth-child(even) div:nth-child(2){
+  margin-left:40px;
+  width:300px;
+}
+
+.home-row h1 {
+  font-size:24px;
+  margin:24px 0;
+  font-weight:bold;
+}
+
+.home-row h2 {
+  font-size:20px;
+  margin:20px 0;
+  font-weight:bold;
+}
+
+.home-row p {
+  font-size:16px;
+  line-height:22px;
 }

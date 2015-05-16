@@ -3,7 +3,7 @@ div.highlight pre, code {
   border-radius: 0;
   border: none;
   border-left: 5px solid #494747;
-  font-family: 'Source Code Pro', monospace;
+  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
   font-size: 14px;
   line-height: 24px;
   overflow: auto;
@@ -21,7 +21,7 @@ code {
   border-radius: 0;
   border: none;
   border-left: 5px;
-  font-family: 'Source Code Pro', monospace;
+  font-family: font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
   font-size: 14px;
   line-height: 24px;
   overflow: auto;
