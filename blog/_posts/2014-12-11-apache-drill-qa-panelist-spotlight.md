@@ -3,9 +3,10 @@ layout: post
 title: "Apache Drill Q&A Panelist Spotlight"
 code: apache-drill-qa-panelist-spotlight
 excerpt: Join us on Twitter for a live Q&A on Wednesday, December 17.
+authors: ["tshiran"]
 nodate: true
 ---
-<script type="text/javascript" src="https://addthisevent.com/libs/1.5.8/ate.min.js"></script>
+<script type="text/javascript" src="//addthisevent.com/libs/1.5.8/ate.min.js"></script>
 <a href="{{ site.baseurl }}/blog/2014/12/11/apache-drill-qa-panelist-spotlight/" title="Add to Calendar" class="addthisevent">
     Add to Calendar
     <span class="_start">12-17-2014 11:30:00</span>
@@ -15,7 +16,7 @@ nodate: true
     <span class="_description">Join us on Twitter for a one-hour, live SQL-on-Hadoop Q&A. Use the **hashtag #DrillQA** so the panelists can engage with your questions and comments. Apache Drill committers Tomer Shiran, Jacques Nadeau, and Ted Dunning, as well as Tableau Product Manager Jeff Feng and Data Scientist Dr. Kirk Borne will be on hand to answer your questions.</span>
     <span class="_location">Twitter: #DrillQA</span>
     <span class="_organizer">Tomer Shiran</span>
-    <span class="_organizer_email">tshiran@apache.org</span>
+    <span class="_organizer_email">tshiran\@apache.org</span>
     <span class="_all_day_event">false</span>
     <span class="_date_format">MM-DD-YYYY</span>
 </a>
