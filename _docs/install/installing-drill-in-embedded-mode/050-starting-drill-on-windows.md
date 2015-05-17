@@ -2,9 +2,9 @@
 title: "Starting Drill on Windows"
 parent: "Installing Drill in Embedded Mode"
 ---
-Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
+Start the Drill shell using the **sqlline command**. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch the Drill shell:
 
-1. Open the apache-drill-0.9.0 folder.  
+1. Open the apache-drill-0.1.0 folder.  
 2. Open the bin folder, and double-click the `sqlline.bat` file:
    ![drill bin dir]({{ site.baseurl }}/docs/img/drill-bin.png)
    The Windows command prompt opens.  
@@ -18,9 +18,9 @@ You can use the schema option in the **sqlline** command to specify a storage pl
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=local
 
-## Exiting SQLLine
+## Exiting the Drill Shell
 
-To exit SQLLine, issue the following command:
+To exit the Drill shell, issue the following command:
 
     !quit
 

@@ -7,7 +7,7 @@ cluster, Drill broadcasts the information to all of the other Drill nodes
 to have identical storage plugin configurations. You do not need to
 restart any of the Drillbits when you add or update a storage plugin instance.
 
-Use the Drill Web UI to update or add a new storage plugin. Launch a web browser, go to: `http://<IP address of the sandbox>:8047`, and then go to the Storage tab. 
+Use the Drill Web UI to update or add a new storage plugin. Launch a web browser, go to: `http://<IP address or host name>:8047`, and then go to the Storage tab. 
 
 To create and configure a new storage plugin:
 

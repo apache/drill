@@ -58,15 +58,15 @@ analysis extremely easy.
         dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
         limit 1;
 
-    +-------------+--------------+------------+------------+------------+------------+--------------+------------+------------+------------+------------+------------+------------+------------+---------------+
-    | business_id | full_address |   hours    |     open    | categories |            city    | review_count |        name   | longitude  |   state  |   stars          |  latitude  | attributes |          type    | neighborhoods |
-    +-------------+--------------+------------+------------+------------+------------+--------------+------------+------------+------------+------------+------------+------------+------------+---------------+
-    | vcNAWiLM4dR7D2nwwJ7nCA | 4840 E Indian School Rd
-    Ste 101
-    Phoenix, AZ 85018 | {"Tuesday":{"close":"17:00","open":"08:00"},"Friday":{"close":"17:00","open":"08:00"},"Monday":{"close":"17:00","open":"08:00"},"Wednesday":{"close":"17:00","open":"08:00"},"Thursday":{"close":"17:00","open":"08:00"},"Sunday":{},"Saturday":{}} | true              | ["Doctors","Health & Medical"] | Phoenix  | 7                   | Eric Goldberg, MD | -111.983758 | AZ       | 3.5                | 33.499313  | {"By Appointment Only":true,"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} | business   | []                  |
-    +-------------+--------------+------------+------------+------------+------------+--------------+------------+------------+------------+------------+------------+------------+------------+---------------+
+    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
+    | business_id            | full_address                                       | hours                                                                                                                                                                                                                                                      | open | categories                     | city    | review_count | name              | longitude   | state | stars | latitude  | attributes                                                                                                                                                   | type     | neighborhoods |
+    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
+    | vcNAWiLM4dR7D2nwwJ7nCA | 4840 E Indian School Rd Ste 101, Phoenix, AZ 85018 | fill in{"Tuesday":{"close":"17:00","open":"08:00"},"Friday":{"close":"17:00","open":"08:00"},"Monday":{"close":"17:00","open":"08:00"},"Wednesday":{"close":"17:00","open":"08:00"},"Thursday":{"close":"17:00","open":"08:00"},"Sunday":{},"Saturday":{}} | true | ["Doctors","Health & Medical"] | Phoenix | 7            | Eric Goldberg, MD | -111.983758 | AZ    | 3.5   | 33.499313 | {"By Appointment Only":true,"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} | business | []            |
+    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
 
-{% include startnote.html %}You can directly query self-describing files such as JSON, Parquet, and text. There is no need to create metadata definitions in the Hive metastore.{% include endnote.html %}
+{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+
+You can directly query self-describing files such as JSON, Parquet, and text. There is no need to create metadata definitions in the Hive metastore.
 
 ### 2\. Explore the business data set further
 
@@ -128,20 +128,20 @@ analysis extremely easy.
     dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
     where review_count > 1000 order by `review_count` desc limit 10;
 
-    +------------+------------+------------+----------------------------+
-    |    name                |   state     |    city     | review_count |
-    +------------+------------+------------+----------------------------+
-    | Mon Ami Gabi           | NV          | Las Vegas  | 4084          |
-    | Earl of Sandwich       | NV          | Las Vegas  | 3655          |
-    | Wicked Spoon           | NV          | Las Vegas  | 3408          |
-    | The Buffet             | NV          | Las Vegas  | 2791          |
-    | Serendipity 3          | NV          | Las Vegas  | 2682          |
-    | Bouchon                | NV          | Las Vegas  | 2419          |
-    | The Buffet at Bellagio | NV          | Las Vegas  | 2404          |
-    | Bacchanal Buffet       | NV          | Las Vegas  | 2369          |
-    | The Cosmopolitan of Las Vegas | NV   | Las Vegas  | 2253          |
-    | Aria Hotel & Casino    | NV          | Las Vegas  | 2224          |
-    +------------+------------+------------+----------------------------+
+    +-------------------------------+-------------+------------+---------------+
+    |           name                |   state     |    city    |  review_count |
+    +-------------------------------+-------------+------------+---------------+
+    | Mon Ami Gabi                  | NV          | Las Vegas  | 4084          |
+    | Earl of Sandwich              | NV          | Las Vegas  | 3655          |
+    | Wicked Spoon                  | NV          | Las Vegas  | 3408          |
+    | The Buffet                    | NV          | Las Vegas  | 2791          |
+    | Serendipity 3                 | NV          | Las Vegas  | 2682          |
+    | Bouchon                       | NV          | Las Vegas  | 2419          |
+    | The Buffet at Bellagio        | NV          | Las Vegas  | 2404          |
+    | Bacchanal Buffet              | NV          | Las Vegas  | 2369          |
+    | The Cosmopolitan of Las Vegas | NV          | Las Vegas  | 2253          |
+    | Aria Hotel & Casino           | NV          | Las Vegas  | 2224          |
+    +-------------------------------+-------------+----------------------------+
 
 #### Saturday open and close times for a few businesses
 
@@ -151,9 +151,9 @@ analysis extremely easy.
     dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`
     b limit 10;
 
-    +------------+------------+----------------------------+
+    +----------------------------+------------+------------+
     |    name                    |   EXPR$1   |   EXPR$2   |
-    +------------+------------+----------------------------+
+    +----------------------------+------------+------------+
     | Eric Goldberg, MD          | 08:00      | 17:00      |
     | Pine Cone Restaurant       | null       | null       |
     | Deforest Family Restaurant | 06:00      | 22:00      |
@@ -164,7 +164,7 @@ analysis extremely easy.
     | McFarland Public Library   | 09:00      | 20:00      |
     | Green Lantern Restaurant   | 06:00      | 02:00      |
     | Spartan Animal Hospital    | 07:30      | 18:00      |
-    +------------+------------+----------------------------+
+    +----------------------------+------------+------------+
 
 Note how Drill can traverse and refer through multiple levels of nesting.
 
@@ -188,29 +188,33 @@ the data).
 Then, query the attribute’s data.
 
     0: jdbc:drill:zk=local> select attributes from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` limit 10;
-    +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | attributes                                                                                                                                                                       |
-    +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | {"By Appointment Only":"true","Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} |
+
+    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |                                                     attributes                                                                                                                    |
+    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | {"By Appointment Only":"true","Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                    |
     | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"true","dinner":"false","breakfast":"false","brunch":"false"},"Caters":"false","Noise Level":"averag |
     | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"false","dinner":"false","breakfast":"false","brunch":"true"},"Caters":"false","Noise Level":"quiet" |
     | {"Take-out":"true","Good For":{},"Takes Reservations":"false","Delivery":"false","Ambience":{},"Parking":{"garage":"false","street":"false","validated":"false","lot":"true","val |
     | {"Take-out":"true","Good For":{},"Ambience":{},"Parking":{},"Has TV":"false","Outdoor Seating":"false","Attire":"casual","Music":{},"Hair Types Specialized In":{},"Payment Types |
-    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} |
-    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} |
-    | {"Good For":{},"Ambience":{},"Parking":{},"Wi-Fi":"free","Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} |
-    | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"false","dinner":"true","breakfast":"false","brunch":"false"},"Noise Level":"average","Takes Reserva |
-    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} |
-    +------------+
+    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                                 |
+    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                                 |
+    | {"Good For":{},"Ambience":{},"Parking":{},"Wi-Fi":"free","Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                  |
+    | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"false","dinner":"true","breakfast":"false","brunch":"false"},"Noise Level":"average"                |
+    | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                                 |
+    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
 
 Turn off the all text mode so we can continue to perform arithmetic operations
 on data.
 
     0: jdbc:drill:zk=local> alter system set `store.json.all_text_mode` = false;
-    +------------+------------+
-    |     ok             |  summary   |
-    +------------+------------+
-    | true              | store.json.all_text_mode updated. |
+    +-------+------------------------------------+
+    |  ok   |              summary               |
+    +-------+------------------------------------+
+    | true  | store.json.all_text_mode updated.  |
+    +-------+------------------------------------+
 
 ### 4\. Explore the restaurant businesses in the data set
 
@@ -225,40 +229,43 @@ on data.
 
 #### Top restaurants in number of reviews
 
-    0: jdbc:drill:zk=local> select name,state,city,`review_count` from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by `review_count` desc limit 10
-    . . . . . . . . . . . > ;
-    +------------+------------+------------+--------------+
-    |    name         |   state    |    city     | review_count |
-    +------------+------------+------------+--------------+
-    | Mon Ami Gabi | NV               | Las Vegas  | 4084         |
-    | Earl of Sandwich | NV         | Las Vegas  | 3655         |
-    | Wicked Spoon | NV             | Las Vegas  | 3408         |
-    | The Buffet | NV       | Las Vegas  | 2791         |
-    | Serendipity 3 | NV              | Las Vegas  | 2682         |
-    | Bouchon       | NV         | Las Vegas  | 2419           |
-    | The Buffet at Bellagio | NV             | Las Vegas  | 2404         |
-    | Bacchanal Buffet | NV        | Las Vegas  | 2369         |
-    | Hash House A Go Go | NV                | Las Vegas  | 2201         |
-    | Mesa Grill | NV         | Las Vegas  | 2004         |
-    +------------+------------+------------+--------------+
+    0: jdbc:drill:zk=local> select name,state,city,`review_count` from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by `review_count` desc limit 10;
+
+    +------------------------+-------+-----------+--------------+
+    |          name          | state |    city   | review_count |
+    +------------------------+-------+-----------+--------------+
+    | Mon Ami Gabi           | NV    | Las Vegas | 4084         |
+    | Earl of Sandwich       | NV    | Las Vegas | 3655         |
+    | Wicked Spoon           | NV    | Las Vegas | 3408         |
+    | The Buffet             | NV    | Las Vegas | 2791         |
+    | Serendipity 3          | NV    | Las Vegas | 2682         |
+    | Bouchon                | NV    | Las Vegas | 2419         |
+    | The Buffet at Bellagio | NV    | Las Vegas | 2404         |
+    | Bacchanal Buffet       | NV    | Las Vegas | 2369         |
+    | Hash House A Go Go     | NV    | Las Vegas | 2201         |
+    | Mesa Grill             | NV    | Las Vegas | 2004         |
+    +------------------------+-------+-----------+--------------+
 
 #### Top restaurants in number of listed categories
 
     0: jdbc:drill:zk=local> select name,repeated_count(categories) as categorycount, categories from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by repeated_count(categories) desc limit 10;
-    +------------+---------------+------------+
-    |    name         | categorycount | categories |
-    +------------+---------------+------------+
-    | Binion's Hotel & Casino | 10           | ["Arts & Entertainment","Restaurants","Bars","Casinos","Event Planning & Services","Lounges","Nightlife","Hotels & Travel","American (N |
-    | Stage Deli | 10        | ["Arts & Entertainment","Food","Hotels","Desserts","Delis","Casinos","Sandwiches","Hotels & Travel","Restaurants","Event Planning & Services"] |
-    | Jillian's  | 9               | ["Arts & Entertainment","American (Traditional)","Music Venues","Bars","Dance Clubs","Nightlife","Bowling","Active Life","Restaurants"] |
-    | Hotel Chocolat | 9               | ["Coffee & Tea","Food","Cafes","Chocolatiers & Shops","Specialty Food","Event Planning & Services","Hotels & Travel","Hotels","Restaurants"] |
-    | Hotel du Vin & Bistro Edinburgh | 9           | ["Modern European","Bars","French","Wine Bars","Event Planning & Services","Nightlife","Hotels & Travel","Hotels","Restaurants" |
-    | Elixir             | 9             | ["Arts & Entertainment","American (Traditional)","Music Venues","Bars","Cocktail Bars","Nightlife","American (New)","Local Flavor","Restaurants"] |
-    | Tocasierra Spa and Fitness | 8                  | ["Beauty & Spas","Gyms","Medical Spas","Health & Medical","Fitness & Instruction","Active Life","Day Spas","Restaurants"] |
-    | Costa Del Sol At Sunset Station | 8            | ["Steakhouses","Mexican","Seafood","Event Planning & Services","Hotels & Travel","Italian","Restaurants","Hotels"] |
-    | Scottsdale Silverado Golf Club | 8              | ["Fashion","Shopping","Sporting Goods","Active Life","Golf","American (New)","Sports Wear","Restaurants"] |
-    | House of Blues | 8               | ["Arts & Entertainment","Music Venues","Restaurants","Hotels","Event Planning & Services","Hotels & Travel","American (New)","Nightlife"] |
-    +------------+---------------+------------+
+
+    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+    | name                            | categorycount | categories                                                                                                                                        |
+    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+    | Binion's Hotel & Casino         | 10            | ["Arts &,Entertainment","Restaurants","Bars","Casinos","Event,Planning &,Services","Lounges","Nightlife","Hotels &,Travel","American]             |
+    | Stage Deli                      | 10            | ["Arts &,Entertainment","Food","Hotels","Desserts","Delis","Casinos","Sandwiches","Hotels,& Travel","Restaurants","Event Planning &,Services"]    |
+    | Jillian's                       | 9             | ["Arts &,Entertainment","American (Traditional)","Music,Venues","Bars","Dance,Clubs","Nightlife","Bowling","Active,Life","Restaurants"]           |
+    | Hotel Chocolat                  | 9             | ["Coffee &,Tea","Food","Cafes","Chocolatiers &,Shops","Specialty Food","Event Planning &,Services","Hotels & Travel","Hotels","Restaurants"]      |
+    | Hotel du Vin & Bistro Edinburgh | 9             | ["Modern,European","Bars","French","Wine,Bars","Event Planning &,Services","Nightlife","Hotels &,Travel","Hotels","Restaurants"]                  |
+    | Elixir                          | 9             | ["Arts &,Entertainment","American (Traditional)","Music,Venues","Bars","Cocktail,Bars","Nightlife","American (New)","Local,Flavor","Restaurants"] |
+    | Tocasierra Spa and Fitness      | 8             | ["Beauty &,Spas","Gyms","Medical Spas","Health &,Medical","Fitness & Instruction","Active,Life","Day Spas","Restaurants"]                         |
+    | Costa Del Sol At Sunset Station | 8             | ["Steakhouses","Mexican","Seafood","Event,Planning & Services","Hotels &,Travel","Italian","Restaurants","Hotels"]                                |
+    | Scottsdale Silverado Golf Club  | 8             | ["Fashion","Shopping","Sporting,Goods","Active Life","Golf","American,(New)","Sports Wear","Restaurants"]                                         |
+    | House of Blues                  | 8             | ["Arts & Entertainment","Music Venues","Restaurants","Hotels","Event Planning & Services","Hotels & Travel","American (New)","Nightlife"]         |
+    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+
+{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
 
 #### Top first categories in number of review counts
 
@@ -266,20 +273,21 @@ on data.
     from dfs.`/users/nrentachintala/Downloads/yelp_academic_dataset_business.json` 
     group by categories[0] 
     order by count(categories[0]) desc limit 10;
-    +------------+---------------+
-    |   EXPR$0   | categorycount |
-    +------------+---------------+
-    | Food       | 4294          |
-    | Shopping   | 1885          |
-    | Active Life | 1676          |
-    | Bars       | 1366          |
-    | Local Services | 1351          |
-    | Mexican    | 1284          |
-    | Hotels & Travel | 1283          |
-    | Fast Food  | 963           |
+
+    +----------------------+---------------+
+    | EXPR$0               | categorycount |
+    +----------------------+---------------+
+    | Food                 | 4294          |
+    | Shopping             | 1885          |
+    | Active Life          | 1676          |
+    | Bars                 | 1366          |
+    | Local Services       | 1351          |
+    | Mexican              | 1284          |
+    | Hotels & Travel      | 1283          |
+    | Fast Food            | 963           |
     | Arts & Entertainment | 906           |
-    | Hair Salons | 901           |
-    +------------+---------------+
+    | Hair Salons          | 901           |
+    +----------------------+---------------+
 
 ### 5\. Explore the Yelp reviews dataset and combine with the businesses.
 
@@ -287,11 +295,11 @@ on data.
 
     0: jdbc:drill:zk=local> select * 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_review.json` limit 1;
-    +------------+------------+------------+------------+------------+------------+------------+-------------+
-    |   votes          |  user_id   | review_id  |   stars    |            date    |    text           |          type    | business_id |
-    +------------+------------+------------+------------+------------+------------+------------+-------------+
-    | {"funny":0,"useful":2,"cool":1} | Xqd0DzHaiyRqVH3WRG7hzg | 15SdjuK7DmYqUAj6rjGowg | 5            | 2007-05-17 | dr. goldberg offers everything i look for in a general practitioner.  he's nice and easy to talk to without being patronizing; he's always on time in seeing his patients; he's affiliated with a top-notch hospital (nyu) which my parents have explained to me is very important in case something happens and you need surgery; and you can get referrals to see specialists without having to see him first.  really, what more do you need?  i'm sitting here trying to think of any complaints i have about him, but i'm really drawing a blank. | review | vcNAWiLM4dR7D2nwwJ7nCA |
-    +------------+------------+------------+------------+------------+------------+------------+-------------+
+    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
+    | votes                           | user_id                | review_id              | stars | date       | text                                                                 | type   | business_id            |
+    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
+    | {"funny":0,"useful":2,"cool":1} | Xqd0DzHaiyRqVH3WRG7hzg | 15SdjuK7DmYqUAj6rjGowg | 5     | 2007-05-17 | dr. goldberg offers everything i look for in a general practitioner. | review | vcNAWiLM4dR7D2nwwJ7nCA |
+    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
 
 #### Top businesses with cool rated reviews
 
@@ -305,14 +313,14 @@ of the reviews themselves.
     FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_review.json` r
     GROUP BY r.business_id having sum(r.votes.cool) > 2000 
     order by sum(r.votes.cool)  desc);
-    +------------+
-    |    name         |
-    +------------+
-    | Earl of Sandwich |
-    | XS Nightclub |
+    +-------------------------------+
+    |             name              |
+    +-------------------------------+
+    | Earl of Sandwich              |
+    | XS Nightclub                  |
     | The Cosmopolitan of Las Vegas |
-    | Wicked Spoon |
-    +------------+
+    | Wicked Spoon                  |
+    +-------------------------------+
 
 #### Create a view with the combined business and reviews data sets
 
@@ -326,19 +334,19 @@ instead of in a logical view, you can use CREATE TABLE AS SELECT syntax.
     Select b.name,b.stars,b.state,b.city,r.votes.funny,r.votes.useful,r.votes.cool, r.`date` 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json` b, dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_review.json` r 
     where r.business_id=b.business_id
-    +------------+------------+
-    |     ok             |  summary   |
-    +------------+------------+
-    | true              | View 'businessreviews' created successfully in 'dfs.tmp' schema |
-    +------------+------------+
+    +------------+-----------------------------------------------------------------+
+    |     ok     |                           summary                               |
+    +------------+-----------------------------------------------------------------+
+    | true       | View 'businessreviews' created successfully in 'dfs.tmp' schema |
+    +------------+-----------------------------------------------------------------+
 
 Let’s get the total number of records from the view.
 
     0: jdbc:drill:zk=local> select count(*) as Total from dfs.tmp.businessreviews;
     +------------+
-    |   Total   |
+    |   Total    |
     +------------+
-    | 1125458       |
+    | 1125458    |
     +------------+
 
 In addition to these queries, you can get many more deeper insights using
@@ -359,30 +367,30 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
 
     0: jdbc:drill:zk=local> select name, flatten(categories) as category 
     from dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_business.json`  limit 20;
-    +------------+------------+
-    |    name         |   category   |
-    +------------+------------+
-    | Eric Goldberg, MD | Doctors          |
-    | Eric Goldberg, MD | Health & Medical |
-    | Pine Cone Restaurant | Restaurants |
-    | Deforest Family Restaurant | American (Traditional) |
-    | Deforest Family Restaurant | Restaurants |
-    | Culver's   | Food       |
-    | Culver's   | Ice Cream & Frozen Yogurt |
-    | Culver's   | Fast Food  |
-    | Culver's   | Restaurants |
-    | Chang Jiang Chinese Kitchen | Chinese    |
-    | Chang Jiang Chinese Kitchen | Restaurants |
-    | Charter Communications | Television Stations |
-    | Charter Communications | Mass Media |
-    | Air Quality Systems | Home Services |
-    | Air Quality Systems | Heating & Air Conditioning/HVAC |
-    | McFarland Public Library | Libraries  |
-    | McFarland Public Library | Public Services & Government |
-    | Green Lantern Restaurant | American (Traditional) |
-    | Green Lantern Restaurant | Restaurants |
-    | Spartan Animal Hospital | Veterinarians |
-    +------------+------------+
+    +-----------------------------+---------------------------------+
+    | name                        | category                        |
+    +-----------------------------+---------------------------------+
+    | Eric Goldberg, MD           | Doctors                         |
+    | Eric Goldberg, MD           | Health & Medical                |
+    | Pine Cone Restaurant        | Restaurants                     |
+    | Deforest Family Restaurant  | American (Traditional)          |
+    | Deforest Family Restaurant  | Restaurants                     |
+    | Culver's                    | Food                            |
+    | Culver's                    | Ice Cream & Frozen Yogurt       |
+    | Culver's                    | Fast Food                       |
+    | Culver's                    | Restaurants                     |
+    | Chang Jiang Chinese Kitchen | Chinese                         |
+    | Chang Jiang Chinese Kitchen | Restaurants                     |
+    | Charter Communications      | Television Stations             |
+    | Charter Communications      | Mass Media                      |
+    | Air Quality Systems         | Home Services                   |
+    | Air Quality Systems         | Heating & Air Conditioning/HVAC |
+    | McFarland Public Library    | Libraries                       |
+    | McFarland Public Library    | Public Services & Government    |
+    | Green Lantern Restaurant    | American (Traditional)          |
+    | Green Lantern Restaurant    | Restaurants                     |
+    | Spartan Animal Hospital     | Veterinarians                   |
+    +-----------------------------+---------------------------------+
 
 #### Top categories used in business reviews
 
@@ -390,20 +398,20 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     from (select flatten(categories) catl from dfs.`/yelp_academic_dataset_business.json` ) celltbl 
     group by celltbl.catl 
     order by count(celltbl.catl) desc limit 10 ;
-    +------------+-------------+
-    |    catl    | categorycnt |
-    +------------+-------------+
-    | Restaurants | 14303       |
-    | Shopping   | 6428        |
-    | Food       | 5209        |
-    | Beauty & Spas | 3421        |
-    | Nightlife  | 2870        |
-    | Bars       | 2378        |
+    +------------------+-------------+
+    | catl             | categorycnt |
+    +------------------+-------------+
+    | Restaurants      | 14303       |
+    | Shopping         | 6428        |
+    | Food             | 5209        |
+    | Beauty & Spas    | 3421        |
+    | Nightlife        | 2870        |
+    | Bars             | 2378        |
     | Health & Medical | 2351        |
-    | Automotive | 2241        |
-    | Home Services | 1957        |
-    | Fashion    | 1897        |
-    +------------+-------------+
+    | Automotive       | 2241        |
+    | Home Services    | 1957        |
+    | Fashion          | 1897        |
+    +------------------+-------------+
 
 Stay tuned for more features and upcoming activities in the Drill community.
 

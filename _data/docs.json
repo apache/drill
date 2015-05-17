@@ -2937,6 +2937,23 @@
             "title": "Functions for Handling Nulls", 
             "url": "/docs/functions-for-handling-nulls/"
         }, 
+        "Getting Query Information": {
+            "breadcrumbs": [
+                {
+                    "title": "Query Audit Logging", 
+                    "url": "/docs/query-audit-logging/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Reference", 
+            "next_url": "/docs/sql-reference/", 
+            "parent": "Query Audit Logging", 
+            "previous_title": "Query Audit Logging", 
+            "previous_url": "/docs/query-audit-logging/", 
+            "relative_path": "_docs/075-getting-query-information.md", 
+            "title": "Getting Query Information", 
+            "url": "/docs/getting-query-information/"
+        }, 
         "Getting Started": {
             "breadcrumbs": [], 
             "children": [
@@ -4067,8 +4084,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Reference", 
-            "next_url": "/docs/sql-reference/", 
+            "next_title": "Query Audit Logging", 
+            "next_url": "/docs/query-audit-logging/", 
             "parent": "Query Data", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
@@ -4876,6 +4893,36 @@
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
         }, 
+        "Query Audit Logging": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Audit Logging", 
+                            "url": "/docs/query-audit-logging/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Reference", 
+                    "next_url": "/docs/sql-reference/", 
+                    "parent": "Query Audit Logging", 
+                    "previous_title": "Query Audit Logging", 
+                    "previous_url": "/docs/query-audit-logging/", 
+                    "relative_path": "_docs/075-getting-query-information.md", 
+                    "title": "Getting Query Information", 
+                    "url": "/docs/getting-query-information/"
+                }
+            ], 
+            "next_title": "Getting Query Information", 
+            "next_url": "/docs/getting-query-information/", 
+            "parent": "", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "relative_path": "_docs/074-query-audit-logging.md", 
+            "title": "Query Audit Logging", 
+            "url": "/docs/query-audit-logging/"
+        }, 
         "Query Data": {
             "breadcrumbs": [], 
             "children": [
@@ -5239,8 +5286,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Reference", 
-                    "next_url": "/docs/sql-reference/", 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
@@ -7365,8 +7412,8 @@
             "next_title": "SQL Reference Introduction", 
             "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Getting Query Information", 
+            "previous_url": "/docs/getting-query-information/", 
             "relative_path": "_docs/080-sql-reference.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"
@@ -10776,8 +10823,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Reference", 
-                    "next_url": "/docs/sql-reference/", 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
@@ -10794,6 +10841,36 @@
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Audit Logging", 
+                            "url": "/docs/query-audit-logging/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Reference", 
+                    "next_url": "/docs/sql-reference/", 
+                    "parent": "Query Audit Logging", 
+                    "previous_title": "Query Audit Logging", 
+                    "previous_url": "/docs/query-audit-logging/", 
+                    "relative_path": "_docs/075-getting-query-information.md", 
+                    "title": "Getting Query Information", 
+                    "url": "/docs/getting-query-information/"
+                }
+            ], 
+            "next_title": "Getting Query Information", 
+            "next_url": "/docs/getting-query-information/", 
+            "parent": "", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "relative_path": "_docs/074-query-audit-logging.md", 
+            "title": "Query Audit Logging", 
+            "url": "/docs/query-audit-logging/"
         }, 
         {
             "breadcrumbs": [], 
@@ -11582,8 +11659,8 @@
             "next_title": "SQL Reference Introduction", 
             "next_url": "/docs/sql-reference-introduction/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Getting Query Information", 
+            "previous_url": "/docs/getting-query-information/", 
             "relative_path": "_docs/080-sql-reference.md", 
             "title": "SQL Reference", 
             "url": "/docs/sql-reference/"

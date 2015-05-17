@@ -36,7 +36,7 @@ file tells Drill to scan that JAR file or associated object and include it.
 
 You can run the following query to see a list of Drill’s startup options:
 
-    SELECT * FROM sys.options WHERE type='BOOT';
+    SELECT * FROM sys.boot;
 
 ## Configuring Start-Up Options
 
@@ -56,7 +56,6 @@ The summary of start-up options, also known as boot options, lists default value
 * drill.exec.sort.external.spill.directories
 
   Tells Drill which directory to use when spooling. Drill uses a spool and sort operation for beyond memory operations. The sorting operation is designed to spool to a Hadoop file system. The default Hadoop file system is a local file system in the /tmp directory. Spooling performance (both writing and reading back from it) is constrained by the file system. For MapR clusters, use MapReduce volumes or set up local volumes to use for spooling purposes. Volumes improve performance and stripe data across as many disks as possible.
-
 
 * drill.exec.zk.connect  
   Provides Drill with the ZooKeeper quorum to use to connect to data sources. Change this setting to point to the ZooKeeper quorum that you want Drill to use. You must configure this option on each Drillbit node.

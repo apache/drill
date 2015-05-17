@@ -3,7 +3,7 @@ title: "Configuring Drill Memory"
 parent: "Configure Drill"
 ---
 
-This section describes how to configure the amount of direct memory allocated to a Drillbit for query processing in any Drill cluster, multitenant or not. The default memory for a Drillbit is 8G, but Drill prefers 16G or more depending on the workload. The total amount of direct memory that a Drillbit allocates to query operations cannot exceed the limit set.
+You can configure the amount of direct memory allocated to a Drillbit for query processing in any Drill cluster, multitenant or not. The default memory for a Drillbit is 8G, but Drill prefers 16G or more depending on the workload. The total amount of direct memory that a Drillbit allocates to query operations cannot exceed the limit set.
 
 Drill uses Java direct memory and performs well when executing
 operations in memory instead of storing the operations on disk. Drill does not
@@ -26,7 +26,7 @@ After you edit `<drill_installation_directory>/conf/drill-env.sh`, [restart the 
 
 ## About the Drillbit startup script
 
-The drill-env.sh file contains the following options:
+The `drill-env.sh` file contains the following options:
 
     DRILL_MAX_DIRECT_MEMORY="8G"
     DRILL_MAX_HEAP="4G"
