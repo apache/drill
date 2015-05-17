@@ -1,72 +1,75 @@
-/*****************
- Categories Bar
-*****************/
-#menu ul li.toc-categories a {
-	height:50px;
-	padding:0;
+/* Navigation menu */
+
+#menu ul li.toc-categories a{
+  height:50px;
+  padding:0;
   text-decoration: none;
-	width: 60px;
+  width: 60px;
   text-align: center;
   color: #bababa;
 }
-#menu ul li.toc-categories {
-	float:left;
+
+#menu ul li.toc-categories{
+  float:left;
   line-height: 45px;
   font-size: 18px;
   display: none;
   overflow: auto;
 }
 
-/****************
- Docs Nav (Bottom)
-****************/
+/* Bottom navigation (left and right arrows) */
 
-div.doc-nav {
+div.doc-nav{
   overflow: auto;
   width: 100%;
   margin-top: 30px;
 }
+
 div.doc-nav a{
   text-decoration: none;
 }
+
 div.doc-nav a:hover{
   text-decoration: underline;
 }
-div.doc-nav span.previous-toc {
+
+div.doc-nav span.previous-toc{
   float: left;
   width: auto;
 }
-div.doc-nav span.back-to-toc {
+
+div.doc-nav span.back-to-toc{
   float: left;
   width: auto;
   margin-left: 15%;
 }
-div.doc-nav span.next-toc {
+
+div.doc-nav span.next-toc{
   float: right;
 }
 
+/* Main content area */
 
-/*****************
- Main Area
-*****************/
-
-.main-content .int_text {
+.main-content .int_text{
   margin-left: 0px;
   margin-top: 0px;
 }
-.main-content .int_text img {
+
+.main-content .int_text img{
   margin: 30px 0px;
 }
-.main-content .int_title
-{
+
+.main-content .int_title{
   text-align: left;
   margin-left: 0px;
   margin-top: 30px;
 }
-.int_title::after{
+
+.int_title.left::after{
   left: 0px;
 }
-.main-content .edit-link {
+
+.main-content .edit-link{
   position: relative;
   float: right;
   margin-top: 13px;
@@ -75,27 +78,28 @@ div.doc-nav span.next-toc {
   font-size: 24px;
   color: #333333;
 }
-div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3, div.main-content h4, div.main-content h5, div.main-content h6 {
-  /*font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;*/
+
+div.int_title h1, div.main-content h1, div.main-content h2, div.main-content h3, div.main-content h4, div.main-content h5, div.main-content h6{
   font-weight: normal;
   line-height: 24px;
   color: #313030;
   padding: 0;
 }
-div.main-content h1, div.main-content h2 {
+div.main-content h1, div.main-content h2{
   margin-top: 24px;
   margin-bottom: 24px;
 }
 
-div.main-content h3 {
+div.main-content h3{
   margin-top: 24px;
   font-weight: bold;
 }
 
-div.section > h2, div.section > h3, div.section > h4 {
+div.section > h2, div.section > h3, div.section > h4{
   margin: 24px 0;
 }
-div.main-content h1, div.int_title h1 {
+
+div.main-content h1, div.int_title h1{
   border-top: none;
   font-size: 36px;
   line-height: 48px;
@@ -106,7 +110,7 @@ div.main-content h1, div.int_title h1 {
 /* Sidebar doc menu styles
 ***************************/
 
-.sidebar {
+.sidebar{
   position: fixed;
   -webkit-transform: translateZ(0);
   background-color: #f5f6f7;
@@ -123,102 +127,119 @@ div.main-content h1, div.int_title h1 {
   -moz-transition: left 0.4s cubic-bezier(.02,.01,.47,1);
   -webkit-transition: left 0.4s cubic-bezier(.02,.01,.47,1);
 }
-.sidebar.force-expand {
+
+.sidebar.force-expand{
   left: 0px;
 }
-aside {
+
+aside{
   display:block;
 }
-div.docsidebar {
+
+div.docsidebar{
   font-size: 14px;
   height: 100%;
 }
-div.docsidebarwrapper {
+
+div.docsidebarwrapper{
   padding: 0;
   padding-top: 24px;
   padding-bottom: 130px;
   /*min-height: 100%;*/
   position: relative;
 }
-div.docsidebar h3 {
+div.docsidebar h3{
   padding: 0 12px;
   font-size: 14px;
   line-height: 24px;
   font-weight: bold;
   margin: -3px 0 15px 0;
 }
-div.docsidebarwrapper ul {
+
+div.docsidebarwrapper ul{
   margin: 12px 0 0 0;
   padding: 0;
 }
-div.docsidebar ul {
+
+div.docsidebar ul{
   list-style: none;
   margin: 10px 0 10px 0;
   padding: 0;
   color: #000;
 }
-div.docsidebar ul li {
+
+div.docsidebar ul li{
   font-weight: normal;
   line-height: 24px;
 }
-.docsidebarwrapper > ul > .toctree-l1.current_section {
+
+.docsidebarwrapper > ul > .toctree-l1.current_section{
   background-color: #fff;
   border-right: 1px solid #f5f6f7;
 }
-.docsidebarwrapper a
-{
+
+.docsidebarwrapper a{
   color: #333333;
   text-decoration: none;
 }
-.docsidebarwrapper > ul > ul.current_section {
+
+.docsidebarwrapper > ul > ul.current_section{
   background-color: #fff;
   border-right: 1px solid #f5f6f7;
   margin-right: 0px;
 }
-.docsidebarwrapper > ul > .toctree-l1 {
+
+.docsidebarwrapper > ul > .toctree-l1{
   padding: 11px 0 0 12px;
   line-height: 24px;
   border-top: 1px solid #ebebed;
 }
-.docsidebarwrapper > ul > .toctree-l1 > a {
+
+.docsidebarwrapper > ul > .toctree-l1 > a{
   font-size: 18px;
   line-height: 24px;
   width: 100%;
   display: inline-block;
 }
-div.docsidebar ul ul, div.docsidebar ul.want-points {
+
+div.docsidebar ul ul, div.docsidebar ul.want-points{
   list-style: none outside none;
   margin-left: 0;
 }
-div.docsidebar ul ul {
+
+div.docsidebar ul ul{
   margin-top: 0px;
   margin-bottom: 0;
 }
-div.docsidebar ul ul ul {
+
+div.docsidebar ul ul ul{
   margin-top: -3px;
 }
 
-.docsidebarwrapper li.toctree-l1 ul > li > a {
+.docsidebarwrapper li.toctree-l1 ul > li > a{
   line-height: 24px;
   display: inline-block;
   width: 100%;
 }
-.docsidebarwrapper li.toctree-l1 ul > li
-{
+
+.docsidebarwrapper li.toctree-l1 ul > li{
   font-size: 14px;
 }
-div.docsidebar li.toctree-l2 {
+
+div.docsidebar li.toctree-l2{
   text-indent: -12px;
   padding-left: 47px;
 }
-div.docsidebar li.toctree-l1 a:hover, div.docsidebar li.toctree-l2 a:hover, div.docsidebar li.toctree-l3 a:hover {
+
+div.docsidebar li.toctree-l1 a:hover, div.docsidebar li.toctree-l2 a:hover, div.docsidebar li.toctree-l3 a:hover{
   text-decoration: underline;
 }
 
-div.docsidebar li.toctree-l3  {
+div.docsidebar li.toctree-l3 {
   padding-left: 57px;
   text-indent: -12px;
 }
+
 span.expand, span.contract{
   width: 0px;
   cursor: pointer;
@@ -227,163 +248,176 @@ span.expand, span.contract{
   position: relative;
   right: 5px;
 }
-span.expand.show, span.contract.show {
+
+span.expand.show, span.contract.show{
   display: inline-block;
 }
 
-.docsidebarwrapper li.toctree-l2.current, .docsidebarwrapper li.toctree-l3.current {
+.docsidebarwrapper li.toctree-l2.current, .docsidebarwrapper li.toctree-l3.current{
   background-color: #1A6BC7;
   color: white;
 }
-.docsidebarwrapper li.toctree-l2.current.current > a, .docsidebarwrapper li.toctree-l3.current.current > a {
+
+.docsidebarwrapper li.toctree-l2.current.current > a, .docsidebarwrapper li.toctree-l3.current.current > a{
   color: white;
 }
-.docsidebarwrapper a:hover {
+
+.docsidebarwrapper a:hover{
   color: black;
 }
-.docsidebarwrapper a {
+
+.docsidebarwrapper a{
   display: inline-block;
   width: 100%;
 }
 
-.docsidebarwrapper ul {
+.docsidebarwrapper ul{
   font-size: 14px;
 }
 
-.permalink
-{
+.permalink{
   text-decoration:none;
   font-size: 70%;
   color: #1A6BC7;
 }
-.permalink.hide {
+
+.permalink.hide{
   visibility: hidden;
 }
-/****************************
-/* Responsive media queries
-/***************************/
 
-@media (max-width: 320px) {
-  .int_text {
+/* Responsive */
+
+@media (max-width: 320px){
+  .int_text{
     width: auto;
   }
-  .int_title {
+  .int_title{
     width: auto;
   }
 }
-@media (max-width: 768px) {
-  .int_text {
-    width: auto;
-  }
-  .int_title {
-    width: auto;
-  }
-  
-}
-/* Browser styles when browser max width is the follow. 
-   Need menu click to make sidebar appear */
 
-@media (max-width: 1024px) {
-  div#footer {
+@media (max-width: 768px){
+  .int_text{
+    width: auto;
+  }
+  .int_title{
+    width: auto;
+  }
+}
+
+@media (max-width: 1024px){
+  div#footer{
     margin-left: 0px;
     width: 100%;
   }
-  div#footer .wrapper {
+  
+  div#footer .wrapper{
     padding: 0 20px;
   }
-  .main-content .edit-link {
+  
+  .main-content .edit-link{
     margin-right: 0px; /* container takes care of right margin */
   }
 
-  #menu ul li.toc-categories {
+  #menu ul li.toc-categories{
     display: inline-block;
     width: 60px;
     text-align: center;
   }
-  #menu ul li.logo {
+  
+  #menu ul li.logo{
     padding-left: 0px;
   }
-  #menu.force-expand ul li.toc-categories {
+  
+  #menu.force-expand ul li.toc-categories{
     display: inline-block;
   }
 
-  .page-wrap div.int_title.margin_110 {
+  .page-wrap div.int_title.margin_110{
     margin-top:110px;
   }
 
-  li.toc-categories .expand-toc-icon {
+  li.toc-categories .expand-toc-icon{
     font-size: 24px;
-    /*padding-right: 10px;*/
   }
-  li.toc-categories a.expand-toc-icon {
+  
+  li.toc-categories a.expand-toc-icon{
     color: black;
   }
 
-  .expand-toc-icon:hover,
-  .expand-toc-icon:active {
+  .expand-toc-icon:hover, .expand-toc-icon:active{
     color: white;
     text-decoration: none;
   }
 
-  .sidebar {
+  .sidebar{
     left: -293px;
     box-shadow: 0 0 13px rgba(0,0,0,0.3);
   }
 
-  .sidebar.reveal {
+  .sidebar.reveal{
     left: 0;
   }
-  .main-content.force-expand {
+  
+  .main-content.force-expand{
     margin-left: 313px;
   }
-  #footer.force-expand .wrapper {
+  
+  #footer.force-expand .wrapper{
     margin-left: 313px;
   }
+  
   .main-content{
     margin: 0px 20px 0px 20px;
   }
-  .int_title {
+  
+  .int_title{
     margin-top: 60px;
   }
-  .int_title h1 {
+  
+  .int_title h1{
     font-size: 28px;
   }
-  .page-wrap #footer {
+  
+  .page-wrap #footer{
     width: auto;
   }
-  .breadcrumbs.force-expand li:first-of-type {
+  
+  .breadcrumbs.force-expand li:first-of-type{
     margin-left: 301px;
   }
 }
-@media (min-width: 1025px) {
-  .main-content-wrapper {
+
+@media (min-width: 1025px){
+  .main-content-wrapper{
     width: 1092px; 
   }
-  .main-content
-  {
+  
+  .main-content{
     margin-left: 313px;
   }
-  #menu ul li.logo {
+  
+  #menu ul li.logo{
     padding-left: 30px;
   }
-  #footer .wrapper {
+  
+  #footer .wrapper{
     margin-left: 313px;
   }
-  #footer {
+  
+  #footer{
     width: 100%;
   }
- .breadcrumbs {
+  
+ .breadcrumbs{
     margin-left: 0px;
   }
-  .breadcrumbs li:first-of-type {
+  
+  .breadcrumbs li:first-of-type{
     margin-left: 301px;
   }
 }
-/*
-div.page-wrap:after {
-  height: 0px;
-}
-*/
-#footer {
+
+#footer{
   width: 1092px;
 }

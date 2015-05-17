@@ -2,7 +2,7 @@
 layout: post
 title: "Drill 1.0 Released"
 code: drill-1.0-released
-excerpt: Drill 1.0 is now available, representing a major milestone for the Drill community. Drill in now production-ready, making it easier than ever to explore and analyze data in non-relational datastores.
+excerpt: Drill 1.0 has been released, representing a major milestone for the Drill community. Drill in now production-ready, making it easier than ever to explore and analyze data in non-relational datastores.
 authors: ["tshiran", "jnadeau"]
 ---
 We embarked on the Drill project in late 2012 with two primary objectives:

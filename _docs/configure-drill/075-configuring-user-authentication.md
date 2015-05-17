@@ -24,7 +24,7 @@ The client passes the username and password to a Drillbit, which then passes the
  
 The following image illustrates the user authentication process in Drill:
 
-![]({{site.baseurl}}/docs/img/UserAuthProcess.png)
+![]({{site.baseurl}}/docs/img/UserAuthProcess.PNG)
 
 ### Installing and Configuring PAM
 

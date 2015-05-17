@@ -5,7 +5,7 @@ div#video-box{
   height:160px;
 }
 
-div#video-box div.background {
+div#video-box div.background{
   position:absolute;
   background-color:#fff;
   height:100%;
@@ -13,7 +13,7 @@ div#video-box div.background {
   opacity:.15;
 }
 
-div#video-box div.row {
+div#video-box div.row{
   position:absolute;
   height:40px;
   width:100%;
@@ -25,31 +25,31 @@ div#video-box div.row {
   
 }
 
-div#video-box div.row.r1 {
+div#video-box div.row.r1{
   top:40px;
 }
 
-div#video-box div.row.r2 {
+div#video-box div.row.r2{
   top:80px;
 }
 
-div#video-box div.row.r3 {
+div#video-box div.row.r3{
   top:120px;
   border-bottom:none;
 }
 
-div#video-box div.row div {
+div#video-box div.row div{
   overflow: hidden;
   margin:5px;
   height:30px;
   float:left;
 }
 
-div#video-box div.row div img {
+div#video-box div.row div img{
   height:40px;
   margin:-5px 0;
 }
 
-div#video-box a {
+div#video-box a{
   color:#006;
 }

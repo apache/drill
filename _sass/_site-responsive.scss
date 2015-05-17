@@ -5,19 +5,11 @@
 #menu ul li.menu-break {
   display:none;
 }
+
 .mobile-break {
   display: none;
 }
 
-/*@media (max-width: 768px) {
-  #menu ul li{
-    display: block;
-  }
-  #menu ul li.expand-menu {
-    display: none;
-  }
-}
-*/
 @media (min-width: 1025px) {
   #menu ul li.expand-menu {
     display: none;
@@ -269,7 +261,4 @@
     padding-left: 20px;
     text-align: left;
   }
-
 }
-
-

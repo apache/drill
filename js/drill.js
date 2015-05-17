@@ -49,10 +49,10 @@ Drill.Site = {
   watchSearchBarMouseEnter: function() {
     $("#menu .search-bar input[type=text]").on({
       focus: function(){
-        $(this).animate({ width: '125px' });
+        $(this).animate({ width: '130px' });
       },
       blur: function() {
-        $(this).animate({ width: '44px' });
+        $(this).animate({ width: '50px' });
       }
     })
   },
