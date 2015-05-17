@@ -78,7 +78,7 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"maprdb"</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"*</td>
     <td>yes</td>
     <td>One or more file formats of data Drill can read. Drill can implicitly detect some file formats based on the file extension or the first few bits of data within the file, but you need to configure an option for others.</td>
   </tr>
@@ -101,6 +101,8 @@ The following table describes the attributes you configure for storage plugins i
     <td>The delimiter used to separate columns in text files such as CSV. Specify a non-printable delimiter in the storage plugin config by using the form \uXXXX, where XXXX is the four numeral hex ascii code for the character.</td>
   </tr>
 </table>
+
+\* Only appears when you install Drill on a cluster using the mapr-drill package.
 
 The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
 

@@ -11,11 +11,14 @@ Included in the data sources that  Drill supports are these key data sources:
 
 Drill supports the following input formats for data:
 
+* [Avro](http://avro.apache.org/docs/current/spec.html)
 * CSV (Comma-Separated-Values)
 * TSV (Tab-Separated-Values)
 * PSV (Pipe-Separated-Values)
 * Parquet
-* JSON
+* MapR-DB*
+
+\* Only available when you install Drill on a cluster using the mapr-drill package.
 
 You set the input format for data coming from data sources to Drill in the workspace portion of the [storage plugin]({{ site.baseurl }}/docs/storage-plugin-registration) definition. The default input format in Drill is Parquet. 
 
