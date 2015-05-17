@@ -27,3 +27,6 @@ defaults:
       type: docs # This defines the default for anything in the docs collection. An alternative would be to use "path: _docs" here.
     values:
       layout: docpage
+
+sass:
+  style: :compressed

@@ -1,5 +1,4 @@
-.breadcrumbs
-{
+.breadcrumbs{
   display: block;
   padding: 0.5625rem 0 0.5625rem 0;
   overflow: hidden;
@@ -10,8 +9,7 @@
   width: 100%;
 }
 
-.breadcrumbs>*
-{
+.breadcrumbs>*{
   margin: 0;
   float: left;
   font-size: 0.6875rem;
@@ -19,21 +17,24 @@
   text-transform: uppercase;
   color: #334D5C;
 }
-.breadcrumbs>*:before
-{
+
+.breadcrumbs>*:before{
   content: "/";
   color: #aaa;
   margin: 0 0.75rem;
   position: relative;
   top: 1px;
 }
-.breadcrumbs>.current {
+
+.breadcrumbs>.current{
   font-weight: bold;
 }
+
 .breadcrumbs>*.current {
   cursor: default;
   color: #333;
 }
+
 .breadcrumbs>* a {
   color: #1a6bc7;
   text-decoration:none;

@@ -2,44 +2,45 @@
 layout: default
 title: Documentation
 ---
+<link href="{{ site.baseurl }}/css/content.css" rel="stylesheet" type="text/css">
 
-  {% include doctoc.html %}
-  {% include breadcrumbs.html %}
+{% include doctoc.html %}
+{% include breadcrumbs.html %}
 
-  <div class="main-content-wrapper">
-    <div class="main-content">
+<div class="main-content-wrapper">
+  <div class="main-content">
 
-      {% if page.relative_path %}
-        <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
-      {% endif %}
+    {% if page.relative_path %}
+      <a class="edit-link" href="https://github.com/apache/drill/blob/gh-pages/{{ page.relative_path }}" target="_blank"><i class="fa fa-pencil-square-o"></i></a>
+    {% endif %}
 
-      <div class="int_title">
-        <h1>{{ page.title }}</h1>
+    <div class="int_title left">
+      <h1>{{ page.title }}</h1>
 
-      </div>
+    </div>
 
-      <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
+    <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
 
-      <div class="int_text" align="left">
-        {% if page_data.children.size == 0 or page.noChildren %}
-          {{ content }}
-      {% else %}
+    <div class="int_text" align="left">
+      {% if page_data.children.size == 0 or page.noChildren %}
+        {{ content }}
+    {% else %}
+        <ul>
+        {% for doc0 in page_data.children %}
+          <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
+        {% if doc0.children.size > 0 %}
           <ul>
-          {% for doc0 in page_data.children %}
-            <li><a href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
-          {% if doc0.children.size > 0 %}
-            <ul>
-            {% for doc1 in doc0.children %}
-              <li><a href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
-          {% endfor %}
-          </ul>
-        {% endif %}
+          {% for doc1 in doc0.children %}
+            <li><a href="{{ site.baseurl }}{{ doc1.url }}">{{ doc1.title }}</a></li>
         {% endfor %}
         </ul>
       {% endif %}
-        {% unless page.noChildren %}
-          {% include docnav.html %}
-      {% endunless %}
-      </div>
+      {% endfor %}
+      </ul>
+    {% endif %}
+      {% unless page.noChildren %}
+        {% include docnav.html %}
+    {% endunless %}
     </div>
   </div>
+</div>

@@ -1,12 +1,14 @@
 ---
 layout: default
 ---
-<link href="{{ site.baseurl }}/static/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css">
-<link href="{{ site.baseurl }}/css/video-slider.css" rel="stylesheet" type="text/css">
-<script language="javascript" type="text/javascript" src="{{ site.baseurl }}/static/fancybox/jquery.fancybox.pack.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.5.0/slick.css"/>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/jquery.slick/1.5.0/slick-theme.css"/>
-<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.slick/1.5.0/slick.min.js"></script>
+<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet" type="text/css"/>
+<link href="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.4/slick.min.css" rel="stylesheet" type="text/css"/>
+<link href="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.4/slick-theme.min.css" rel="stylesheet" type="text/css"/>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.js" language="javascript" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.4/slick.min.js" language="javascript" type="text/javascript"></script>
+
+<link href="{{ site.baseurl }}/css/home.css" rel="stylesheet" type="text/css"/>
 
 <script type="text/javascript">
 
@@ -109,13 +111,13 @@ SELECT timestamp
 </div>
 
 <div class="home-row">
-  <div class="big"><img src="{{ site.baseurl }}/images/home-json.png" style="width:250px" /></div>
+  <div class="big"><img src="{{ site.baseurl }}/images/home-json.png" style="width:300px" /></div>
   <div class="description">
     <h1>Treat your data like a table even when it’s not</h1>
     <p>Drill features a JSON data model that enables it to query complex/nested data and rapidly evolving structure commonly seen in modern applications and non-relational datastores. Drill also provides intuitive extensions to SQL so that the user can easily query complex data.
     <p>Drill is the only columnar query engine that supports complex data. It features an in-memory shredded columnar representation for complex data which allows Drill to achieve columnar speed with the flexibility of an internal JSON document model.</p>
   </div>
-  <div class="small"><img src="{{ site.baseurl }}/images/home-json.png" style="width:250px" /></div>
+  <div class="small"><img src="{{ site.baseurl }}/images/home-json.png" style="width:300px" /></div>
 </div>
 
 <div class="home-row">

@@ -1,7 +1,5 @@
 @charset "UTF-8";
 
-@import url(http://fonts.googleapis.com/css?family=Lato:400,300,700);
-
 * {
   outline:none;
 }
@@ -748,8 +746,7 @@ li p {
   font-weight: inherit;
   padding: 0 0 0 8px;
   line-height: 20px;
-  font-family: "Lato";
-  width: 44px;
+  width: 50px;
 }
 #menu .search-bar input[placeholder] {
   opacity: .7;

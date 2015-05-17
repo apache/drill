@@ -1,4 +1,4 @@
-div.highlight pre, code {
+div.highlight pre, code{
   background: #f5f6f7 url(../images/code-block-bg.png) 0 0 repeat;
   border-radius: 0;
   border: none;
@@ -11,17 +11,18 @@ div.highlight pre, code {
   white-space: pre;
 }
 
-pre {
+pre{
   padding: 24px 12px;
   color: #222;
   margin: 24px 0;
 }
-code {
+
+code{
   background: #f5f6f7 url(../images/code-block-bg.png) 0 0 repeat;
   border-radius: 0;
   border: none;
   border-left: 5px;
-  font-family: font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
   font-size: 14px;
   line-height: 24px;
   overflow: auto;
@@ -29,40 +30,47 @@ code {
   white-space: pre;
 }
 
-div.admonition {
+div.admonition{
   margin: 24px 0;
   width: auto;
   max-width: 100%;
   padding: 2px 12px 22px 12px;
   border-left: 5px solid transparent;
 }
-.admonition .admonition-title {
+
+.admonition .admonition-title{
   margin-bottom: 0;
   font-size: 12px;
   font-weight: bold;
   text-transform: uppercase;
   line-height: 24px;
 }
-.admonition > p {
+
+.admonition > p{
   margin: 0 0 12.5px 0;
 }
-.admonition p.first {
+
+.admonition p.first{
   margin-top: 0 !important;
 }
-.admonition > p.last {
+
+.admonition > p.last{
   margin-bottom: 0;
 }
-.admonition .admonition-title:after {
+.admonition .admonition-title:after{
   content: ":";
   font-weight: 900;
 }
+
 .admonition.important{
   background-color: #fff2d5;
   border-color: #ffb618;
 }
-.admonition.important .admonition-title {
+
+.admonition.important .admonition-title{
   color: #ffb618;
 }
+
 .admonition.note{
   background-color: #edf4e8;
   border-color: #6ba442;
