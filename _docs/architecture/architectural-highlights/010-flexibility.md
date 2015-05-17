@@ -15,7 +15,7 @@ The following features contribute to Drill's flexible architecture:
 Drill does not require schema or type specification for the data in order to
 start the query execution process. Instead, Drill starts processing the data
 in units called record-batches and discovers the schema on the fly during
-processing. Self-describing data formats such as Parquet, JSON, AVRO, and
+processing. Self-describing data formats such as Parquet, JSON, Avro, and
 NoSQL databases have schema specified as part of the data itself, which Drill
 leverages dynamically at query time. Schema can change over the course of a
 Drill query, so all of the Drill operators are designed to reconfigure

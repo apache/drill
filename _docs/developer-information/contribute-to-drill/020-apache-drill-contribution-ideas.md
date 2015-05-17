@@ -54,7 +54,6 @@ Currently Drill supports text, JSON and Parquet file formats natively when
 interacting with file system. More readers/writers can be introduced by
 implementing custom storage plugins. Example formats are.
 
-  * AVRO
   * Sequence
   * RC
   * ORC

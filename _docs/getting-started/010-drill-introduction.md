@@ -16,7 +16,9 @@ Apache Drill 1.0 offers the following new features:
 * [Query audit logging]({{site.baseurl}}/docs/getting-query-information/) for getting the query history on a Drillbit.
 * Improved connection handling.
 * New Errors tab in the Query Profiles UI that facilitates troubleshooting and distributed storing of profiles.
-* Support for new storage plugin format: [Avro](http://avro.apache.org/docs/current/spec.html)
+* Support for a new storage plugin input format: [Avro](http://avro.apache.org/docs/current/spec.html)
+
+In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` system option to `true`.
 
 Key features of Apache Drill are:
 

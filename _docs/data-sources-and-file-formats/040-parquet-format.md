@@ -158,4 +158,4 @@ Parquet supports the following data description languages:
 * Apache Thrift
 * Google Protocol Buffers 
 
-Implement custom storage plugins, such as an Avro plugin, to create Parquet readers/writers for these formats. 
+Implement custom storage plugins to create Parquet readers/writers for formats such as Thrift. 
