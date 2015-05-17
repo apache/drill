@@ -43,32 +43,32 @@ The output looks something like this:
 
 Complete the following steps to install Drill:  
 
-1. Issue the following command in a terminal to download the latest, stable version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz):
+1. Issue the following command in a terminal to download the latest version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz):
 
-        wget http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz  
+        wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz  
 
 2. Copy the downloaded file to the directory where you want to install Drill. 
 
 3. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
-        sudo tar -xvzf apache-drill-0.9.0..tar.gz  
+        sudo tar -xvzf apache-drill-1.0.0.tar.gz  
 
-The extraction process creates the installation directory named apache-drill-0.9.0 containing the Drill software.
+The extraction process creates the installation directory named apache-drill-1.0.0 containing the Drill software.
 
-At this point, you can [start Drill]({{site.baseurl}}/docs/drill-in-10-minutes/#start-drill).
+At this point, you can start Drill.
 
 ## Start Drill on Linux and Mac OS X
-Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The zk=local means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
+Start Drill in embedded mode using the `drill-embedded` command:
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-0.9.0  
+        cd apache-drill-1.0.0  
 
-2. Issue the following command to launch SQLLine:
+2. Issue the following command to launch Drill in embedded mode:
 
-        bin/sqlline -u jdbc:drill:zk=local  
+        bin/drill-embedded  
 
-   The `0: jdbc:drill:zk=local>`  prompt appears.  
+   The message of the day followed by the `0: jdbc:drill:zk=local>`  prompt appears.  
 
    At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
@@ -76,24 +76,25 @@ Launch SQLLine using the sqlline command to start to Drill in embedded mode. The
 
 You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
-1. Click the following link to download the latest, stable version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.9.0.tar.gz)
-2. Move the `apache-drill-0.9.0.tar.gz` file to a directory where you want to install Drill.
-3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-0.9.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-0.9.0 containing the Drill software. For example:
+1. Click the following link to download the latest version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz](http://getdrill.org/drill/download/apache-drill-0.1.0.tar.gz)  
+2. Move the `apache-drill-1.0.0.tar.gz` file to a directory where you want to install Drill.  
+3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-1.0.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-1.0.0 containing the Drill software. For example:  
    ![drill install dir]({{ site.baseurl }}/docs/img/drill-directory.png)
-   At this point, you can start Drill.  
+
+At this point, you can start Drill.  
 
 ## Start Drill on Windows
-Launch SQLLine using the **sqlline command** to start to Drill in embedded mode. The command directs SQLLine to connect to Drill. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
+Start Drill by running the sqlline.bat file and typing a connection string, as shown in the following procedure. The `zk=local` in the connection string means the local node is the ZooKeeper node:
 
-1. Open the apache-drill-0.9.0 folder.  
+1. Open the apache-drill-1.0.0 folder.  
 2. Open the bin folder, and double-click the `sqlline.bat` file:
    ![drill bin dir]({{ site.baseurl }}/docs/img/drill-bin.png)
    The Windows command prompt opens.  
 3. At the sqlline> prompt, type `!connect jdbc:drill:zk=local` and then press Enter:
    ![sqlline]({{ site.baseurl }}/docs/img/sqlline1.png)
-4. Enter the username, `admin`, and password, also `admin` when prompted.
+4. Enter the username, `admin`, and password, also `admin` when prompted.  
    The `0: jdbc:drill:zk=local>` prompt appears.
-At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data) to Drill.
+At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data).
 
 ## Stopping Drill
 
@@ -118,35 +119,18 @@ A sample JSON file, `employee.json`, contains fictitious employee data.
 To view the data in the `employee.json` file, submit the following SQL query
 to Drill:
     
-    0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json`;
+    0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;
 
-The query returns the following results:
+The query output is:
 
-**Example of partial output**
-
-    +-------------+------------+------------+------------+-------------+-----------+
-    | employee_id | full_name  | first_name | last_name  | position_id | position_ |
-    +-------------+------------+------------+------------+-------------+-----------+
-    | 1101        | Steve Eurich | Steve      | Eurich         | 16          | Store T |
-    | 1102        | Mary Pierson | Mary       | Pierson    | 16          | Store T |
-    | 1103        | Leo Jones  | Leo        | Jones      | 16          | Store Tem |
-    | 1104        | Nancy Beatty | Nancy      | Beatty     | 16          | Store T |
-    | 1105        | Clara McNight | Clara      | McNight    | 16          | Store  |
-    | 1106        | Marcella Isaacs | Marcella   | Isaacs     | 17          | Stor |
-    | 1107        | Charlotte Yonce | Charlotte  | Yonce      | 17          | Stor |
-    | 1108        | Benjamin Foster | Benjamin   | Foster     | 17          | Stor |
-    | 1109        | John Reed  | John       | Reed       | 17          | Store Per |
-    | 1110        | Lynn Kwiatkowski | Lynn       | Kwiatkowski | 17          | St |
-    | 1111        | Donald Vann | Donald     | Vann       | 17          | Store Pe |
-    | 1112        | William Smith | William    | Smith      | 17          | Store  |
-    | 1113        | Amy Hensley | Amy        | Hensley    | 17          | Store Pe |
-    | 1114        | Judy Owens | Judy       | Owens      | 17          | Store Per |
-    | 1115        | Frederick Castillo | Frederick  | Castillo   | 17          | S |
-    | 1116        | Phil Munoz | Phil       | Munoz      | 17          | Store Per |
-    | 1117        | Lori Lightfoot | Lori       | Lightfoot  | 17          | Store |
-    +-------------+------------+------------+------------+-------------+-----------+
-    1,155 rows selected (0.762 seconds)
-    0: jdbc:drill:zk=local>
+    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    | employee_id  |    full_name     | first_name  | last_name  | position_id  |   position_title    | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
+    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    | 1            | Sheri Nowmer     | Sheri       | Nowmer     | 1            | President           | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
+    | 2            | Derrick Whelply  | Derrick     | Whelply    | 2            | VP Country Manager  | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree  | M               | M       | Senior Management  |
+    | 4            | Michael Spence   | Michael     | Spence     | 2            | VP Country Manager  | 0         | 1              | 1969-06-20  | 1998-01-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree  | S               | M       | Senior Management  |
+    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    3 rows selected (0.827 seconds)
 
 ### Querying a Parquet File
 
@@ -176,17 +160,16 @@ your operating system:
 
 The query returns the following results:
 
-    +------------+------------+
-    |   EXPR$0   |   EXPR$1   |
-    +------------+------------+
-    | AFRICA     | lar deposits. blithely final packages cajole. regular waters ar |
-    | AMERICA    | hs use ironic, even requests. s |
-    | ASIA       | ges. thinly even pinto beans ca |
-    | EUROPE     | ly final courts cajole furiously final excuse |
-    | MIDDLE EAST | uickly special accounts cajole carefully blithely close reques |
-    +------------+------------+
-    5 rows selected (0.165 seconds)
-    0: jdbc:drill:zk=local>
+    +--------------+--------------+-----------------------+
+    | R_REGIONKEY  |    R_NAME    |       R_COMMENT       |
+    +--------------+--------------+-----------------------+
+    | 0            | AFRICA       | lar deposits. blithe  |
+    | 1            | AMERICA      | hs use ironic, even   |
+    | 2            | ASIA         | ges. thinly even pin  |
+    | 3            | EUROPE       | ly final courts cajo  |
+    | 4            | MIDDLE EAST  | uickly special accou  |
+    +--------------+--------------+-----------------------+
+    5 rows selected (0.409 seconds)
 
 #### Nation File
 
@@ -194,7 +177,7 @@ If you followed the Apache Drill in 10 Minutes instructions to install Drill
 in embedded mode, the path to the parquet file varies between operating
 systems.
 
-**Note:** When you enter the query, include the version of Drill that you are currently running. 
+{% include startnote.html %}When you enter the query, include the version of Drill that you are currently running.{% include endnote.html %}
 
 To view the data in the `nation.parquet` file, issue the query appropriate for
 your operating system:
@@ -212,14 +195,44 @@ your operating system:
 
 The query returns the following results:
 
+    SELECT * FROM dfs.`Users/khahn/drill/apache-drill-1.0.0-SNAPSHOT/sample-data/nation.parquet`;
+    +--------------+-----------------+--------------+-----------------------+
+    | N_NATIONKEY  |     N_NAME      | N_REGIONKEY  |       N_COMMENT       |
+    +--------------+-----------------+--------------+-----------------------+
+    | 0            | ALGERIA         | 0            |  haggle. carefully f  |
+    | 1            | ARGENTINA       | 1            | al foxes promise sly  |
+    | 2            | BRAZIL          | 1            | y alongside of the p  |
+    | 3            | CANADA          | 1            | eas hang ironic, sil  |
+    | 4            | EGYPT           | 4            | y above the carefull  |
+    | 5            | ETHIOPIA        | 0            | ven packages wake qu  |
+    | 6            | FRANCE          | 3            | refully final reques  |
+    | 7            | GERMANY         | 3            | l platelets. regular  |
+    | 8            | INDIA           | 2            | ss excuses cajole sl  |
+    | 9            | INDONESIA       | 2            |  slyly express asymp  |
+    | 10           | IRAN            | 4            | efully alongside of   |
+    | 11           | IRAQ            | 4            | nic deposits boost a  |
+    | 12           | JAPAN           | 2            | ously. final, expres  |
+    | 13           | JORDAN          | 4            | ic deposits are blit  |
+    | 14           | KENYA           | 0            |  pending excuses hag  |
+    | 15           | MOROCCO         | 0            | rns. blithely bold c  |
+    | 16           | MOZAMBIQUE      | 0            | s. ironic, unusual a  |
+    | 17           | PERU            | 1            | platelets. blithely   |
+    | 18           | CHINA           | 2            | c dependencies. furi  |
+    | 19           | ROMANIA         | 3            | ular asymptotes are   |
+    | 20           | SAUDI ARABIA    | 4            | ts. silent requests   |
+    | 21           | VIETNAM         | 2            | hely enticingly expr  |
+    | 22           | RUSSIA          | 3            |  requests against th  |
+    | 23           | UNITED KINGDOM  | 3            | eans boost carefully  |
+    | 24           | UNITED STATES   | 1            | y final packages. sl  |
+    +--------------+-----------------+--------------+-----------------------+
+    25 rows selected (0.101 seconds)
+
 ## Summary
 
-Now you know a bit about Apache Drill. To summarize, you have completed the
-following tasks:
+Now, you have been introduced to Apache Drill, which supports nested data, schema-less execution, and decentralized metadata. To summarize, you have completed the following tasks:
 
-  * Learned that Apache Drill supports nested data, schema-less execution, and decentralized metadata.
   * Downloaded and installed Apache Drill.
-  * Invoked SQLLine with Drill in embedded mode.
+  * Started Drill in embedded mode.
   * Queried the sample JSON file, `employee.json`, to view its data.
   * Queried the sample `region.parquet` file to view its data.
   * Queried the sample `nation.parquet` file to view its data.
@@ -228,7 +241,7 @@ following tasks:
 
 Now that you have an idea about what Drill can do, you might want to:
 
-  * [Deploy Drill in a clustered environment.]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster)
+  * [Install Drill on a cluster.]({{ site.baseurl }}/docs/installing-drill-on-the-cluster)
   * [Configure storage plugins to connect Drill to your data sources]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
   * Query [Hive]({{ site.baseurl }}/docs/querying-hive) and [HBase]({{ site.baseurl }}/docs/hbase-storage-plugin) data.
   * [Query Complex Data]({{ site.baseurl }}/docs/querying-complex-data)

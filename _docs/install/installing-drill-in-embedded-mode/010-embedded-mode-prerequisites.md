@@ -3,15 +3,12 @@ title: "Embedded Mode Prerequisites"
 parent: "Installing Drill in Embedded Mode"
 ---
 Installing Drill in embedded mode installs Drill locally on your machine.
-Embedded mode is a quick, easy way to install and try Drill without having to
-perform any configuration tasks. When you install Drill in embedded mode, the
-Drillbit service is installed locally and starts automatically when you invoke
-SQLLine, the Drill shell. You can install Drill in embedded mode on a machine
+Embedded mode is a quick way to install and try Drill without having to
+perform any configuration tasks. Installing Drill in embedded mode configures the
+local Drillbit service to start automatically when you launch the Drill shell. You can install Drill in embedded mode on a machine
 running Linux, Mac OS X, or Windows.
 
 **Prerequisite:**
-
-You must have the following software installed on your machine to run Drill:
 
 You need to meet the following prerequisites to run Drill:
 

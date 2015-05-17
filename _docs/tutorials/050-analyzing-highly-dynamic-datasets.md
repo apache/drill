@@ -49,35 +49,38 @@ Step 3: Start analyzing the data using SQL
 First, let’s take a look at the dataset:
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` limit 2;
-    +--------------+------------+-------------+
-    | checkin_info |    type    | business_id |
-    +--------------+------------+-------------+
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------------------+
+    |                                                                 checkin_info                                                                                                                                                             |    type    |      business_id       |
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------------------+
     | {"3-4":1,"13-5":1,"6-6":1,"14-5":1,"14-6":1,"14-2":1,"14-3":1,"19-0":1,"11-5":1,"13-2":1,"11-6":2,"11-3":1,"12-6":1,"6-5":1,"5-5":1,"9-2":1,"9-5":1,"9-6":1,"5-2":1,"7-6":1,"7-5":1,"7-4":1,"17-5":1,"8-5":1,"10-2":1,"10-5":1,"10-6":1} | checkin    | JwUE5GmEO-sH1FuwJgKBlQ |
-    | {"6-6":2,"6-5":1,"7-6":1,"7-5":1,"8-5":2,"10-5":1,"9-3":1,"12-5":1,"15-3":1,"15-5":1,"15-6":1,"16-3":1,"10-0":1,"15-4":1,"10-4":1,"8-2":1} | checkin    | uGykseHzyS5xAMWoN6YUqA |
-    +--------------+------------+-------------+
-You query the data in JSON files directly. Schema definitions in Hive store are no necessary. The names of the elements within the `checkin_info` column are different between the first and second row.
+    | {"6-6":2,"6-5":1,"7-6":1,"7-5":1,"8-5":2,"10-5":1,"9-3":1,"12-5":1,"15-3":1,"15-5":1,"15-6":1,"16-3":1,"10-0":1,"15-4":1,"10-4":1,"8-2":1}                                                                                               | checkin    | uGykseHzyS5xAMWoN6YUqA |
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------------------+
 
-Drill provides a function called KVGEN (Key Value Generator) which is useful when working with complex data that contain arbitrary maps consisting of dynamic and unknown element names such as checkin_info. KVGEN turns the dynamic map into an array of key-value pairs where keys represent the dynamic element names.
+{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+
+You query the data in JSON files directly. Schema definitions in Hive store are not necessary. The names of the elements within the `checkin_info` column are different between the first and second row.
+
+Drill provides a function called KVGEN (Key Value Generator) which is useful when working with complex data that contains arbitrary maps consisting of dynamic and unknown element names such as checkin_info. KVGEN turns the dynamic map into an array of key-value pairs where keys represent the dynamic element names.
 
 Let’s apply KVGEN on the `checkin_info` element to generate key-value pairs.
 
     0: jdbc:drill:zk=local> SELECT KVGEN(checkin_info) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` LIMIT 2;
-    +------------+
-    |  checkins  |
-    +------------+
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |                                                                    checkins                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     | [{"key":"3-4","value":1},{"key":"13-5","value":1},{"key":"6-6","value":1},{"key":"14-5","value":1},{"key":"14-6","value":1},{"key":"14-2","value":1},{"key":"14-3","value":1},{"key":"19-0","value":1},{"key":"11-5","value":1},{"key":"13-2","value":1},{"key":"11-6","value":2},{"key":"11-3","value":1},{"key":"12-6","value":1},{"key":"6-5","value":1},{"key":"5-5","value":1},{"key":"9-2","value":1},{"key":"9-5","value":1},{"key":"9-6","value":1},{"key":"5-2","value":1},{"key":"7-6","value":1},{"key":"7-5","value":1},{"key":"7-4","value":1},{"key":"17-5","value":1},{"key":"8-5","value":1},{"key":"10-2","value":1},{"key":"10-5","value":1},{"key":"10-6","value":1}] |
-    | [{"key":"6-6","value":2},{"key":"6-5","value":1},{"key":"7-6","value":1},{"key":"7-5","value":1},{"key":"8-5","value":2},{"key":"10-5","value":1},{"key":"9-3","value":1},{"key":"12-5","value":1},{"key":"15-3","value":1},{"key":"15-5","value":1},{"key":"15-6","value":1},{"key":"16-3","value":1},{"key":"10-0","value":1},{"key":"15-4","value":1},{"key":"10-4","value":1},{"key":"8-2","value":1}] |
-    +------------+
+    | [{"key":"6-6","value":2},{"key":"6-5","value":1},{"key":"7-6","value":1},{"key":"7-5","value":1},{"key":"8-5","value":2},{"key":"10-5","value":1},{"key":"9-3","value":1},{"key":"12-5","value":1},{"key":"15-3","value":1},{"key":"15-5","value":1},{"key":"15-6","value":1},{"key":"16-3","value":1},{"key":"10-0","value":1},{"key":"15-4","value":1},{"key":"10-4","value":1},{"key":"8-2","value":1}]                                                                                                                                                                                                                                                                               |
+    +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Drill provides another function to operate on complex data called ‘Flatten’ to break the list of key-value pairs resulting from ‘KVGen’ into separate rows to further apply analytic functions on it.
 
     0: jdbc:drill:zk=local> SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` LIMIT 20;
-    +------------+
-    |  checkins  |
-    +------------+
-    | {"key":"3-4","value":1} |
+    +--------------------------+
+    |         checkins         |
+    +--------------------------+
+    | {"key":"3-4","value":1}  |
     | {"key":"13-5","value":1} |
-    | {"key":"6-6","value":1} |
+    | {"key":"6-6","value":1}  |
     | {"key":"14-5","value":1} |
     | {"key":"14-6","value":1} |
     | {"key":"14-2","value":1} |
@@ -88,14 +91,14 @@ Drill provides another function to operate on complex data called ‘Flatten’ 
     | {"key":"11-6","value":2} |
     | {"key":"11-3","value":1} |
     | {"key":"12-6","value":1} |
-    | {"key":"6-5","value":1} |
-    | {"key":"5-5","value":1} |
-    | {"key":"9-2","value":1} |
-    | {"key":"9-5","value":1} |
-    | {"key":"9-6","value":1} |
-    | {"key":"5-2","value":1} |
-    | {"key":"7-6","value":1} |
-    +------------+
+    | {"key":"6-5","value":1}  |
+    | {"key":"5-5","value":1}  |
+    | {"key":"9-2","value":1}  |
+    | {"key":"9-5","value":1}  |
+    | {"key":"9-6","value":1}  |
+    | {"key":"5-2","value":1}  |
+    | {"key":"7-6","value":1}  |
+    +--------------------------+
 
 You can get value from the data quickly by applying both KVGEN and FLATTEN functions on the datasets on the fly--no need for time-consuming schema definitions and data storage in intermediate formats.
 

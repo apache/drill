@@ -4,7 +4,7 @@ parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:
 
-  * Drill shell (SQLLine)
+  * Drill shell
   * Drill Web UI
   * [ODBC]({{ site.baseurl }}/docs/odbc-jdbc-interfaces#using-odbc-to-access-apache-drill-from-bi-tools)*
   * [JDBC]({{ site.baseurl }}/docs/using-jdbc/)

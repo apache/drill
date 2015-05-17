@@ -2,38 +2,27 @@
 title: "Starting Drill on Linux and Mac OS X"
 parent: "Installing Drill in Embedded Mode"
 ---
-Launch SQLLine using the sqlline command to start to Drill in embedded mode. The command directs SQLLine to connect to Drill using jdbc. The zk=local means the local node is the ZooKeeper node. Complete the following steps to launch SQLLine and start Drill:
+Start the Drill shell using the `drill-embedded` command. The command uses a jdbc connection string and identifies the local node as the ZooKeeper node. Complete the following steps to start the Drill shell:
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-0.9.0  
+        cd apache-drill-1.0.0  
 
 2. Issue the following command to launch SQLLine:
 
-        bin/sqlline -u jdbc:drill:zk=local  
+        bin/drill-embedded  
 
    The `0: jdbc:drill:zk=local>`  prompt appears.  
 
-   At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data) to Drill.
+   At this point, you can [run queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data).
 
-## Example of Starting Drill
-
-The simplest example of how to start SQLLine is to identify the protocol, JDBC, and ZooKeeper node or nodes in the **sqlline** command. This example starts SQLLine on a node in an embedded, single-node cluster:
-
-    sqlline -u jdbc:drill:zk=local
-
-This example also starts SQLLine using the `dfs` storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query:
-
-
-    bin/sqlline –u jdbc:drill:schema=dfs;zk=centos26
-    
-You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
+You can also use the **sqlline** command to start Drill using a custom connection string, as described in ["Using an Ad-Hoc Connection to Drill"](docs/starting-drill-in-distributed-mode/#using-an-ad-hoc-connection-to-drill). For example, you can specify the storage plugin when you start the shell. Doing so eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=local
 
-## Exiting SQLLine
+## Exiting the Drill Shell
 
-To exit SQLLine, issue the following command:
+To exit the Drill shell, issue the following command:
 
     !quit
 

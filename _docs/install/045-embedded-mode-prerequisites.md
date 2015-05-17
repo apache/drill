@@ -14,10 +14,10 @@ To install Apache Drill in distributed mode, complete the following steps:
 
 **Prerequisites**
 
-Before you install Apache Drill on nodes in your cluster, you must have the
-following software and services installed:
+Before you install Apache Drill on nodes in your cluster, install and configure the
+following software and services:
 
-  * [Oracle JDK version 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)
-  * Configured and running ZooKeeper quorum
-  * Configured and running Hadoop cluster (Recommended)
+  * [Oracle JDK version 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) (Required)
+  * Configured and running a ZooKeeper quorum (Required)
+  * Configured and running a Hadoop cluster (Recommended)
   * DNS (Recommended)
