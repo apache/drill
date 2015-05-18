@@ -27,3 +27,6 @@ is only for metadata. Drill does not invoke the Hive execution engine for any
 requests.
 
   * **Distributed cache**: Drill uses a distributed cache to manage metadata (not the data) and configuration information across various nodes. Sample metadata information that is stored in the cache includes query plan fragments, intermediate state of the query execution, and statistics. Drill uses Infinispan as its cache technology.
+  * 
+  Please check if Drill still uses distributed caches. ASAIK, currently Drill neither uses Hazelcast of Infinispan as distributed caches. See https://issues.apache.org/jira/browse/DRILL-1436#
+  If that's the case, plese distributed cache from the aarchitecture diagram. 
