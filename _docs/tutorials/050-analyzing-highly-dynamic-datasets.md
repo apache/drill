@@ -104,7 +104,7 @@ You can get value from the data quickly by applying both KVGEN and FLATTEN funct
 
 On the output of flattened data, you use standard SQL functionality such as filters , aggregates, and sort. Let’s see a few examples.
 
-## Get the total number of check-ins recorded in the Yelp dataset
+### Get the total number of check-ins recorded in the Yelp dataset
 
     0: jdbc:drill:zk=local> SELECT SUM(checkintbl.checkins.`value`) AS TotalCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl
@@ -115,7 +115,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 4713811       |
     +---------------+
 
-## Get the number of check-ins specifically for Sunday midnights
+### Get the number of check-ins specifically for Sunday midnights
 
     0: jdbc:drill:zk=local> SELECT SUM(checkintbl.checkins.`value`) AS SundayMidnightCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl WHERE checkintbl.checkins.key='23-0';
@@ -125,7 +125,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 8575                   |
     +------------------------+
 
-## Get the number of check-ins per day of the week
+### Get the number of check-ins per day of the week
 
     0: jdbc:drill:zk=local> SELECT `right`(checkintbl.checkins.key,1) WeekDay,sum(checkintbl.checkins.`value`) TotalCheckins from (
     . . . . . . . . . . . >  select flatten(kvgen(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json`  ) checkintbl GROUP BY `right`(checkintbl.checkins.key,1) ORDER BY TotalCheckins;
@@ -141,7 +141,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 5          | 937201        |
     +------------+---------------+
 
-## Get the number of check-ins per hour of the day
+### Get the number of check-ins per hour of the day
 
     0: jdbc:drill:zk=local> SELECT SUBSTR(checkintbl.checkins.key,1,strpos(checkintbl.checkins.key,'-')-1) AS HourOfTheDay ,SUM(checkintbl.checkins.`value`) TotalCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl GROUP BY SUBSTR(checkintbl.checkins.key,1,strpos(checkintbl.checkins.key,'-')-1) ORDER BY TotalCheckins;

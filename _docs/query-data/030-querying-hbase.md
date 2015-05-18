@@ -2,7 +2,7 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in distributed mode, in which Drill might start as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill]({{ site.baseurl }}/docs/install-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: /mapr/demo.mapr.com/tables
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in distributed mode, in which Drill might start as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill]({{ site.baseurl }}/docs/install-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: `/mapr/demo.mapr.com/tables`
 
 You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.
 
@@ -99,15 +99,16 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
        SELECT * FROM students;
    The query returns binary results:
   
-        +------------+------------+------------+
-        |  row_key   |  account   |  address   |
-        +------------+------------+------------+
-        | [B@e6d9eb7 | {"name":"QWxpY2U="} | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="} |
-        | [B@2823a2b4 | {"name":"Qm9i"} | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="} |
-        | [B@3b8eec02 | {"name":"RnJhbms="} | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="} |
-        | [B@242895da | {"name":"TWFyeQ=="} | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
-        +------------+------------+------------+
+        +-------------+-----------------------+---------------------------------------------------------------------------+
+        |  row_key    |  account              |                                address                                    |
+        +-------------+-----------------------+---------------------------------------------------------------------------+
+        | [B@e6d9eb7  | {"name":"QWxpY2U="}   | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="}     |
+        | [B@2823a2b4 | {"name":"Qm9i"}       | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="}     |
+        | [B@3b8eec02 | {"name":"RnJhbms="}   | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="}     |
+        | [B@242895da | {"name":"TWFyeQ=="}   | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
+        +-------------+-----------------------+---------------------------------------------------------------------------+
         4 rows selected (1.335 seconds)
+
    The Drill output reflects the actual data type of the HBase data, which is binary.
 
 2. Issue the following query, that includes the CONVERT_FROM function, to convert the `students` table to readable data:
@@ -124,14 +125,14 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
 
     The query returns readable data:
 
-        +------------+------------+------------+------------+------------+
-        | studentid  |    name    |   state    |   street   |  zipcode   |
-        +------------+------------+------------+------------+------------+
-        | student1   | Alice      | CA         | 123 Ballmer Av | 12345      |
-        | student2   | Bob        | CA         | 1 Infinite Loop | 12345      |
-        | student3   | Frank      | CA         | 435 Walker Ct | 12345      |
+        +------------+------------+------------+------------------+------------+
+        | studentid  |    name    |   state    |       street     |  zipcode   |
+        +------------+------------+------------+------------------+------------+
+        | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
+        | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
+        | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
         | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-        +------------+------------+------------+------------+------------+
+        +------------+------------+------------+------------------+------------+
         4 rows selected (0.504 seconds)
 
 3. Query the clicks table to see which students visited google.com:
@@ -142,13 +143,13 @@ The `maprdb` format plugin provides access to the `/tables` directory. Use Drill
                CONVERT_FROM(clicks.clickinfo.url, 'UTF8') AS url 
         FROM clicks WHERE clicks.clickinfo.url LIKE '%google%'; 
 
-        +------------+------------+------------+------------+
-        |  clickid   | studentid  |    time    |    url     |
-        +------------+------------+------------+------------+
+        +------------+------------+--------------------------+-----------------------+
+        |  clickid   | studentid  |           time           |         url           |
+        +------------+------------+--------------------------+-----------------------+
         | click1     | student1   | 2014-01-01 12:01:01.0001 | http://www.google.com |
         | click3     | student2   | 2014-01-01 01:02:01.0001 | http://www.google.com |
         | click6     | student3   | 2013-02-01 12:01:01.0001 | http://www.google.com |
-        +------------+------------+------------+------------+
+        +------------+------------+--------------------------+-----------------------+
         3 rows selected (0.294 seconds)
 
 4. Query the clicks table to get the studentid of the student having 100 items. Use CONVERT_FROM to convert the textual studentid and itemtype data, but use CAST to convert the integer quantity.

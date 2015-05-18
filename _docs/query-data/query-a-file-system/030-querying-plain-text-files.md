@@ -44,19 +44,19 @@ records:
 Drill recognizes each row as an array of values and returns one column for
 each row.
 
-        0: jdbc:drill:zk=local> select * from dfs.`/Users/brumsby/drill/plays.csv`;
+    0: jdbc:drill:zk=local> select * from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +------------+
-    |  columns   |
-    +------------+
-    | ["1599","As You Like It"] |
-    | ["1601","Twelfth Night"] |
-    | ["1594","Comedy of Errors"] |
-    | ["1595","Romeo and Juliet"] |
+    +-----------------------------------+
+    |              columns              |
+    +-----------------------------------+
+    | ["1599","As You Like It"]         |
+    | ["1601","Twelfth Night"]          |
+    | ["1594","Comedy of Errors"]       |
+    | ["1595","Romeo and Juliet"]       |
     | ["1596","The Merchant of Venice"] |
-    | ["1610","The Tempest"] |
-    | ["1599","Hamlet"] |
-    +------------+
+    | ["1610","The Tempest"]            |
+    | ["1599","Hamlet"]                 |
+    +-----------------------------------+
     7 rows selected (0.089 seconds)
 
 ## Columns[n] Syntax
@@ -67,17 +67,17 @@ based index, so the first column is column `0`.)
 
     0: jdbc:drill:zk=local> select columns[0], columns[1] from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +------------+------------+
-    |   EXPR$0   |   EXPR$1   |
-    +------------+------------+
-    | 1599       | As You Like It |
-    | 1601       | Twelfth Night |
-    | 1594       | Comedy of Errors |
-    | 1595       | Romeo and Juliet |
+    +------------+------------------------+
+    |   EXPR$0   |         EXPR$1         |
+    +------------+------------------------+
+    | 1599       | As You Like It         |
+    | 1601       | Twelfth Night          |
+    | 1594       | Comedy of Errors       |
+    | 1595       | Romeo and Juliet       |
     | 1596       | The Merchant of Venice |
-    | 1610       | The Tempest |
-    | 1599       | Hamlet     |
-    +------------+------------+
+    | 1610       | The Tempest            |
+    | 1599       | Hamlet                 |
+    +------------+------------------------+
     7 rows selected (0.137 seconds)
 
 You can use aliases to return meaningful column names. Note that `YEAR` is a
@@ -86,17 +86,17 @@ reserved word, so the `Year` alias must be enclosed by back ticks.
     0: jdbc:drill:zk=local> select columns[0] as `Year`, columns[1] as Play 
     from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +------------+------------+
-    |    Year    |    Play    |
-    +------------+------------+
-    | 1599       | As You Like It |
-    | 1601       | Twelfth Night |
-    | 1594       | Comedy of Errors |
-    | 1595       | Romeo and Juliet |
+    +------------+------------------------+
+    |    Year    |    Play                |
+    +------------+------------------------+
+    | 1599       | As You Like It         |
+    | 1601       | Twelfth Night          |
+    | 1594       | Comedy of Errors       |
+    | 1595       | Romeo and Juliet       |
     | 1596       | The Merchant of Venice |
-    | 1610       | The Tempest |
-    | 1599       | Hamlet     |
-    +------------+------------+
+    | 1610       | The Tempest            |
+    | 1599       | Hamlet                 |
+    +------------+------------------------+
     7 rows selected (0.113 seconds)
 
 You cannot refer to the aliases in subsequent clauses of the query. Use the
@@ -106,12 +106,12 @@ example:
     0: jdbc:drill:zk=local> select columns[0] as `Year`, columns[1] as Play 
     from dfs.`/Users/brumsby/drill/plays.csv` where columns[0]>1599;
  
-    +------------+------------+
-    |    Year    |    Play    |
-    +------------+------------+
+    +------------+---------------+
+    |    Year    |      Play     |
+    +------------+---------------+
     | 1601       | Twelfth Night |
-    | 1610       | The Tempest |
-    +------------+------------+
+    | 1610       | The Tempest   |
+    +------------+---------------+
     2 rows selected (0.201 seconds)
 
 Note that the restriction with the use of aliases applies to queries against

@@ -18,8 +18,6 @@ Drill includes a shell for connecting to relational databases and executing SQL 
     sqlline version 1.1.6
     0: jdbc:drill:>
 
-[Starting SQLLine outside the sandbox]({{ site.baseurl }}/docs/install-drill) for use with Drill requires entering a few options, covered in the section, ["Install Drill"](docs/install-drill/). 
-
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
 ## Storage Plugin Overview

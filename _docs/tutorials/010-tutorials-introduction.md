@@ -12,13 +12,13 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Explore data using a Hadoop environment pre-configured with Drill.  
 * [Analyzing Highly Dynamic Datasets]({{site.baseurl}}/docs/analyzing-highly-dynamic-datasets)  
   Delve into changing data without creating a schema or going through an ETL phase.
-* [Analyzing Social Media]({site.baseurl}}/docs/analyzing-social-media)  
+* [Analyzing Social Media]({{site.baseurl}}/docs/analyzing-social-media)  
   Analyze Twitter data in native JSON format using Apache Drill.  
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables in Tableau.  
-* [Using MicroStrategy Analytics with Apache Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with--apache-drill/)  
+* [Using MicroStrategy Analytics with Apache Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-apache-drill/)  
   Use the Drill ODBC driver from MapR to analyze data and generate a report using Drill from the MicroStrategy UI.  
-* [Using Tibco Spotfire Server with Drill]({{site.baseurl}}/drill/docs/using-tibco-spotfire-with-drill/)  
+* [Using Tibco Spotfire Server with Drill]({{site.baseurl}}/docs/using-tibco-spotfire-with-drill/)  
   Use the Apache Drill to query complex data structures from Tibco Spotfire Desktop.
 * [Configuring Tibco Spotfire Server with Drill]({{site.baseurl}}/docs/configuring-tibco-spotfire-server-with-drill)  
   Integrate Tibco Spotfire Server with Apache Drill and explore multiple data formats on Hadoop.  

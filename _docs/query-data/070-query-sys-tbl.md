@@ -13,21 +13,21 @@ system tables that you can query.
 Issue the `SHOW DATABASES` command to view Drill databases.
 
     0: jdbc:drill:zk=10.10.100.113:5181> show databases;
-    +-------------+
-    | SCHEMA_NAME |
-    +-------------+
-    | M7          |
-    | hive.default|
-    | dfs.default |
-    | dfs.root    |
-    | dfs.views   |
-    | dfs.tmp     |
-    | dfs.tpcds   |
-    | sys         |
-    | cp.default  |
-    | hbase       |
+    +--------------------+
+    |      SCHEMA_NAME   |
+    +--------------------+
+    | M7                 |
+    | hive.default       |
+    | dfs.default        |
+    | dfs.root           |
+    | dfs.views          |
+    | dfs.tmp            |
+    | dfs.tpcds          |
+    | sys                |
+    | cp.default         |
+    | hbase              |
     | INFORMATION_SCHEMA |
-    +-------------+
+    +--------------------+
     11 rows selected (0.162 seconds)
 
 Drill returns `sys` in the database results.
@@ -67,13 +67,13 @@ Query the drillbits, version, and options tables in the sys database.
 ###Query the drillbits table.
 
     0: jdbc:drill:zk=10.10.100.113:5181> select * from drillbits;
-    +------------------+------------+--------------+------------+---------+
-    |   host            | user_port | control_port | data_port  |  current|
+    +-------------------+------------+--------------+------------+---------+
+    |   host            |  user_port | control_port | data_port  |  current|
     +-------------------+------------+--------------+------------+--------+
-    | qa-node115.qa.lab | 31010     | 31011        | 31012      | true    |
-    | qa-node114.qa.lab | 31010     | 31011        | 31012      | false   |
-    | qa-node116.qa.lab | 31010     | 31011        | 31012      | false   |
-    +------------+------------+--------------+------------+---------------+
+    | qa-node115.qa.lab | 31010      | 31011        | 31012      | true    |
+    | qa-node114.qa.lab | 31010      | 31011        | 31012      | false   |
+    | qa-node116.qa.lab | 31010      | 31011        | 31012      | false   |
+    +-------------------+------------+--------------+------------+---------+
     3 rows selected (0.146 seconds)
 
   * host   
@@ -94,12 +94,12 @@ query. This Drillbit is the Foreman for the current session.
 ### Query the version table.
 
     0: jdbc:drill:zk=10.10.100.113:5181> select * from version;
-    +------------+----------------+-------------+-------------+------------+
-    | commit_id  | commit_message | commit_time | build_email | build_time |
-    +------------+----------------+-------------+-------------+------------+
-    | 108d29fce3d8465d619d45db5f6f433ca3d97619 | DRILL-1635: Additional fix for validation exceptions. | 14.11.2014 @ 02:32:47 UTC | Unknown    | 14.11.2014 @ 03:56:07 UTC |
-    +------------+----------------+-------------+-------------+------------+
-    1 row selected (0.144 seconds)
+    +-------------------------------------------+--------------------------------------------------------------------+----------------------------+--------------+----------------------------+
+    |                 commit_id                 |                           commit_message                           |        commit_time         | build_email  |         build_time         |
+    +-------------------------------------------+--------------------------------------------------------------------+----------------------------+--------------+----------------------------+
+    | d8b19759657698581cc0d01d7038797952888123  | DRILL-3100: TestImpersonationDisabledWithMiniDFS fails on Windows  | 15.05.2015 @ 05:18:03 UTC  | Unknown      | 15.05.2015 @ 06:52:32 UTC  |
+    +-------------------------------------------+--------------------------------------------------------------------+----------------------------+--------------+----------------------------+
+    1 row selected (0.099 seconds)
   * commit_id  
 The github id of the release you are running. For example, <https://github.com
 /apache/drill/commit/e3ab2c1760ad34bda80141e2c3108f7eda7c9104>
@@ -120,21 +120,22 @@ Drill provides system, session, and boot options that you can query.
 The following example shows a query on the system options:
 
     0: jdbc:drill:zk=10.10.100.113:5181> select * from options where type='SYSTEM' limit 10;
-    +------------+------------+------------+------------+------------+------------+------------+
-    |    name   |   kind    |   type    |  num_val   | string_val |  bool_val  | float_val  |
-    +------------+------------+------------+------------+------------+------------+------------+
-    | exec.max_hash_table_size | LONG       | SYSTEM    | 1073741824 | null     | null      | null      |
-    | planner.memory.max_query_memory_per_node | LONG       | SYSTEM    | 2048       | null     | null      | null      |
-    | planner.join.row_count_estimate_factor | DOUBLE   | SYSTEM    | null      | null      | null      | 1.0       |
-    | planner.affinity_factor | DOUBLE  | SYSTEM    | null      | null      | null       | 1.2      |
-    | exec.errors.verbose | BOOLEAN | SYSTEM    | null      | null      | false      | null     |
-    | planner.disable_exchanges | BOOLEAN   | SYSTEM    | null      | null      | false      | null     |
-    | exec.java_compiler_debug | BOOLEAN    | SYSTEM    | null      | null      | true      | null      |
-    | exec.min_hash_table_size | LONG       | SYSTEM    | 65536     | null      | null      | null       |
-    | exec.java_compiler_janino_maxsize | LONG       | SYSTEM   | 262144    | null      | null      | null      |
-    | planner.enable_mergejoin | BOOLEAN    | SYSTEM    | null      | null      | true      | null       |
-    +------------+------------+------------+------------+------------+------------+------------+
-    10 rows selected (0.334 seconds)  
+    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
+    |                      name                       |   kind   |  type   |  status  |   num_val   | string_val  | bool_val  | float_val  |
+    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
+    | drill.exec.functions.cast_empty_string_to_null  | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
+    | drill.exec.storage.file.partition.column.label  | STRING   | SYSTEM  | DEFAULT  | null        | dir         | null      | null       |
+    | exec.errors.verbose                             | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
+    | exec.java_compiler                              | STRING   | SYSTEM  | DEFAULT  | null        | DEFAULT     | null      | null       |
+    | exec.java_compiler_debug                        | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | true      | null       |
+    | exec.java_compiler_janino_maxsize               | LONG     | SYSTEM  | DEFAULT  | 262144      | null        | null      | null       |
+    | exec.max_hash_table_size                        | LONG     | SYSTEM  | DEFAULT  | 1073741824  | null        | null      | null       |
+    | exec.min_hash_table_size                        | LONG     | SYSTEM  | DEFAULT  | 65536       | null        | null      | null       |
+    | exec.queue.enable                               | BOOLEAN  | SYSTEM  | DEFAULT  | null        | null        | false     | null       |
+    | exec.queue.large                                | LONG     | SYSTEM  | DEFAULT  | 10          | null        | null      | null       |
+    +-------------------------------------------------+----------+---------+----------+-------------+-------------+-----------+------------+
+    10 rows selected (0.216 seconds)
+
   * name  
 The name of the option.
   * kind  
@@ -151,9 +152,7 @@ The default value, which is true or false; otherwise, null.
 The default value, which is of the double, float, or long double data type;
 otherwise, null.
 
-For information about how to configure Drill system and session options, see[
-Planning and Execution Options]({{ site.baseurl }}/docs/planning-and-execution-options).
+For information about how to configure Drill system and session options, see [Planning and Execution Options]({{ site.baseurl }}/docs/planning-and-execution-options).
 
-For information about how to configure Drill start-up options, see[ Start-Up
-Options]({{ site.baseurl }}/docs/start-up-options).
+For information about how to configure Drill start-up options, see [Start-Up Options]({{ site.baseurl }}/docs/start-up-options).
 

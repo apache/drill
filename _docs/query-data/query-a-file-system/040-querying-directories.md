@@ -16,20 +16,20 @@ the "union" of the two files, ordered by the first column:
     0: jdbc:drill:zk=local> select columns[0] as `Year`, columns[1] as Play 
     from dfs.`/Users/brumsby/drill/testdata` order by 1;
  
-    +------------+------------+
-    |    Year    |    Play    |
-    +------------+------------+
-    | 1594       | Comedy of Errors |
-    | 1595       | Romeo and Juliet |
+    +------------+------------------------+
+    |    Year    |          Play          |
+    +------------+------------------------+
+    | 1594       | Comedy of Errors       |
+    | 1595       | Romeo and Juliet       |
     | 1596       | The Merchant of Venice |
-    | 1599       | As You Like It |
-    | 1599       | Hamlet     |
-    | 1601       | Twelfth Night |
-    | 1606       | Macbeth    |
-    | 1606       | King Lear  |
-    | 1609       | The Winter's Tale |
-    | 1610       | The Tempest |
-    +------------+------------+
+    | 1599       | As You Like It         |
+    | 1599       | Hamlet                 |
+    | 1601       | Twelfth Night          |
+    | 1606       | Macbeth                |
+    | 1606       | King Lear              |
+    | 1609       | The Winter's Tale      |
+    | 1610       | The Tempest            |
+    +------------+------------------------+
     10 rows selected (0.296 seconds)
 
 You can drill down further and automatically query subdirectories as well. For
@@ -65,11 +65,11 @@ files inside the subdirectory named `2013`. The variable `dir0` refers to the
 first level down from logs, `dir1` to the next level, and so on.
 
     0: jdbc:drill:> use bob.logdata;
-    +------------+------------+
-    |     ok     |  summary   |
-    +------------+------------+
+    +------------+-----------------------------------------+
+    |     ok     |              summary                    |
+    +------------+-----------------------------------------+
     | true       | Default schema changed to 'bob.logdata' |
-    +------------+------------+
+    +------------+-----------------------------------------+
     1 row selected (0.305 seconds)
  
     0: jdbc:drill:> select * from logs where dir0='2013' limit 10;

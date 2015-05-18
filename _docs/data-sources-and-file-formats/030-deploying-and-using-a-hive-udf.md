@@ -21,7 +21,7 @@ After you export the custom UDF as a JAR, perform the UDF setup tasks so Drill c
  
 To set up the UDF:
 
-1. Register Hive. [Register a Hive storage plugin]({{ site.baseurl }}/docs/registering-hive/) that connects Drill to a Hive data source.
+1. Register Hive. [Register a Hive storage plugin]({{ site.baseurl }}/docs/hive-storage-plugin/) that connects Drill to a Hive data source.
 2. Add the JAR for the UDF to the Drill CLASSPATH. In earlier versions of Drill, place the JAR file in the `/jars/3rdparty` directory of the Drill installation on all nodes running a Drillbit.
 3. On each Drill node in the cluster, restart the Drillbit.
    `<drill installation directory>/bin/drillbit.sh restart`

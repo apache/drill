@@ -4,8 +4,8 @@ parent: "Develop Custom Functions"
 ---
 Create a class within a Java package that implements Drill’s simple interface
 into the program, and include the required information for the function type.
-Your function must include data types that Drill supports, such as int or
-BigInt. For a list of supported data types, refer to the [SQL Reference]({{ site.baseurl }}/docs/sql-reference).
+Your function must include data types that Drill supports, such as INTEGER or
+BIGINT. For a list of supported data types, refer to the [SQL Reference]({{ site.baseurl }}/docs/supported-data-types/).
 
 Complete the following steps to develop a simple function using Drill’s simple
 function interface:

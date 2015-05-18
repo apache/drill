@@ -5,12 +5,12 @@ parent: "Querying Complex Data"
 Apache Drill queries do not require prior knowledge of the actual data you are
 trying to access, regardless of its source system or its schema and data
 types. The sweet spot for Apache Drill is a SQL query workload against
-"complex data": data made up of various types of records and fields, rather
+*complex data*: data made up of various types of records and fields, rather
 than data in a recognizable relational form (discrete rows and columns). Drill
 is capable of discovering the form of the data when you submit the query.
 Nested data formats such as JSON (JavaScript Object Notation) files and
 Parquet files are not only _accessible_: Drill provides special operators and
-functions that you can use to _drill down _into these files and ask
+functions that you can use to _drill down_ into these files and ask
 interesting analytic questions.
 
 These operators and functions include:

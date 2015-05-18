@@ -5,22 +5,22 @@ parent: "SQL Functions"
 
 In addition to the TO_DATE, TO_TIME, and TO_TIMESTAMP functions, Drill supports a number of other date/time functions and arithmetic operators for use with dates, times, and intervals. Drill supports time functions based on the Gregorian calendar and in the range 1971 to 2037.
 
-This section defines the following date/time functions:
+This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation) and defines the following date/time functions:
 
 **Function**| **Return Type**  
 ---|---  
 [AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)| INTERVALDAY or INTERVALYEAR
 [EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| DOUBLE
-[CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| DATE  
-[CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME   
-[CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP 
+[CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| DATE  
+[CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIME   
+[CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP 
 [DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| DATE, TIMESTAMP  
 [DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| DOUBLE  
 [DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMOP     
-[LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIME  
-[LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| TIMESTAMP  
-[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#current_*x*-local*x*-now-and-timeofday)| VARCHAR  
+[LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIME  
+[LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
+[NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
+[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| VARCHAR  
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -49,14 +49,14 @@ Find the interval between midnight April 3, 2015 and June 13, 1957.
 Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on January 1, 2001.
 
     SELECT AGE(CAST('2010-01-01 10:10:10' AS TIMESTAMP), CAST('2001-01-01 11:10:10' AS TIMESTAMP)) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | P109M16DT82800S |
-    +------------+
-    1 row selected (0.161 seconds)
+    +------------------+
+    |      EXPR$0      |
+    +------------------+
+    | P109M16DT82800S  |
+    +------------------+
+    1 row selected (0.122 seconds)
 
-For information about how to read the interval data, see the [Interval section]({{ site.baseurl }}/docs/date-time-and-timestamp#interval).
+For information about how to read the interval data, see the [Interval section]({{ site.baseurl }}/docs/date-time-and-timestamp/#intervalyear-and-intervalday).
 
 ## DATE_ADD
 Returns the sum of a date/time and a number of days/hours, or of a date/time and date/time interval.
@@ -92,22 +92,22 @@ Add two days to today's date May 15, 2015.
 Add two months to April 15, 2015.
 
     SELECT DATE_ADD(date '2015-04-15', interval '2' month) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-06-15 00:00:00.0 |
-    +------------+
-    1 row selected (0.073 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2015-06-15 00:00:00.0  |
+    +------------------------+
+    1 row selected (0.107 seconds)
 
 Add 10 hours to the timestamp 2015-04-15 22:55:55.
 
     SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-04-16 08:55:55.0 |
-    +------------+
-    1 row selected (0.068 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2015-04-16 08:55:55.0  |
+    +------------------------+
+    1 row selected (0.199 seconds)
 
 Add 10 hours to the time 22 hours, 55 minutes, 55 seconds.
 
@@ -122,22 +122,22 @@ Add 10 hours to the time 22 hours, 55 minutes, 55 seconds.
 Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
 
     SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2016-06-15 22:55:55.0 |
-    +------------+
-    1 row selected (0.065 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2016-06-15 22:55:55.0  |
+    +------------------------+
+    1 row selected (0.106 seconds)
 
 Add 1 day 2 and 1/2 hours and 45.100 seconds to the time 22:55:55.
 
     SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 01:26:40.100 |
-    +------------+
-    1 row selected (0.07 seconds)
+    +---------------+
+    |    EXPR$0     |
+    +---------------+
+    | 01:26:40.100  |
+    +---------------+
+    1 row selected (0.106 seconds)
 
 ## DATE_PART
 Returns a field of a date, time, timestamp, or interval.
@@ -234,12 +234,12 @@ Subtact two months from April 15, 2015.
 Subtract 10 hours from the timestamp 2015-04-15 22:55:55.
 
     SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-04-15 12:55:55.0 |
-    +------------+
-    1 row selected (0.068 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2015-04-15 12:55:55.0  |
+    +------------------------+
+    1 row selected (0.108 seconds)
 
 Subtract 10 hours from the time 22 hours, 55 minutes, 55 seconds.
 
@@ -254,24 +254,24 @@ Subtract 10 hours from the time 22 hours, 55 minutes, 55 seconds.
 Subtract 1 year and 1 month from the timestamp 2015-04-15 22:55:55.
 
     SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2014-02-15 22:55:55.0 |
-    +------------+
-    1 row selected (0.073 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2014-02-15 22:55:55.0  |
+    +------------------------+
+    1 row selected (0.108 seconds)
 
 Subtract 1 day, 2 and 1/2 hours, and 45.100 seconds from the time 22:55:55.
 
     SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 01:26:40.100 |
-    +------------+
-    1 row selected (0.073 seconds)
+    +---------------+
+    |    EXPR$0     |
+    +---------------+
+    | 01:26:40.100  |
+    +---------------+
+    1 row selected (0.095 seconds)
 
-## CURRENT_*x*, LOCAL*x*, NOW, and TIMEOFDAY
+## Other Date and Time Functions
 
 The following examples show how to use these functions:
 
@@ -300,58 +300,58 @@ The following examples show how to use these functions:
         1 row selected (0.073 seconds)
 
         SELECT CURRENT_TIMESTAMP FROM sys.version;
-        +-------------------+
-        | current_timestamp |
-        +-------------------+
-        | 2015-04-02 14:32:34.047 |
-        +-------------------+
-        1 row selected (0.061 seconds)
+        +--------------------------+
+        |    CURRENT_TIMESTAMP     |
+        +--------------------------+
+        | 2015-05-17 22:45:55.848  |
+        +--------------------------+
+        1 row selected (0.109 seconds)
 
         SELECT LOCALTIME FROM sys.version;
 
-        +------------+
-        | localtime  |
-        +------------+
-        | 14:33:04.95 |
-        +------------+
-        1 row selected (0.051 seconds)
+        +---------------+
+        |   LOCALTIME   |
+        +---------------+
+        | 22:46:19.656  |
+        +---------------+
+        1 row selected (0.105 seconds)
 
         SELECT LOCALTIMESTAMP FROM sys.version;
 
-        +----------------+
-        | LOCALTIMESTAMP |
-        +----------------+
-        | 2015-04-02 23:13:13.204 |
-        +----------------+
-        1 row selected (0.105 seconds)
+        +--------------------------+
+        |      LOCALTIMESTAMP      |
+        +--------------------------+
+        | 2015-05-17 22:46:47.944  |
+        +--------------------------+
+        1 row selected (0.08 seconds)
 
         SELECT NOW() FROM sys.version;
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-04-02 23:14:30.076 |
-        +------------+
-        1 row selected (0.05 seconds)
+        +--------------------------+
+        |          EXPR$0          |
+        +--------------------------+
+        | 2015-05-17 22:47:11.008  |
+        +--------------------------+
+        1 row selected (0.085 seconds)
 
-If you set up Drill for [UTC time]({{ site.baseurl }}/docs/casting-converting-data-types/time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
+If you set up Drill for [UTC time]({{ site.baseurl }}/docs/data-type-conversion/#time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
 
     SELECT TIMEOFDAY() FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
+    +-----------------------------+
+    |           EXPR$0            |
+    +-----------------------------+
     | 2015-04-02 22:05:02.424 UTC |
-    +------------+
+    +-----------------------------+
     1 row selected (1.191 seconds)
 
 If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and time with time zone information.
 
     SELECT TIMEOFDAY() FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-04-02 15:01:31.114 America/Los_Angeles |
-    +------------+
-    1 row selected (1.199 seconds)
+    +----------------------------------------------+
+    |                    EXPR$0                    |
+    +----------------------------------------------+
+    | 2015-05-17 22:47:38.012 America/Los_Angeles  |
+    +----------------------------------------------+
+    1 row selected (0.08 seconds)
 
 ## EXTRACT
 

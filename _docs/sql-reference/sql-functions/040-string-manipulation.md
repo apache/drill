@@ -92,12 +92,12 @@ Concatenates arguments.
 
     SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | Drill 1.0 release |
-    +------------+
-    1 row selected (0.221 seconds)
+    +--------------------+
+    |       EXPR$0       |
+    +--------------------+
+    | Drill 1.0 release  |
+    +--------------------+
+    1 row selected (0.134 seconds)
 
 Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators#string-concatenate-operator) to concatenate strings.
 
@@ -112,12 +112,12 @@ Returns the string using initial caps.
 
     SELECT INITCAP('apache drill release 1.0') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | Apache Drill Release 1.0 |
-    +------------+
-    1 row selected (0.124 seconds)
+    +---------------------------+
+    |          EXPR$0           |
+    +---------------------------+
+    | Apache Drill Release 1.0  |
+    +---------------------------+
+    1 row selected (0.106 seconds)
 
 ## LENGTH
 Returns the number of characters in the string.
@@ -159,12 +159,12 @@ Converts characters in the string to lowercase.
 
     SELECT LOWER('Apache Drill') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | apache drill |
-    +------------+
-    1 row selected (0.113 seconds)
+    +---------------+
+    |    EXPR$0     |
+    +---------------+
+    | apache drill  |
+    +---------------+
+    1 row selected (0.103 seconds)
 
 ## LPAD
 Pads the string to the length specified by prepending the fill or a space. Truncates the string if longer than the specified length.
@@ -178,12 +178,12 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
 
     SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | of Apache Drill Release 1.0 |
-    +------------+
-    1 row selected (0.112 seconds)
+    +------------------------------+
+    |            EXPR$0            |
+    +------------------------------+
+    | of Apache Drill Release 1.0  |
+    +------------------------------+
+    1 row selected (0.132 seconds)
 
 ## LTRIM
 Removes any characters from the beginning of string1 that match the characters in string2. 
@@ -205,12 +205,12 @@ Removes any characters from the beginning of string1 that match the characters i
 
     SELECT LTRIM('A powerful tool Apache Drill', 'Apache ') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | owerful tool Apache Drill |
-    +------------+
-    1 row selected (0.07 seconds)
+    +----------------------------+
+    |           EXPR$0           |
+    +----------------------------+
+    | owerful tool Apache Drill  |
+    +----------------------------+
+    1 row selected (0.1 seconds)
 
 ## POSITION
 Returns the location of a substring.
@@ -249,22 +249,23 @@ Substitutes new text for substrings that match [POSIX regular expression pattern
 Replace a's with b's in this string.
 
     SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a', 'b') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | bbc, bcd, bde, bef |
-    +------------+
+    +---------------------+
+    |       EXPR$0        |
+    +---------------------+
+    | bbc, bcd, bde, bef  |
+    +---------------------+
+    1 row selected (0.105 seconds)
 
 
 Use the regular expression *a* followed by a period (.) in the same query to replace all a's and the subsequent character.
 
     SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a.','b') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | bc, bd, be, bf |
-    +------------+
-    1 row selected (0.099 seconds)
+    +-----------------+
+    |     EXPR$0      |
+    +-----------------+
+    | bc, bd, be, bf  |
+    +-----------------+
+    1 row selected (0.113 seconds)
 
 
 ## RPAD
@@ -277,12 +278,12 @@ Pads the string to the length specified. Appends the text you specify after the 
 ### RPAD Example
 
     SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | Apache Drill Release 1 |
-    +------------+
-    1 row selected (0.15 seconds)
+    +-------------------------+
+    |         EXPR$0          |
+    +-------------------------+
+    | Apache Drill Release 1  |
+    +-------------------------+
+    1 row selected (0.107 seconds)
 
 ## RTRIM
 Removes any characters from the end of string1 that match the characters in string2.  
@@ -303,12 +304,12 @@ Removes any characters from the end of string1 that match the characters in stri
     1 row selected (0.135 seconds)
 
     SELECT RTRIM('1.0 Apache Tomcat 1.0', 'Drill 1.0') from sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 1.0 Apache Tomcat |
-    +------------+
-    1 row selected (0.088 seconds)
+    +--------------------+
+    |       EXPR$0       |
+    +--------------------+
+    | 1.0 Apache Tomcat  |
+    +--------------------+
+    1 row selected (0.102 seconds)
 
 ## STRPOS
 Returns the location of the substring in a string.
@@ -377,20 +378,20 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
     1 row selected (0.172 seconds)
 
     SELECT TRIM(both 'l' from 'long live Drill') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | ong live Dri |
-    +------------+
-    1 row selected (0.087 seconds)
+    +---------------+
+    |    EXPR$0     |
+    +---------------+
+    | ong live Dri  |
+    +---------------+
+    1 row selected (0.104 seconds)
 
     SELECT TRIM(leading 'l' from 'long live Drill') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | ong live Drill |
-    +------------+
-    1 row selected (0.077 seconds)
+    +-----------------+
+    |     EXPR$0      |
+    +-----------------+
+    | ong live Drill  |
+    +-----------------+
+    1 row selected (0.101 seconds)
 
 ## UPPER
 Converts characters in the string to uppercase.
@@ -403,9 +404,9 @@ Converts characters in the string to uppercase.
 
     SELECT UPPER('Apache Drill') FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | APACHE DRILL |
-    +------------+
-    1 row selected (0.104 seconds)
+    +---------------+
+    |    EXPR$0     |
+    +---------------+
+    | APACHE DRILL  |
+    +---------------+
+    1 row selected (0.081 seconds)

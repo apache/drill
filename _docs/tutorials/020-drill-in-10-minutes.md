@@ -11,7 +11,7 @@ without having to perform any setup tasks.
 
 ## Installation Overview
 
-You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about running Drill in distributed mode, see  [Deploying Drill in a Cluster]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster).
+You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about installing Drill in distributed mode, see [Installing Drill in Distributed Mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode).
 
 This installation procedure includes how to download the Apache Drill archive and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
 
