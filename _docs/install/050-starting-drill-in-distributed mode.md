@@ -44,11 +44,11 @@ Complete the following steps to start the Drill shell on the local node:
 
 Drill provides a list of Drillbits that are running.
 
-    +----------------+--------------+--------------+--------------------+
-    |    host        | user_port    | control_port |      data_port     |
-    +----------------+--------------+--------------+--------------------+
-    | <host address> | <port number>| <port number>|   <port number>    |
-    +----------------+--------------+--------------+--------------------+
+    +----------------+---------------+---------------+---------------+-----------+
+    |    hostname    | user_port     | control_port  |   data_port   |  current  |
+    +----------------+---------------+---------------+---------------+-----------+
+    | <host address> | <port number> | <port number> | <port number> | <boolean> |
+    +----------------+---------------+---------------+---------------+-----------+
 
 Now you can run queries. The Drill installation includes sample data
 that you can query. Refer to [Querying Parquet Files]({{ site.baseurl }}/docs/querying-parquet-files/).
