@@ -30,7 +30,7 @@ If the SELECT statement includes a WHERE clause that compares a column of an unk
 
     SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0;
 
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to `true`.{% include endnote.html %}
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.  
 
@@ -56,7 +56,7 @@ The following example shows how to cast a character to a DECIMAL having two deci
     | 1.00       |
     +------------+
 
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to `true`.{% include endnote.html %}
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 ### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
@@ -89,7 +89,7 @@ Cast an integer to a decimal.
     +------------+
     1 row selected (0.08 seconds)
 
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to `true`.{% include endnote.html %}
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 ### Casting Intervals
 
