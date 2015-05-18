@@ -15,7 +15,7 @@ function interface:
 		<dependency>
 		<groupId>org.apache.drill.exec</groupId>
 		<artifactId>drill-java-exec</artifactId>
-		<version>1.0.0-m2-incubating-SNAPSHOT</version>
+		<version>1.0.0</version>
 		</dependency>
 
   2. Create a class that implements the `DrillSimpleFunc` interface and identify the scope as `FunctionScope.SIMPLE`.
@@ -40,7 +40,7 @@ function interface:
 		public void setup(RecordBatch b) {
 		}
 		public void eval() {
-		 out.value = (int) (in1.value + in2.value);
+		 out.value = in1.value + in2.value;
 		}
 
   5. Use the maven-source-plugin to compile the sources and classes JAR files. Verify that an empty `drill-module.conf` is included in the resources folder of the JARs.   
