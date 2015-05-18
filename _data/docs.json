@@ -2805,6 +2805,23 @@
             "title": "Enron Emails", 
             "url": "/docs/enron-emails/"
         }, 
+        "Error Messages": {
+            "breadcrumbs": [
+                {
+                    "title": "Log and Debug", 
+                    "url": "/docs/log-and-debug/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Modify logback.xml", 
+            "next_url": "/docs/modify-logback-xml/", 
+            "parent": "Log and Debug", 
+            "previous_title": "Log and Debug Introduction", 
+            "previous_url": "/docs/log-and-debug-introduction/", 
+            "relative_path": "_docs/log-and-debug/002-error-messages.md", 
+            "title": "Error Messages", 
+            "url": "/docs/error-messages/"
+        }, 
         "FLATTEN": {
             "breadcrumbs": [
                 {
@@ -3660,8 +3677,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using JDBC", 
-            "next_url": "/docs/using-jdbc/", 
+            "next_title": "Using JDBC with SQuirreL on Windows", 
+            "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "ODBC/JDBC Interfaces", 
             "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -3952,6 +3969,104 @@
             "title": "Lexical Structure", 
             "url": "/docs/lexical-structure/"
         }, 
+        "Log and Debug": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Error Messages", 
+                    "next_url": "/docs/error-messages/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug", 
+                    "previous_url": "/docs/log-and-debug/", 
+                    "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
+                    "title": "Log and Debug Introduction", 
+                    "url": "/docs/log-and-debug-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Modify logback.xml", 
+                    "next_url": "/docs/modify-logback-xml/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug Introduction", 
+                    "previous_url": "/docs/log-and-debug-introduction/", 
+                    "relative_path": "_docs/log-and-debug/002-error-messages.md", 
+                    "title": "Error Messages", 
+                    "url": "/docs/error-messages/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Review the Java Stack Trace", 
+                    "next_url": "/docs/review-the-java-stack-trace/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Error Messages", 
+                    "previous_url": "/docs/error-messages/", 
+                    "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
+                    "title": "Modify logback.xml", 
+                    "url": "/docs/modify-logback-xml/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "", 
+                    "next_url": "", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Modify logback.xml", 
+                    "previous_url": "/docs/modify-logback-xml/", 
+                    "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
+                    "title": "Review the Java Stack Trace", 
+                    "url": "/docs/review-the-java-stack-trace/"
+                }
+            ], 
+            "next_title": "Log and Debug Introduction", 
+            "next_url": "/docs/log-and-debug-introduction/", 
+            "parent": "", 
+            "previous_title": "Project Bylaws", 
+            "previous_url": "/docs/project-bylaws/", 
+            "relative_path": "_docs/sql-reference/sql-functions/073-log-and-debug.md", 
+            "title": "Log and Debug", 
+            "url": "/docs/log-and-debug/"
+        }, 
+        "Log and Debug Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Log and Debug", 
+                    "url": "/docs/log-and-debug/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Error Messages", 
+            "next_url": "/docs/error-messages/", 
+            "parent": "Log and Debug", 
+            "previous_title": "Log and Debug", 
+            "previous_url": "/docs/log-and-debug/", 
+            "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
+            "title": "Log and Debug Introduction", 
+            "url": "/docs/log-and-debug-introduction/"
+        }, 
         "MapR-DB Format": {
             "breadcrumbs": [
                 {
@@ -3989,6 +4104,23 @@
             "relative_path": "_docs/sql-reference/sql-functions/010-math-and-trig.md", 
             "title": "Math and Trig", 
             "url": "/docs/math-and-trig/"
+        }, 
+        "Modify logback.xml": {
+            "breadcrumbs": [
+                {
+                    "title": "Log and Debug", 
+                    "url": "/docs/log-and-debug/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Review the Java Stack Trace", 
+            "next_url": "/docs/review-the-java-stack-trace/", 
+            "parent": "Log and Debug", 
+            "previous_title": "Error Messages", 
+            "previous_url": "/docs/error-messages/", 
+            "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
+            "title": "Modify logback.xml", 
+            "url": "/docs/modify-logback-xml/"
         }, 
         "MongoDB Plugin for Apache Drill": {
             "breadcrumbs": [
@@ -4200,8 +4332,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using JDBC", 
-                    "next_url": "/docs/using-jdbc/", 
+                    "next_title": "Using JDBC with SQuirreL on Windows", 
+                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -4222,9 +4354,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc.md", 
-                    "title": "Using JDBC", 
-                    "url": "/docs/using-jdbc/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
+                    "title": "Using JDBC with SQuirreL on Windows", 
+                    "url": "/docs/using-jdbc-with-squirrel-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4406,8 +4538,8 @@
                     "next_title": "ODBC on Linux and Mac Introduction", 
                     "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using JDBC", 
-                    "previous_url": "/docs/using-jdbc/", 
+                    "previous_title": "Using JDBC with SQuirreL on Windows", 
+                    "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
                     "title": "Using ODBC on Linux and Mac OS X", 
                     "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
@@ -4709,8 +4841,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Audit Logging", 
-                    "next_url": "/docs/query-audit-logging/", 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning", 
                     "previous_url": "/docs/performance-tuning/", 
@@ -4736,8 +4868,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Audit Logging", 
-            "next_url": "/docs/query-audit-logging/", 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
             "parent": "Performance Tuning", 
             "previous_title": "Performance Tuning", 
             "previous_url": "/docs/performance-tuning/", 
@@ -4858,8 +4990,8 @@
         "Project Bylaws": {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "", 
-            "next_url": "", 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
@@ -4891,8 +5023,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Performance Tuning Introduction", 
-            "previous_url": "/docs/performance-tuning-introduction/", 
+            "previous_title": "Log and Debug", 
+            "previous_url": "/docs/log-and-debug/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -6023,6 +6155,23 @@
             "relative_path": "_docs/sql-reference/080-reserved-keywords.md", 
             "title": "Reserved Keywords", 
             "url": "/docs/reserved-keywords/"
+        }, 
+        "Review the Java Stack Trace": {
+            "breadcrumbs": [
+                {
+                    "title": "Log and Debug", 
+                    "url": "/docs/log-and-debug/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "", 
+            "next_url": "", 
+            "parent": "Log and Debug", 
+            "previous_title": "Modify logback.xml", 
+            "previous_url": "/docs/modify-logback-xml/", 
+            "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
+            "title": "Review the Java Stack Trace", 
+            "url": "/docs/review-the-java-stack-trace/"
         }, 
         "SELECT": {
             "breadcrumbs": [
@@ -8931,7 +9080,7 @@
             "title": "Using Drill Explorer on Windows", 
             "url": "/docs/using-drill-explorer-on-windows/"
         }, 
-        "Using JDBC": {
+        "Using JDBC with SQuirreL on Windows": {
             "breadcrumbs": [
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -8944,9 +9093,9 @@
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Interfaces Introduction", 
             "previous_url": "/docs/interfaces-introduction/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc.md", 
-            "title": "Using JDBC", 
-            "url": "/docs/using-jdbc/"
+            "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
+            "title": "Using JDBC with SQuirreL on Windows", 
+            "url": "/docs/using-jdbc-with-squirrel-on-windows/"
         }, 
         "Using MicroStrategy Analytics with Apache Drill": {
             "breadcrumbs": [
@@ -9145,8 +9294,8 @@
             "next_title": "ODBC on Linux and Mac Introduction", 
             "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using JDBC", 
-            "previous_url": "/docs/using-jdbc/", 
+            "previous_title": "Using JDBC with SQuirreL on Windows", 
+            "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
             "title": "Using ODBC on Linux and Mac OS X", 
             "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
@@ -10570,8 +10719,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using JDBC", 
-                    "next_url": "/docs/using-jdbc/", 
+                    "next_title": "Using JDBC with SQuirreL on Windows", 
+                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -10592,9 +10741,9 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc.md", 
-                    "title": "Using JDBC", 
-                    "url": "/docs/using-jdbc/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
+                    "title": "Using JDBC with SQuirreL on Windows", 
+                    "url": "/docs/using-jdbc-with-squirrel-on-windows/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10776,8 +10925,8 @@
                     "next_title": "ODBC on Linux and Mac Introduction", 
                     "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using JDBC", 
-                    "previous_url": "/docs/using-jdbc/", 
+                    "previous_title": "Using JDBC with SQuirreL on Windows", 
+                    "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
                     "title": "Using ODBC on Linux and Mac OS X", 
                     "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
@@ -11393,8 +11542,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Audit Logging", 
-                    "next_url": "/docs/query-audit-logging/", 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning", 
                     "previous_url": "/docs/performance-tuning/", 
@@ -11411,6 +11560,18 @@
             "relative_path": "_docs/072-performance-tuning.md", 
             "title": "Performance Tuning", 
             "url": "/docs/performance-tuning/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [], 
+            "next_title": "Query Audit Logging", 
+            "next_url": "/docs/query-audit-logging/", 
+            "parent": "", 
+            "previous_title": "Performance Tuning Introduction", 
+            "previous_url": "/docs/performance-tuning-introduction/", 
+            "relative_path": "_docs/073-log-and-debug.md", 
+            "title": "Log and Debug", 
+            "url": "/docs/log-and-debug/"
         }, 
         {
             "breadcrumbs": [], 
@@ -11436,8 +11597,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Performance Tuning Introduction", 
-            "previous_url": "/docs/performance-tuning-introduction/", 
+            "previous_title": "Log and Debug", 
+            "previous_url": "/docs/log-and-debug/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -13224,14 +13385,95 @@
         {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "", 
-            "next_url": "", 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Error Messages", 
+                    "next_url": "/docs/error-messages/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug", 
+                    "previous_url": "/docs/log-and-debug/", 
+                    "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
+                    "title": "Log and Debug Introduction", 
+                    "url": "/docs/log-and-debug-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Modify logback.xml", 
+                    "next_url": "/docs/modify-logback-xml/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug Introduction", 
+                    "previous_url": "/docs/log-and-debug-introduction/", 
+                    "relative_path": "_docs/log-and-debug/002-error-messages.md", 
+                    "title": "Error Messages", 
+                    "url": "/docs/error-messages/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Review the Java Stack Trace", 
+                    "next_url": "/docs/review-the-java-stack-trace/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Error Messages", 
+                    "previous_url": "/docs/error-messages/", 
+                    "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
+                    "title": "Modify logback.xml", 
+                    "url": "/docs/modify-logback-xml/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "", 
+                    "next_url": "", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Modify logback.xml", 
+                    "previous_url": "/docs/modify-logback-xml/", 
+                    "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
+                    "title": "Review the Java Stack Trace", 
+                    "url": "/docs/review-the-java-stack-trace/"
+                }
+            ], 
+            "next_title": "Log and Debug Introduction", 
+            "next_url": "/docs/log-and-debug-introduction/", 
+            "parent": "", 
+            "previous_title": "Project Bylaws", 
+            "previous_url": "/docs/project-bylaws/", 
+            "relative_path": "_docs/sql-reference/sql-functions/073-log-and-debug.md", 
+            "title": "Log and Debug", 
+            "url": "/docs/log-and-debug/"
         }
     ]
 }
