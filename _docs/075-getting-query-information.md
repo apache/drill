@@ -2,7 +2,7 @@
 title: "Getting Query Information"
 parent: "Query Audit Logging"
 ---
-The query log provides audit log functionality for the queries executed by various drillbits in the cluster. The log records important information about queries executed on the Drillbit where Drill runs. The log includes query text, start time, end time, user, status, schema, and the query id. You can query one of the following log files, depending on whether you run Drill in embedded or distributed mode, to get audit logging information.:
+The query log provides audit log functionality for the queries executed by various drillbits in the cluster. The log records important information about queries executed on the Drillbit where Drill runs. The log includes query text, start time, end time, user, status, schema, and the query id. You can query one of the following log files, depending on whether you run Drill in embedded or distributed mode, to get audit logging information:
 
 * `sqlline_queries.json` (embedded mode) 
 * `drillbit_queries.json` (distributed mode)
