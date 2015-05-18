@@ -32,9 +32,7 @@ UI to connect to Drill. Drill must be running in order to access the Web UI.
 
 Complete the following steps to configure MongoDB as a data source for Drill:
 
-  1. Navigate to Drill installation directory and invoke SQLLine to run Drill queries. On Linux, for example:
-
-        bin/sqlline -u jdbc:drill:zk=local
+  1. [Start the Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/) shell for your environment.
 
      Do not enter any commands. You will return to the command prompt after
 completing the configuration in the Drill Web UI.
@@ -62,17 +60,17 @@ Drill data sources, including MongoDB. If you downloaded the zip codes file,
 you should see `mongo.zipdb` in the results.
 
     0: jdbc:drill:zk=local> SHOW DATABASES;
-    +-------------+
-    | SCHEMA_NAME |
-    +-------------+
-    | dfs.default |
-    | dfs.root    |
-    | dfs.tmp     |
-    | sys         |
-    | mongo.zipdb |
-    | cp.default  |
+    +--------------------+
+    |     SCHEMA_NAME    |
+    +--------------------+
+    | dfs.default        |
+    | dfs.root           |
+    | dfs.tmp            |
+    | sys                |
+    | mongo.zipdb        |
+    | cp.default         |
     | INFORMATION_SCHEMA |
-    +-------------+
+    +--------------------+
 
 If you want all queries that you submit to run on `mongo.zipdb`, you can issue
 the `USE` command to change schema.
@@ -87,19 +85,19 @@ Reference]({{ site.baseurl }}/docs/sql-reference).
 **Example 1: View mongo.zipdb Dataset**
 
     0: jdbc:drill:zk=local> SELECT * FROM zipcodes LIMIT 10;
-    +------------+
-    |     *      |
-    +------------+
-    | { "city" : "AGAWAM" , "loc" : [ -72.622739 , 42.070206] , "pop" : 15338 , "state" : "MA"} |
-    | { "city" : "CUSHMAN" , "loc" : [ -72.51565 , 42.377017] , "pop" : 36963 , "state" : "MA"} |
-    | { "city" : "BARRE" , "loc" : [ -72.108354 , 42.409698] , "pop" : 4546 , "state" : "MA"} |
-    | { "city" : "BELCHERTOWN" , "loc" : [ -72.410953 , 42.275103] , "pop" : 10579 , "state" : "MA"} |
-    | { "city" : "BLANDFORD" , "loc" : [ -72.936114 , 42.182949] , "pop" : 1240 , "state" : "MA"} |
-    | { "city" : "BRIMFIELD" , "loc" : [ -72.188455 , 42.116543] , "pop" : 3706 , "state" : "MA"} |
-    | { "city" : "CHESTER" , "loc" : [ -72.988761 , 42.279421] , "pop" : 1688 , "state" : "MA"} |
-    | { "city" : "CHESTERFIELD" , "loc" : [ -72.833309 , 42.38167] , "pop" : 177 , "state" : "MA"} |
-    | { "city" : "CHICOPEE" , "loc" : [ -72.607962 , 42.162046] , "pop" : 23396 , "state" : "MA"} |
-    | { "city" : "CHICOPEE" , "loc" : [ -72.576142 , 42.176443] , "pop" : 31495 , "state" : "MA"} |
++------------------------------------------------------------------------------------------------+
+|                                           *                                                    |
++------------------------------------------------------------------------------------------------+
+| { "city" : "AGAWAM" , "loc" : [ -72.622739 , 42.070206] , "pop" : 15338 , "state" : "MA"}      |
+| { "city" : "CUSHMAN" , "loc" : [ -72.51565 , 42.377017] , "pop" : 36963 , "state" : "MA"}      |
+| { "city" : "BARRE" , "loc" : [ -72.108354 , 42.409698] , "pop" : 4546 , "state" : "MA"}        |
+| { "city" : "BELCHERTOWN" , "loc" : [ -72.410953 , 42.275103] , "pop" : 10579 , "state" : "MA"} |
+| { "city" : "BLANDFORD" , "loc" : [ -72.936114 , 42.182949] , "pop" : 1240 , "state" : "MA"}    |
+| { "city" : "BRIMFIELD" , "loc" : [ -72.188455 , 42.116543] , "pop" : 3706 , "state" : "MA"}    |
+| { "city" : "CHESTER" , "loc" : [ -72.988761 , 42.279421] , "pop" : 1688 , "state" : "MA"}      |
+| { "city" : "CHESTERFIELD" , "loc" : [ -72.833309 , 42.38167] , "pop" : 177 , "state" : "MA"}   |
+| { "city" : "CHICOPEE" , "loc" : [ -72.607962 , 42.162046] , "pop" : 23396 , "state" : "MA"}    |
+| { "city" : "CHICOPEE" , "loc" : [ -72.576142 , 42.176443] , "pop" : 31495 , "state" : "MA"}    |
 
 **Example 2: Aggregation**
 

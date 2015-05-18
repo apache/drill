@@ -1,6 +1,6 @@
 ---
 title: "Partition Pruning"
-parent: "Configure Drill"
+parent: "Archived Pages"
 ---
 Partition pruning is a performance optimization that limits the number of
 files and partitions that Drill reads when querying file systems and Hive

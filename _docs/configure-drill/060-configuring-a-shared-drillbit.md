@@ -11,7 +11,7 @@ Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introdu
 * exec.queue.large  
 * exec.queue.small  
 
-For more information, see the section, "Performance Tuning".
+For more information, see the section, ["Performance Tuning"](/docs/performance-tuning-introduction/).
 
 ## Configuring Parallelization
 

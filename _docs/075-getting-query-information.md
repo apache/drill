@@ -4,7 +4,10 @@ parent: "Query Audit Logging"
 ---
 The query log provides audit log functionality for the queries executed by various drillbits in the cluster. To access the query log, go to `sqlline_queries.json` file in the `log` directory of the Drill installation. The log records important information about queries executed on the Drillbit where Drill runs. The log includes query text, start time, end time, user, status, schema, and the query id.
 
-You can query the `sqlline_queries.json` using Drill to get audit logging information.
+You can query one of the following files, depending on whether you run Drill in embedded or distributed mode, to get audit logging information.:
+
+* `sqlline_queries.json` (embedded mode) 
+* `drillbit_queries.json` (distributed mode)
 
 ## Checking the Most Recent Queries
 
