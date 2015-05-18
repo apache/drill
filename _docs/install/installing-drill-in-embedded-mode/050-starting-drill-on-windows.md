@@ -14,7 +14,7 @@ At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minu
 
 You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
 
-    c:\bin/sqlline –u "jdbc:drill:schema=dfs;zk=local"
+    c:\bin\sqlline sqlline.bat –u "jdbc:drill:schema=dfs;zk=local"
 
 ## Exiting the Drill Shell
 
