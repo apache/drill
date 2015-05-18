@@ -60,7 +60,7 @@ You can use the following subquery operators in your Drill queries:
   * EXISTS
   * IN
 
-See [SELECT Statements]({{ site.baseurl }}/docs/select-statements).
+See [SELECT Statements]({{ site.baseurl }}/docs/select).
 
 ## String Concatenate Operator
 

@@ -1,5 +1,5 @@
 ---
-title: "ALTER SESSION Command"
+title: "ALTER SESSION"
 parent: "SQL Commands"
 ---
 The ALTER SESSION command changes a system setting for the duration of a

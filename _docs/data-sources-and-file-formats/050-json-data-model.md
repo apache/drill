@@ -53,15 +53,15 @@ Set the `store.json.read_numbers_as_double` property to true.
 
 When you set this option, Drill reads all numbers from the JSON files as DOUBLE. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
-* Cast JSON values to [SQL types]({{ site.baseurl }}/docs/data-types), such as BIGINT, FLOAT, and INTEGER.
-* Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/supported-date-time-data-type-formats).
+* Cast JSON values to [SQL types]({{ site.baseurl }}/docs/json-data-model/#data-type-mapping), such as BIGINT, FLOAT, and INTEGER.
+* Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/date-time-and-timestamp).
 
-Drill uses [map and array data types]({{ site.baseurl }}/docs/data-types) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
+Drill uses [map and array data types]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql/#create-a-view-on-a-mapr-db-table). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
 
 ## Reading JSON
-To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/connect-to-a-data-source) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
+To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/file-system-storage-plugin/) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
 
-JSON data is often complex. Data can be deeply nested and semi-structured. but [you can use workarounds ]({{ site.baseurl }}/docs/json-data-model#limitations-and-workaroumds) covered later.
+JSON data is often complex. Data can be deeply nested and semi-structured. but you can use [workarounds ]({{ site.baseurl }}/docs/json-data-model/#limitations-and-workarounds) covered later.
 
 Drill reads tuples defined in single objects, having no comma between objects. A JSON object is an unordered set of name/value pairs. Curly braces delimit objects in the JSON file:
 
@@ -95,7 +95,7 @@ You can write data from Drill to a JSON file. The following setup is required:
         CREATE TABLE my_json AS
         SELECT my column from dfs.`<path_file_name>`;
 
-Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas-command):
+Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas/):
    
 * Creates a directory using table name.
 * Writes the JSON data to the directory in the workspace location.
@@ -310,7 +310,7 @@ To access the second geometry coordinate of the first city lot in the San Franci
     +-------------------+
     1 row selected (0.19 seconds)
 
-More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/query-3-selecting-nested-data-for-a-column). 
+More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/selecting-nested-data-for-a-column). 
 
 ### Example: Flatten an Array of Maps using a Subquery
 By flattening the following JSON file, which contains an array of maps, you can evaluate the records of the flattened data. 
@@ -449,7 +449,7 @@ Workaround: Separate lengthy objects into objects delimited by curly braces usin
  
 * [FLATTEN]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
 
-* [KVGEN]({{ site.baseurl }}/docs/json-data-model#generate-key-value-pairs) separates objects having more elements than optimal for querying.
+* [KVGEN]({{ site.baseurl }}/docs/kvgen/) separates objects having more elements than optimal for querying.
 
   
 ### Nested Column Names 

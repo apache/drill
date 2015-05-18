@@ -9,33 +9,16 @@ data. Use SQL syntax to query the sample `JSON` file.
 To view the data in the `employee.json` file, submit the following SQL query
 to Drill:
 
-         0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json`;
+         0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 5;
 
 The query returns the following results:
 
-**Example of partial output**
+    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    | employee_id  |         full_name          |     first_name      |   last_name   | position_id  |       position_title       | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  |   education_level    | marital_status  | gender  |    management_role    |
+    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    | 1            | Sheri Nowmer               | Sheri               | Nowmer        | 1            | President                  | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree      | S               | F       | Senior Management     |
+    | 2            | Derrick Whelply            | Derrick             | Whelply       | 2            | VP Country Manager         | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | M               | M       | Senior Management     |
+    | 4            | Michael Spence             | Michael             | Spence        | 2            | VP Country Manager         | 0         | 1              | 1969-06-20  | 1998-01-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | S               | M       | Senior Management     |
+    | 5            | Maya Gutierrez             | Maya                | Gutierrez     | 2            | VP Country Manager         | 0         | 1              | 1951-05-10  | 1998-01-01 00:00:00.0  | 35000.0  | 1              | Bachelors Degree     | M               | F       | Senior Management     |
 
-    +-------------+------------+------------+------------+-------------+-----------+
-    | employee_id | full_name  | first_name | last_name  | position_id | position_ |
-    +-------------+------------+------------+------------+-------------+-----------+
-    | 1101        | Steve Eurich | Steve      | Eurich     | 16          | Store T |
-    | 1102        | Mary Pierson | Mary       | Pierson    | 16          | Store T |
-    | 1103        | Leo Jones  | Leo        | Jones      | 16          | Store Tem |
-    | 1104        | Nancy Beatty | Nancy      | Beatty     | 16          | Store T |
-    | 1105        | Clara McNight | Clara      | McNight    | 16          | Store  |
-    | 1106        | Marcella Isaacs | Marcella   | Isaacs     | 17          | Stor |
-    | 1107        | Charlotte Yonce | Charlotte  | Yonce      | 17          | Stor |
-    | 1108        | Benjamin Foster | Benjamin   | Foster     | 17          | Stor |
-    | 1109        | John Reed  | John       | Reed       | 17          | Store Per |
-    | 1110        | Lynn Kwiatkowski | Lynn       | Kwiatkowski | 17          | St |
-    | 1111        | Donald Vann | Donald     | Vann       | 17          | Store Pe |
-    | 1112        | William Smith | William    | Smith      | 17          | Store  |
-    | 1113        | Amy Hensley | Amy        | Hensley    | 17          | Store Pe |
-    | 1114        | Judy Owens | Judy       | Owens      | 17          | Store Per |
-    | 1115        | Frederick Castillo | Frederick  | Castillo   | 17          | S |
-    | 1116        | Phil Munoz | Phil       | Munoz      | 17          | Store Per |
-    | 1117        | Lori Lightfoot | Lori       | Lightfoot  | 17          | Store |
-    ...
-    +-------------+------------+------------+------------+-------------+-----------+
-    1,155 rows selected (0.762 seconds)
     0: jdbc:drill:zk=local>

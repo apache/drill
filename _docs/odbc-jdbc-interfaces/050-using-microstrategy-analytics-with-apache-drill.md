@@ -98,9 +98,7 @@ You can now use MicroStrategy Analytics Enterprise to access Drill as a database
 This step includes an example scenario that shows you how to use MicroStrategy, with Drill as the database instance, to analyze Twitter data stored as complex JSON documents. 
 
 ####Scenario
-The Drill distributed file system plugin is configured to read Twitter data in a directory structure. A view is created in Drill to capture the most relevant maps and nested maps and arrays for the Twitter JSON documents. Refer to the following page for more information about how to configure and use Drill to work with complex data:
-
-https://cwiki.apache.org/confluence/display/DRILL/Query+Data
+The Drill distributed file system plugin is configured to read Twitter data in a directory structure. A view is created in Drill to capture the most relevant maps and nested maps and arrays for the Twitter JSON documents. Refer to [Query Data](/docs/query-data-introduction/) for more information about how to configure and use Drill to work with complex data:
 
 ####Part 1: Create a Project
 Complete the following steps to create a project:

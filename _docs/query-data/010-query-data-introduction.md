@@ -3,11 +3,12 @@ title: "Query Data Introduction"
 parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, and HBase data sources
-registered with Drill. If you connect directly to a particular schema when
-you invoke SQLLine, you can issue SQL queries against that schema. If you d0
-not indicate a schema when you invoke SQLLine, you can issue the `USE
-<schema>` statement to run your queries against a particular schema. After you
-issue the `USE` statement, you can use absolute notation, such as `schema.table.column`.
+registered with Drill. You issue the `USE
+<storage plugin>` statement to run your queries against a particular storage plugin. You use dot notation and back ticks to specify the storage plugin name and sometimes the workspace name. For example, to use the dfs storage plugin and default workspace, issue this command: ``USE dfs.`default``
+
+Alternatively, you can omit the USE statement, and specify the storage plugin and workspace name using dot notation and back ticks. For example:
+
+``dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json```;
 
 You may need to use casting functions in some queries. For example, you may
 have to cast a string `"100"` to an integer in order to apply a math function
@@ -22,9 +23,6 @@ text may help you isolate the problem.
 
 The set command increases the default text display (number of characters). By
 default, most of the plan output is hidden.
-
-You may see errors if you try to use non-standard or unsupported SQL syntax in
-a query.
 
 Remember the following tips when querying data with Drill:
 

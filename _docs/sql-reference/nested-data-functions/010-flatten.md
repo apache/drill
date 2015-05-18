@@ -52,9 +52,9 @@ row contains an array of four categories:
     0: jdbc:drill:zk=local> select distinct name, hours, categories 
     from dfs.yelp.`yelp_academic_dataset_business.json` 
     where name ='zpizza';
-    +------------+------------+------------+
-    |    name    |   hours    | categories |
-    +------------+------------+------------+
+    +------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+    |    name    |   hours                                                                                                                                                                                                                                                                                                         | categories                                    |
+    +------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
     | zpizza     | {"Tuesday":{"close":"22:00","open":"10:00"},"Friday":{"close":"23:00","open":"10:00"},"Monday":{"close":"22:00","open":"10:00"},"Wednesday":{"close":"22:00","open":"10:00"},"Thursday":{"close":"22:00","open":"10:00"},"Sunday":{"close":"22:00","open":"10:00"},"Saturday":{"close":"23:00","open":"10:00"}} | ["Gluten-Free","Pizza","Vegan","Restaurants"] |
 
 The FLATTEN function can operate on this single row and return multiple rows,
@@ -98,5 +98,5 @@ the categories array, then run a COUNT function on the flattened result:
     +---------------|------------+
 
 A common use case for FLATTEN is its use in conjunction with the
-[KVGEN]({{ site.baseurl }}/docs/flatten-function) function as shown in the section, ["JSON Data Model"]({{ site.baseurl }}/docs/json-data-model/).
+KVGEN function as shown in the section, ["JSON Data Model"]({{ site.baseurl }}/docs/json-data-model/).
 

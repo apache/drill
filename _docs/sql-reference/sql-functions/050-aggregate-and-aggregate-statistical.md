@@ -44,11 +44,11 @@ MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is A
     13 rows selected (0.056 seconds)
 
     SELECT AVG(ALL a2) FROM t2;
-    +------------+
-    |   EXPR$0   |
-    +------------+
+    +--------------------+
+    |        EXPR$0      |
+    +--------------------+
     | 4.3076923076923075 |
-    +------------+
+    +--------------------+
     1 row selected (0.084 seconds)
 
     SELECT AVG(DISTINCT a2) FROM t2;

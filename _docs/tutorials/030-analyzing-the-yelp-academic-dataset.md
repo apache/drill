@@ -2,17 +2,14 @@
 title: "Analyzing the Yelp Academic Dataset"
 parent: "Tutorials"
 ---
-[Apache Drill](https://www.mapr.com/products/apache-drill) is one of the
-fastest growing open source projects, with the community making rapid progress
-with monthly releases. The key difference is Drill’s agility and flexibility.
+Apache Drill is one of the fastest growing open source projects, with the community making rapid progress with monthly releases. The key difference is Drill’s agility and flexibility.
 Along with meeting the table stakes for SQL-on-Hadoop, which is to achieve low
 latency performance at scale, Drill allows users to analyze the data without
 any ETL or up-front schema definitions. The data could be in any file format
 such as text, JSON, or Parquet. Data could have simple types such as string,
 integer, dates, or more complex multi-structured data, such as nested maps and
 arrays. Data can exist in any file system, local or distributed, such as HDFS,
-[MapR FS](https://www.mapr.com/blog/comparing-mapr-fs-and-hdfs-nfs-and-
-snapshots), or S3. Drill, has a “no schema” approach, which enables you to get
+MapR FS, or S3. Drill, has a “no schema” approach, which enables you to get
 value from your data in just a few minutes.
 
 Let’s quickly walk through the steps required to install Drill and run it
@@ -28,7 +25,7 @@ example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 
 [http://drill.apache.org/download/](http://drill.apache.org/download/)
 
-You can also [deploy Drill in clustered mode]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster) if you
+You can also [in Drill in distributed mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode) if you
 want to scale your environment.
 
 ### Step 2 : Open the Drill tar file
@@ -417,8 +414,8 @@ Stay tuned for more features and upcoming activities in the Drill community.
 
 To learn more about Drill, please refer to the following resources:
 
-  * Download Drill here:<http://getdrill.org/drill/download>
-  * 10 reasons we think Drill is cool:</docs/why-drill>
+  * Download Drill here: <http://getdrill.org/drill/download>
+  * [10 reasons we think Drill is cool]({{site.baseurl}}/docs/why-drill)
   * [A simple 10-minute tutorial]({{ site.baseurl }}/docs/drill-in-10-minutes>)
   * [More tutorials]({{ site.baseurl }}/docs/tutorials-introduction/)
 

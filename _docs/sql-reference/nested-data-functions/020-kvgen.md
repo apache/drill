@@ -73,7 +73,7 @@ a map with a wide set of columns into an array of key-value pairs.
 
 In turn, you can write analytic queries that return a subset of the generated
 keys or constrain the keys in some way. For example, you can use the
-[FLATTEN]({{ site.baseurl }}/docs/flatten-function) function to break the
+[FLATTEN]({{ site.baseurl }}/docs/flatten) function to break the
 array down into multiple distinct rows and further query those rows.
 
 For example, assume that a JSON file named `simplemaps.json` contains this data:  
@@ -92,8 +92,7 @@ KVGEN would operate on this data as follows:
 	+------------+
 	2 rows selected (0.201 seconds)
 
-Applying the [FLATTEN]({{ site.baseurl }}/docs/flatten-function) function to
-this data would return:
+Applying the FLATTEN function to this data would return:
 
     {"key": "a", "value": "valA"}
     {"key": "b", "value": "valB"}

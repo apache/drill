@@ -1,5 +1,5 @@
 ---
-title: "DESCRIBE Command"
+title: "DESCRIBE"
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table or view.

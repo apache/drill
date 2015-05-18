@@ -11,7 +11,7 @@ without having to perform any setup tasks.
 
 ## Installation Overview
 
-You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about running Drill in distributed mode, see  [Deploying Drill in a Cluster]({{ site.baseurl }}/docs/deploying-drill-in-a-cluster).
+You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about installing Drill in distributed mode, see [Installing Drill in Distributed Mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode).
 
 This installation procedure includes how to download the Apache Drill archive and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
 
@@ -86,14 +86,17 @@ At this point, you can start Drill.
 ## Start Drill on Windows
 Start Drill by running the sqlline.bat file and typing a connection string, as shown in the following procedure. The `zk=local` in the connection string means the local node is the ZooKeeper node:
 
-1. Open the apache-drill-1.0.0 folder.  
-2. Open the bin folder, and double-click the `sqlline.bat` file:
-   ![drill bin dir]({{ site.baseurl }}/docs/img/drill-bin.png)
-   The Windows command prompt opens.  
-3. At the sqlline> prompt, type `!connect jdbc:drill:zk=local` and then press Enter:
-   ![sqlline]({{ site.baseurl }}/docs/img/sqlline1.png)
-4. Enter the username, `admin`, and password, also `admin` when prompted.  
-   The `0: jdbc:drill:zk=local>` prompt appears.
+Start the Drill shell using the **sqlline command**. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch the Drill shell:
+
+1. Open Command Prompt.  
+2. Open the apache-drill-1.0.0 folder. For example:  
+   ``cd apache-drill-1.0.0``
+3. Go to the bin directory. For example:  
+   ``cd bin``
+4. Type the following command on the command line:
+   ``sqlline.bat -u "jdbc:drill:zk=local"``
+   ![drill install dir]({{ site.baseurl }}/docs/img/sqlline1.png)
+
 At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data).
 
 ## Stopping Drill

@@ -47,6 +47,8 @@ The following examples show how to cast a string to a number, a number to a stri
 ### Casting a Character String to a Number
 You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DECIMAL type, and then to an INT. 
 
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
+
 The following example shows how to cast a character to a DECIMAL having two decimal places.
 
     SELECT CAST('1' as DECIMAL(28, 2)) FROM sys.version;
@@ -55,8 +57,6 @@ The following example shows how to cast a character to a DECIMAL having two deci
     +------------+
     | 1.00       |
     +------------+
-
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 ### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
@@ -82,12 +82,11 @@ The first example shows Drill casting a number to a VARCHAR having a length of 3
 Cast an integer to a decimal.
 
     SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | -2.147483648E9 |
-    +------------+
-    1 row selected (0.08 seconds)
+    +-----------------+
+    |     EXPR$0      |
+    +-----------------+
+    | -2.147483648E9  |
+    +-----------------+
 
 {% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
@@ -108,12 +107,12 @@ For example, a JSON file named intervals.json contains the following objects:
 
         ALTER SESSION SET `store.format` = 'parquet';
 
-        +------------+------------+
-        |     ok     |  summary   |
-        +------------+------------+
-        | true       | store.format updated. |
-        +------------+------------+
-        1 row selected (0.037 seconds)
+        +-------+------------------------+
+        |  ok   |        summary         |
+        +-------+------------------------+
+        | true  | store.format updated.  |
+        +-------+------------------------+
+        1 row selected (0.072 seconds)
 
 2. Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
 
@@ -153,14 +152,14 @@ This example shows how to use the CONVERT_FROM function to convert complex HBase
 
     SELECT * FROM students;
         
-    +------------+------------+------------+
-    |  row_key   |  account   |  address   |
-    +------------+------------+------------+
-    | [B@e6d9eb7 | {"name":"QWxpY2U="} | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="} |
-    | [B@2823a2b4 | {"name":"Qm9i"} | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="} |
-    | [B@3b8eec02 | {"name":"RnJhbms="} | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="} |
+    +-------------+---------------------+---------------------------------------------------------------------------+
+    |   row_key   |  account            |                               address                                     |
+    +-------------+---------------------+---------------------------------------------------------------------------+
+    | [B@e6d9eb7  | {"name":"QWxpY2U="} | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="}     |
+    | [B@2823a2b4 | {"name":"Qm9i"}     | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="}     |
+    | [B@3b8eec02 | {"name":"RnJhbms="} | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="}     |
     | [B@242895da | {"name":"TWFyeQ=="} | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
-    +------------+------------+------------+
+    +-------------+---------------------+---------------------------------------------------------------------------+
     4 rows selected (1.335 seconds)
 
 You use the CONVERT_FROM function to decode the binary data to render it readable, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types). JSON supports strings. To convert binary to strings, use the UTF8 type.:
@@ -171,25 +170,25 @@ You use the CONVERT_FROM function to decode the binary data to render it readabl
            CONVERT_FROM(students.address.street, 'UTF8') AS street, 
            CONVERT_FROM(students.address.zipcode, 'UTF8') AS zipcode FROM students;
 
-    +------------+------------+------------+------------+------------+
-    | studentid  |    name    |   state    |   street   |  zipcode   |
-    +------------+------------+------------+------------+------------+
-    | student1   | Alice      | CA         | 123 Ballmer Av | 12345      |
-    | student2   | Bob        | CA         | 1 Infinite Loop | 12345      |
-    | student3   | Frank      | CA         | 435 Walker Ct | 12345      |
+    +------------+------------+------------+------------------+------------+
+    | studentid  |    name    |   state    |      street      |  zipcode   |
+    +------------+------------+------------+------------------+------------+
+    | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
+    | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
+    | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
     | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-    +------------+------------+------------+------------+------------+
+    +------------+------------+------------+------------------+------------+
     4 rows selected (0.504 seconds)
 
 This example converts from VARCHAR to a JSON map:
 
     SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM sys.version;
-    +------------+
-    |   MYCOL    |
-    +------------+
-    | {"x":100,"y":215.6} |
-    +------------+
-    1 row selected (0.073 seconds)
+    +----------------------+
+    |        MYCOL         |
+    +----------------------+
+    | {"x":100,"y":215.6}  |
+    +----------------------+
+    1 row selected (0.163 seconds)
 
 This example uses a list of BIGINT as input and returns a repeated list of vectors:
 
@@ -204,12 +203,12 @@ This example uses a list of BIGINT as input and returns a repeated list of vecto
 This example uses a map as input to return a repeated list vector (JSON).
 
     SELECT CONVERT_FROM('[{a : 100, b: 200}, {a:300, b: 400}]' ,'JSON') AS MYCOL1  FROM sys.version;
-    +------------+
-    |   MYCOL1   |
-    +------------+
-    | [{"a":100,"b":200},{"a":300,"b":400}] |
-    +------------+
-    1 row selected (0.074 seconds)
+    +--------------------+
+    |       MYCOL1       |
+    +--------------------+
+    | [[1,2],[3,4],[5]]  |
+    +--------------------+
+    1 row selected (0.141 seconds)
 
 ### Set Up a Storage Plugin for Working with HBase Files
 
@@ -311,12 +310,12 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SEL
 6. Set up Drill to store data in Parquet format.
 
         ALTER SESSION SET `store.format`='parquet';
-        +------------+------------+
-        |     ok     |  summary   |
-        +------------+------------+
-        | true       | store.format updated. |
-        +------------+------------+
-        1 row selected (0.056 seconds)
+        +-------+------------------------+
+        |  ok   |        summary         |
+        +-------+------------------------+
+        | true  | store.format updated.  |
+        +-------+------------------------+
+        1 row selected (0.07 seconds)
 
 7. Use CONVERT_TO to convert the JSON data to a binary format in the Parquet file.
 
@@ -337,14 +336,14 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SEL
 8. Take a look at the binary Parquet output:
 
         SELECT * FROM tmp.`json2parquet`;
-        +------------+------------+------------+------------+------------+
-        |     id     |    name    |   state    |   street   |    zip     |
-        +------------+------------+------------+------------+------------+
+        +-------------+-------------+-------------+-------------+-------------+
+        |      id     |    name     |    state    |   street    |     zip     |
+        +-------------+-------------+-------------+-------------+-------------+
         | [B@224388b2 | [B@7fc36fb0 | [B@77d9cd57 | [B@7c384839 | [B@530dd5e5 |
-        | [B@3155d7fc | [B@7ad6fab1 | [B@37e4b978 | [B@94c91f3 | [B@201ed4a |
+        | [B@3155d7fc | [B@7ad6fab1 | [B@37e4b978 | [B@94c91f3  | [B@201ed4a  |
         | [B@4fb2c078 | [B@607a2f28 | [B@75ae1c93 | [B@79d63340 | [B@5dbeed3d |
-        | [B@2fcfec74 | [B@7baccc31 | [B@d91e466 | [B@6529eb7f | [B@232412bc |
-        +------------+------------+------------+------------+------------+
+        | [B@2fcfec74 | [B@7baccc31 | [B@d91e466  | [B@6529eb7f | [B@232412bc |
+        +-------------+-------------+-------------+-------------+-------------+
         4 rows selected (0.12 seconds)
 
 9. Use CONVERT_FROM to convert the Parquet data to a readable format:
@@ -356,14 +355,14 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SEL
                CONVERT_FROM(zip, 'UTF8') AS zip 
         FROM tmp.`json2parquet2`;
 
-        +------------+------------+------------+------------+------------+
-        |     id     |    name    |   state    |  address   |    zip     |
-        +------------+------------+------------+------------+------------+
-        | student1   | Alice      | CA         | 123 Ballmer Av | 12345      |
-        | student2   | Bob        | CA         | 1 Infinite Loop | 12345      |
-        | student3   | Frank      | CA         | 435 Walker Ct | 12345      |
+        +------------+------------+------------+------------------+------------+
+        |     id     |    name    |   state    |  address         |    zip     |
+        +------------+------------+------------+------------------+------------+
+        | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
+        | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
+        | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
         | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-        +------------+------------+------------+------------+------------+
+        +------------+------------+------------+------------------+------------+
         4 rows selected (0.182 seconds)
 
 ## Other Data Type Conversions
@@ -481,11 +480,12 @@ Convert an integer to a character string.
 Convert a date to a character string.
 
     SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2008-Feb-23 |
-    +------------+
+    +--------------+
+    |    EXPR$0    |
+    +--------------+
+    | 2008-Feb-23  |
+    +--------------+
+    1 row selected (0.166 seconds)
 
 Convert a time to a string.
 
@@ -501,12 +501,12 @@ Convert a time to a string.
 Convert a timestamp to a string.
 
     SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015 Feb 23 12:00:00 |
-    +------------+
-    1 row selected (0.075 seconds)
+    +-----------------------+
+    |        EXPR$0         |
+    +-----------------------+
+    | 2015 Feb 23 12:00:00  |
+    +-----------------------+
+    1 row selected (0.142 seconds)
 
 ## TO_DATE
 Converts a character string or a UNIX epoch timestamp to a date.
@@ -690,21 +690,22 @@ Specify a format using patterns defined in [Java DateTimeFormat class](http://jo
 Convert a date to a timestamp. 
 
     SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2008-02-23 12:00:00.0 |
-    +------------+
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2008-02-23 12:00:00.0  |
+    +------------------------+
+    1 row selected (0.126 seconds)
 
 Convert Unix Epoch time to a timestamp.
 
     SELECT TO_TIMESTAMP(1427936330) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015-04-01 17:58:50.0 |
-    +------------+
-    1 row selected (0.094 seconds)
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 2015-04-01 17:58:50.0  |
+    +------------------------+
+    1 row selected (0.114 seconds)
 
 Convert a UTC date to a timestamp offset from the UTC time zone code.
 
@@ -712,12 +713,12 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS New_TZ 
     FROM sys.version;
 
-    +------------+------------+
-    |  Original  |   New_TZ   |
-    +------------+------------+
-    | 2015-03-30 20:49:00.0 | UTC        |
-    +------------+------------+
-    1 row selected (0.129 seconds)
+    +------------------------+---------+
+    |        Original        | New_TZ  |
+    +------------------------+---------+
+    | 2015-03-30 20:49:00.0  | UTC     |
+    +------------------------+---------+
+    1 row selected (0.148 seconds)
 
 ## Time Zone Limitation
 Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. Queries of data associated with a time zone can return inconsistent results or an error. For more information, see the ["Understanding Drill's Timestamp and Timezone"](http://www.openkb.info/2015/05/understanding-drills-timestamp-and.html#.VUzhotpVhHw) blog. The Drill time zone is based on the operating system time zone unless you override it. To work around the limitation, configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
@@ -726,12 +727,12 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
         SELECT TIMEOFDAY() FROM sys.version;
 
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-04-02 15:01:31.114 America/Los_Angeles |
-        +------------+
-        1 row selected (1.199 seconds)
+        +----------------------------------------------+
+        |                    EXPR$0                    |
+        +----------------------------------------------+
+        | 2015-05-17 22:37:29.516 America/Los_Angeles  |
+        +----------------------------------------------+
+        1 row selected (0.108 seconds)
 
 2. Configure the default time zone format in <drill installation directory>/conf/drill-env.sh by adding `-Duser.timezone=UTC` to DRILL_JAVA_OPTS. For example:
 
@@ -743,12 +744,12 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
         SELECT TIMEOFDAY() FROM sys.version;
 
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-04-02 17:05:02.424 UTC |
-        +------------+
-        1 row selected (1.191 seconds)
+        +----------------------------------------------+
+        |                    EXPR$0                    |
+        +----------------------------------------------+
+        | 2015-05-17 22:37:57.082 America/Los_Angeles  |
+        +----------------------------------------------+
+        1 row selected (0.087 seconds)
 
 You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
 
@@ -756,12 +757,12 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
            FROM sys.version;
 
-    +------------+------------+
-    |  Original  |  TimeZone  |
-    +------------+------------+
-    | 2015-03-30 20:49:00.0 | UTC        |
-    +------------+------------+
-    1 row selected (0.299 seconds)
+    +------------------------+-----------+
+    |        Original        | TimeZone  |
+    +------------------------+-----------+
+    | 2015-03-30 20:49:00.0  | UTC       |
+    +------------------------+-----------+
+    1 row selected (0.097 seconds)
 
 <!-- DRILL-448 Support timestamp with time zone -->
 

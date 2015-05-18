@@ -32,12 +32,12 @@ To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to
 
      ALTER SYSTEM SET `planner.enable_decimal_data_type` = true;
 
-     +------------+------------+
-     |     ok     |  summary   |
-     +------------+------------+
-     | true       | planner.enable_decimal_data_type updated. |
-     +------------+------------+
-     1 row selected (1.191 seconds)
+    +-------+--------------------------------------------+
+    |  ok   |                  summary                   |
+    +-------+--------------------------------------------+
+    | true  | planner.enable_decimal_data_type updated.  |
+    +-------+--------------------------------------------+
+    1 row selected (0.08 seconds)
 
 ## Casting and Converting Data Types
 
@@ -94,13 +94,13 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
   Casts data from one data type to another.
 * [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)  
   Converts data, including binary data, from one data type to another.
-* [TO_CHAR]()  
+* [TO_CHAR]({{ site.baseurl }}/docs/data-type-conversion/#to_char)  
   Converts a TIMESTAMP, INTERVALDAY/INTERVALYEAR, INTEGER, DOUBLE, or DECIMAL to a string.
-* [TO_DATE]()  
+* [TO_DATE]({{ site.baseurl }}/docs/data-type-conversion/#to_date)  
   Converts a string to DATE.
-* [TO_NUMBER]()  
+* [TO_NUMBER]({{ site.baseurl }}/docs/data-type-conversion/#to_number)  
   Converts a string to a DECIMAL.
-* [TO_TIMESTAMP]()  
+* [TO_TIMESTAMP]({{ site.baseurl }}/docs/data-type-conversion/#to_timestamp)  
   Converts a string to TIMESTAMP.
 
 If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.

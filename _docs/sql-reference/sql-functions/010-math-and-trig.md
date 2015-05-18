@@ -12,7 +12,7 @@ Drill supports the math functions shown in the following table of math functions
 
 \* Not supported in this release.
 
-Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type:
+Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOAT and DOUBLE types. DEGREES, EXP, RADIANS, and the multiple LOG functions take the input types in this list plus the DECIMAL type. In this release, Drill disables the DECIMAL data type. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
 
 ## Table of Math Functions
 
@@ -184,12 +184,12 @@ Get the natural log of 7.5.
 
     SELECT LOG(7.5) FROM sys.version;
 
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2.0149030205422647 |
-    +------------+
-    1 row selected (0.063 seconds)
+    +---------------------+
+    |       EXPR$0        |
+    +---------------------+
+    | 2.0149030205422647  |
+    +---------------------+
+    1 row selected (0.139 seconds)
 
 ## Trig Functions
 
