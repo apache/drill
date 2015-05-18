@@ -4,7 +4,7 @@ parent: "Installing Drill in Embedded Mode"
 ---
 Start the Drill shell using the **sqlline command**. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch the Drill shell:
 
-1. Open Command Prompt.
+1. Open Command Prompt.  
 2. Open the apache-drill-1.0.0 folder. For example:  
    ``cd apache-drill-1.0.0``
 3. Go to the bin directory. For example:  
