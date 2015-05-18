@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
+import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
@@ -120,11 +121,16 @@ public class DrillRuleSets {
     if (DRILL_BASIC_RULES == null) {
 
       DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
-        // Add support for WHERE style joins.
-      DrillPushFilterPastProjectRule.INSTANCE,
+      // Add support for WHERE style joins.
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
       // End support for WHERE style joins.
+
+      /*
+       Filter push-down related rules
+       */
+      DrillPushFilterPastProjectRule.INSTANCE,
+      FilterSetOpTransposeRule.INSTANCE,
 
       FilterMergeRule.INSTANCE,
       AggregateRemoveRule.INSTANCE,
@@ -136,11 +142,12 @@ public class DrillRuleSets {
       DrillReduceAggregatesRule.INSTANCE,
 
       /*
-      Projection push-down related rules
-      */
+       Projection push-down related rules
+       */
       DrillPushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
       DrillPushProjIntoScan.INSTANCE,
+      DrillProjectSetOpTransposeRule.INSTANCE,
 
       PruneScanRule.getFilterOnProject(context),
       PruneScanRule.getFilterOnScan(context),
