@@ -26,6 +26,7 @@ Drill supports the following file types:
     * Tab-separated values (TSV, type: text)
     * Pipe-separated values (PSV, type: text)
   * Structured data files:
+    * Avro(type: avro)
     * JSON (type: json)
     * Parquet (type: parquet)
 

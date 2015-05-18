@@ -389,66 +389,6 @@
             "title": "Apache Drill M1 Release Notes (Apache Drill Alpha)", 
             "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
         }, 
-        "Architectural Highlights": {
-            "breadcrumbs": [
-                {
-                    "title": "Architecture", 
-                    "url": "/docs/architecture/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Architectural Highlights", 
-                            "url": "/docs/architectural-highlights/"
-                        }, 
-                        {
-                            "title": "Architecture", 
-                            "url": "/docs/architecture/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Performance", 
-                    "next_url": "/docs/performance/", 
-                    "parent": "Architectural Highlights", 
-                    "previous_title": "Architectural Highlights", 
-                    "previous_url": "/docs/architectural-highlights/", 
-                    "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
-                    "title": "Flexibility", 
-                    "url": "/docs/flexibility/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Architectural Highlights", 
-                            "url": "/docs/architectural-highlights/"
-                        }, 
-                        {
-                            "title": "Architecture", 
-                            "url": "/docs/architecture/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Tutorials", 
-                    "next_url": "/docs/tutorials/", 
-                    "parent": "Architectural Highlights", 
-                    "previous_title": "Flexibility", 
-                    "previous_url": "/docs/flexibility/", 
-                    "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
-                    "title": "Performance", 
-                    "url": "/docs/performance/"
-                }
-            ], 
-            "next_title": "Flexibility", 
-            "next_url": "/docs/flexibility/", 
-            "parent": "Architecture", 
-            "previous_title": "Core Modules", 
-            "previous_url": "/docs/core-modules/", 
-            "relative_path": "_docs/architecture/030-architectural-highlights.md", 
-            "title": "Architectural Highlights", 
-            "url": "/docs/architectural-highlights/"
-        }, 
         "Architecture": {
             "breadcrumbs": [], 
             "children": [
@@ -477,8 +417,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Architectural Highlights", 
-                    "next_url": "/docs/architectural-highlights/", 
+                    "next_title": "Performance", 
+                    "next_url": "/docs/performance/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
@@ -493,58 +433,15 @@
                             "url": "/docs/architecture/"
                         }
                     ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Architectural Highlights", 
-                                    "url": "/docs/architectural-highlights/"
-                                }, 
-                                {
-                                    "title": "Architecture", 
-                                    "url": "/docs/architecture/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Performance", 
-                            "next_url": "/docs/performance/", 
-                            "parent": "Architectural Highlights", 
-                            "previous_title": "Architectural Highlights", 
-                            "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
-                            "title": "Flexibility", 
-                            "url": "/docs/flexibility/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Architectural Highlights", 
-                                    "url": "/docs/architectural-highlights/"
-                                }, 
-                                {
-                                    "title": "Architecture", 
-                                    "url": "/docs/architecture/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Tutorials", 
-                            "next_url": "/docs/tutorials/", 
-                            "parent": "Architectural Highlights", 
-                            "previous_title": "Flexibility", 
-                            "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
-                            "title": "Performance", 
-                            "url": "/docs/performance/"
-                        }
-                    ], 
-                    "next_title": "Flexibility", 
-                    "next_url": "/docs/flexibility/", 
+                    "children": [], 
+                    "next_title": "Tutorials", 
+                    "next_url": "/docs/tutorials/", 
                     "parent": "Architecture", 
                     "previous_title": "Core Modules", 
                     "previous_url": "/docs/core-modules/", 
-                    "relative_path": "_docs/architecture/030-architectural-highlights.md", 
-                    "title": "Architectural Highlights", 
-                    "url": "/docs/architectural-highlights/"
+                    "relative_path": "_docs/architecture/030-performance.md", 
+                    "title": "Performance", 
+                    "url": "/docs/performance/"
                 }
             ], 
             "next_title": "Architecture Introduction", 
@@ -601,14 +498,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Archived Pages", 
+                            "url": "/docs/archived-pages/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
+                    "parent": "Archived Pages", 
+                    "previous_title": "What is Apache Drill", 
+                    "previous_url": "/docs/what-is-apache-drill/", 
+                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -1089,8 +1003,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Configuring the Drill Shell", 
+                    "next_url": "/docs/configuring-the-drill-shell/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Persistent Configuration Storage", 
                     "previous_url": "/docs/persistent-configuration-storage/", 
@@ -1111,9 +1025,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
+                    "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
+                    "title": "Configuring the Drill Shell", 
+                    "url": "/docs/configuring-the-drill-shell/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -1396,6 +1310,23 @@
             "title": "Configuring a Multitenant Cluster Introduction", 
             "url": "/docs/configuring-a-multitenant-cluster-introduction/"
         }, 
+        "Configuring the Drill Shell": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Connect a Data Source", 
+            "next_url": "/docs/connect-a-data-source/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Ports Used by Drill", 
+            "previous_url": "/docs/ports-used-by-drill/", 
+            "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
+            "title": "Configuring the Drill Shell", 
+            "url": "/docs/configuring-the-drill-shell/"
+        }, 
         "Connect a Data Source": {
             "breadcrumbs": [], 
             "children": [
@@ -1615,8 +1546,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "Configuring the Drill Shell", 
+            "previous_url": "/docs/configuring-the-drill-shell/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -1727,8 +1658,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Architectural Highlights", 
-            "next_url": "/docs/architectural-highlights/", 
+            "next_title": "Performance", 
+            "next_url": "/docs/performance/", 
             "parent": "Architecture", 
             "previous_title": "Architecture Introduction", 
             "previous_url": "/docs/architecture-introduction/", 
@@ -2894,27 +2825,6 @@
             "relative_path": "_docs/connect-a-data-source/050-file-system-storage-plugin.md", 
             "title": "File System Storage Plugin", 
             "url": "/docs/file-system-storage-plugin/"
-        }, 
-        "Flexibility": {
-            "breadcrumbs": [
-                {
-                    "title": "Architectural Highlights", 
-                    "url": "/docs/architectural-highlights/"
-                }, 
-                {
-                    "title": "Architecture", 
-                    "url": "/docs/architecture/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Performance", 
-            "next_url": "/docs/performance/", 
-            "parent": "Architectural Highlights", 
-            "previous_title": "Architectural Highlights", 
-            "previous_url": "/docs/architectural-highlights/", 
-            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
-            "title": "Flexibility", 
-            "url": "/docs/flexibility/"
         }, 
         "Functions for Handling Nulls": {
             "breadcrumbs": [
@@ -4084,8 +3994,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Audit Logging", 
-            "next_url": "/docs/query-audit-logging/", 
+            "next_title": "Performance Tuning", 
+            "next_url": "/docs/performance-tuning/", 
             "parent": "Query Data", 
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
@@ -4736,26 +4646,22 @@
         "Partition Pruning": {
             "breadcrumbs": [
                 {
-                    "title": "Configure Drill", 
-                    "url": "/docs/configure-drill/"
+                    "title": "Archived Pages", 
+                    "url": "/docs/archived-pages/"
                 }
             ], 
             "children": [], 
-            "next_title": "Connect a Data Source", 
-            "next_url": "/docs/connect-a-data-source/", 
-            "parent": "Configure Drill", 
-            "previous_title": "Ports Used by Drill", 
-            "previous_url": "/docs/ports-used-by-drill/", 
-            "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
+            "next_title": "Progress Reports", 
+            "next_url": "/docs/progress-reports/", 
+            "parent": "Archived Pages", 
+            "previous_title": "What is Apache Drill", 
+            "previous_url": "/docs/what-is-apache-drill/", 
+            "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
             "title": "Partition Pruning", 
             "url": "/docs/partition-pruning/"
         }, 
         "Performance": {
             "breadcrumbs": [
-                {
-                    "title": "Architectural Highlights", 
-                    "url": "/docs/architectural-highlights/"
-                }, 
                 {
                     "title": "Architecture", 
                     "url": "/docs/architecture/"
@@ -4764,12 +4670,59 @@
             "children": [], 
             "next_title": "Tutorials", 
             "next_url": "/docs/tutorials/", 
-            "parent": "Architectural Highlights", 
-            "previous_title": "Flexibility", 
-            "previous_url": "/docs/flexibility/", 
-            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
+            "parent": "Architecture", 
+            "previous_title": "Core Modules", 
+            "previous_url": "/docs/core-modules/", 
+            "relative_path": "_docs/architecture/030-performance.md", 
             "title": "Performance", 
             "url": "/docs/performance/"
+        }, 
+        "Performance Tuning": {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Performance Tuning", 
+                    "previous_url": "/docs/performance-tuning/", 
+                    "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md", 
+                    "title": "Performance Tuning Introduction", 
+                    "url": "/docs/performance-tuning-introduction/"
+                }
+            ], 
+            "next_title": "Performance Tuning Introduction", 
+            "next_url": "/docs/performance-tuning-introduction/", 
+            "parent": "", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "relative_path": "_docs/072-performance-tuning.md", 
+            "title": "Performance Tuning", 
+            "url": "/docs/performance-tuning/"
+        }, 
+        "Performance Tuning Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Audit Logging", 
+            "next_url": "/docs/query-audit-logging/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Performance Tuning", 
+            "previous_url": "/docs/performance-tuning/", 
+            "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md", 
+            "title": "Performance Tuning Introduction", 
+            "url": "/docs/performance-tuning-introduction/"
         }, 
         "Persistent Configuration Storage": {
             "breadcrumbs": [
@@ -4842,8 +4795,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Partition Pruning", 
-            "next_url": "/docs/partition-pruning/", 
+            "next_title": "Configuring the Drill Shell", 
+            "next_url": "/docs/configuring-the-drill-shell/", 
             "parent": "Configure Drill", 
             "previous_title": "Persistent Configuration Storage", 
             "previous_url": "/docs/persistent-configuration-storage/", 
@@ -4875,8 +4828,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "What is Apache Drill", 
-            "previous_url": "/docs/what-is-apache-drill/", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
@@ -4917,8 +4870,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Performance Tuning Introduction", 
+            "previous_url": "/docs/performance-tuning-introduction/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -5286,8 +5239,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Audit Logging", 
-                    "next_url": "/docs/query-audit-logging/", 
+                    "next_title": "Performance Tuning", 
+                    "next_url": "/docs/performance-tuning/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
@@ -8779,8 +8732,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Progress Reports", 
-            "next_url": "/docs/progress-reports/", 
+            "next_title": "Partition Pruning", 
+            "next_url": "/docs/partition-pruning/", 
             "parent": "Archived Pages", 
             "previous_title": "How to Run the Drill Demo", 
             "previous_url": "/docs/how-to-run-the-drill-demo/", 
@@ -8920,8 +8873,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Architectural Highlights", 
-                    "next_url": "/docs/architectural-highlights/", 
+                    "next_title": "Performance", 
+                    "next_url": "/docs/performance/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
@@ -8936,58 +8889,15 @@
                             "url": "/docs/architecture/"
                         }
                     ], 
-                    "children": [
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Architectural Highlights", 
-                                    "url": "/docs/architectural-highlights/"
-                                }, 
-                                {
-                                    "title": "Architecture", 
-                                    "url": "/docs/architecture/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Performance", 
-                            "next_url": "/docs/performance/", 
-                            "parent": "Architectural Highlights", 
-                            "previous_title": "Architectural Highlights", 
-                            "previous_url": "/docs/architectural-highlights/", 
-                            "relative_path": "_docs/architecture/architectural-highlights/010-flexibility.md", 
-                            "title": "Flexibility", 
-                            "url": "/docs/flexibility/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Architectural Highlights", 
-                                    "url": "/docs/architectural-highlights/"
-                                }, 
-                                {
-                                    "title": "Architecture", 
-                                    "url": "/docs/architecture/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Tutorials", 
-                            "next_url": "/docs/tutorials/", 
-                            "parent": "Architectural Highlights", 
-                            "previous_title": "Flexibility", 
-                            "previous_url": "/docs/flexibility/", 
-                            "relative_path": "_docs/architecture/architectural-highlights/020-performance.md", 
-                            "title": "Performance", 
-                            "url": "/docs/performance/"
-                        }
-                    ], 
-                    "next_title": "Flexibility", 
-                    "next_url": "/docs/flexibility/", 
+                    "children": [], 
+                    "next_title": "Tutorials", 
+                    "next_url": "/docs/tutorials/", 
                     "parent": "Architecture", 
                     "previous_title": "Core Modules", 
                     "previous_url": "/docs/core-modules/", 
-                    "relative_path": "_docs/architecture/030-architectural-highlights.md", 
-                    "title": "Architectural Highlights", 
-                    "url": "/docs/architectural-highlights/"
+                    "relative_path": "_docs/architecture/030-performance.md", 
+                    "title": "Performance", 
+                    "url": "/docs/performance/"
                 }
             ], 
             "next_title": "Architecture Introduction", 
@@ -9758,8 +9668,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Configuring the Drill Shell", 
+                    "next_url": "/docs/configuring-the-drill-shell/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Persistent Configuration Storage", 
                     "previous_url": "/docs/persistent-configuration-storage/", 
@@ -9780,9 +9690,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Ports Used by Drill", 
                     "previous_url": "/docs/ports-used-by-drill/", 
-                    "relative_path": "_docs/configure-drill/110-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
+                    "relative_path": "_docs/configure-drill/120-configuring-the-drill-shell.md", 
+                    "title": "Configuring the Drill Shell", 
+                    "url": "/docs/configuring-the-drill-shell/"
                 }
             ], 
             "next_title": "Configure Drill Introduction", 
@@ -10013,8 +9923,8 @@
             "next_title": "Connect a Data Source Introduction", 
             "next_url": "/docs/connect-a-data-source-introduction/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "Configuring the Drill Shell", 
+            "previous_url": "/docs/configuring-the-drill-shell/", 
             "relative_path": "_docs/050-connect-a-data-source.md", 
             "title": "Connect a Data Source", 
             "url": "/docs/connect-a-data-source/"
@@ -10823,8 +10733,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Audit Logging", 
-                    "next_url": "/docs/query-audit-logging/", 
+                    "next_title": "Performance Tuning", 
+                    "next_url": "/docs/performance-tuning/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
@@ -10841,6 +10751,36 @@
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Performance Tuning", 
+                    "previous_url": "/docs/performance-tuning/", 
+                    "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md", 
+                    "title": "Performance Tuning Introduction", 
+                    "url": "/docs/performance-tuning-introduction/"
+                }
+            ], 
+            "next_title": "Performance Tuning Introduction", 
+            "next_url": "/docs/performance-tuning-introduction/", 
+            "parent": "", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "relative_path": "_docs/072-performance-tuning.md", 
+            "title": "Performance Tuning", 
+            "url": "/docs/performance-tuning/"
         }, 
         {
             "breadcrumbs": [], 
@@ -10866,8 +10806,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Performance Tuning Introduction", 
+            "previous_url": "/docs/performance-tuning-introduction/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -12375,14 +12315,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Archived Pages", 
+                            "url": "/docs/archived-pages/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
+                    "parent": "Archived Pages", 
+                    "previous_title": "What is Apache Drill", 
+                    "previous_url": "/docs/what-is-apache-drill/", 
+                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -12418,8 +12375,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "What is Apache Drill", 
-            "previous_url": "/docs/what-is-apache-drill/", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"

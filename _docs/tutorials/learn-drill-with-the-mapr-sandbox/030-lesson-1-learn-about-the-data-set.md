@@ -22,17 +22,17 @@ This lesson consists of select * queries on each data source.
 
 ## Before You Begin
 
-### Start SQLLine
+### Start the Drill Shell
 
-If SQLLine is not already started, use a Terminal or Command window to log
+If the Drill shell is not already started, use a Terminal or Command window to log
 into the demo VM as root, then enter `sqlline`, as described in ["Getting to Know the Sandbox"]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox):
 
-You can run queries from the `sqlline` prompt to complete the tutorial. To exit from
-SQLLine, type:
+You can run queries to complete the tutorial. To exit from
+the Drill shell, type:
 
     0: jdbc:drill:> !quit
 
-Examples in this tutorial use SQLLine. You can also execute queries using the Drill Web UI.
+Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web UI.
 
 ### List the available workspaces and databases:
 

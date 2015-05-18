@@ -11,20 +11,7 @@ Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introdu
 * exec.queue.large  
 * exec.queue.small  
 
-### Example Configuration
-
-For example, you configure the queue reserved for large queries for a 5-query maximum. You configure the queue reserved for small queries for 20 queries. Users start to run queries, and Drill receives the following query requests in this order:
-
-* Query A (blue): 1 billion records, Drill estimates 10 million rows will be processed  
-* Query B (red): 2 billion records, Drill estimates 20 million rows will be processed  
-* Query C: 1 billion records  
-* Query D: 100 records
-
-The exec.queue.threshold default is 30 million, which is the estimated rows to be processed by the query. Queries A and B are queued in the large queue. The estimated rows to be processed reaches the 30 million threshold, filling the queue to capacity. The query C request arrives and goes on the wait list, and then query D arrives. Query D is queued immediately in the small queue because of its small size, as shown in the following diagram: 
-
-![drill queuing]({{ site.baseurl }}/docs/img/queuing.png)
-
-The Drill queuing configuration in this example tends to give many users running small queries a rapid response. Users running a large query might experience some delay until an earlier-received large query returns, freeing space in the large queue to process queries that are waiting.
+For more information, see the section, ["Performance Tuning"](/docs/performance-tuning-introduction/).
 
 ## Configuring Parallelization
 
@@ -39,7 +26,22 @@ To configure parallelization, configure the following options in the `sys.option
 * `planner.width.max.per.query`  
   Same as max per node but applies to the query as executed by the entire cluster.
 
-Configure the `planner.width.max.per.node` to achieve fine grained, absolute control over parallelization. 
+### planner.width.max_per_node
+Configure the `planner.width.max.per.node` to achieve fine grained, absolute control over parallelization. In this context *width* refers to fanout or distribution potential: the ability to run a query in parallel across the cores on a node and the nodes on a cluster. A physical plan consists of intermediate operations, known as query &quot;fragments,&quot; that run concurrently, yielding opportunities for parallelism above and below each exchange operator in the plan. An exchange operator represents a breakpoint in the execution flow where processing can be distributed. For example, a single-process scan of a file may flow into an exchange operator, followed by a multi-process aggregation fragment.
+
+The maximum width per node defines the maximum degree of parallelism for any fragment of a query, but the setting applies at the level of a single node in the cluster. The *default* maximum degree of parallelism per node is calculated as follows, with the theoretical maximum automatically scaled back (and rounded down) so that only 70% of the actual available capacity is taken into account: number of active drillbits (typically one per node) * number of cores per node * 0.7
+
+For example, on a single-node test system with 2 cores and hyper-threading enabled: 1 * 4 * 0.7 = 3
+
+When you modify the default setting, you can supply any meaningful number. The system does not automatically scale down your setting.
+
+### planner.width.max_per_query
+
+The max_per_query value also sets the maximum degree of parallelism for any given stage of a query, but the setting applies to the query as executed by the whole cluster (multiple nodes). In effect, the actual maximum width per query is the *minimum of two values*: min((number of nodes * width.max_per_node), width.max_per_query)
+
+For example, on a 4-node cluster where `width.max_per_node` is set to 6 and `width.max_per_query` is set to 30: min((4 * 6), 30) = 24
+
+In this case, the effective maximum width per query is 24, not 30.
 
 <!-- ??For example, setting the `planner.width.max.per.query` to 60 will not accelerate Drill operations because overlapping does not occur when executing 60 queries at the same time.??
 

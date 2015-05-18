@@ -30,6 +30,8 @@ If the SELECT statement includes a WHERE clause that compares a column of an unk
 
     SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0;
 
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
+
 Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.  
 
 Refer to the following tables for information about the data types to use for casting:
@@ -53,6 +55,8 @@ The following example shows how to cast a character to a DECIMAL having two deci
     +------------+
     | 1.00       |
     +------------+
+
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 ### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
@@ -84,6 +88,8 @@ Cast an integer to a decimal.
     | -2.147483648E9 |
     +------------+
     1 row selected (0.08 seconds)
+
+{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
 ### Casting Intervals
 
@@ -731,7 +737,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
         export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
 
-3. Restart SQLLine.
+3. Restart the Drill shell.
 
 4. Confirm that Drill is now set to UTC:
 

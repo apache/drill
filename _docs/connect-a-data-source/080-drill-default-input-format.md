@@ -21,11 +21,13 @@ default input format, and Drill cannot detect the file format, the query
 fails. You can define a default input format for any of the file types that
 Drill supports. Currently, Drill supports the following types:
 
-  * CSV
-  * TSV
-  * PSV
+  * Avro
+  * CSV, TSV, or PSV
   * Parquet
   * JSON
+  * MapR-DB*
+
+\* Only available when you install Drill on a cluster using the mapr-drill package.
 
 ## Defining a Default Input Format
 

@@ -7,27 +7,25 @@ parent: "Getting Started"
 
 ### 1. Get started in minutes
 
-It only takes a couple of minutes to start working with Drill. Untar it on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure. No need to define schemas. Just point at the data and drill!
+It takes a couple of minutes to start working with Drill. Untar the Drill software on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure or to define schemas. Just point to the data, such as data in a file, directory, HBase table, and drill.
 
     $ tar -xvf apache-drill-<version>.tar.gz
-    $ <install directory>/bin/sqlline -u jdbc:drill:zk=local
-    0: jdbc:drill:zk=local> USE cp; 
-    0: jdbc:drill:zk=local> SELECT * FROM employee.json limit 5;
-    +-------------+------------------+------------+------------+-------------+----------------------+------------+---------------+-----
-    | employee_id | full_name        | first_name | last_name  | position_id | position_title       |  store_id  | department_id | birt 
-    +-------------+------------------+------------+------------+-------------+----------------------+------------+---------------+------+
-    | 1           | Sheri Nowmer     | Sheri      | Nowmer     | 1           | President            | 0          | 1             | 19   
-    | 2           | Derrick Whelply  | Derrick    | Whelply    | 2           | VP Country Manager   | 0          | 1             |
-    | 4           | Michael Spence   | Michael    | Spence     | 2           | VP Country Manager   | 0          | 1             |
-    | 5           | Maya Gutierrez   | Maya       | Gutierrez  | 2           | VP Country Manager   | 0          | 1             |
-    | 6           | Roberta Damstra  | Roberta    | Damstra    | 3           | VP Information Systems | 0        | 2             |
-    +-------------+------------------+------------+------------+-------------+----------------------+------------+---------------+-----
+    $ <install directory>/bin/drill-embedded
+    0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 5;
+    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    | employee_id  |         full_name          |     first_name      |   last_name   | position_id  |       position_title       | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  |   education_level    | marital_status  | gender  |    management_role    |
+    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    | 1            | Sheri Nowmer               | Sheri               | Nowmer        | 1            | President                  | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree      | S               | F       | Senior Management     |
+    | 2            | Derrick Whelply            | Derrick             | Whelply       | 2            | VP Country Manager         | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | M               | M       | Senior Management     |
+    | 4            | Michael Spence             | Michael             | Spence        | 2            | VP Country Manager         | 0         | 1              | 1969-06-20  | 1998-01-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | S               | M       | Senior Management     |
+    | 5            | Maya Gutierrez             | Maya                | Gutierrez     | 2            | VP Country Manager         | 0         | 1              | 1951-05-10  | 1998-01-01 00:00:00.0  | 35000.0  | 1              | Bachelors Degree     | M               | F       | Senior Management     |
+
 
 ## 2. Schema-free JSON model
-Drill is the world's first and only distributed SQL engine that doesn't require schemas. It shares the same schema-free JSON model as MongoDB and Elasticsearch. Instead of spending weeks or months defining schemas, transforming data (ETL) and maintaining those schemas, simply point Drill at your data (file, directory, HBase table, etc.) and run your queries. Drill automatically understands the structure of the data. Drill's self-service approach reduces the burden on IT and increases the productivity and agility of analysts and developers.
+Drill is the world's first and only distributed SQL engine that doesn't require schemas. It shares the same schema-free JSON model as MongoDB and Elasticsearch. No need to define and maintain schemas or transform data (ETL). Drill automatically understands the structure of the data. 
 
 ## 3. Query complex, semi-structured data in-situ
-Drill's schema-free JSON model allows you to query complex, semi-structured data in situ. No need to flatten or transform the data prior to or during query execution. Drill also provides intuitive extensions to SQL to work with nested data. Here's a simple query on a JSON file demonstrating how to access nested elements and arrays:
+Using Drill's schema-free JSON model, you can query complex, semi-structured data in situ. No need to flatten or transform the data prior to or during query execution. Drill also provides intuitive extensions to SQL to work with nested data. Here's a simple query on a JSON file demonstrating how to access nested elements and arrays:
 
     SELECT * FROM (SELECT t.trans_id,
                           t.trans_info.prod_id[0] AS prod_id,
@@ -56,7 +54,7 @@ Drill supports the standard SQL:2003 syntax. No need to learn a new "SQL-like" l
           ORDER BY o.o_orderpriority;
 
 ## 5. Leverage standard BI tools
-Drill works with standard BI tools. You can keep using the tools you love, such as Tableau, MicroStrategy, QlikView and Excel. No need to introduce yet another visualization or dashboard tool. Combine a self-service BI tool with the only self-service SQL engine to enable true self-service data exploration.
+Drill works with standard BI tools. You can use your existing tools, such as Tableau, MicroStrategy, QlikView and Excel. 
 
 ## 6. Interactive queries on Hive tables
 Apache Drill lets you leverage your investments in Hive. You can run interactive queries with Drill on your Hive tables and access all Hive input/output formats (including custom SerDes). You can join tables associated with different Hive metastores, and you can join a Hive table with an HBase table or a directory of log files. Here's a simple query in Drill on a Hive table:
@@ -68,7 +66,7 @@ Apache Drill lets you leverage your investments in Hive. You can run interactive
 
 
 ## 7. Access multiple data sources
-Drill is designed with extensibility in mind. It provides out-of-the-box connectivity to file systems (local or distributed file systems such as S3, HDFS and MapR-FS), HBase and Hive. You can implement a storage plugin to make Drill work with any other data source. Drill can combine data from multiple data sources on the fly in a single query, with no centralized metadata definitions. Here's a query that combines data from a Hive table, an HBase table (view) and a JSON file:
+Drill is extensible. You can connect Drill out-of-the-box to file systems (local or distributed, such as S3, HDFS and MapR-FS), HBase and Hive. You can implement a storage plugin to make Drill work with any other data source. Drill can combine data from multiple data sources on the fly in a single query, with no centralized metadata definitions. Here's a query that combines data from a Hive table, an HBase table (view) and a JSON file:
 
     SELECT custview.membership, sum(orders.order_total) AS sales
     FROM hive.orders, custview, dfs.`clicks/clicks.json` c 
@@ -81,7 +79,7 @@ Drill exposes a simple and high-performance Java API to build custom functions (
 
 
 ## 9. High performance
-Drill is designed from the ground up for high throughput and low latency. It doesn't use a general purpose execution engine like MapReduce, Tez or Spark. As a result, Drill is able to deliver its unparalleled flexibility (schema-free JSON model) without compromising performance. Drill's optimizer leverages rule- and cost-based techniques, as well as data locality and operator push-down (the ability to push down query fragments into the back-end data sources). Drill also provides a columnar and vectorized execution engine, resulting in higher memory and CPU efficiency.
+Drill is designed from the ground up for high throughput and low latency. It doesn't use a general purpose execution engine like MapReduce, Tez or Spark. As a result, Drill is flexible (schema-free JSON model) and performant. Drill's optimizer leverages rule- and cost-based techniques, as well as data locality and operator push-down, which is the capability to push down query fragments into the back-end data sources. Drill also provides a columnar and vectorized execution engine, resulting in higher memory and CPU efficiency.
 
 ## 10. Scales from a single laptop to a 1000-node cluster
-Drill is available as a simple download you can run on your laptop. When you're ready to analyze larger datasets, simply deploy Drill on your Hadoop cluster (up to 1000 commodity servers). Drill leverages the aggregate memory in the cluster to execute queries using an optimistic pipelined model, and automatically spills to disk when the working set doesn't fit in memory.
+Drill is available as a simple download you can run on your laptop. When you're ready to analyze larger datasets, deploy Drill on your Hadoop cluster (up to 1000 commodity servers). Drill leverages the aggregate memory in the cluster to execute queries using an optimistic pipelined model, and automatically spills to disk when the working set doesn't fit in memory.

@@ -15,7 +15,7 @@ You can install Drill in embedded mode on a machine running Linux, Mac OS X, or 
 
 This installation procedure includes how to download the Apache Drill archive and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
 
-After installing Drill, you start  SQLLine. SQLLine is a pure-Java console-based utility for connecting to relational databases and executing SQL commands. SQLLine is used as the shell for Drill. Drill follows the ANSI SQL: 2011 standard with [extensions]({{site.baseurl}}/docs/sql-extensions/) for nested data formats and other capabilities.
+After installing Drill, you start the Drill shell. The Drill shell is a pure-Java console-based utility for connecting to relational databases and executing SQL commands. Drill follows the ANSI SQL: 2011 standard with [extensions]({{site.baseurl}}/docs/sql-extensions/) for nested data formats and other capabilities.
 
 ## Embedded Mode Installation Prerequisites
 
@@ -98,7 +98,7 @@ At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes
 
 ## Stopping Drill
 
-Issue the following command when you want to exit SQLLine:
+Issue the following command when you want to exit the Drill shell:
 
     !quit
 

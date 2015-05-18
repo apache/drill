@@ -34,3 +34,7 @@ Modify MapReduce memory to suit your application needs. Remaining memory is typi
 
 ## How to Manage Drill CPU Resources
 Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
+
+## How to Manage Disk Resources
+
+The `planner.add_producer_consumer` system option enables or disables a secondary reading thread that works out of band of the rest of the scanning fragment to prefetch data from disk. If you interact with a certain type of storage medium that is slow or does not prefetch much data, this option tells Drill to add a producer consumer reading thread to the operation. Drill can then assign one thread that focuses on a single reading fragment. If Drill is using memory, you can disable this option to get better performance. If Drill is using disk space, you should enable this option and set a reasonable queue size for the `planner.producer_consumer_queue_size` option. For more information about these options, see the section, ["Performance Tuning"](/docs/performance-tuning-introduction/).

@@ -35,9 +35,9 @@ want to scale your environment.
 
     tar -xvf apache-drill-0.1.0.tar.gz
 
-### Step 3: Launch SQLLine, a JDBC application that ships with Drill
+### Step 3: Start the Drill shell.
 
-    bin/sqlline -u jdbc:drill:zk=local
+    bin/drill-embedded
 
 That’s it! You are now ready explore the data.
 

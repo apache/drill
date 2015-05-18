@@ -38,9 +38,9 @@ Install Drill locally on your desktop (embedded mode). You don’t need Hadoop.
 
 ----------
 
-Step 2: Launch the SQLLine, a pre-packaged JDBC-based application with Drill
+Step 2: Start the Drill shell.
 
-    bin/sqlline -u jdbc:drill:zk=local  
+    bin/drill-embedded
 
 ----------
 
