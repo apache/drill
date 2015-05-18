@@ -17,7 +17,7 @@
             "title": "2014 Q1 Drill Report", 
             "url": "/docs/2014-q1-drill-report/"
         }, 
-        "ALTER SESSION Command": {
+        "ALTER SESSION": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -29,16 +29,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ALTER SYSTEM Command", 
-            "next_url": "/docs/alter-system-command/", 
+            "next_title": "ALTER SYSTEM", 
+            "next_url": "/docs/alter-system/", 
             "parent": "SQL Commands", 
             "previous_title": "Supported SQL Commands", 
             "previous_url": "/docs/supported-sql-commands/", 
-            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
-            "title": "ALTER SESSION Command", 
-            "url": "/docs/alter-session-command/"
+            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
+            "title": "ALTER SESSION", 
+            "url": "/docs/alter-session/"
         }, 
-        "ALTER SYSTEM Command": {
+        "ALTER SYSTEM": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -50,14 +50,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE TABLE AS (CTAS) Command", 
-            "next_url": "/docs/create-table-as-ctas-command/", 
+            "next_title": "CREATE TABLE AS (CTAS)", 
+            "next_url": "/docs/create-table-as-ctas/", 
             "parent": "SQL Commands", 
-            "previous_title": "ALTER SESSION Command", 
-            "previous_url": "/docs/alter-session-command/", 
+            "previous_title": "ALTER SESSION", 
+            "previous_url": "/docs/alter-session/", 
             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
-            "title": "ALTER SYSTEM Command", 
-            "url": "/docs/alter-system-command/"
+            "title": "ALTER SYSTEM", 
+            "url": "/docs/alter-system/"
         }, 
         "AOL Search": {
             "breadcrumbs": [
@@ -555,7 +555,7 @@
             "title": "CASE", 
             "url": "/docs/case/"
         }, 
-        "CREATE TABLE AS (CTAS) Command": {
+        "CREATE TABLE AS (CTAS)": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -567,16 +567,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE VIEW Command", 
-            "next_url": "/docs/create-view-command/", 
+            "next_title": "CREATE VIEW", 
+            "next_url": "/docs/create-view/", 
             "parent": "SQL Commands", 
-            "previous_title": "ALTER SYSTEM Command", 
-            "previous_url": "/docs/alter-system-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-            "title": "CREATE TABLE AS (CTAS) Command", 
-            "url": "/docs/create-table-as-ctas-command/"
+            "previous_title": "ALTER SYSTEM", 
+            "previous_url": "/docs/alter-system/", 
+            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
+            "title": "CREATE TABLE AS (CTAS)", 
+            "url": "/docs/create-table-as-ctas/"
         }, 
-        "CREATE VIEW Command": {
+        "CREATE VIEW": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -588,14 +588,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "DESCRIBE Command", 
-            "next_url": "/docs/describe-command/", 
+            "next_title": "DROP VIEW", 
+            "next_url": "/docs/drop-view/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TABLE AS (CTAS) Command", 
-            "previous_url": "/docs/create-table-as-ctas-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-            "title": "CREATE VIEW Command", 
-            "url": "/docs/create-view-command/"
+            "previous_title": "CREATE TABLE AS (CTAS)", 
+            "previous_url": "/docs/create-table-as-ctas/", 
+            "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
+            "title": "CREATE VIEW", 
+            "url": "/docs/create-view/"
         }, 
         "Compiling Drill from Source": {
             "breadcrumbs": [
@@ -1684,7 +1684,7 @@
             "title": "Custom Function Interfaces", 
             "url": "/docs/custom-function-interfaces/"
         }, 
-        "DESCRIBE Command": {
+        "DESCRIBE": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -1696,14 +1696,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "EXPLAIN Commands", 
-            "next_url": "/docs/explain-commands/", 
+            "next_title": "EXPLAIN", 
+            "next_url": "/docs/explain/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE VIEW Command", 
-            "previous_url": "/docs/create-view-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
-            "title": "DESCRIBE Command", 
-            "url": "/docs/describe-command/"
+            "previous_title": "DROP VIEW", 
+            "previous_url": "/docs/drop-view/", 
+            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
+            "title": "DESCRIBE", 
+            "url": "/docs/describe/"
+        }, 
+        "DROP VIEW": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "DESCRIBE", 
+            "next_url": "/docs/describe/", 
+            "parent": "SQL Commands", 
+            "previous_title": "CREATE VIEW", 
+            "previous_url": "/docs/create-view/", 
+            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
+            "title": "DROP VIEW", 
+            "url": "/docs/drop-view/"
         }, 
         "Data Sources and File Formats": {
             "breadcrumbs": [], 
@@ -2725,7 +2746,7 @@
             "title": "Driver Configuration Options", 
             "url": "/docs/driver-configuration-options/"
         }, 
-        "EXPLAIN Commands": {
+        "EXPLAIN": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -2737,14 +2758,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SELECT Statements", 
-            "next_url": "/docs/select-statements/", 
+            "next_title": "SELECT", 
+            "next_url": "/docs/select/", 
             "parent": "SQL Commands", 
-            "previous_title": "DESCRIBE Command", 
-            "previous_url": "/docs/describe-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-            "title": "EXPLAIN Commands", 
-            "url": "/docs/explain-commands/"
+            "previous_title": "DESCRIBE", 
+            "previous_url": "/docs/describe/", 
+            "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
+            "title": "EXPLAIN", 
+            "url": "/docs/explain/"
         }, 
         "Embedded Mode Prerequisites": {
             "breadcrumbs": [
@@ -6003,7 +6024,7 @@
             "title": "Reserved Keywords", 
             "url": "/docs/reserved-keywords/"
         }, 
-        "SELECT Statements": {
+        "SELECT": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -6015,16 +6036,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-            "next_url": "/docs/show-databases-and-show-schemas-command/", 
+            "next_title": "SELECT FROM", 
+            "next_url": "/docs/select-from/", 
             "parent": "SQL Commands", 
-            "previous_title": "EXPLAIN Commands", 
-            "previous_url": "/docs/explain-commands/", 
+            "previous_title": "EXPLAIN", 
+            "previous_url": "/docs/explain/", 
             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
-            "title": "SELECT Statements", 
-            "url": "/docs/select-statements/"
+            "title": "SELECT", 
+            "url": "/docs/select/"
         }, 
-        "SHOW DATABASES and SHOW SCHEMAS Command": {
+        "SELECT FROM": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -6036,16 +6057,205 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SHOW FILES Command", 
-            "next_url": "/docs/show-files-command/", 
+            "next_title": "SELECT GROUP BY", 
+            "next_url": "/docs/select-group-by/", 
             "parent": "SQL Commands", 
-            "previous_title": "SELECT Statements", 
-            "previous_url": "/docs/select-statements/", 
+            "previous_title": "SELECT", 
+            "previous_url": "/docs/select/", 
+            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
+            "title": "SELECT FROM", 
+            "url": "/docs/select-from/"
+        }, 
+        "SELECT GROUP BY": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT HAVING", 
+            "next_url": "/docs/select-having/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT FROM", 
+            "previous_url": "/docs/select-from/", 
+            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
+            "title": "SELECT GROUP BY", 
+            "url": "/docs/select-group-by/"
+        }, 
+        "SELECT HAVING": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT LIMIT", 
+            "next_url": "/docs/select-limit/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT GROUP BY", 
+            "previous_url": "/docs/select-group-by/", 
+            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
+            "title": "SELECT HAVING", 
+            "url": "/docs/select-having/"
+        }, 
+        "SELECT LIMIT": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT OFFSET", 
+            "next_url": "/docs/select-offset/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT HAVING", 
+            "previous_url": "/docs/select-having/", 
+            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
+            "title": "SELECT LIMIT", 
+            "url": "/docs/select-limit/"
+        }, 
+        "SELECT OFFSET": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT ORDER BY", 
+            "next_url": "/docs/select-order-by/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT LIMIT", 
+            "previous_url": "/docs/select-limit/", 
+            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
+            "title": "SELECT OFFSET", 
+            "url": "/docs/select-offset/"
+        }, 
+        "SELECT ORDER BY": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT UNION", 
+            "next_url": "/docs/select-union/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT OFFSET", 
+            "previous_url": "/docs/select-offset/", 
+            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
+            "title": "SELECT ORDER BY", 
+            "url": "/docs/select-order-by/"
+        }, 
+        "SELECT UNION": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT WHERE", 
+            "next_url": "/docs/select-where/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT ORDER BY", 
+            "previous_url": "/docs/select-order-by/", 
+            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
+            "title": "SELECT UNION", 
+            "url": "/docs/select-union/"
+        }, 
+        "SELECT WHERE": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SELECT WITH", 
+            "next_url": "/docs/select-with/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT UNION", 
+            "previous_url": "/docs/select-union/", 
+            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
+            "title": "SELECT WHERE", 
+            "url": "/docs/select-where/"
+        }, 
+        "SELECT WITH": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
+            "next_url": "/docs/show-databases-and-show-schemas/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT WHERE", 
+            "previous_url": "/docs/select-where/", 
+            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
+            "title": "SELECT WITH", 
+            "url": "/docs/select-with/"
+        }, 
+        "SHOW DATABASES and SHOW SCHEMAS": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SHOW FILES", 
+            "next_url": "/docs/show-files/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT WITH", 
+            "previous_url": "/docs/select-with/", 
             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-            "url": "/docs/show-databases-and-show-schemas-command/"
+            "title": "SHOW DATABASES and SHOW SCHEMAS", 
+            "url": "/docs/show-databases-and-show-schemas/"
         }, 
-        "SHOW FILES Command": {
+        "SHOW FILES": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -6057,16 +6267,16 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SHOW TABLES Command", 
-            "next_url": "/docs/show-tables-command/", 
+            "next_title": "SHOW TABLES", 
+            "next_url": "/docs/show-tables/", 
             "parent": "SQL Commands", 
-            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-            "previous_url": "/docs/show-databases-and-show-schemas-command/", 
+            "previous_title": "SHOW DATABASES and SHOW SCHEMAS", 
+            "previous_url": "/docs/show-databases-and-show-schemas/", 
             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
-            "title": "SHOW FILES Command", 
-            "url": "/docs/show-files-command/"
+            "title": "SHOW FILES", 
+            "url": "/docs/show-files/"
         }, 
-        "SHOW TABLES Command": {
+        "SHOW TABLES": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -6078,14 +6288,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "USE Command", 
-            "next_url": "/docs/use-command/", 
+            "next_title": "USE", 
+            "next_url": "/docs/use/", 
             "parent": "SQL Commands", 
-            "previous_title": "SHOW FILES Command", 
-            "previous_url": "/docs/show-files-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
-            "title": "SHOW TABLES Command", 
-            "url": "/docs/show-tables-command/"
+            "previous_title": "SHOW FILES", 
+            "previous_url": "/docs/show-files/", 
+            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables.md", 
+            "title": "SHOW TABLES", 
+            "url": "/docs/show-tables/"
         }, 
         "SQL Commands": {
             "breadcrumbs": [
@@ -6107,8 +6317,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ALTER SESSION Command", 
-                    "next_url": "/docs/alter-session-command/", 
+                    "next_title": "ALTER SESSION", 
+                    "next_url": "/docs/alter-session/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SQL Commands", 
                     "previous_url": "/docs/sql-commands/", 
@@ -6128,14 +6338,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ALTER SYSTEM Command", 
-                    "next_url": "/docs/alter-system-command/", 
+                    "next_title": "ALTER SYSTEM", 
+                    "next_url": "/docs/alter-system/", 
                     "parent": "SQL Commands", 
                     "previous_title": "Supported SQL Commands", 
                     "previous_url": "/docs/supported-sql-commands/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
-                    "title": "ALTER SESSION Command", 
-                    "url": "/docs/alter-session-command/"
+                    "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
+                    "title": "ALTER SESSION", 
+                    "url": "/docs/alter-session/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6149,14 +6359,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE TABLE AS (CTAS) Command", 
-                    "next_url": "/docs/create-table-as-ctas-command/", 
+                    "next_title": "CREATE TABLE AS (CTAS)", 
+                    "next_url": "/docs/create-table-as-ctas/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "ALTER SESSION Command", 
-                    "previous_url": "/docs/alter-session-command/", 
+                    "previous_title": "ALTER SESSION", 
+                    "previous_url": "/docs/alter-session/", 
                     "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
-                    "title": "ALTER SYSTEM Command", 
-                    "url": "/docs/alter-system-command/"
+                    "title": "ALTER SYSTEM", 
+                    "url": "/docs/alter-system/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6170,14 +6380,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE VIEW Command", 
-                    "next_url": "/docs/create-view-command/", 
+                    "next_title": "CREATE VIEW", 
+                    "next_url": "/docs/create-view/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "ALTER SYSTEM Command", 
-                    "previous_url": "/docs/alter-system-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                    "title": "CREATE TABLE AS (CTAS) Command", 
-                    "url": "/docs/create-table-as-ctas-command/"
+                    "previous_title": "ALTER SYSTEM", 
+                    "previous_url": "/docs/alter-system/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
+                    "title": "CREATE TABLE AS (CTAS)", 
+                    "url": "/docs/create-table-as-ctas/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6191,14 +6401,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DESCRIBE Command", 
-                    "next_url": "/docs/describe-command/", 
+                    "next_title": "DROP VIEW", 
+                    "next_url": "/docs/drop-view/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "CREATE TABLE AS (CTAS) Command", 
-                    "previous_url": "/docs/create-table-as-ctas-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                    "title": "CREATE VIEW Command", 
-                    "url": "/docs/create-view-command/"
+                    "previous_title": "CREATE TABLE AS (CTAS)", 
+                    "previous_url": "/docs/create-table-as-ctas/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
+                    "title": "CREATE VIEW", 
+                    "url": "/docs/create-view/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6212,14 +6422,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "EXPLAIN Commands", 
-                    "next_url": "/docs/explain-commands/", 
+                    "next_title": "DESCRIBE", 
+                    "next_url": "/docs/describe/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "CREATE VIEW Command", 
-                    "previous_url": "/docs/create-view-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
-                    "title": "DESCRIBE Command", 
-                    "url": "/docs/describe-command/"
+                    "previous_title": "CREATE VIEW", 
+                    "previous_url": "/docs/create-view/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
+                    "title": "DROP VIEW", 
+                    "url": "/docs/drop-view/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6233,14 +6443,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT Statements", 
-                    "next_url": "/docs/select-statements/", 
+                    "next_title": "EXPLAIN", 
+                    "next_url": "/docs/explain/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "DESCRIBE Command", 
-                    "previous_url": "/docs/describe-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                    "title": "EXPLAIN Commands", 
-                    "url": "/docs/explain-commands/"
+                    "previous_title": "DROP VIEW", 
+                    "previous_url": "/docs/drop-view/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
+                    "title": "DESCRIBE", 
+                    "url": "/docs/describe/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6254,14 +6464,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                    "next_url": "/docs/show-databases-and-show-schemas-command/", 
+                    "next_title": "SELECT", 
+                    "next_url": "/docs/select/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "EXPLAIN Commands", 
-                    "previous_url": "/docs/explain-commands/", 
+                    "previous_title": "DESCRIBE", 
+                    "previous_url": "/docs/describe/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
+                    "title": "EXPLAIN", 
+                    "url": "/docs/explain/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT FROM", 
+                    "next_url": "/docs/select-from/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "EXPLAIN", 
+                    "previous_url": "/docs/explain/", 
                     "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
-                    "title": "SELECT Statements", 
-                    "url": "/docs/select-statements/"
+                    "title": "SELECT", 
+                    "url": "/docs/select/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6275,14 +6506,203 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SHOW FILES Command", 
-                    "next_url": "/docs/show-files-command/", 
+                    "next_title": "SELECT GROUP BY", 
+                    "next_url": "/docs/select-group-by/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT Statements", 
-                    "previous_url": "/docs/select-statements/", 
+                    "previous_title": "SELECT", 
+                    "previous_url": "/docs/select/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
+                    "title": "SELECT FROM", 
+                    "url": "/docs/select-from/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT HAVING", 
+                    "next_url": "/docs/select-having/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT FROM", 
+                    "previous_url": "/docs/select-from/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
+                    "title": "SELECT GROUP BY", 
+                    "url": "/docs/select-group-by/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT LIMIT", 
+                    "next_url": "/docs/select-limit/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT GROUP BY", 
+                    "previous_url": "/docs/select-group-by/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
+                    "title": "SELECT HAVING", 
+                    "url": "/docs/select-having/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT OFFSET", 
+                    "next_url": "/docs/select-offset/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT HAVING", 
+                    "previous_url": "/docs/select-having/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
+                    "title": "SELECT LIMIT", 
+                    "url": "/docs/select-limit/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT ORDER BY", 
+                    "next_url": "/docs/select-order-by/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT LIMIT", 
+                    "previous_url": "/docs/select-limit/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
+                    "title": "SELECT OFFSET", 
+                    "url": "/docs/select-offset/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT UNION", 
+                    "next_url": "/docs/select-union/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT OFFSET", 
+                    "previous_url": "/docs/select-offset/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
+                    "title": "SELECT ORDER BY", 
+                    "url": "/docs/select-order-by/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT WHERE", 
+                    "next_url": "/docs/select-where/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT ORDER BY", 
+                    "previous_url": "/docs/select-order-by/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
+                    "title": "SELECT UNION", 
+                    "url": "/docs/select-union/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SELECT WITH", 
+                    "next_url": "/docs/select-with/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT UNION", 
+                    "previous_url": "/docs/select-union/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
+                    "title": "SELECT WHERE", 
+                    "url": "/docs/select-where/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                    "next_url": "/docs/show-databases-and-show-schemas/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT WHERE", 
+                    "previous_url": "/docs/select-where/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
+                    "title": "SELECT WITH", 
+                    "url": "/docs/select-with/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SHOW FILES", 
+                    "next_url": "/docs/show-files/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SELECT WITH", 
+                    "previous_url": "/docs/select-with/", 
                     "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                    "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                    "url": "/docs/show-databases-and-show-schemas-command/"
+                    "title": "SHOW DATABASES and SHOW SCHEMAS", 
+                    "url": "/docs/show-databases-and-show-schemas/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6296,14 +6716,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SHOW TABLES Command", 
-                    "next_url": "/docs/show-tables-command/", 
+                    "next_title": "SHOW TABLES", 
+                    "next_url": "/docs/show-tables/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                    "previous_url": "/docs/show-databases-and-show-schemas-command/", 
+                    "previous_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                    "previous_url": "/docs/show-databases-and-show-schemas/", 
                     "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
-                    "title": "SHOW FILES Command", 
-                    "url": "/docs/show-files-command/"
+                    "title": "SHOW FILES", 
+                    "url": "/docs/show-files/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6317,14 +6737,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "USE Command", 
-                    "next_url": "/docs/use-command/", 
+                    "next_title": "USE", 
+                    "next_url": "/docs/use/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SHOW FILES Command", 
-                    "previous_url": "/docs/show-files-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
-                    "title": "SHOW TABLES Command", 
-                    "url": "/docs/show-tables-command/"
+                    "previous_title": "SHOW FILES", 
+                    "previous_url": "/docs/show-files/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/110-show-tables.md", 
+                    "title": "SHOW TABLES", 
+                    "url": "/docs/show-tables/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -6341,11 +6761,11 @@
                     "next_title": "SQL Conditional Expressions", 
                     "next_url": "/docs/sql-conditional-expressions/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SHOW TABLES Command", 
-                    "previous_url": "/docs/show-tables-command/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
-                    "title": "USE Command", 
-                    "url": "/docs/use-command/"
+                    "previous_title": "SHOW TABLES", 
+                    "previous_url": "/docs/show-tables/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/120-use.md", 
+                    "title": "USE", 
+                    "url": "/docs/use/"
                 }
             ], 
             "next_title": "Supported SQL Commands", 
@@ -6390,8 +6810,8 @@
             "next_title": "CASE", 
             "next_url": "/docs/case/", 
             "parent": "SQL Reference", 
-            "previous_title": "USE Command", 
-            "previous_url": "/docs/use-command/", 
+            "previous_title": "USE", 
+            "previous_url": "/docs/use/", 
             "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
             "title": "SQL Conditional Expressions", 
             "url": "/docs/sql-conditional-expressions/"
@@ -7038,8 +7458,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SESSION Command", 
-                            "next_url": "/docs/alter-session-command/", 
+                            "next_title": "ALTER SESSION", 
+                            "next_url": "/docs/alter-session/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -7059,14 +7479,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM Command", 
-                            "next_url": "/docs/alter-system-command/", 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
-                            "title": "ALTER SESSION Command", 
-                            "url": "/docs/alter-session-command/"
+                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
+                            "title": "ALTER SESSION", 
+                            "url": "/docs/alter-session/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7080,14 +7500,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS) Command", 
-                            "next_url": "/docs/create-table-as-ctas-command/", 
+                            "next_title": "CREATE TABLE AS (CTAS)", 
+                            "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SESSION Command", 
-                            "previous_url": "/docs/alter-session-command/", 
+                            "previous_title": "ALTER SESSION", 
+                            "previous_url": "/docs/alter-session/", 
                             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
-                            "title": "ALTER SYSTEM Command", 
-                            "url": "/docs/alter-system-command/"
+                            "title": "ALTER SYSTEM", 
+                            "url": "/docs/alter-system/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7101,14 +7521,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW Command", 
-                            "next_url": "/docs/create-view-command/", 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SYSTEM Command", 
-                            "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                            "title": "CREATE TABLE AS (CTAS) Command", 
-                            "url": "/docs/create-table-as-ctas-command/"
+                            "previous_title": "ALTER SYSTEM", 
+                            "previous_url": "/docs/alter-system/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
+                            "title": "CREATE TABLE AS (CTAS)", 
+                            "url": "/docs/create-table-as-ctas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7122,14 +7542,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DESCRIBE Command", 
-                            "next_url": "/docs/describe-command/", 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TABLE AS (CTAS) Command", 
-                            "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                            "title": "CREATE VIEW Command", 
-                            "url": "/docs/create-view-command/"
+                            "previous_title": "CREATE TABLE AS (CTAS)", 
+                            "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
+                            "title": "CREATE VIEW", 
+                            "url": "/docs/create-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7143,14 +7563,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "EXPLAIN Commands", 
-                            "next_url": "/docs/explain-commands/", 
+                            "next_title": "DESCRIBE", 
+                            "next_url": "/docs/describe/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE VIEW Command", 
-                            "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
-                            "title": "DESCRIBE Command", 
-                            "url": "/docs/describe-command/"
+                            "previous_title": "CREATE VIEW", 
+                            "previous_url": "/docs/create-view/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
+                            "title": "DROP VIEW", 
+                            "url": "/docs/drop-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7164,14 +7584,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT Statements", 
-                            "next_url": "/docs/select-statements/", 
+                            "next_title": "EXPLAIN", 
+                            "next_url": "/docs/explain/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DESCRIBE Command", 
-                            "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                            "title": "EXPLAIN Commands", 
-                            "url": "/docs/explain-commands/"
+                            "previous_title": "DROP VIEW", 
+                            "previous_url": "/docs/drop-view/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
+                            "title": "DESCRIBE", 
+                            "url": "/docs/describe/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7185,14 +7605,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "next_url": "/docs/show-databases-and-show-schemas-command/", 
+                            "next_title": "SELECT", 
+                            "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "EXPLAIN Commands", 
-                            "previous_url": "/docs/explain-commands/", 
+                            "previous_title": "DESCRIBE", 
+                            "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
+                            "title": "EXPLAIN", 
+                            "url": "/docs/explain/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT FROM", 
+                            "next_url": "/docs/select-from/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "EXPLAIN", 
+                            "previous_url": "/docs/explain/", 
                             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
-                            "title": "SELECT Statements", 
-                            "url": "/docs/select-statements/"
+                            "title": "SELECT", 
+                            "url": "/docs/select/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7206,14 +7647,203 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW FILES Command", 
-                            "next_url": "/docs/show-files-command/", 
+                            "next_title": "SELECT GROUP BY", 
+                            "next_url": "/docs/select-group-by/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT Statements", 
-                            "previous_url": "/docs/select-statements/", 
+                            "previous_title": "SELECT", 
+                            "previous_url": "/docs/select/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
+                            "title": "SELECT FROM", 
+                            "url": "/docs/select-from/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT HAVING", 
+                            "next_url": "/docs/select-having/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT FROM", 
+                            "previous_url": "/docs/select-from/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
+                            "title": "SELECT GROUP BY", 
+                            "url": "/docs/select-group-by/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT LIMIT", 
+                            "next_url": "/docs/select-limit/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT GROUP BY", 
+                            "previous_url": "/docs/select-group-by/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
+                            "title": "SELECT HAVING", 
+                            "url": "/docs/select-having/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT OFFSET", 
+                            "next_url": "/docs/select-offset/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT HAVING", 
+                            "previous_url": "/docs/select-having/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
+                            "title": "SELECT LIMIT", 
+                            "url": "/docs/select-limit/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT ORDER BY", 
+                            "next_url": "/docs/select-order-by/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT LIMIT", 
+                            "previous_url": "/docs/select-limit/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
+                            "title": "SELECT OFFSET", 
+                            "url": "/docs/select-offset/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT UNION", 
+                            "next_url": "/docs/select-union/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT OFFSET", 
+                            "previous_url": "/docs/select-offset/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
+                            "title": "SELECT ORDER BY", 
+                            "url": "/docs/select-order-by/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT WHERE", 
+                            "next_url": "/docs/select-where/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT ORDER BY", 
+                            "previous_url": "/docs/select-order-by/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
+                            "title": "SELECT UNION", 
+                            "url": "/docs/select-union/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT WITH", 
+                            "next_url": "/docs/select-with/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT UNION", 
+                            "previous_url": "/docs/select-union/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
+                            "title": "SELECT WHERE", 
+                            "url": "/docs/select-where/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "next_url": "/docs/show-databases-and-show-schemas/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT WHERE", 
+                            "previous_url": "/docs/select-where/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
+                            "title": "SELECT WITH", 
+                            "url": "/docs/select-with/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SHOW FILES", 
+                            "next_url": "/docs/show-files/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT WITH", 
+                            "previous_url": "/docs/select-with/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "url": "/docs/show-databases-and-show-schemas-command/"
+                            "title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "url": "/docs/show-databases-and-show-schemas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7227,14 +7857,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW TABLES Command", 
-                            "next_url": "/docs/show-tables-command/", 
+                            "next_title": "SHOW TABLES", 
+                            "next_url": "/docs/show-tables/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "previous_url": "/docs/show-databases-and-show-schemas-command/", 
+                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "previous_url": "/docs/show-databases-and-show-schemas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
-                            "title": "SHOW FILES Command", 
-                            "url": "/docs/show-files-command/"
+                            "title": "SHOW FILES", 
+                            "url": "/docs/show-files/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7248,14 +7878,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "USE Command", 
-                            "next_url": "/docs/use-command/", 
+                            "next_title": "USE", 
+                            "next_url": "/docs/use/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW FILES Command", 
-                            "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
-                            "title": "SHOW TABLES Command", 
-                            "url": "/docs/show-tables-command/"
+                            "previous_title": "SHOW FILES", 
+                            "previous_url": "/docs/show-files/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables.md", 
+                            "title": "SHOW TABLES", 
+                            "url": "/docs/show-tables/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -7272,11 +7902,11 @@
                             "next_title": "SQL Conditional Expressions", 
                             "next_url": "/docs/sql-conditional-expressions/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW TABLES Command", 
-                            "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
-                            "title": "USE Command", 
-                            "url": "/docs/use-command/"
+                            "previous_title": "SHOW TABLES", 
+                            "previous_url": "/docs/show-tables/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/120-use.md", 
+                            "title": "USE", 
+                            "url": "/docs/use/"
                         }
                     ], 
                     "next_title": "Supported SQL Commands", 
@@ -7321,8 +7951,8 @@
                     "next_title": "CASE", 
                     "next_url": "/docs/case/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "USE Command", 
-                    "previous_url": "/docs/use-command/", 
+                    "previous_title": "USE", 
+                    "previous_url": "/docs/use/", 
                     "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
                     "title": "SQL Conditional Expressions", 
                     "url": "/docs/sql-conditional-expressions/"
@@ -7856,8 +8486,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ALTER SESSION Command", 
-            "next_url": "/docs/alter-session-command/", 
+            "next_title": "ALTER SESSION", 
+            "next_url": "/docs/alter-session/", 
             "parent": "SQL Commands", 
             "previous_title": "SQL Commands", 
             "previous_url": "/docs/sql-commands/", 
@@ -8187,7 +8817,7 @@
             "title": "Tutorials Introduction", 
             "url": "/docs/tutorials-introduction/"
         }, 
-        "USE Command": {
+        "USE": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -8202,11 +8832,11 @@
             "next_title": "SQL Conditional Expressions", 
             "next_url": "/docs/sql-conditional-expressions/", 
             "parent": "SQL Commands", 
-            "previous_title": "SHOW TABLES Command", 
-            "previous_url": "/docs/show-tables-command/", 
-            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
-            "title": "USE Command", 
-            "url": "/docs/use-command/"
+            "previous_title": "SHOW TABLES", 
+            "previous_url": "/docs/show-tables/", 
+            "relative_path": "_docs/sql-reference/sql-commands/120-use.md", 
+            "title": "USE", 
+            "url": "/docs/use/"
         }, 
         "Useful Research": {
             "breadcrumbs": [
@@ -11272,8 +11902,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SESSION Command", 
-                            "next_url": "/docs/alter-session-command/", 
+                            "next_title": "ALTER SESSION", 
+                            "next_url": "/docs/alter-session/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -11293,14 +11923,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM Command", 
-                            "next_url": "/docs/alter-system-command/", 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session-command.md", 
-                            "title": "ALTER SESSION Command", 
-                            "url": "/docs/alter-session-command/"
+                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
+                            "title": "ALTER SESSION", 
+                            "url": "/docs/alter-session/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11314,14 +11944,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS) Command", 
-                            "next_url": "/docs/create-table-as-ctas-command/", 
+                            "next_title": "CREATE TABLE AS (CTAS)", 
+                            "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SESSION Command", 
-                            "previous_url": "/docs/alter-session-command/", 
+                            "previous_title": "ALTER SESSION", 
+                            "previous_url": "/docs/alter-session/", 
                             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
-                            "title": "ALTER SYSTEM Command", 
-                            "url": "/docs/alter-system-command/"
+                            "title": "ALTER SYSTEM", 
+                            "url": "/docs/alter-system/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11335,14 +11965,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW Command", 
-                            "next_url": "/docs/create-view-command/", 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SYSTEM Command", 
-                            "previous_url": "/docs/alter-system-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as-command.md", 
-                            "title": "CREATE TABLE AS (CTAS) Command", 
-                            "url": "/docs/create-table-as-ctas-command/"
+                            "previous_title": "ALTER SYSTEM", 
+                            "previous_url": "/docs/alter-system/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
+                            "title": "CREATE TABLE AS (CTAS)", 
+                            "url": "/docs/create-table-as-ctas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11356,14 +11986,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DESCRIBE Command", 
-                            "next_url": "/docs/describe-command/", 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE TABLE AS (CTAS) Command", 
-                            "previous_url": "/docs/create-table-as-ctas-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view-command.md", 
-                            "title": "CREATE VIEW Command", 
-                            "url": "/docs/create-view-command/"
+                            "previous_title": "CREATE TABLE AS (CTAS)", 
+                            "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
+                            "title": "CREATE VIEW", 
+                            "url": "/docs/create-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11377,14 +12007,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "EXPLAIN Commands", 
-                            "next_url": "/docs/explain-commands/", 
+                            "next_title": "DESCRIBE", 
+                            "next_url": "/docs/describe/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "CREATE VIEW Command", 
-                            "previous_url": "/docs/create-view-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/060-describe-command.md", 
-                            "title": "DESCRIBE Command", 
-                            "url": "/docs/describe-command/"
+                            "previous_title": "CREATE VIEW", 
+                            "previous_url": "/docs/create-view/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
+                            "title": "DROP VIEW", 
+                            "url": "/docs/drop-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11398,14 +12028,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT Statements", 
-                            "next_url": "/docs/select-statements/", 
+                            "next_title": "EXPLAIN", 
+                            "next_url": "/docs/explain/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DESCRIBE Command", 
-                            "previous_url": "/docs/describe-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/070-explain-commands.md", 
-                            "title": "EXPLAIN Commands", 
-                            "url": "/docs/explain-commands/"
+                            "previous_title": "DROP VIEW", 
+                            "previous_url": "/docs/drop-view/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
+                            "title": "DESCRIBE", 
+                            "url": "/docs/describe/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11419,14 +12049,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "next_url": "/docs/show-databases-and-show-schemas-command/", 
+                            "next_title": "SELECT", 
+                            "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "EXPLAIN Commands", 
-                            "previous_url": "/docs/explain-commands/", 
+                            "previous_title": "DESCRIBE", 
+                            "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
+                            "title": "EXPLAIN", 
+                            "url": "/docs/explain/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT FROM", 
+                            "next_url": "/docs/select-from/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "EXPLAIN", 
+                            "previous_url": "/docs/explain/", 
                             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
-                            "title": "SELECT Statements", 
-                            "url": "/docs/select-statements/"
+                            "title": "SELECT", 
+                            "url": "/docs/select/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11440,14 +12091,203 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW FILES Command", 
-                            "next_url": "/docs/show-files-command/", 
+                            "next_title": "SELECT GROUP BY", 
+                            "next_url": "/docs/select-group-by/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT Statements", 
-                            "previous_url": "/docs/select-statements/", 
+                            "previous_title": "SELECT", 
+                            "previous_url": "/docs/select/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
+                            "title": "SELECT FROM", 
+                            "url": "/docs/select-from/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT HAVING", 
+                            "next_url": "/docs/select-having/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT FROM", 
+                            "previous_url": "/docs/select-from/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
+                            "title": "SELECT GROUP BY", 
+                            "url": "/docs/select-group-by/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT LIMIT", 
+                            "next_url": "/docs/select-limit/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT GROUP BY", 
+                            "previous_url": "/docs/select-group-by/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
+                            "title": "SELECT HAVING", 
+                            "url": "/docs/select-having/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT OFFSET", 
+                            "next_url": "/docs/select-offset/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT HAVING", 
+                            "previous_url": "/docs/select-having/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
+                            "title": "SELECT LIMIT", 
+                            "url": "/docs/select-limit/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT ORDER BY", 
+                            "next_url": "/docs/select-order-by/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT LIMIT", 
+                            "previous_url": "/docs/select-limit/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
+                            "title": "SELECT OFFSET", 
+                            "url": "/docs/select-offset/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT UNION", 
+                            "next_url": "/docs/select-union/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT OFFSET", 
+                            "previous_url": "/docs/select-offset/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
+                            "title": "SELECT ORDER BY", 
+                            "url": "/docs/select-order-by/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT WHERE", 
+                            "next_url": "/docs/select-where/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT ORDER BY", 
+                            "previous_url": "/docs/select-order-by/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
+                            "title": "SELECT UNION", 
+                            "url": "/docs/select-union/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SELECT WITH", 
+                            "next_url": "/docs/select-with/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT UNION", 
+                            "previous_url": "/docs/select-union/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
+                            "title": "SELECT WHERE", 
+                            "url": "/docs/select-where/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "next_url": "/docs/show-databases-and-show-schemas/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT WHERE", 
+                            "previous_url": "/docs/select-where/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
+                            "title": "SELECT WITH", 
+                            "url": "/docs/select-with/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SHOW FILES", 
+                            "next_url": "/docs/show-files/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SELECT WITH", 
+                            "previous_url": "/docs/select-with/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
-                            "title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "url": "/docs/show-databases-and-show-schemas-command/"
+                            "title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "url": "/docs/show-databases-and-show-schemas/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11461,14 +12301,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SHOW TABLES Command", 
-                            "next_url": "/docs/show-tables-command/", 
+                            "next_title": "SHOW TABLES", 
+                            "next_url": "/docs/show-tables/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS Command", 
-                            "previous_url": "/docs/show-databases-and-show-schemas-command/", 
+                            "previous_title": "SHOW DATABASES and SHOW SCHEMAS", 
+                            "previous_url": "/docs/show-databases-and-show-schemas/", 
                             "relative_path": "_docs/sql-reference/sql-commands/100-show-files.md", 
-                            "title": "SHOW FILES Command", 
-                            "url": "/docs/show-files-command/"
+                            "title": "SHOW FILES", 
+                            "url": "/docs/show-files/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11482,14 +12322,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "USE Command", 
-                            "next_url": "/docs/use-command/", 
+                            "next_title": "USE", 
+                            "next_url": "/docs/use/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW FILES Command", 
-                            "previous_url": "/docs/show-files-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables-command.md", 
-                            "title": "SHOW TABLES Command", 
-                            "url": "/docs/show-tables-command/"
+                            "previous_title": "SHOW FILES", 
+                            "previous_url": "/docs/show-files/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/110-show-tables.md", 
+                            "title": "SHOW TABLES", 
+                            "url": "/docs/show-tables/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11506,11 +12346,11 @@
                             "next_title": "SQL Conditional Expressions", 
                             "next_url": "/docs/sql-conditional-expressions/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SHOW TABLES Command", 
-                            "previous_url": "/docs/show-tables-command/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/120-use-command.md", 
-                            "title": "USE Command", 
-                            "url": "/docs/use-command/"
+                            "previous_title": "SHOW TABLES", 
+                            "previous_url": "/docs/show-tables/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/120-use.md", 
+                            "title": "USE", 
+                            "url": "/docs/use/"
                         }
                     ], 
                     "next_title": "Supported SQL Commands", 
@@ -11555,8 +12395,8 @@
                     "next_title": "CASE", 
                     "next_url": "/docs/case/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "USE Command", 
-                    "previous_url": "/docs/use-command/", 
+                    "previous_title": "USE", 
+                    "previous_url": "/docs/use/", 
                     "relative_path": "_docs/sql-reference/075-sql-conditional-expressions.md", 
                     "title": "SQL Conditional Expressions", 
                     "url": "/docs/sql-conditional-expressions/"

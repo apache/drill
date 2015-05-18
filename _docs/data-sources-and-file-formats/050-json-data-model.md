@@ -95,7 +95,7 @@ You can write data from Drill to a JSON file. The following setup is required:
         CREATE TABLE my_json AS
         SELECT my column from dfs.`<path_file_name>`;
 
-Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas-command):
+Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas/):
    
 * Creates a directory using table name.
 * Writes the JSON data to the directory in the workspace location.
