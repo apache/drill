@@ -8,9 +8,7 @@ Start the Drill shell using the **sqlline command**. The `zk=local` means the lo
 2. Go to the bin directory.
 2. Open Command Prompt and type the following command on the command line:
    ``sqlline.bat -u "jdbc:drill:zk=local"``
-3. At the sqlline> prompt, type `!connect jdbc:drill:zk=local` and then press Enter:
-   ![sqlline]({{ site.baseurl }}/docs/img/sqlline1.png)
-4. Enter the username, `admin`, and password, also `admin` when prompted.
+3. Enter the username, `admin`, and password, also `admin` when prompted.
    The `0: jdbc:drill:zk=local>` prompt appears.
 At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
