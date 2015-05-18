@@ -731,7 +731,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
         export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -ea -Duser.timezone=UTC"
 
-3. Restart SQLLine.
+3. Restart the Drill shell.
 
 4. Confirm that Drill is now set to UTC:
 

@@ -12,7 +12,7 @@ example:
 
 Using the secure shell instead of the VM interface has some advantages. You can copy/paste commands from the tutorial and avoid mouse control problems.
 
-Drill includes SQLLine, a JDBC utility for connecting to relational databases and executing SQL commands. `SQLLine` is a sql client on the sandbox that starts Drill only in embedded mode. After logging into the sandbox,  use the `SQLLine` command to start SQLLine for executing Drill queries in embedded mode.  
+Drill includes a shell for connecting to relational databases and executing SQL commands. On the sandbox, the Drill shell runs in embedded mode. After logging into the sandbox,  use the `SQLLine` command to start SQLLine for executing Drill queries in embedded mode.  
 
     [mapr@maprdemo ~]# sqlline
     sqlline version 1.1.6

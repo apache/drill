@@ -78,13 +78,13 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"*</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb" *</td>
     <td>yes</td>
     <td>One or more file formats of data Drill can read. Drill can implicitly detect some file formats based on the file extension or the first few bits of data within the file, but you need to configure an option for others.</td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"</td>
+    <td>"text"<br>"parquet"<br>"json"<br>"maprdb" *</td>
     <td>yes</td>
     <td>The type of the format specified. For example, you can define two formats, csv and psv, as type "Text", but having different delimiters. Drill enables the maprdb plugin if you define the maprdb type.</td>
   </tr>
@@ -102,7 +102,7 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
 </table>
 
-\* Only appears when you install Drill on a cluster using the mapr-drill package.
+\* Pertains only to distributed drill installations using the mapr-drill package.
 
 The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
 
@@ -119,10 +119,10 @@ For example, using uppercase letters in the query after defining the storage plu
 
 Drill provides a REST API that you can use to create a storage plugin. Use an HTTP POST and pass two properties:
 
-* name
+* name  
   The plugin name. 
 
-* config
+* config  
   The storage plugin definition as you would enter it in the Web UI.
 
 For example, this command creates a plugin named myplugin for reading files of an unknown type located on the root of the file system:

@@ -8,7 +8,7 @@ Start the Drill shell using the `drill-embedded` command. The command uses a jdb
 
         cd apache-drill-1.0.0  
 
-2. Issue the following command to launch SQLLine:
+2. Issue the following command to start the Drill shell:
 
         bin/drill-embedded  
 
