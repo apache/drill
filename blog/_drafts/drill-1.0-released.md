@@ -7,14 +7,14 @@ authors: ["tshiran", "jnadeau"]
 ---
 We embarked on the Drill project in late 2012 with two primary objectives:
 
-* Revolutionize the query engine by enabling low-latency queries on Big Data while getting rid of all the 'overhead' - namely, the need to load data, create and maintain schemas, transform data, etc. We wanted to develop a system that would support the speed and agility at which modern organizations want (or need) to operate in this era.
+* Enable agility by getting rid of all the traditional overhead - namely, the need to load data, create and maintain schemas, transform data, etc. We wanted to develop a system that would support the speed and agility at which modern organizations want (or need) to operate in this era.
 * Unlock the data housed in non-relational datastores like NoSQL, Hadoop and cloud storage, making it available not only to developers, but also business users, analysts, data scientists and anyone else who can write a SQL query or use a BI tool. Non-relational datastores are capturing an increasing share of the world's data, and it's incredibly hard to explore and analyze this data.
 
-Today we're happy to announce the availability of Drill 1.0, our first production-ready release. Drill 1.0 includes many performance and reliability enhancements over previous releases.
+Today we're happy to announce the availability of the production-ready Drill 1.0 release. This release addresses [228 JIRAs](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12313820&version=12325568) on top of the 0.9 release earlier this month.
 
 We would not have been able to reach this milestone without the tremendous effort by all the [committers]({{ site.baseurl }}/team/) and contributors, and we would like to congratulate the entire community on achieving this milestone. While 1.0 is an exciting milestone, it's really just the beginning of the journey. We'll release 1.1 next month, and continue with our 4-6 week release cycle, so you can count on many additional enhancements over the coming months.
 
-We have inlcluded the press release issued by the Apache Software Foundation below.
+We have included the press release issued by the Apache Software Foundation below.
 
 Happy Drilling!  
 Tomer Shiran and Jacques Nadeau
@@ -23,7 +23,7 @@ Tomer Shiran and Jacques Nadeau
 
 # The Apache Software Foundation Announces Apache™ Drill™ 1.0
 
-## Open Source schema-free SQL query engine revolutionizes data exploration and analytics for Apache Hadoop®, NoSQL and Cloud storage 
+## Open Source schema-free SQL query engine revolutionizes data exploration and analytics for Apache Hadoop®, NoSQL and Cloud storage
 
 Forest Hill, MD - 19 May 2015 - The Apache Software Foundation (ASF), the all-volunteer developers, stewards, and incubators of more than 350 Open Source projects and initiatives, announced today the availability of Apache™ Drill™ 1.0, the schema-free SQL query engine for Apache Hadoop®, NoSQL and Cloud storage.
 
