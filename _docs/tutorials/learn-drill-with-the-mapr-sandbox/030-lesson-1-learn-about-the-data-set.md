@@ -34,7 +34,7 @@ the Drill shell, type:
 
 Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web UI.
 
-### Enable the DECIMAL Data Yype
+### Enable the DECIMAL Data Type
 
 This tutorial uses the DECIMAL data type in some examples. The DECIMAL data type is disabled by default in this release, so enable the DECIMAL data type before proceeding:
 

@@ -321,7 +321,7 @@ quickly create a Drill table from the results of the query.
     | 1328     | 56           | 26       |
     | 1328     | 91           | 26       |
     | 1328     | 74           | 26       |
-        ...
+    ...
     +----------+--------------+----------+
     107,482 rows selected (14.863 seconds)
 
@@ -347,7 +347,7 @@ who have made transactions that are above the average in their states.
 
 This example uses a CTAS statement to create a table based on a correlated
 subquery that you ran previously. This table contains all of the rows that the
-query returns (106,281) and stores them in the format specified by the storage
+query returns (107,482) and stores them in the format specified by the storage
 plugin (Parquet format in this example). You can create tables that store data
 in csv, parquet, and json formats.
 
