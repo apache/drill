@@ -55,7 +55,7 @@ public abstract class BaseValueVector implements ValueVector {
   }
 
   public MaterializedField getField(FieldReference ref){
-    return getField().clone(ref);
+    return getField().withPath(ref);
   }
 
   @Override

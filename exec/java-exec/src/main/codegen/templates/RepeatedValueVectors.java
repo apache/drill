@@ -90,7 +90,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
 
   @Override
   public TransferPair getTransferPair(FieldReference ref){
-    return new TransferImpl(getField().clone(ref));
+    return new TransferImpl(getField().withPath(ref));
   }
 
   @Override

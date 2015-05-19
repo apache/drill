@@ -191,7 +191,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return new TransferImpl(getField());
   }
   public TransferPair getTransferPair(FieldReference ref) {
-    return new TransferImpl(getField().clone(ref));
+    return new TransferImpl(getField().withPath(ref));
   }
 
   public TransferPair makeTransferPair(ValueVector to) {

@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,13 +35,17 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 
 public class MaterializedField {
-  private Key key;
+  private final Key key;
   // use an ordered set as existing code relies on order (e,g. parquet writer)
-  private Set<MaterializedField> children = Sets.newLinkedHashSet();
+  private final LinkedHashSet<MaterializedField> children;
 
   private MaterializedField(SchemaPath path, MajorType type) {
-    super();
-    key = new Key(path, type);
+    this(path, type, new LinkedHashSet<MaterializedField>());
+  }
+
+  private MaterializedField(SchemaPath path, MajorType type, LinkedHashSet<MaterializedField> children) {
+    this.key = new Key(path, type);
+    this.children = children;
   }
 
   public static MaterializedField create(SerializedField serField){
@@ -77,14 +82,25 @@ public class MaterializedField {
     children.add(field);
   }
 
-  public MaterializedField cloneWithType(MajorType type) {
-    final MaterializedField clone = new MaterializedField(key.path, type);
-    clone.children = Sets.newLinkedHashSet(children);
-    return clone;
+  public MaterializedField clone() {
+    return withPathAndType(getPath(), getType());
   }
 
-  public MaterializedField clone(FieldReference ref){
-    return create(ref, key.type);
+  public MaterializedField withType(MajorType type) {
+    return withPathAndType(getPath(), type);
+  }
+
+  public MaterializedField withPath(SchemaPath path) {
+    return withPathAndType(path, getType());
+  }
+
+  public MaterializedField withPathAndType(final SchemaPath path, final MajorType type) {
+    final LinkedHashSet<MaterializedField> newChildren = new LinkedHashSet<>(children.size());
+    final MaterializedField clone = new MaterializedField(path, type, newChildren);
+    for (final MaterializedField child:children) {
+      newChildren.add(child.clone());
+    }
+    return clone;
   }
 
   public String getLastName(){
@@ -268,8 +284,8 @@ public class MaterializedField {
    */
   public class Key {
 
-    private SchemaPath path;
-    private MajorType type;
+    private final SchemaPath path;
+    private final MajorType type;
 
     private Key(SchemaPath path, MajorType type) {
       this.path = path;

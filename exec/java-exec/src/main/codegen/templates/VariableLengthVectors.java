@@ -172,7 +172,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return new TransferImpl(getField());
   }
   public TransferPair getTransferPair(FieldReference ref){
-    return new TransferImpl(getField().clone(ref));
+    return new TransferImpl(getField().withPath(ref));
   }
 
   public TransferPair makeTransferPair(ValueVector to) {

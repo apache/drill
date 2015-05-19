@@ -443,7 +443,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         }
 
         // make sure to project field with children for children to show up in the schema
-        final MaterializedField projected = field.cloneWithType(outputType);
+        final MaterializedField projected = field.withType(outputType);
         // Add the vector to our output container
         container.addOrGet(projected);
 
