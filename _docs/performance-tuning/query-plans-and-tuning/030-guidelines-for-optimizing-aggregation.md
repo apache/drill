@@ -1,6 +1,6 @@
 ---
 title: "Guidelines for Optimizing Aggregation"
-parent: "Performance Tuning"
+parent: "Query Plans and Tuning Introduction"
 --- 
 
 

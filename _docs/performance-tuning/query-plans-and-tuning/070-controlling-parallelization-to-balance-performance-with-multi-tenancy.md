@@ -1,6 +1,6 @@
 ---
 title: "Controlling Parallelization to Balance Performance with Multi-Tenancy"
-parent: "Performance Tuning"
+parent: "Query Plans and Tuning Introduction"
 --- 
 
 When you run Drill in a multi-tenant environment, (in conjunction with other workloads in a cluster, such as MapReduce) you may need to modify Drill settings and options to maximize performance, or reduce the allocated resources to other applications. See [Configuring Multi-Tenant Resources]({{ site.baseurl }}/docs/configuring-multitenant-resources/).

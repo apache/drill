@@ -1,6 +1,6 @@
 ---
 title: "Join Planning Guidelines"
-parent: "Performance Tuning"
+parent: "Query Plans and Tuning Introduction"
 --- 
 
 Drill uses distributed and broadcast joins to join tables. You can modify configuration settings in Drill to control how Drill plans joins in a query.
