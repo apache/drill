@@ -324,9 +324,9 @@
             "next_title": "Sample Datasets", 
             "next_url": "/docs/sample-datasets/", 
             "parent": "Release Notes", 
-            "previous_title": "Apache Drill 0.8.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-            "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+            "previous_title": "Apache Drill 0.9.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+            "relative_path": "_docs/rn/080-1.0.0-rn.md", 
             "title": "Apache Drill 0.9.0 Release Notes", 
             "url": "/docs/apache-drill-0-9-0-release-notes/"
         }, 
@@ -1713,8 +1713,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Developer Information", 
-            "next_url": "/docs/developer-information/", 
+            "next_title": "Troubleshooting", 
+            "next_url": "/docs/troubleshooting/", 
             "parent": "Develop Custom Functions", 
             "previous_title": "Using Custom Functions in Queries", 
             "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -2259,8 +2259,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Developer Information", 
-                    "next_url": "/docs/developer-information/", 
+                    "next_title": "Troubleshooting", 
+                    "next_url": "/docs/troubleshooting/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Using Custom Functions in Queries", 
                     "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -2622,8 +2622,8 @@
             "next_title": "Develop Drill", 
             "next_url": "/docs/develop-drill/", 
             "parent": "", 
-            "previous_title": "Custom Function Interfaces", 
-            "previous_url": "/docs/custom-function-interfaces/", 
+            "previous_title": "Troubleshooting", 
+            "previous_url": "/docs/troubleshooting/", 
             "relative_path": "_docs/120-developer-information.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
@@ -6789,12 +6789,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Sample Datasets", 
-                    "next_url": "/docs/sample-datasets/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sample Datasets", 
+                    "next_url": "/docs/sample-datasets/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "relative_path": "_docs/rn/080-1.0.0-rn.md", 
                     "title": "Apache Drill 0.9.0 Release Notes", 
                     "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }
@@ -9375,6 +9392,18 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/070-testing-the-odbc-connection.md", 
             "title": "Testing the ODBC Connection", 
             "url": "/docs/testing-the-odbc-connection/"
+        }, 
+        "Troubleshooting": {
+            "breadcrumbs": [], 
+            "children": [], 
+            "next_title": "Developer Information", 
+            "next_url": "/docs/developer-information/", 
+            "parent": "", 
+            "previous_title": "Custom Function Interfaces", 
+            "previous_url": "/docs/custom-function-interfaces/", 
+            "relative_path": "_docs/110-troubleshooting.md", 
+            "title": "Troubleshooting", 
+            "url": "/docs/troubleshooting/"
         }, 
         "Tutorials": {
             "breadcrumbs": [], 
@@ -13749,8 +13778,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Developer Information", 
-                    "next_url": "/docs/developer-information/", 
+                    "next_title": "Troubleshooting", 
+                    "next_url": "/docs/troubleshooting/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Using Custom Functions in Queries", 
                     "previous_url": "/docs/using-custom-functions-in-queries/", 
@@ -13767,6 +13796,18 @@
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
+        }, 
+        {
+            "breadcrumbs": [], 
+            "children": [], 
+            "next_title": "Developer Information", 
+            "next_url": "/docs/developer-information/", 
+            "parent": "", 
+            "previous_title": "Custom Function Interfaces", 
+            "previous_url": "/docs/custom-function-interfaces/", 
+            "relative_path": "_docs/110-troubleshooting.md", 
+            "title": "Troubleshooting", 
+            "url": "/docs/troubleshooting/"
         }, 
         {
             "breadcrumbs": [], 
@@ -14018,8 +14059,8 @@
             "next_title": "Develop Drill", 
             "next_url": "/docs/develop-drill/", 
             "parent": "", 
-            "previous_title": "Custom Function Interfaces", 
-            "previous_url": "/docs/custom-function-interfaces/", 
+            "previous_title": "Troubleshooting", 
+            "previous_url": "/docs/troubleshooting/", 
             "relative_path": "_docs/120-developer-information.md", 
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
@@ -14154,12 +14195,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Sample Datasets", 
-                    "next_url": "/docs/sample-datasets/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sample Datasets", 
+                    "next_url": "/docs/sample-datasets/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "relative_path": "_docs/rn/080-1.0.0-rn.md", 
                     "title": "Apache Drill 0.9.0 Release Notes", 
                     "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }
