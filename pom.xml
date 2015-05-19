@@ -1220,7 +1220,7 @@
           <dependency>
             <groupId>sqlline</groupId>
             <artifactId>sqlline</artifactId>
-            <version>1.1.9-drill-r4</version>
+            <version>1.1.9-drill-r5</version>
           </dependency>
 
           <dependency>
@@ -1564,7 +1564,7 @@
           <dependency>
             <groupId>sqlline</groupId>
             <artifactId>sqlline</artifactId>
-            <version>1.1.9-drill-r4</version>
+            <version>1.1.9-drill-r5</version>
           </dependency>
           <!-- Test Dependencies -->
           <dependency>
