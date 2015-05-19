@@ -417,8 +417,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Core Modules", 
-                    "next_url": "/docs/core-modules/", 
+                    "next_title": "Drill Query Execution", 
+                    "next_url": "/docs/drill-query-execution/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture", 
                     "previous_url": "/docs/architecture/", 
@@ -434,11 +434,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Performance", 
-                    "next_url": "/docs/performance/", 
+                    "next_title": "Core Modules", 
+                    "next_url": "/docs/core-modules/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
+                    "relative_path": "_docs/architecture/015-drill-query-execution.md", 
+                    "title": "Drill Query Execution", 
+                    "url": "/docs/drill-query-execution/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Performance", 
+                    "next_url": "/docs/performance/", 
+                    "parent": "Architecture", 
+                    "previous_title": "Drill Query Execution", 
+                    "previous_url": "/docs/drill-query-execution/", 
                     "relative_path": "_docs/architecture/020-core-modules.md", 
                     "title": "Core Modules", 
                     "url": "/docs/core-modules/"
@@ -478,8 +495,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Core Modules", 
-            "next_url": "/docs/core-modules/", 
+            "next_title": "Drill Query Execution", 
+            "next_url": "/docs/drill-query-execution/", 
             "parent": "Architecture", 
             "previous_title": "Architecture", 
             "previous_url": "/docs/architecture/", 
@@ -1716,8 +1733,8 @@
             "next_title": "Performance", 
             "next_url": "/docs/performance/", 
             "parent": "Architecture", 
-            "previous_title": "Architecture Introduction", 
-            "previous_url": "/docs/architecture-introduction/", 
+            "previous_title": "Drill Query Execution", 
+            "previous_url": "/docs/drill-query-execution/", 
             "relative_path": "_docs/architecture/020-core-modules.md", 
             "title": "Core Modules", 
             "url": "/docs/core-modules/"
@@ -2762,6 +2779,23 @@
             "relative_path": "_docs/developer-information/design-docs/010-drill-plan-syntax.md", 
             "title": "Drill Plan Syntax", 
             "url": "/docs/drill-plan-syntax/"
+        }, 
+        "Drill Query Execution": {
+            "breadcrumbs": [
+                {
+                    "title": "Architecture", 
+                    "url": "/docs/architecture/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Core Modules", 
+            "next_url": "/docs/core-modules/", 
+            "parent": "Architecture", 
+            "previous_title": "Architecture Introduction", 
+            "previous_url": "/docs/architecture-introduction/", 
+            "relative_path": "_docs/architecture/015-drill-query-execution.md", 
+            "title": "Drill Query Execution", 
+            "url": "/docs/drill-query-execution/"
         }, 
         "Drill in 10 Minutes": {
             "breadcrumbs": [
@@ -10371,8 +10405,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Core Modules", 
-                    "next_url": "/docs/core-modules/", 
+                    "next_title": "Drill Query Execution", 
+                    "next_url": "/docs/drill-query-execution/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture", 
                     "previous_url": "/docs/architecture/", 
@@ -10388,11 +10422,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Performance", 
-                    "next_url": "/docs/performance/", 
+                    "next_title": "Core Modules", 
+                    "next_url": "/docs/core-modules/", 
                     "parent": "Architecture", 
                     "previous_title": "Architecture Introduction", 
                     "previous_url": "/docs/architecture-introduction/", 
+                    "relative_path": "_docs/architecture/015-drill-query-execution.md", 
+                    "title": "Drill Query Execution", 
+                    "url": "/docs/drill-query-execution/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Architecture", 
+                            "url": "/docs/architecture/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Performance", 
+                    "next_url": "/docs/performance/", 
+                    "parent": "Architecture", 
+                    "previous_title": "Drill Query Execution", 
+                    "previous_url": "/docs/drill-query-execution/", 
                     "relative_path": "_docs/architecture/020-core-modules.md", 
                     "title": "Core Modules", 
                     "url": "/docs/core-modules/"

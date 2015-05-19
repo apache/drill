@@ -7,9 +7,8 @@ Planner options affect how Drill plans a query. You can use the ALTER SYSTEM|SES
  
 The following planning options affect query planning and performance:
 
-* **planner.width.max\_per_node** 
-
-     Default is 3. Configure this option to achieve fine grained, absolute control over parallelization.
+* **planner.width.max\_per_node**  
+     Configure this option to achieve fine grained, absolute control over parallelization.
 
      In this context width refers to fan out or distribution potential: the ability to run a query in parallel across the cores on a node and the nodes on a cluster. A physical plan consists of intermediate operations, known as query "fragments," that run concurrently, yielding opportunities for parallelism above and below each exchange operator in the plan. An exchange operator represents a breakpoint in the execution flow where processing can be distributed. For example, a single-process scan of a file may flow into an exchange operator, followed by a multi-process aggregation fragment.
  
@@ -19,15 +18,12 @@ The following planning options affect query planning and performance:
      When you modify the default setting, you can supply any meaningful number. The system does not automatically scale down your setting.  
 
 * **planner.width\_max\_per_query**  
-
      Default is 1000. The maximum number of threads than can run in parallel for a query across all nodes. Only change this setting when Drill over-parallelizes on very large clusters.
  
 * **planner.slice_target**  
-
      Default is 100000. The minimum number of estimated records to work with in a major fragment before applying additional parallelization.
  
 * **planner.broadcast_threshold**  
-
      Default is 10000000. The maximum number of records allowed to be broadcast as part of a join. After one million records, Drill reshuffles data rather than doing a broadcast to one side of the join. To improve performance you can increase this number, especially on 10GB Ethernet clusters.
  
 

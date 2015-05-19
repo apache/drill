@@ -289,8 +289,7 @@ in descending order. Only clicks that have resulted in a purchase are counted.
   
 ## Store a Result Set in a Table for Reuse and Analysis
 
-Finally, run another correlated subquery that returns a fairly large result
-set. To facilitate additional analysis on this result set, you can easily and
+To facilitate additional analysis on this result set, you can easily and
 quickly create a Drill table from the results of the query.
 
 ### Continue to use the dfs.clicks workspace
