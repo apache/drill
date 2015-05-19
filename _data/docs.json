@@ -597,6 +597,23 @@
             "title": "CREATE VIEW", 
             "url": "/docs/create-view/"
         }, 
+        "Choosing a Storage Format": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Plans and Tuning Introduction", 
+            "next_url": "/docs/query-plans-and-tuning-introduction/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
+            "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
+            "title": "Choosing a Storage Format", 
+            "url": "/docs/choosing-a-storage-format/"
+        }, 
         "Compiling Drill from Source": {
             "breadcrumbs": [
                 {
@@ -1649,6 +1666,23 @@
             "relative_path": "_docs/developer-information/020-contribute-to-drill.md", 
             "title": "Contribute to Drill", 
             "url": "/docs/contribute-to-drill/"
+        }, 
+        "Controlling Parallelization to Balance Performance with Multi-Tenancy": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Plans", 
+            "next_url": "/docs/query-plans/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Enabling Query Queuing", 
+            "previous_url": "/docs/enabling-query-queuing/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
+            "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+            "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
         }, 
         "Core Modules": {
             "breadcrumbs": [
@@ -2788,6 +2822,23 @@
             "title": "Embedded Mode Prerequisites", 
             "url": "/docs/embedded-mode-prerequisites/"
         }, 
+        "Enabling Query Queuing": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+            "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+            "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/060-enabling-query-queuing.md", 
+            "title": "Enabling Query Queuing", 
+            "url": "/docs/enabling-query-queuing/"
+        }, 
         "Enron Emails": {
             "breadcrumbs": [
                 {
@@ -2969,6 +3020,23 @@
             "relative_path": "_docs/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md", 
             "title": "Getting to Know the Drill Sandbox", 
             "url": "/docs/getting-to-know-the-drill-sandbox/"
+        }, 
+        "Guidelines for Optimizing Aggregation": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Modifying Query Planning Options", 
+            "next_url": "/docs/modifying-query-planning-options/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Join Planning Guidelines", 
+            "previous_url": "/docs/join-planning-guidelines/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/030-guidelines-for-optimizing-aggregation.md", 
+            "title": "Guidelines for Optimizing Aggregation", 
+            "url": "/docs/guidelines-for-optimizing-aggregation/"
         }, 
         "HBase Storage Plugin": {
             "breadcrumbs": [
@@ -3703,6 +3771,23 @@
             "title": "JSON Data Model", 
             "url": "/docs/json-data-model/"
         }, 
+        "Join Planning Guidelines": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Guidelines for Optimizing Aggregation", 
+            "next_url": "/docs/guidelines-for-optimizing-aggregation/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Query Plans and Tuning Introduction", 
+            "previous_url": "/docs/query-plans-and-tuning-introduction/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/020-join-planning-guidelines.md", 
+            "title": "Join Planning Guidelines", 
+            "url": "/docs/join-planning-guidelines/"
+        }, 
         "KVGEN": {
             "breadcrumbs": [
                 {
@@ -4121,6 +4206,23 @@
             "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
             "title": "Modify logback.xml", 
             "url": "/docs/modify-logback-xml/"
+        }, 
+        "Modifying Query Planning Options": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+            "next_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Guidelines for Optimizing Aggregation", 
+            "previous_url": "/docs/guidelines-for-optimizing-aggregation/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/040-modifying-query-planning-options.md", 
+            "title": "Modifying Query Planning Options", 
+            "url": "/docs/modifying-query-planning-options/"
         }, 
         "MongoDB Plugin for Apache Drill": {
             "breadcrumbs": [
@@ -4799,17 +4901,17 @@
         "Partition Pruning": {
             "breadcrumbs": [
                 {
-                    "title": "Archived Pages", 
-                    "url": "/docs/archived-pages/"
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
                 }
             ], 
             "children": [], 
-            "next_title": "Progress Reports", 
-            "next_url": "/docs/progress-reports/", 
-            "parent": "Archived Pages", 
-            "previous_title": "What is Apache Drill", 
-            "previous_url": "/docs/what-is-apache-drill/", 
-            "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
+            "next_title": "Choosing a Storage Format", 
+            "next_url": "/docs/choosing-a-storage-format/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Performance Tuning Introduction", 
+            "previous_url": "/docs/performance-tuning-introduction/", 
+            "relative_path": "_docs/performance-tuning/020-partition-pruning.md", 
             "title": "Partition Pruning", 
             "url": "/docs/partition-pruning/"
         }, 
@@ -4841,14 +4943,201 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Log and Debug", 
-                    "next_url": "/docs/log-and-debug/", 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning", 
                     "previous_url": "/docs/performance-tuning/", 
                     "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md", 
                     "title": "Performance Tuning Introduction", 
                     "url": "/docs/performance-tuning-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Performance Tuning Introduction", 
+                    "previous_url": "/docs/performance-tuning-introduction/", 
+                    "relative_path": "_docs/performance-tuning/020-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning Introduction", 
+                    "next_url": "/docs/query-plans-and-tuning-introduction/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Partition Pruning", 
+                    "previous_url": "/docs/partition-pruning/", 
+                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
+                    "title": "Choosing a Storage Format", 
+                    "url": "/docs/choosing-a-storage-format/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Join Planning Guidelines", 
+                    "next_url": "/docs/join-planning-guidelines/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Choosing a Storage Format", 
+                    "previous_url": "/docs/choosing-a-storage-format/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/010-query-plans-and-tuning-introduction.md", 
+                    "title": "Query Plans and Tuning Introduction", 
+                    "url": "/docs/query-plans-and-tuning-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Guidelines for Optimizing Aggregation", 
+                    "next_url": "/docs/guidelines-for-optimizing-aggregation/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Plans and Tuning Introduction", 
+                    "previous_url": "/docs/query-plans-and-tuning-introduction/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/020-join-planning-guidelines.md", 
+                    "title": "Join Planning Guidelines", 
+                    "url": "/docs/join-planning-guidelines/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Modifying Query Planning Options", 
+                    "next_url": "/docs/modifying-query-planning-options/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Join Planning Guidelines", 
+                    "previous_url": "/docs/join-planning-guidelines/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/030-guidelines-for-optimizing-aggregation.md", 
+                    "title": "Guidelines for Optimizing Aggregation", 
+                    "url": "/docs/guidelines-for-optimizing-aggregation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "next_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Guidelines for Optimizing Aggregation", 
+                    "previous_url": "/docs/guidelines-for-optimizing-aggregation/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/040-modifying-query-planning-options.md", 
+                    "title": "Modifying Query Planning Options", 
+                    "url": "/docs/modifying-query-planning-options/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Enabling Query Queuing", 
+                    "next_url": "/docs/enabling-query-queuing/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Modifying Query Planning Options", 
+                    "previous_url": "/docs/modifying-query-planning-options/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/050-sort-based-and-hash-based-memory-constrained-operators.md", 
+                    "title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "url": "/docs/sort-based-and-hash-based-memory-constrained-operators/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/060-enabling-query-queuing.md", 
+                    "title": "Enabling Query Queuing", 
+                    "url": "/docs/enabling-query-queuing/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans", 
+                    "next_url": "/docs/query-plans/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Enabling Query Queuing", 
+                    "previous_url": "/docs/enabling-query-queuing/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
+                    "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Profiles", 
+                    "next_url": "/docs/query-profiles/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/010-query-plans.md", 
+                    "title": "Query Plans", 
+                    "url": "/docs/query-plans/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Plans", 
+                    "previous_url": "/docs/query-plans/", 
+                    "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/020-query-profiles.md", 
+                    "title": "Query Profiles", 
+                    "url": "/docs/query-profiles/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -4868,8 +5157,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Log and Debug", 
-            "next_url": "/docs/log-and-debug/", 
+            "next_title": "Partition Pruning", 
+            "next_url": "/docs/partition-pruning/", 
             "parent": "Performance Tuning", 
             "previous_title": "Performance Tuning", 
             "previous_url": "/docs/performance-tuning/", 
@@ -5444,6 +5733,57 @@
             "relative_path": "_docs/sql-reference/065-query-directory-functions.md", 
             "title": "Query Directory Functions", 
             "url": "/docs/query-directory-functions/"
+        }, 
+        "Query Plans": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Profiles", 
+            "next_url": "/docs/query-profiles/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+            "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/010-query-plans.md", 
+            "title": "Query Plans", 
+            "url": "/docs/query-plans/"
+        }, 
+        "Query Plans and Tuning Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Join Planning Guidelines", 
+            "next_url": "/docs/join-planning-guidelines/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Choosing a Storage Format", 
+            "previous_url": "/docs/choosing-a-storage-format/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/010-query-plans-and-tuning-introduction.md", 
+            "title": "Query Plans and Tuning Introduction", 
+            "url": "/docs/query-plans-and-tuning-introduction/"
+        }, 
+        "Query Profiles": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Query Plans", 
+            "previous_url": "/docs/query-plans/", 
+            "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/020-query-profiles.md", 
+            "title": "Query Profiles", 
+            "url": "/docs/query-profiles/"
         }, 
         "Query Stages": {
             "breadcrumbs": [
@@ -8314,6 +8654,23 @@
             "relative_path": "_docs/query-data/querying-complex-data/040-selecting-nested-data.md", 
             "title": "Selecting Nested Data for a Column", 
             "url": "/docs/selecting-nested-data-for-a-column/"
+        }, 
+        "Sort-Based and Hash-Based Memory-Constrained Operators": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Enabling Query Queuing", 
+            "next_url": "/docs/enabling-query-queuing/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Modifying Query Planning Options", 
+            "previous_url": "/docs/modifying-query-planning-options/", 
+            "relative_path": "_docs/performance-tuning/query-plans-and-tuning/050-sort-based-and-hash-based-memory-constrained-operators.md", 
+            "title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+            "url": "/docs/sort-based-and-hash-based-memory-constrained-operators/"
         }, 
         "Start-Up Options": {
             "breadcrumbs": [
@@ -11542,14 +11899,201 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Log and Debug", 
-                    "next_url": "/docs/log-and-debug/", 
+                    "next_title": "Partition Pruning", 
+                    "next_url": "/docs/partition-pruning/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning", 
                     "previous_url": "/docs/performance-tuning/", 
                     "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md", 
                     "title": "Performance Tuning Introduction", 
                     "url": "/docs/performance-tuning-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Performance Tuning Introduction", 
+                    "previous_url": "/docs/performance-tuning-introduction/", 
+                    "relative_path": "_docs/performance-tuning/020-partition-pruning.md", 
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning Introduction", 
+                    "next_url": "/docs/query-plans-and-tuning-introduction/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Partition Pruning", 
+                    "previous_url": "/docs/partition-pruning/", 
+                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
+                    "title": "Choosing a Storage Format", 
+                    "url": "/docs/choosing-a-storage-format/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Join Planning Guidelines", 
+                    "next_url": "/docs/join-planning-guidelines/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Choosing a Storage Format", 
+                    "previous_url": "/docs/choosing-a-storage-format/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/010-query-plans-and-tuning-introduction.md", 
+                    "title": "Query Plans and Tuning Introduction", 
+                    "url": "/docs/query-plans-and-tuning-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Guidelines for Optimizing Aggregation", 
+                    "next_url": "/docs/guidelines-for-optimizing-aggregation/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Plans and Tuning Introduction", 
+                    "previous_url": "/docs/query-plans-and-tuning-introduction/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/020-join-planning-guidelines.md", 
+                    "title": "Join Planning Guidelines", 
+                    "url": "/docs/join-planning-guidelines/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Modifying Query Planning Options", 
+                    "next_url": "/docs/modifying-query-planning-options/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Join Planning Guidelines", 
+                    "previous_url": "/docs/join-planning-guidelines/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/030-guidelines-for-optimizing-aggregation.md", 
+                    "title": "Guidelines for Optimizing Aggregation", 
+                    "url": "/docs/guidelines-for-optimizing-aggregation/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "next_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Guidelines for Optimizing Aggregation", 
+                    "previous_url": "/docs/guidelines-for-optimizing-aggregation/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/040-modifying-query-planning-options.md", 
+                    "title": "Modifying Query Planning Options", 
+                    "url": "/docs/modifying-query-planning-options/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Enabling Query Queuing", 
+                    "next_url": "/docs/enabling-query-queuing/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Modifying Query Planning Options", 
+                    "previous_url": "/docs/modifying-query-planning-options/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/050-sort-based-and-hash-based-memory-constrained-operators.md", 
+                    "title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "url": "/docs/sort-based-and-hash-based-memory-constrained-operators/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "next_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Sort-Based and Hash-Based Memory-Constrained Operators", 
+                    "previous_url": "/docs/sort-based-and-hash-based-memory-constrained-operators/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/060-enabling-query-queuing.md", 
+                    "title": "Enabling Query Queuing", 
+                    "url": "/docs/enabling-query-queuing/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans", 
+                    "next_url": "/docs/query-plans/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Enabling Query Queuing", 
+                    "previous_url": "/docs/enabling-query-queuing/", 
+                    "relative_path": "_docs/performance-tuning/query-plans-and-tuning/070-controlling-parallelization-to-balance-performance-with-multi-tenancy.md", 
+                    "title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Profiles", 
+                    "next_url": "/docs/query-profiles/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/010-query-plans.md", 
+                    "title": "Query Plans", 
+                    "url": "/docs/query-plans/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Plans", 
+                    "previous_url": "/docs/query-plans/", 
+                    "relative_path": "_docs/performance-tuning/where-to-identify-performance-issues/020-query-profiles.md", 
+                    "title": "Query Profiles", 
+                    "url": "/docs/query-profiles/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -11567,8 +12111,8 @@
             "next_title": "Query Audit Logging", 
             "next_url": "/docs/query-audit-logging/", 
             "parent": "", 
-            "previous_title": "Performance Tuning Introduction", 
-            "previous_url": "/docs/performance-tuning-introduction/", 
+            "previous_title": "Query Profiles", 
+            "previous_url": "/docs/query-profiles/", 
             "relative_path": "_docs/073-log-and-debug.md", 
             "title": "Log and Debug", 
             "url": "/docs/log-and-debug/"
