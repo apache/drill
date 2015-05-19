@@ -26,9 +26,9 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RawFragmentBatch;
 
 public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRawBatchBuffer.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRawBatchBuffer.class);
 
-  private static enum BufferState {
+  private enum BufferState {
     INIT,
     STREAMS_FINISHED,
     KILLED
@@ -61,7 +61,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   }
 
   @Override
-  public void enqueue(final RawFragmentBatch batch) throws IOException {
+  public synchronized void enqueue(final RawFragmentBatch batch) throws IOException {
 
     // if this fragment is already canceled or failed, we shouldn't need any or more stuff. We do the null check to
     // ensure that tests run.
@@ -113,8 +113,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   public void close() {
     if (!isTerminated() && context.shouldContinue()) {
       final String msg = String.format("Cleanup before finished. %d out of %d strams have finished", completedStreams(), fragmentCount);
-      final IllegalStateException e = new IllegalStateException(msg);
-      throw e;
+      throw  new IllegalStateException(msg);
     }
 
     if (!bufferQueue.isEmpty()) {
@@ -127,7 +126,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   }
 
   @Override
-  public void kill(final FragmentContext context) {
+  public synchronized void kill(final FragmentContext context) {
     state = BufferState.KILLED;
     clearBufferWithBody();
   }

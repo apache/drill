@@ -122,7 +122,6 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     final FragmentRecordBatch fragmentBatch = get(pBody, FragmentRecordBatch.PARSER);
     final int targetCount = fragmentBatch.getReceivingMinorFragmentIdCount();
 
-    Pointer<DrillBuf> out = new Pointer<DrillBuf>();
     AckSender ack = new AckSender(sender);
     // increment so we don't get false returns.
     ack.increment();
@@ -139,12 +138,8 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
         }
 
       }else{
-        if (targetCount > 1) {
-          for (int minor = 0; minor < targetCount; minor++) {
-            send(fragmentBatch, (DrillBuf) body, minor, ack, true);
-          }
-        } else {
-          send(fragmentBatch, (DrillBuf) body, 0, ack, false);
+        for (int minor = 0; minor < targetCount; minor++) {
+          send(fragmentBatch, (DrillBuf) body, minor, ack);
         }
       }
     } catch (IOException | FragmentSetupException e) {
@@ -158,34 +153,23 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
       // decrement the extra reference we grabbed at the top.
       ack.sendOk();
-      if(out != null && out.value != null){
-        out.value.release();
-      }
     }
   }
 
-  private void send(final FragmentRecordBatch fragmentBatch, final DrillBuf body, final int minor, final AckSender ack,
-      final boolean shared)
+  private void send(final FragmentRecordBatch fragmentBatch, final DrillBuf body, final int minor, final AckSender ack)
       throws FragmentSetupException, IOException {
 
-    FragmentManager manager = workBus.getFragmentManager(getHandle(fragmentBatch, minor));
+    final FragmentManager manager = workBus.getFragmentManager(getHandle(fragmentBatch, minor));
     if (manager == null) {
       return;
     }
 
     final BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-    final Pointer<DrillBuf> out = new Pointer<DrillBuf>();
+    final Pointer<DrillBuf> out = new Pointer<>();
 
     final boolean withinMemoryEnvelope;
-    final DrillBuf submitBody;
 
-    if (shared) {
-      withinMemoryEnvelope = allocator.takeOwnership((DrillBuf) body, out);
-      submitBody = out.value;
-    }else{
-      withinMemoryEnvelope = allocator.takeOwnership((DrillBuf) body.unwrap());
-      submitBody = body;
-    }
+    withinMemoryEnvelope = allocator.takeOwnership(body, out);
 
     if (!withinMemoryEnvelope) {
       // if we over reserved, we need to add poison pill before batch.
@@ -193,14 +177,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     }
 
     ack.increment();
-    dataHandler.handle(manager, fragmentBatch, submitBody, ack);
+    dataHandler.handle(manager, fragmentBatch, out.value, ack);
 
-    if (shared) {
-      // make sure to release the reference count we have to the new buffer.
-      // dataHandler.handle should have taken any ownership it needed.
-      out.value.release();
-    }
-
+    // make sure to release the reference count we have to the new buffer.
+    // dataHandler.handle should have taken any ownership it needed.
+    out.value.release();
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {
