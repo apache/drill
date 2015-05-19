@@ -390,7 +390,7 @@ use in your Drill queries as described in this section:
 [TO_TIMESTAMP](#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
 
 ### Format Specifiers for Numerical Conversions
-Use the following format specifiers for converting numbers:
+Use the following Java format specifiers for converting numbers:
 
 | Symbol     | Location            | Meaning                                                                                                                                                                                              |
 |------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -408,7 +408,7 @@ Use the following format specifiers for converting numbers:
 
 ### Format Specifiers for Date/Time Conversions
 
-Use the following format specifiers for date/time conversions:
+Use the following Joda format specifiers for date/time conversions:
 
 | Symbol | Meaning                                          | Presentation | Examples                           |
 |--------|--------------------------------------------------|--------------|------------------------------------|
@@ -438,7 +438,7 @@ Use the following format specifiers for date/time conversions:
 For more information about specifying a format, refer to one of the following format specifier documents:
 
 * [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) format specifiers 
-* [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html) format specifiers
+* [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html) format specifiers
 
 ## TO_CHAR
 

@@ -4,40 +4,6 @@ parent: "Data Types"
 ---
 Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/data-types/data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. 
 
-DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
-
-Currently, Drill does not support casting a TIMESTAMP with time zone, but you can use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types#to_timestamp) in a query to use time stamp data having a time zone.
-
-Next, use the following literals in a SELECT statement. 
-
-* `date`
-* `time`
-* `timestamp`
-
-        SELECT date '2010-2-15' FROM sys.version;
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2010-02-15 |
-        +------------+
-        1 row selected (0.083 seconds)
-
-        SELECT time '15:20:30' from sys.version;
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 15:20:30   |
-        +------------+
-        1 row selected (0.067 seconds)
-
-        SELECT timestamp '2015-03-11 6:50:08' FROM sys.version;
-        +------------+
-        |   EXPR$0   |
-        +------------+
-        | 2015-03-11 06:50:08.0 |
-        +------------+
-        1 row selected (0.071 seconds)
-
 ## INTERVALYEAR and INTERVALDAY
 
 The INTERVALYEAR AND INTERVALDAY types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
@@ -111,5 +77,41 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
     1 row selected (0.076 seconds)
 
 For information about casting interval data, see the ["CAST"]({{ site.baseurl }}/docs/data-type-conversion#cast) function.
+
+## DATE, TIME, and TIMESTAMP
+
+DATE, TIME, and TIMESTAMP store values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
+
+Drill does not support TIMESTAMP with time zone; however, if your data includes the time zone, use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types#to_timestamp) and [Joda format specifiers]({{site.baseurl}}/docs/data-type-conversion/#format-specifiers-for-date/time-conversions) as shown the examples in section, ["Time Zone Limitation"]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).
+
+Next, use the following literals in a SELECT statement. 
+
+* `date`
+* `time`
+* `timestamp`
+
+        SELECT date '2010-2-15' FROM sys.version;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2010-02-15 |
+        +------------+
+        1 row selected (0.083 seconds)
+
+        SELECT time '15:20:30' from sys.version;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 15:20:30   |
+        +------------+
+        1 row selected (0.067 seconds)
+
+        SELECT timestamp '2015-03-11 6:50:08' FROM sys.version;
+        +------------+
+        |   EXPR$0   |
+        +------------+
+        | 2015-03-11 06:50:08.0 |
+        +------------+
+        1 row selected (0.071 seconds)
 
 

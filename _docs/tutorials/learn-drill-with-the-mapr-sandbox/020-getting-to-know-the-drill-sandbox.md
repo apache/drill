@@ -12,25 +12,23 @@ example:
 
 Using the secure shell instead of the VM interface has some advantages. You can copy/paste commands from the tutorial and avoid mouse control problems.
 
-Drill includes a shell for connecting to relational databases and executing SQL commands. On the sandbox, the Drill shell runs in embedded mode. After logging into the sandbox,  use the `SQLLine` command to start SQLLine for executing Drill queries in embedded mode.  
+Drill includes a shell for connecting to relational databases and executing SQL commands. On the sandbox, the Drill shell runs in embedded mode. After logging into the sandbox,  use the `SQLLine` command. The Drill shell appears, and you can run Drill queries.  
 
-    [mapr@maprdemo ~]# sqlline
-    sqlline version 1.1.6
+    [mapr@maprdemo ~]$ sqlline
+    apache drill 1.0.0 
+    "the only truly happy people are children, the creative minority and drill users"
     0: jdbc:drill:>
 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 
 
 ## Storage Plugin Overview
-This section describes storage plugins included in the sandbox. For general information about Drill storage plugins, see ["Connect to a Data Source"]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
-Take a look at the pre-configured storage plugins for the sandbox by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. For example:
-
-    http://localhost:8047/storage
+You use a [storage plugins]({{ site.baseurl }}/docs/connect-a-data-source-introduction) to connect to a data source, such as a file or the Hive metastore. Take a look at the storage plugin definitions by opening the Storage tab in the Drill Web UI. Launch a web browser and go to: `http://<IP address>:8047/storage`. 
 
 The control panel for managing storage plugins appears.
 
 ![sandbox plugin]({{ site.baseurl }}/docs/img/get2kno_plugin.png)
 
-You see that the following storage plugin controls:
+You see the following storage plugin controls:
 
 * cp
 * dfs
@@ -39,11 +37,9 @@ You see that the following storage plugin controls:
 * hbase
 * mongo
 
-Click Update to look at a configuration. 
+Click Update to examine a configuration. 
 
-In some cases, the storage plugin defined for use in the sandbox differs from the default storage plugin of the same name in a Drill installation as described in the following sections. Typically you create a storage plugin or customize an existing one for analyzing a particular data source. 
-
-The tutorial uses the dfs, hive, maprdb, and hbase storage plugins. 
+If you've used an installation of Drill before using the sandbox, you might notice that a few storage plugins in the sandbox differ from the same storage plugin in a Drill installation. The sandbox version of dfs, hive, maprdb, and hbase storage plugins definitions play a role in simulating the cluster environment for running the tutorial. 
 
 ### dfs
 
@@ -85,11 +81,13 @@ The `dfs` definition includes format definitions.
          "delimiter": ","
       },
      . . .
-      "json": {
-       "type": "json"
-       }
+       "json": {
+          "type": "json"
+      },
+       "maprdb": {
+          "type": "maprdb"
       }
-    }
+     . . .
 
 ### maprdb
 
@@ -97,12 +95,13 @@ The maprdb storage plugin is a configuration for MapR-DB in the sandbox. You use
 information on how to configure Drill to query HBase.
 
     {
-      "type" : "hbase",
-      "enabled" : true,
-      "config" : {
-        "hbase.table.namespace.mappings" : "*:/tables"
-      }
-     }
+      "type": "hbase",
+      "config": {
+        "hbase.table.namespace.mappings": "*:/tables"
+      },
+      "size.calculator.enabled": false,
+      "enabled": true
+    }
 
 ### hive
 
@@ -110,7 +109,7 @@ The hive storage plugin is a configuration for a Hive data warehouse within the 
 Drill connects to the Hive metastore by using the configured metastore thrift
 URI. Metadata for Hive tables is automatically available for users to query.
 
-     {
+    {
       "type": "hive",
       "enabled": true,
       "configProps": {

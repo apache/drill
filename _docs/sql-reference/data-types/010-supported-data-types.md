@@ -19,7 +19,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
 | SMALLINT**                                        | 2-byte signed integer in the range -32,768 to 32,767                                                                 | 32000                                                                          |
 | TIME                                              | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                       | 22:55:55.23                                                                    |
 | TIMESTAMP                                         | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS  | 2015-12-30 22:55:55.23                                                         |
-| CHARACTER VARYING, CHARACTER, CHAR, or VARCHAR*** | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647. | CHAR(30) casts data to a 30-character string maximum.                          |
+| CHARACTER VARYING, CHARACTER, CHAR,*** or VARCHAR | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647. | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
 \* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.  
@@ -28,7 +28,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
 
 ## Enabling the DECIMAL Type
 
-To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`. Enable the DECIMAL data type if performance is not an issue.
+To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`. The DECIMAL type is released as an alpha feature and not recommended for production use.
 
      ALTER SYSTEM SET `planner.enable_decimal_data_type` = true;
 
@@ -64,25 +64,29 @@ In some cases, Drill converts schema-less data to correctly-typed data implicitl
 * Text: CSV, TSV, and other text  
   Implicitly casts all textual data to VARCHAR.
 
-## Precedence of Data Types
+## Explicit Casting Precedence of Data Types
 
-The following list includes data types Drill uses in descending order of precedence. As shown in the table, you can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT (not supported in this release) value to INT. You cannot cast an INT value to SMALLINT due to possible precision loss. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
+The following list includes data types Drill uses in descending order of precedence. Casting precedence shown in the following table applies to the implicit casting that Drill performs. For example, Drill might implicitly cast data when a query includes a function or filter on mismatched data types:
+
+    SELECT myBigInt FROM mytable WHERE myBigInt = 2.5;
+
+As shown in the table, you can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT (not supported in this release) value to INT. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
 
 ### Casting Precedence
 
-| Precedence | Data Type              | Precedence | Data Type   |
-|------------|------------------------|------------|-------------|
-| 1          | INTERVALYEAR (highest) | 11         | INT         |
-| 2          | INTERVLADAY            | 12         | UINT2       |
-| 3          | TIMESTAMP              | 13         | SMALLINT*   |
-| 4          | DATE                   | 14         | UINT1       |
-| 5          | TIME                   | 15         | VAR16CHAR   |
-| 6          | DOUBLE                 | 16         | FIXED16CHAR |
-| 7          | DECIMAL                | 17         | VARCHAR     |
-| 8          | UINT8                  | 18         | CHAR        |
-| 9          | BIGINT                 | 19         | VARBINARY   |
-| 10         | UINT4                  | 20         | FIXEDBINARY |
-| 21         | NULL (lowest)          |            |             |
+| Precedence | Data Type              | Precedence |    Data Type   |
+|------------|------------------------|------------|----------------|
+| 1          | INTERVALYEAR (highest) | 11         | INT            |
+| 2          | INTERVLADAY            | 12         | UINT2          |
+| 3          | TIMESTAMP              | 13         | SMALLINT*      |
+| 4          | DATE                   | 14         | UINT1          |
+| 5          | TIME                   | 15         | VAR16CHAR      |
+| 6          | DOUBLE                 | 16         | FIXED16CHAR    |
+| 7          | DECIMAL                | 17         | VARCHAR        |
+| 8          | UINT8                  | 18         | CHAR           |
+| 9          | BIGINT                 | 19         | VARBINARY      |
+| 10         | UINT4                  | 20         | FIXEDBINARY    |
+| 21         | NULL (lowest)          | 21         | NULL (lowest)  |
 
 \* Not supported in this release.
 
@@ -114,21 +118,25 @@ The following tables show data types that Drill can cast to/from other data type
 | To            | SMALLINT | INT | BIGINT | DECIMAL | FLOAT | CHAR | FIXEDBINARY | VARCHAR | VARBINARY |
 |---------------|----------|-----|--------|---------|-------|------|-------------|---------|-----------|
 | **From:**     |          |     |        |         |       |      |             |         |           |
-| SMALLINT*     |          | yes | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
-| INT           | yes      | no  | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
+| SMALLINT*     | yes      | yes | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
+| INT           | yes      | yes | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
 | BIGINT        | yes      | yes | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
 | DECIMAL       | yes      | yes | yes    | yes     | yes   | yes  | yes         | yes     | yes       |
 | DOUBLE        | yes      | yes | yes    | yes     | yes   | yes  | no          | yes     | no        |
-| FLOAT         | yes      | yes | yes    | yes     | no    | yes  | no          | yes     | no        |
-| CHAR          | yes      | yes | yes    | yes     | yes   | no   | yes         | yes     | yes       |
+| FLOAT         | yes      | yes | yes    | yes     | yes   | yes  | no          | yes     | no        |
+| CHAR          | yes      | yes | yes    | yes     | yes   | char | yes         | yes     | yes       |
 | FIXEDBINARY** | yes      | yes | yes    | yes     | yes   | no   | no          | yes     | yes       |
-| VARCHAR***    | yes      | yes | yes    | yes     | yes   | yes  | yes         | no      | yes       |
+| VARCHAR***    | yes      | yes | yes    | yes     | yes   | yes  | yes         | no      | no        |
 | VARBINARY**   | yes      | yes | yes    | yes     | yes   | no   | yes         | yes     | no        |
 
 
 \* Not supported in this release.   
-\*\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
+\*\* Used to cast binary UTF-8 data coming to/from sources such as MapR-DB/HBase.   
 \*\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.   
+
+{% include startnote.html %}The CAST function does not support all representations of FIXEDBINARY. Only the UTF-8 format is supported. {% include endnote.html %}
+
+If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, such as big endian, use the CONVERT_TO/FROM functions instead of CAST.
 
 ### Date and Time Data Types
 
@@ -145,12 +153,15 @@ The following tables show data types that Drill can cast to/from other data type
 | INTERVALYEAR | Yes  | No   | Yes       | Yes         | No           | Yes         |
 | INTERVALDAY  | Yes  | No   | Yes       | Yes         | Yes          | No          |
 
-\* Used to cast binary data coming to/from sources such as MapR-DB/HBase.   
+\* Used to cast binary UTF-8 data coming to/from sources such as MapR-DB/HBase.   
 
 ## CONVERT_TO and CONVERT_FROM Data Types
 
-You use the CONVERT_TO and CONVERT_FROM data types as arguments to the CONVERT_TO
-and CONVERT_FROM functions. CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. 
+CONVERT_TO converts data to binary from the input type. CONVERT_FROM converts data from binary to the input type. For example, the following CONVERT_TO function converts an integer in big endian format to VARBINARY:
+
+    CONVERT_TO(mycolumn, 'INT_BE')
+
+CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. 
 
 We recommend storing HBase/MapR-DB data in a binary representation rather than
 a string representation. Use the \*\_BE types to store integer data types in an HBase or Mapr-DB table.  INT is a 4-byte little endian signed integer. INT_BE is a 4-byte big endian signed integer. The comparison order of \*\_BE encoded bytes is the same as the integer value itself if the bytes are unsigned or positive. Using a *_BE type facilitates scan range pruning and filter pushdown into HBase scan. 
