@@ -321,14 +321,31 @@
                 }
             ], 
             "children": [], 
+            "next_title": "Apache Drill 1.0.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Apache Drill 0.8.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
+            "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+            "title": "Apache Drill 0.9.0 Release Notes", 
+            "url": "/docs/apache-drill-0-9-0-release-notes/"
+        }, 
+        "Apache Drill 1.0.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
             "next_title": "Sample Datasets", 
             "next_url": "/docs/sample-datasets/", 
             "parent": "Release Notes", 
             "previous_title": "Apache Drill 0.9.0 Release Notes", 
             "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
             "relative_path": "_docs/rn/080-1.0.0-rn.md", 
-            "title": "Apache Drill 0.9.0 Release Notes", 
-            "url": "/docs/apache-drill-0-9-0-release-notes/"
+            "title": "Apache Drill 1.0.0 Release Notes", 
+            "url": "/docs/apache-drill-1-0-0-release-notes/"
         }, 
         "Apache Drill Contribution Guidelines": {
             "breadcrumbs": [
@@ -6789,8 +6806,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 0.9.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "next_title": "Apache Drill 1.0.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
@@ -6812,8 +6829,8 @@
                     "previous_title": "Apache Drill 0.9.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "relative_path": "_docs/rn/080-1.0.0-rn.md", 
-                    "title": "Apache Drill 0.9.0 Release Notes", 
-                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                    "title": "Apache Drill 1.0.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-0-0-release-notes/"
                 }
             ], 
             "next_title": "Apache Drill 0.5.0 Release Notes", 
@@ -8932,8 +8949,8 @@
             "next_title": "AOL Search", 
             "next_url": "/docs/aol-search/", 
             "parent": "", 
-            "previous_title": "Apache Drill 0.9.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+            "previous_title": "Apache Drill 1.0.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-0-0-release-notes/", 
             "relative_path": "_docs/140-sample-datasets.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
@@ -14195,8 +14212,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 0.9.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "next_title": "Apache Drill 1.0.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
@@ -14218,8 +14235,8 @@
                     "previous_title": "Apache Drill 0.9.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "relative_path": "_docs/rn/080-1.0.0-rn.md", 
-                    "title": "Apache Drill 0.9.0 Release Notes", 
-                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                    "title": "Apache Drill 1.0.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-0-0-release-notes/"
                 }
             ], 
             "next_title": "Apache Drill 0.5.0 Release Notes", 
@@ -14289,8 +14306,8 @@
             "next_title": "AOL Search", 
             "next_url": "/docs/aol-search/", 
             "parent": "", 
-            "previous_title": "Apache Drill 0.9.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+            "previous_title": "Apache Drill 1.0.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-0-0-release-notes/", 
             "relative_path": "_docs/140-sample-datasets.md", 
             "title": "Sample Datasets", 
             "url": "/docs/sample-datasets/"
