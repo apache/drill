@@ -1,6 +1,6 @@
 ---
 title: "Modifying Query Planning Options"
-parent: "Query Plans and Tuning Introduction"
+parent: "Query Plans and Tuning"
 --- 
 
 Planner options affect how Drill plans a query. You can use the ALTER SYSTEM|SESSION commands to modify certain planning options to optimize query plans and improve performance.  Typically, you modify options at the session level. See [ALTER SESSION]({{ site.baseurl }}/docs/alter-session/) for details on how to run the command.

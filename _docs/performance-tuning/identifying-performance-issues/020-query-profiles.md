@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-parent: "Performance Tuning"
+parent: "Identifying Performance Issues"
 ---
 
 A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. Drill creates a query profile from major, minor, operator, and input stream profiles. Each major fragment profile consists of a list of minor fragment profiles. Each minor fragment profile consists of a list of operator profiles. An operator profile consists of a list of input stream profiles. 
