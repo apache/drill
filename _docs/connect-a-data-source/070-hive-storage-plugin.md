@@ -43,7 +43,7 @@ To register a remote Hive metastore with Drill, complete the following steps:
           }
         }       
   5. Click **Enable**.
-  6. Verify that `HADOOP_CLASSPATH` is set in `drill-env.sh`. If you need to set the classpath, add the following line to `drill-env.sh`.
+
 
 Once you have configured a storage plugin instance for a Hive data source, you
 can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).
@@ -72,6 +72,4 @@ steps:
           }
         }
   4. Click **Enable**.
-  5. Verify that `HADOOP_CLASSPATH` is set in `drill-env.sh`. If you need to set the classpath, add the following line to `drill-env.sh`.
   
-        export HADOOP_CLASSPATH=/<directory path>/hadoop/hadoop-<version-number>

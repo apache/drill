@@ -8,7 +8,7 @@ Using familiar date and time formats, listed in the [SQL data types table]({{ si
 
 The INTERVALYEAR AND INTERVALDAY types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
 
-Use ISO 8601 syntax to format an interval:
+If your interval data is in the data source, for example a JSON file, cast the JSON VARCHAR types to intervalyear and intervalday using the folliwng ISO 8601 syntax:
 
     P [qty] Y [qty] M [qty] D T [qty] H [qty] M [qty] S
 
@@ -26,7 +26,8 @@ where:
 * M follows a number of minutes.
 * S follows a number of seconds and optional milliseconds to the right of a decimal point
 
-You can restrict the set of stored interval fields by using one of these phrases in the query:
+
+If your input is interval data, use the following SQL literals to restrict the set of stored interval fields:
 
 * YEAR
 * MONTH
