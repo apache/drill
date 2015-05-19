@@ -3239,8 +3239,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Profile Column Descriptions", 
-                    "next_url": "/docs/query-profile-column-descriptions/", 
+                    "next_title": "Performance Tuning Reference", 
+                    "next_url": "/docs/performance-tuning-reference/", 
                     "parent": "Identifying Performance Issues", 
                     "previous_title": "Query Plans", 
                     "previous_url": "/docs/query-plans/", 
@@ -4243,8 +4243,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "", 
-                    "next_url": "", 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
                     "parent": "Log and Debug", 
                     "previous_title": "Modify logback.xml", 
                     "previous_url": "/docs/modify-logback-xml/", 
@@ -4256,9 +4256,9 @@
             "next_title": "Log and Debug Introduction", 
             "next_url": "/docs/log-and-debug-introduction/", 
             "parent": "", 
-            "previous_title": "Project Bylaws", 
-            "previous_url": "/docs/project-bylaws/", 
-            "relative_path": "_docs/sql-reference/sql-functions/073-log-and-debug.md", 
+            "previous_title": "Physical Operators", 
+            "previous_url": "/docs/physical-operators/", 
+            "relative_path": "_docs/073-log-and-debug.md", 
             "title": "Log and Debug", 
             "url": "/docs/log-and-debug/"
         }, 
@@ -5323,8 +5323,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Profile Column Descriptions", 
-                            "next_url": "/docs/query-profile-column-descriptions/", 
+                            "next_title": "Performance Tuning Reference", 
+                            "next_url": "/docs/performance-tuning-reference/", 
                             "parent": "Identifying Performance Issues", 
                             "previous_title": "Query Plans", 
                             "previous_url": "/docs/query-plans/", 
@@ -5349,15 +5349,58 @@
                             "url": "/docs/performance-tuning/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Log and Debug", 
-                    "next_url": "/docs/log-and-debug/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Performance Tuning Reference", 
+                                    "url": "/docs/performance-tuning-reference/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Physical Operators", 
+                            "next_url": "/docs/physical-operators/", 
+                            "parent": "Performance Tuning Reference", 
+                            "previous_title": "Performance Tuning Reference", 
+                            "previous_url": "/docs/performance-tuning-reference/", 
+                            "relative_path": "_docs/performance-tuning/performance-tuning-reference/010-query-profile-tables.md", 
+                            "title": "Query Profile Column Descriptions", 
+                            "url": "/docs/query-profile-column-descriptions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Performance Tuning Reference", 
+                                    "url": "/docs/performance-tuning-reference/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Log and Debug", 
+                            "next_url": "/docs/log-and-debug/", 
+                            "parent": "Performance Tuning Reference", 
+                            "previous_title": "Query Profile Column Descriptions", 
+                            "previous_url": "/docs/query-profile-column-descriptions/", 
+                            "relative_path": "_docs/performance-tuning/performance-tuning-reference/020-physical-operators.md", 
+                            "title": "Physical Operators", 
+                            "url": "/docs/physical-operators/"
+                        }
+                    ], 
+                    "next_title": "Query Profile Column Descriptions", 
+                    "next_url": "/docs/query-profile-column-descriptions/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Query Profiles", 
                     "previous_url": "/docs/query-profiles/", 
-                    "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
-                    "title": "Query Profile Column Descriptions", 
-                    "url": "/docs/query-profile-column-descriptions/"
+                    "relative_path": "_docs/performance-tuning/060-performance-tuning-reference.md", 
+                    "title": "Performance Tuning Reference", 
+                    "url": "/docs/performance-tuning-reference/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -5386,6 +5429,66 @@
             "title": "Performance Tuning Introduction", 
             "url": "/docs/performance-tuning-introduction/"
         }, 
+        "Performance Tuning Reference": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning Reference", 
+                            "url": "/docs/performance-tuning-reference/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Physical Operators", 
+                    "next_url": "/docs/physical-operators/", 
+                    "parent": "Performance Tuning Reference", 
+                    "previous_title": "Performance Tuning Reference", 
+                    "previous_url": "/docs/performance-tuning-reference/", 
+                    "relative_path": "_docs/performance-tuning/performance-tuning-reference/010-query-profile-tables.md", 
+                    "title": "Query Profile Column Descriptions", 
+                    "url": "/docs/query-profile-column-descriptions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning Reference", 
+                            "url": "/docs/performance-tuning-reference/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
+                    "parent": "Performance Tuning Reference", 
+                    "previous_title": "Query Profile Column Descriptions", 
+                    "previous_url": "/docs/query-profile-column-descriptions/", 
+                    "relative_path": "_docs/performance-tuning/performance-tuning-reference/020-physical-operators.md", 
+                    "title": "Physical Operators", 
+                    "url": "/docs/physical-operators/"
+                }
+            ], 
+            "next_title": "Query Profile Column Descriptions", 
+            "next_url": "/docs/query-profile-column-descriptions/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Query Profiles", 
+            "previous_url": "/docs/query-profiles/", 
+            "relative_path": "_docs/performance-tuning/060-performance-tuning-reference.md", 
+            "title": "Performance Tuning Reference", 
+            "url": "/docs/performance-tuning-reference/"
+        }, 
         "Persistent Configuration Storage": {
             "breadcrumbs": [
                 {
@@ -5406,6 +5509,27 @@
             "relative_path": "_docs/configure-drill/configuration-options/040-persistent-configuration-storage.md", 
             "title": "Persistent Configuration Storage", 
             "url": "/docs/persistent-configuration-storage/"
+        }, 
+        "Physical Operators": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning Reference", 
+                    "url": "/docs/performance-tuning-reference/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
+            "parent": "Performance Tuning Reference", 
+            "previous_title": "Query Profile Column Descriptions", 
+            "previous_url": "/docs/query-profile-column-descriptions/", 
+            "relative_path": "_docs/performance-tuning/performance-tuning-reference/020-physical-operators.md", 
+            "title": "Physical Operators", 
+            "url": "/docs/physical-operators/"
         }, 
         "Planning and Execution Options": {
             "breadcrumbs": [
@@ -5499,8 +5623,8 @@
         "Project Bylaws": {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "Log and Debug", 
-            "next_url": "/docs/log-and-debug/", 
+            "next_title": "", 
+            "next_url": "", 
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
@@ -5532,8 +5656,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Log and Debug", 
-            "previous_url": "/docs/log-and-debug/", 
+            "previous_title": "Review the Java Stack Trace", 
+            "previous_url": "/docs/review-the-java-stack-trace/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -6164,17 +6288,21 @@
         "Query Profile Column Descriptions": {
             "breadcrumbs": [
                 {
+                    "title": "Performance Tuning Reference", 
+                    "url": "/docs/performance-tuning-reference/"
+                }, 
+                {
                     "title": "Performance Tuning", 
                     "url": "/docs/performance-tuning/"
                 }
             ], 
             "children": [], 
-            "next_title": "Log and Debug", 
-            "next_url": "/docs/log-and-debug/", 
-            "parent": "Performance Tuning", 
-            "previous_title": "Query Profiles", 
-            "previous_url": "/docs/query-profiles/", 
-            "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
+            "next_title": "Physical Operators", 
+            "next_url": "/docs/physical-operators/", 
+            "parent": "Performance Tuning Reference", 
+            "previous_title": "Performance Tuning Reference", 
+            "previous_url": "/docs/performance-tuning-reference/", 
+            "relative_path": "_docs/performance-tuning/performance-tuning-reference/010-query-profile-tables.md", 
             "title": "Query Profile Column Descriptions", 
             "url": "/docs/query-profile-column-descriptions/"
         }, 
@@ -6190,8 +6318,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Profile Column Descriptions", 
-            "next_url": "/docs/query-profile-column-descriptions/", 
+            "next_title": "Performance Tuning Reference", 
+            "next_url": "/docs/performance-tuning-reference/", 
             "parent": "Identifying Performance Issues", 
             "previous_title": "Query Plans", 
             "previous_url": "/docs/query-plans/", 
@@ -6935,8 +7063,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "", 
-            "next_url": "", 
+            "next_title": "Query Audit Logging", 
+            "next_url": "/docs/query-audit-logging/", 
             "parent": "Log and Debug", 
             "previous_title": "Modify logback.xml", 
             "previous_url": "/docs/modify-logback-xml/", 
@@ -12612,8 +12740,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Profile Column Descriptions", 
-                            "next_url": "/docs/query-profile-column-descriptions/", 
+                            "next_title": "Performance Tuning Reference", 
+                            "next_url": "/docs/performance-tuning-reference/", 
                             "parent": "Identifying Performance Issues", 
                             "previous_title": "Query Plans", 
                             "previous_url": "/docs/query-plans/", 
@@ -12638,15 +12766,58 @@
                             "url": "/docs/performance-tuning/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Log and Debug", 
-                    "next_url": "/docs/log-and-debug/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Performance Tuning Reference", 
+                                    "url": "/docs/performance-tuning-reference/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Physical Operators", 
+                            "next_url": "/docs/physical-operators/", 
+                            "parent": "Performance Tuning Reference", 
+                            "previous_title": "Performance Tuning Reference", 
+                            "previous_url": "/docs/performance-tuning-reference/", 
+                            "relative_path": "_docs/performance-tuning/performance-tuning-reference/010-query-profile-tables.md", 
+                            "title": "Query Profile Column Descriptions", 
+                            "url": "/docs/query-profile-column-descriptions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Performance Tuning Reference", 
+                                    "url": "/docs/performance-tuning-reference/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Log and Debug", 
+                            "next_url": "/docs/log-and-debug/", 
+                            "parent": "Performance Tuning Reference", 
+                            "previous_title": "Query Profile Column Descriptions", 
+                            "previous_url": "/docs/query-profile-column-descriptions/", 
+                            "relative_path": "_docs/performance-tuning/performance-tuning-reference/020-physical-operators.md", 
+                            "title": "Physical Operators", 
+                            "url": "/docs/physical-operators/"
+                        }
+                    ], 
+                    "next_title": "Query Profile Column Descriptions", 
+                    "next_url": "/docs/query-profile-column-descriptions/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Query Profiles", 
                     "previous_url": "/docs/query-profiles/", 
-                    "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
-                    "title": "Query Profile Column Descriptions", 
-                    "url": "/docs/query-profile-column-descriptions/"
+                    "relative_path": "_docs/performance-tuning/060-performance-tuning-reference.md", 
+                    "title": "Performance Tuning Reference", 
+                    "url": "/docs/performance-tuning-reference/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -12660,12 +12831,81 @@
         }, 
         {
             "breadcrumbs": [], 
-            "children": [], 
-            "next_title": "Query Audit Logging", 
-            "next_url": "/docs/query-audit-logging/", 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Error Messages", 
+                    "next_url": "/docs/error-messages/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug", 
+                    "previous_url": "/docs/log-and-debug/", 
+                    "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
+                    "title": "Log and Debug Introduction", 
+                    "url": "/docs/log-and-debug-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Modify logback.xml", 
+                    "next_url": "/docs/modify-logback-xml/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Log and Debug Introduction", 
+                    "previous_url": "/docs/log-and-debug-introduction/", 
+                    "relative_path": "_docs/log-and-debug/002-error-messages.md", 
+                    "title": "Error Messages", 
+                    "url": "/docs/error-messages/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Review the Java Stack Trace", 
+                    "next_url": "/docs/review-the-java-stack-trace/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Error Messages", 
+                    "previous_url": "/docs/error-messages/", 
+                    "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
+                    "title": "Modify logback.xml", 
+                    "url": "/docs/modify-logback-xml/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Log and Debug", 
+                            "url": "/docs/log-and-debug/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Audit Logging", 
+                    "next_url": "/docs/query-audit-logging/", 
+                    "parent": "Log and Debug", 
+                    "previous_title": "Modify logback.xml", 
+                    "previous_url": "/docs/modify-logback-xml/", 
+                    "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
+                    "title": "Review the Java Stack Trace", 
+                    "url": "/docs/review-the-java-stack-trace/"
+                }
+            ], 
+            "next_title": "Log and Debug Introduction", 
+            "next_url": "/docs/log-and-debug-introduction/", 
             "parent": "", 
-            "previous_title": "Query Profile Column Descriptions", 
-            "previous_url": "/docs/query-profile-column-descriptions/", 
+            "previous_title": "Physical Operators", 
+            "previous_url": "/docs/physical-operators/", 
             "relative_path": "_docs/073-log-and-debug.md", 
             "title": "Log and Debug", 
             "url": "/docs/log-and-debug/"
@@ -12694,8 +12934,8 @@
             "next_title": "Getting Query Information", 
             "next_url": "/docs/getting-query-information/", 
             "parent": "", 
-            "previous_title": "Log and Debug", 
-            "previous_url": "/docs/log-and-debug/", 
+            "previous_title": "Review the Java Stack Trace", 
+            "previous_url": "/docs/review-the-java-stack-trace/", 
             "relative_path": "_docs/074-query-audit-logging.md", 
             "title": "Query Audit Logging", 
             "url": "/docs/query-audit-logging/"
@@ -14511,95 +14751,14 @@
         {
             "breadcrumbs": [], 
             "children": [], 
-            "next_title": "Log and Debug", 
-            "next_url": "/docs/log-and-debug/", 
+            "next_title": "", 
+            "next_url": "", 
             "parent": "", 
             "previous_title": "2014 Q1 Drill Report", 
             "previous_url": "/docs/2014-q1-drill-report/", 
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
-        }, 
-        {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Log and Debug", 
-                            "url": "/docs/log-and-debug/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Error Messages", 
-                    "next_url": "/docs/error-messages/", 
-                    "parent": "Log and Debug", 
-                    "previous_title": "Log and Debug", 
-                    "previous_url": "/docs/log-and-debug/", 
-                    "relative_path": "_docs/log-and-debug/001-log-and-debug-introduction.md", 
-                    "title": "Log and Debug Introduction", 
-                    "url": "/docs/log-and-debug-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Log and Debug", 
-                            "url": "/docs/log-and-debug/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Modify logback.xml", 
-                    "next_url": "/docs/modify-logback-xml/", 
-                    "parent": "Log and Debug", 
-                    "previous_title": "Log and Debug Introduction", 
-                    "previous_url": "/docs/log-and-debug-introduction/", 
-                    "relative_path": "_docs/log-and-debug/002-error-messages.md", 
-                    "title": "Error Messages", 
-                    "url": "/docs/error-messages/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Log and Debug", 
-                            "url": "/docs/log-and-debug/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Review the Java Stack Trace", 
-                    "next_url": "/docs/review-the-java-stack-trace/", 
-                    "parent": "Log and Debug", 
-                    "previous_title": "Error Messages", 
-                    "previous_url": "/docs/error-messages/", 
-                    "relative_path": "_docs/log-and-debug/003-modify-logback.xml.md", 
-                    "title": "Modify logback.xml", 
-                    "url": "/docs/modify-logback-xml/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Log and Debug", 
-                            "url": "/docs/log-and-debug/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "", 
-                    "next_url": "", 
-                    "parent": "Log and Debug", 
-                    "previous_title": "Modify logback.xml", 
-                    "previous_url": "/docs/modify-logback-xml/", 
-                    "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
-                    "title": "Review the Java Stack Trace", 
-                    "url": "/docs/review-the-java-stack-trace/"
-                }
-            ], 
-            "next_title": "Log and Debug Introduction", 
-            "next_url": "/docs/log-and-debug-introduction/", 
-            "parent": "", 
-            "previous_title": "Project Bylaws", 
-            "previous_url": "/docs/project-bylaws/", 
-            "relative_path": "_docs/sql-reference/sql-functions/073-log-and-debug.md", 
-            "title": "Log and Debug", 
-            "url": "/docs/log-and-debug/"
         }
     ]
 }

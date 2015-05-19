@@ -1,6 +1,6 @@
 ---
 title: "Query Profile Column Descriptions"
-parent: "Performance Tuning"
+parent: "Performance Tuning Reference"
 --- 
 
 The following tables provide descriptions listed in each of the tables for a query profile.  

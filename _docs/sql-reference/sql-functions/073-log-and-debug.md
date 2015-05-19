@@ -1,3 +1,0 @@
----
-title: "Log and Debug"
----
