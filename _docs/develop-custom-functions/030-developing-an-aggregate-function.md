@@ -34,7 +34,7 @@ Complete the following steps to create an aggregate function:
 	**Example**
 
 		@Override
-		public void setup(RecordBatch b) {
+		public void setup() {
 		  value = new BitHolder(); 
 		  value.value = 0;
 		}
