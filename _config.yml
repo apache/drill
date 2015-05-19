@@ -1,5 +1,5 @@
-title: Apache Drill - Self-Service Data Exploration
-title_suffix: Apache Drill # This is appended to every page title on the site 
+title: Apache Drill - Schema-free SQL Query Engine for Hadoop, NoSQL and Cloud Storage
+title_suffix: Apache Drill # This is appended to every page title on the site
 
 email: tshiran@apache.org
 permalink: pretty
@@ -20,7 +20,7 @@ collections:
   docs:
     output: true
     permalink: /docs/:title/
-    
+
 defaults:
   -
     scope:
