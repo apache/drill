@@ -91,17 +91,7 @@ The `dfs` definition includes format definitions.
 
 ### maprdb
 
-The maprdb storage plugin is a configuration for MapR-DB in the sandbox. You use this plugin in the sandbox to query HBase as well as MapR-DB data because the sandbox does not include HBase services. In addition to the following brief example, see the [Registering HBase]({{ site.baseurl }}/docs/hbase-storage-plugin) for more
-information on how to configure Drill to query HBase.
-
-    {
-      "type": "hbase",
-      "config": {
-        "hbase.table.namespace.mappings": "*:/tables"
-      },
-      "size.calculator.enabled": false,
-      "enabled": true
-    }
+The maprdb format is a configuration for MapR-DB in the sandbox. You use this format in the sandbox to query MapR-DB/HBase tables. 
 
 ### hive
 

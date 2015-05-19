@@ -30,9 +30,5 @@ To register HBase with Drill, complete the following steps:
 
   4. Click **Enable**.
 
-The hbase.zookeeper.property.clientPort shown here and in the default hbase storage plugin is 2181. In a MapR cluster, the port is 5181; however, in a MapR cluster, use the maprdb storage plugin format instead of the hbase storage plugin. 
-
 After you configure a storage plugin instance for the HBase, you can
 issue Drill queries against it.
-
-In the Drill sandbox, use the `dfs` storage plugin and the [MapR-DB format]({{ site.baseurl }}/docs/mapr-db-format/) to query HBase files because the sandbox does not include HBase services.

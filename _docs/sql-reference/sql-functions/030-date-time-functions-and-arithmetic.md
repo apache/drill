@@ -16,7 +16,7 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP 
 [DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| DATE, TIMESTAMP  
 [DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| DOUBLE  
-[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMOP     
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMP     
 [LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIME  
 [LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
@@ -67,9 +67,12 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
     DATE_ADD(keyword literal, interval expr)
 
+    DATE_ADD(column <date type>)
+
 *date* is the keyword date.  
 *literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
 *integer* is a number of days to add to the date/time.  
+*column* is a date data in a data source.
 
 
 *keyword* is the word date, time, or timestamp.  
@@ -78,6 +81,10 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 *expr* is an interval expression.  
 
 ### DATE_ADD Examples
+
+Add two days to the birthday column in the genealogy database.
+
+    SELECT DATE_ADD (CAST (birthdays AS date), 2) from genealogy.json;
 
 Add two days to today's date May 15, 2015.
 
@@ -170,16 +177,6 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
     +------------+
     1 row selected (0.088 seconds)
 
-Find the hour part of the timestamp for April 2, 2015 23:25:43. Use Unix Epoch timestamp in milliseconds, which is 1428017143000 in UTC.
-
-    SELECT DATE_PART('hour', 1428017143000) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 23         |
-    +------------+
-    1 row selected (0.07 seconds)
-
 Return the day part of the one year, 2 months, 10 days interval.
 
     SELECT DATE_PART('day', '1:2:10') FROM sys.version;
@@ -199,9 +196,12 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
     DATE_SUB(keyword literal, interval expr)  
 
+    DATE_ADD(column <date type>)  
+
 *date* is the keyword date.  
 *literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
 *integer* is a number of days to subtract from the date/time.  
+*column* is date data in a data source.
 
 
 *keyword* is the word date, time, or timestamp.  
@@ -365,7 +365,7 @@ Returns a component of a timestamp, time, date, or interval.
 
     component FROM (timestamp | time | date | interval)
 
-*component* is supported time unit.
+*component* is one of the following time units: year, month, day, hour, minute, second.
 
 ### EXTRACT Usage Notes
 

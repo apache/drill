@@ -12,9 +12,7 @@ numbers, the query fails. Defining a default input format can prevent queries
 from failing in situations where Drill cannot determine the file type.
 
 If you incorrectly define the file type in a workspace and Drill cannot
-determine the file type, the query fails. For example, if the directory for
-which you have defined a workspace contains JSON files and you defined the
-default input format as CSV, the query fails against the workspace.
+determine the file type, the query fails. For example, if JSON files do not have a `.json` extension, the query fails.
 
 You can define one default input format per workspace. If you do not define a
 default input format, and Drill cannot detect the file format, the query

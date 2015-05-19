@@ -39,6 +39,17 @@ To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to
     +-------+--------------------------------------------+
     1 row selected (0.08 seconds)
 
+## Composite Types
+
+Drill supports the following composite types:
+
+* Array
+  Array element references, for example `a[1]` is the primary type-specific operation.
+* Map
+  Drill supports constructs in the form `m['k']`
+
+For more information about array and map types, see the section, ["Handling Different Data Types"]({{site.baseurl}}/docs/handling-different-data-types/#handling-json-and-parquet-data), [KVGEN]({{site.baseurl}}/docs/kvgen/), and [FLATTEN]({{site.baseurl}}/docs/flatten/).
+
 ## Casting and Converting Data Types
 
 In Drill, you cast or convert data to the required type for moving data from one data source to another or to make the data readable.

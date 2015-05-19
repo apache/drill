@@ -56,7 +56,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"workspaces"</td>
     <td>null<br>"logs"</td>
     <td>no</td>
-    <td>One or more unique workspace names, enclosed in double quotation marks. If a workspace is defined more than once, the latest one overrides the previous ones. Not used with local or distributed file systems.</td>
+    <td>One or more unique workspace names, enclosed in double quotation marks. If a workspace is defined more than once, the latest one overrides the previous ones. Used with local or distributed file systems.</td>
   </tr>
   <tr>
     <td>"workspaces". . . "location"</td>
@@ -86,7 +86,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"formats" . . . "type"</td>
     <td>"text"<br>"parquet"<br>"json"<br>"maprdb" *</td>
     <td>yes</td>
-    <td>The type of the format specified. For example, you can define two formats, csv and psv, as type "Text", but having different delimiters. Drill enables the maprdb plugin if you define the maprdb type.</td>
+    <td>The type of the format specified. For example, you can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
   <tr>
     <td>formats . . . "extensions"</td>
@@ -105,8 +105,6 @@ The following table describes the attributes you configure for storage plugins i
 \* Pertains only to distributed drill installations using the mapr-drill package.
 
 The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
-
-Although Drill can work with different file types in the same directory, restricting a Drill workspace to one file type prevents confusion.
 
 ## Case-sensitive Names
 As previously mentioned, workspace and storage plugin names are case-sensitive. For example, the following query uses a storage plugin name `dfs` and a workspace name `clicks`. When you refer to `dfs.clicks` in an SQL statement, use the defined case:
@@ -130,6 +128,11 @@ For example, this command creates a plugin named myplugin for reading files of a
     curl -X POST -/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
 
 ## Bootstrapping a Storage Plugin
+
+Bootstrapping a storage plugin works only when the first drillbit in the cluster first starts up. After startup, you have to use the REST API or Drill Web UI. If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
+
 If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
+
+If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not install, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.
 
 If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not install, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.

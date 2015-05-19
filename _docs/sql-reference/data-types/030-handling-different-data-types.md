@@ -65,7 +65,7 @@ To prevent Drill from attempting to read such data, set `store.json.read_numbers
 
 FLOAT and DOUBLE yield approximate results. These are variable-precision numeric types. Drill does not cast/convert all values precisely to the internal format, but instead stores approximations. Slight differences can occur in the value stored and retrieved. The following guidelines are recommended:
 
-* For conversions involving monetary calculations, for example, that require precise results use the DECIMAL type instead of FLOAT or DOUBLE. In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. [Enable the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type)) if performance is not an issue.
+* For conversions involving monetary calculations, for example, that require precise results use the DECIMAL type instead of FLOAT or DOUBLE. In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. 
 * For complex calculations or mission-critical applications, especially those involving infinity and underflow situations, carefully consider the limitations of type casting that involves FLOAT or DOUBLE.
 * Equality comparisons between floating-point values can produce unexpected results.
 

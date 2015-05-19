@@ -26,12 +26,6 @@ The target data type, such as INTEGER or DATE, to which to cast the expression
 
 ### CAST Usage Notes
 
-If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause. For example:
-
-    SELECT c_row, CAST(c_int AS DECIMAL(28,8)) FROM mydata WHERE CAST(c_int AS DECIMAL(28,8)) > -3.0;
-
-{% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
-
 Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.  
 
 Refer to the following tables for information about the data types to use for casting:
@@ -45,7 +39,7 @@ Refer to the following tables for information about the data types to use for ca
 The following examples show how to cast a string to a number, a number to a string, and one type of number to another.
 
 ### Casting a Character String to a Number
-You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DECIMAL type, and then to an INT. 
+You cannot cast a character string that includes a decimal point to an INT or BIGINT. For example, if you have "1200.50" in a JSON file, attempting to select and cast the string to an INT fails. As a workaround, cast to a FLOAT or DOUBLE type, and then cast to an INT, assuming you want to lose digits to the right of the decimal point. 
 
 {% include startnote.html %}In this release, Drill disables the DECIMAL data type. To enable, set the planner.enable_decimal_data_type option to true.{% include endnote.html %}
 
@@ -210,7 +204,7 @@ This example uses a map as input to return a repeated list vector (JSON).
     +--------------------+
     1 row selected (0.141 seconds)
 
-### Set Up a Storage Plugin for Working with HBase Files
+### Set Up a Storage Plugin for Working with HBase
 
 This example assumes you are working in the Drill Sandbox. The `maprdb` storage plugin definition is limited, so you modify the `dfs` storage plugin slightly and use that plugin for this example.
 
@@ -435,6 +429,8 @@ Use the following Joda format specifiers for date/time conversions:
 | Z      | time zone offset/id                              | zone         | -0800; -08:00; America/Los_Angeles |
 | '      | single quotation mark, escape for text delimiter | literal      |                                    |  
 
+{% include startnote.html %}The Joda format specifiers are case-sensitive.{% include endnote.html %}
+
 For more information about specifying a format, refer to one of the following format specifier documents:
 
 * [Java DecimalFormat class](http://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html) format specifiers 
@@ -458,23 +454,24 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
 
 ### TO_CHAR Examples
 
-Convert a FLOAT to a character string.
+Convert a FLOAT to a character string. The format specifications use a comma to separate thousands and round-off to three decimal places.
 
-    SELECT TO_CHAR(125.789383, '#,###.###') FROM sys.version;
+    SELECT TO_CHAR(1256.789383, '#,###.###') FROM sys.version;
     +------------+
     |   EXPR$0   |
     +------------+
-    | 125.789    |
+    | 1,256.789  |
     +------------+
+    1 row selected (1.767 seconds)
 
 Convert an integer to a character string.
 
-    SELECT TO_CHAR(125, '#,###.###') FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 125        |
-    +------------+
+    SELECT TO_CHAR(125677.4567, '#,###.###') FROM sys.version;
+    +--------------+
+    |    EXPR$0    |
+    +--------------+
+    | 125,677.457  |
+    +--------------+
     1 row selected (0.083 seconds)
 
 Convert a date to a character string.
@@ -520,7 +517,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
 ### TO_DATE Usage Notes
-Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
+Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
 
 To compare dates in the WHERE clause, use TO_DATE on the value in the date column and in the comparison value. For example:
 
@@ -650,7 +647,7 @@ Converts a character string to a time.
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not milliseconds. 
 
 ## TO_TIME Usage Notes
-Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html).
+Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html).
 
 ### TO_TIME Examples
 
@@ -683,7 +680,7 @@ Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
 ### TO_TIMESTAMP Usage Notes
-Specify a format using patterns defined in [Java DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
+Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
 
 ### TO_TIMESTAMP Examples
 

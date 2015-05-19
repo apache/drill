@@ -2,8 +2,8 @@
 title: "MapR-DB Format"
 parent: "Connect a Data Source"
 ---
-Drill includes a `maprdb` format plugin for MapR-DB that is defined within the
-default `dfs` storage plugin instance when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format plugin improves the
+Drill includes a `maprdb` format for MapR-DB that is defined within the
+default `dfs` storage plugin instance when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format improves the
 estimated number of rows that Drill uses to plan a query. It also enables you
 to query tables like you would query files in a file system because MapR-DB
 and MapR-FS share the same namespace.
@@ -19,11 +19,6 @@ query.
 **Example**
 
     SELECT * FROM mfs.`/users/max/mytable`;
-
-Drill stores the `maprdb` format plugin in the `dfs` storage plugin instance,
-which you can view in the Drill Web UI. You can access the Web UI at
-[http://localhost:8047/storage](http://localhost:8047/storage). Click **Update** next to the `dfs` instance
-in the Web UI to view the configuration for the `dfs` instance.
 
 The following image shows a portion of the configuration with the `maprdb`
 format plugin for the `dfs` instance:
