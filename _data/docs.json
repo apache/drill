@@ -3239,8 +3239,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Log and Debug", 
-                    "next_url": "/docs/log-and-debug/", 
+                    "next_title": "Query Profile Column Descriptions", 
+                    "next_url": "/docs/query-profile-column-descriptions/", 
                     "parent": "Identifying Performance Issues", 
                     "previous_title": "Query Plans", 
                     "previous_url": "/docs/query-plans/", 
@@ -5323,8 +5323,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Log and Debug", 
-                            "next_url": "/docs/log-and-debug/", 
+                            "next_title": "Query Profile Column Descriptions", 
+                            "next_url": "/docs/query-profile-column-descriptions/", 
                             "parent": "Identifying Performance Issues", 
                             "previous_title": "Query Plans", 
                             "previous_url": "/docs/query-plans/", 
@@ -5341,6 +5341,23 @@
                     "relative_path": "_docs/performance-tuning/050-identifying-performance-issues.md", 
                     "title": "Identifying Performance Issues", 
                     "url": "/docs/identifying-performance-issues/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Profiles", 
+                    "previous_url": "/docs/query-profiles/", 
+                    "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
+                    "title": "Query Profile Column Descriptions", 
+                    "url": "/docs/query-profile-column-descriptions/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -6144,6 +6161,23 @@
             "title": "Query Plans and Tuning Introduction", 
             "url": "/docs/query-plans-and-tuning-introduction/"
         }, 
+        "Query Profile Column Descriptions": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Log and Debug", 
+            "next_url": "/docs/log-and-debug/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Query Profiles", 
+            "previous_url": "/docs/query-profiles/", 
+            "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
+            "title": "Query Profile Column Descriptions", 
+            "url": "/docs/query-profile-column-descriptions/"
+        }, 
         "Query Profiles": {
             "breadcrumbs": [
                 {
@@ -6156,8 +6190,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Log and Debug", 
-            "next_url": "/docs/log-and-debug/", 
+            "next_title": "Query Profile Column Descriptions", 
+            "next_url": "/docs/query-profile-column-descriptions/", 
             "parent": "Identifying Performance Issues", 
             "previous_title": "Query Plans", 
             "previous_url": "/docs/query-plans/", 
@@ -12578,8 +12612,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Log and Debug", 
-                            "next_url": "/docs/log-and-debug/", 
+                            "next_title": "Query Profile Column Descriptions", 
+                            "next_url": "/docs/query-profile-column-descriptions/", 
                             "parent": "Identifying Performance Issues", 
                             "previous_title": "Query Plans", 
                             "previous_url": "/docs/query-plans/", 
@@ -12596,6 +12630,23 @@
                     "relative_path": "_docs/performance-tuning/050-identifying-performance-issues.md", 
                     "title": "Identifying Performance Issues", 
                     "url": "/docs/identifying-performance-issues/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Log and Debug", 
+                    "next_url": "/docs/log-and-debug/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Query Profiles", 
+                    "previous_url": "/docs/query-profiles/", 
+                    "relative_path": "_docs/performance-tuning/060-query-profile-tables.md", 
+                    "title": "Query Profile Column Descriptions", 
+                    "url": "/docs/query-profile-column-descriptions/"
                 }
             ], 
             "next_title": "Performance Tuning Introduction", 
@@ -12613,8 +12664,8 @@
             "next_title": "Query Audit Logging", 
             "next_url": "/docs/query-audit-logging/", 
             "parent": "", 
-            "previous_title": "Query Profiles", 
-            "previous_url": "/docs/query-profiles/", 
+            "previous_title": "Query Profile Column Descriptions", 
+            "previous_url": "/docs/query-profile-column-descriptions/", 
             "relative_path": "_docs/073-log-and-debug.md", 
             "title": "Log and Debug", 
             "url": "/docs/log-and-debug/"
