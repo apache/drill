@@ -21,12 +21,10 @@ name. Names are case-sensitive.
 Click Update to reconfigure an existing, enabled storage plugin.
 
 ## Storage Plugin Attributes
-The following diagram of the dfs storage plugin briefly describes options you configure in a typical storage plugin configuration:
-
+The following graphic shows key attributes of a typical dfs storage plugin:  
 ![dfs plugin]({{ site.baseurl }}/docs/img/connect-plugin.png)
-
+## List of Attributes and Definitions
 The following table describes the attributes you configure for storage plugins. 
-
 <table>
   <tr>
     <th>Attribute</th>
@@ -56,7 +54,7 @@ The following table describes the attributes you configure for storage plugins.
     <td>"workspaces"</td>
     <td>null<br>"logs"</td>
     <td>no</td>
-    <td>One or more unique workspace names. If a workspace is defined more than once, the latest one overrides the previous ones. Used with local or distributed file systems.</td>
+    <td>One or more unique workspace names. If a workspace name is used more than once, only the last definition is effective. </td>
   </tr>
   <tr>
     <td>"workspaces". . . "location"</td>
@@ -116,7 +114,7 @@ The following table describes the attributes you configure for storage plugins.
     <td>"formats" . . . "escape"</td>
     <td>"`"</td>
     <td>no</td>
-    <td>A single character that escapes the `quote` character.</td>
+    <td>A single character that escapes the quote character.</td>
   </tr>
   <tr>
     <td>"formats" . . . "comment"</td>
