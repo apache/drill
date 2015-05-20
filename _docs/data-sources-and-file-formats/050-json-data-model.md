@@ -56,7 +56,7 @@ When you set this option, Drill reads all numbers from the JSON files as DOUBLE.
 * Cast JSON values to [SQL types]({{ site.baseurl }}/docs/json-data-model/#data-type-mapping), such as BIGINT, FLOAT, and INTEGER.
 * Cast JSON strings to [Drill Date/Time Data Type Formats]({{ site.baseurl }}/docs/date-time-and-timestamp).
 
-Drill uses [map and array data types]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) internally for reading complex and nested data structures from JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql/#create-a-view-on-a-mapr-db-table). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
+Drill uses [map and array data types]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) internally for reading complex and nested data structures from data sources such as JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql/#create-a-view-on-a-mapr-db-table). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
 
 ## Reading JSON
 To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/file-system-storage-plugin/) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
