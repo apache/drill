@@ -25,7 +25,7 @@ The following diagram of the dfs storage plugin briefly describes options you co
 
 ![dfs plugin]({{ site.baseurl }}/docs/img/connect-plugin.png)
 
-The following table describes the attributes you configure for storage plugins in more detail than the diagram. 
+The following table describes the attributes you configure for storage plugins. 
 
 <table>
   <tr>
@@ -38,71 +38,195 @@ The following table describes the attributes you configure for storage plugins i
     <td>"type"</td>
     <td>"file"<br>"hbase"<br>"hive"<br>"mongo"</td>
     <td>yes</td>
-    <td>The storage plugin type name supported by Drill.</td>
+    <td>A valid storage plugin type name.</td>
   </tr>
   <tr>
     <td>"enabled"</td>
     <td>true<br>false</td>
     <td>yes</td>
-    <td>The state of the storage plugin.</td>
+    <td>State of the storage plugin.</td>
   </tr>
   <tr>
     <td>"connection"</td>
     <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"maprfs:///"</td>
     <td>implementation-dependent</td>
-    <td>The type of distributed file system. Drill can work with any distributed system, such as HDFS and S3, or files in your file system.</td>
+    <td>Type of distributed file system, such as HDFS, Amazon S3, or files in your file system.</td>
   </tr>
   <tr>
     <td>"workspaces"</td>
     <td>null<br>"logs"</td>
     <td>no</td>
-    <td>One or more unique workspace names, enclosed in double quotation marks. If a workspace is defined more than once, the latest one overrides the previous ones. Used with local or distributed file systems.</td>
+    <td>One or more unique workspace names. If a workspace is defined more than once, the latest one overrides the previous ones. Used with local or distributed file systems.</td>
   </tr>
   <tr>
     <td>"workspaces". . . "location"</td>
     <td>"location": "/"<br>"location": "/tmp"</td>
     <td>no</td>
-    <td>The path to a directory on the file system.</td>
+    <td>Path to a directory on the file system.</td>
   </tr>
   <tr>
     <td>"workspaces". . . "writable"</td>
     <td>true<br>false</td>
     <td>no</td>
-    <td>One or more unique workspace names, enclosed in double quotation marks. If a workspace is defined more than once, the latest one overrides the previous ones. Not used with local or distributed file systems.</td>
+    <td>One or more unique workspace names. If defined more than once, the last workspace name overrides the others.</td>
   </tr>
   <tr>
     <td>"workspaces". . . "defaultInputFormat"</td>
     <td>null<br>"parquet"<br>"csv"<br>"json"</td>
     <td>no</td>
-    <td>The format of data Drill reads by default, regardless of extension. Parquet is the default.</td>
+    <td>Format for reading data, regardless of extension. Default = Parquet.</td>
   </tr>
   <tr>
     <td>"formats"</td>
     <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb" *</td>
     <td>yes</td>
-    <td>One or more file formats of data Drill can read. Drill can implicitly detect some file formats based on the file extension or the first few bits of data within the file, but you need to configure an option for others.</td>
+    <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file, others require configuration.</td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
     <td>"text"<br>"parquet"<br>"json"<br>"maprdb" *</td>
     <td>yes</td>
-    <td>The type of the format specified. For example, you can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
+    <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
   <tr>
     <td>formats . . . "extensions"</td>
     <td>["csv"]</td>
     <td>format-dependent</td>
-    <td>The extensions of the files that Drill can read.</td>
+    <td>Extensions of the files that Drill can read.</td>
   </tr>
   <tr>
     <td>"formats" . . . "delimiter"</td>
     <td>"\t"<br>","</td>
     <td>format-dependent</td>
-    <td>The delimiter used to separate columns in text files such as CSV. Specify a non-printable delimiter in the storage plugin config by using the form \uXXXX, where XXXX is the four numeral hex ascii code for the character.</td>
+    <td>One or more characters that separate records in a delimited text file, such as CSV. Use a 4-digit hex ascii code syntax \uXXXX for a non-printable delimiter. </td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "fieldDelimiter"</td>
+    <td>","</td>
+    <td>no</td>
+    <td>A single character that separates each value in a column of a delimited text file.</td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "quote"</td>
+    <td>"""</td>
+    <td>no</td>
+    <td>A single character that starts/ends a value in a delimited text file.</td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "escape"</td>
+    <td>"`"</td>
+    <td>no</td>
+    <td>A single character that escapes the `quote` character.</td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "comment"</td>
+    <td>"#"</td>
+    <td>no</td>
+    <td>The line decoration that starts a comment line in the delimited text file.</td>
+  </tr>
+  <tr>
+    <td>"formats" . . . "skipFirstLine"</td>
+    <td>true</td>
+    <td>no</td>
+    <td>To include or omits the header when reading a delimited text file.
+    </td>
   </tr>
 </table>
 
-\* Pertains only to distributed drill installations using the mapr-drill package.
+\* Pertains only to distributed drill installations using the mapr-drill package.  
+
+## Using the Formats
+
+You can use the following attributes when the `sys.options` property setting `exec.storage.enable_new_text_reader` is true (the default):
+
+* comment  
+* escape  
+* fieldDeliimiter  
+* quote  
+* skipFirstLine
+
+The "formats" apply to all workspaces defined in a storage plugin. A typical use case defines separate storage plugins for different root directories to query the files stored below the directory. An alternative use case defines multiple formats within the same storage plugin and names target files using different extensions to match the formats.
+
+The following example of a storage plugin for reading CSV files with the new text reader includes two formats for reading files having either a `csv` or `csv2` extension. The text reader does include the first line of column names in the queries of `.csv` files but does not include it in queries of `.csv2` files. 
+
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv"
+      ],  
+      "delimiter": "," 
+    },  
+    "csv_with_header": {
+      "type": "text",
+      "extensions": [
+        "csv2"
+      ],  
+      "comment": "&",
+      "skipFirstLine": true,
+      "delimiter": "," 
+    },  
+
+### How Formats Affect Output
+
+The following self-explanatory examples show how the output of queries look using different formats:
+
+    SELECT * FROM dfs.`/tmp/csv_no_header.csv`;
+    +------------------------+
+    |        columns         |
+    +------------------------+
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    +------------------------+
+    7 rows selected (0.112 seconds)
+
+    SELECT * FROM dfs.`/tmp/csv_with_comments.csv2`;
+    +------------------------+
+    |        columns         |
+    +------------------------+
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    +------------------------+
+    7 rows selected (0.111 seconds)
+
+    SELECT * FROM dfs.`/tmp/csv_with_escape.csv`;
+    +------------------------------------------------------------------------+
+    |                                columns                                 |
+    +------------------------------------------------------------------------+
+    | ["hello","1","2","3 \" double quote is the default escape character"]  |
+    | ["hello","1","2","3"]                                                  |
+    | ["hello","1","2","3"]                                                  |
+    | ["hello","1","2","3"]                                                  |
+    | ["hello","1","2","3"]                                                  |
+    | ["hello","1","2","3"]                                                  |
+    | ["hello","1","2","3"]                                                  |
+    +------------------------------------------------------------------------+
+    7 rows selected (0.104 seconds)
+
+    SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
+    +------------------------+
+    |        columns         |
+    +------------------------+
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    | ["hello","1","2","3"]  |
+    +------------------------+
+
+
+## Using Other Attributes
 
 The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
 
@@ -113,7 +237,7 @@ As previously mentioned, workspace and storage plugin names are case-sensitive. 
 
 For example, using uppercase letters in the query after defining the storage plugin and workspace names using lowercase letters does not work. 
 
-## REST API
+## Storage Plugin REST API
 
 Drill provides a REST API that you can use to create a storage plugin. Use an HTTP POST and pass two properties:
 
