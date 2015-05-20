@@ -8,7 +8,7 @@ If you experience performance issues in Drill, you can typically identify the so
 
 Drill has an optimizer and a parallelizer that work together to plan a query. Drill creates logical, physical, and execution plans based on the available statistics for an associated set of files or data sources. The number of running Drill nodes and configured runtime settings contribute to how Drill plans and executes a query.
  
-You can use [EXPLAIN commands]({{ site.baseurl }}/docs/explain-commands/) to view the logical and physical plans for a query, however you cannot view the execution plan. To see how Drill executed a query, you can view the query profile in the Drill Web UI at <drill_node_ip_address>:8047.
+You can use [EXPLAIN commands]({{ site.baseurl }}/docs/explain-commands/) to view the logical and physical plans for a query, however you cannot view the execution plan. To see how Drill executed a query, you can view the query profile in the Drill Web UI at `<drill_node_ip_address>:8047`.
 
 ### Logical Plan  
 
@@ -32,7 +32,7 @@ The physical plan shows the major fragments and specific operators with correlat
  
 The physical plan displays the IDs in the following format:
  
-<MajorFragmentID\> - <OperatorID\>
+`<MajorFragmentID> - <OperatorID>`
  
 For example, 00-02 where 00 is the MajorFragmentID and 02 is is the OperatorID.
  
@@ -64,9 +64,9 @@ You can test the performance of a physical plan that Drill generates, modify the
  
 To modify and re-submit a physical plan to Drill, complete the following steps:  
 
-1. Run EXPLAIN PLAN FOR <query\> to see the physical plan for your query.  
+1. Run EXPLAIN PLAN FOR `<query>` to see the physical plan for your query.  
 2. Copy the JSON output of the physical plan, and modify as needed.  
-3. Navigate to the Drill Web UI at <drill\_node\_ip_address\>:8047.  
+3. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047`.  
 4. Select **Query** in the menu bar.  
 ![]({{ site.baseurl }}/docs/img/submit_plan.png)  
 

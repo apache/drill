@@ -5,7 +5,7 @@ parent: "Identifying Performance Issues"
 
 A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. Drill creates a query profile from major, minor, operator, and input stream profiles. Each major fragment profile consists of a list of minor fragment profiles. Each minor fragment profile consists of a list of operator profiles. An operator profile consists of a list of input stream profiles. 
 
-You can view aggregate statistics across profile lists in the Profile tab of the Drill Web UI at <drill\_node\_ip_address\>:8047. You can modify and resubmit queries, or cancel queries. For debugging purposes, you can use profiles in conjunction with Drill logs. See Log and Debug.
+You can view aggregate statistics across profile lists in the Profile tab of the Drill Web UI at `<drill_node_ip_address>:8047`. You can modify and resubmit queries, or cancel queries. For debugging purposes, you can use profiles in conjunction with Drill logs. See Log and Debug.
  
 Metrics in a query profile are associated with a coordinate system of IDs. Drill uses a coordinate system comprised of query, fragment, and operator identifiers to track query execution activities and resources. Drill assigns a unique QueryID to each query received and then assigns IDs to each fragment and operator that executes the query.
  
@@ -19,7 +19,7 @@ Fragment and operator IDs:
 
 ## Viewing a Query Profile  
 
-When you select the Profiles tab in the Drill Web UI at <drill\_node_ip\_address\>:8047, you see a list of the last 100 queries than have run or that are currently running in the cluster.  
+When you select the Profiles tab in the Drill Web UI at `<drill_node_ip_address>:8047`, you see a list of the last 100 queries than have run or that are currently running in the cluster.  
 
 ![]({{ site.baseurl }}/docs/img/list_queries.png)
 
@@ -124,7 +124,7 @@ You may want to cancel a query if it hangs or causes performance bottlenecks. Yo
  
 To cancel a query from the Drill Web UI, complete the following steps:  
 
-1. Navigate to the Drill Web UI at <drill\_node_ip\_address\>:8047.
+1. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047`.
 The Drill node from which you access the Drill Web UI must have an active Drillbit running.
 2. Select Profiles in the toolbar.
 A list of running and completed queries appears.
