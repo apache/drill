@@ -21,7 +21,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-maprdb</artifactId>
@@ -50,7 +50,7 @@
     <dependency>
       <groupId>com.mapr.fs</groupId>
       <artifactId>mapr-hbase</artifactId>
-      <version>4.0.1.28318-mapr</version>
+      <version>4.1.0-mapr</version>
     </dependency>
 
     <!-- Test dependencies -->
@@ -79,7 +79,7 @@
   <repositories>
     <repository>
       <id>mapr-releases</id>
-        <url>http://maven.corp.maprtech.com/nexus/content/repositories/public</url>
+        <url>http://repository.mapr.com/nexus/content/repositories/releases</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
