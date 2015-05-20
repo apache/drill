@@ -17,24 +17,16 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.SQLException;
 
 
 public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
@@ -63,29 +55,25 @@ public class Drill2461IntervalsBreakInfoSchemaBugTest extends JdbcTestBase {
 
     // Create a view using an INTERVAL type:
     util = stmt.executeQuery( "USE dfs_test.tmp" );
-    assert util.next();
-    assert util.getBoolean( 1 )
-        : "Error setting schema to dfs_test.tmp: " + util.getString( 2 );
+    assertTrue( util.next() );
+    assertTrue( "Error setting schema to dfs_test.tmp: " + util.getString( 2 ), util.getBoolean( 1 ) );
     util = stmt.executeQuery(
         "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS "
       + "\n  SELECT CAST( NULL AS INTERVAL HOUR(4) TO MINUTE ) AS optINTERVAL_HM "
       + "\n  FROM INFORMATION_SCHEMA.CATALOGS "
       + "\n  LIMIT 1 " );
-    assert util.next();
-    assert util.getBoolean( 1 )
-        : "Error creating temporary test-columns view " + VIEW_NAME + ": "
-          + util.getString( 2 );
+    assertTrue( util.next() );
+    assertTrue( "Error creating temporary test-columns view " + VIEW_NAME + ": "
+          + util.getString( 2 ), util.getBoolean( 1 ) );
 
     // Test whether query INFORMATION_SCHEMA.COLUMNS works (doesn't crash):
     util = stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.COLUMNS" );
-    assert util.next();
+    assertTrue( util.next() );
 
     // Clean up the test view:
     util = connection.createStatement().executeQuery( "DROP VIEW " + VIEW_NAME );
-    assert util.next();
-    assert util.getBoolean( 1 )
-       : "Error dropping temporary test-columns view " + VIEW_NAME + ": "
-         + util.getString( 2 );
+    assertTrue( util.next() );
+    assertTrue( "Error dropping temporary test-columns view " + VIEW_NAME + ": "
+         + util.getString( 2 ), util.getBoolean( 1 ) );
   }
-
 }

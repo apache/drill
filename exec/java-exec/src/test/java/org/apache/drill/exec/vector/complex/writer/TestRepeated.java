@@ -39,22 +39,22 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 
 public class TestRepeated {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeated.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeated.class);
 
   private static BufferAllocator allocator;
 
   @BeforeClass
-  public static void setupAllocator(){
+  public static void setupAllocator() {
     allocator = new TopLevelAllocator();
   }
 
   @AfterClass
-  public static void destroyAllocator(){
+  public static void destroyAllocator() {
     allocator.close();
   }
 //
 //  @Test
-//  public void repeatedMap(){
+//  public void repeatedMap() {
 //
 //    /**
 //     * We're going to try to create an object that looks like:
@@ -105,14 +105,14 @@ public class TestRepeated {
 //    map.end();
 //
 //
-//    assert writer.ok();
+//    assertTrue(writer.ok());
 //
 //    System.out.println(v.getAccessor().getObject(0));
 //
 //  }
 
   @Test
-  public void listOfList() throws IOException{
+  public void listOfList() throws IOException {
     /**
      * We're going to try to create an object that looks like:
      *
@@ -130,21 +130,21 @@ public class TestRepeated {
      *
      */
 
-    MapVector v = new MapVector("", allocator, null);
-    ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
+    final MapVector v = new MapVector("", allocator, null);
+    final ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
     writer.allocate();
 
     {
-      MapWriter map = writer.rootAsMap();
-      ListWriter list = map.list("a");
+      final MapWriter map = writer.rootAsMap();
+      final ListWriter list = map.list("a");
       list.start();
 
-      ListWriter innerList = list.list();
-      IntWriter innerInt = innerList.integer();
+      final ListWriter innerList = list.list();
+      final IntWriter innerInt = innerList.integer();
 
       innerList.start();
 
-      IntHolder holder = new IntHolder();
+      final IntHolder holder = new IntHolder();
 
       holder.value = 1;
       innerInt.write(holder);
@@ -164,11 +164,11 @@ public class TestRepeated {
       innerList.end();
       list.end();
 
-      IntWriter numCol = map.integer("nums");
+      final IntWriter numCol = map.integer("nums");
       holder.value = 14;
       numCol.write(holder);
 
-      MapWriter repeatedMap = map.list("b").map();
+      final MapWriter repeatedMap = map.list("b").map();
       repeatedMap.start();
       holder.value = 1;
       repeatedMap.integer("c").write(holder);
@@ -177,7 +177,7 @@ public class TestRepeated {
       repeatedMap.start();
       holder.value = 2;
       repeatedMap.integer("c").write(holder);
-      BigIntHolder h = new BigIntHolder();
+      final BigIntHolder h = new BigIntHolder();
       h.value = 15;
       repeatedMap.bigInt("x").write(h);
       repeatedMap.end();
@@ -188,16 +188,16 @@ public class TestRepeated {
     {
       writer.setPosition(1);
 
-      MapWriter map = writer.rootAsMap();
-      ListWriter list = map.list("a");
+      final MapWriter map = writer.rootAsMap();
+      final ListWriter list = map.list("a");
       list.start();
 
-      ListWriter innerList = list.list();
-      IntWriter innerInt = innerList.integer();
+      final ListWriter innerList = list.list();
+      final IntWriter innerInt = innerList.integer();
 
       innerList.start();
 
-      IntHolder holder = new IntHolder();
+      final IntHolder holder = new IntHolder();
 
       holder.value = -1;
       innerInt.write(holder);
@@ -217,11 +217,11 @@ public class TestRepeated {
       innerList.end();
       list.end();
 
-      IntWriter numCol = map.integer("nums");
+      final IntWriter numCol = map.integer("nums");
       holder.value = -28;
       numCol.write(holder);
 
-      MapWriter repeatedMap = map.list("b").map();
+      final MapWriter repeatedMap = map.list("b").map();
       repeatedMap.start();
       holder.value = -1;
       repeatedMap.integer("c").write(holder);
@@ -230,7 +230,7 @@ public class TestRepeated {
       repeatedMap.start();
       holder.value = -2;
       repeatedMap.integer("c").write(holder);
-      BigIntHolder h = new BigIntHolder();
+      final BigIntHolder h = new BigIntHolder();
       h.value = -30;
       repeatedMap.bigInt("x").write(h);
       repeatedMap.end();
@@ -238,16 +238,14 @@ public class TestRepeated {
       map.end();
     }
 
-
-    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     System.out.println("Map of Object[0]: " + ow.writeValueAsString(v.getAccessor().getObject(0)));
     System.out.println("Map of Object[1]: " + ow.writeValueAsString(v.getAccessor().getObject(1)));
 
-
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    JsonWriter jsonWriter = new JsonWriter(stream, true, true);
-    FieldReader reader = v.getChild("col", MapVector.class).getReader();
+    final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    final JsonWriter jsonWriter = new JsonWriter(stream, true, true);
+    final FieldReader reader = v.getChild("col", MapVector.class).getReader();
     reader.setPosition(0);
     jsonWriter.write(reader);
     reader.setPosition(1);
@@ -256,7 +254,5 @@ public class TestRepeated {
     System.out.println(new String(stream.toByteArray(), Charsets.UTF_8));
 
     writer.clear();
-
-
   }
 }

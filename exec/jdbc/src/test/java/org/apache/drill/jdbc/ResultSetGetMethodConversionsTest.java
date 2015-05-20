@@ -17,8 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.*;
 
 import org.junit.AfterClass;
@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -73,7 +72,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
 
     // Set up result row with values of various types.
-    Statement stmt = connection.createStatement();
+    final Statement stmt = connection.createStatement();
     testDataRow = stmt.executeQuery(
         ""
         +   "SELECT  "
@@ -98,7 +97,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
         + "\nFROM INFORMATION_SCHEMA.CATALOGS "
         + "\nLIMIT 1 " );
     // Note: Assertions must be enabled (as they have been so far in tests).
-    assert testDataRow.next();
+    assertTrue( testDataRow.next() );
   }
 
   @AfterClass

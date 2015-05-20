@@ -18,7 +18,9 @@
 package org.apache.drill.jdbc;
 
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.*;
 
 import org.apache.drill.jdbc.Driver;
@@ -153,15 +155,11 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                                      final String columnName ) throws SQLException
   {
     System.out.println( "(Setting up row for " + tableOrViewName + "." + columnName + ".)");
-    assert null != dbMetadata
-        : "dbMetadata is null; must be set before calling setUpRow(...)";
+    assertNotNull("dbMetadata is null; must be set before calling setUpRow(...)", dbMetadata);
     final ResultSet testRow =
         dbMetadata.getColumns( "DRILL", schemaName, tableOrViewName, columnName );
-    if ( ! testRow.next() ) {
-      assert false
-          : "Test setup error:  No row for column DRILL . `" + schemaName + "` . `"
-            + tableOrViewName + "` . `" + columnName + "`";
-    }
+    assertTrue("Test setup error:  No row for column DRILL . `" + schemaName + "` . `"
+            + tableOrViewName + "` . `" + columnName + "`", testRow.next());
     return testRow;
   }
 
@@ -174,7 +172,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties());
     dbMetadata = connection.getMetaData();
-    Statement stmt = connection.createStatement();
+    final Statement stmt = connection.createStatement();
 
     ResultSet util;
 
@@ -200,9 +198,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     } else if ( 17 == hiveTestColumnRowCount ) {
       // Hive data seems to exist already--skip recreating it.
     } else {
-      assert false
-          : "Expected 17 Hive test columns see " + hiveTestColumnRowCount + "."
-            + "  Test code is out of date or Hive data is corrupted.";
+      fail("Expected 17 Hive test columns see " + hiveTestColumnRowCount + "."
+            + "  Test code is out of date or Hive data is corrupted.");
     }
     TODO(end) */
 
@@ -210,9 +207,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
     // Create temporary test-columns view:
     util = stmt.executeQuery( "USE dfs_test.tmp" );
-    assert util.next();
-    assert util.getBoolean( 1 )
-        : "Error setting schema for test: " + util.getString( 2 );
+    assertTrue( util.next() );
+    assertTrue( "Error setting schema for test: " + util.getString( 2 ), util.getBoolean( 1 ) );
     util = stmt.executeQuery(
         ""
         +   "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS SELECT  "
@@ -245,10 +241,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
         + "\n  '' "
         + "\nFROM INFORMATION_SCHEMA.COLUMNS "
         + "\nLIMIT 1 " );
-    assert util.next();
-    assert util.getBoolean( 1 )
-        : "Error creating temporary test-columns view " + VIEW_NAME + ": "
-          + util.getString( 2 );
+    assertTrue( util.next() );
+    assertTrue("Error creating temporary test-columns view " + VIEW_NAME + ": "
+          + util.getString( 2 ), util.getBoolean( 1 ) );
 
     // Set up result rows for temporary test view and Hivetest columns:
 
@@ -298,14 +293,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @AfterClass
   public static void tearDownConnection() throws SQLException {
-
-    ResultSet util =
+    final ResultSet util =
         connection.createStatement().executeQuery( "DROP VIEW " + VIEW_NAME + "" );
-    assert util.next();
-    // DRILL-2439:  assert util.getBoolean( 1 ) : ...;
-    assert util.getBoolean( 1 )
-       : "Error dropping temporary test-columns view " + VIEW_NAME + ": "
-         + util.getString( 2 );
+    assertTrue( util.next() );
+    // DRILL-2439:  assertTrue( ..., util.getBoolean( 1 ) );
+    assertTrue("Error dropping temporary test-columns view " + VIEW_NAME + ": "
+         + util.getString( 2 ), util.getBoolean( 1 ) );
     connection.close();
   }
 

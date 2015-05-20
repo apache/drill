@@ -18,6 +18,7 @@
 package org.apache.drill.jdbc.test;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.*;
 
@@ -49,7 +50,7 @@ public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTestB
   private static DatabaseMetaData dbMetadata;
 
   @Rule
-  public TestRule TIMEOUT = TestTools.getTimeoutRule( 120_000 /* ms */ );
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule( 120_000 /* ms */ );
 
   @BeforeClass
   public static void setUpConnection() throws Exception {
@@ -78,8 +79,7 @@ public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTestB
   public void testColumn_DATA_TYPE_isInteger() throws Exception {
     // Get metadata for some column(s).
     final ResultSet columns = dbMetadata.getColumns( null, null, null, null );
-    final boolean hasRow = columns.next();
-    assert hasRow : "DatabaseMetaData.getColumns(...) returned no rows";
+    assertTrue( "DatabaseMetaData.getColumns(...) returned no rows", columns.next() );
 
     do {
       // DATA_TYPE should be INTEGER, so getInt( "DATA_TYPE" ) should succeed:
@@ -152,8 +152,7 @@ public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTestB
     final ResultSet columns =
         dbMetadata.getColumns( null, "INFORMATION_SCHEMA", "COLUMNS",
                                "ORDINAL_POSITION" );
-    final boolean hasRow = columns.next();
-    assert hasRow : "DatabaseMetaData.getColumns(...) returned no rows";
+    assertTrue( "DatabaseMetaData.getColumns(...) returned no rows", columns.next() );
 
     // TYPE_NAME should be character string for type name "INTEGER", so
     // getString( "TYPE_NAME" ) should succeed and getInt( "TYPE_NAME" ) should
@@ -179,5 +178,4 @@ public class Drill2128GetColumnsDataTypeNotTypeCodeIntBugsTest extends JdbcTestB
     assertThat( "getString( 6 ) (expected to be same as getString( \"TYPE_NAME\" ))",
                   typeName2, equalTo( typeName1 ) );
   }
-
 }

@@ -20,21 +20,27 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.common.types.TypeProtos;
 
 public class FieldInfo {
-  String parquetType;
-  String name;
-  int bitLength;
-  int numberOfPages;
-  Object[] values;
-  TypeProtos.MinorType type;
+  final String parquetType;
+  final String name;
+  final int bitLength;
+  final int numberOfPages;
+  final Object[] values;
+  final TypeProtos.MinorType type;
 
-  FieldInfo(String parquetType, String name, int bitLength, Object[] values, TypeProtos.MinorType type, ParquetTestProperties props){
+  FieldInfo(String parquetType, String name, int bitLength, Object[] values,
+      TypeProtos.MinorType type, ParquetTestProperties props){
     this.parquetType = parquetType;
     this.name = name;
     this.bitLength  = bitLength;
-    this.numberOfPages = Math.max(1, (int) Math.ceil( ((long) props.recordsPerRowGroup) * bitLength / 8.0 / props.bytesPerPage));
-    this.values = values;
+    this.numberOfPages = Math.max(1,
+        (int) Math.ceil( ((long) props.recordsPerRowGroup) * bitLength / 8.0 / props.bytesPerPage));
+
     // generator is designed to use 3 values
-    assert values.length == 3;
+    if (values.length != 3) {
+      throw new IllegalStateException("generator is designed to use 3 values");
+    }
+    this.values = values;
+
     this.type = type;
   }
 }

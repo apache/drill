@@ -17,14 +17,15 @@
  */
 package org.apache.drill.common.expression;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
 public class PathSegmentTests extends DrillTest {
-
   protected PathSegment makeArraySegment(final int len, final PathSegment tail) {
     PathSegment node = tail;
-    for (int i=0; i<len; i++) {
+    for (int i = 0; i < len; i++) {
       node = new PathSegment.ArraySegment(node);
     }
     return node;
@@ -35,11 +36,11 @@ public class PathSegmentTests extends DrillTest {
     final int levels = 10;
     final PathSegment segment = new PathSegment.NameSegment("test", makeArraySegment(levels, null));
     final PathSegment clone = segment.clone();
-    assert segment.equals(clone) : "result of clone & original segments must be identical";
+    assertEquals("result of clone & original segments must be identical", segment, clone);
 
     final PathSegment tail = new PathSegment.NameSegment("tail");
     final PathSegment newSegment = new PathSegment.NameSegment("test", makeArraySegment(levels, tail));
     final PathSegment newClone = segment.cloneWithNewChild(tail);
-    assert newSegment.equals(newClone) : "result of cloneWithChild & original segment must be identical";
+    assertEquals("result of cloneWithChild & original segment must be identical", newSegment, newClone);
   }
 }

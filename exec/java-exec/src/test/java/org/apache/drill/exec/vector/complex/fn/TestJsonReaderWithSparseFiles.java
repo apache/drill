@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -30,24 +30,20 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
-
-  static interface Function<T> {
+  private static interface Function<T> {
     void apply(T param);
   }
 
-  static class TypeConverter {
-
+  private static class TypeConverter {
     public Object convert(Object obj) {
       if (obj instanceof JsonStringArrayList || obj instanceof JsonStringHashMap) {
         return obj.toString();
       }
       return obj;
     }
-
   }
 
-  static class Verifier implements Function<RecordBatchLoader> {
-
+  private static class Verifier implements Function<RecordBatchLoader> {
     private final int count;
     private final Object[][] values;
     private final TypeConverter converter = new TypeConverter();
@@ -59,38 +55,36 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
 
     @Override
     public void apply(RecordBatchLoader loader) {
-      assert loader.getRecordCount() == count : "invalid record count returned";
+      assertEquals("invalid record count returned", count, loader.getRecordCount());
 
-      Object[] row;
-      Object expected;
-      Object actual;
-      for (int r=0;r<values.length;r++) {
-        row = values[r];
-        for (int c=0; c<values[r].length; c++) {
-          expected = row[c];
-          actual = loader.getValueAccessorById(ValueVector.class, c).getValueVector().getAccessor().getObject(r);
-          actual = converter.convert(actual);
-          assert Objects.equals(actual, expected) : String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
-              r, c,
-              expected,
-              expected==null?"null":expected.getClass().getSimpleName(),
-              actual,
-              actual==null?"null":actual.getClass().getSimpleName());
+      for (int r = 0; r < values.length; r++) {
+        final Object[] row = values[r];
+        for (int c = 0; c<values[r].length; c++) {
+          final Object expected = row[c];
+          final Object unconverted = loader.getValueAccessorById(ValueVector.class, c)
+              .getValueVector().getAccessor().getObject(r);
+          final Object actual = converter.convert(unconverted);
+          assertEquals(String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
+                r, c, expected,
+                expected == null ? "null" : expected.getClass().getSimpleName(),
+                actual,
+                actual == null ? "null" : actual.getClass().getSimpleName()),
+              actual, expected);
         }
       }
     }
   }
 
   protected void query(final String query, final Function<RecordBatchLoader> testBody) throws Exception {
-    List<QueryDataBatch> batches = testSqlWithResults(query);
-    RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
+    final List<QueryDataBatch> batches = testSqlWithResults(query);
+    final RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
     try {
       // first batch at index 0 is empty and used for fast schema return. Load the second one for the tests
-      QueryDataBatch batch = batches.get(0);
+      final QueryDataBatch batch = batches.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
       testBody.apply(loader);
     } finally {
-      for (QueryDataBatch batch:batches) {
+      for (final QueryDataBatch batch:batches) {
         batch.release();
       }
       loader.clear();
@@ -132,5 +126,4 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
     };
     query(sql, new Verifier(1, values));
   }
-
 }

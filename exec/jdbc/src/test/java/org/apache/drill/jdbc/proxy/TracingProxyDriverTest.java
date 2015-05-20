@@ -20,10 +20,7 @@ package org.apache.drill.jdbc.proxy;
 import org.apache.drill.test.DrillTest;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -35,11 +32,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -64,10 +60,6 @@ public class TracingProxyDriverTest extends DrillTest {
         DriverManager.getConnection( "jdbc:proxy::jdbc:drill:zk=local" );
   }
 
-  @AfterClass
-  public static void tearDownTestCase() {
-  }
-
   @Test
   public void testBasicProxying() throws SQLException {
     try ( final Statement stmt = proxyConnection.createStatement() ) {
@@ -89,23 +81,22 @@ public class TracingProxyDriverTest extends DrillTest {
     }
 
     void redirect() {
-      assert ! redirected;
+      assertFalse( redirected );
       redirected = true;
       System.setErr( capturingStream );
     }
 
     void unredirect() {
-      assert redirected;
+      assertTrue( redirected );
       redirected = false;
       System.setErr( savedStdErr );
     }
 
     String getOutput() {
-      assert ! redirected;
+      assertFalse( redirected );
       return new String( buffer.toByteArray(), StandardCharsets.UTF_8 );
     }
   }
-
 
   @Test
   public void testBasicReturnTrace() throws SQLException {
@@ -223,7 +214,6 @@ public class TracingProxyDriverTest extends DrillTest {
       // expected
     }
 
-
     final ResultSet catalogsResultSet = dbMetaData.getCatalogs();
     assertThat( catalogsResultSet, notNullValue() );
     assertThat( catalogsResultSet, instanceOf( ResultSet.class ) );
@@ -247,11 +237,9 @@ public class TracingProxyDriverTest extends DrillTest {
       catch ( SQLException e ) {
         // expected;
       }
-
     }
 
     assertThat( proxyConnection.getMetaData(), sameInstance( dbMetaData ) );
     assertThat( catalogsResultSet.getMetaData(), sameInstance( rsMetaData ) );
   }
-
 } // class ProxyDriverTest

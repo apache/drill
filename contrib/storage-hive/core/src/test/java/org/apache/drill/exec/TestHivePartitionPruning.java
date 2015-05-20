@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec;
 
+import static org.junit.Assert.assertFalse;
+
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -25,11 +27,11 @@ public class TestHivePartitionPruning extends HiveTestBase {
   //Currently we do not have a good way to test plans so using a crude string comparison
   @Test
   public void testSimplePartitionFilter() throws Exception {
-    String query = "explain plan for select * from hive.`default`.partition_pruning_test where c = 1";
-    String plan = getPlanInString(query, OPTIQ_FORMAT);
+    final String query = "explain plan for select * from hive.`default`.partition_pruning_test where c = 1";
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
-    assert plan.contains("Filter") == false;
+    assertFalse(plan.contains("Filter"));
   }
 
   /* Partition pruning is not supported for disjuncts that do not meet pruning criteria.
@@ -37,28 +39,28 @@ public class TestHivePartitionPruning extends HiveTestBase {
    */
   @Ignore
   public void testDisjunctsPartitionFilter() throws Exception {
-    String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1) or (d = 1)";
-    String plan = getPlanInString(query, OPTIQ_FORMAT);
+    final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1) or (d = 1)";
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
-    assert plan.contains("Filter") == false;
+    assertFalse(plan.contains("Filter"));
   }
 
   @Test
   public void testConjunctsPartitionFilter() throws Exception {
-    String query = "explain plan for select * from hive.`default`.partition_pruning_test where c = 1 and d = 1";
-    String plan = getPlanInString(query, OPTIQ_FORMAT);
+    final String query = "explain plan for select * from hive.`default`.partition_pruning_test where c = 1 and d = 1";
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
-    assert plan.contains("Filter") == false;
+    assertFalse(plan.contains("Filter"));
   }
 
   @Ignore("DRILL-1571")
   public void testComplexFilter() throws Exception {
-    String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1 and d = 1) or (c = 2 and d = 3)";
-    String plan = getPlanInString(query, OPTIQ_FORMAT);
+    final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1 and d = 1) or (c = 2 and d = 3)";
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
-    assert plan.contains("Filter") == false;
+    assertFalse(plan.contains("Filter"));
   }
 }

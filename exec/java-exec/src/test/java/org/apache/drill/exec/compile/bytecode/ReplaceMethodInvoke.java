@@ -37,7 +37,7 @@ import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 public class ReplaceMethodInvoke {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplaceMethodInvoke.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplaceMethodInvoke.class);
 
   public static void main(String[] args) throws Exception {
     final String k2 = "org/apache/drill/Pickle.class";
@@ -74,7 +74,10 @@ public class ReplaceMethodInvoke {
     final PrintWriter pw = new PrintWriter(sw);
     DrillCheckClassAdapter.verify(new ClassReader(cw.toByteArray()), false, pw);
 
-    assert sw.toString().length() == 0 : sw.toString();
+    final String checkString = sw.toString();
+    if (!checkString.isEmpty()) {
+      throw new IllegalStateException(checkString);
+    }
   }
 
   private static ClassWriter writer() {

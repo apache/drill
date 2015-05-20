@@ -17,13 +17,12 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
@@ -46,12 +45,6 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTestBase {
     // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", JdbcAssert.getDefaultProperties() );
     statement = connection.createStatement();
-
-    boolean assertionsEnabled = false;
-    assert assertionsEnabled = true;
-    if ( ! assertionsEnabled ) {
-      throw new RuntimeException( "Assertions need to be enabled but are not." );
-    }
   }
 
   @AfterClass
@@ -63,69 +56,66 @@ public class Drill2463GetNullsFailedWithAssertionsBugTest extends JdbcTestBase {
 
   @Test
   public void testGetPrimitiveTypeNullAsOwnType() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS INTEGER ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getInt(...) for NULL", rs.getInt( 1 ), equalTo( 0 ) );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
 
   @Test
   public void testGetPrimitiveTypeNullAsObject() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS INTEGER ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getObject(...) for NULL", rs.getObject( 1 ), nullValue() );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
 
   @Test
   public void testGetNonprimitiveTypeNullAsOwnType() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS VARCHAR ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getString(...) for NULL", rs.getString( 1 ), nullValue() );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
-
 
   // Test a few specifics
 
   @Test
   public void testGetBooleanNullAsOwnType() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS BOOLEAN ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getBoolean(...) for NULL", rs.getBoolean( 1 ), equalTo( false ) );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
 
   @Test
   public void testGetBooleanNullAsObject() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS BOOLEAN ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getObject(...) for NULL", rs.getObject( 1 ), nullValue() );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
 
   @Test
   public void testGetIntegerNullAsOwnType() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS INTEGER ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getInt(...) for NULL", rs.getInt( 1 ), equalTo( 0 ) );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
 
   @Test
   public void testGetIntegerNullAsObject() throws Exception {
-    ResultSet rs = statement.executeQuery(
+    final ResultSet rs = statement.executeQuery(
         "SELECT CAST( NULL AS INTEGER ) FROM INFORMATION_SCHEMA.CATALOGS" );
-    assert rs.next();
+    assertTrue( rs.next() );
     assertThat( "getObject(...) for NULL", rs.getObject( 1 ), nullValue() );
     assertThat( "wasNull", rs.wasNull(), equalTo( true ) );
   }
-
-
 }

@@ -50,7 +50,6 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
     testQuery("select * from cp.`employee.json`");
   }
 
-
   @Test
   public void testCast() throws Exception{
     testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs_test.`%s/../../sample-data/region.parquet`", WORKING_PATH));
@@ -199,26 +198,27 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {
         try {
-          Statement statement = connection.createStatement();
+          final Statement statement = connection.createStatement();
 
           // show tables on view
-          ResultSet resultSet = statement.executeQuery("select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
-                                                       "interval '1' year, interval '2' day, " +
-                                                       "date_add(date '2008-2-23', interval '1 10:20:30' day to second), " +
-                                                       "date_add(date '2010-2-23', 1) " +
-                                                       "from cp.`employee.json` limit 1");
+          final ResultSet resultSet = statement.executeQuery(
+              "select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
+              "interval '1' year, interval '2' day, " +
+              "date_add(date '2008-2-23', interval '1 10:20:30' day to second), " +
+              "date_add(date '2010-2-23', 1) " +
+              "from cp.`employee.json` limit 1");
 
           resultSet.next();
-          java.sql.Date date = resultSet.getDate(1);
-          java.sql.Time time = resultSet.getTime(2);
-          java.sql.Timestamp ts = resultSet.getTimestamp(3);
-          String intervalYear = resultSet.getString(4);
-          String intervalDay  = resultSet.getString(5);
-          java.sql.Timestamp ts1 = resultSet.getTimestamp(6);
-          java.sql.Date date1 = resultSet.getDate(7);
+          final java.sql.Date date = resultSet.getDate(1);
+          final java.sql.Time time = resultSet.getTime(2);
+          final java.sql.Timestamp ts = resultSet.getTimestamp(3);
+          final String intervalYear = resultSet.getString(4);
+          final String intervalDay  = resultSet.getString(5);
+          final java.sql.Timestamp ts1 = resultSet.getTimestamp(6);
+          final java.sql.Date date1 = resultSet.getDate(7);
 
-          java.sql.Timestamp result = java.sql.Timestamp.valueOf("2008-2-24 10:20:30");
-          java.sql.Date result1 = java.sql.Date.valueOf("2010-2-24");
+          final java.sql.Timestamp result = java.sql.Timestamp.valueOf("2008-2-24 10:20:30");
+          final java.sql.Date result1 = java.sql.Date.valueOf("2010-2-24");
           assertEquals(ts1, result);
           assertEquals(date1, result1);
 
@@ -243,13 +243,14 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {
         try {
-          Statement statement = connection.createStatement();
+          final Statement statement = connection.createStatement();
 
           // show files
-          ResultSet resultSet = statement.executeQuery("select timestamp '2008-2-23 12:23:23', date '2001-01-01' from cp.`employee.json` limit 1");
+          final ResultSet resultSet = statement.executeQuery(
+              "select timestamp '2008-2-23 12:23:23', date '2001-01-01' from cp.`employee.json` limit 1");
 
-          assert (resultSet.getMetaData().getColumnType(1) == Types.TIMESTAMP);
-          assert (resultSet.getMetaData().getColumnType(2) == Types.DATE);
+          assertEquals( Types.TIMESTAMP, resultSet.getMetaData().getColumnType(1) );
+          assertEquals( Types.DATE, resultSet.getMetaData().getColumnType(2) );
 
           System.out.println(JdbcAssert.toString(resultSet));
           resultSet.close();

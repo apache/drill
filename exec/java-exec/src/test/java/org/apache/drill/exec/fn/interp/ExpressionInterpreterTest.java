@@ -57,14 +57,14 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 public class ExpressionInterpreterTest  extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionInterpreterTest.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionInterpreterTest.class);
 
   @Test
   public void interpreterNullableStrExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
-    String expressionStr =  "substr(col1, 1, 3)";
-    String[] expectedFirstTwoValues = {"aaa", "null"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    final String expressionStr =  "substr(col1, 1, 3)";
+    final String[] expectedFirstTwoValues = {"aaa", "null"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
@@ -72,10 +72,10 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
 
   @Test
   public void interpreterNullableBooleanExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
-    String expressionStr =  "col1 < 'abc' and col1 > 'abc'";
-    String[] expectedFirstTwoValues = {"false", "null"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    final String expressionStr =  "col1 < 'abc' and col1 > 'abc'";
+    final String[] expectedFirstTwoValues = {"false", "null"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
@@ -83,67 +83,67 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
 
   @Test
   public void interpreterNullableIntegerExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
-    String expressionStr = "col1 + 100 - 1 * 2 + 2";
-    String[] expectedFirstTwoValues = {"-2147483548", "null"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
+    final String expressionStr = "col1 + 100 - 1 * 2 + 2";
+    final String[] expectedFirstTwoValues = {"-2147483548", "null"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
 
   @Test
   public void interpreterLikeExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
-    String expressionStr =  "like(col1, 'aaa%')";
-    String[] expectedFirstTwoValues = {"true", "null"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    final String expressionStr =  "like(col1, 'aaa%')";
+    final String[] expectedFirstTwoValues = {"true", "null"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
 
   @Test
   public void interpreterCastExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
-    String expressionStr =  "cast(3+4 as float8)";
-    String[] expectedFirstTwoValues = {"7.0", "7.0"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    final String expressionStr =  "cast(3+4 as float8)";
+    final String[] expectedFirstTwoValues = {"7.0", "7.0"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
 
   @Test
   public void interpreterCaseExpr() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
-    String expressionStr =  "case when substr(col1, 1, 3)='aaa' then 'ABC' else 'XYZ' end";
-    String[] expectedFirstTwoValues = {"ABC", "XYZ"};
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.VARCHAR)};
+    final String expressionStr =  "case when substr(col1, 1, 3)='aaa' then 'ABC' else 'XYZ' end";
+    final String[] expectedFirstTwoValues = {"ABC", "XYZ"};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues);
   }
 
   @Test
   public void interpreterDateTest() throws Exception {
-    String[] colNames = {"col1"};
-    TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
-    String expressionStr = "now()";
-    BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
-    QueryContextInformation queryContextInfo = planFragment.getContext();
-    int                        timeZoneIndex = queryContextInfo.getTimeZone();
-    org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-    org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
+    final String[] colNames = {"col1"};
+    final TypeProtos.MajorType[] colTypes = {Types.optional(TypeProtos.MinorType.INT)};
+    final String expressionStr = "now()";
+    final BitControl.PlanFragment planFragment = BitControl.PlanFragment.getDefaultInstance();
+    final QueryContextInformation queryContextInfo = planFragment.getContext();
+    final int                        timeZoneIndex = queryContextInfo.getTimeZone();
+    final org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+    final org.joda.time.DateTime     now = new org.joda.time.DateTime(queryContextInfo.getQueryStartTime(), timeZone);
 
-    long queryStartDate = now.getMillis();
+    final long queryStartDate = now.getMillis();
 
-    TimeStampHolder out = new TimeStampHolder();
+    final TimeStampHolder out = new TimeStampHolder();
 
     out.value = queryStartDate;
 
-    ByteBuffer buffer = ByteBuffer.allocate(12);
+    final ByteBuffer buffer = ByteBuffer.allocate(12);
     buffer.putLong(out.value);
-    long l = buffer.getLong(0);
-    DateTime t = new DateTime(l);
+    final long l = buffer.getLong(0);
+    final DateTime t = new DateTime(l);
 
-    String[] expectedFirstTwoValues = {t.toString(), t.toString()};
+    final String[] expectedFirstTwoValues = {t.toString(), t.toString()};
 
     doTest(expressionStr, colNames, colTypes, expectedFirstTwoValues, planFragment);
   }
@@ -154,32 +154,31 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   protected void doTest(String expressionStr, String[] colNames, TypeProtos.MajorType[] colTypes, String[] expectFirstTwoValues, BitControl.PlanFragment planFragment) throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-
-    Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
 
     bit1.run();
 
     // Create a mock scan batch as input for evaluation.
-    assert(colNames.length == colTypes.length);
+    assertEquals(colNames.length, colTypes.length);
 
-    MockGroupScanPOP.MockColumn[] columns = new MockGroupScanPOP.MockColumn[colNames.length];
+    final MockGroupScanPOP.MockColumn[] columns = new MockGroupScanPOP.MockColumn[colNames.length];
 
     for (int i = 0; i < colNames.length; i++ ) {
       columns[i] = new MockGroupScanPOP.MockColumn(colNames[i], colTypes[i].getMinorType(), colTypes[i].getMode(),0,0,0);
     }
 
-    MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
-    MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
+    final MockGroupScanPOP.MockScanEntry entry = new MockGroupScanPOP.MockScanEntry(10, columns);
+    final MockSubScanPOP scanPOP = new MockSubScanPOP("testTable", java.util.Collections.singletonList(entry));
 
-    ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
+    final ScanBatch batch = createMockScanBatch(bit1, scanPOP, planFragment);
 
     batch.next();
 
-    ValueVector vv = evalExprWithInterpreter(expressionStr, batch, bit1);
+    final ValueVector vv = evalExprWithInterpreter(expressionStr, batch, bit1);
 
     // Verify the first 2 values in the output of evaluation.
-    assert(expectFirstTwoValues.length == 2);
+    assertEquals(2, expectFirstTwoValues.length);
     assertEquals(expectFirstTwoValues[0], getValueFromVector(vv, 0));
     assertEquals(expectFirstTwoValues[1], getValueFromVector(vv, 1));
 
@@ -191,13 +190,13 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     bit1.close();
   }
 
-
   private ScanBatch createMockScanBatch(Drillbit bit, MockSubScanPOP scanPOP, BitControl.PlanFragment planFragment) {
-    List<RecordBatch> children = Lists.newArrayList();
-    MockScanBatchCreator creator = new MockScanBatchCreator();
+    final List<RecordBatch> children = Lists.newArrayList();
+    final MockScanBatchCreator creator = new MockScanBatchCreator();
 
     try {
-      FragmentContext context = new FragmentContext(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
+      final FragmentContext context =
+          new FragmentContext(bit.getContext(), planFragment, null, bit.getContext().getFunctionImplementationRegistry());
       return creator.getBatch(context,scanPOP, children);
     } catch (Exception ex) {
       throw new DrillRuntimeException("Error when setup fragment context" + ex);
@@ -205,28 +204,26 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   private LogicalExpression parseExpr(String expr) throws RecognitionException {
-    ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-    ExprParser parser = new ExprParser(tokens);
-    ExprParser.parse_return ret = parser.parse();
+    final ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+    final CommonTokenStream tokens = new CommonTokenStream(lexer);
+    final ExprParser parser = new ExprParser(tokens);
+    final ExprParser.parse_return ret = parser.parse();
     return ret.e;
   }
 
   private ValueVector evalExprWithInterpreter(String expression, RecordBatch batch, Drillbit bit) throws Exception {
-    LogicalExpression expr = parseExpr(expression);
-    ErrorCollector error = new ErrorCollectorImpl();
-    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error, bit.getContext().getFunctionImplementationRegistry());
+    final LogicalExpression expr = parseExpr(expression);
+    final ErrorCollector error = new ErrorCollectorImpl();
+    final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error, bit.getContext().getFunctionImplementationRegistry());
     if (error.getErrorCount() != 0) {
       logger.error("Failure while materializing expression [{}].  Errors: {}", expression, error);
       assertEquals(0, error.getErrorCount());
     }
 
     final MaterializedField outputField = MaterializedField.create("outCol", materializedExpr.getMajorType());
-
-    ValueVector vector = TypeHelper.getNewVector(outputField, bit.getContext().getAllocator());
+    final ValueVector vector = TypeHelper.getNewVector(outputField, bit.getContext().getAllocator());
 
     vector.allocateNewSafe();
-
     InterpreterEvaluator.evaluate(batch, vector, materializedExpr);
 
     return vector;
@@ -234,8 +231,8 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
 
   private void showValueVectorContent(ValueVector vw) {
     for (int row = 0; row < vw.getAccessor().getValueCount(); row ++ ) {
-      Object o = vw.getAccessor().getObject(row);
-      String cellString;
+      final Object o = vw.getAccessor().getObject(row);
+      final String cellString;
       if (o instanceof byte[]) {
         cellString = DrillStringUtils.toBinaryString((byte[]) o);
       } else {
@@ -246,8 +243,8 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
   }
 
   private String getValueFromVector(ValueVector vw, int index) {
-    Object o = vw.getAccessor().getObject(index);
-    String cellString;
+    final Object o = vw.getAccessor().getObject(index);
+    final String cellString;
     if (o instanceof byte[]) {
       cellString = DrillStringUtils.toBinaryString((byte[]) o);
     } else {
@@ -255,5 +252,4 @@ public class ExpressionInterpreterTest  extends PopUnitTestBase {
     }
     return cellString;
   }
-
 }

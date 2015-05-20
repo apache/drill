@@ -17,7 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -43,18 +44,19 @@ import com.google.common.util.concurrent.SettableFuture;
 public class ParquetResultListener implements UserResultsListener {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetResultListener.class);
 
-  private SettableFuture<Void> future = SettableFuture.create();
+  private final SettableFuture<Void> future = SettableFuture.create();
   int count = 0;
   int totalRecords;
 
-  boolean testValues;
-  BufferAllocator allocator;
+  private boolean testValues;
+  private final BufferAllocator allocator;
 
   int batchCounter = 1;
-  HashMap<String, Integer> valuesChecked = new HashMap<>();
-  ParquetTestProperties props;
+  private final HashMap<String, Integer> valuesChecked = new HashMap<>();
+  private final ParquetTestProperties props;
 
-  ParquetResultListener(BufferAllocator allocator, ParquetTestProperties props, int numberOfTimesRead, boolean testValues){
+  ParquetResultListener(BufferAllocator allocator, ParquetTestProperties props,
+      int numberOfTimesRead, boolean testValues) {
     this.allocator = allocator;
     this.props = props;
     this.totalRecords = props.recordsPerRowGroup * props.numberRowGroups * numberOfTimesRead;
@@ -72,30 +74,30 @@ public class ParquetResultListener implements UserResultsListener {
     checkLastChunk();
   }
 
-  private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, Object value, String name) {
+  private <T> void assertField(ValueVector valueVector, int index,
+      TypeProtos.MinorType expectedMinorType, Object value, String name) {
     assertField(valueVector, index, expectedMinorType, value, name, 0);
   }
 
   @SuppressWarnings("unchecked")
-  private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
+  private <T> void assertField(ValueVector valueVector, int index,
+      TypeProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
 
     if (expectedMinorType == TypeProtos.MinorType.MAP) {
       return;
     }
 
-    T val;
+    final T val;
     try {
-    val = (T) valueVector.getAccessor().getObject(index);
-    if (val instanceof byte[]) {
-      assert(Arrays.equals((byte[]) value, (byte[]) val));
-    }
-    else if (val instanceof String) {
-      assert(val.equals(value));
-    } else {
-      assertEquals(value, val);
-    }
+      val = (T) valueVector.getAccessor().getObject(index);
     } catch (Throwable ex) {
       throw ex;
+    }
+
+    if (val instanceof byte[]) {
+      assertTrue(Arrays.equals((byte[]) value, (byte[]) val));
+    } else {
+      assertEquals(value, val);
     }
   }
 
@@ -106,7 +108,7 @@ public class ParquetResultListener implements UserResultsListener {
     FieldInfo currentField;
     count += result.getHeader().getRowCount();
     boolean schemaChanged = false;
-    RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
+    final RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
     try {
       schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
@@ -122,10 +124,10 @@ public class ParquetResultListener implements UserResultsListener {
     if (schemaChanged) {
     } // do not believe any change is needed for when the schema changes, with the current mock scan use case
 
-    for (VectorWrapper vw : batchLoader) {
-      ValueVector vv = vw.getValueVector();
+    for (final VectorWrapper vw : batchLoader) {
+      final ValueVector vv = vw.getValueVector();
       currentField = props.fields.get(vv.getField().getPath().getRootSegment().getPath());
-      if ( ! valuesChecked.containsKey(vv.getField().getPath().getRootSegment().getPath())){
+      if (!valuesChecked.containsKey(vv.getField().getPath().getRootSegment().getPath())) {
         valuesChecked.put(vv.getField().getPath().getRootSegment().getPath(), 0);
         columnValCounter = 0;
       } else {
@@ -133,7 +135,7 @@ public class ParquetResultListener implements UserResultsListener {
       }
       printColumnMajor(vv);
 
-      if (testValues){
+      if (testValues) {
         for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
           assertField(vv, j, currentField.type,
               currentField.values[columnValCounter % 3], currentField.name + "/");
@@ -163,7 +165,7 @@ public class ParquetResultListener implements UserResultsListener {
     if (testValues) {
       assertEquals( "Unexpected number of output columns from parquet scan.", props.fields.keySet().size(), valuesChecked.keySet().size() );
     }
-    for (String s : valuesChecked.keySet()) {
+    for (final String s : valuesChecked.keySet()) {
       try {
         if (recordsInBatch == -1 ){
           recordsInBatch = valuesChecked.get(s);
@@ -176,7 +178,7 @@ public class ParquetResultListener implements UserResultsListener {
       }
     }
 
-    assert valuesChecked.keySet().size() > 0;
+    assertTrue(valuesChecked.keySet().size() > 0);
     future.set(null);
   }
 
@@ -198,14 +200,14 @@ public class ParquetResultListener implements UserResultsListener {
         System.out.print(", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
       }
     }
-    if (ParquetRecordReaderTest.VERBOSE_DEBUG){
+    if (ParquetRecordReaderTest.VERBOSE_DEBUG) {
       System.out.println("\n" + vv.getAccessor().getValueCount());
     }
   }
 
   public void printRowMajor(RecordBatchLoader batchLoader) {
     for (int i = 0; i < batchLoader.getRecordCount(); i++) {
-      if (i % 50 == 0){
+      if (i % 50 == 0) {
         System.out.println();
         for (VectorWrapper vw : batchLoader) {
           ValueVector v = vw.getValueVector();
@@ -216,8 +218,8 @@ public class ParquetResultListener implements UserResultsListener {
         System.out.println();
       }
 
-      for (VectorWrapper vw : batchLoader) {
-        ValueVector v = vw.getValueVector();
+      for (final VectorWrapper vw : batchLoader) {
+        final ValueVector v = vw.getValueVector();
         Object o = v.getAccessor().getObject(i);
         if (o instanceof byte[]) {
           try {
@@ -244,10 +246,10 @@ public class ParquetResultListener implements UserResultsListener {
     }
   }
 
-  public void getResults() throws RpcException{
-    try{
+  public void getResults() throws RpcException {
+    try {
       future.get();
-    }catch(Throwable t){
+    } catch(Throwable t) {
       throw RpcException.mapException(t);
     }
   }
