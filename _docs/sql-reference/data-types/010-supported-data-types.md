@@ -44,11 +44,23 @@ To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to
 Drill supports the following composite types:
 
 * Array
-  Array element references, for example `a[1]` is the primary type-specific operation.
 * Map
-  Drill supports constructs in the form `m['k']`
 
-For more information about array and map types, see the section, ["Handling Different Data Types"]({{site.baseurl}}/docs/handling-different-data-types/#handling-json-and-parquet-data), [KVGEN]({{site.baseurl}}/docs/kvgen/), and [FLATTEN]({{site.baseurl}}/docs/flatten/).
+A map is a set of name/value pairs. A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map. An array is a repeated list of values. A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
+
+Drill uses map and array data types internally for reading complex and nested data structures from data sources. For more information, see examples of [handling JSON maps and arrays]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data). 
+
+In this release of Drill, you cannot reference a composite type by name in a query, but Drill supports array values coming from data sources. For example, you can use the index syntax to query data and get the value of an array element:  
+
+`a[1]`  
+
+You can refer to the value for a key in a map using this syntax:
+
+`m['k']`
+
+The section [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) show how to use [composite types]({{site.baseurl}}/docs/supported-data-types/#composite-types) to access nested arrays.
+
+For more information about using array and map types, see the sections, ["KVGEN"]({{site.baseurl}}/docs/kvgen/) and ["FLATTEN"]({{site.baseurl}}/docs/flatten/).
 
 ## Casting and Converting Data Types
 
