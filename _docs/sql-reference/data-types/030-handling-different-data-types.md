@@ -9,9 +9,7 @@ To query HBase data in Drill, convert every column of an HBase table to/from byt
 In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. In addition to using the CAST function, you can also use TO_CHAR, TO_DATE, TO_NUMBER, and TO_TIMESTAMP. If the SELECT statement includes a WHERE clause that compares a column of an unknown data type, cast both the value of the column and the comparison value in the WHERE clause.
 
 ## Handling JSON and Parquet Data
-Complex and nested data structures in JSON and Parquet files are of map and array types.
-
-A map is a set of name/value pairs. A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map. An array is a repeated list of values. A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
+Complex and nested data structures in JSON and Parquet files are [composite types](({{site.baseurl}}/docs/supported-data-types/#composite-types)): map and array.
 
 Drill reads/writes maps and arrays from/to JSON and Parquet files. In Drill, you do not cast a map or array to another type.
 

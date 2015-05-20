@@ -46,6 +46,10 @@ Drill supports the following composite types:
 * Array
 * Map
 
+A map is a set of name/value pairs. A value in a map can be a scalar type, such as string or int, or a complex type, such as an array or another map. An array is a repeated list of values. A value in an array can be a scalar type, such as string or int, or an array can be a complex type, such as a map or another array.
+
+Drill uses map and array data types internally for reading complex and nested data structures from data sources. For more information, see examples of [handling JSON maps and arrays]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data). 
+
 In this release of Drill, you cannot reference a composite type by name in a query, but Drill supports array values coming from data sources. For example, you can use the index syntax to query data and get the value of an array element:  
 
 `a[1]`  
@@ -54,7 +58,7 @@ You can refer to the value for a key in a map using this syntax:
 
 `m['k']`
 
-Drill uses [map and array data types]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) internally for reading complex and nested data structures from data sources such as JSON. You can cast data in a map or array of data to return a value from the structure, as shown in [“Create a view on a MapR-DB table”] ({{ site.baseurl }}/docs/lesson-2-run-queries-with-ansi-sql/#create-a-view-on-a-mapr-db-table). [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to access nested arrays.
+The section [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) show how to use [composite types]({{site.baseurl}}/docs/supported-data-types/#composite-types) to access nested arrays.
 
 For more information about using array and map types, see the sections, ["KVGEN"]({{site.baseurl}}/docs/kvgen/) and ["FLATTEN"]({{site.baseurl}}/docs/flatten/).
 
