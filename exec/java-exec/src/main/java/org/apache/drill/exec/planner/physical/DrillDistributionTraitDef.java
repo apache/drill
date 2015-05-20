@@ -72,30 +72,24 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
         return null;
     }
 
-    RelNode newRel = null;
     switch(toDist.getType()){
       // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
       // therefore RelCollation is set to default, which is EMPTY.
       case SINGLETON:
-        newRel = new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
-        break;
+        return new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case HASH_DISTRIBUTED:
-        newRel = new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
-                                            toDist.getFields());
-        break;
+        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
+                                             toDist.getFields());
       case RANGE_DISTRIBUTED:
-        newRel = new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
-        break;
+        return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case BROADCAST_DISTRIBUTED:
-        newRel = new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
-        break;
+        return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+      case ANY:
+        // If target is "any", any input would satisfy "any". Return input directly.
+        return rel;
       default:
-        newRel = null;
+        return null;
     }
-
-    // planner.register(newRel, rel);
-
-    return newRel;
   }
 
 }

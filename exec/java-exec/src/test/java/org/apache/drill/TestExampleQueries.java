@@ -995,4 +995,29 @@ public class TestExampleQueries extends BaseTestQuery{
         .run();
 
   }
+
+  @Test  //DRILL_3004
+  public void testDRILL_3004() throws Exception {
+    final String query =
+        "SELECT\n" +
+        "  nations.N_NAME,\n" +
+        "  regions.R_NAME\n" +
+        "FROM\n" +
+        "  cp.`tpch/nation.parquet` nations\n" +
+        "JOIN\n" +
+        "  cp.`tpch/region.parquet` regions\n" +
+        "on nations.N_REGIONKEY = regions.R_REGIONKEY " +
+        "where 1 = 0";
+
+
+    testBuilder()
+        .sqlQuery(query)
+        .expectsEmptyResultSet()
+        .optionSettingQueriesForTestQuery("ALTER SESSION SET `planner.enable_hashjoin` = false; " +
+                                          "ALTER SESSION SET `planner.disable_exchanges` = true")
+        .build()
+        .run();
+
+  }
+
 }
