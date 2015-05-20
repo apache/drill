@@ -164,66 +164,6 @@ The following example of a storage plugin for reading CSV files with the new tex
       "delimiter": "," 
     },  
 
-### How Formats Affect Output
-
-The following self-explanatory examples show how the output of queries look using different formats:
-
-    SELECT * FROM dfs.`/tmp/csv_no_header.csv`;
-    +------------------------+
-    |        columns         |
-    +------------------------+
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    +------------------------+
-    7 rows selected (0.112 seconds)
-
-    SELECT * FROM dfs.`/tmp/csv_with_comments.csv2`;
-    +------------------------+
-    |        columns         |
-    +------------------------+
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    +------------------------+
-    7 rows selected (0.111 seconds)
-
-    SELECT * FROM dfs.`/tmp/csv_with_escape.csv`;
-    +------------------------------------------------------------------------+
-    |                                columns                                 |
-    +------------------------------------------------------------------------+
-    | ["hello","1","2","3 \" double quote is the default escape character"]  |
-    | ["hello","1","2","3"]                                                  |
-    | ["hello","1","2","3"]                                                  |
-    | ["hello","1","2","3"]                                                  |
-    | ["hello","1","2","3"]                                                  |
-    | ["hello","1","2","3"]                                                  |
-    | ["hello","1","2","3"]                                                  |
-    +------------------------------------------------------------------------+
-    7 rows selected (0.104 seconds)
-
-    SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
-    +------------------------+
-    |        columns         |
-    +------------------------+
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    | ["hello","1","2","3"]  |
-    +------------------------+
-
-
 ## Using Other Attributes
 
 The configuration of other attributes, such as `size.calculator.enabled` in the hbase plugin and `configProps` in the hive plugin, are implementation-dependent and beyond the scope of this document.
