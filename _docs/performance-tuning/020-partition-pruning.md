@@ -13,8 +13,9 @@ You can organize your data in such a way that maximizes partition pruning in Dri
  
 Partitioning data requires you to determine a partitioning scheme, or a logical way to store the data in a hierarchy of directories. You can then use CTAS to create Parquet files from the original data, specifying filter conditions, and then move the files into the correlating directories in the hierarchy. Once you have partitioned the data, you can create and query views on the data.
  
-Partitioning Example
-For example, if you have several text files with log data which span multiple years, and you want to partition the data by year and quarter, you could create the following hierarchy of directories:  
+### Partitioning Example  
+
+If you have several text files with log data which span multiple years, and you want to partition the data by year and quarter, you could create the following hierarchy of directories:  
        
        …/logs/1994/Q1  
        …/logs/1994/Q2  
