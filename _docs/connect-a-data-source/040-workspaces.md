@@ -57,7 +57,7 @@ files and tables in the `file` or `hive default` workspaces, you can omit the
 workspace name from the query.
 
 For example, you can issue a query on a Hive table in the `default workspace`
-using either of the following formats and get the the same results:
+using either of the following formats and get the same results:
 
 **Example**
 

@@ -19,7 +19,7 @@ If you've never used Drill, use these tutorials to download, install, and start 
 * [Using MicroStrategy Analytics with Apache Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-apache-drill/)  
   Use the Drill ODBC driver from MapR to analyze data and generate a report using Drill from the MicroStrategy UI.  
 * [Using Tibco Spotfire Server with Drill]({{site.baseurl}}/docs/using-tibco-spotfire-with-drill/)  
-  Use the Apache Drill to query complex data structures from Tibco Spotfire Desktop.
+  Use Apache Drill to query complex data structures from Tibco Spotfire Desktop.
 * [Configuring Tibco Spotfire Server with Drill]({{site.baseurl}}/docs/configuring-tibco-spotfire-server-with-drill)  
   Integrate Tibco Spotfire Server with Apache Drill and explore multiple data formats on Hadoop.  
 * [Using Apache Drill with Tableau 9 Desktop]({{site.baseurl}}/docs/using-apache-drill-with-tableau-9-desktop)  

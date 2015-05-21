@@ -86,16 +86,19 @@ Cast an integer to a decimal.
 
 ### Casting Intervals
 
-To cast interval data to the INTERVALDAY or INTERVALYEAR types use the following syntax:
+To cast interval data to interval types you can query from a data source such as JSON, for example, use the following syntax, respectively:
 
     CAST (column_name AS INTERVAL DAY)
     CAST (column_name AS INTERVAL YEAR)
+    CAST (column_name AS INTERVAL SECOND)
 
-For example, a JSON file named intervals.json contains the following objects:
+For example, a JSON file named `intervals.json` contains the following objects:
 
     { "INTERVALYEAR_col":"P1Y", "INTERVALDAY_col":"P1D", "INTERVAL_col":"P1Y1M1DT1H1M" }
     { "INTERVALYEAR_col":"P2Y", "INTERVALDAY_col":"P2D", "INTERVAL_col":"P2Y2M2DT2H2M" }
     { "INTERVALYEAR_col":"P3Y", "INTERVALDAY_col":"P3D", "INTERVAL_col":"P3Y3M3DT3H3M" }
+
+Create a table in Parquet from the interval data in the `intervals.json` file.
 
 1. Set the storage format to Parquet.
 
@@ -110,10 +113,25 @@ For example, a JSON file named intervals.json contains the following objects:
 
 2. Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
 
-    CREATE TABLE dfs.tmp.parquet_intervals AS 
-    (SELECT CAST( INTERVALYEAR_col as interval year) INTERVALYEAR_col, 
-            CAST( INTERVALDAY_col as interval day) INTERVALDAY_col 
-    FROM dfs.`/Users/drill/intervals.json`);
+        CREATE TABLE dfs.tmp.parquet_intervals AS 
+        (SELECT CAST( INTERVALYEAR_col as INTERVAL YEAR) INTERVALYEAR_col, 
+                CAST( INTERVALDAY_col as INTERVAL DAY) INTERVALDAY_col,
+                CAST( INTERVAL_col as INTERVAL SECOND) INTERVAL_col 
+        FROM dfs.`/Users/drill/intervals.json`);
+
+3. Take a look at what Drill wrote to the Parquet file:
+
+        SELECT * FROM dfs.`tmp`.parquet_intervals;
+        +-------------------+------------------+---------------+
+        | INTERVALYEAR_col  | INTERVALDAY_col  | INTERVAL_col  |
+        +-------------------+------------------+---------------+
+        | P12M              | P1D              | P1DT3660S     |
+        | P24M              | P2D              | P2DT7320S     |
+        | P36M              | P3D              | P3DT10980S    |
+        +-------------------+------------------+---------------+
+        3 rows selected (0.082 seconds)
+
+Because you cast the INTERVAL_col to INTERVAL SECOND, Drill returns the interval data representing the year, month, day, hour, minute, and second. 
 
 ## CONVERT_TO and CONVERT_FROM
 

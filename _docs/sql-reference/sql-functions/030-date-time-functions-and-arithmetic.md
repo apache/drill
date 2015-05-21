@@ -36,7 +36,7 @@ Cast string arguments to timestamp to include time data in the calculations of t
 
 ### AGE Examples
 
-Find the interval between midnight April 3, 2015 and June 13, 1957.
+Find the interval between midnight today, April 3, 2015, and June 13, 1957.
 
     SELECT AGE('1957-06-13') FROM sys.version;
     +------------+
@@ -45,6 +45,17 @@ Find the interval between midnight April 3, 2015 and June 13, 1957.
     | P703M23D   |
     +------------+
     1 row selected (0.064 seconds)
+
+Find the interval between midnight today, May 21, 2015, and hire dates of employees 578 and 761 in the employees.json file included with the Drill installation.
+
+    SELECT AGE(CAST(hire_date AS TIMESTAMP)) FROM cp.`employee.json` where employee_id IN( '578','761');
+    +------------------+
+    |      EXPR$0      |
+    +------------------+
+    | P236MT25200S     |
+    | P211M19DT25200S  |
+    +------------------+
+    2 rows selected (0.121 seconds)
 
 Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on January 1, 2001.
 
@@ -82,10 +93,6 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 ### DATE_ADD Examples
 
-Add two days to the birthday column in the genealogy database.
-
-    SELECT DATE_ADD (CAST (birthdays AS date), 2) from genealogy.json;
-
 Add two days to today's date May 15, 2015.
 
     SELECT DATE_ADD(date '2015-05-15', 2) FROM sys.version;
@@ -96,35 +103,51 @@ Add two days to today's date May 15, 2015.
     +------------+
     1 row selected (0.07 seconds)
 
-Add two months to April 15, 2015.
+Using the example data from the ["Casting Intervals"]({{site.baseurl}}/docs/data-type-conversion/#casting-intervals) section, add intervals from the `intervals.json` file to a literal timestamp using an interval expression. Create an interval expression that casts the interval data in the intervals.json file to a timestamp.
 
-    SELECT DATE_ADD(date '2015-04-15', interval '2' month) FROM sys.version;
+    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', CAST(INTERVALDAY_col as interval second)) FROM dfs.`/Users/drilluser/apache-drill-1.0.0/intervals.json`;
     +------------------------+
     |         EXPR$0         |
     +------------------------+
-    | 2015-06-15 00:00:00.0  |
+    | 2015-04-16 22:55:55.0  |
+    | 2015-04-17 22:55:55.0  |
+    | 2015-04-18 22:55:55.0  |
     +------------------------+
-    1 row selected (0.107 seconds)
+    3 rows selected (0.105 seconds)
 
-Add 10 hours to the timestamp 2015-04-15 22:55:55.
+The query returns the sum of the timestamp plus 1, 2, and 3 days becuase the INTERVALDAY_col contains P1D, P2D, and P3D, 
 
-    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
+The Drill installation includes the `employee.json` file that has records of employee hire dates:
+
+    SELECT * FROM cp.`employee.json` LIMIT 1;
+    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    | employee_id  |   full_name   | first_name  | last_name  | position_id  | position_title  | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
+    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    | 1            | Sheri Nowmer  | Sheri       | Nowmer     | 1            | President       | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
+    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+    1 row selected (0.137 seconds)
+
+Look at the hire_dates for the employee 578 and 761 in `employee.json`.
+
+    SELECT hire_date FROM cp.`employee.json` where employee_id IN( '578','761');
+    +------------------------+
+    |       hire_date        |
+    +------------------------+
+    | 1996-01-01 00:00:00.0  |
+    | 1998-01-01 00:00:00.0  |
+    +------------------------+
+    2 rows selected (0.135 seconds)
+
+Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+
+    SELECT DATE_ADD(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` where employee_id IN( '578','761');
     +------------------------+
     |         EXPR$0         |
     +------------------------+
-    | 2015-04-16 08:55:55.0  |
+    | 1996-01-01 10:00:00.0  |
+    | 1998-01-01 10:00:00.0  |
     +------------------------+
-    1 row selected (0.199 seconds)
-
-Add 10 hours to the time 22 hours, 55 minutes, 55 seconds.
-
-    SELECT DATE_ADD(time '22:55:55', interval '10' hour) FROM sys.version;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 08:55:55   |
-    +------------+
-    1 row selected (0.085 seconds)
+    2 rows selected (0.172 seconds)
 
 Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
 
@@ -210,6 +233,17 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 *expr* is an interval expression.
 
 ### DATE_SUB Examples
+
+Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+
+    SELECT DATE_SUB(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` WHERE employee_id IN( '578','761');
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 1995-12-31 14:00:00.0  |
+    | 1997-12-31 14:00:00.0  |
+    +------------------------+
+    2 rows selected (0.161 seconds)
 
 Subtract two days to today's date May 15, 2015.
 

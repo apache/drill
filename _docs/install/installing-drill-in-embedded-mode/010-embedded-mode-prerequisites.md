@@ -14,7 +14,7 @@ You need to meet the following prerequisites to run Drill:
 
 * Linux, Mac OS X, and Windows: [Oracle Java SE Development (JDK) Kit 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) installation  
 * Windows only:  
-  * A JAVA_HOME environment variable set up that points to  to the JDK installation  
+  * A JAVA_HOME environment variable set up that points to the JDK installation  
   * A PATH environment variable that includes a pointer to the JDK installation  
   * A third-party utility for unzipping a tar.gz file 
 
