@@ -82,9 +82,14 @@ public class DrillJdbc41Factory extends DrillFactory {
   }
 
   @Override
-  public DrillResultSetImpl newResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, TimeZone timeZone) {
-    final ResultSetMetaData metaData = newResultSetMetaData(statement, prepareResult.getColumnList());
-    return new DrillResultSetImpl(statement, (DrillPrepareResult) prepareResult, metaData, timeZone);
+  public DrillResultSetImpl newResultSet( AvaticaStatement statement,
+                                          AvaticaPrepareResult prepareResult,
+                                          TimeZone timeZone ) {
+    final ResultSetMetaData metaData =
+        newResultSetMetaData(statement, prepareResult.getColumnList());
+    return new DrillResultSetImpl( (DrillStatementImpl) statement,
+                                   (DrillPrepareResult) prepareResult,
+                                   metaData, timeZone);
   }
 
   @Override
