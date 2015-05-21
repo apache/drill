@@ -848,14 +848,18 @@ public class TypeCastRules {
       }
     }
 
-    for (int i = 0; i < holder.getParamCount(); i++) {
-      MajorType argType = call.args.get(i).getMajorType();
-      MajorType parmType = holder.getParmMajorType(i);
+    final int numOfArgs = holder.getParamCount();
+    for (int i = 0; i < numOfArgs; i++) {
+      final MajorType argType = call.args.get(i).getMajorType();
+      final MajorType parmType = holder.getParmMajorType(i);
 
       //@Param FieldReader will match any type
       if (holder.isFieldReader(i)) {
 //        if (Types.isComplex(call.args.get(i).getMajorType()) ||Types.isRepeated(call.args.get(i).getMajorType()) )
-          continue;
+        // add the max cost when encountered with a field reader considering that it is the most expensive factor
+        // contributing to the cost.
+        cost += ResolverTypePrecedence.MAX_IMPLICIT_CAST_COST;
+        continue;
 //        else
 //          return -1;
       }
