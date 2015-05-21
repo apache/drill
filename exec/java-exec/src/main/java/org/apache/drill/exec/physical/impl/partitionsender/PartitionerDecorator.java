@@ -29,8 +29,9 @@ import org.apache.drill.exec.record.RecordBatch;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.testing.CountDownLatchInjection;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
 /**
  * Decorator class to hide multiple Partitioner existence from the caller
@@ -42,8 +43,7 @@ import org.apache.drill.exec.testing.ExecutionControlsInjector;
  */
 public class PartitionerDecorator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerDecorator.class);
-  private static final ExecutionControlsInjector injector =
-      ExecutionControlsInjector.getInjector(PartitionerDecorator.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(PartitionerDecorator.class);
 
   private List<Partitioner> partitioners;
   private final OperatorStats stats;

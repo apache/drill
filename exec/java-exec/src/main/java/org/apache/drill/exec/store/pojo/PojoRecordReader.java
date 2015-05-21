@@ -42,7 +42,8 @@ import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.NTimeStampWriter;
 import org.apache.drill.exec.store.pojo.Writers.StringWriter;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -50,8 +51,7 @@ import com.google.common.collect.Lists;
 
 public class PojoRecordReader<T> extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
-  private static final ExecutionControlsInjector injector =
-    ExecutionControlsInjector.getInjector(PojoRecordReader.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(PojoRecordReader.class);
 
   public final int forJsonIgnore = 1;
 

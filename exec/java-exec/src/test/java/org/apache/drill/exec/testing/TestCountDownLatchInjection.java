@@ -47,7 +47,7 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
    * {@link org.apache.drill.exec.ops.FragmentContext}.
    */
   private static class DummyClass {
-    private static final ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DummyClass.class);
+    private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DummyClass.class);
 
     private final QueryContext context;
     private final CountDownLatch latch;

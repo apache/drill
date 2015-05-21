@@ -21,6 +21,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.data.DataTunnel;
+import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.testing.ExecutionControlsInjector;
 import org.slf4j.Logger;
@@ -46,9 +47,9 @@ public class AccountingDataTunnel {
   }
 
   /**
-   * See {@link DataTunnel#setTestInjectionControls(ExecutionControlsInjector, ExecutionControls, Logger)}.
+   * See {@link DataTunnel#setTestInjectionControls(ControlsInjector, ExecutionControls, Logger)}.
    */
-  public void setTestInjectionControls(final ExecutionControlsInjector testInjector,
+  public void setTestInjectionControls(final ControlsInjector testInjector,
       final ExecutionControls testControls, final org.slf4j.Logger testLogger) {
     tunnel.setTestInjectionControls(testInjector, testControls, testLogger);
   }

@@ -48,7 +48,8 @@ import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.rel.RelCollationTraitDef;
@@ -66,7 +67,7 @@ import org.apache.hadoop.security.AccessControlException;
 
 public class DrillSqlWorker {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
-  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DrillSqlWorker.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DrillSqlWorker.class);
 
   private final Planner planner;
   private final HepPlanner hepPlanner;

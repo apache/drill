@@ -35,13 +35,12 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 import com.google.common.base.Preconditions;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 
 public class ScreenCreator implements RootCreator<Screen>{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
-  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ScreenCreator.class);
-
-
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);
 
   @Override
   public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) throws ExecutionSetupException {

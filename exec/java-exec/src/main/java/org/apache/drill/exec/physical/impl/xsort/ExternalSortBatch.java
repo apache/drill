@@ -62,8 +62,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.store.ischema.Records;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -80,6 +80,7 @@ import com.sun.codemodel.JExpr;
 
 public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ExternalSortBatch.class);
 
   private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
   private static final GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);
@@ -115,7 +116,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   public static final String INTERRUPTION_AFTER_SORT = "after-sort";
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
-  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ExternalSortBatch.class);
+
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, true);

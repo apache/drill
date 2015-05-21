@@ -56,7 +56,7 @@ public class TestPauseInjection extends BaseTestQuery {
    */
   private static class DummyClass {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DummyClass.class);
-    private static final ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DummyClass.class);
+    private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DummyClass.class);
 
     private final QueryContext context;
     private final CountDownLatch latch;

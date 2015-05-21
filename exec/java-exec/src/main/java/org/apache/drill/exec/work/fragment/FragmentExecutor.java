@@ -41,7 +41,8 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -52,7 +53,7 @@ import org.apache.hadoop.security.UserGroupInformation;
  */
 public class FragmentExecutor implements Runnable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
-  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(FragmentExecutor.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(FragmentExecutor.class);
 
   private final AtomicBoolean hasCloseoutThread = new AtomicBoolean(false);
   private final String fragmentName;

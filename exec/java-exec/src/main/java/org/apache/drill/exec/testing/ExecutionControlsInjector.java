@@ -18,7 +18,7 @@
 package org.apache.drill.exec.testing;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.util.AssertionUtil;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 
 /**
@@ -27,14 +27,15 @@ import org.slf4j.Logger;
  * of loggers). Injection site either use {@link org.apache.drill.exec.ops.FragmentContext} or
  * {@link org.apache.drill.exec.ops.QueryContext}. See {@link org.apache.drill.exec.testing.TestExceptionInjection} and
  * {@link org.apache.drill.exec.testing.TestPauseInjection} for examples of use.
+ * See {@link ControlsInjector} for documentation.
  */
-public class ExecutionControlsInjector {
-//  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(ExecutionControlsInjector.class);
+public class ExecutionControlsInjector implements ControlsInjector {
 
   private final Class<?> clazz; // the class that owns this injector
 
   /**
-   * Constructor. Classes should use the static {@link #getInjector} method to obtain their injector.
+   * Constructor. Classes should use the static {@link ControlsInjectorFactory#getInjector} method to obtain their
+   * injector.
    *
    * @param clazz the owning class
    */
@@ -42,96 +43,40 @@ public class ExecutionControlsInjector {
     this.clazz = clazz;
   }
 
-  /**
-   * Create an injector if assertions are enabled
-   *
-   * @param clazz the owning class
-   * @return the newly created injector
-   */
-  public static ExecutionControlsInjector getInjector(final Class<?> clazz) {
-    if (AssertionUtil.isAssertionsEnabled()) {
-      return new ExecutionControlsInjector(clazz);
-    } else {
-      return new NoOpControlsInjector(clazz);
-    }
-  }
-
-  /**
-   * Get the injector's owning class.
-   *
-   * @return the injector's owning class
-   */
+  @Override
   public Class<?> getSiteClass() {
     return clazz;
   }
 
-  /**
-   * Inject (throw) an unchecked exception at this point, if an injection is specified, and it is time
-   * for it to be thrown.
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate an exception
-   * during testing.
-   *
-   * @param executionControls the controls in the current context
-   * @param desc              the site description
-   *                          throws the exception specified by the injection, if it is time
-   */
+  @Override
   public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
+    Preconditions.checkNotNull(executionControls);
     final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwUnchecked();
     }
   }
 
-  /**
-   * Inject (throw) an unchecked exception at this point, if the fragmentContext is not null,
-   * an injection is specified, and it is time for it to be thrown.
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate an exception
-   * during testing.
-   *
-   * @param fragmentContext   fragmentContext used to retrieve the controls, can be null
-   * @param desc              the site description
-   *                          throws the exception specified by the injection, if it is time
-   */
+  @Override
   public void injectUnchecked(final FragmentContext fragmentContext, final String desc) {
     if (fragmentContext != null) {
       injectUnchecked(fragmentContext.getExecutionControls(), desc);
     }
   }
 
-  /**
-   * Inject (throw) a checked exception at this point, if an injection is specified, and it is time
-   * for it to be thrown.
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate an exception
-   * during testing.
-   *
-   * @param executionControls the controls in the current context
-   * @param desc              the site description
-   * @param exceptionClass    the expected class of the exception (or a super class of it)
-   * @throws T the exception specified by the injection, if it is time
-   */
-  public <T extends Throwable> void injectChecked(
-    final ExecutionControls executionControls, final String desc, final Class<T> exceptionClass) throws T {
+  @Override
+  public <T extends Throwable> void injectChecked(final ExecutionControls executionControls, final String desc,
+                                                  final Class<T> exceptionClass) throws T {
+    Preconditions.checkNotNull(executionControls);
     final ExceptionInjection exceptionInjection = executionControls.lookupExceptionInjection(this, desc);
     if (exceptionInjection != null) {
       exceptionInjection.throwChecked(exceptionClass);
     }
   }
 
-  /**
-   * Pauses at this point, if such an injection is specified (i.e. matches the site description).
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate a pause
-   * during testing.
-   *
-   * @param executionControls the controls in the current context
-   * @param desc              the site description
-   * @param logger            logger of the class containing the injection site
-   */
-  public void injectPause(final ExecutionControls executionControls, final String desc,
-                                               final Logger logger) {
+  @Override
+  public void injectPause(final ExecutionControls executionControls, final String desc, final Logger logger) {
+    Preconditions.checkNotNull(executionControls);
     final PauseInjection pauseInjection =
       executionControls.lookupPauseInjection(this, desc);
 
@@ -142,20 +87,10 @@ public class ExecutionControlsInjector {
     }
   }
 
-  /**
-   * Insert a pause that can be interrupted using {@link Thread#interrupt()} at the given site point, if such an
-   * injection is specified (i.e. matches the site description).
-   * <p/>
-   * <p>Implementors use this in their code at a site where they want to simulate a interruptible pause
-   * during testing.
-   *
-   * @param executionControls the controls in the current context
-   * @param desc              the site description
-   * @param logger            logger of the class containing the injection site
-   * @throws InterruptedException if interrupted using {@link Thread#interrupt()}
-   */
+  @Override
   public void injectInterruptiblePause(final ExecutionControls executionControls, final String desc,
       final Logger logger) throws InterruptedException {
+    Preconditions.checkNotNull(executionControls);
     final PauseInjection pauseInjection = executionControls.lookupPauseInjection(this, desc);
 
     if (pauseInjection != null) {
@@ -170,7 +105,9 @@ public class ExecutionControlsInjector {
     }
   }
 
+  @Override
   public CountDownLatchInjection getLatch(final ExecutionControls executionControls, final String desc) {
+    Preconditions.checkNotNull(executionControls);
     return executionControls.lookupCountDownLatchInjection(this, desc);
   }
 }

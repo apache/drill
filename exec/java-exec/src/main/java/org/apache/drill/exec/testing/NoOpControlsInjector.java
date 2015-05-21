@@ -17,19 +17,38 @@
  */
 package org.apache.drill.exec.testing;
 
+import org.apache.drill.exec.ops.FragmentContext;
 import org.slf4j.Logger;
 
 /**
  * An injector that does not inject any controls, useful when not testing (i.e. assertions are not enabled).
+ * See {@link ControlsInjector} for documentation.
  */
-public final class NoOpControlsInjector extends ExecutionControlsInjector {
+public final class NoOpControlsInjector implements ControlsInjector {
 
+  private final Class<?> clazz;
+
+  /**
+   * Constructor. Classes should use the static {@link ControlsInjectorFactory#getInjector} method to obtain their
+   * injector.
+   *
+   * @param clazz the owning class
+   */
   protected NoOpControlsInjector(final Class<?> clazz) {
-    super(clazz);
+    this.clazz = clazz;
+  }
+
+  @Override
+  public Class<?> getSiteClass() {
+    return clazz;
   }
 
   @Override
   public void injectUnchecked(final ExecutionControls executionControls, final String desc) {
+  }
+
+  @Override
+  public void injectUnchecked(final FragmentContext fragmentContext, final String desc) {
   }
 
   @Override
@@ -38,13 +57,12 @@ public final class NoOpControlsInjector extends ExecutionControlsInjector {
   }
 
   @Override
-  public void injectPause(final ExecutionControls executionControls, final String desc,
-                                               final Logger logger) {
+  public void injectPause(final ExecutionControls executionControls, final String desc, final Logger logger) {
   }
 
   @Override
-  public void injectInterruptiblePause(ExecutionControls executionControls, String desc, Logger logger)
-      throws InterruptedException {
+  public void injectInterruptiblePause(final ExecutionControls executionControls, final String desc,
+                                       final Logger logger) throws InterruptedException {
   }
 
   /**

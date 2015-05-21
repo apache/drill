@@ -31,14 +31,14 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.exec.util.Pointer;
 
 public class TopLevelAllocator implements BufferAllocator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
-
-  private static final ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(TopLevelAllocator.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(TopLevelAllocator.class);
   public static final String CHILD_BUFFER_INJECTION_SITE = "child.buffer";
 
   public static long MAXIMUM_DIRECT_MEMORY;

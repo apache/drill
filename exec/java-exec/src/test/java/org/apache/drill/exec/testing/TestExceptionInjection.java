@@ -51,7 +51,7 @@ public class TestExceptionInjection extends BaseTestQuery {
    * For instance, these are accessible from {@link org.apache.drill.exec.ops.QueryContext}.
    */
   private static class DummyClass {
-    private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(DummyClass.class);
+    private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DummyClass.class);
     private final QueryContext context;
 
     public DummyClass(final QueryContext context) {

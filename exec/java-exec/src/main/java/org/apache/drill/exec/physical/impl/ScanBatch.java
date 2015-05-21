@@ -49,7 +49,8 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.testing.ExecutionControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjector;
+import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -63,7 +64,7 @@ import com.google.common.collect.Maps;
  */
 public class ScanBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
-  private final static ExecutionControlsInjector injector = ExecutionControlsInjector.getInjector(ScanBatch.class);
+  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScanBatch.class);
 
   private final Map<MaterializedField.Key, ValueVector> fieldVectorMap = Maps.newHashMap();
 

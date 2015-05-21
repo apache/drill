@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -30,13 +31,10 @@ import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
-import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
-import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
-import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.calcite.sql.SqlLiteral;
 
 import com.google.common.collect.Maps;
@@ -44,7 +42,10 @@ import com.google.common.collect.Maps;
 public class SystemOptionManager extends BaseOptionManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
 
-  private static final OptionValidator[] VALIDATORS = {
+  private static final ImmutableList<OptionValidator> VALIDATORS;
+
+  static {
+    final ImmutableList.Builder<OptionValidator> builder = ImmutableList.<OptionValidator>builder().add(
       PlannerSettings.CONSTANT_FOLDING,
       PlannerSettings.EXCHANGE,
       PlannerSettings.HASHAGG,
@@ -111,10 +112,14 @@ public class SystemOptionManager extends BaseOptionManager {
       QueryClassLoader.JAVA_COMPILER_DEBUG,
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
-      ExecConstants.DRILLBIT_CONTROLS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
       ExecConstants.ENABLE_NEW_TEXT_READER
-  };
+    );
+    if (AssertionUtil.isAssertionsEnabled()) {
+      builder.add(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR);
+    }
+    VALIDATORS = builder.build();
+  }
 
   private final PStoreConfig<OptionValue> config;
   private PStore<OptionValue> options;

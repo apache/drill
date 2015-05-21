@@ -31,6 +31,7 @@ import org.apache.drill.exec.rpc.ListeningCommand;
 import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.testing.ExecutionControlsInjector;
 
@@ -43,7 +44,7 @@ public class DataTunnel {
 
   // Needed for injecting a test pause
   private boolean isInjectionControlSet;
-  private ExecutionControlsInjector testInjector;
+  private ControlsInjector testInjector;
   private ExecutionControls testControls;
   private org.slf4j.Logger testLogger;
 
@@ -63,7 +64,7 @@ public class DataTunnel {
    * @param testControls
    * @param testLogger
    */
-  public void setTestInjectionControls(final ExecutionControlsInjector testInjector,
+  public void setTestInjectionControls(final ControlsInjector testInjector,
       final ExecutionControls testControls, final org.slf4j.Logger testLogger) {
     isInjectionControlSet = true;
     this.testInjector = testInjector;
