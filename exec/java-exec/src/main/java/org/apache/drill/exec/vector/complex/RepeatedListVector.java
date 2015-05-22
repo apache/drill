@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex;
 import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,7 +70,7 @@ public class RepeatedListVector extends AbstractContainerVector
 
       @Override
       public Object getObject(int index) {
-        List<Object> list = new JsonStringArrayList();
+        final List<Object> list = new JsonStringArrayList();
         final int start = offsets.getAccessor().get(index);
         final int until = offsets.getAccessor().get(index+1);
         for (int i = start; i < until; i++) {
@@ -133,7 +134,7 @@ public class RepeatedListVector extends AbstractContainerVector
       public DelegateTransferPair(DelegateRepeatedVector target) {
         this.target = Preconditions.checkNotNull(target);
         if (target.getDataVector() == DEFAULT_DATA_VECTOR) {
-          target.addOrGetVector(VectorDescriptor.create(getDataVector().getField().getType()));
+          target.addOrGetVector(VectorDescriptor.create(getDataVector().getField()));
           target.getDataVector().allocateNew();
         }
         this.children = new TransferPair[] {
@@ -284,15 +285,16 @@ public class RepeatedListVector extends AbstractContainerVector
 
   protected RepeatedListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack, DelegateRepeatedVector delegate) {
     super(field, allocator, callBack);
-    int childrenSize = field.getChildren().size();
-
-    // repeated list vector should not have more than one child
-    assert childrenSize <= 1;
     this.delegate = Preconditions.checkNotNull(delegate);
-    if (childrenSize > 0) {
-      MaterializedField child = field.getChildren().iterator().next();
-      addOrGetVector(VectorDescriptor.create(child.getType()));
-//      setVector(TypeHelper.getNewVector(child, allocator, callBack));
+
+    final Collection<MaterializedField> children = field.getChildren();
+    final int childSize = children.size();
+    // repeated list vector cannot have more than one child
+    assert childSize < 2;
+    final boolean hasChild = childSize == 1;
+    if (hasChild) {
+      final MaterializedField child = children.iterator().next();
+      addOrGetVector(VectorDescriptor.create(child));
     }
   }
 

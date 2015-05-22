@@ -17,41 +17,67 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.util.Collection;
+
 import com.google.common.base.Preconditions;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.record.MaterializedField;
 
 public class VectorDescriptor {
-  private static final String DEFAULT_NAME = new String("NONE");
+  private static final String DEFAULT_NAME = "NONE";
 
-  private final TypeProtos.MajorType type;
-  private final String name;
+  private final MaterializedField field;
 
-  public VectorDescriptor(TypeProtos.MajorType type) {
+  public VectorDescriptor(final TypeProtos.MajorType type) {
     this(DEFAULT_NAME, type);
   }
 
-  public VectorDescriptor(String name,TypeProtos.MajorType type) {
-    this.name = Preconditions.checkNotNull(name, "name cannot be null");
-    this.type = Preconditions.checkNotNull(type, "type cannot be null");
+  public VectorDescriptor(final String name, final TypeProtos.MajorType type) {
+    this(MaterializedField.create(name, type));
+  }
+
+  public VectorDescriptor(final MaterializedField field) {
+    this.field = Preconditions.checkNotNull(field, "field cannot be null");
+  }
+
+  public MaterializedField getField() {
+    return field;
   }
 
   public TypeProtos.MajorType getType() {
-    return type;
+    return field.getType();
   }
 
   public String getName() {
-    return name;
+    return field.getLastName();
+  }
+
+  public Collection<MaterializedField> getChildren() {
+    return field.getChildren();
   }
 
   public boolean hasName() {
-    return name != DEFAULT_NAME;
+    return getName() != DEFAULT_NAME;
   }
 
-  public static VectorDescriptor create(String name, TypeProtos.MajorType type) {
+  public VectorDescriptor withName(final String name) {
+    return new VectorDescriptor(field.withPath(new FieldReference(name)));
+  }
+
+  public VectorDescriptor withType(final TypeProtos.MajorType type) {
+    return new VectorDescriptor(field.withType(type));
+  }
+
+  public static VectorDescriptor create(final String name, final TypeProtos.MajorType type) {
     return new VectorDescriptor(name, type);
   }
 
-  public static VectorDescriptor create(TypeProtos.MajorType type) {
+  public static VectorDescriptor create(final TypeProtos.MajorType type) {
     return new VectorDescriptor(type);
+  }
+
+  public static VectorDescriptor create(final MaterializedField field) {
+    return new VectorDescriptor(field);
   }
 }

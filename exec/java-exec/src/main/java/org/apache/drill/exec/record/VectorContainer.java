@@ -76,22 +76,22 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return addOrGet(field, null);
   }
 
-  public <T extends ValueVector> T addOrGet(MaterializedField field, SchemaChangeCallBack callBack) {
-    TypedFieldId id = getValueVectorId(field.getPath());
-    ValueVector v = null;
-    Class clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
+  public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
+    final TypedFieldId id = getValueVectorId(field.getPath());
+    final ValueVector vector;
+    final Class clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
-      v = getValueAccessorById(id.getFieldIds()).getValueVector();
-      if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(v.getClass())) {
-        ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
-        replace(v, newVector);
+      vector = getValueAccessorById(id.getFieldIds()).getValueVector();
+      if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
+        final ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+        replace(vector, newVector);
         return (T) newVector;
       }
     } else {
-      v = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
-      add(v);
+      vector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+      add(vector);
     }
-    return (T) v;
+    return (T) vector;
   }
 
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {

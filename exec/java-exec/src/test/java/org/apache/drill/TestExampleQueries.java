@@ -27,8 +27,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import static org.apache.drill.TestBuilder.listOf;
 
-public class TestExampleQueries extends BaseTestQuery{
+public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test // see DRILL-2328
@@ -41,7 +42,7 @@ public class TestExampleQueries extends BaseTestQuery{
       testBuilder()
           .sqlQuery("select (mi || lname) as CONCATOperator, mi, lname, concat(mi, lname) as CONCAT from concatNull")
           .ordered()
-          .baselineColumns("CONCATOperator", "mi", "lname","CONCAT")
+          .baselineColumns("CONCATOperator", "mi", "lname", "CONCAT")
           .baselineValues("A.Nowmer", "A.", "Nowmer", "A.Nowmer")
           .baselineValues("I.Whelply", "I.", "Whelply", "I.Whelply")
           .baselineValues(null, null, "Derry", "Derry")
@@ -157,7 +158,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
-  public void testJoinMerge() throws Exception{
+  public void testJoinMerge() throws Exception {
     test("alter session set `planner.enable_hashjoin` = false");
     test("select count(*) \n" +
         "  from (select l.l_orderkey as x, c.c_custkey as y \n" +
@@ -170,12 +171,12 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
-  public void testJoinExpOn() throws Exception{
+  public void testJoinExpOn() throws Exception {
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b on a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
   }
 
   @Test
-  public void testJoinExpWhere() throws Exception{
+  public void testJoinExpWhere() throws Exception {
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b where a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
   }
 
@@ -201,8 +202,8 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testPushExpInJoinConditionLeftJoin() throws Exception {
     test("select a.n_nationkey, b.r_regionkey from cp.`tpch/nation.parquet` a left join cp.`tpch/region.parquet` b " + "" +
         " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
-    //    "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
-        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') ") ;   // right filter
+        //    "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') ");   // right filter
     //    "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
   }
 
@@ -211,52 +212,52 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select a.n_nationkey, b.r_regionkey from cp.`tpch/nation.parquet` a right join cp.`tpch/region.parquet` b " + "" +
         " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
         "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') ");  // left filter
-     //   "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
-     //   "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+    //   "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+    //   "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
   }
 
   @Test
-  public void testCaseReturnValueVarChar() throws Exception{
+  public void testCaseReturnValueVarChar() throws Exception {
     test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
   }
 
   @Test
-  public void testCaseReturnValueBigInt() throws Exception{
-    test("select case when employee_id < 1000 then 1000 else 2000 end from cp.`employee.json` limit 5" );
+  public void testCaseReturnValueBigInt() throws Exception {
+    test("select case when employee_id < 1000 then 1000 else 2000 end from cp.`employee.json` limit 5");
   }
 
   @Test
-  public void testHashPartitionSV2 () throws Exception{
+  public void testHashPartitionSV2() throws Exception {
     test("select count(n_nationkey) from cp.`tpch/nation.parquet` where n_nationkey > 8 group by n_regionkey");
   }
 
   @Test
-  public void testHashPartitionSV4 () throws Exception{
+  public void testHashPartitionSV4() throws Exception {
     test("select count(n_nationkey) as cnt from cp.`tpch/nation.parquet` group by n_regionkey order by cnt");
   }
 
   @Test
-  public void testSelectWithLimit() throws Exception{
+  public void testSelectWithLimit() throws Exception {
     test("select employee_id,  first_name, last_name from cp.`employee.json` limit 5 ");
   }
 
   @Test
-  public void testSelectWithLimit2() throws Exception{
+  public void testSelectWithLimit2() throws Exception {
     test("select l_comment, l_orderkey from cp.`tpch/lineitem.parquet` limit 10000 ");
   }
 
   @Test
-  public void testSVRV4() throws Exception{
+  public void testSVRV4() throws Exception {
     test("select employee_id,  first_name from cp.`employee.json` order by employee_id ");
   }
 
   @Test
-  public void testSVRV4MultBatch() throws Exception{
+  public void testSVRV4MultBatch() throws Exception {
     test("select l_orderkey from cp.`tpch/lineitem.parquet` order by l_orderkey limit 10000 ");
   }
 
   @Test
-  public void testSVRV4Join() throws Exception{
+  public void testSVRV4Join() throws Exception {
     test("select count(*) from cp.`tpch/lineitem.parquet` l, cp.`tpch/partsupp.parquet` ps \n" +
         " where l.l_partkey = ps.ps_partkey and l.l_suppkey = ps.ps_suppkey ;");
   }
@@ -285,7 +286,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   @Ignore("DRILL-3004")
-  public void testJoin() throws Exception{
+  public void testJoin() throws Exception {
     test("alter session set `planner.enable_hashjoin` = false");
     test("SELECT\n" +
         "  nations.N_NAME,\n" +
@@ -299,22 +300,22 @@ public class TestExampleQueries extends BaseTestQuery{
 
 
   @Test
-  public void testWhere() throws Exception{
+  public void testWhere() throws Exception {
     test("select * from cp.`employee.json` ");
   }
 
   @Test
-  public void testGroupBy() throws Exception{
+  public void testGroupBy() throws Exception {
     test("select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
   }
 
   @Test
-  public void testExplainPhysical() throws Exception{
+  public void testExplainPhysical() throws Exception {
     test("explain plan for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
   }
 
   @Test
-  public void testExplainLogical() throws Exception{
+  public void testExplainLogical() throws Exception {
     test("explain plan without implementation for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
   }
 
@@ -490,7 +491,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-1488
-  public void testIdentifierMaxLength() throws  Exception {
+  public void testIdentifierMaxLength() throws Exception {
     // use long column alias name (approx 160 chars)
     test("select employee_id as  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa from cp.`employee.json` limit 1");
 
@@ -517,7 +518,7 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test // DRILL-1788
   public void testCaseInsensitiveJoin() throws Exception {
     test("select n3.n_name from (select n2.n_name from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.N_name = n2.n_name) n3 " +
-          " join cp.`tpch/nation.parquet` n4 on n3.n_name = n4.n_name");
+        " join cp.`tpch/nation.parquet` n4 on n3.n_name = n4.n_name");
   }
 
   @Test // DRILL-1561
@@ -558,7 +559,7 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
 
-      // source is CSV
+    // source is CSV
     String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
     String query = String.format("select rid, x.name from (select columns[0] as RID, columns[1] as NAME from dfs_test.`%s`) X where X.rid = 2", root);
     actualRecordCount = testSql(query);
@@ -572,9 +573,9 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testMultipleCountDistinctWithGroupBy() throws Exception {
     String query = "select n_regionkey, count(distinct n_nationkey), count(distinct n_name) from cp.`tpch/nation.parquet` group by n_regionkey;";
     String hashagg_only = "alter session set `planner.enable_hashagg` = true; " +
-                          "alter session set `planner.enable_streamagg` = false;";
+        "alter session set `planner.enable_streamagg` = false;";
     String streamagg_only = "alter session set `planner.enable_hashagg` = false; " +
-                            "alter session set `planner.enable_streamagg` = true;";
+        "alter session set `planner.enable_streamagg` = true;";
 
     // hash agg and streaming agg with default slice target (single phase aggregate)
     test(hashagg_only + query);
@@ -617,16 +618,16 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test // DRILL-2063
   public void testAggExpressionWithGroupBy() throws Exception {
     String query = "select l_suppkey, sum(l_extendedprice)/sum(l_quantity) as avg_price \n" +
-           " from cp.`tpch/lineitem.parquet` where l_orderkey in \n" +
-           " (select o_orderkey from cp.`tpch/orders.parquet` where o_custkey = 2) \n" +
-           " and l_suppkey = 4 group by l_suppkey";
+        " from cp.`tpch/lineitem.parquet` where l_orderkey in \n" +
+        " (select o_orderkey from cp.`tpch/orders.parquet` where o_custkey = 2) \n" +
+        " and l_suppkey = 4 group by l_suppkey";
 
     testBuilder()
-    .sqlQuery(query)
-    .ordered()
-    .baselineColumns("l_suppkey", "avg_price")
-    .baselineValues(4, 1374.47)
-    .build().run();
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("l_suppkey", "avg_price")
+        .baselineValues(4, 1374.47)
+        .build().run();
 
   }
 
@@ -638,11 +639,11 @@ public class TestExampleQueries extends BaseTestQuery{
         " group by l_suppkey having sum(l_extendedprice)/sum(l_quantity) > 1850.0";
 
     testBuilder()
-    .sqlQuery(query)
-    .ordered()
-    .baselineColumns("l_suppkey", "avg_price")
-    .baselineValues(98, 1854.95)
-    .build().run();
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("l_suppkey", "avg_price")
+        .baselineValues(98, 1854.95)
+        .build().run();
   }
 
   @Test
@@ -695,7 +696,7 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test // DRILL-2311
-  @Ignore ("Move to TestParquetWriter. Have to ensure same file name does not exist on filesystem.")
+  @Ignore("Move to TestParquetWriter. Have to ensure same file name does not exist on filesystem.")
   public void testCreateTableSameColumnNames() throws Exception {
     String creatTable = "CREATE TABLE CaseInsensitiveColumnNames as " +
         "select cast(r_regionkey as BIGINT) BIGINT_col, cast(r_regionkey as DECIMAL) bigint_col \n" +
@@ -765,11 +766,11 @@ public class TestExampleQueries extends BaseTestQuery{
         + " in (select p.p_partkey from cp.`tpch/part.parquet` p where p.p_type like '%NICKEL'))";
 
     testBuilder()
-    .sqlQuery(query)
-    .unOrdered()
-    .baselineColumns("cnt")
-    .baselineValues(60175l)
-    .go();
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(60175l)
+        .go();
   }
 
   @Test // DRILL-2094
@@ -913,10 +914,10 @@ public class TestExampleQueries extends BaseTestQuery{
         + "from cp.`tpch/nation.parquet` \n"
         + "group by n_nationkey \n"
         + "having n_nationkey in \n"
-            + "(select r_regionkey \n"
-            + "from cp.`tpch/region.parquet` \n"
-            + "group by r_regionkey \n"
-            + "having sum(r_regionkey) > 0)";
+        + "(select r_regionkey \n"
+        + "from cp.`tpch/region.parquet` \n"
+        + "group by r_regionkey \n"
+        + "having sum(r_regionkey) > 0)";
 
     String query3 = "select n_nationkey as col \n"
         + "from cp.`tpch/nation.parquet` \n"
@@ -966,9 +967,9 @@ public class TestExampleQueries extends BaseTestQuery{
     String root = FileUtils.getResourceAsFile("/store/text/data/nations.csv").toURI().toString();
     String query = String.format(
         "select cast(columns[0] as int) as nation_key " +
-        " from dfs_test.`%s` " +
-        " group by columns[0] " +
-        " order by cast(columns[0] as int)", root);
+            " from dfs_test.`%s` " +
+            " group by columns[0] " +
+            " order by cast(columns[0] as int)", root);
 
     testBuilder()
         .sqlQuery(query)
@@ -1020,4 +1021,14 @@ public class TestExampleQueries extends BaseTestQuery{
 
   }
 
+  @Test
+  public void testRepeatedListProjectionPastJoin() throws Exception {
+    final String query = "select * from cp.`join/join-left-drill-3032.json` f1 inner join cp.`join/join-right-drill-3032.json` f2 on f1.id = f2.id";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("id", "id0", "aaa")
+        .baselineValues(1L, 1L, listOf(listOf(listOf("val1"), listOf("val2"))))
+        .go();
+  }
 }
