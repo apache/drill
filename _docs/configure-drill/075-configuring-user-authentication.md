@@ -6,7 +6,9 @@ Authentication is the process of proving a user’s identity to access a process
  
 If user impersonation is enabled, Drill executes the client requests as the authenticated user. Otherwise, Drill executes client requests as the user that started the Drillbit process. You can enable both authorization and impersonation to improve Drill security. See [Configuring User Impersonation]({{site.baseurl}}/docs/configuring-user-impersonation/).
 
-When using PAM for authentication, each user that has permission to run Drill must exist in the list of users that resides on each Drill node in the cluster. The username (including uid) and password for each user must be identical across all of the Drill nodes. 
+When using PAM for authentication, each user that has permission to run Drill queries must exist in the list of users that resides on each Drill node in the cluster. The username (including uid) and password for each user must be identical across all of the Drill nodes. 
+
+If you use PAM with /etc/passwd for authentication, verify that the users with permission to start the Drill process are part of the shadow user group on all nodes in the cluster. This enables Drill to read the /etc/shadow file for authentication. 
 
 ## User Authentication Process
 
@@ -15,12 +17,11 @@ When user authentication is configured, each user that accesses the Drillbit pro
 When launching SQLLine, a user must include the `–n` and `–p` parameters with their username and password in the SQLLine argument:  
        `sqlline –u jdbc:drill:zk=10.10.11.112:5181 –n bob –p bobdrill`
 
- 
-When a user connects to Drill from a BI tool, such as Tableau, the MapR Drill ODBC driver prompts the user for their username and password:
+ When a user connects to Drill from a BI tool, such as Tableau, the MapR Drill ODBC driver prompts the user for their username and password:
 
 ![ODBC Driver]({{site.baseurl}}/docs/img/UserAuth_ODBC_Driver.png)
 
-The client passes the username and password to a Drillbit, which then passes the credentials to PAM. If PAM can verify that the user is authorized to access Drill, the user can connect to the Drillbit process from the client and issue queries against the file system or other storage plugins, such as Hive or HBase. However, if PAM cannot verify that the user is authorized to access Drill, the client returns an error.
+The client passes the username and password to a Drillbit as part of the connection request, which then passes the credentials to PAM. If PAM can verify that the user is authorized to access Drill, the connection is successful, and the user can issues queries against the file system or other storage plugins, such as Hive or HBase. However, if PAM cannot verify that the user is authorized to access Drill, the connection is terminated as AUTH_FAILED.
  
 The following image illustrates the user authentication process in Drill:
 
@@ -28,7 +29,7 @@ The following image illustrates the user authentication process in Drill:
 
 ### Installing and Configuring PAM
 
-Install and configure the provided Drill PAM. Drill only supports the PAM provided here.
+Install and configure the provided Drill PAM. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator using the instructions under "Implementing and Configuring a Custom Authenticator."
  
 Complete the following steps to install and configure PAM for Drill:
 
@@ -50,7 +51,7 @@ Complete the following steps to install and configure PAM for Drill:
            } 
           }
 
-5. (Optional) To add or remove different PAM profiles, add or delete the profile names in the `“pam_profiles”` array.  
+5. (Optional) To add or remove different PAM profiles, add or delete the profile names in the `“pam_profiles”` array shown above.  
 6. Restart the Drillbit process on each Drill node.
    * In a MapR cluster, run the following command:  
 

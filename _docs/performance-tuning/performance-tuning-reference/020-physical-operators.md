@@ -95,9 +95,9 @@ Drill uses the following receiver operators:
 
 Drill uses the following sender operators:  
 
-| PartitionSender                                                                                                                                                |                                                                                                                |
-|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| The PartitionSender operator maintains a queue for each outbound destination.  May be either the number of outbound minor fragments or the number of the nodes | depending on the use of muxxing operations.  Each queue may store up to 3 record batches for each destination. |  
+| Operator        | Description                                                                                                                                                                                                                                                                    |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| PartitionSender | The PartitionSender operator maintains a queue for each outbound destination.  May be either the number of outbound minor fragments or the number of the nodes, depending on the use of muxxing operations.  Each queue may store up to 3 record batches for each destination. |
 
 ## File Writers  
 
