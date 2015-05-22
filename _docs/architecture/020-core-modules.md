@@ -26,4 +26,3 @@ through Hive if they have metadata defined there. Drill integration with Hive
 is only for metadata. Drill does not invoke the Hive execution engine for any
 requests.
 
-  * **Distributed cache**: Drill uses a distributed cache to manage metadata (not the data) and configuration information across various nodes. Sample metadata information that is stored in the cache includes query plan fragments, intermediate state of the query execution, and statistics. Drill uses Infinispan as its cache technology.
