@@ -2,9 +2,7 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-This exercise creates two tables in HBase, students and clicks, that you can query with Drill. As an HBase user, you most likely are running Drill in distributed mode, in which Drill might start as a service. If you are not an HBase user and just kicking the tires, you might use the Drill Sandbox on a single-node cluster (embedded mode). In this case, you need to [start Drill]({{ site.baseurl }}/docs/install-drill/) before performing step 5 of this exercise. On the Drill Sandbox, HBase tables you create will be located in: `/mapr/demo.mapr.com/tables`
-
-You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.
+This exercise creates two tables in HBase, students and clicks, that you can query with Drill. You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to readable output. You use the CAST function to convert the binary INT to readable output in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.
 
 ## Create the HBase tables
 
@@ -87,11 +85,6 @@ steps:
 4. Issue the following command to put the data into hbase:  
   
         cat testdata.txt | hbase shell
-5. In Drill, use the [MapR-DB format plugin]({{ site.baseurl }}/docs/mapr-db-format), if you are using the Drill Sandbox; otherwise, enable and use the hbase storage plugin on a system having HBase services.  
-   * USE hbase;  /* If you have installed HBase services. */  
-   * USE maprdb;  /* If you are using the Drill Sandbox */
-
-The `maprdb` format plugin provides access to the `/tables` directory. Use Drill to query the students and clicks tables on the Drill Sandbox.  
 
 ## Query HBase Tables
 1. Issue the following query to see the data in the students table:  

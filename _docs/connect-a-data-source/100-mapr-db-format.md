@@ -2,7 +2,7 @@
 title: "MapR-DB Format"
 parent: "Connect a Data Source"
 ---
-Drill includes a `maprdb` format for MapR-DB that is defined within the
+The MapR-DB format is not included in apache drill release. Drill includes a `maprdb` format for MapR-DB that is defined within the
 default `dfs` storage plugin instance when you install Drill from the `mapr-drill` package on a MapR node. The `maprdb` format improves the
 estimated number of rows that Drill uses to plan a query. It also enables you
 to query tables like you would query files in a file system because MapR-DB
@@ -21,7 +21,7 @@ query.
     SELECT * FROM mfs.`/users/max/mytable`;
 
 The following image shows a portion of the configuration with the `maprdb`
-format plugin for the `dfs` instance:
+format for the `dfs` instance:
 
 ![drill query flow]({{ site.baseurl }}/docs/img/18.png)
 

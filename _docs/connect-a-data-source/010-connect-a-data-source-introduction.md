@@ -25,5 +25,4 @@ A storage plugin provides the following information to Drill:
   * Interfaces that Drill can use to read from and write to data sources
   * A set of storage plugin optimization rules that assist with efficient and faster execution of Drill queries, such as pushdowns, statistics, and partition awareness
 
-A storage plugin performs scanner and writer functions and informs the execution engine of any native capabilities, such
-as predicate pushdown, joins, and SQL.
+A storage plugin performs scanner and writer functions and informs the execution engine of any native capabilities.
