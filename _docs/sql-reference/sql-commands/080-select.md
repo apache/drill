@@ -35,14 +35,6 @@ Because Drill works with schema-less data sources, you cannot use positional
 aliases (1, 2, etc.) to refer to SELECT list columns, except in the ORDER BY
 clause.
 
-## UNION ALL Set Operator
-
-Drill supports the UNION ALL set operator to combine two result sets. The
-distinct UNION operator is not yet supported.
-
-The EXCEPT, EXCEPT ALL, INTERSECT, and INTERSECT ALL operators are not yet
-supported.
-
 ## Joins
 
 Drill supports ANSI standard joins in the FROM and WHERE clauses:
@@ -52,12 +44,11 @@ Drill supports ANSI standard joins in the FROM and WHERE clauses:
 
 The following types of join syntax are supported:
 
-Join type| Syntax  
----|---  
-Join condition in WHERE clause|FROM table1, table 2 WHERE table1.col1=table2.col1  
-USING join in FROM clause|FROM table1 JOIN table2 USING(col1, ...)  
-ON join in FROM clause|FROM table1 JOIN table2 ON table1.col1=table2.col1  
-NATURAL JOIN in FROM clause|FROM table 1 NATURAL JOIN table 2  
+| Join type                      | Syntax                                             |
+|--------------------------------|----------------------------------------------------|
+| Join condition in WHERE clause | FROM table1, table 2 WHERE table1.col1=table2.col1 |
+| ON join in FROM clause         | FROM table1 JOIN table2 ON table1.col1=table2.col1 |
+
 
 Cross-joins are not yet supported. You must specify a join condition when more
 than one table is listed in the FROM clause.

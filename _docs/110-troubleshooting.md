@@ -10,8 +10,9 @@ Before you begin troubleshooting issues that you encounter in Drill, make sure y
 You should also know the version of Drill running in the cluster. You can search JIRA for issues related to the version to see if a patch or workaround exists for the issue that you encountered.
 
 ### Identify the Foreman
-Issue the following query to identify the node running as the Foreman:
-SELECT host FROM sys.drillbits WHERE `current` = true;
+Issue the following query to identify the node running as the Foreman:  
+
+       SELECT host FROM sys.drillbits WHERE `current` = true;
 
 ### Identify the Drill Version
 Issue the following query to identify the version of Drill running in your cluster:
