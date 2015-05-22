@@ -6,9 +6,12 @@ First, check that you [meet the prerequisites]({{site.baseurl}}/docs/embedded-mo
 
 Complete the following steps to install Drill:  
 
-1. Issue the following command in a terminal to download the latest, stable version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz):
+1. In a terminal windows, change to the directory where you want to install Drill.
 
-        wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz  
+2. one of the following two commands (some systems will have wget, and some will have curl) to download the latest version of Apache Drill, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz):
+
+   * `wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
+   *  `curl -o apache-drill-1.0.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
 
 2. Copy the downloaded file to the directory where you want to install Drill. 
 

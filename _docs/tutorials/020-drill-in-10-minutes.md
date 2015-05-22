@@ -43,13 +43,16 @@ The output looks something like this:
 
 Complete the following steps to install Drill:  
 
-1. Issue the following command in a terminal to download the latest version of Apache Drill to a directory on your machine, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz):
+1. In a terminal windows, change to the directory where you want to install Drill.
 
-        wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz  
+2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz)or run one of the following commands, depending on which you have installed on your system:
 
-2. Copy the downloaded file to the directory where you want to install Drill. 
+   * `wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
+   *  `curl -o apache-drill-1.0.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
 
-3. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
+3. Copy the downloaded file to the directory where you want to install Drill. 
+
+4. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
         sudo tar -xvzf apache-drill-1.0.0.tar.gz  
 
@@ -107,7 +110,7 @@ Issue the following command when you want to exit the Drill shell:
 
 ## Query Sample Data
 
-Your Drill installation includes a `sample-date` directory with JSON and
+Your Drill installation includes a `sample-data` directory with JSON and
 Parquet files that you can query. The local file system on your machine is
 configured as the `dfs` storage plugin instance by default when you install
 Drill in embedded mode. For more information about storage plugin
@@ -120,7 +123,7 @@ Use SQL syntax to query the sample `JSON` and `Parquet` files in the `sample-dat
 A sample JSON file, `employee.json`, contains fictitious employee data.
 
 To view the data in the `employee.json` file, submit the following SQL query
-to Drill:
+to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/) to point to the file.
     
     0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;
 
@@ -146,20 +149,12 @@ If you followed the Apache Drill in 10 Minutes instructions to install Drill
 in embedded mode, the path to the parquet file varies between operating
 systems.
 
-{% include startnote.html %}When you enter the query, include the version of Drill that you are currently running.{% include endnote.html %} 
+{% include startnote.html %}Substitute your installation path and the Drill version in the angle-bracketed locations when you enter the query.{% include endnote.html %} 
 
 To view the data in the `region.parquet` file, issue the query appropriate for
 your operating system:
 
-* Linux  
-
-        SELECT * FROM dfs.`/opt/drill/apache-drill-<version>/sample-data/region.parquet`;
-* Mac OS X
-  
-        SELECT * FROM dfs.`/Users/max/drill/apache-drill-<version>/sample-data/region.parquet`;
-* Windows  
-        
-        SELECT * FROM dfs.`C:\drill\apache-drill-<version>\sample-data\region.parquet`;
+        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/region.parquet`;
 
 The query returns the following results:
 
@@ -180,21 +175,12 @@ If you followed the Apache Drill in 10 Minutes instructions to install Drill
 in embedded mode, the path to the parquet file varies between operating
 systems.
 
-{% include startnote.html %}When you enter the query, include the version of Drill that you are currently running.{% include endnote.html %}
+{% include startnote.html %}Substitute your installation path and the Drill version in the angle-bracketed locations when you enter the query{% include endnote.html %}
 
 To view the data in the `nation.parquet` file, issue the query appropriate for
 your operating system:
 
-* Linux  
-
-          SELECT * FROM dfs.`/opt/drill/apache-drill-<version>/sample-data/nation.parquet`;
-* Mac OS X
-  
-          SELECT * FROM dfs.`/Users/max/drill/apache-drill-<version>/sample-data/nation.parquet`;
-
-* Windows 
- 
-          SELECT * FROM dfs.`C:\drill\apache-drill-<version>\sample-data\nation.parquet`;
+          SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/nation.parquet`;
 
 The query returns the following results:
 

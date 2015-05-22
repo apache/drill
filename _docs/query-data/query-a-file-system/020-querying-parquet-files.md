@@ -12,20 +12,9 @@ The examples assume that Drill was [installed in embedded mode]({{ site.baseurl 
 
 ## Region File
 
-To view the data in the `region.parquet` file, issue the query appropriate for
-your operating system:
+To view the data in the `region.parquet` file, issue the following query:
 
-  * Linux  
-    
-        SELECT * FROM dfs.`/opt/drill/apache-drill-1.0.0/sample-data/region.parquet`;
-
-  * Mac OS X  
-        
-        SELECT * FROM dfs.`/Users/max/drill/apache-drill-1.0.0/sample-data/region.parquet`;
-
-  * Windows  
-    
-        SELECT * FROM dfs.`C:\drill\apache-drill-1.0.0\sample-data\region.parquet`;
+        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>\sample-data\region.parquet`;
 
 The query returns the following results:
 
@@ -49,17 +38,7 @@ systems.
 To view the data in the `nation.parquet` file, issue the query appropriate for
 your operating system:
 
-  * Linux  
-  
-        SELECT * FROM dfs.`/opt/drill/apache-drill-1.0.0/sample-data/nation.parquet`;
-
-  * Mac OS X  
-
-        SELECT * FROM dfs.`/Users/max/drill/apache-drill-1.0.0-incubating/sample-data/nation.parquet`;
-
-  * Windows  
-
-        SELECT * FROM dfs.`C:\drill\apache-drill-1.0.0-incubating\sample-data\nation.parquet`;
+        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/apache-drill-1.0.0/sample-data/nation.parquet`;
 
 The query returns the following results:
 
