@@ -8,14 +8,13 @@ Complete the following steps to install Drill:
 
 1. In a terminal windows, change to the directory where you want to install Drill.
 
-2. one of the following two commands (some systems will have wget, and some will have curl) to download the latest version of Apache Drill, or download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz):
-
+2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz) or run one of the following commands, depending on which you have installed on your system:  
    * `wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
    *  `curl -o apache-drill-1.0.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
 
-2. Copy the downloaded file to the directory where you want to install Drill. 
+3. Copy the downloaded file to the directory where you want to install Drill. 
 
-3. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
+4. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
         sudo tar -xvzf apache-drill-1.0.0.tar.gz  
 
