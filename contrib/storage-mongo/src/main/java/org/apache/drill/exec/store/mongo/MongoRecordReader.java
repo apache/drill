@@ -37,6 +37,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,27 +46,25 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
-import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
 public class MongoRecordReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
 
-  private DBCollection collection;
-  private DBCursor cursor;
+  private MongoCollection<Document> collection;
+  private MongoCursor<Document> cursor;
 
   private JsonReader jsonReader;
   private VectorContainerWriter writer;
 
   private BasicDBObject filters;
-  private DBObject fields;
+  private BasicDBObject fields;
 
   private MongoClientOptions clientOptions;
   private MongoCredential credential;
@@ -141,7 +140,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       }
       MongoClient client = MongoCnxnManager.getClient(addresses, clientOptions,
           credential);
-      DB db = client.getDB(subScanSpec.getDbName());
+      MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
       collection = db.getCollection(subScanSpec.getCollectionName());
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -155,7 +154,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false, readNumbersAsDouble);
     logger.info("Filters Applied : " + filters);
     logger.info("Fields Selected :" + fields);
-    cursor = collection.find(filters, fields);
+    cursor = collection.find(filters).projection(fields).iterator();
   }
 
   @Override
@@ -170,7 +169,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     try {
       while (docCount < BaseValueVector.INITIAL_VALUE_ALLOCATION && cursor.hasNext()) {
         writer.setPosition(docCount);
-        String doc = cursor.next().toString();
+        String doc = cursor.next().toJson();
         jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
         jsonReader.write(writer);
         docCount++;

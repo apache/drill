@@ -22,13 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.bson.LazyBSONCallback;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.LazyWriteableDBObject;
 
 public class MongoUtils {
 
@@ -50,14 +46,6 @@ public class MongoUtils {
     filters.add(rightFilter);
     orQueryFilter.put("$or", filters);
     return orQueryFilter;
-  }
-
-  public static BasicDBObject deserializeFilter(byte[] filterBytes) {
-    DBObject dbo = new LazyWriteableDBObject(filterBytes,
-        new LazyBSONCallback());
-    BasicDBObject result = new BasicDBObject();
-    result.putAll(dbo);
-    return result;
   }
 
   public static Map<String, List<BasicDBObject>> mergeFilters(

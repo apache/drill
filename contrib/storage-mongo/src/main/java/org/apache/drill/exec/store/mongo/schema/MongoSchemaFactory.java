@@ -27,10 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Maps;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
-
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -50,13 +47,13 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mongodb.DB;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 
 public class MongoSchemaFactory implements SchemaFactory {
 
@@ -106,8 +103,10 @@ public class MongoSchemaFactory implements SchemaFactory {
         throw new UnsupportedOperationException();
       }
       try {
-        return MongoCnxnManager.getClient(addresses, options, credential)
-            .getDatabaseNames();
+        List<String> dbNames = new ArrayList<>();
+        MongoCnxnManager.getClient(addresses, options, credential)
+            .listDatabaseNames().into(dbNames);
+        return dbNames;
       } catch (MongoException me) {
         logger.warn("Failure while loading databases in Mongo. {}",
             me.getMessage());
@@ -124,9 +123,11 @@ public class MongoSchemaFactory implements SchemaFactory {
     @Override
     public List<String> load(String dbName) throws Exception {
       try {
-        DB db = MongoCnxnManager.getClient(addresses, options, credential)
-            .getDB(dbName);
-        return new ArrayList<>(db.getCollectionNames());
+        MongoDatabase db = MongoCnxnManager.getClient(addresses, options,
+            credential).getDatabase(dbName);
+        List<String> collectionNames = new ArrayList<>();
+        db.listCollectionNames().into(collectionNames);
+        return collectionNames;
       } catch (MongoException me) {
         logger.warn("Failure while getting collection names from '{}'. {}",
             dbName, me.getMessage());
