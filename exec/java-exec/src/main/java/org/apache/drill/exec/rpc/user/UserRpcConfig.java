@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import java.util.concurrent.Executor;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -32,10 +34,11 @@ import org.apache.drill.exec.rpc.RpcConfig;
 public class UserRpcConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserRpcConfig.class);
 
-  public static RpcConfig getMapping(DrillConfig config) {
+  public static RpcConfig getMapping(DrillConfig config, Executor executor) {
     return RpcConfig.newBuilder()
         .name("USER")
         .timeout(config.getInt(ExecConstants.USER_RPC_TIMEOUT))
+        .executor(executor)
         .add(RpcType.HANDSHAKE, UserToBitHandshake.class, RpcType.HANDSHAKE, BitToUserHandshake.class) // user to bit
         .add(RpcType.RUN_QUERY, RunQuery.class, RpcType.QUERY_HANDLE, QueryId.class) // user to bit
         .add(RpcType.CANCEL_QUERY, QueryId.class, RpcType.ACK, Ack.class) // user to bit

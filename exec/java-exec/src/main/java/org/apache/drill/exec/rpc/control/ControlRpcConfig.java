@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.concurrent.Executor;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
@@ -35,9 +37,10 @@ import org.apache.drill.exec.rpc.RpcConfig;
 public class ControlRpcConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlRpcConfig.class);
 
-  public static RpcConfig getMapping(DrillConfig config) {
+  public static RpcConfig getMapping(DrillConfig config, Executor executor) {
     return RpcConfig.newBuilder()
         .name("CONTROL")
+        .executor(executor)
         .timeout(config.getInt(ExecConstants.BIT_RPC_TIMEOUT))
         .add(RpcType.HANDSHAKE, BitControlHandshake.class, RpcType.HANDSHAKE, BitControlHandshake.class)
         .add(RpcType.REQ_INITIALIZE_FRAGMENTS, InitializeFragments.class, RpcType.ACK, Ack.class)

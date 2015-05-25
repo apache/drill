@@ -20,6 +20,8 @@ package org.apache.drill.exec.rpc.user;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 
+import java.util.concurrent.Executor;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -51,9 +53,9 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   private boolean supportComplexTypes = true;
 
   public UserClient(DrillConfig config, boolean supportComplexTypes, BufferAllocator alloc,
-      EventLoopGroup eventLoopGroup) {
+      EventLoopGroup eventLoopGroup, Executor eventExecutor) {
     super(
-        UserRpcConfig.getMapping(config),
+        UserRpcConfig.getMapping(config, eventExecutor),
         alloc,
         eventLoopGroup,
         RpcType.HANDSHAKE,

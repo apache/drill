@@ -57,8 +57,10 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final DataResponseHandler dataHandler;
 
   public DataServer(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
-    super(DataRpcConfig.getMapping(context.getConfig()), context.getAllocator().getUnderlyingAllocator(), context
-        .getBitLoopGroup());
+    super(
+        DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
+        context.getAllocator().getUnderlyingAllocator(),
+        context.getBitLoopGroup());
     this.context = context;
     this.workBus = workBus;
     this.dataHandler = dataHandler;

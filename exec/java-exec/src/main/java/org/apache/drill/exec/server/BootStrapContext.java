@@ -19,6 +19,11 @@ package org.apache.drill.exec.server;
 
 import io.netty.channel.EventLoopGroup;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -26,6 +31,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.metrics.DrillMetrics;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.TransportCheck;
 
 import com.codahale.metrics.MetricRegistry;
@@ -39,6 +45,7 @@ public class BootStrapContext implements AutoCloseable {
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
+  private final ExecutorService executor;
 
   public BootStrapContext(DrillConfig config, ScanResult classpathScan) {
     this.config = config;
@@ -47,6 +54,21 @@ public class BootStrapContext implements AutoCloseable {
     this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
     this.metrics = DrillMetrics.getInstance();
     this.allocator = RootAllocatorFactory.newRoot(config);
+    this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>(),
+        new NamedThreadFactory("drill-executor-")) {
+      @Override
+      protected void afterExecute(final Runnable r, final Throwable t) {
+        if (t != null) {
+          logger.error("{}.run() leaked an exception.", r.getClass().getName(), t);
+        }
+        super.afterExecute(r, t);
+      }
+    };
+  }
+
+  public ExecutorService getExecutor() {
+    return executor;
   }
 
   public DrillConfig getConfig() {
@@ -80,7 +102,28 @@ public class BootStrapContext implements AutoCloseable {
     } catch (Error | Exception e) {
       logger.warn("failure resetting metrics.", e);
     }
-    loop.shutdownGracefully();
+
+    if (executor != null) {
+      executor.shutdown(); // Disable new tasks from being submitted
+      try {
+        // Wait a while for existing tasks to terminate
+        if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+          executor.shutdownNow(); // Cancel currently executing tasks
+          // Wait a while for tasks to respond to being cancelled
+          if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+            logger.error("Pool did not terminate");
+          }
+        }
+      } catch (InterruptedException ie) {
+        logger.warn("Executor interrupted while awaiting termination");
+
+        // (Re-)Cancel if current thread also interrupted
+        executor.shutdownNow();
+        // Preserve interrupt status
+        Thread.currentThread().interrupt();
+      }
+    }
+
     DrillAutoCloseables.closeNoChecked(allocator);
   }
 }

@@ -20,10 +20,12 @@ package org.apache.drill.exec.work.fragment;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.drill.common.DeferredException;
+import org.apache.drill.common.SerializedExecutor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -62,6 +64,7 @@ public class FragmentExecutor implements Runnable {
   private final DeferredException deferredException = new DeferredException();
   private final PlanFragment fragment;
   private final FragmentRoot rootOperator;
+  private final ReceiverExecutor receiverExecutor;
 
   private volatile RootExec root;
   private final AtomicReference<FragmentState> fragmentState = new AtomicReference<>(FragmentState.AWAITING_ALLOCATION);
@@ -97,6 +100,7 @@ public class FragmentExecutor implements Runnable {
     this.fragment = fragment;
     this.rootOperator = rootOperator;
     this.fragmentName = QueryIdHelper.getQueryIdentifier(context.getHandle());
+    this.receiverExecutor = new ReceiverExecutor(fragmentName, fragmentContext.getExecutor());
 
     context.setExecutorState(new ExecutorStateImpl());
   }
@@ -139,7 +143,7 @@ public class FragmentExecutor implements Runnable {
    * so we need to be careful about the state transitions that can result.
    */
   public void cancel() {
-    final boolean thisIsOnlyThread = this.hasCloseoutThread.compareAndSet(false, true);
+    final boolean thisIsOnlyThread = hasCloseoutThread.compareAndSet(false, true);
 
     if (!thisIsOnlyThread) {
       acceptExternalEvents.awaitUninterruptibly();
@@ -162,10 +166,12 @@ public class FragmentExecutor implements Runnable {
         }
       }
     } else {
+      // countdown so receiver fragment finished can proceed.
+      acceptExternalEvents.countDown();
+
       updateState(FragmentState.CANCELLATION_REQUESTED);
       cleanup(FragmentState.FINISHED);
     }
-
   }
 
   private void cleanup(FragmentState state) {
@@ -194,15 +200,7 @@ public class FragmentExecutor implements Runnable {
    * @param handle The downstream FragmentHandle of the Fragment that needs no more records from this Fragment.
    */
   public void receivingFragmentFinished(final FragmentHandle handle) {
-    acceptExternalEvents.awaitUninterruptibly();
-    if (root != null) {
-      logger.info("Applying request for early sender termination for {} -> {}.",
-          QueryIdHelper.getFragmentId(this.getContext().getHandle()), QueryIdHelper.getFragmentId(handle));
-      root.receivingFragmentFinished(handle);
-    } else {
-      logger.warn("Dropping request for early fragment termination for path {} -> {} as no root exec exists.",
-          QueryIdHelper.getFragmentId(this.getContext().getHandle()), QueryIdHelper.getFragmentId(handle));
-    }
+    receiverExecutor.submitReceiverFinished(handle);
   }
 
   @Override
@@ -476,4 +474,46 @@ public class FragmentExecutor implements Runnable {
       }
     }
   }
+
+  private class ReceiverExecutor extends SerializedExecutor {
+
+    public ReceiverExecutor(String name, Executor underlyingExecutor) {
+      super(name, underlyingExecutor);
+    }
+
+    @Override
+    protected void runException(Runnable command, Throwable t) {
+      logger.error("Failure running with exception of command {}", command, t);
+    }
+
+    public void submitReceiverFinished(FragmentHandle handle){
+      execute(new ReceiverFinished(handle));
+    }
+  }
+
+  private class ReceiverFinished implements Runnable {
+    final FragmentHandle handle;
+
+    public ReceiverFinished(FragmentHandle handle) {
+      super();
+      this.handle = handle;
+    }
+
+    @Override
+    public void run() {
+      acceptExternalEvents.awaitUninterruptibly();
+
+      if (root != null) {
+        logger.info("Applying request for early sender termination for {} -> {}.",
+            QueryIdHelper.getFragmentId(getContext().getHandle()), QueryIdHelper.getFragmentId(handle));
+        root.receivingFragmentFinished(handle);
+      } else {
+        logger.warn("Dropping request for early fragment termination for path {} -> {} as no root exec exists.",
+            QueryIdHelper.getFragmentId(getContext().getHandle()), QueryIdHelper.getFragmentId(handle));
+      }
+
+    }
+
+  }
+
 }

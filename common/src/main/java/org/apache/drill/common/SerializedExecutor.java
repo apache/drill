@@ -17,79 +17,113 @@
  */
 package org.apache.drill.common;
 
+import io.netty.util.Recycler;
+import io.netty.util.Recycler.Handle;
+
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 
 /**
- * Serializes execution of multiple submissions to a single target, while
- * still using a thread pool to execute those submissions. Provides an
- * implicit queueing capability for a single target that requires any commands
- * that execute against it to be serialized.
+ * Serializes execution of multiple submissions to a single target, while still
+ * using a thread pool to execute those submissions. Provides an implicit
+ * queueing capability for a single target that requires any commands that
+ * execute against it to be serialized.
  */
-public class SerializedExecutor implements Executor {
+public abstract class SerializedExecutor implements Executor {
+
+  private final Recycler<RunnableProcessor> processors = new Recycler<RunnableProcessor>() {
+    @Override
+    protected RunnableProcessor newObject(Handle handle) {
+      return new RunnableProcessor(handle);
+    }
+  };
+
   private boolean isProcessing = false;
   private final LinkedList<Runnable> queuedRunnables = new LinkedList<>();
   private final Executor underlyingExecutor;
+  private final String name;
 
   /**
    * Constructor.
    *
-   * @param underlyingExecutor underlying executor to use to execute commands
-   *   submitted to this SerializedExecutor
+   * @param underlyingExecutor
+   *          underlying executor to use to execute commands submitted to this
+   *          SerializedExecutor
    */
-  public SerializedExecutor(Executor underlyingExecutor) {
+  public SerializedExecutor(String name, Executor underlyingExecutor) {
     this.underlyingExecutor = underlyingExecutor;
+    this.name = name;
   }
 
   /**
-   * An exception occurred in the last command executed; this reports that
-   * to the subclass of SerializedExecutor.
+   * An exception occurred in the last command executed; this reports that to
+   * the subclass of SerializedExecutor.
    *
-   * <p>The default implementation of this method throws an exception, which
-   * is considered an error (see below). Implementors have two alternatives:
-   * Arrange not to throw from your commands' run(), or if they do,
-   * provide an override of this method that handles any exception that
-   * is thrown.</p>
+   * <p>
+   * The default implementation of this method throws an exception, which is
+   * considered an error (see below). Implementors have two alternatives:
+   * Arrange not to throw from your commands' run(), or if they do, provide an
+   * override of this method that handles any exception that is thrown.
+   * </p>
    *
-   * <p>It is an error for this to throw an exception, and doing so will
-   * terminate the thread with an IllegalStateException. Derivers must
-   * handle any reported exceptions in other ways.</p>
+   * <p>
+   * It is an error for this to throw an exception, and doing so will terminate
+   * the thread with an IllegalStateException. Derivers must handle any reported
+   * exceptions in other ways.
+   * </p>
    *
-   * @param command the command that caused the exception
-   * @param t the exception
+   * @param command
+   *          the command that caused the exception
+   * @param t
+   *          the exception
    */
-  protected void runException(Runnable command, Throwable t) {
-    throw new IllegalStateException("unhandled exception thrown by command");
-  }
+  protected abstract void runException(Runnable command, Throwable t);
 
   private class RunnableProcessor implements Runnable {
+    private final Handle handle;
+
     private Runnable command;
 
-    public RunnableProcessor(Runnable command) {
+    public RunnableProcessor(Handle handle) {
+      this.handle = handle;
+    }
+
+    public Runnable set(Runnable command) {
       this.command = command;
+      return this;
     }
 
     @Override
     public void run() {
-      while (true) {
-        try {
-          command.run();
-        } catch(Exception | AssertionError e) {
+      final Thread currentThread = Thread.currentThread();
+      final String originalThreadName = currentThread.getName();
+      currentThread.setName(name);
+
+      try {
+        while (true) {
           try {
-            runException(command, e);
-          } catch(Exception | AssertionError ee) {
-            throw new IllegalStateException("Exception handler threw an exception", ee);
-          }
-        }
-
-        synchronized (queuedRunnables) {
-          if (queuedRunnables.isEmpty()) {
-            isProcessing = false;
-            break;
+            command.run();
+          } catch (Exception | AssertionError e) {
+            try {
+              runException(command, e);
+            } catch (Exception | AssertionError ee) {
+              throw new IllegalStateException("Exception handler threw an exception", ee);
+            }
           }
 
-          command = queuedRunnables.removeFirst();
+          synchronized (queuedRunnables) {
+            if (queuedRunnables.isEmpty()) {
+              isProcessing = false;
+              break;
+            }
+
+            command = queuedRunnables.removeFirst();
+          }
         }
+      } finally {
+        currentThread.setName(originalThreadName);
+        command = null;
+        processors.recycle(this, handle);
       }
     }
   }
@@ -105,6 +139,6 @@ public class SerializedExecutor implements Executor {
       isProcessing = true;
     }
 
-    underlyingExecutor.execute(new RunnableProcessor(command));
+    underlyingExecutor.execute(processors.get().set(command));
   }
 }

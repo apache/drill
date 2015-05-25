@@ -18,16 +18,16 @@
 package org.apache.drill.exec.service;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import io.netty.channel.EventLoopGroup;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import io.netty.channel.EventLoopGroup;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -61,7 +61,13 @@ public class ServiceEngine implements Closeable{
       WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) throws DrillbitStartupException {
     final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
         context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
-    this.userServer = new UserServer(context.getConfig(), context.getClasspathScan(), context.getAllocator(), eventLoopGroup, userWorker);
+    this.userServer = new UserServer(
+        context.getConfig(),
+        context.getClasspathScan(),
+        context.getAllocator(),
+        eventLoopGroup,
+        userWorker,
+        context.getExecutor());
     this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
     this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
     this.config = context.getConfig();
@@ -89,8 +95,8 @@ public class ServiceEngine implements Closeable{
     return controller;
   }
 
-  private void submit(ExecutorService p, final String name, final Closeable c) {
-    p.submit(new Runnable() {
+  private void submit(Executor p, final String name, final Closeable c) {
+    p.execute(new Runnable() {
       @Override
       public void run() {
         Stopwatch watch = new Stopwatch().start();

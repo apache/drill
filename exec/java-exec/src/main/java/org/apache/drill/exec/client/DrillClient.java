@@ -30,6 +30,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
@@ -54,6 +58,7 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.TransportCheck;
@@ -86,6 +91,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private final boolean ownsAllocator;
   private final boolean isDirectConnection; // true if the connection bypasses zookeeper and connects directly to a drillbit
   private EventLoopGroup eventLoopGroup;
+  private ExecutorService executor;
 
   public DrillClient() throws OutOfMemoryException {
     this(DrillConfig.create(), false);
@@ -212,7 +218,18 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     eventLoopGroup = createEventLoop(config.getInt(ExecConstants.CLIENT_RPC_THREADS), "Client-");
-    client = new UserClient(config, supportComplexTypes, allocator, eventLoopGroup);
+    executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>(),
+        new NamedThreadFactory("drill-client-executor-")) {
+      @Override
+      protected void afterExecute(final Runnable r, final Throwable t) {
+        if (t != null) {
+          logger.error("{}.run() leaked an exception.", r.getClass().getName(), t);
+        }
+        super.afterExecute(r, t);
+      }
+    };
+    client = new UserClient(config, supportComplexTypes, allocator, eventLoopGroup, executor);
     logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
     connect(endpoint);
     connected = true;
@@ -278,6 +295,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
     if (eventLoopGroup != null) {
       eventLoopGroup.shutdownGracefully();
+    }
+
+    if (executor != null) {
+      executor.shutdownNow();
     }
 
     // TODO:  Did DRILL-1735 changes cover this TODO?:

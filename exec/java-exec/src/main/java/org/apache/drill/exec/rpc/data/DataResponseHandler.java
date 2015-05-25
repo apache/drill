@@ -17,15 +17,12 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import java.io.IOException;
-
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
-import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.rpc.ResponseSender;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 public interface DataResponseHandler {

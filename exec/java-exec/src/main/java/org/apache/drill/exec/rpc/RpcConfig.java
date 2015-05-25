@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -32,13 +33,16 @@ public class RpcConfig {
   private final int timeout;
   private final Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap;
   private final Map<Integer, RpcMessageType<?, ?, ?>> receiveMap;
+  private final Executor executor;
 
   private RpcConfig(String name, Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap,
-      Map<Integer, RpcMessageType<?, ?, ?>> receiveMap, int timeout) {
+      Map<Integer, RpcMessageType<?, ?, ?>> receiveMap, int timeout, Executor executor) {
+    Preconditions.checkNotNull(executor, "Executor must be defined.");
     this.name = name;
     this.timeout = timeout;
     this.sendMap = ImmutableMap.copyOf(sendMap);
     this.receiveMap = ImmutableMap.copyOf(receiveMap);
+    this.executor = executor;
   }
 
   public String getName() {
@@ -52,6 +56,11 @@ public class RpcConfig {
   public boolean hasTimeout() {
     return timeout > 0;
   }
+
+  public Executor getExecutor() {
+    return executor;
+  }
+
   public boolean checkReceive(int rpcType, Class<?> receiveClass) {
     if (RpcConstants.EXTRA_DEBUGGING) {
       logger.debug(String.format("Checking reception for rpcType %d and receive class %s.", rpcType, receiveClass));
@@ -152,6 +161,7 @@ public class RpcConfig {
   public static class RpcConfigBuilder {
     private String name;
     private int timeout = -1;
+    private Executor executor;
     private Map<EnumLite, RpcMessageType<?, ?, ?>> sendMap = Maps.newHashMap();
     private Map<Integer, RpcMessageType<?, ?, ?>> receiveMap = Maps.newHashMap();
 
@@ -175,10 +185,15 @@ public class RpcConfig {
       return this;
     }
 
+    public RpcConfigBuilder executor(Executor executor) {
+      this.executor = executor;
+      return this;
+    }
+
     public RpcConfig build() {
       Preconditions.checkArgument(timeout > -1, "Timeout must be a positive number or zero for disabled.");
       Preconditions.checkArgument(name != null, "RpcConfig name must be set.");
-      return new RpcConfig(name, sendMap, receiveMap, timeout);
+      return new RpcConfig(name, sendMap, receiveMap, timeout, executor);
     }
 
   }

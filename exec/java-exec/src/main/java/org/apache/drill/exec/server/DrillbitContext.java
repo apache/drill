@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.server;
 
-import io.netty.channel.EventLoopGroup;
-
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.netty.channel.EventLoopGroup;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +42,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Preconditions;
 
 public class DrillbitContext {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -61,9 +59,9 @@ public class DrillbitContext {
   private final SystemOptionManager systemOptions;
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
-  private final ExecutorService executor;
-  private final LogicalPlanPersistence lpPersistence;
   private final ScanResult classpathScan;
+  private final LogicalPlanPersistence lpPersistence;
+
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -72,8 +70,7 @@ public class DrillbitContext {
       Controller controller,
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
-      PStoreProvider provider,
-      ExecutorService executor) {
+      PStoreProvider provider) {
     this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
@@ -82,7 +79,6 @@ public class DrillbitContext {
     this.connectionsPool = checkNotNull(connectionsPool);
     this.endpoint = checkNotNull(endpoint);
     this.provider = provider;
-    this.executor = executor;
     this.lpPersistence = new LogicalPlanPersistence(context.getConfig(), classpathScan);
     this.storagePlugins = new StoragePluginRegistry(this); // TODO change constructor
     this.reader = new PhysicalPlanReader(context.getConfig(), classpathScan, lpPersistence, endpoint, storagePlugins);
@@ -169,7 +165,7 @@ public class DrillbitContext {
   }
 
   public ExecutorService getExecutor() {
-    return executor;
+    return context.getExecutor();
   }
 
   public LogicalPlanPersistence getLpPersistence() {

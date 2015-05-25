@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.data;
 
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
 import org.apache.drill.exec.rpc.ReconnectingConnection;
 import org.apache.drill.exec.server.BootStrapContext;

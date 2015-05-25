@@ -39,7 +39,6 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -104,8 +103,14 @@ public class TestOptiqPlans extends ExecTest {
       }
     };
     final RemoteServiceSet lss = RemoteServiceSet.getLocalServiceSet();
-    final DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller,
-        com, workBus, new LocalPStoreProvider(config), null);
+    final DrillbitContext bitContext = new DrillbitContext(
+        DrillbitEndpoint.getDefaultInstance(),
+        context,
+        coord,
+        controller,
+        com,
+        workBus,
+        new LocalPStoreProvider(config));
     final QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
         bitContext);
     final PhysicalPlanReader reader = bitContext.getPlanReader();

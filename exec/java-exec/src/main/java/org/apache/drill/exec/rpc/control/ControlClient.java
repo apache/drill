@@ -40,7 +40,7 @@ import com.google.protobuf.MessageLite;
 
 public class ControlClient extends BasicClient<RpcType, ControlConnection, BitControlHandshake, BitControlHandshake>{
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlClient.class);
 
   private final ControlMessageHandler handler;
   private final DrillbitEndpoint remoteEndpoint;
@@ -49,9 +49,14 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   private final DrillbitEndpoint localIdentity;
   private final BufferAllocator allocator;
 
-  public ControlClient(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint, ControlMessageHandler handler, BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
-    super(ControlRpcConfig.getMapping(context.getConfig()), context.getAllocator().getUnderlyingAllocator(), context
-        .getBitLoopGroup(), RpcType.HANDSHAKE, BitControlHandshake.class, BitControlHandshake.PARSER);
+  public ControlClient(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint, ControlMessageHandler handler,
+      BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
+    super(ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
+        context.getAllocator().getUnderlyingAllocator(),
+        context.getBitLoopGroup(),
+        RpcType.HANDSHAKE,
+        BitControlHandshake.class,
+        BitControlHandshake.PARSER);
     this.localIdentity = localEndpoint;
     this.remoteEndpoint = remoteEndpoint;
     this.handler = handler;
