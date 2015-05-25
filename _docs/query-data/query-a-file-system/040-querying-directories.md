@@ -89,4 +89,38 @@ first level down from logs, `dir1` to the next level, and so on.
     +------------+------------+------------+------------+------------+------------+------------+------------+------------+-------------+
     10 rows selected (0.583 seconds)
 
+## Example of Querying Multiple Files in a Directory
+
+This example is a continuation of the example in the section, ["Example of Querying a TSV File"]({{site.baseurl}}/docs/querying-plain-text-files/#example-of-querying-a-tsv-file) that creates a subdirectory in the `ngram` directory and [custom plugin workspace]({{site.baseurl}}/docs/querying-plain-text-files/#create-a-storage-plugin) you created earlier.
+
+You download a second Ngram file. Next, you
+move both Ngram GZ files you downloaded to the `ngram` subdirectory. Finally, using the custom
+plugin workspace, you query both files. In the FROM clause, simply reference
+the subdirectory.
+
+  1. Download a second file of compressed Google Ngram data from this location: 
+  
+     http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-ze.gz
+  2. Move `googlebooks-eng-all-2gram-20120701-ze.gz` to the `ngram/myfiles` subdirectory. 
+  3. Move the 5gram file you downloaded earlier `googlebooks-eng-all-5gram-20120701-zo.gz` to the `ngram/myfiles` subdirectory.
+  4. In the Drill shell, use the `myplugin.ngrams` workspace. 
+   
+          USE myplugin.ngram;
+  5. Query the myfiles directory for the "Zoological Journal of the Linnean" or "zero temperatures" in books published in 1998.
+  
+          SELECT * 
+          FROM myfiles 
+          WHERE (((COLUMNS[0] = 'Zoological Journal of the Linnean')
+            OR (COLUMNS[0] = 'zero temperatures')) 
+            AND (COLUMNS[1] = '1998'));
+The output lists ngrams from both files.
+
+          +----------------------------------------------------------+
+          |                         columns                          |
+          +----------------------------------------------------------+
+          | ["Zoological Journal of the Linnean","1998","157","53"]  |
+          | ["zero temperatures","1998","628","487"]                 |
+          +----------------------------------------------------------+
+          2 rows selected (7.007 seconds)
+
 For more information about querying directories, see the section, ["Query Directory Functions"]({{site.baseurl}}/docs/query-directory-functions).
