@@ -194,104 +194,23 @@ times a year in the books that Google scans.
          +------------------------------------+-------------------+------------+
          5 rows selected (1.175 seconds)
 
-The Drill default storage plugins support common file formats. If you need
-support for some other file format, such as GZ, create a custom storage plugin. You can also create a storage plugin to simplify querying files having long path names. A workspace name replaces the long path name.
+The Drill default storage plugins support common file formats. 
 
 
-## Create a Storage Plugin
+## Query the GZ File Directly
 
-This example covers how to create and use a storage plugin to simplify queries or to query a file type that `dfs` does not specify, GZ in this case. First, you create the storage plugin in the Drill Web UI. Next, you connect to the
-file through the plugin to query a file.
+This example covers how to query the GZ file containing the compressed TSV data. The GZ file name needs to be renamed to specify the type of delimited file, such as CSV or TSV. You add `.tsv` before the `.gz` extension in this example.
 
-You can create a storage plugin using the Apache Drill Web UI to query the GZ file containing the compressed TSV data.
-
-  1. Create an `ngram` directory on your file system.
-  2. Copy the GZ file `googlebooks-eng-all-5gram-20120701-zo.gz` to the `ngram` directory.
-  3. Open the Drill Web UI by navigating to <http://localhost:8047/storage>.   
-     To open the Drill Web UI, the [Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/) must still be running.
-  4. In New Storage Plugin, type `myplugin`.  
-     ![new plugin]({{ site.baseurl }}/docs/img/ngram_plugin.png)    
-  5. Click **Create**.  
-     The Configuration screen appears.
-  6. Replace null with the following storage plugin definition, except on the location line, use the *full* path to your `ngram` directory instead of the drilluser's path and give your workspace an arbitrary name, for example, ngram:
-  
-        {
-          "type": "file",
-          "enabled": true,
-          "connection": "file:///",
-          "workspaces": {
-            "ngram": {
-              "location": "/Users/drilluser/ngram",
-              "writable": false,
-              "defaultInputFormat": null
-           }
-         },
-         "formats": {
-           "tsv": {
-             "type": "text",
-             "extensions": [
-               "gz"
-             ],
-             "delimiter": "\t"
-            }
-          }
-        }
-
-  7. Click **Create**.  
-     The success message appears briefly.
-  8. Click **Back**.  
-     The new plugin appears in Enabled Storage Plugins.  
-     ![new plugin]({{ site.baseurl }}/docs/img/ngram_plugin.png) 
-  9. Go back to the Drill shell, and list the storage plugins.  
-          SHOW DATABASES;
-
-          +---------------------+
-          |     SCHEMA_NAME     |
-          +---------------------+
-          | INFORMATION_SCHEMA  |
-          | cp.default          |
-          | dfs.default         |
-          | dfs.root            |
-          | dfs.tmp             |
-          | myplugin.default    |
-          | myplugin.ngram      |
-          | sys                 |
-          +---------------------+
-          8 rows selected (0.105 seconds)
-
-Your custom plugin appears in the list and has two workspaces: the `ngram`
-workspace that you defined and a default workspace.
-
-### Connect to and Query a File
-
-When querying the same data source repeatedly, avoiding long path names is
-important. This exercise demonstrates how to simplify the query. Instead of
-using the full path to the Ngram file, you use dot notation in the FROM
-clause.
-
-``<workspace name>.`<location>```
-
-This syntax assumes you connected to a storage plugin that defines the
-location of the data. To query the data source while you are _not_ connected to
-that storage plugin, include the plugin name:
-
-``<plugin name>.<workspace name>.`<location>```
-
-This exercise shows how to query Ngram data when you are connected to `myplugin`.
-
-  1. Connect to the ngram file through the custom storage plugin.  
-     `USE myplugin;`
-  2. Get data about "Zoological Journal of the Linnean" that appears more than 250 times a year in the books that Google scans. In the FROM clause, instead of using the full path to the file as you did in the last exercise, connect to the data using the storage plugin workspace name ngram.
+  1. Rename the GZ file `googlebooks-eng-all-5gram-20120701-zo.gz` to googlebooks-eng-all-5gram-20120701-zo.tsv.gz.
+  2. Query the renamed GZ file directly to get data about "Zoological Journal of the Linnean" that appears more than 250 times a year in the books that Google scans. In the FROM clause, instead of using the full path to the file as you did in the last exercise, connect to the data using the storage plugin workspace name ngram.
   
          SELECT COLUMNS[0], 
                 COLUMNS[1], 
                 COLUMNS[2] 
-         FROM ngram.`/googlebooks-eng-all-5gram-20120701-zo.gz` 
+         FROM dfs.`/Users/drilluser/Downloads/googlebooks-eng-all-5gram-20120701-zo.tsv.gz` 
          WHERE ((columns[0] = 'Zoological Journal of the Linnean') 
          AND (columns[2] > 250)) 
          LIMIT 10;
 
-     The five rows of output appear.  
-
-To continue with this example and query multiple files in a directory, see the section, ["Example of Querying Multiple Files in a Directory"]({{site.baseurl}}/docs/querying-directories/#example-of-querying-multiple-files-in-a-directory).
+     The 5 rows of output appear.  
 
