@@ -157,7 +157,7 @@ path and name of the file in back ticks.
 
   3. Change the file name to add a `.tsv` extension.  
 The Drill `dfs` storage plugin definition includes a TSV format that requires
-a file to have this extension.
+a file to have this extension. Later, you learn how to skip this step and query the GZ file directly.
 
 ### Query the Data
 
@@ -174,12 +174,12 @@ times a year in the books that Google scans.
      * In the WHERE clause, enclose the string literal "Zoological Journal of the Linnean" in single quotation marks.  
      * Limit the output to 10 rows.  
   
-         SELECT COLUMNS[0] AS Ngram,
-                COLUMNS[1] AS Publication_Date,
-                COLUMNS[2] AS Frequency
-         FROM `/Users/drilluser/Downloads/googlebooks-eng-all-5gram-20120701-zo.tsv`
-         WHERE ((columns[0] = 'Zoological Journal of the Linnean')
-             AND (columns[2] > 250)) LIMIT 10;
+            SELECT COLUMNS[0] AS Ngram,
+                   COLUMNS[1] AS Publication_Date,
+                   COLUMNS[2] AS Frequency
+            FROM `/Users/drilluser/Downloads/googlebooks-eng-all-5gram-20120701-zo.tsv`
+            WHERE ((columns[0] = 'Zoological Journal of the Linnean')
+            AND (columns[2] > 250)) LIMIT 10;
 
      The output is:
 
@@ -195,7 +195,7 @@ times a year in the books that Google scans.
          5 rows selected (1.175 seconds)
 
 The Drill default storage plugins support common file formats. If you need
-support for some other file format, such as GZ, create a custom storage plugin. You can also create a storage plugin to simplify querying file having long path names. A workspace name replaces the long path name.
+support for some other file format, such as GZ, create a custom storage plugin. You can also create a storage plugin to simplify querying files having long path names. A workspace name replaces the long path name.
 
 
 ## Create a Storage Plugin
@@ -203,7 +203,7 @@ support for some other file format, such as GZ, create a custom storage plugin. 
 This example covers how to create and use a storage plugin to simplify queries or to query a file type that `dfs` does not specify, GZ in this case. First, you create the storage plugin in the Drill Web UI. Next, you connect to the
 file through the plugin to query a file.
 
-You can create a storage plugin using the Apache Drill Web UI to query the GZ file containing the compressed TSV data directly.
+You can create a storage plugin using the Apache Drill Web UI to query the GZ file containing the compressed TSV data.
 
   1. Create an `ngram` directory on your file system.
   2. Copy the GZ file `googlebooks-eng-all-5gram-20120701-zo.gz` to the `ngram` directory.
@@ -213,7 +213,7 @@ You can create a storage plugin using the Apache Drill Web UI to query the GZ fi
      ![new plugin]({{ site.baseurl }}/docs/img/ngram_plugin.png)    
   5. Click **Create**.  
      The Configuration screen appears.
-  6. Replace null with the following storage plugin definition, except on the location line, use the path to your `ngram` directory instead of the drilluser's path and give your workspace an arbitrary name, for example, ngram:
+  6. Replace null with the following storage plugin definition, except on the location line, use the *full* path to your `ngram` directory instead of the drilluser's path and give your workspace an arbitrary name, for example, ngram:
   
         {
           "type": "file",
@@ -288,7 +288,7 @@ This exercise shows how to query Ngram data when you are connected to `myplugin`
                 COLUMNS[2] 
          FROM ngram.`/googlebooks-eng-all-5gram-20120701-zo.gz` 
          WHERE ((columns[0] = 'Zoological Journal of the Linnean') 
-          AND (columns[2] > 250)) 
+         AND (columns[2] > 250)) 
          LIMIT 10;
 
      The five rows of output appear.  
