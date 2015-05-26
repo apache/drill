@@ -38,3 +38,6 @@ The `drill-env.sh` file contains the following options:
 * Xmx specifies the maximum memory allocation pool for a Java Virtual Machine (JVM). 
 * Xms specifies the initial memory allocation pool.
 
+If performance is an issue, replace the -ea flag with -Dbounds=false, as shown in the following example:
+
+    export DRILL_JAVA_OPTS="-Xms1G -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -Dbounds=false"

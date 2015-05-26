@@ -126,7 +126,9 @@ Using the following techniques, you can query complex, nested JSON:
 * Generate key/value pairs for loosely structured data
 
 ## Example: Flatten and Generate Key Values for Complex JSON
-This example uses the following data that represents unit sales of tickets to events that were sold over a period of for several days in different states:
+This example uses the following data that represents unit sales of tickets to events that were sold over a period of for several days in December:
+
+### ticket_sales.json Contents
 
     {
       "type": "ticket",
@@ -151,56 +153,32 @@ This example uses the following data that represents unit sales of tickets to ev
     
 Take a look at the data in Drill:
 
-    SELECT * FROM dfs.`/Users/drilluser/ticket_sales.json`;
-    +------------+------------+------------+------------+------------+
-    |    type    |  channel   |   month    |    day     |   sales    |
-    +------------+------------+------------+------------+------------+
-    | ticket     | 123455     | 12         | ["15","25","28","31"] | {"NY":"532806","PA":"112889","TX":"898999","UT":"10875"} |
-    | ticket     | 123456     | 12         | ["10","15","19","31"] | {"NY":"972880","PA":"857475","CA":"87350","OR":"49999"} |
-    +------------+------------+------------+------------+------------+
-    2 rows selected (0.041 seconds)
+    +---------+---------+---------------------------------------------------------------+
+    |  type   |  venue  |                             sales                             |
+    +---------+---------+---------------------------------------------------------------+
+    | ticket  | 123455  | {"12-10":532806,"12-11":112889,"12-19":898999,"12-21":10875}  |
+    | ticket  | 123456  | {"12-10":87350,"12-19":49999,"12-21":857475,"12-15":972880}   |
+    +---------+---------+---------------------------------------------------------------+
+    2 rows selected (1.343 seconds)
 
-### Flatten Arrays
-The FLATTEN function breaks the following _day arrays from the JSON example file shown earlier into separate rows.
-
-    "_day": [ 15, 25, 28, 31 ] 
-    "_day": [ 10, 15, 19, 31 ]
-
-Flatten the sales column of the ticket data onto separate rows, one row for each day in the array, for a better view of the data. FLATTEN copies the sales data related in the JSON object on each row.  Using the all (*) wildcard as the argument to flatten is not supported and returns an error.
-
-    SELECT flatten(tkt._day) AS `day`, tkt.sales FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
-
-    +------------+------------+
-    |    day     |   sales    |
-    +------------+------------+
-    | 15         | {"NY":532806,"PA":112889,"TX":898999,"UT":10875} |
-    | 25         | {"NY":532806,"PA":112889,"TX":898999,"UT":10875} |
-    | 28         | {"NY":532806,"PA":112889,"TX":898999,"UT":10875} |
-    | 31         | {"NY":532806,"PA":112889,"TX":898999,"UT":10875} |
-    | 10         | {"NY":972880,"PA":857475,"CA":87350,"OR":49999} |
-    | 15         | {"NY":972880,"PA":857475,"CA":87350,"OR":49999} |
-    | 19         | {"NY":972880,"PA":857475,"CA":87350,"OR":49999} |
-    | 31         | {"NY":972880,"PA":857475,"CA":87350,"OR":49999} |
-    +------------+------------+
-    8 rows selected (0.072 seconds)
 
 ### Generate Key/Value Pairs
-Use the KVGEN (Key Value Generator) function to generate key/value pairs from complex data. Generating key/value pairs is often helpful when working with data that contains arbitrary maps consisting of dynamic and unknown element names, such as the ticket sales data by state. For example purposes, take a look at how kvgen breaks the sales data into keys and values representing the states and number of tickets sold:
+Continuing with the data from [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json), use the KVGEN (Key Value Generator) function to generate key/value pairs from complex data. Generating key/value pairs is often helpful when working with data that contains arbitrary maps consisting of dynamic and unknown element names, such as the ticket sales data in this example. For example purposes, take a look at how kvgen breaks the sales data into keys and values representing the key dates and number of tickets sold:
 
-    SELECT KVGEN(tkt.sales) AS state_sales FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
-    +-------------+
-    | state_sales |
-    +-------------+
-    | [{"key":"NY","value":532806},{"key":"PA","value":112889},{"key":"TX","value":898999},{"key":"UT","value":10875}] |
-    | [{"key":"NY","value":972880},{"key":"PA","value":857475},{"key":"CA","value":87350},{"key":"OR","value":49999}] |
-    +-------------+
-    2 rows selected (0.039 seconds)
+    SELECT KVGEN(tkt.sales) AS `key dates:tickets sold` FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
+    +---------------------------------------------------------------------------------------------------------------------------------------+
+    |                                                        key dates:tickets sold                                                         |
+    +---------------------------------------------------------------------------------------------------------------------------------------+
+    | [{"key":"12-10","value":"532806"},{"key":"12-11","value":"112889"},{"key":"12-19","value":"898999"},{"key":"12-21","value":"10875"}] |
+    | [{"key":"12-10","value":"87350"},{"key":"12-19","value":"49999"},{"key":"12-21","value":"857475"},{"key":"12-15","value":"972880"}] |
+    +---------------------------------------------------------------------------------------------------------------------------------------+
+    2 rows selected (0.106 seconds)
 
 KVGEN allows queries against maps where the keys themselves represent data rather than a schema, as shown in the next example.
 
 ### Flatten JSON Data
 
-FLATTEN breaks the list of key-value pairs into separate rows on which you can apply analytic functions. FLATTEN takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error.
+FLATTEN breaks the list of key-value pairs into separate rows on which you can apply analytic functions. FLATTEN takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error. The following example continues using data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json):
 
     SELECT FLATTEN(kvgen(sales)) Sales 
     FROM dfs.`/Users/drilluser/drill/ticket_sales.json`;
@@ -220,41 +198,41 @@ FLATTEN breaks the list of key-value pairs into separate rows on which you can a
     8 rows selected (0.171 seconds)
 
 ### Example: Aggregate Loosely Structured Data
-Use flatten and kvgen together to aggregate the data. Continuing with the previous example, make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode. 
+Use flatten and kvgen together to aggregate the data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json). Make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode. 
 
     ALTER SYSTEM SET `store.json.all_text_mode` = false;
     
 Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in a single query.
 
-    SELECT SUM(tkt.tot_sales.`value`) AS TotalSales FROM (SELECT flatten(kvgen(sales)) tot_sales FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt;
+    SELECT SUM(tkt.tot_sales.`value`) AS TicketSold FROM (SELECT flatten(kvgen(sales)) tot_sales FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt;
 
-    +------------+
-    | TotalSales |
-    +------------+
-    | 3523273    |
-    +------------+
-    1 row selected (0.081 seconds)
+    +--------------+
+    | TicketsSold  |
+    +--------------+
+    | 3523273.0    |
+    +--------------+
+    1 row selected (0.244 seconds)
 
 ### Example: Aggregate and Sort Data
-Sum the ticket sales by state and group by state and sort in ascending order. 
+Sum the ticket sales by state and group by day and sort in ascending order. 
 
-    SELECT `right`(tkt.tot_sales.key,2) State, 
+    SELECT `right`(tkt.tot_sales.key,2) `December Date`, 
     SUM(tkt.tot_sales.`value`) AS TotalSales 
-    FROM (SELECT flatten(kvgen(sales)) tot_sales 
+    FROM (SELECT FLATTEN(kvgen(sales)) tot_sales 
     FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt 
     GROUP BY `right`(tkt.tot_sales.key,2) 
     ORDER BY TotalSales;
 
-    +---------------+--------------+
-    | December_Date |  TotalSales  |
-    +---------------+--------------+
-    | 11            | 112889       |
-    | 10            | 620156       |
-    | 21            | 868350       |
-    | 19            | 948998       |
-    | 15            | 972880       |
-    +---------------+--------------+
-    5 rows selected (0.203 seconds)
+    +----------------+-------------+
+    | December Date  | TotalSales  |
+    +----------------+-------------+
+    | 11             | 112889.0    |
+    | 10             | 620156.0    |
+    | 21             | 868350.0    |
+    | 19             | 948998.0    |
+    | 15             | 972880.0    |
+    +----------------+-------------+
+    5 rows selected (0.252 seconds)
 
 ### Example: Access a Map Field in an Array
 To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."]({{ site.baseurl }}/docs/json-data-model#empty-array)

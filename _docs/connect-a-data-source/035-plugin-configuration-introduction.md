@@ -58,9 +58,9 @@ The following table describes the attributes you configure for storage plugins.
   </tr>
   <tr>
     <td>"workspaces". . . "location"</td>
-    <td>"location": "/"<br>"location": "/tmp"</td>
+    <td>"location": "/Users/johndoe/mydata"<br>"location": "/tmp"</td>
     <td>no</td>
-    <td>Path to a directory on the file system.</td>
+    <td>Full path to a directory on the file system.</td>
   </tr>
   <tr>
     <td>"workspaces". . . "writable"</td>
