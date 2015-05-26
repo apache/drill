@@ -52,11 +52,11 @@ Drill uses map and array data types internally for reading complex and nested da
 
 `a[1]`  
 
-You can refer to the value for a key in a map using this syntax:
+You can refer to the value for a key in a map using dot notation:
 
-`m['k']`
+`t.m.k`
 
-The section [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to use [composite types]({{site.baseurl}}/docs/supported-data-types/#composite-types) to access nested arrays. ["Handling Different Data Types"]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) includes examples of JSON maps and arrays. Drill provides functions for handling array and map types:
+The section [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) shows how to use composite types to access nested arrays. ["Handling Different Data Types"]({{ site.baseurl }}/docs/handling-different-data-types/#handling-json-and-parquet-data) includes examples of JSON maps and arrays. Drill provides functions for handling array and map types:
 
 * ["KVGEN"]({{site.baseurl}}/docs/kvgen/)
 * ["FLATTEN"]({{site.baseurl}}/docs/flatten/)
