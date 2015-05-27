@@ -162,8 +162,11 @@
   div.int_search {
     width: 100%;
   }
-  
+
  /* Fixing header slider height/width relative issues */
+ .headlines.tc {
+  padding: 0px 30px;
+}
     #header .scroller .item {    
     height: auto !important;
   }
@@ -172,6 +175,7 @@
   }
   #header .scroller, #header .scroller .item, #header .scroller .item div.headlines.tc {    
     max-width: 100% !important;
+    width: auto;
   }
   div#video-slider {    
     float: none !important;    
@@ -220,9 +224,6 @@
   #header .scroller .item .tc h2 {
     font-size: 24px;
     line-height: 32px;
-  }
-  #header .scroller .item div.headlines.tc {
-    margin-left: 30px;
   }
   div.headlines a.download-headline {
     font-size: .7em;
