@@ -162,6 +162,21 @@
   div.int_search {
     width: 100%;
   }
+  
+ /* Fixing header slider height/width relative issues */
+    #header .scroller .item {    
+    height: auto !important;
+  }
+  #header {    
+    height: auto !important;
+  }
+  #header .scroller, #header .scroller .item, #header .scroller .item div.headlines.tc {    
+    max-width: 100% !important;
+  }
+  div#video-slider {    
+    float: none !important;    
+    margin: 60px auto 40px auto;
+  }
 }
 
 @media (max-width: 570px) {
