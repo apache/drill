@@ -38,13 +38,12 @@ $(document).ready(function(e) {
 	
 	$(window).scroll(onScroll);
 
-	function getParameterByName(name) {
+
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-        alert(results);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-	}
+    results = regex.exec(location.search);
+    alert(results);
+    
 });
 
 var reel_currentIndex = 0;
