@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.hive;
 
+import com.google.common.base.Strings;
+import org.apache.drill.TestBuilder;
 import org.junit.Test;
 
 public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
+  private static final String[] baselineCols = new String[] {"COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE"};
+  private static final Object[] expVal1 = new Object[] {"key", "INTEGER", "YES"};
+  private static final Object[] expVal2 = new Object[] {"value", "VARCHAR", "YES"};
 
   @Test
   public void showTablesFromDb() throws Exception{
@@ -63,15 +68,76 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .go();
   }
 
-  @Test
-  public void describeTableNullableColumns() throws Exception{
-    testBuilder()
-        .sqlQuery("DESCRIBE hive.`default`.kv")
+  private static void describeHelper(final String options, final String describeCmd) throws Exception {
+    final TestBuilder builder = testBuilder();
+
+    if (!Strings.isNullOrEmpty(options)) {
+      builder.optionSettingQueriesForTestQuery(options);
+    }
+
+    builder.sqlQuery(describeCmd)
         .unOrdered()
-        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("key", "INTEGER", "YES")
-        .baselineValues("value", "VARCHAR", "YES")
+        .baselineColumns(baselineCols)
+        .baselineValues(expVal1)
+        .baselineValues(expVal2)
         .go();
+  }
+
+  // When table name is fully qualified with schema name (sub-schema is default schema)
+  @Test
+  public void describeTable1() throws Exception{
+    describeHelper(null, "DESCRIBE hive.`default`.kv");
+  }
+
+  // When table name is fully qualified with schema name (sub-schema is non-default schema)
+  @Test
+  public void describeTable2() throws Exception{
+    describeHelper(null, "DESCRIBE hive.`db1`.kv_db1");
+  }
+
+  // When table is qualified with just the top level schema. It should look for the table in default sub-schema within
+  // the top level schema.
+  @Test
+  public void describeTable3() throws Exception {
+    describeHelper(null, "DESCRIBE hive.kv");
+  }
+
+  // When table name is qualified with multi-level schema (sub-schema is default schema) given as single level schema name.
+  @Test
+  public void describeTable4() throws Exception {
+    describeHelper(null, "DESCRIBE `hive.default`.kv");
+  }
+
+  // When table name is qualified with multi-level schema (sub-schema is non-default schema)
+  // given as single level schema name.
+  @Test
+  public void describeTable5() throws Exception {
+    describeHelper(null, "DESCRIBE `hive.db1`.kv_db1");
+  }
+
+  // When current default schema is just the top-level schema name and the table has no schema qualifier. It should
+  // look for the table in default sub-schema within the top level schema.
+  @Test
+  public void describeTable6() throws Exception {
+    describeHelper("USE hive", "DESCRIBE kv");
+  }
+
+  // When default schema is fully qualified with schema name and table is not qualified with a schema name
+  @Test
+  public void describeTable7() throws Exception {
+    describeHelper("USE hive.`default`", "DESCRIBE kv");
+  }
+
+  // When default schema is qualified with multi-level schema given as single level schema name.
+  @Test
+  public void describeTable8() throws Exception {
+    describeHelper("USE `hive.default`", "DESCRIBE kv");
+  }
+
+  // When default schema is top-level schema and table is qualified with sub-schema
+  @Test
+  public void describeTable9() throws Exception {
+    describeHelper("USE `hive`", "DESCRIBE `default`.kv");
   }
 
   @Test

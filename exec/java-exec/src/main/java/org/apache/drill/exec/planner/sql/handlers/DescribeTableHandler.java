@@ -62,12 +62,25 @@ public class DescribeTableHandler extends DefaultSqlHandler {
           ImmutableList.of(IS_SCHEMA_NAME, TAB_COLUMNS), null, SqlParserPos.ZERO, null);
 
       final SqlIdentifier table = node.getTable();
-      final SchemaPlus schema = SchemaUtilites.findSchema(context.getNewDefaultSchema(), Util.skipLast(table.names));
+      final SchemaPlus defaultSchema = context.getNewDefaultSchema();
+      final List<String> schemaPathGivenInCmd = Util.skipLast(table.names);
+      final SchemaPlus schema = SchemaUtilites.findSchema(defaultSchema, schemaPathGivenInCmd);
+
+      if (schema == null) {
+        SchemaUtilites.throwSchemaNotFoundException(defaultSchema,
+            SchemaUtilites.SCHEMA_PATH_JOINER.join(schemaPathGivenInCmd));
+      }
+
+      if (SchemaUtilites.isRootSchema(schema)) {
+        throw UserException.validationError()
+            .message("No schema selected.")
+            .build();
+      }
 
       final String tableName = Util.last(table.names);
 
       // find resolved schema path
-      final String schemaPath = SchemaUtilites.getSchemaPath(schema);
+      final String schemaPath = SchemaUtilites.unwrapAsDrillSchemaInstance(schema).getFullSchemaName();
 
       if (schema.getTable(tableName) == null) {
         throw UserException.validationError()
