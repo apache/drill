@@ -20,7 +20,7 @@ Reading a random element from a ValueVector must be a constant time operation.
 To accomodate, elements are identified by their offset from the start of the
 buffer. Repeated, nullable and variable width ValueVectors utilize in an
 additional fixed width value vector to index each element. Write access is not
-supported once the ValueVector has been constructed by the RecordBatch.
+supported once the ValueVector has been constructed.
 
 ### Efficient Subsets of Value Vectors
 

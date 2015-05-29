@@ -61,6 +61,13 @@ The section [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-
 * ["KVGEN"]({{site.baseurl}}/docs/kvgen/)
 * ["FLATTEN"]({{site.baseurl}}/docs/flatten/)
 
+## ANY Type
+The ANY type is a key technological advance in Drill that enables it to address late typing problems. Drill uses the ANY type internally and you might see references to ANY in the output of the DESCRIBE or other commands. You cannot cast a value to the ANY type in this release.
+
+Using the ANY type, the parser postpones the problem of resolving the type of some value until the query is actually running.  At that point, Drill has an empirical schema available for each record batch to use for final code
+generation and optimization.  If the empirical schema changes due to
+changes in the data processing, Drill regenerates the code as necessary.
+
 ## Casting and Converting Data Types
 
 In Drill, you cast or convert data to the required type for moving data from one data source to another or to make the data readable.

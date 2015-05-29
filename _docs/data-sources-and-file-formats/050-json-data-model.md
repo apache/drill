@@ -126,7 +126,7 @@ Using the following techniques, you can query complex, nested JSON:
 * Generate key/value pairs for loosely structured data
 
 ## Example: Flatten and Generate Key Values for Complex JSON
-This example uses the following data that represents unit sales of tickets to events that were sold over a period of for several days in December:
+This example uses the following data that represents unit sales of tickets to events that were sold over a period of several days in December:
 
 ### ticket_sales.json Contents
 
@@ -214,7 +214,7 @@ Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in
     1 row selected (0.244 seconds)
 
 ### Example: Aggregate and Sort Data
-Sum the ticket sales by state and group by day and sort in ascending order. 
+Sum and group the ticket sales by date and sort in ascending order of total tickets sold. 
 
     SELECT `right`(tkt.tot_sales.key,2) `December Date`, 
     SUM(tkt.tot_sales.`value`) AS TotalSales 
