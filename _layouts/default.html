@@ -3,7 +3,7 @@
 
 {% include head.html %}
 
-<body onResize="resized();">
+<body onResize="resized();" class="{% body_class %}">
   <div class="page-wrap">
     {% include menu.html %}
     {{ content }}
