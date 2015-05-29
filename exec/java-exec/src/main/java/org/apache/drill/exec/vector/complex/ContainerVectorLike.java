@@ -15,7 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.vector.complex;
+
+import org.apache.drill.exec.vector.AddOrGetResult;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VectorDescriptor;
 
 /**
  * A mix-in used for introducing container vector-like behaviour.

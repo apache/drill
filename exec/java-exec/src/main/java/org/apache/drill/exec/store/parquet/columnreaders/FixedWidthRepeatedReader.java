@@ -21,10 +21,8 @@ import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
-import org.apache.drill.exec.vector.RepeatedValueVector;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.exec.vector.ValueVector;
 
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;

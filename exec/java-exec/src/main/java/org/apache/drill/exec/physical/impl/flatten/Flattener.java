@@ -24,7 +24,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.RepeatedValueVector;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 public interface Flattener {
 

@@ -19,9 +19,7 @@
 import java.lang.Override;
 
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.BaseRepeatedValueVector;
-import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
+import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.mortbay.jetty.servlet.Holder;
 
 <@pp.dropOutputFile />

@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.vector.complex.RepeatedFixedWidthVectorLike;
+import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 
 public class AllocationHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationHelper.class);

@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.vector.complex;
 
 import io.netty.buffer.DrillBuf;
 
 /**
  * A {@link org.apache.drill.exec.vector.ValueVector} mix-in that can be used in conjunction with
- * {@link org.apache.drill.exec.vector.RepeatedValueVector} subtypes.
+ * {@link RepeatedValueVector} subtypes.
  */
 public interface RepeatedFixedWidthVectorLike {
   /**
@@ -30,7 +30,7 @@ public interface RepeatedFixedWidthVectorLike {
    * @param valueCount   Number of separate repeating groupings.
    * @param innerValueCount   Number of supported values in the vector.
    */
-  public void allocateNew(int valueCount, int innerValueCount);
+  void allocateNew(int valueCount, int innerValueCount);
 
   /**
    * Load the records in the provided buffer based on the given number of values.
@@ -39,7 +39,7 @@ public interface RepeatedFixedWidthVectorLike {
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int valueCount, int innerValueCount, DrillBuf buf);
+  int load(int valueCount, int innerValueCount, DrillBuf buf);
 
 //  public interface RepeatedAccessor extends Accessor {
 //    public int getGroupCount();

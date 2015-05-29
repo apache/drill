@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.vector.complex;
 
 import io.netty.buffer.DrillBuf;
 
@@ -27,13 +27,13 @@ public interface RepeatedVariableWidthVectorLike {
    * @param parentValueCount   Number of separate repeating groupings.
    * @param childValueCount   Number of supported values in the vector.
    */
-  public void allocateNew(int totalBytes, int parentValueCount, int childValueCount);
+  void allocateNew(int totalBytes, int parentValueCount, int childValueCount);
 
   /**
    * Provide the maximum amount of variable width bytes that can be stored int his vector.
    * @return
    */
-  public int getByteCapacity();
+  int getByteCapacity();
 
   /**
    * Load the records in the provided buffer based on the given number of values.
@@ -43,5 +43,5 @@ public interface RepeatedVariableWidthVectorLike {
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf);
+  int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf);
 }
