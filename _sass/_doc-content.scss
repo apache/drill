@@ -19,7 +19,9 @@
 body.blog #menu ul li.toc-categories {
   display:none;
 }
-
+body.blog #menu ul li.logo {
+  padding-left:30px;
+}
 /* Bottom navigation (left and right arrows) */
 
 div.doc-nav{
