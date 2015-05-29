@@ -37,6 +37,14 @@ $(document).ready(function(e) {
 	resized();
 	
 	$(window).scroll(onScroll);
+
+	function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+        alert(results);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	}
 });
 
 var reel_currentIndex = 0;
