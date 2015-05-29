@@ -16,6 +16,9 @@
   display: none;
   overflow: auto;
 }
+body.blog #menu ul li.toc-categories {
+  display:none;
+}
 
 /* Bottom navigation (left and right arrows) */
 
