@@ -65,7 +65,7 @@ public class CountDownLatchInjectionImpl extends Injection implements CountDownL
     try {
       latch.await();
     } catch (final InterruptedException e) {
-      logger.warn("Interrupted while awaiting in %s at %s.", siteClass.getSimpleName(), desc);
+      logger.warn("Interrupted while awaiting in {} at {}.", siteClass.getSimpleName(), desc);
       throw e;
     }
   }

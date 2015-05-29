@@ -182,7 +182,7 @@ public class ControlMessageHandler {
     //     request; it is possible that before the fragment state was updated in the QueryManager, this handler
     //     received a cancel signal.
     // (2) Unknown fragment.
-    logger.warn("Dropping request to cancel fragment. {} does not exist.", QueryIdHelper.getFragmentId(handle));
+    logger.warn("Dropping request to cancel fragment. {} does not exist.", QueryIdHelper.getQueryIdentifier(handle));
     return Acks.OK;
   }
 
@@ -202,7 +202,7 @@ public class ControlMessageHandler {
     }
 
     // fragment completed or does not exist
-    logger.warn("Dropping request to resume fragment. {} does not exist.", QueryIdHelper.getFragmentId(handle));
+    logger.warn("Dropping request to resume fragment. {} does not exist.", QueryIdHelper.getQueryIdentifier(handle));
     return Acks.OK;
   }
 
@@ -221,8 +221,8 @@ public class ControlMessageHandler {
       } else {
         logger.warn(
             "Dropping request for early fragment termination for path {} -> {} as path to executor unavailable.",
-            QueryIdHelper.getFragmentId(finishedReceiver.getSender()),
-            QueryIdHelper.getFragmentId(finishedReceiver.getReceiver()));
+            QueryIdHelper.getQueryIdentifier(finishedReceiver.getSender()),
+            QueryIdHelper.getQueryIdentifier(finishedReceiver.getReceiver()));
       }
     }
 

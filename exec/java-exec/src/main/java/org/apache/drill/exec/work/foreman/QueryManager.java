@@ -236,7 +236,7 @@ public class QueryManager {
     for(final FragmentData data : fragmentDataSet) {
       final DrillbitEndpoint endpoint = data.getEndpoint();
       final FragmentHandle handle = data.getHandle();
-      controller.getTunnel(endpoint).resumeFragment(new SignalListener(endpoint, handle,
+      controller.getTunnel(endpoint).unpauseFragment(new SignalListener(endpoint, handle,
         SignalListener.Signal.UNPAUSE), handle);
     }
   }

@@ -356,6 +356,7 @@ public class ScanBatch implements CloseableRecordBatch {
     return WritableBatch.get(this);
   }
 
+  @Override
   public void close() {
     container.clear();
     for (ValueVector v : partitionVectors) {

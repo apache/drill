@@ -241,6 +241,7 @@ public class FragmentExecutor implements Runnable {
       updateState(FragmentState.RUNNING);
 
       acceptExternalEvents.countDown();
+      injector.injectPause(fragmentContext.getExecutionControls(), "fragment-running", logger);
 
       final DrillbitEndpoint endpoint = drillbitContext.getEndpoint();
       logger.debug("Starting fragment {}:{} on {}:{}",

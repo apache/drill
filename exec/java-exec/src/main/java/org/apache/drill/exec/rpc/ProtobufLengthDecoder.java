@@ -29,7 +29,8 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import com.google.protobuf.CodedInputStream;
 
 /**
- * Modified version of ProtobufVarint32FrameDecoder that avoids bytebuf copy.
+ * Modified version of {@link io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder} that avoids bytebuf copy.
+ * See the documentation there.
  */
 public class ProtobufLengthDecoder extends ByteToMessageDecoder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProtobufLengthDecoder.class);

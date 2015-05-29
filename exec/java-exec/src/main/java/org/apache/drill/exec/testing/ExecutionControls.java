@@ -20,6 +20,7 @@ package org.apache.drill.exec.testing;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -102,7 +103,7 @@ public final class ExecutionControls {
       }
       final String jsonString = v.string_val;
       try {
-        controlsOptionMapper.readValue(jsonString, Controls.class);
+        validateControlsString(jsonString);
       } catch (final IOException e) {
         throw new ExpressionParsingException("Invalid control options string (" + jsonString + ").", e);
       }
@@ -112,8 +113,12 @@ public final class ExecutionControls {
   /**
    * POJO used to parse JSON-specified controls.
    */
-  public static class Controls {
+  private static class Controls {
     public Collection<? extends Injection> injections;
+  }
+
+  public static void validateControlsString(final String jsonString) throws IOException {
+    controlsOptionMapper.readValue(jsonString, Controls.class);
   }
 
   /**

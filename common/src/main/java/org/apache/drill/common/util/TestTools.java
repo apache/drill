@@ -24,7 +24,7 @@ import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 
 public class TestTools {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTools.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTools.class);
 
   static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()
       .toString().indexOf("-agentlib:jdwp") > 0;
@@ -38,9 +38,15 @@ public class TestTools {
     return IS_DEBUG ? new TestName() : new Timeout(timeout);
   }
 
+  /**
+   * If not enforced, the repeat rule applies only if the test is run in non-debug mode.
+   */
+  public static TestRule getRepeatRule(final boolean enforce) {
+    return enforce || !IS_DEBUG ? new RepeatTestRule() : new TestName();
+  }
+
   public static String getWorkingPath() {
     return WORKING_PATH;
   }
-
 
 }

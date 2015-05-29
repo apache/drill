@@ -23,6 +23,7 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.common.util.RepeatTestRule;
 import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -38,7 +39,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest {
-  static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
+//  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
 
   protected static final ObjectMapper objectMapper;
   static {
@@ -56,6 +57,8 @@ public class DrillTest {
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
+
+  @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
 
   @Rule public TestName TEST_NAME = new TestName();
 

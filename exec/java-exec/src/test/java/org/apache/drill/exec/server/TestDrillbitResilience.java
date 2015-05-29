@@ -39,6 +39,7 @@ import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.util.RepeatTestRule.Repeat;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.client.DrillClient;
@@ -73,6 +74,7 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
+import org.apache.drill.exec.testing.Controls;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.ForemanException;
@@ -90,10 +92,8 @@ import com.google.common.base.Preconditions;
 
 /**
  * Test how resilient drillbits are to throwing exceptions during various phases of query
- * execution by injecting exceptions at various points and to cancellations in various phases.
- * The test cases are mentioned in DRILL-2383.
+ * execution by injecting exceptions at various points, and to cancellations in various phases.
  */
-@Ignore
 public class TestDrillbitResilience extends DrillTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
 
@@ -101,6 +101,11 @@ public class TestDrillbitResilience extends DrillTest {
   private static RemoteServiceSet remoteServiceSet;
   private static final Map<String, Drillbit> drillbits = new HashMap<>();
   private static DrillClient drillClient;
+
+  /**
+   * The number of times test (that are repeated) should be repeated.
+   */
+  private static final int NUM_RUNS = 3;
 
   /**
    * Note: Counting sys.memory executes a fragment on every drillbit. This is a better check in comparison to
@@ -160,11 +165,26 @@ public class TestDrillbitResilience extends DrillTest {
   private final static String DRILLBIT_BETA = "beta";
   private final static String DRILLBIT_GAMMA = "gamma";
 
+  /**
+   * Get the endpoint for the drillbit, if it is running
+   * @param name name of the drillbit
+   * @return endpoint of the drillbit
+   */
+  private static DrillbitEndpoint getEndpoint(final String name) {
+    @SuppressWarnings("resource")
+    final Drillbit drillbit = drillbits.get(name);
+    if (drillbit == null) {
+      throw new IllegalStateException("No Drillbit named \"" + name + "\" found.");
+    }
+    return drillbit.getContext().getEndpoint();
+  }
+
   @BeforeClass
   public static void startSomeDrillbits() throws Exception {
     // turn off the HTTP server to avoid port conflicts between the drill bits
     System.setProperty(ExecConstants.HTTP_ENABLE, "false");
 
+    // turn on error for failure in cancelled fragments
     zkHelper = new ZookeeperHelper(true);
     zkHelper.startZookeeper(1);
 
@@ -284,58 +304,10 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
-   * Create a single exception injection.
-   *
-   * @param siteClass      the injection site class
-   * @param desc           the injection site description
-   * @param exceptionClass the class of the exception to throw
-   * @return the created controls JSON as string
+   * Sets a session option.
    */
-  private static String createSingleException(final Class<?> siteClass, final String desc,
-                                              final Class<? extends Throwable> exceptionClass) {
-    final String siteClassName = siteClass.getName();
-    final String exceptionClassName = exceptionClass.getName();
-    return "{\"injections\":[{"
-      + "\"type\":\"exception\","
-      + "\"siteClass\":\"" + siteClassName + "\","
-      + "\"desc\":\"" + desc + "\","
-      + "\"nSkip\":0,"
-      + "\"nFire\":1,"
-      + "\"exceptionClass\":\"" + exceptionClassName + "\""
-      + "}]}";
-  }
-
-  /**
-   * Create a single exception injection.
-   *
-   * @param siteClass      the injection site class
-   * @param desc           the injection site description
-   * @param exceptionClass the class of the exception to throw
-   * @param bitName        the drillbit name which should be injected into
-   * @return the created controls JSON as string
-   */
-  private static String createSingleExceptionOnBit(final Class<?> siteClass, final String desc,
-                                                   final Class<? extends Throwable> exceptionClass,
-                                                   final String bitName) {
-    final String siteClassName = siteClass.getName();
-    final String exceptionClassName = exceptionClass.getName();
-    @SuppressWarnings("resource")
-    final Drillbit drillbit = drillbits.get(bitName);
-    if (drillbit == null) {
-      throw new IllegalStateException("No Drillbit named \"" + bitName + "\" found");
-    }
-
-    final DrillbitEndpoint endpoint = drillbit.getContext().getEndpoint();
-    return "{\"injections\":[{"
-      + "\"address\":\"" + endpoint.getAddress() + "\","
-      + "\"port\":\"" + endpoint.getUserPort() + "\","
-      + "\"type\":\"exception\","
-      + "\"siteClass\":\"" + siteClassName + "\","
-      + "\"desc\":\"" + desc + "\","
-      + "\"nSkip\":0,"
-      + "\"nFire\":1,"
-      + "\"exceptionClass\":\"" + exceptionClassName + "\""
-      + "}]}";
+  private static void setSessionOption(final String option, final String value) {
+    ControlsInjectionUtil.setSessionOption(drillClient, option, value);
   }
 
   /**
@@ -345,8 +317,8 @@ public class TestDrillbitResilience extends DrillTest {
    * @param exceptionClass the expected exception class
    * @param desc           the expected exception site description
    */
-  private static void assertExceptionInjected(final Throwable throwable,
-                                              final Class<? extends Throwable> exceptionClass, final String desc) {
+  private static void assertExceptionMessage(final Throwable throwable, final Class<? extends Throwable> exceptionClass,
+                                             final String desc) {
     assertTrue("Throwable was not of UserException type.", throwable instanceof UserException);
     final ExceptionWrapper cause = ((UserException) throwable).getOrCreatePBError(false).getException();
     assertEquals("Exception class names should match.", exceptionClass.getName(), cause.getExceptionClass());
@@ -354,16 +326,17 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   @Test
-  public void settingNoopInjectionsAndQuery() {
+  public void settingNoOpInjectionsAndQuery() {
     final long before = countAllocatedMemory();
 
-    final String controls = createSingleExceptionOnBit(getClass(), "noop", RuntimeException.class, DRILLBIT_BETA);
+    final String controls = Controls.newBuilder()
+      .addExceptionOnBit(getClass(), "noop", RuntimeException.class, getEndpoint(DRILLBIT_BETA))
+      .build();
     setControls(controls);
-    try {
-      QueryTestUtil.test(drillClient, TEST_QUERY);
-    } catch (final Exception e) {
-      fail(e.getMessage());
-    }
+    final WaitUntilCompleteListener listener = new WaitUntilCompleteListener();
+    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, TEST_QUERY, listener);
+    final Pair<QueryState, Exception> pair = listener.waitForCompletion();
+    assertStateCompleted(pair, QueryState.COMPLETED);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
@@ -376,17 +349,14 @@ public class TestDrillbitResilience extends DrillTest {
    * @param desc site description
    */
   private static void testForeman(final String desc) {
-    final String controls = createSingleException(Foreman.class, desc, ForemanException.class);
-    setControls(controls);
-    try {
-      QueryTestUtil.test(drillClient, TEST_QUERY);
-      fail();
-    } catch (final Exception e) {
-      assertExceptionInjected(e, ForemanException.class, desc);
-    }
+    final String controls = Controls.newBuilder()
+      .addException(Foreman.class, desc, ForemanException.class)
+      .build();
+    assertFailsWithException(controls, ForemanException.class, desc);
   }
 
   @Test
+  @Repeat(count = NUM_RUNS)
   public void foreman_runTryBeginning() {
     final long before = countAllocatedMemory();
 
@@ -397,6 +367,8 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   @Test
+  @Ignore // TODO(DRILL-3163, DRILL-3167)
+  //@Repeat(count = NUM_RUNS)
   public void foreman_runTryEnd() {
     final long before = countAllocatedMemory();
 
@@ -534,10 +506,11 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
-   * Given the result of {@link WaitUntilCompleteListener#waitForCompletion}, this method fails if the state is not
-   * as expected or if an exception is thrown.
+   * Given the result of {@link WaitUntilCompleteListener#waitForCompletion}, this method fails if the completed state
+   * is not as expected, or if an exception is thrown. The completed state could be COMPLETED or CANCELED. This state
+   * is set when {@link WaitUntilCompleteListener#queryCompleted} is called.
    */
-  private static void assertCompleteState(final Pair<QueryState, Exception> result, final QueryState expectedState) {
+  private static void assertStateCompleted(final Pair<QueryState, Exception> result, final QueryState expectedState) {
     final QueryState actualState = result.getFirst();
     final Exception exception = result.getSecond();
     if (actualState != expectedState || exception != null) {
@@ -547,57 +520,27 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   /**
+   * Given a set of controls, this method ensures that the given query completes with a CANCELED state.
+   */
+  private static void assertCancelledWithoutException(final String controls, final WaitUntilCompleteListener listener,
+                                                      final String query) {
+    setControls(controls);
+
+    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, query, listener);
+    final Pair<QueryState, Exception> result = listener.waitForCompletion();
+    assertStateCompleted(result, QueryState.CANCELED);
+  }
+
+  /**
    * Given a set of controls, this method ensures that the TEST_QUERY completes with a CANCELED state.
    */
   private static void assertCancelledWithoutException(final String controls, final WaitUntilCompleteListener listener) {
     assertCancelledWithoutException(controls, listener, TEST_QUERY);
   }
 
-  private static void assertCancelledWithoutException(final String controls, final WaitUntilCompleteListener listener, final String query) {
-    assertCancelled(controls, query, listener);
-  }
-
-  /**
-   * Given a set of controls, this method ensures that the given query completes with a CANCELED state.
-   */
-  private static void assertCancelled(final String controls, final String testQuery,
-      final WaitUntilCompleteListener listener) {
-    setControls(controls);
-
-    QueryTestUtil.testWithListener(drillClient, QueryType.SQL, testQuery, listener);
-    final Pair<QueryState, Exception> result = listener.waitForCompletion();
-    assertCompleteState(result, QueryState.CANCELED);
-  }
-
-  private static void setSessionOption(final String option, final String value) {
-    try {
-      final List<QueryDataBatch> results = drillClient.runQuery(QueryType.SQL,
-          String.format("alter session set `%s` = %s", option, value));
-      for (final QueryDataBatch data : results) {
-        data.release();
-      }
-    } catch(RpcException e) {
-      fail(String.format("Failed to set session option `%s` = %s, Error: %s", option, value, e.toString()));
-    }
-  }
-
-  private static String createPauseInjection(final Class siteClass, final String siteDesc, final int nSkip) {
-    return "{\"injections\" : [{"
-      + "\"type\" : \"pause\"," +
-      "\"siteClass\" : \"" + siteClass.getName() + "\","
-      + "\"desc\" : \"" + siteDesc + "\","
-      + "\"nSkip\" : " + nSkip
-      + "}]}";
-  }
-
-  private static String createPauseInjection(final Class siteClass, final String siteDesc) {
-    return createPauseInjection(siteClass, siteDesc, 0);
-  }
-
-  @Test // To test pause and resume. Test hangs if resume did not happen.
+  @Test // To test pause and resume. Test hangs and times out if resume did not happen.
   public void passThrough() {
     final long before = countAllocatedMemory();
-
 
     final WaitUntilCompleteListener listener = new WaitUntilCompleteListener() {
       @Override
@@ -609,20 +552,26 @@ public class TestDrillbitResilience extends DrillTest {
       }
     };
 
-    final String controls = createPauseInjection(PojoRecordReader.class, "read-next");
+    final String controls = Controls.newBuilder()
+      .addPause(PojoRecordReader.class, "read-next")
+      .build();
     setControls(controls);
 
     QueryTestUtil.testWithListener(drillClient, QueryType.SQL, TEST_QUERY, listener);
     final Pair<QueryState, Exception> result = listener.waitForCompletion();
-    assertCompleteState(result, QueryState.COMPLETED);
+    assertStateCompleted(result, QueryState.COMPLETED);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Cancellation TC 1: cancel before any result set is returned
-  @Ignore // DRILL-3052
-  public void cancelBeforeAnyResultsArrive() {
+  // DRILL-3052: Since root fragment is waiting on data and leaf fragments are cancelled before they send any
+  // data to root, root will never run. This test will timeout if the root did not send the final state to Foreman.
+  // DRILL-2383: Cancellation TC 1: cancel before any result set is returned.
+  @Test
+  @Ignore // TODO(DRILL-3192)
+  //@Repeat(count = NUM_RUNS)
+  public void cancelWhenQueryIdArrives() {
     final long before = countAllocatedMemory();
 
     final WaitUntilCompleteListener listener = new WaitUntilCompleteListener() {
@@ -634,14 +583,17 @@ public class TestDrillbitResilience extends DrillTest {
       }
     };
 
-    final String controls = createPauseInjection(Foreman.class, "foreman-ready");
+    final String controls = Controls.newBuilder()
+      .addPause(FragmentExecutor.class, "fragment-running")
+      .build();
     assertCancelledWithoutException(controls, listener);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Cancellation TC 2: cancel in the middle of fetching result set
+  @Test // DRILL-2383: Cancellation TC 2: cancel in the middle of fetching result set
+  @Repeat(count = NUM_RUNS)
   public void cancelInMiddleOfFetchingResults() {
     final long before = countAllocatedMemory();
 
@@ -660,7 +612,9 @@ public class TestDrillbitResilience extends DrillTest {
     };
 
     // skip once i.e. wait for one batch, so that #dataArrived above triggers #cancelAndResume
-    final String controls = createPauseInjection(ScreenCreator.class, "sending-data", 1);
+    final String controls = Controls.newBuilder()
+      .addPause(ScreenCreator.class, "sending-data", 1)
+      .build();
     assertCancelledWithoutException(controls, listener);
 
     final long after = countAllocatedMemory();
@@ -668,7 +622,8 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
 
-  @Test // Cancellation TC 3: cancel after all result set are produced but not all are fetched
+  @Test // DRILL-2383: Cancellation TC 3: cancel after all result set are produced but not all are fetched
+  @Repeat(count = NUM_RUNS)
   public void cancelAfterAllResultsProduced() {
     final long before = countAllocatedMemory();
 
@@ -685,15 +640,17 @@ public class TestDrillbitResilience extends DrillTest {
       }
     };
 
-    final String controls = createPauseInjection(ScreenCreator.class, "send-complete");
+    final String controls = Controls.newBuilder()
+      .addPause(ScreenCreator.class, "send-complete")
+      .build();
     assertCancelledWithoutException(controls, listener);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Cancellation TC 4: cancel after everything is completed and fetched
-  @Ignore
+  @Test // DRILL-2383: Cancellation TC 4: cancel after everything is completed and fetched
+  @Repeat(count = NUM_RUNS)
   public void cancelAfterEverythingIsCompleted() {
     final long before = countAllocatedMemory();
 
@@ -710,26 +667,27 @@ public class TestDrillbitResilience extends DrillTest {
       }
     };
 
-    final String controls = createPauseInjection(Foreman.class, "foreman-cleanup");
+    final String controls = Controls.newBuilder()
+      .addPause(Foreman.class, "foreman-cleanup")
+      .build();
     assertCancelledWithoutException(controls, listener);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Completion TC 1: success
+  @Test // DRILL-2383: Completion TC 1: success
   public void successfullyCompletes() {
     final long before = countAllocatedMemory();
 
     final WaitUntilCompleteListener listener = new WaitUntilCompleteListener();
     QueryTestUtil.testWithListener(drillClient, QueryType.SQL, TEST_QUERY, listener);
     final Pair<QueryState, Exception> result = listener.waitForCompletion();
-    assertCompleteState(result, QueryState.COMPLETED);
+    assertStateCompleted(result, QueryState.COMPLETED);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
-
 
   /**
    * Given a set of controls, this method ensures TEST_QUERY fails with the given class and desc.
@@ -742,47 +700,54 @@ public class TestDrillbitResilience extends DrillTest {
     final Pair<QueryState, Exception> result = listener.waitForCompletion();
     final QueryState state = result.getFirst();
     assertTrue(String.format("Query state should be FAILED (and not %s).", state), state == QueryState.FAILED);
-    assertExceptionInjected(result.getSecond(), exceptionClass, exceptionDesc);
+    assertExceptionMessage(result.getSecond(), exceptionClass, exceptionDesc);
   }
 
   private static void assertFailsWithException(final String controls, final Class<? extends Throwable> exceptionClass,
-      final String exceptionDesc) {
+                                               final String exceptionDesc) {
     assertFailsWithException(controls, exceptionClass, exceptionDesc, TEST_QUERY);
   }
 
-  @Test // Completion TC 2: failed query - before query is executed - while sql parsing
+  @Test // DRILL-2383: Completion TC 2: failed query - before query is executed - while sql parsing
   public void failsWhenParsing() {
     final long before = countAllocatedMemory();
 
     final String exceptionDesc = "sql-parsing";
     final Class<? extends Throwable> exceptionClass = ForemanSetupException.class;
-    final String controls = createSingleException(DrillSqlWorker.class, exceptionDesc, exceptionClass);
+    final String controls = Controls.newBuilder()
+    .addException(DrillSqlWorker.class, exceptionDesc, exceptionClass)
+      .build();
     assertFailsWithException(controls, exceptionClass, exceptionDesc);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Completion TC 3: failed query - before query is executed - while sending fragments to other drillbits
+  @Test // DRILL-2383: Completion TC 3: failed query - before query is executed - while sending fragments to other
+  // drillbits
   public void failsWhenSendingFragments() {
     final long before = countAllocatedMemory();
 
     final String exceptionDesc = "send-fragments";
     final Class<? extends Throwable> exceptionClass = ForemanException.class;
-    final String controls = createSingleException(Foreman.class, exceptionDesc, exceptionClass);
+    final String controls = Controls.newBuilder()
+    .addException(Foreman.class, exceptionDesc, exceptionClass)
+      .build();
     assertFailsWithException(controls, exceptionClass, exceptionDesc);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  @Test // Completion TC 4: failed query - during query execution
+  @Test // DRILL-2383: Completion TC 4: failed query - during query execution
   public void failsDuringExecution() {
     final long before = countAllocatedMemory();
 
     final String exceptionDesc = "fragment-execution";
     final Class<? extends Throwable> exceptionClass = IOException.class;
-    final String controls = createSingleException(FragmentExecutor.class, exceptionDesc, exceptionClass);
+    final String controls = Controls.newBuilder()
+      .addException(FragmentExecutor.class, exceptionDesc, exceptionClass)
+      .build();
     assertFailsWithException(controls, exceptionClass, exceptionDesc);
 
     final long after = countAllocatedMemory();
@@ -794,11 +759,14 @@ public class TestDrillbitResilience extends DrillTest {
    * Specifically tests cancelling fragment which has {@link MergingRecordBatch} blocked waiting for data.
    */
   @Test
-  public void testInterruptingBlockedMergingRecordBatch() {
+  @Repeat(count = NUM_RUNS)
+  public void interruptingBlockedMergingRecordBatch() {
     final long before = countAllocatedMemory();
 
-    final String control = createPauseInjection(MergingRecordBatch.class, "waiting-for-data", 1);
-    testInterruptingBlockedFragmentsWaitingForData(control);
+    final String control = Controls.newBuilder()
+      .addPause(MergingRecordBatch.class, "waiting-for-data", 1)
+      .build();
+    interruptingBlockedFragmentsWaitingForData(control);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
@@ -809,23 +777,26 @@ public class TestDrillbitResilience extends DrillTest {
    * Specifically tests cancelling fragment which has {@link UnorderedReceiverBatch} blocked waiting for data.
    */
   @Test
-  public void testInterruptingBlockedUnorderedReceiverBatch() {
+  @Repeat(count = NUM_RUNS)
+  public void interruptingBlockedUnorderedReceiverBatch() {
     final long before = countAllocatedMemory();
 
-    final String control = createPauseInjection(UnorderedReceiverBatch.class, "waiting-for-data", 1);
-    testInterruptingBlockedFragmentsWaitingForData(control);
+    final String control = Controls.newBuilder()
+      .addPause(UnorderedReceiverBatch.class, "waiting-for-data", 1)
+      .build();
+    interruptingBlockedFragmentsWaitingForData(control);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  private static void testInterruptingBlockedFragmentsWaitingForData(final String control) {
+  private static void interruptingBlockedFragmentsWaitingForData(final String control) {
     try {
       setSessionOption(SLICE_TARGET, "1");
       setSessionOption(HASHAGG.getOptionName(), "false");
 
       final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
-      assertCancelled(control, query, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+      assertCancelledWithoutException(control, new ListenerThatCancelsQueryAfterFirstBatchOfData(), query);
     } finally {
       setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
       setSessionOption(HASHAGG.getOptionName(), HASHAGG.getDefault().bool_val.toString());
@@ -838,7 +809,8 @@ public class TestDrillbitResilience extends DrillTest {
    * the partitioner threads.
    */
   @Test
-  public void testInterruptingPartitionerThreadFragment() {
+  @Repeat(count = NUM_RUNS)
+  public void interruptingPartitionerThreadFragment() {
     try {
       setSessionOption(SLICE_TARGET, "1");
       setSessionOption(HASHAGG.getOptionName(), "true");
@@ -846,22 +818,13 @@ public class TestDrillbitResilience extends DrillTest {
 
       final long before = countAllocatedMemory();
 
-      final String controls = "{\"injections\" : ["
-        + "{"
-        + "\"type\" : \"latch\","
-        + "\"siteClass\" : \"" + PartitionerDecorator.class.getName() + "\","
-        + "\"desc\" : \"partitioner-sender-latch\""
-        + "},"
-        + "{"
-        + "\"type\" : \"pause\","
-        + "\"siteClass\" : \"" + PartitionerDecorator.class.getName() + "\","
-        + "\"desc\" : \"wait-for-fragment-interrupt\","
-        + "\"nSkip\" : 1"
-        + "}" +
-        "]}";
+      final String controls = Controls.newBuilder()
+      .addLatch(PartitionerDecorator.class, "partitioner-sender-latch")
+      .addPause(PartitionerDecorator.class, "wait-for-fragment-interrupt", 1)
+      .build();
 
       final String query = "SELECT sales_city, COUNT(*) cnt FROM cp.`region.json` GROUP BY sales_city";
-      assertCancelled(controls, query, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+      assertCancelledWithoutException(controls, new ListenerThatCancelsQueryAfterFirstBatchOfData(), query);
 
       final long after = countAllocatedMemory();
       assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
@@ -874,85 +837,104 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   @Test
-  public void testInterruptingWhileFragmentIsBlockedInAcquiringSendingTicket() throws Exception {
-
+  @Ignore // TODO(DRILL-3193)
+  //@Repeat(count = NUM_RUNS)
+  public void interruptingWhileFragmentIsBlockedInAcquiringSendingTicket() {
     final long before = countAllocatedMemory();
 
-    final String control =
-      createPauseInjection(SingleSenderRootExec.class, "data-tunnel-send-batch-wait-for-interrupt", 1);
-    assertCancelled(control, TEST_QUERY, new ListenerThatCancelsQueryAfterFirstBatchOfData());
+    final String control = Controls.newBuilder()
+      .addPause(SingleSenderRootExec.class, "data-tunnel-send-batch-wait-for-interrupt", 1)
+      .build();
+    assertCancelledWithoutException(control, new ListenerThatCancelsQueryAfterFirstBatchOfData());
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
   @Test
+  @Repeat(count = NUM_RUNS)
   public void memoryLeaksWhenCancelled() {
     setSessionOption(SLICE_TARGET, "10");
 
     final long before = countAllocatedMemory();
 
-    final String controls = createPauseInjection(ScreenCreator.class, "sending-data", 1);
-    String query = null;
     try {
-      query = BaseTestQuery.getFile("queries/tpch/09.sql");
-    } catch (final IOException e) {
-      fail("Failed to get query file: " + e);
-    }
-
-    final WaitUntilCompleteListener listener = new WaitUntilCompleteListener() {
-      private boolean cancelRequested = false;
-
-      @Override
-      public void dataArrived(final QueryDataBatch result, final ConnectionThrottle throttle) {
-        if (!cancelRequested) {
-          check(queryId != null, "Query id should not be null, since we have waited long enough.");
-          cancelAndResume();
-          cancelRequested = true;
-        }
-        result.release();
+      final String controls = Controls.newBuilder()
+        .addPause(ScreenCreator.class, "sending-data", 1)
+        .build();
+      String query = null;
+      try {
+        query = BaseTestQuery.getFile("queries/tpch/09.sql");
+        query = query.substring(0, query.length() - 1); // drop the ";"
+      } catch (final IOException e) {
+        fail("Failed to get query file: " + e);
       }
-    };
 
-    assertCancelledWithoutException(controls, listener, query.substring(0, query.length() - 1));
+      final WaitUntilCompleteListener listener = new WaitUntilCompleteListener() {
+        private volatile boolean cancelRequested = false;
 
-    final long after = countAllocatedMemory();
-    assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
+        @Override
+        public void dataArrived(final QueryDataBatch result, final ConnectionThrottle throttle) {
+          if (!cancelRequested) {
+            check(queryId != null, "Query id should not be null, since we have waited long enough.");
+            cancelAndResume();
+            cancelRequested = true;
+          }
+          result.release();
+        }
+      };
 
-    setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+      assertCancelledWithoutException(controls, listener, query);
+
+      final long after = countAllocatedMemory();
+      assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
+    } finally {
+      setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+    }
   }
 
   @Test
+  @Ignore // TODO(DRILL-3194)
+  //@Repeat(count = NUM_RUNS)
   public void memoryLeaksWhenFailed() {
     setSessionOption(SLICE_TARGET, "10");
 
     final long before = countAllocatedMemory();
 
-    final String exceptionDesc = "fragment-execution";
-    final Class<? extends Throwable> exceptionClass = IOException.class;
-    final String controls = createSingleException(FragmentExecutor.class, exceptionDesc, exceptionClass);
-    String query = null;
     try {
-      query = BaseTestQuery.getFile("queries/tpch/09.sql");
-    } catch (final IOException e) {
-      fail("Failed to get query file: " + e);
+      final String exceptionDesc = "fragment-execution";
+      final Class<? extends Throwable> exceptionClass = IOException.class;
+      final String controls = Controls.newBuilder()
+        .addException(FragmentExecutor.class, exceptionDesc, exceptionClass)
+        .build();
+
+      String query = null;
+      try {
+        query = BaseTestQuery.getFile("queries/tpch/09.sql");
+        query = query.substring(0, query.length() - 1); // drop the ";"
+      } catch (final IOException e) {
+        fail("Failed to get query file: " + e);
+      }
+
+      assertFailsWithException(controls, exceptionClass, exceptionDesc, query);
+
+      final long after = countAllocatedMemory();
+      assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
+
+    } finally {
+      setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
     }
-
-    assertFailsWithException(controls, exceptionClass, exceptionDesc, query.substring(0, query.length() - 1));
-
-    final long after = countAllocatedMemory();
-    assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
-
-    setSessionOption(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
   }
 
   @Test // DRILL-3065
-  public void testInterruptingAfterMSorterSorting() {
+  public void failsAfterMSorterSorting() {
     final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
     Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();
-    final String controls = createSingleException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SORT, typeOfException);
+    final String controls = Controls.newBuilder()
+      .addException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SORT, typeOfException)
+      .build();
     assertFailsWithException(controls, typeOfException, ExternalSortBatch.INTERRUPTION_AFTER_SORT, query);
 
     final long after = countAllocatedMemory();
@@ -960,28 +942,30 @@ public class TestDrillbitResilience extends DrillTest {
   }
 
   @Test // DRILL-3085
-  public void testInterruptingAfterMSorterSetup() {
+  public void failsAfterMSorterSetup() {
     final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
     Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();
-    final String controls = createSingleException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SETUP, typeOfException);
+    final String controls = Controls.newBuilder()
+    .addException(ExternalSortBatch.class, ExternalSortBatch.INTERRUPTION_AFTER_SETUP, typeOfException)
+      .build();
     assertFailsWithException(controls, typeOfException, ExternalSortBatch.INTERRUPTION_AFTER_SETUP, query);
 
     final long after = countAllocatedMemory();
     assertEquals(String.format("We are leaking %d bytes", after - before), before, after);
   }
 
-  private long countAllocatedMemory() {
+  private static long countAllocatedMemory() {
     // wait to make sure all fragments finished cleaning up
     try {
       Thread.sleep(2000);
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       // just ignore
     }
 
     long allocated = 0;
-    for (String name : drillbits.keySet()) {
+    for (final String name : drillbits.keySet()) {
       allocated += drillbits.get(name).getContext().getAllocator().getAllocatedMemory();
     }
 

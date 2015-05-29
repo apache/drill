@@ -22,7 +22,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -148,37 +147,13 @@ public class TestExceptionInjection extends BaseTestQuery {
     }
   }
 
-  private static String createException(final String desc, final int nSkip, final int nFire,
-                                        final String exceptionClass) {
-    return "{\"injections\":[{"
-      + "\"type\":\"exception\","
-      + "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
-      + "\"desc\":\"" + desc + "\","
-      + "\"nSkip\": " + nSkip + ","
-      + "\"nFire\": " + nFire + ","
-      + "\"exceptionClass\":\"" + exceptionClass + "\""
-      + "}]}";
-  }
-
-  private static String createExceptionOnBit(final DrillbitEndpoint endpoint, final String desc, final int nSkip,
-                                             final int nFire, final String exceptionClass) {
-    return "{\"injections\":[{"
-      + "\"address\":\"" + endpoint.getAddress() + "\","
-      + "\"port\":\"" + endpoint.getUserPort() + "\","
-      + "\"type\":\"exception\","
-      + "\"siteClass\":\"org.apache.drill.exec.testing.TestExceptionInjection$DummyClass\","
-      + "\"desc\":\"" + desc + "\","
-      + "\"nSkip\": " + nSkip + ","
-      + "\"nFire\": " + nFire + ","
-      + "\"exceptionClass\":\"" + exceptionClass + "\""
-      + "}]}";
-  }
-
   @SuppressWarnings("static-method")
   @Test
   public void checkedInjection() {
     // set the injection via the parsing POJOs
-    final String controls = createException(DummyClass.THROWS_IOEXCEPTION, 0, 1, IOException.class.getName());
+    final String controls = Controls.newBuilder()
+      .addException(DummyClass.class, DummyClass.THROWS_IOEXCEPTION, IOException.class, 0, 1)
+      .build();
     ControlsInjectionUtil.setControls(session, controls);
 
     final QueryContext context = new QueryContext(session, bits[0].getContext());
@@ -204,8 +179,10 @@ public class TestExceptionInjection extends BaseTestQuery {
     final String passthroughDesc = "<<injected from descPassthrough>>";
     final int nSkip = 7;
     final int nFire = 3;
-    final String exceptionClass = RuntimeException.class.getName();
-    final String controls = createException(passthroughDesc, nSkip, nFire, exceptionClass);
+    final Class<? extends Throwable> exceptionClass = RuntimeException.class;
+    final String controls = Controls.newBuilder()
+      .addException(DummyClass.class, passthroughDesc, exceptionClass, nSkip, nFire)
+      .build();
     ControlsInjectionUtil.setControls(session, controls);
 
     final QueryContext context = new QueryContext(session, bits[0].getContext());
@@ -219,7 +196,7 @@ public class TestExceptionInjection extends BaseTestQuery {
 
     // these should throw
     for (int i = 0; i < nFire; ++i) {
-      assertPassthroughThrows(dummyClass, exceptionClass, passthroughDesc);
+      assertPassthroughThrows(dummyClass, exceptionClass.getName(), passthroughDesc);
     }
 
     // this shouldn't throw
@@ -260,10 +237,11 @@ public class TestExceptionInjection extends BaseTestQuery {
     final String passthroughDesc = "<<injected from descPassthrough>>";
     final int nSkip = 7;
     final int nFire = 3;
-    final String exceptionClass = RuntimeException.class.getName();
+    final Class<? extends Throwable> exceptionClass = RuntimeException.class;
     // only drillbit1's (address, port)
-    final String controls = createExceptionOnBit(drillbitContext1.getEndpoint(), passthroughDesc, nSkip, nFire,
-      exceptionClass);
+    final String controls = Controls.newBuilder()
+    .addExceptionOnBit(DummyClass.class, passthroughDesc, exceptionClass, drillbitContext1.getEndpoint(), nSkip, nFire)
+      .build();
 
     ControlsInjectionUtil.setControls(session, controls);
 
@@ -278,7 +256,7 @@ public class TestExceptionInjection extends BaseTestQuery {
 
       // these should throw
       for (int i = 0; i < nFire; ++i) {
-        assertPassthroughThrows(class1, exceptionClass, passthroughDesc);
+        assertPassthroughThrows(class1, exceptionClass.getName(), passthroughDesc);
       }
 
       // this shouldn't throw

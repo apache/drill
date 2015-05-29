@@ -295,7 +295,6 @@ public class Foreman implements Runnable {
       if(resume) {
         resume();
       }
-      injector.injectPause(queryContext.getExecutionControls(), "foreman-ready", logger);
 
       // restore the thread's original name
       currentThread.setName(originalName);
