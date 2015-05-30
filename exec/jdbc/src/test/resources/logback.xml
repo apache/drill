@@ -37,7 +37,7 @@
   </logger>
 
   <logger name="drill.allocator">
-    <level value="debug" />
+    <level value="info" />
   </logger>
 
   <!--logger name="org" additivity="false">
@@ -95,13 +95,8 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <!--logger name="org.apache.drill.common.util.PathScanner" additivity="false">
-    <level value="info" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger-->
   <logger name="org.apache.drill.common.util.PathScanner" additivity="false">
-    <level value="trace" />
+    <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
   </logger>
@@ -112,41 +107,11 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
-  <!--logger name="org.apache.drill.exec.compile" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger-->
-<!---->
-  <logger name="org.apache.drill.exec.compile.JaninoClassCompiler" additivity="false">
+  <logger name="org.apache.drill.exec.compile" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
   </logger>
-
-  <logger name="org.apache.drill.exec.compile.MergeAdapter" additivity="false">
-    <level value="debugo" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger>
-<!--
-  --><!--logger name="org.apache.drill.exec.compile.bytecode" additivity="false">
-    <level value="info" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger-->
-<!---->
-  <!--logger name="org.apache.drill.exec.compile.bytecode.DrillJavaFileManager" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger-->
-
-  <!--logger name="org.apache.drill.exec.compile.bytecode.ScalarReplacementNode" additivity="false">
-    <level value="info" />
-    <appender-ref ref="SOCKET" />
-    <appender-ref ref="STDOUT" />
-  </logger-->
 
   <logger name="org.apache.drill.exec.coord" additivity="false">
     <level value="info" />
@@ -195,11 +160,11 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
-  <!--logger name="org.apache.drill.exec.memory" additivity="false">
+  <logger name="org.apache.drill.exec.memory" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <logger name="org.apache.drill.exec.memory.Accountor" additivity="false">
     <level value="debug" />
@@ -214,7 +179,7 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 <!---->
-  <logger name="org.apache.drill.exec.ops.OperatorContextImpl" additivity="false">
+  <logger name="org.apache.drill.exec.ops" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
@@ -232,11 +197,11 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <!--logger name="org.apache.drill.exec.physical.impl" additivity="false">
+  <logger name="org.apache.drill.exec.physical.impl" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <logger name="org.apache.drill.exec.physical.impl.svremover" additivity="false">
     <level value="info" />
@@ -411,11 +376,11 @@
     <appender-ref ref="STDOUT" />
   </logger-->
 
-  <!--logger name="org.apache.drill.exec.work.foreman" additivity="false">
+  <logger name="org.apache.drill.exec.work.foreman" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <!--logger name="org.apache.drill.exec.work.foreman.Foreman" additivity="false">
     <level value="info" />
@@ -434,11 +399,11 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <!--logger name="org.apache.drill.exec.work.fragment" additivity="false">
+  <logger name="org.apache.drill.exec.work.fragment" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 
   <!--logger name="org.apache.drill.exec.work.fragment.FragmentExecutor" additivity="false">
     <level value="warn" />
@@ -464,12 +429,11 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-<!--
-  --><!--logger name="org.apache.drill.jdbc.impl.DrillResultSetImpl$ResultsListener" additivity="false">
+  <logger name="org.apache.drill.jdbc.impl.DrillResultSetImpl$ResultsListener" additivity="false">
     <level value="info" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
-  </logger-->
+  </logger>
 <!---->
 
   <root>
