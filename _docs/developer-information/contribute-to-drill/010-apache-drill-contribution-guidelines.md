@@ -114,7 +114,7 @@ Please do:
   * comment code whose function or rationale is not obvious;
   * update documentation (e.g., _package.html_ files, this wiki, etc.)
 
-Updating a patch
+### Updating a patch
 
 For patch updates, our convention is to number them like
 DRILL-1856.1.patch.txt, DRILL-1856.2.patch.txt, etc. And then click the

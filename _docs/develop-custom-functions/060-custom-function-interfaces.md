@@ -55,7 +55,6 @@ The following example shows the program created for the `myaddints` function:
     import org.apache.drill.exec.expr.holders.Float8Holder;
     import org.apache.drill.exec.expr.holders.IntHolder;
     import org.apache.drill.exec.expr.holders.VarCharHolder;
-    import org.apache.drill.exec.record.RecordBatch;
      
     public class MyUdfs {
        
@@ -65,7 +64,7 @@ The following example shows the program created for the `myaddints` function:
         @Param BigIntHolder input1;
         @Param BigIntHolder input2;
         @Output BigIntHolder out;
-        public void setup(RecordBatch b){}
+        public void setup(){}
              
         public void eval(){
           out.value = input1.value + input2.value;
@@ -118,7 +117,6 @@ The following example shows the program created for the `mysecondmin` function:
     import org.apache.drill.exec.expr.holders.Float8Holder;
     import org.apache.drill.exec.expr.holders.IntHolder;
     import org.apache.drill.exec.expr.holders.VarCharHolder;
-    import org.apache.drill.exec.record.RecordBatch;
      
     public class MyUdfs {
        
@@ -128,9 +126,9 @@ The following example shows the program created for the `mysecondmin` function:
         @Workspace BigIntHolder min;
         @Workspace BigIntHolder secondMin;
         @Output BigIntHolder out;
-        public void setup(RecordBatch b) {
-            min = new BigIntHolder(); 
-            secondMin = new BigIntHolder(); 
+        public void setup() {
+          min = new BigIntHolder(); 
+          secondMin = new BigIntHolder(); 
           min.value = 999999999;
           secondMin.value = 999999999;
         }
@@ -139,8 +137,8 @@ The following example shows the program created for the `mysecondmin` function:
         public void add() {
              
             if (in.value < min.value) {
-                min.value = in.value;
-                secondMin.value = min.value;
+              min.value = in.value;
+              secondMin.value = min.value;
             }
              
         }

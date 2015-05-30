@@ -4,7 +4,7 @@ parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store
 (PStore). This data is encoded in JSON or Protobuf format. Drill can use the
-local file system, ZooKeeper, HBase, or MapR-DB to store this data. The data
+local file system or a distributed file system, such as HDFS or MapR-FS to store this data. The data
 stored in a PStore includes state information for storage plugins, query
 profiles, and ALTER SYSTEM settings. The default type of PStore configured
 depends on the Drill installation mode.

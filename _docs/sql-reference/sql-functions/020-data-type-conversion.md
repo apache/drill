@@ -395,11 +395,11 @@ use in your Drill queries as described in this section:
 
 **Function**| **Return Type**  
 ---|---  
-[TO_CHAR](#TO_CHAR)(expression, format)| VARCHAR  
-[TO_DATE](#TO_DATE)(expression, format)| DATE  
-[TO_NUMBER](#TO_NUMBER)(VARCHAR, format)| DECIMAL  
-[TO_TIMESTAMP](#TO_TIMESTAMP)(VARCHAR, format)| TIMESTAMP
-[TO_TIMESTAMP](#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
+[TO_CHAR]({{site.baseurl}}/docs/data-type-conversion/#TO_CHAR)(expression, format)| VARCHAR  
+[TO_DATE]({{site.baseurl}}/docs/data-type-conversion/#TO_DATE)(expression, format)| DATE  
+[TO_NUMBER]({{site.baseurl}}/docs/data-type-conversion/#TO_NUMBER)(VARCHAR, format)| DECIMAL  
+[TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#TO_TIMESTAMP)(VARCHAR, format)| TIMESTAMP
+[TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
 
 ### Format Specifiers for Numerical Conversions
 Use the following Java format specifiers for converting numbers:

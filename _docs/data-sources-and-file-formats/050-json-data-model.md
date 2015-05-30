@@ -10,9 +10,9 @@ Drill supports [JSON (JavaScript Object Notation)](http://www.json.org/), a self
 
 Semi-structured JSON data often consists of complex, nested elements having schema-less fields that differ type-wise from row to row. The data can constantly evolve. Applications typically add and remove fields frequently to meet business requirements.
 
-Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table. 
+Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table.
 
-You can also [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files. 
+You can also [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files.
 
 In addition to the examples presented later in this section, see ["How to Analyze Highly Dynamic Datasets with Apache Drill"](https://www.mapr.com/blog/how-analyze-highly-dynamic-datasets-apache-drill) for information about how to analyze a JSON data set.
 
@@ -21,14 +21,14 @@ JSON data consists of the following types:
 
 * Array: ordered values, separated by commas, enclosed in square brackets
 * Boolean: true or false
-* Number: double-precision floating point number, including exponential numbers. No octal, hexadecimal, NaN, or Infinity 
+* Number: double-precision floating point number, including exponential numbers. No octal, hexadecimal, NaN, or Infinity
 * null: empty value
 * Object: unordered key/value collection enclosed in curly braces
 * String: Unicode enclosed in double quotation marks
 * Value: a string, number, true, false, null
 * Whitespace: used between tokens
 
-The following table shows SQL-JSON data type mapping: 
+The following table shows SQL-JSON data type mapping:
 
 | SQL Type | JSON Type | Description                                                                                   |
 |----------|-----------|-----------------------------------------------------------------------------------------------|
@@ -58,10 +58,10 @@ When you set this option, Drill reads all numbers from the JSON files as DOUBLE.
 
 [“Query Complex Data”]({{ site.baseurl }}/docs/querying-complex-data-introduction) show how to use [composite types]({{site.baseurl}}/docs/supported-data-types/#composite-types) to access nested arrays.
 
-Drill uses these types internally for reading complex and nested data structures from data sources such as JSON. 
+Drill uses these types internally for reading complex and nested data structures from data sources such as JSON.
 
 ## Reading JSON
-To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/file-system-storage-plugin/) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition. 
+To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/file-system-storage-plugin/) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition.
 
 JSON data is often complex. Data can be deeply nested and semi-structured. but you can use [workarounds ]({{ site.baseurl }}/docs/json-data-model/#limitations-and-workarounds) covered later.
 
@@ -69,8 +69,8 @@ Drill reads tuples defined in single objects, having no comma between objects. A
 
     { name: "Apples", desc: "Delicious" }
     { name: "Oranges", desc: "Florida Navel" }
-    
-To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions. 
+
+To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions.
 
 ## Writing JSON
 You can write data from Drill to a JSON file. The following setup is required:
@@ -90,7 +90,7 @@ You can write data from Drill to a JSON file. The following setup is required:
 * Set the output format to JSON. For example:
 
         ALTER SESSION SET `store.format`='json';
-    
+
 * Use the path to the workspace location in a CTAS command. for example:
 
         USE myplugin.myworkspace;
@@ -98,7 +98,7 @@ You can write data from Drill to a JSON file. The following setup is required:
         SELECT my column from dfs.`<path_file_name>`;
 
 Drill performs the following actions, as shown in the complete [CTAS command example]({{ site.baseurl }}/docs/create-table-as-ctas/):
-   
+
 * Creates a directory using table name.
 * Writes the JSON data to the directory in the workspace location.
 
@@ -109,11 +109,11 @@ Generally, you query JSON files using the following syntax, which includes a tab
 * Dot notation to drill down into a JSON map.
 
         SELECT t.level1.level2. . . . leveln FROM <storage plugin location>`myfile.json` t
-        
+
 * Use square brackets, array-style notation to drill down into a JSON array.
 
         SELECT t.level1.level2[n][2] FROM <storage plugin location>`myfile.json` t;
-    
+
   The first index position of an array is 0.
 
 * Do not use a map, array or repeated scalar type in GROUP BY, ORDER BY or in a comparison operator.
@@ -122,11 +122,12 @@ Drill returns null when a document does not have the specified map or level.
 
 Using the following techniques, you can query complex, nested JSON:
 
-* Flatten nested data 
+* Flatten nested data
 * Generate key/value pairs for loosely structured data
 
 ## Example: Flatten and Generate Key Values for Complex JSON
-This example uses the following data that represents unit sales of tickets to events that were sold over a period of for several days in December:
+
+This example uses the following data that represents unit sales of tickets to events that were sold over a period of several days in December:
 
 ### ticket_sales.json Contents
 
@@ -150,7 +151,7 @@ This example uses the following data that represents unit sales of tickets to ev
         "12-21": 857475
       }
     }
-    
+
 Take a look at the data in Drill:
 
     +---------+---------+---------------------------------------------------------------+
@@ -180,7 +181,7 @@ KVGEN allows queries against maps where the keys themselves represent data rathe
 
 FLATTEN breaks the list of key-value pairs into separate rows on which you can apply analytic functions. FLATTEN takes a JSON array, such as the output from kvgen(sales), as an argument. Using the all (*) wildcard as the argument is not supported and returns an error. The following example continues using data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json):
 
-    SELECT FLATTEN(kvgen(sales)) Sales 
+    SELECT FLATTEN(kvgen(sales)) Sales
     FROM dfs.`/Users/drilluser/drill/ticket_sales.json`;
 
     +--------------------------------+
@@ -198,10 +199,10 @@ FLATTEN breaks the list of key-value pairs into separate rows on which you can a
     8 rows selected (0.171 seconds)
 
 ### Example: Aggregate Loosely Structured Data
-Use flatten and kvgen together to aggregate the data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json). Make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode. 
+Use flatten and kvgen together to aggregate the data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json). Make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode.
 
     ALTER SYSTEM SET `store.json.all_text_mode` = false;
-    
+
 Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in a single query.
 
     SELECT SUM(tkt.tot_sales.`value`) AS TicketSold FROM (SELECT flatten(kvgen(sales)) tot_sales FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt;
@@ -214,13 +215,17 @@ Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in
     1 row selected (0.244 seconds)
 
 ### Example: Aggregate and Sort Data
-Sum the ticket sales by state and group by day and sort in ascending order. 
+<<<<<<< HEAD
+Sum the ticket sales by state and group by day and sort in ascending order.
+=======
+Sum and group the ticket sales by date and sort in ascending order of total tickets sold.
+>>>>>>> d6f216a60b04b5366a3f3905450988597a421118
 
-    SELECT `right`(tkt.tot_sales.key,2) `December Date`, 
-    SUM(tkt.tot_sales.`value`) AS TotalSales 
-    FROM (SELECT FLATTEN(kvgen(sales)) tot_sales 
-    FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt 
-    GROUP BY `right`(tkt.tot_sales.key,2) 
+    SELECT `right`(tkt.tot_sales.key,2) `December Date`,
+    SUM(tkt.tot_sales.`value`) AS TotalSales
+    FROM (SELECT FLATTEN(kvgen(sales)) tot_sales
+    FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt
+    GROUP BY `right`(tkt.tot_sales.key,2)
     ORDER BY TotalSales;
 
     +----------------+-------------+
@@ -240,30 +245,30 @@ To access a map field in an array, use dot notation to drill down through the hi
     {
       "type": "FeatureCollection",
       "features": [
-      { 
-        "type": "Feature", 
-        "properties": 
-        { 
-          "MAPBLKLOT": "0001001", 
-          "BLKLOT": "0001001", 
-          "BLOCK_NUM": "0001", 
-          "LOT_NUM": "001", 
-          "FROM_ST": "0", 
-          "TO_ST": "0", 
-          "STREET": "UNKNOWN", 
-          "ST_TYPE": null, 
-          "ODD_EVEN": "E" }, 
-          "geometry": 
-        { 
-            "type": "Polygon", 
-            "coordinates": 
-            [ [ 
-            [ -122.422003528252475, 37.808480096967251, 0.0 ], 
-            [ -122.422076013325281, 37.808835019815085, 0.0 ], 
-            [ -122.421102174348633, 37.808803534992904, 0.0 ], 
-            [ -122.421062569067274, 37.808601056818148, 0.0 ], 
-            [ -122.422003528252475, 37.808480096967251, 0.0 ] 
-            ] ] 
+      {
+        "type": "Feature",
+        "properties":
+        {
+          "MAPBLKLOT": "0001001",
+          "BLKLOT": "0001001",
+          "BLOCK_NUM": "0001",
+          "LOT_NUM": "001",
+          "FROM_ST": "0",
+          "TO_ST": "0",
+          "STREET": "UNKNOWN",
+          "ST_TYPE": null,
+          "ODD_EVEN": "E" },
+          "geometry":
+        {
+            "type": "Polygon",
+            "coordinates":
+            [ [
+            [ -122.422003528252475, 37.808480096967251, 0.0 ],
+            [ -122.422076013325281, 37.808835019815085, 0.0 ],
+            [ -122.421102174348633, 37.808803534992904, 0.0 ],
+            [ -122.421062569067274, 37.808601056818148, 0.0 ],
+            [ -122.422003528252475, 37.808480096967251, 0.0 ]
+            ] ]
         }
       },
     . . .
@@ -281,7 +286,7 @@ This example shows how to drill down using array notation plus dot notation in f
 
 To access the second geometry coordinate of the first city lot in the San Francisco city lots, use array indexing notation for the coordinates as well as the features:
 
-    SELECT features[0].geometry.coordinates[0][1] 
+    SELECT features[0].geometry.coordinates[0][1]
     FROM dfs.`/Users/drilluser/citylots.json`;
     +-------------------+
     |      EXPR$0       |
@@ -290,10 +295,10 @@ To access the second geometry coordinate of the first city lot in the San Franci
     +-------------------+
     1 row selected (0.19 seconds)
 
-More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/selecting-nested-data-for-a-column). 
+More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/selecting-nested-data-for-a-column).
 
 ### Example: Flatten an Array of Maps using a Subquery
-By flattening the following JSON file, which contains an array of maps, you can evaluate the records of the flattened data. 
+By flattening the following JSON file, which contains an array of maps, you can evaluate the records of the flattened data.
 
     {"name":"classic","fillings":[ {"name":"sugar","cal":500} , {"name":"flour","cal":300} ] }
 
@@ -346,8 +351,8 @@ This example uses a WHERE clause to drill down to a third level of the following
 
 Use dot notation, for example `t.birth.lastname` and `t.birth.bearer.max_hdl` to drill down to the nested level:
 
-    SELECT t.birth.lastname AS Name, t.birth.weight AS Weight 
-    FROM dfs.`Users/drilluser/vitalstat.json` t 
+    SELECT t.birth.lastname AS Name, t.birth.weight AS Weight
+    FROM dfs.`Users/drilluser/vitalstat.json` t
     WHERE t.birth.bearer.max_hdl < 160;
 
     +----------------+------------+
@@ -367,7 +372,7 @@ In most cases, you can use a workaround, presented in the following sections, to
 * Complex JSON objects
 * Nested column names
 * Schema changes
-* Selecting all in a JSON directory query 
+* Selecting all in a JSON directory query
 
 ### Array at the root level
 Drill cannot read an array at the root level, outside an object.
@@ -401,7 +406,7 @@ Workaround: To query n-level nested data, use the table alias to remove ambiguit
     }
     . . .
 
-    SELECT dev_id, `date`, `time`, t.user_info.user_id, t.user_info.device, t.dev_info.prod_id 
+    SELECT dev_id, `date`, `time`, t.user_info.user_id, t.user_info.device, t.dev_info.prod_id
     FROM dfs.`/Users/mypath/example.json` t;
 
 ### Empty array
@@ -409,7 +414,7 @@ Drill cannot read an empty array, shown in the following example, and attempting
 
         { "a":[] }
 
-Workaround: Remove empty arrays. 
+Workaround: Remove empty arrays.
 
 For example, you cannot query the [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json) data unless you make the following modification.
 
@@ -418,7 +423,7 @@ For example, you cannot query the [City Lots San Francisco in .json](https://git
 After removing the extraneous square brackets in the coordinates array, you can drill down to query all the data for the lots.
 
 ### Lengthy JSON objects
-Currently, Drill cannot manage lengthy JSON objects, such as a gigabit JSON file. Finding the beginning and end of records can be time consuming and require scanning the whole file. 
+Currently, Drill cannot manage lengthy JSON objects, such as a gigabit JSON file. Finding the beginning and end of records can be time consuming and require scanning the whole file.
 
 Workaround: Use a tool to split the JSON file into smaller chunks of 64-128MB or 64-256MB initially until you know the total data size and node configuration. Keep the JSON objects intact in each file. A distributed file system, such as MapR-FS, is recommended over trying to manage file partitions.
 
@@ -426,13 +431,13 @@ Workaround: Use a tool to split the JSON file into smaller chunks of 64-128MB or
 Complex arrays and maps can be difficult or impossible to query.
 
 Workaround: Separate lengthy objects into objects delimited by curly braces using the following functions:
- 
+
 * [FLATTEN]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
 
 * [KVGEN]({{ site.baseurl }}/docs/kvgen/) separates objects having more elements than optimal for querying.
 
-  
-### Nested Column Names 
+
+### Nested Column Names
 
 You cannot use reserved words for nested column names because Drill returns null if you enclose n-level nested column names in back ticks. The previous example encloses the date and time column names in back ticks because the names are reserved words. The enclosure of column names in back ticks works because the date and time columns belong to the first level of the JSON object.
 
@@ -457,8 +462,8 @@ Drill cannot read JSON files containing changes in the schema. For example, atte
 
 ![drill query flow]({{ site.baseurl }}/docs/img/data-sources-schemachg.png)
 
-Drill interprets numbers that do not have a decimal point as BigInt values. In this example, Drill recognizes the first two coordinates as doubles and the third coordinate as a BigInt, which causes an error. 
-                
+Drill interprets numbers that do not have a decimal point as BigInt values. In this example, Drill recognizes the first two coordinates as doubles and the third coordinate as a BigInt, which causes an error.
+
 Workaround: Set the `store.json.read_numbers_as_double` property, described earlier, to true.
 
     ALTER SYSTEM SET `store.json.read_numbers_as_double` = true;
@@ -467,9 +472,3 @@ Workaround: Set the `store.json.read_numbers_as_double` property, described earl
 Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/querying-directories) that selects all (SELECT *) JSON files.
 
 Workaround: Query each file individually.
-
-
-
-
-
-

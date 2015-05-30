@@ -37,10 +37,10 @@ function interface:
 
 	**Example**
 	
-		public void setup(RecordBatch b) {
+		public void setup() {
 		}
 		public void eval() {
-		 out.value = in1.value + in2.value;
+		  out.value = in1.value + in2.value;
 		}
 
   5. Use the maven-source-plugin to compile the sources and classes JAR files. Verify that an empty `drill-module.conf` is included in the resources folder of the JARs.   
