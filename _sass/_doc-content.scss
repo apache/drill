@@ -16,7 +16,12 @@
   display: none;
   overflow: auto;
 }
-
+body.blog #menu ul li.toc-categories {
+  display:none;
+}
+body.blog #menu ul li.logo {
+  padding-left:30px;
+}
 /* Bottom navigation (left and right arrows) */
 
 div.doc-nav{
@@ -181,6 +186,7 @@ div.docsidebar ul li{
 .docsidebarwrapper a{
   color: #333333;
   text-decoration: none;
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .docsidebarwrapper > ul > ul.current_section{
@@ -200,6 +206,7 @@ div.docsidebar ul li{
   line-height: 24px;
   width: 100%;
   display: inline-block;
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 div.docsidebar ul ul, div.docsidebar ul.want-points{
@@ -220,6 +227,7 @@ div.docsidebar ul ul ul{
   line-height: 24px;
   display: inline-block;
   width: 100%;
+  font-family: 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .docsidebarwrapper li.toctree-l1 ul > li{

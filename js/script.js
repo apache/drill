@@ -37,6 +37,16 @@ $(document).ready(function(e) {
 	resized();
 	
 	$(window).scroll(onScroll);
+
+    var pathname = window.location.pathname;
+    var pathSlashesReplaced = pathname.replace(/\//g, " ");
+    var pathSlashesReplacedNoFirstDash = pathSlashesReplaced.replace(" ","");
+    var newClass = pathSlashesReplacedNoFirstDash.replace(/(\.[\s\S]+)/ig, "");
+	$("body").addClass(newClass);
+    if ( $("body").attr("class") == "") 
+    {                                   
+         $("body").addClass("class");
+    }
 });
 
 var reel_currentIndex = 0;

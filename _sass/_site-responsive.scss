@@ -104,7 +104,7 @@
 
 
   div.home-row{
-    width:100%;
+      padding: 0px 20px 0px 0px;
   }
 
   div.home-row:nth-child(odd) div.small{
@@ -162,6 +162,25 @@
   div.int_search {
     width: 100%;
   }
+
+ /* Fixing header slider height/width relative issues */
+ .headlines.tc {
+  padding: 0px 30px;
+}
+    #header .scroller .item {    
+    height: auto !important;
+  }
+  #header {    
+    height: auto !important;
+  }
+  #header .scroller, #header .scroller .item, #header .scroller .item div.headlines.tc {    
+    max-width: 100% !important;
+    width: auto;
+  }
+  div#video-slider {    
+    float: none !important;    
+    margin: 60px auto 40px auto;
+  }
 }
 
 @media (max-width: 570px) {
@@ -195,7 +214,7 @@
     float: right;
   }
   #menu.force-expand {
-    position: relative;
+    position: fixed;
   }
 
   /* Responsive Homepage 570 max width */
@@ -205,9 +224,6 @@
   #header .scroller .item .tc h2 {
     font-size: 24px;
     line-height: 32px;
-  }
-  #header .scroller .item div.headlines.tc {
-    margin-left: 30px;
   }
   div.headlines a.download-headline {
     font-size: .7em;
