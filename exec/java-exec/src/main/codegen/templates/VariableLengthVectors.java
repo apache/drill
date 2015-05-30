@@ -18,6 +18,7 @@
 
 import java.lang.Override;
 
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -282,17 +283,28 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       allocationMonitor = 0;
     }
 
-    DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
-    if(newBuf == null){
-      return false;
+    /* Boolean to keep track if all the memory allocations were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
+      if (newBuf == null) {
+        return false;
+      }
+      this.data = newBuf;
+      if (!offsetVector.allocateNewSafe()) {
+        return false;
+      }
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
     }
-
-    this.data = newBuf;
     data.readerIndex(0);
-
-    if(!offsetVector.allocateNewSafe()){
-      return false;
-    }
     offsetVector.zeroVector();
     return true;
   }
@@ -300,15 +312,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public void allocateNew(int totalBytes, int valueCount) {
     clear();
     assert totalBytes >= 0;
-    DrillBuf newBuf = allocator.buffer(totalBytes);
-    if(newBuf == null){
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
+    try {
+      DrillBuf newBuf = allocator.buffer(totalBytes);
+      if (newBuf == null) {
+        throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
+      }
+      this.data = newBuf;
+      offsetVector.allocateNew(valueCount + 1);
+    } catch (OutOfMemoryRuntimeException e) {
+      clear();
+      throw e;
     }
-
-    this.data = newBuf;
     data.readerIndex(0);
     allocationTotalByteCount = totalBytes;
-    offsetVector.allocateNew(valueCount+1);
     offsetVector.zeroVector();
   }
 

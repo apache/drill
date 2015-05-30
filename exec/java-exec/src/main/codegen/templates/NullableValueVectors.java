@@ -124,8 +124,21 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public boolean allocateNewSafe() {
-    if(!values.allocateNewSafe()) return false;
-    if(!bits.allocateNewSafe()) return false;
+    /* Boolean to keep track if all the memory allocations were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      if(!values.allocateNewSafe()) return false;
+      if(!bits.allocateNewSafe()) return false;
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
+    }
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
@@ -134,8 +147,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public void allocateNew(int totalBytes, int valueCount) {
-    values.allocateNew(totalBytes, valueCount);
-    bits.allocateNew(valueCount);
+    try {
+      values.allocateNew(totalBytes, valueCount);
+      bits.allocateNew(valueCount);
+    } catch(OutOfMemoryRuntimeException e){
+      clear();
+      throw e;
+    }
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
@@ -175,8 +193,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public void allocateNew() {
-    values.allocateNew();
-    bits.allocateNew();
+    try {
+      values.allocateNew();
+      bits.allocateNew();
+    } catch(OutOfMemoryRuntimeException e) {
+      clear();
+      throw e;
+    }
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
@@ -185,8 +208,21 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public boolean allocateNewSafe() {
-    if(!values.allocateNewSafe()) return false;
-    if(!bits.allocateNewSafe()) return false;
+    /* Boolean to keep track if all the memory allocations were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      if(!values.allocateNewSafe()) return false;
+      if(!bits.allocateNewSafe()) return false;
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
+    }
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
@@ -195,8 +231,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   @Override
   public void allocateNew(int valueCount) {
-    values.allocateNew(valueCount);
-    bits.allocateNew(valueCount);
+    try {
+      values.allocateNew(valueCount);
+      bits.allocateNew(valueCount);
+    } catch(OutOfMemoryRuntimeException e) {
+      clear();
+      throw e;
+    }
     bits.zeroVector();
     mutator.reset();
     accessor.reset();

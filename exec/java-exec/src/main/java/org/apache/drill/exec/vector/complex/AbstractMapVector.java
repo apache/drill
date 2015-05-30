@@ -52,9 +52,23 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public boolean allocateNewSafe() {
-    for (ValueVector v : vectors.values()) {
-      if (!v.allocateNewSafe()) {
-        return false;
+    /* boolean to keep track if all the memory allocation were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+
+      for (ValueVector v : vectors.values()) {
+        if (!v.allocateNewSafe()) {
+          return false;
+        }
+      }
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
       }
     }
     return true;

@@ -177,18 +177,36 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     }
 
 
-  public boolean allocateNewSafe(){
-    if(!offsets.allocateNewSafe()) return false;
+  public boolean allocateNewSafe() {
+    /* boolean to keep track if all the memory allocation were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      if(!offsets.allocateNewSafe()) return false;
+      if(!values.allocateNewSafe()) return false;
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
+    }
     offsets.zeroVector();
-    if(!values.allocateNewSafe()) return false;
     mutator.reset();
     return true;
   }
   
   public void allocateNew() {
-    offsets.allocateNew();
+    try {
+      offsets.allocateNew();
+      values.allocateNew();
+    } catch (OutOfMemoryRuntimeException e) {
+      clear();
+      throw e;
+    }
     offsets.zeroVector();
-    values.allocateNew();
     mutator.reset();
   }
 
@@ -200,9 +218,14 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
   
   public void allocateNew(int totalBytes, int valueCount, int innerValueCount) {
-    offsets.allocateNew(valueCount+1);
+    try {
+      offsets.allocateNew(valueCount+1);
+      values.allocateNew(totalBytes, innerValueCount);
+    } catch (OutOfMemoryRuntimeException e) {
+      clear();
+      throw e;
+    }
     offsets.zeroVector();
-    values.allocateNew(totalBytes, innerValueCount);
     mutator.reset();
   }
   
@@ -230,9 +253,20 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
 
   public void allocateNew(int valueCount, int innerValueCount) {
     clear();
-    offsets.allocateNew(valueCount+1);
+    /* boolean to keep track if all the memory allocation were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      offsets.allocateNew(valueCount+1);
+      values.allocateNew(innerValueCount);
+    } catch(OutOfMemoryRuntimeException e){
+      clear();
+      throw e;
+    }
     offsets.zeroVector();
-    values.allocateNew(innerValueCount);
     mutator.reset();
   }
   

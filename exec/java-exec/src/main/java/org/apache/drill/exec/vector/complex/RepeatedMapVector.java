@@ -35,6 +35,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -103,11 +104,16 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
   @Override
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
-    offsets.allocateNew(groupCount+1);
-    offsets.zeroVector();
-    for (ValueVector v : getChildren()) {
-      AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
+    try {
+      offsets.allocateNew(groupCount + 1);
+      for (ValueVector v : getChildren()) {
+        AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
+      }
+    } catch (OutOfMemoryRuntimeException e){
+      clear();
+      throw e;
     }
+    offsets.zeroVector();
     mutator.reset();
   }
 
@@ -216,11 +222,24 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
 
   @Override
   public boolean allocateNewSafe() {
-    if (!offsets.allocateNewSafe()) {
-      return false;
+    /* boolean to keep track if all the memory allocation were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      if (!offsets.allocateNewSafe()) {
+        return false;
+      }
+      success =  super.allocateNewSafe();
+    } finally {
+      if (!success) {
+        clear();
+      }
     }
     offsets.zeroVector();
-    return super.allocateNewSafe();
+    return success;
   }
 
   protected static class SingleMapTransferPair implements TransferPair {

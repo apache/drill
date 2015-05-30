@@ -61,12 +61,26 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   @Override
   public boolean allocateNewSafe() {
-    if (!offsets.allocateNewSafe()) {
-      return false;
+    /* boolean to keep track if all the memory allocation were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      if (!offsets.allocateNewSafe()) {
+        return false;
+      }
+      success = vector.allocateNewSafe();
+    } finally {
+      if (!success) {
+        clear();
+      }
     }
     offsets.zeroVector();
-    return vector.allocateNewSafe();
+    return success;
   }
+
 
   @Override
   public UInt4Vector getOffsetVector() {
