@@ -16,7 +16,7 @@ Start the Drill shell using the `drill-embedded` command. The command uses a jdb
 
    At this point, you can [run queries]({{site.baseurl}}/docs/query-data).
 
-You can also use the **sqlline** command to start Drill using a custom connection string, as described in ["Using an Ad-Hoc Connection to Drill"]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/#using-an-ad-hoc-connection-to-drill). For example, you can specify the storage plugin when you start the shell. Doing so eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
+To start Drill, you can also use the **sqlline** command and a custom connection string, as described in detail in ["Using an Ad-Hoc Connection to Drill"]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/#using-an-ad-hoc-connection-to-drill). For example, you can specify the storage plugin when you start the shell. Doing so eliminates the need to specify the storage plugin in the query. For example, this command specifies the `dfs` storage plugin:
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=local
 

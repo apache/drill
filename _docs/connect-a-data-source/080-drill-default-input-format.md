@@ -61,9 +61,4 @@ steps:
 
 ## Querying Compressed JSON
 
-You can query compressed JSON in .gz files as well as uncompressed files having the .json extension. First, add the gz extension to a storage plugin, and then use that plugin to query the compressed file.
-
-      "extensions": [
-        "json",
-        "gz"
-      ]
+You can query compressed JSON in .gz files as well as uncompressed files having the .json extension. The .json extension must precede the gz extension in the GZ file name. For example, `proddata.json.gz`.

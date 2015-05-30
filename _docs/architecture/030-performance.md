@@ -43,7 +43,7 @@ process at a glance.
 
 ![drill compiler]({{ site.baseurl }}/docs/img/58.png)
 
-**Optimistic and pipelined query execution**
+**_Optimistic and pipelined query execution_**
 
 Drill adopts an optimistic execution model to process queries. Drill assumes
 that failures are infrequent within the short span of a query and therefore

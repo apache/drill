@@ -74,21 +74,17 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 ### DATE_ADD Syntax
 
-    DATE_ADD(date literal_date, integer)
+    DATE_ADD(keyword literal_date, integer)
 
     DATE_ADD(keyword literal, interval expr)
 
-    DATE_ADD(column <date type>)
-
-*date* is the keyword date.  
-*literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
-*integer* is a number of days to add to the date/time.  
-*column* is a date data in a data source.
-
+    DATE_ADD(column, integer)
 
 *keyword* is the word date, time, or timestamp.  
-*literal* is a date, time, or timestamp literal.  
-*interval* is a keyword  
+*literal* is a date, time, or timestamp literal.  For example, a date in yyyy-mm-dd format enclosed in single quotation marks.  
+*integer* is a number of days to add to the date/time.  
+*column* is date, time, or timestamp data in a data source column.  
+*interval* is the keyword interval.  
 *expr* is an interval expression.  
 
 ### DATE_ADD Examples
@@ -215,21 +211,17 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
 ### DATE_SUB Syntax
 
-    DATE_SUB(date literal_date, integer) 
+    DATE_SUB(keyword literal, integer) 
 
     DATE_SUB(keyword literal, interval expr)  
 
-    DATE_ADD(column <date type>)  
-
-*date* is the keyword date.  
-*literal_date* is a date in yyyy-mm-dd format enclosed in single quotation marks.  
-*integer* is a number of days to subtract from the date/time.  
-*column* is date data in a data source.
-
+    DATE_ADD(column, integer)  
 
 *keyword* is the word date, time, or timestamp.  
-*literal* is a date, time, or timestamp literal.  
-*interval* is a keyword.  
+*literal* is a date, time, or timestamp literal. For example, a date in yyyy-mm-dd format enclosed in single quotation marks.   
+*integer* is a number of days to subtract from the date, time, or timestamp.  
+*column* is date, time, or timestamp data in the data source.  
+*interval* is the keyword interval.  
 *expr* is an interval expression.
 
 ### DATE_SUB Examples

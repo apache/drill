@@ -4,7 +4,7 @@ parent: "Connect a Data Source"
 ---
 The MapR-DB format is not included in Apache Drill release. If you install Drill from the `mapr-drill` package on a MapR node, the MapR-DB format appears in the `dfs` storage plugin instance. The `maprdb` format improves the
 estimated number of rows that Drill uses to plan a query. It also enables you
-to query tables like you would query files in a file system because MapR-DB
+to query tables as you would query files in a file system because MapR-DB
 and MapR-FS share the same namespace.
 
 You can query tables stored across multiple directories. You do not need to

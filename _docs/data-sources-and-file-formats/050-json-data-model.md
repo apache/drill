@@ -215,11 +215,8 @@ Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in
     1 row selected (0.244 seconds)
 
 ### Example: Aggregate and Sort Data
-<<<<<<< HEAD
-Sum the ticket sales by state and group by day and sort in ascending order.
-=======
+
 Sum and group the ticket sales by date and sort in ascending order of total tickets sold.
->>>>>>> d6f216a60b04b5366a3f3905450988597a421118
 
     SELECT `right`(tkt.tot_sales.key,2) `December Date`,
     SUM(tkt.tot_sales.`value`) AS TotalSales
@@ -365,14 +362,14 @@ Use dot notation, for example `t.birth.lastname` and `t.birth.bearer.max_hdl` to
 ## Limitations and Workarounds
 In most cases, you can use a workaround, presented in the following sections, to overcome the following limitations:
 
-* Array at the root level
-* Complex nested data
-* Empty array
-* Lengthy JSON objects
-* Complex JSON objects
-* Nested column names
-* Schema changes
-* Selecting all in a JSON directory query
+* [Array at the root level]({{site.baseurl}}/docs/json-data-model/#array-at-the-root-level)
+* [Complex nested data]({{site.baseurl}}/docs/json-data-model/#complex-nested-data)
+* [Empty array]({{site.baseurl}}/docs/json-data-model/#empty-array)
+* [Lengthy JSON objects]({{site.baseurl}}/docs/json-data-model/#lengthy-json-objects)
+* [Complex JSON objects]({{site.baseurl}}/docs/json-data-model/#complex-json-objects)
+* [Nested column names]({{site.baseurl}}/docs/json-data-model/#nested-column-names)
+* [Schema changes]({{site.baseurl}}/docs/json-data-model/#schema-changes)
+* [Selecting all in a JSON directory query]({{site.baseurl}}/docs/json-data-model/#selecting-all-in-a-json-directory-query)
 
 ### Array at the root level
 Drill cannot read an array at the root level, outside an object.

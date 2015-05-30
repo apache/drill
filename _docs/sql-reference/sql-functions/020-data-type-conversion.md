@@ -393,13 +393,13 @@ If you have dates and times in other formats, use a data type conversion functio
 The following table lists data type formatting functions that you can
 use in your Drill queries as described in this section:
 
-**Function**| **Return Type**  
----|---  
-[TO_CHAR]({{site.baseurl}}/docs/data-type-conversion/#TO_CHAR)(expression, format)| VARCHAR  
-[TO_DATE]({{site.baseurl}}/docs/data-type-conversion/#TO_DATE)(expression, format)| DATE  
-[TO_NUMBER]({{site.baseurl}}/docs/data-type-conversion/#TO_NUMBER)(VARCHAR, format)| DECIMAL  
-[TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#TO_TIMESTAMP)(VARCHAR, format)| TIMESTAMP
-[TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#TO_TIMESTAMP)(DOUBLE)| TIMESTAMP
+| Function                                                                                         | Return Type |
+|--------------------------------------------------------------------------------------------------|-------------|
+| [TO_CHAR]({{site.baseurl}}/docs/data-type-conversion/#to_char)(expression, format)               | VARCHAR     |
+| [TO_DATE]({{site.baseurl}}/docs/data-type-conversion/#to_date)(expression, format)               | DATE        |
+| [TO_NUMBER]({{site.baseurl}}/docs/data-type-conversion/#to_number)(VARCHAR, format)              | DECIMAL     |
+| [TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#to_timestamp)(VARCHAR, format)        | TIMESTAMP   |
+| [TO_TIMESTAMP]({{site.baseurl}}/docs/data-type-conversion/#to_timestamp)(DOUBLE)                 | TIMESTAMP   |
 
 ### Format Specifiers for Numerical Conversions
 Use the following Java format specifiers for converting numbers:

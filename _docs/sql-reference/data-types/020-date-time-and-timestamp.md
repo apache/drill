@@ -19,11 +19,11 @@ Using familiar date and time formats, listed in the [SQL data types table]({{ si
 
 ## INTERVALYEAR and INTERVALDAY
 
-The INTERVALYEAR AND INTERVALDAY types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
+The INTERVALYEAR and INTERVALDAY types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
 
 ### Interval in Data Source
 
-If your interval data is in the data source, for example a JSON file, cast the JSON VARCHAR types to INTERVALYEAR and INTERVALDAY using the following ISO 8601 syntax:
+If your interval data is in the data source, you need to cast the data to an SQL interval type to query the data using Drill. For example, to use interval data in a JSON file, cast the JSON data, which is of the VARCHAR type, to INTERVALYEAR and INTERVALDAY using the following ISO 8601 syntax:
 
     P [qty] Y [qty] M [qty] D T [qty] H [qty] M [qty] S
 
@@ -41,9 +41,9 @@ where:
 * M follows a number of minutes.
 * S follows a number of seconds and optional milliseconds to the right of a decimal point
 
-### Interval Literal
+### Using the Interval Literal in Input
 
-You can use INTERVAL as a keyword that introduces an interval literal that denotes a data type. With the input of interval data, use the following SQL literals to restrict the set of stored interval fields:
+When you want to use interval data in input, use INTERVAL as a keyword that introduces an interval literal that denotes a data type. With the input of interval data, use the following SQL literals to restrict the set of stored interval fields:
 
 * YEAR
 * MONTH

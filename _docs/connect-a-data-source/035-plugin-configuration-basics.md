@@ -1,10 +1,10 @@
 ---
-title: "Plugin Configuration Introduction"
+title: "Plugin Configuration Basics"
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin instances on one Drill node in a Drill
-cluster, Drill broadcasts the information to all of the other Drill nodes 
-to have identical storage plugin configurations. You do not need to
+cluster, Drill broadcasts the information to other Drill nodes 
+to synchronize the storage plugin configurations. You do not need to
 restart any of the Drillbits when you add or update a storage plugin instance.
 
 Use the Drill Web UI to update or add a new storage plugin. Launch a web browser, go to: `http://<IP address or host name>:8047`, and then go to the Storage tab. 
@@ -194,6 +194,5 @@ For example, this command creates a plugin named myplugin for reading files of a
 If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
 
 Bootstrapping a storage plugin works only when the first drillbit in the cluster first starts up. After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin. 
-
 
 If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.

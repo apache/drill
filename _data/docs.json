@@ -1440,9 +1440,9 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
-                            "title": "Plugin Configuration Introduction", 
-                            "url": "/docs/plugin-configuration-introduction/"
+                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-basics.md", 
+                            "title": "Plugin Configuration Basics", 
+                            "url": "/docs/plugin-configuration-basics/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -1459,8 +1459,8 @@
                             "next_title": "Workspaces", 
                             "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Plugin Configuration Introduction", 
-                            "previous_url": "/docs/plugin-configuration-introduction/", 
+                            "previous_title": "Plugin Configuration Basics", 
+                            "previous_url": "/docs/plugin-configuration-basics/", 
                             "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
@@ -1550,8 +1550,8 @@
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Plugin Configuration Introduction", 
-                    "next_url": "/docs/plugin-configuration-introduction/", 
+                    "next_title": "Plugin Configuration Basics", 
+                    "next_url": "/docs/plugin-configuration-basics/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 
@@ -2696,7 +2696,7 @@
             "parent": "Installing Drill in Distributed Mode", 
             "previous_title": "Installing Drill in Distributed Mode", 
             "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+            "relative_path": "_docs/install/045-distributed-mode-prerequisites.md", 
             "title": "Distributed Mode Prerequisites", 
             "url": "/docs/distributed-mode-prerequisites/"
         }, 
@@ -2968,8 +2968,8 @@
             "next_title": "Workspaces", 
             "next_url": "/docs/workspaces/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "Plugin Configuration Introduction", 
-            "previous_url": "/docs/plugin-configuration-introduction/", 
+            "previous_title": "Plugin Configuration Basics", 
+            "previous_url": "/docs/plugin-configuration-basics/", 
             "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
             "title": "File System Storage Plugin", 
             "url": "/docs/file-system-storage-plugin/"
@@ -3426,7 +3426,7 @@
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill in Distributed Mode", 
                             "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-                            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                            "relative_path": "_docs/install/045-distributed-mode-prerequisites.md", 
                             "title": "Distributed Mode Prerequisites", 
                             "url": "/docs/distributed-mode-prerequisites/"
                         }, 
@@ -3534,7 +3534,7 @@
                     "parent": "Installing Drill in Distributed Mode", 
                     "previous_title": "Installing Drill in Distributed Mode", 
                     "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-                    "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                    "relative_path": "_docs/install/045-distributed-mode-prerequisites.md", 
                     "title": "Distributed Mode Prerequisites", 
                     "url": "/docs/distributed-mode-prerequisites/"
                 }, 
@@ -5552,7 +5552,7 @@
             "title": "Planning and Execution Options", 
             "url": "/docs/planning-and-execution-options/"
         }, 
-        "Plugin Configuration Introduction": {
+        "Plugin Configuration Basics": {
             "breadcrumbs": [
                 {
                     "title": "Storage Plugin Configuration", 
@@ -5569,9 +5569,9 @@
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Storage Plugin Configuration", 
             "previous_url": "/docs/storage-plugin-configuration/", 
-            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
-            "title": "Plugin Configuration Introduction", 
-            "url": "/docs/plugin-configuration-introduction/"
+            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-basics.md", 
+            "title": "Plugin Configuration Basics", 
+            "url": "/docs/plugin-configuration-basics/"
         }, 
         "Ports Used by Drill": {
             "breadcrumbs": [
@@ -9344,9 +9344,9 @@
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
-                    "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
-                    "title": "Plugin Configuration Introduction", 
-                    "url": "/docs/plugin-configuration-introduction/"
+                    "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-basics.md", 
+                    "title": "Plugin Configuration Basics", 
+                    "url": "/docs/plugin-configuration-basics/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -9363,8 +9363,8 @@
                     "next_title": "Workspaces", 
                     "next_url": "/docs/workspaces/", 
                     "parent": "Storage Plugin Configuration", 
-                    "previous_title": "Plugin Configuration Introduction", 
-                    "previous_url": "/docs/plugin-configuration-introduction/", 
+                    "previous_title": "Plugin Configuration Basics", 
+                    "previous_url": "/docs/plugin-configuration-basics/", 
                     "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
                     "title": "File System Storage Plugin", 
                     "url": "/docs/file-system-storage-plugin/"
@@ -9454,8 +9454,8 @@
                     "url": "/docs/drill-default-input-format/"
                 }
             ], 
-            "next_title": "Plugin Configuration Introduction", 
-            "next_url": "/docs/plugin-configuration-introduction/", 
+            "next_title": "Plugin Configuration Basics", 
+            "next_url": "/docs/plugin-configuration-basics/", 
             "parent": "Connect a Data Source", 
             "previous_title": "Storage Plugin Registration", 
             "previous_url": "/docs/storage-plugin-registration/", 
@@ -11068,7 +11068,7 @@
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill in Distributed Mode", 
                             "previous_url": "/docs/installing-drill-in-distributed-mode/", 
-                            "relative_path": "_docs/install/045-embedded-mode-prerequisites.md", 
+                            "relative_path": "_docs/install/045-distributed-mode-prerequisites.md", 
                             "title": "Distributed Mode Prerequisites", 
                             "url": "/docs/distributed-mode-prerequisites/"
                         }, 
@@ -11494,9 +11494,9 @@
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
-                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-introduction.md", 
-                            "title": "Plugin Configuration Introduction", 
-                            "url": "/docs/plugin-configuration-introduction/"
+                            "relative_path": "_docs/connect-a-data-source/035-plugin-configuration-basics.md", 
+                            "title": "Plugin Configuration Basics", 
+                            "url": "/docs/plugin-configuration-basics/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11513,8 +11513,8 @@
                             "next_title": "Workspaces", 
                             "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Plugin Configuration Introduction", 
-                            "previous_url": "/docs/plugin-configuration-introduction/", 
+                            "previous_title": "Plugin Configuration Basics", 
+                            "previous_url": "/docs/plugin-configuration-basics/", 
                             "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
                             "title": "File System Storage Plugin", 
                             "url": "/docs/file-system-storage-plugin/"
@@ -11604,8 +11604,8 @@
                             "url": "/docs/drill-default-input-format/"
                         }
                     ], 
-                    "next_title": "Plugin Configuration Introduction", 
-                    "next_url": "/docs/plugin-configuration-introduction/", 
+                    "next_title": "Plugin Configuration Basics", 
+                    "next_url": "/docs/plugin-configuration-basics/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Storage Plugin Registration", 
                     "previous_url": "/docs/storage-plugin-registration/", 

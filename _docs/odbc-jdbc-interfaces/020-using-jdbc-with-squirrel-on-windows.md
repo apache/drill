@@ -3,7 +3,7 @@ title: "Using JDBC with SQuirreL on Windows"
 parent: "ODBC/JDBC Interfaces"
 ---
 To use the JDBC Driver to access Drill through SQuirreL, ensure that you meet the prerequisites and follow the steps in this section.
-### Prerequisites
+## Prerequisites
 
   * SQuirreL requires JRE 7
   * Drill installed in distributed mode on one or multiple nodes in a cluster. Refer to the [Install Drill]({{ site.baseurl }}/docs/install-drill/) documentation for more information.
@@ -18,7 +18,7 @@ If a DNS entry does not exist, create the entry for the Drill node(s).
 
 ----------
 
-### Step 1: Getting the Drill JDBC Driver
+## Step 1: Getting the Drill JDBC Driver
 
 The Drill JDBC Driver `JAR` file must exist in a directory on your Windows
 machine in order to configure the driver in the SQuirreL client.
@@ -39,7 +39,7 @@ you can locate the driver in the following directory:
 
 ----------
 
-### Step 2: Installing and Starting SQuirreL
+## Step 2: Installing and Starting SQuirreL
 
 To install and start SQuirreL, complete the following steps:
 
@@ -50,14 +50,14 @@ To install and start SQuirreL, complete the following steps:
 
 ----------
 
-### Step 3: Adding the Drill JDBC Driver to SQuirreL
+## Step 3: Adding the Drill JDBC Driver to SQuirreL
 
 To add the Drill JDBC Driver to SQuirreL, define the driver and create a
 database alias. The alias is a specific instance of the driver configuration.
 SQuirreL uses the driver definition and alias to connect to Drill so you can
 access data sources that you have registered with Drill.
 
-#### A. Define the Driver
+### A. Define the Driver
 
 To define the Drill JDBC Driver, complete the following steps:
 
@@ -79,7 +79,7 @@ To define the Drill JDBC Driver, complete the following steps:
 
    ![drill query flow]({{ site.baseurl }}/docs/img/52.png)
 
-#### B. Create an Alias
+### B. Create an Alias
 
 To create an alias, complete the following steps:
 
@@ -88,43 +88,14 @@ To create an alias, complete the following steps:
     
     ![drill query flow]({{ site.baseurl }}/docs/img/19.png)
     
-3. Enter the following information:
-  
-     <table style='table-layout:fixed;width:100%'><tbody><tr>
-     <td valign="top" width="10%"><strong>Option</strong></td>
-     <td valign="top" style='width: 500px;'><strong>Description</strong></td>
-     </tr>
-     <tr>
-     <td valign="top">Alias Name</td>
-     <td valign="top">A unique name for the Drill JDBC Driver alias.</td>
-     </tr>
-     <tr>
-     <td valign="top">Driver</td>
-     <td valign="top">Select the Drill JDBC Driver.</td>
-     </tr>
-     <tr>
-     <td valign="top">URL</td>
-     <td valign="top">Enter the connection URL with the name of the Drill directory stored in ZooKeeper and the cluster ID:
-       <code>jdbc:drill:zk=&lt;<em>zookeeper_quorum</em>&gt;/&lt;drill_directory_in_zookeeper&gt;/&lt;cluster_ID&gt;;schema=&lt;<em>schema_to_use_as_default</em>&gt;</code>
-       <em>The following examples show URLs for Drill installed on a single node:</em><br />
-       <span style="font-family: monospace;font-size: 14.0px;line-height: 1.4285715;background-color: transparent;">jdbc:drill:zk=10.10.100.56:5181/drill/demo_mapr_com-drillbits;schema=hive<br /></span>
-       <span style="font-family: monospace;font-size: 14.0px;line-height: 1.4285715;background-color: transparent;">jdbc:drill:zk=10.10.100.24:2181/drill/drillbits1;schema=hive<br /> </span>
-       <em>The following example shows a URL for Drill installed in distributed mode with a connection to a ZooKeeper quorum:</em>
-       <span style="font-family: monospace;font-size: 14.0px;line-height: 1.4285715;background-color: transparent;">jdbc:drill:zk=10.10.100.30:5181,10.10.100.31:5181,10.10.100.32:5181/drill/drillbits1;schema=hive</span>
-          <ul>
-          <li>Including a default schema is optional.</li>
-          <li>The ZooKeeper port is 2181. In a MapR cluster, the ZooKeeper port is 5181.</li>
-          <li>The Drill directory stored in ZooKeeper is <code>/drill</code>.</li>
-          <li>The Drill default cluster ID is<code> drillbits1</code>.</li>
-          </ul>
-     </td></tr><tr>
-     <td valign="top">User Name</td>
-     <td valign="top">admin</td>
-     </tr>
-     <tr>
-     <td valign="top">Password</td>
-     <td valign="top">admin</td>
-     </tr></tbody></table>
+3. Enter the following information:  
+
+   * Alias Name: A unique name for the Drill JDBC Driver alias  
+   * Driver: Select the Drill JDBC Driver  
+   * URL: Enter the connection URL with the name of the Drill directory stored in ZooKeeper and the cluster ID, as shown in the [next section]({{site.baseurl}}/docs/using-jdbc-with-squirrel-on-windows/#entering-the-connection-url).  
+   * User Name: admin  
+   * Password: admin  
+
 4. Click **Ok**. The Connect to: dialog box appears.  
 
     ![drill query flow]({{ site.baseurl }}/docs/img/30.png)
@@ -135,9 +106,28 @@ To create an alias, complete the following steps:
      
 6. Click **OK**. SQuirreL displays a series of tabs.
 
+### Entering the Connection URL  
+In step 3 of the procedure to create an alias, use the following syntax to enter the connection URL that includes the name of the Drill directory stored in ZooKeeper and the cluster ID:  
+
+     jdbc:drill:zk=<zookeeper_quorum>/<drill_directory_in_zookeeper>/<cluster_ID>;schema=<schema_to_use_as_default>
+
+The following examples show URLs for Drill installed on a single node:
+
+     jdbc:drill:zk=10.10.100.56:5181/drill/demo_mapr_com-drillbits;schema=hive
+     jdbc:drill:zk=10.10.100.24:2181/drill/drillbits1;schema=hive
+
+The following example shows a URL for Drill installed in distributed mode with a connection to a ZooKeeper quorum:
+ 
+     jdbc:drill:zk=10.10.100.30:5181,10.10.100.31:5181,10.10.100.32:5181/drill/drillbits1;schema=hive
+
+* Including a default schema is optional.
+* The ZooKeeper port is 2181. In a MapR cluster, the ZooKeeper port is 5181.
+* The Drill directory stored in ZooKeeper is `/drill`.
+* The Drill default cluster ID is drillbits1.
+
 ----------
 
-### Step 4: Running a Drill Query from SQuirreL
+## Step 4: Running a Drill Query from SQuirreL
 
 Once you have SQuirreL successfully connected to your cluster through the
 Drill JDBC Driver, you can issue queries from the SQuirreL client. You can run

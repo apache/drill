@@ -164,7 +164,7 @@ a file to have this extension. Later, you learn how to skip this step and query 
 Get data about "Zoological Journal of the Linnean" that appears more than 250
 times a year in the books that Google scans.
 
-  1. Switch back to using the `dfs` storage plugin.
+  1. Use the `dfs` storage plugin.
   
           USE dfs;
 

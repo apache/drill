@@ -5,11 +5,7 @@ parent: "Connect a Data Source"
 ## Overview
 
 Drill provides a mongodb format plugin to connect to MongoDB, and run queries
-to read, but not to write, the Mongo data ANSI SQL. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
-
-This procedures in this section assume that you have Drill installed locally (embedded mode),
-as well as MongoDB. Examples in this tutorial use zip code aggregation data
-provided by MongoDB. Before You Begin provides links to download tools and data.
+to read, but not write, the Mongo data using Drill. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
 
 {% include startnote.html %}A local instance of Drill is used in this tutorial for simplicity. {% include endnote.html %}
 
@@ -18,11 +14,11 @@ You can also run Drill and MongoDB together in distributed mode.
 ### Before You Begin
 
 Before you can query MongoDB with Drill, you must have Drill and MongoDB
-installed on your machine. You may also want to import the MongoDB zip code
-data to run the example queries on your machine.
+installed on your machine. Examples in this tutorial use zip code aggregation data
+provided by MongoDB that you download in the following steps:
 
-  1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed on your machine.
-  2. [Install MongoDB](http://docs.mongodb.org/manual/installation), if you do not already have it installed on your machine.
+  1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
+  2. [Install MongoDB](http://docs.mongodb.org/manual/installation), if you do not already have it installed.
   3. [Import the MongoDB zip code sample data set](http://docs.mongodb.org/manual/tutorial/aggregation-zip-code-data-set). You can use Mongo Import to get the data. 
 
 ## Configuring MongoDB
@@ -32,13 +28,12 @@ UI to connect to Drill. Drill must be running in order to access the Web UI.
 
 Complete the following steps to configure MongoDB as a data source for Drill:
 
-  1. [Start the Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/) shell for your environment.
+  1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
 
-     Do not enter any commands. You will return to the command prompt after
-completing the configuration in the Drill Web UI.
+     The Drill shell needs to be running to access the Drill Web UI.
   2. Open a browser window, and navigate to the Drill Web UI at `http://localhost:8047`.
   3. In the navigation bar, click **Storage**.
-  4. Under Disabled Storage Plugins, select **Update** next to the `mongo` instance if the instance exists. If the instance does not exist, create an instance for MongoDB.
+  4. Under Disabled Storage Plugins, select **Update** next to the `mongo` storage plugin.
   5. In the Configuration window, verify that `"enabled"` is set to ``"true."``
 
      **Example**
@@ -50,12 +45,11 @@ completing the configuration in the Drill Web UI.
         }
 
      {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
-  6. Click **Enable** to enable the instance, and save the configuration.
-  7. Navigate back to the Drill command line so you can query MongoDB.
+  6. Click **Enable** to enable the storage plugin, and save the configuration.
 
 ## Querying MongoDB
 
-You can issue the `SHOW DATABASES `command to see a list of databases from all
+In the Drill shell, you can issue the `SHOW DATABASES `command to see a list of databases from all
 Drill data sources, including MongoDB. If you downloaded the zip codes file,
 you should see `mongo.zipdb` in the results.
 

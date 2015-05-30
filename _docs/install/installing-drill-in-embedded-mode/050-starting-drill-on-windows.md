@@ -15,7 +15,7 @@ Start the Drill shell using the **sqlline command**. The `zk=local` means the lo
 
 At this point, you can [submit queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
-You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query: For example, this command specifies the `dfs` storage plugin.
+You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query. For example, this command specifies the `dfs` storage plugin:
 
     C:\bin\sqlline sqlline.bat –u "jdbc:drill:schema=dfs;zk=local"
 
