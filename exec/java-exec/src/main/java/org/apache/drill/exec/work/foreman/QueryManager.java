@@ -35,6 +35,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.SchemaUserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
@@ -50,10 +51,7 @@ import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
-import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
-import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
-import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.NonRootStatusReporter;
 import org.apache.drill.exec.work.fragment.StatusReporter;
 
@@ -126,12 +124,31 @@ public class QueryManager {
     }
   }
 
+  private static boolean isTerminal(final FragmentState state) {
+    return state == FragmentState.FAILED
+        || state == FragmentState.FINISHED
+        || state == FragmentState.CANCELLED;
+  }
+
   private boolean updateFragmentStatus(final FragmentStatus fragmentStatus) {
     final FragmentHandle fragmentHandle = fragmentStatus.getHandle();
     final int majorFragmentId = fragmentHandle.getMajorFragmentId();
     final int minorFragmentId = fragmentHandle.getMinorFragmentId();
     final FragmentData data = fragmentDataMap.get(majorFragmentId).get(minorFragmentId);
-    return data.setStatus(fragmentStatus);
+
+    final FragmentState oldState = data.getState();
+    final boolean inTerminalState = isTerminal(oldState);
+    final FragmentState currentState = fragmentStatus.getProfile().getState();
+
+    if (inTerminalState || (oldState == FragmentState.CANCELLATION_REQUESTED && !isTerminal(currentState))) {
+      // Already in a terminal state, or invalid state transition from CANCELLATION_REQUESTED. This shouldn't happen.
+      logger.warn(String.format("Received status message for fragment %s after fragment was in state %s. New state was %s",
+        QueryIdHelper.getQueryIdentifier(fragmentHandle), oldState, currentState));
+      return false;
+    }
+
+    data.setStatus(fragmentStatus);
+    return oldState != currentState;
   }
 
   private void fragmentDone(final FragmentStatus status) {

@@ -23,10 +23,9 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 public class FragmentData {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentData.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentData.class);
 
   private final boolean isLocal;
   private volatile FragmentStatus status;
@@ -49,31 +48,16 @@ public class FragmentData {
   }
 
   /**
-   * Update the status for this fragment.  Also records last update and last progress time.
-   * @param status Updated status
-   * @return Whether or not the status update resulted in a FragmentState change.
+   * Update the status for this fragment. Also records last update and last progress time.
+   * @param newStatus Updated status
    */
-  public boolean setStatus(final FragmentStatus newStatus) {
+  public void setStatus(final FragmentStatus newStatus) {
     final long time = System.currentTimeMillis();
-    final FragmentState oldState = status.getProfile().getState();
-    final boolean inTerminalState = oldState == FragmentState.FAILED || oldState == FragmentState.FINISHED || oldState == FragmentState.CANCELLED;
-    final FragmentState currentState = newStatus.getProfile().getState();
-    final boolean stateChanged = currentState != oldState;
-
-    if (inTerminalState) {
-      // already in a terminal state. This shouldn't happen.
-      logger.warn(String.format("Received status message for fragment %s after fragment was in state %s. New state was %s",
-          QueryIdHelper.getQueryIdentifier(getHandle()), oldState, currentState));
-      return false;
-    }
-
-    this.lastStatusUpdate = time;
+    lastStatusUpdate = time;
     if (madeProgress(status, newStatus)) {
-      this.lastProgress = time;
+      lastProgress = time;
     }
     status = newStatus;
-
-    return stateChanged;
   }
 
   public FragmentState getState() {
