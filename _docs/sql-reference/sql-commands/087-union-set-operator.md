@@ -1,5 +1,5 @@
 ---
-title: "SELECT UNION"
+title: "UNION Set Operator"
 parent: "SQL Commands"
 ---
 The UNION set operator returns all rows in the result sets of two separate query expressions. For example, if two employee tables exist, you can use the UNION set operator to merge the two tables and build a complete list of all the employees. Drill supports UNION ALL only. Drill does not support DISTINCT.
@@ -9,7 +9,7 @@ The UNION set operator returns all rows in the result sets of two separate query
 The UNION set operator supports the following syntax:
 
        query
-       { UNION [ ALL ] }
+       { UNION ALL }
        query
   
 

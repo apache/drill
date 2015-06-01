@@ -10,7 +10,10 @@ Drill supports the following ANSI standard clauses in the SELECT statement:
   * WHERE clause
   * GROUP BY clause
   * HAVING clause
+  * UNION ALL set operator
   * ORDER BY clause (with an optional LIMIT clause)
+  * Limit clause
+  * Offset clause
 
 You can use the same SELECT syntax in the following commands:
 

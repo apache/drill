@@ -43,7 +43,7 @@ The following table lists the clients, storage plugins, and types of queries tha
 </table>
 
 ## Impersonation and Views
-You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view) Command.
+You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/_docs/create-view) Command.
 
 You can create a view and grant read permissions on the view to give other users access to the data that the view references. When a user queries the view, Drill impersonates the view owner to access the underlying data. If the user tries to access the data directory, Drill returns a permission denied error. A user with read access to a view can create new views from the originating view to further restrict access on data.
 
@@ -79,19 +79,25 @@ After you set this parameter, Drill applies the same permissions on each view cr
 ## Chained Impersonation
 You can configure Drill to allow chained impersonation on views when you enable impersonation in the `drill-override.conf` file. Chained impersonation controls the number of identity transitions that Drill can make when a user queries a view. Each identity transition is equal to one hop.
  
-You can set the maximum number of hops on views to limit the number of times that Drill can impersonate a different user when a user queries a view. The default maximum number of hops is set at 3. When the maximum number of hops is set to 0, Drill does not allow impersonation chaining, and a user can only read data for which they have direct permission to access. An administrator may set the chain length to 0 to protect highly sensitive data. Only an administrator can change this setting.
+An administrator can set the maximum number of hops on views to limit the number of times that Drill can impersonate a different user when other users query a view. The default maximum number of hops is set at 3. When the maximum number of hops is set to 0, Drill does not allow impersonation chaining, and a user can only read data for which they have direct permission to access. An administrator may set the chain length to 0 to protect highly sensitive data. 
  
 The following example depicts a scenario where the maximum hop number is set to 3, and Drill must impersonate three users to access data when Chad queries a view that Jane created:
 
-![](http://i.imgur.com/wwpStcs.png)
+![]({{ site.baseurl }}/_docs/img/user_hops_no_join.PNG)
 
-In the previous example, Joe created a view V3 from views that user Frank created. In the following example, Joe created view V3 by joining a view that Frank created with a view that Bob created, thus increasing the number of identity transitions that Drill makes from 3 to 4, which exceeds the maximum hop setting of 3.
+In the previous example, Joe created V3 from the views that user Frank created. In the following example, Joe created V3 by joining a view that Frank created with a view that Bob created. 
  
-In this scenario, when Chad queries Jane’s view Drill returns an error stating that the query cannot complete because the number of hops required to access the data exceeds the maximum hop setting of 3 that is configured.
+![]({{ site.baseurl }}/_docs/img/user_hops_joined_view.PNG)  
 
-![](http://i.imgur.com/xO2yIDN.png)
+Although V3 was created by joining two different views, the number of hops remains at 3 because Drill does not read the views at the same time. Drill reads V2 first and then reads V1.  
 
-If users encounter this error, you can increase the maximum hop setting to accommodate users running queries on views. When configuring the maximum number of hops that Drill can make, consider that joined views increase the number of identity transitions required for Drill to access the underlying data.
+In the next example, Bob queries V4 which was created by Frank. Frank's view was created from several underlying views. Charlie created V2 by joining Jane's V1 with Kris's V1.2. Kris's V1.2 was created from Amy's V1.1, increasing the complexity of the chaining. Assuming that the hop limit is set at 4, this scenario exceeds the limit.  
+
+![]({{ site.baseurl }}/_docs/img/user_hops_four.PNG)  
+
+When Bob queries Franks’s view, Drill returns an error stating that the query cannot complete because the number of hops required to access the data exceeds the maximum hop setting of 4.
+
+If users encounter this error, the administrator can increase the maximum hop setting to accommodate users running queries on views.
 
 ### Configuring Impersonation and Chaining
 Chaining is a system-wide setting that applies to all views. Currently, Drill does not provide an option to  allow different chain lengths for different views.

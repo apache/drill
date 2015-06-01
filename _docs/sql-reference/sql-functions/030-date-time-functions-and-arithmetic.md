@@ -74,20 +74,26 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 ### DATE_ADD Syntax
 
-    DATE_ADD(keyword literal_date, integer)
+    DATE_ADD(keyword literal, integer)
 
     DATE_ADD(keyword literal, interval expr)
 
     DATE_ADD(column, integer)
+
+    DATE_ADD(column, interval expr)
 
 *keyword* is the word date, time, or timestamp.  
 *literal* is a date, time, or timestamp literal.  For example, a date in yyyy-mm-dd format enclosed in single quotation marks.  
 *integer* is a number of days to add to the date/time.  
 *column* is date, time, or timestamp data in a data source column.  
 *interval* is the keyword interval.  
-*expr* is an interval expression.  
+*expr* is an interval expression, such as the name of a data source column containing interval data.  
 
 ### DATE_ADD Examples
+
+The following examples show how to use the syntax variations.
+
+**`DATE_ADD(keyword literal, integer)` Syntax Example**
 
 Add two days to today's date May 15, 2015.
 
@@ -99,7 +105,9 @@ Add two days to today's date May 15, 2015.
     +------------+
     1 row selected (0.07 seconds)
 
-Using the example data from the ["Casting Intervals"]({{site.baseurl}}/docs/data-type-conversion/#casting-intervals) section, add intervals from the `intervals.json` file to a literal timestamp using an interval expression. Create an interval expression that casts the interval data in the intervals.json file to a timestamp.
+**`DATE_ADD(keyword literal, interval expr)` Syntax Example**
+
+Using the example data from the ["Casting Intervals"]({{site.baseurl}}/docs/data-type-conversion/#casting-intervals) section, add intervals from the `intervals.json` file to a literal timestamp. Create an interval expression that casts the INTERVALDAY_col column, which contains P1D, P2D, and P3D, to a timestamp.
 
     SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', CAST(INTERVALDAY_col as interval second)) FROM dfs.`/Users/drilluser/apache-drill-1.0.0/intervals.json`;
     +------------------------+
@@ -111,39 +119,57 @@ Using the example data from the ["Casting Intervals"]({{site.baseurl}}/docs/data
     +------------------------+
     3 rows selected (0.105 seconds)
 
-The query returns the sum of the timestamp plus 1, 2, and 3 days becuase the INTERVALDAY_col contains P1D, P2D, and P3D, 
+The query output is the sum of the timestamp and 1, 2, and 3 days corresponding to P1D, P2D, and P3D.
 
-The Drill installation includes the `employee.json` file that has records of employee hire dates:
+**DATE_ADD(column, integer) Syntax Example**
 
-    SELECT * FROM cp.`employee.json` LIMIT 1;
-    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
-    | employee_id  |   full_name   | first_name  | last_name  | position_id  | position_title  | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
-    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
-    | 1            | Sheri Nowmer  | Sheri       | Nowmer     | 1            | President       | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
-    +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
-    1 row selected (0.137 seconds)
+Add two days to the value in the birth_date column.
 
-Look at the hire_dates for the employee 578 and 761 in `employee.json`.
+    SELECT DATE_ADD(CAST(birth_date AS date), 2) FROM cp.`employee.json` LIMIT 1;
+    +-------------+
+    |   EXPR$0    |
+    +-------------+
+    | 1961-08-28  |
+    +-------------+
+    1 row selected (0.209 seconds)
 
-    SELECT hire_date FROM cp.`employee.json` where employee_id IN( '578','761');
-    +------------------------+
-    |       hire_date        |
-    +------------------------+
-    | 1996-01-01 00:00:00.0  |
-    | 1998-01-01 00:00:00.0  |
-    +------------------------+
-    2 rows selected (0.135 seconds)
+**`DATE_ADD(column, interval expr)` Syntax Example**
 
-Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+Add a 10 hour interval to the hire dates of employees listed in the `employee.json` file, which Drill includes in the installation.
 
-    SELECT DATE_ADD(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` where employee_id IN( '578','761');
-    +------------------------+
-    |         EXPR$0         |
-    +------------------------+
-    | 1996-01-01 10:00:00.0  |
-    | 1998-01-01 10:00:00.0  |
-    +------------------------+
-    2 rows selected (0.172 seconds)
+1. Take a look at the employee data:
+
+        SELECT * FROM cp.`employee.json` LIMIT 1;
+        +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+        | employee_id  |   full_name   | first_name  | last_name  | position_id  | position_title  | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
+        +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+        | 1            | Sheri Nowmer  | Sheri       | Nowmer     | 1            | President       | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
+        +--------------+---------------+-------------+------------+--------------+-----------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+        1 row selected (0.137 seconds)
+
+2. Look at the hire_dates for the employee 578 and 761 in `employee.json`.
+
+        SELECT hire_date FROM cp.`employee.json` where employee_id IN( '578','761');
+        +------------------------+
+        |       hire_date        |
+        +------------------------+
+        | 1996-01-01 00:00:00.0  |
+        | 1998-01-01 00:00:00.0  |
+        +------------------------+
+        2 rows selected (0.135 seconds)
+
+3. Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+
+        SELECT DATE_ADD(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` where employee_id IN( '578','761');
+        +------------------------+
+        |         EXPR$0         |
+        +------------------------+
+        | 1996-01-01 10:00:00.0  |
+        | 1998-01-01 10:00:00.0  |
+        +------------------------+
+        2 rows selected (0.172 seconds)
+
+**`DATE_ADD(keyword literal, integer)` Syntax Example**
 
 Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
 
@@ -217,27 +243,21 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
     DATE_ADD(column, integer)  
 
+    DATE_SUB(column, interval expr)
+
 *keyword* is the word date, time, or timestamp.  
 *literal* is a date, time, or timestamp literal. For example, a date in yyyy-mm-dd format enclosed in single quotation marks.   
-*integer* is a number of days to subtract from the date, time, or timestamp.  
+*integer* is a number of days to subtract from the date, time, or timestamp.
 *column* is date, time, or timestamp data in the data source.  
 *interval* is the keyword interval.  
-*expr* is an interval expression.
+*expr* is an interval expression, such as the name of a data source column containing interval data.
 
 ### DATE_SUB Examples
+The following examples show how to apply the syntax variations.
 
-Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+**`DATE_SUB(keyword literal, integer)` Syntax Example**
 
-    SELECT DATE_SUB(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` WHERE employee_id IN( '578','761');
-    +------------------------+
-    |         EXPR$0         |
-    +------------------------+
-    | 1995-12-31 14:00:00.0  |
-    | 1997-12-31 14:00:00.0  |
-    +------------------------+
-    2 rows selected (0.161 seconds)
-
-Subtract two days to today's date May 15, 2015.
+Subtract two days from today's date May 15, 2015.
 
     SELECT DATE_SUB(date '2015-05-15', 2) FROM sys.version;
     +------------+
@@ -256,6 +276,8 @@ Subtact two months from April 15, 2015.
     | 2015-02-15 |
     +------------+
     1 row selected (0.088 seconds)
+
+**`DATE_SUB(keyword literal, interval expr)` Syntax Example**
 
 Subtract 10 hours from the timestamp 2015-04-15 22:55:55.
 
@@ -296,6 +318,29 @@ Subtract 1 day, 2 and 1/2 hours, and 45.100 seconds from the time 22:55:55.
     | 01:26:40.100  |
     +---------------+
     1 row selected (0.095 seconds)
+
+**`DATE_SUB(column, integer)` Syntax Example**
+
+    SELECT DATE_SUB(CAST(birth_date AS date), 2) FROM cp.`employee.json` LIMIT 1;
+    +-------------+
+    |   EXPR$0    |
+    +-------------+
+    | 1961-08-24  |
+    +-------------+
+    1 row selected (0.158 seconds)
+
+**`DATE_SUB(column, interval expr)` Syntax Example**
+
+The `employee.json` file, which Drill includes in the installation, lists the hire dates of employees. Cast the hire_dates of the employees 578 and 761 to a timestamp, and add 10 hours to the hire_date timestamp. Because Drill reads data from JSON as VARCHAR, you need to cast the hire_date to the TIMESTAMP type. 
+
+    SELECT DATE_SUB(CAST(hire_date AS TIMESTAMP), interval '10' hour) FROM cp.`employee.json` WHERE employee_id IN( '578','761');
+    +------------------------+
+    |         EXPR$0         |
+    +------------------------+
+    | 1995-12-31 14:00:00.0  |
+    | 1997-12-31 14:00:00.0  |
+    +------------------------+
+    2 rows selected (0.161 seconds)
 
 ## Other Date and Time Functions
 
@@ -383,7 +428,7 @@ If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and t
 
 Returns a component of a timestamp, time, date, or interval.
 
-#### EXTRACT Syntax
+### EXTRACT Syntax
 
     EXTRACT (extract_expression) 
 

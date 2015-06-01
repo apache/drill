@@ -1,5 +1,5 @@
 ---
-title: "SELECT WITH"
+title: "WITH Clause"
 parent: "SQL Commands"
 ---
 The WITH clause is an optional clause used to contain one or more common table
@@ -11,19 +11,19 @@ name, an optional list of column names, and a SELECT statement.
 
 The WITH clause supports the following syntax:
 
-    [ WITH with_subquery [, ...] ]
+    WITH with_subquery [, ...]
     where with_subquery is:
     with_subquery_table_name [ ( column_name [, ...] ) ] AS ( query ) 
 
 ## Parameters
 
-_with_subquery_table_name_
+_with\_subquery\_table\_name_
 
 A unique name for a temporary table that defines the results of a WITH clause
 subquery. You cannot use duplicate names within a single WITH clause. You must
 give each subquery a table name that can be referenced in the FROM clause.
 
-_column_name_
+_column\_name_
 
 An optional list of output column names for the WITH clause subquery,
 separated by commas. The number of column names specified must be equal to or
@@ -78,7 +78,9 @@ duration of the query.
 
 **Note:** The `employee.json` file is included with the Drill installation. It is located in the `cp.default` workspace which is configured by default. 
 
-    0: jdbc:drill:zk=local> with emp_data as (select * from cp.`employee.json`) select full_name, position_title, salary, hire_date from emp_data order by hire_date limit 10;
+       0: jdbc:drill:zk=local> WITH emp_data AS (SELECT * FROM cp.`employee.json`) 
+       SELECT full_name, position_title, salary, hire_date 
+       FROM emp_data ORDER BY hire_date LIMIT 10;
     +------------------+-------------------------+------------+-----------------------+
     | full_name        | position_title          |   salary   | hire_date             |
     +------------------+-------------------------+------------+-----------------------+

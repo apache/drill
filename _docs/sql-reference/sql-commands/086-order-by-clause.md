@@ -1,5 +1,5 @@
 ---
-title: "SELECT ORDER BY"
+title: "ORDER BY Clause"
 parent: "SQL Commands"
 ---
 The ORDER BY clause sorts the result set of a query.

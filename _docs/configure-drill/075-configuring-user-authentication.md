@@ -29,7 +29,7 @@ The following image illustrates the user authentication process in Drill:
 
 ### Installing and Configuring PAM
 
-Install and configure the provided Drill PAM. Drill only supports the PAM provided here. Optionally, you can build and implement a custom authenticator using the instructions under "Implementing and Configuring a Custom Authenticator."
+Install and configure the provided Drill PAM. Drill only supports the PAM provided here. Optionally, you can [build and implement a custom authenticator]({{ site.baseurl }}/docs/configuring-user-authentication/#implementing-and-configuring-a-custom-authenticator).
  
 Complete the following steps to install and configure PAM for Drill:
 

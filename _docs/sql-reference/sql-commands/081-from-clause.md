@@ -1,5 +1,5 @@
 ---
-title: "SELECT FROM"
+title: "FROM Clause"
 parent: "SQL Commands"
 ---
 The FROM clause lists the references (tables, views, and subqueries) that data is selected from. Drill expands the traditional concept of a “table reference” in a standard SQL FROM clause to refer to files and directories in a local or distributed file system.
@@ -72,16 +72,4 @@ Return all of the rows that the equivalent inner join would return plus non-matc
 
 
 ## Examples
-The following query uses a workspace named `dfw.views` and joins a view named “custview” with a hive table named “orders” to determine sales for each membership type:
 
-       0: jdbc:drill:> select membership, sum(order_total) as sales from hive.orders, custview
-       where orders.cust_id=custview.cust_id
-       group by membership order by 2;
-       +------------+------------+
-       | membership |   sales    |
-       +------------+------------+
-       | "basic"    | 380665     |
-       | "silver"   | 708438     |
-       | "gold"     | 2787682    |
-       +------------+------------+
-       3 rows selected

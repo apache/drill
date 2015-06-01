@@ -2953,6 +2953,27 @@
             "title": "FLATTEN", 
             "url": "/docs/flatten/"
         }, 
+        "FROM Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "GROUP BY Clause", 
+            "next_url": "/docs/group-by-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SELECT", 
+            "previous_url": "/docs/select/", 
+            "relative_path": "_docs/sql-reference/sql-commands/081-from-clause.md", 
+            "title": "FROM Clause", 
+            "url": "/docs/from-clause/"
+        }, 
         "File System Storage Plugin": {
             "breadcrumbs": [
                 {
@@ -2994,6 +3015,27 @@
             "relative_path": "_docs/sql-reference/sql-functions/060-functions-for-handling-nulls.md", 
             "title": "Functions for Handling Nulls", 
             "url": "/docs/functions-for-handling-nulls/"
+        }, 
+        "GROUP BY Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "HAVING Clause", 
+            "next_url": "/docs/having-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "FROM Clause", 
+            "previous_url": "/docs/from-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/082-group-by-clause.md", 
+            "title": "GROUP BY Clause", 
+            "url": "/docs/group-by-clause/"
         }, 
         "Getting Query Information": {
             "breadcrumbs": [
@@ -3100,6 +3142,27 @@
             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/030-guidelines-for-optimizing-aggregation.md", 
             "title": "Guidelines for Optimizing Aggregation", 
             "url": "/docs/guidelines-for-optimizing-aggregation/"
+        }, 
+        "HAVING Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "LIMIT Clause", 
+            "next_url": "/docs/limit-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "GROUP BY Clause", 
+            "previous_url": "/docs/group-by-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/083-having-clause.md", 
+            "title": "HAVING Clause", 
+            "url": "/docs/having-clause/"
         }, 
         "HBase Storage Plugin": {
             "breadcrumbs": [
@@ -3935,6 +3998,27 @@
             "relative_path": "_docs/sql-reference/nested-data-functions/020-kvgen.md", 
             "title": "KVGEN", 
             "url": "/docs/kvgen/"
+        }, 
+        "LIMIT Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "OFFSET Clause", 
+            "next_url": "/docs/offset-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "HAVING Clause", 
+            "previous_url": "/docs/having-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/084-limit-clause.md", 
+            "title": "LIMIT Clause", 
+            "url": "/docs/limit-clause/"
         }, 
         "Learn Drill with the MapR Sandbox": {
             "breadcrumbs": [
@@ -4994,6 +5078,48 @@
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
+        }, 
+        "OFFSET Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ORDER BY Clause", 
+            "next_url": "/docs/order-by-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "LIMIT Clause", 
+            "previous_url": "/docs/limit-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/085-offset-clause.md", 
+            "title": "OFFSET Clause", 
+            "url": "/docs/offset-clause/"
+        }, 
+        "ORDER BY Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "UNION Set Operator", 
+            "next_url": "/docs/union-set-operator/", 
+            "parent": "SQL Commands", 
+            "previous_title": "OFFSET Clause", 
+            "previous_url": "/docs/offset-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/086-order-by-clause.md", 
+            "title": "ORDER BY Clause", 
+            "url": "/docs/order-by-clause/"
         }, 
         "Operators": {
             "breadcrumbs": [
@@ -7084,203 +7210,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SELECT FROM", 
-            "next_url": "/docs/select-from/", 
+            "next_title": "FROM Clause", 
+            "next_url": "/docs/from-clause/", 
             "parent": "SQL Commands", 
             "previous_title": "EXPLAIN", 
             "previous_url": "/docs/explain/", 
             "relative_path": "_docs/sql-reference/sql-commands/080-select.md", 
             "title": "SELECT", 
             "url": "/docs/select/"
-        }, 
-        "SELECT FROM": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT GROUP BY", 
-            "next_url": "/docs/select-group-by/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT", 
-            "previous_url": "/docs/select/", 
-            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
-            "title": "SELECT FROM", 
-            "url": "/docs/select-from/"
-        }, 
-        "SELECT GROUP BY": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT HAVING", 
-            "next_url": "/docs/select-having/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT FROM", 
-            "previous_url": "/docs/select-from/", 
-            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
-            "title": "SELECT GROUP BY", 
-            "url": "/docs/select-group-by/"
-        }, 
-        "SELECT HAVING": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT LIMIT", 
-            "next_url": "/docs/select-limit/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT GROUP BY", 
-            "previous_url": "/docs/select-group-by/", 
-            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
-            "title": "SELECT HAVING", 
-            "url": "/docs/select-having/"
-        }, 
-        "SELECT LIMIT": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT OFFSET", 
-            "next_url": "/docs/select-offset/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT HAVING", 
-            "previous_url": "/docs/select-having/", 
-            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
-            "title": "SELECT LIMIT", 
-            "url": "/docs/select-limit/"
-        }, 
-        "SELECT OFFSET": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT ORDER BY", 
-            "next_url": "/docs/select-order-by/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT LIMIT", 
-            "previous_url": "/docs/select-limit/", 
-            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
-            "title": "SELECT OFFSET", 
-            "url": "/docs/select-offset/"
-        }, 
-        "SELECT ORDER BY": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT UNION", 
-            "next_url": "/docs/select-union/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT OFFSET", 
-            "previous_url": "/docs/select-offset/", 
-            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
-            "title": "SELECT ORDER BY", 
-            "url": "/docs/select-order-by/"
-        }, 
-        "SELECT UNION": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT WHERE", 
-            "next_url": "/docs/select-where/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT ORDER BY", 
-            "previous_url": "/docs/select-order-by/", 
-            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
-            "title": "SELECT UNION", 
-            "url": "/docs/select-union/"
-        }, 
-        "SELECT WHERE": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SELECT WITH", 
-            "next_url": "/docs/select-with/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT UNION", 
-            "previous_url": "/docs/select-union/", 
-            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
-            "title": "SELECT WHERE", 
-            "url": "/docs/select-where/"
-        }, 
-        "SELECT WITH": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
-            "next_url": "/docs/show-databases-and-show-schemas/", 
-            "parent": "SQL Commands", 
-            "previous_title": "SELECT WHERE", 
-            "previous_url": "/docs/select-where/", 
-            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
-            "title": "SELECT WITH", 
-            "url": "/docs/select-with/"
         }, 
         "SHOW DATABASES and SHOW SCHEMAS": {
             "breadcrumbs": [
@@ -7297,8 +7234,8 @@
             "next_title": "SHOW FILES", 
             "next_url": "/docs/show-files/", 
             "parent": "SQL Commands", 
-            "previous_title": "SELECT WITH", 
-            "previous_url": "/docs/select-with/", 
+            "previous_title": "WITH Clause", 
+            "previous_url": "/docs/with-clause/", 
             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
             "title": "SHOW DATABASES and SHOW SCHEMAS", 
             "url": "/docs/show-databases-and-show-schemas/"
@@ -7533,8 +7470,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT FROM", 
-                    "next_url": "/docs/select-from/", 
+                    "next_title": "FROM Clause", 
+                    "next_url": "/docs/from-clause/", 
                     "parent": "SQL Commands", 
                     "previous_title": "EXPLAIN", 
                     "previous_url": "/docs/explain/", 
@@ -7554,14 +7491,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT GROUP BY", 
-                    "next_url": "/docs/select-group-by/", 
+                    "next_title": "GROUP BY Clause", 
+                    "next_url": "/docs/group-by-clause/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SELECT", 
                     "previous_url": "/docs/select/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
-                    "title": "SELECT FROM", 
-                    "url": "/docs/select-from/"
+                    "relative_path": "_docs/sql-reference/sql-commands/081-from-clause.md", 
+                    "title": "FROM Clause", 
+                    "url": "/docs/from-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7575,14 +7512,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT HAVING", 
-                    "next_url": "/docs/select-having/", 
+                    "next_title": "HAVING Clause", 
+                    "next_url": "/docs/having-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT FROM", 
-                    "previous_url": "/docs/select-from/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
-                    "title": "SELECT GROUP BY", 
-                    "url": "/docs/select-group-by/"
+                    "previous_title": "FROM Clause", 
+                    "previous_url": "/docs/from-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/082-group-by-clause.md", 
+                    "title": "GROUP BY Clause", 
+                    "url": "/docs/group-by-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7596,14 +7533,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT LIMIT", 
-                    "next_url": "/docs/select-limit/", 
+                    "next_title": "LIMIT Clause", 
+                    "next_url": "/docs/limit-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT GROUP BY", 
-                    "previous_url": "/docs/select-group-by/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
-                    "title": "SELECT HAVING", 
-                    "url": "/docs/select-having/"
+                    "previous_title": "GROUP BY Clause", 
+                    "previous_url": "/docs/group-by-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/083-having-clause.md", 
+                    "title": "HAVING Clause", 
+                    "url": "/docs/having-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7617,14 +7554,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT OFFSET", 
-                    "next_url": "/docs/select-offset/", 
+                    "next_title": "OFFSET Clause", 
+                    "next_url": "/docs/offset-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT HAVING", 
-                    "previous_url": "/docs/select-having/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
-                    "title": "SELECT LIMIT", 
-                    "url": "/docs/select-limit/"
+                    "previous_title": "HAVING Clause", 
+                    "previous_url": "/docs/having-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/084-limit-clause.md", 
+                    "title": "LIMIT Clause", 
+                    "url": "/docs/limit-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7638,14 +7575,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT ORDER BY", 
-                    "next_url": "/docs/select-order-by/", 
+                    "next_title": "ORDER BY Clause", 
+                    "next_url": "/docs/order-by-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT LIMIT", 
-                    "previous_url": "/docs/select-limit/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
-                    "title": "SELECT OFFSET", 
-                    "url": "/docs/select-offset/"
+                    "previous_title": "LIMIT Clause", 
+                    "previous_url": "/docs/limit-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/085-offset-clause.md", 
+                    "title": "OFFSET Clause", 
+                    "url": "/docs/offset-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7659,14 +7596,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT UNION", 
-                    "next_url": "/docs/select-union/", 
+                    "next_title": "UNION Set Operator", 
+                    "next_url": "/docs/union-set-operator/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT OFFSET", 
-                    "previous_url": "/docs/select-offset/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
-                    "title": "SELECT ORDER BY", 
-                    "url": "/docs/select-order-by/"
+                    "previous_title": "OFFSET Clause", 
+                    "previous_url": "/docs/offset-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/086-order-by-clause.md", 
+                    "title": "ORDER BY Clause", 
+                    "url": "/docs/order-by-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7680,14 +7617,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT WHERE", 
-                    "next_url": "/docs/select-where/", 
+                    "next_title": "WHERE Clause", 
+                    "next_url": "/docs/where-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT ORDER BY", 
-                    "previous_url": "/docs/select-order-by/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
-                    "title": "SELECT UNION", 
-                    "url": "/docs/select-union/"
+                    "previous_title": "ORDER BY Clause", 
+                    "previous_url": "/docs/order-by-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/087-union-set-operator.md", 
+                    "title": "UNION Set Operator", 
+                    "url": "/docs/union-set-operator/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7701,14 +7638,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SELECT WITH", 
-                    "next_url": "/docs/select-with/", 
+                    "next_title": "WITH Clause", 
+                    "next_url": "/docs/with-clause/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT UNION", 
-                    "previous_url": "/docs/select-union/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
-                    "title": "SELECT WHERE", 
-                    "url": "/docs/select-where/"
+                    "previous_title": "UNION Set Operator", 
+                    "previous_url": "/docs/union-set-operator/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/088-where-clause.md", 
+                    "title": "WHERE Clause", 
+                    "url": "/docs/where-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7725,11 +7662,11 @@
                     "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
                     "next_url": "/docs/show-databases-and-show-schemas/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT WHERE", 
-                    "previous_url": "/docs/select-where/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
-                    "title": "SELECT WITH", 
-                    "url": "/docs/select-with/"
+                    "previous_title": "WHERE Clause", 
+                    "previous_url": "/docs/where-clause/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/089-with-clause.md", 
+                    "title": "WITH Clause", 
+                    "url": "/docs/with-clause/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -7746,8 +7683,8 @@
                     "next_title": "SHOW FILES", 
                     "next_url": "/docs/show-files/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "SELECT WITH", 
-                    "previous_url": "/docs/select-with/", 
+                    "previous_title": "WITH Clause", 
+                    "previous_url": "/docs/with-clause/", 
                     "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                     "title": "SHOW DATABASES and SHOW SCHEMAS", 
                     "url": "/docs/show-databases-and-show-schemas/"
@@ -8674,8 +8611,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT FROM", 
-                            "next_url": "/docs/select-from/", 
+                            "next_title": "FROM Clause", 
+                            "next_url": "/docs/from-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN", 
                             "previous_url": "/docs/explain/", 
@@ -8695,14 +8632,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT GROUP BY", 
-                            "next_url": "/docs/select-group-by/", 
+                            "next_title": "GROUP BY Clause", 
+                            "next_url": "/docs/group-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SELECT", 
                             "previous_url": "/docs/select/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
-                            "title": "SELECT FROM", 
-                            "url": "/docs/select-from/"
+                            "relative_path": "_docs/sql-reference/sql-commands/081-from-clause.md", 
+                            "title": "FROM Clause", 
+                            "url": "/docs/from-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8716,14 +8653,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT HAVING", 
-                            "next_url": "/docs/select-having/", 
+                            "next_title": "HAVING Clause", 
+                            "next_url": "/docs/having-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT FROM", 
-                            "previous_url": "/docs/select-from/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
-                            "title": "SELECT GROUP BY", 
-                            "url": "/docs/select-group-by/"
+                            "previous_title": "FROM Clause", 
+                            "previous_url": "/docs/from-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/082-group-by-clause.md", 
+                            "title": "GROUP BY Clause", 
+                            "url": "/docs/group-by-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8737,14 +8674,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT LIMIT", 
-                            "next_url": "/docs/select-limit/", 
+                            "next_title": "LIMIT Clause", 
+                            "next_url": "/docs/limit-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT GROUP BY", 
-                            "previous_url": "/docs/select-group-by/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
-                            "title": "SELECT HAVING", 
-                            "url": "/docs/select-having/"
+                            "previous_title": "GROUP BY Clause", 
+                            "previous_url": "/docs/group-by-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/083-having-clause.md", 
+                            "title": "HAVING Clause", 
+                            "url": "/docs/having-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8758,14 +8695,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT OFFSET", 
-                            "next_url": "/docs/select-offset/", 
+                            "next_title": "OFFSET Clause", 
+                            "next_url": "/docs/offset-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT HAVING", 
-                            "previous_url": "/docs/select-having/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
-                            "title": "SELECT LIMIT", 
-                            "url": "/docs/select-limit/"
+                            "previous_title": "HAVING Clause", 
+                            "previous_url": "/docs/having-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/084-limit-clause.md", 
+                            "title": "LIMIT Clause", 
+                            "url": "/docs/limit-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8779,14 +8716,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT ORDER BY", 
-                            "next_url": "/docs/select-order-by/", 
+                            "next_title": "ORDER BY Clause", 
+                            "next_url": "/docs/order-by-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT LIMIT", 
-                            "previous_url": "/docs/select-limit/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
-                            "title": "SELECT OFFSET", 
-                            "url": "/docs/select-offset/"
+                            "previous_title": "LIMIT Clause", 
+                            "previous_url": "/docs/limit-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/085-offset-clause.md", 
+                            "title": "OFFSET Clause", 
+                            "url": "/docs/offset-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8800,14 +8737,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT UNION", 
-                            "next_url": "/docs/select-union/", 
+                            "next_title": "UNION Set Operator", 
+                            "next_url": "/docs/union-set-operator/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT OFFSET", 
-                            "previous_url": "/docs/select-offset/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
-                            "title": "SELECT ORDER BY", 
-                            "url": "/docs/select-order-by/"
+                            "previous_title": "OFFSET Clause", 
+                            "previous_url": "/docs/offset-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/086-order-by-clause.md", 
+                            "title": "ORDER BY Clause", 
+                            "url": "/docs/order-by-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8821,14 +8758,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT WHERE", 
-                            "next_url": "/docs/select-where/", 
+                            "next_title": "WHERE Clause", 
+                            "next_url": "/docs/where-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT ORDER BY", 
-                            "previous_url": "/docs/select-order-by/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
-                            "title": "SELECT UNION", 
-                            "url": "/docs/select-union/"
+                            "previous_title": "ORDER BY Clause", 
+                            "previous_url": "/docs/order-by-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/087-union-set-operator.md", 
+                            "title": "UNION Set Operator", 
+                            "url": "/docs/union-set-operator/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8842,14 +8779,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT WITH", 
-                            "next_url": "/docs/select-with/", 
+                            "next_title": "WITH Clause", 
+                            "next_url": "/docs/with-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT UNION", 
-                            "previous_url": "/docs/select-union/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
-                            "title": "SELECT WHERE", 
-                            "url": "/docs/select-where/"
+                            "previous_title": "UNION Set Operator", 
+                            "previous_url": "/docs/union-set-operator/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/088-where-clause.md", 
+                            "title": "WHERE Clause", 
+                            "url": "/docs/where-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8866,11 +8803,11 @@
                             "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
                             "next_url": "/docs/show-databases-and-show-schemas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT WHERE", 
-                            "previous_url": "/docs/select-where/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
-                            "title": "SELECT WITH", 
-                            "url": "/docs/select-with/"
+                            "previous_title": "WHERE Clause", 
+                            "previous_url": "/docs/where-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/089-with-clause.md", 
+                            "title": "WITH Clause", 
+                            "url": "/docs/with-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -8887,8 +8824,8 @@
                             "next_title": "SHOW FILES", 
                             "next_url": "/docs/show-files/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT WITH", 
-                            "previous_url": "/docs/select-with/", 
+                            "previous_title": "WITH Clause", 
+                            "previous_url": "/docs/with-clause/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES and SHOW SCHEMAS", 
                             "url": "/docs/show-databases-and-show-schemas/"
@@ -9898,6 +9835,27 @@
             "title": "Tutorials Introduction", 
             "url": "/docs/tutorials-introduction/"
         }, 
+        "UNION Set Operator": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "WHERE Clause", 
+            "next_url": "/docs/where-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "ORDER BY Clause", 
+            "previous_url": "/docs/order-by-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/087-union-set-operator.md", 
+            "title": "UNION Set Operator", 
+            "url": "/docs/union-set-operator/"
+        }, 
         "USE": {
             "breadcrumbs": [
                 {
@@ -10434,6 +10392,48 @@
             "relative_path": "_docs/developer-information/design-docs/050-value-vectors.md", 
             "title": "Value Vectors", 
             "url": "/docs/value-vectors/"
+        }, 
+        "WHERE Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "WITH Clause", 
+            "next_url": "/docs/with-clause/", 
+            "parent": "SQL Commands", 
+            "previous_title": "UNION Set Operator", 
+            "previous_url": "/docs/union-set-operator/", 
+            "relative_path": "_docs/sql-reference/sql-commands/088-where-clause.md", 
+            "title": "WHERE Clause", 
+            "url": "/docs/where-clause/"
+        }, 
+        "WITH Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
+            "next_url": "/docs/show-databases-and-show-schemas/", 
+            "parent": "SQL Commands", 
+            "previous_title": "WHERE Clause", 
+            "previous_url": "/docs/where-clause/", 
+            "relative_path": "_docs/sql-reference/sql-commands/089-with-clause.md", 
+            "title": "WITH Clause", 
+            "url": "/docs/with-clause/"
         }, 
         "What is Apache Drill": {
             "breadcrumbs": [
@@ -13568,8 +13568,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT FROM", 
-                            "next_url": "/docs/select-from/", 
+                            "next_title": "FROM Clause", 
+                            "next_url": "/docs/from-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "EXPLAIN", 
                             "previous_url": "/docs/explain/", 
@@ -13589,14 +13589,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT GROUP BY", 
-                            "next_url": "/docs/select-group-by/", 
+                            "next_title": "GROUP BY Clause", 
+                            "next_url": "/docs/group-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SELECT", 
                             "previous_url": "/docs/select/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/081-select-from.md", 
-                            "title": "SELECT FROM", 
-                            "url": "/docs/select-from/"
+                            "relative_path": "_docs/sql-reference/sql-commands/081-from-clause.md", 
+                            "title": "FROM Clause", 
+                            "url": "/docs/from-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13610,14 +13610,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT HAVING", 
-                            "next_url": "/docs/select-having/", 
+                            "next_title": "HAVING Clause", 
+                            "next_url": "/docs/having-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT FROM", 
-                            "previous_url": "/docs/select-from/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/082-select-group-by.md", 
-                            "title": "SELECT GROUP BY", 
-                            "url": "/docs/select-group-by/"
+                            "previous_title": "FROM Clause", 
+                            "previous_url": "/docs/from-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/082-group-by-clause.md", 
+                            "title": "GROUP BY Clause", 
+                            "url": "/docs/group-by-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13631,14 +13631,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT LIMIT", 
-                            "next_url": "/docs/select-limit/", 
+                            "next_title": "LIMIT Clause", 
+                            "next_url": "/docs/limit-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT GROUP BY", 
-                            "previous_url": "/docs/select-group-by/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/083-select-having.md", 
-                            "title": "SELECT HAVING", 
-                            "url": "/docs/select-having/"
+                            "previous_title": "GROUP BY Clause", 
+                            "previous_url": "/docs/group-by-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/083-having-clause.md", 
+                            "title": "HAVING Clause", 
+                            "url": "/docs/having-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13652,14 +13652,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT OFFSET", 
-                            "next_url": "/docs/select-offset/", 
+                            "next_title": "OFFSET Clause", 
+                            "next_url": "/docs/offset-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT HAVING", 
-                            "previous_url": "/docs/select-having/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/084-select-limit.md", 
-                            "title": "SELECT LIMIT", 
-                            "url": "/docs/select-limit/"
+                            "previous_title": "HAVING Clause", 
+                            "previous_url": "/docs/having-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/084-limit-clause.md", 
+                            "title": "LIMIT Clause", 
+                            "url": "/docs/limit-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13673,14 +13673,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT ORDER BY", 
-                            "next_url": "/docs/select-order-by/", 
+                            "next_title": "ORDER BY Clause", 
+                            "next_url": "/docs/order-by-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT LIMIT", 
-                            "previous_url": "/docs/select-limit/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/085-select-offset.md", 
-                            "title": "SELECT OFFSET", 
-                            "url": "/docs/select-offset/"
+                            "previous_title": "LIMIT Clause", 
+                            "previous_url": "/docs/limit-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/085-offset-clause.md", 
+                            "title": "OFFSET Clause", 
+                            "url": "/docs/offset-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13694,14 +13694,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT UNION", 
-                            "next_url": "/docs/select-union/", 
+                            "next_title": "UNION Set Operator", 
+                            "next_url": "/docs/union-set-operator/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT OFFSET", 
-                            "previous_url": "/docs/select-offset/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/086-select-order-by.md", 
-                            "title": "SELECT ORDER BY", 
-                            "url": "/docs/select-order-by/"
+                            "previous_title": "OFFSET Clause", 
+                            "previous_url": "/docs/offset-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/086-order-by-clause.md", 
+                            "title": "ORDER BY Clause", 
+                            "url": "/docs/order-by-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13715,14 +13715,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT WHERE", 
-                            "next_url": "/docs/select-where/", 
+                            "next_title": "WHERE Clause", 
+                            "next_url": "/docs/where-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT ORDER BY", 
-                            "previous_url": "/docs/select-order-by/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/087-select-union.md", 
-                            "title": "SELECT UNION", 
-                            "url": "/docs/select-union/"
+                            "previous_title": "ORDER BY Clause", 
+                            "previous_url": "/docs/order-by-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/087-union-set-operator.md", 
+                            "title": "UNION Set Operator", 
+                            "url": "/docs/union-set-operator/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13736,14 +13736,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SELECT WITH", 
-                            "next_url": "/docs/select-with/", 
+                            "next_title": "WITH Clause", 
+                            "next_url": "/docs/with-clause/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT UNION", 
-                            "previous_url": "/docs/select-union/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/088-select-where.md", 
-                            "title": "SELECT WHERE", 
-                            "url": "/docs/select-where/"
+                            "previous_title": "UNION Set Operator", 
+                            "previous_url": "/docs/union-set-operator/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/088-where-clause.md", 
+                            "title": "WHERE Clause", 
+                            "url": "/docs/where-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13760,11 +13760,11 @@
                             "next_title": "SHOW DATABASES and SHOW SCHEMAS", 
                             "next_url": "/docs/show-databases-and-show-schemas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT WHERE", 
-                            "previous_url": "/docs/select-where/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/089-select-with.md", 
-                            "title": "SELECT WITH", 
-                            "url": "/docs/select-with/"
+                            "previous_title": "WHERE Clause", 
+                            "previous_url": "/docs/where-clause/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/089-with-clause.md", 
+                            "title": "WITH Clause", 
+                            "url": "/docs/with-clause/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13781,8 +13781,8 @@
                             "next_title": "SHOW FILES", 
                             "next_url": "/docs/show-files/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "SELECT WITH", 
-                            "previous_url": "/docs/select-with/", 
+                            "previous_title": "WITH Clause", 
+                            "previous_url": "/docs/with-clause/", 
                             "relative_path": "_docs/sql-reference/sql-commands/090-show-databases-and-show-schemas.md", 
                             "title": "SHOW DATABASES and SHOW SCHEMAS", 
                             "url": "/docs/show-databases-and-show-schemas/"
