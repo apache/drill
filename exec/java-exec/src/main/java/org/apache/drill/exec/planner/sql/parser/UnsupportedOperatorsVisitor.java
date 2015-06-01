@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWindow;
+import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlJoin;
@@ -32,7 +35,9 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlSetOperator;
+
 import java.util.List;
+
 import com.google.common.collect.Lists;
 
 public class UnsupportedOperatorsVisitor extends SqlShuttle {
@@ -78,6 +83,53 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall sqlCall) {
+    // Inspect the window functions
+    if(sqlCall instanceof SqlSelect) {
+      SqlSelect sqlSelect = (SqlSelect) sqlCall;
+
+      // This is used to keep track of the window function which has been defined
+      SqlNode definedWindow = null;
+      for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+        if(nodeInSelectList.getKind() == SqlKind.OVER) {
+          // Throw exceptions if window functions are disabled
+          if(!context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {
+            unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                "Window functions are disabled\n" +
+                "See Apache Drill JIRA: DRILL-2559");
+            throw new UnsupportedOperationException();
+          }
+
+          SqlNode window = ((SqlCall) nodeInSelectList).operand(1);
+
+          // Partition window is referenced as a SqlIdentifier,
+          // which is defined in the window list
+          if(window instanceof SqlIdentifier) {
+            // Expand the SqlIdentifier as the expression defined in the window list
+            for(SqlNode sqlNode : sqlSelect.getWindowList()) {
+              if(((SqlWindow) sqlNode).getDeclName().equalsDeep(window, false)) {
+                window = sqlNode;
+                break;
+              }
+            }
+
+            assert !(window instanceof SqlIdentifier) : "Identifier should have been expanded as a window defined in the window list";
+          }
+
+          // In a SELECT-SCOPE, only a partition can be defined
+          if(definedWindow == null) {
+            definedWindow = window;
+          } else {
+           if(!definedWindow.equalsDeep(window, false)) {
+             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                 "Multiple window definitions in a single SELECT list is not currently supported \n" +
+                 "See Apache Drill JIRA: DRILL-3196");
+             throw new UnsupportedOperationException();
+           }
+          }
+        }
+      }
+    }
+
     // Disable unsupported Intersect, Except
     if(sqlCall.getKind() == SqlKind.INTERSECT || sqlCall.getKind() == SqlKind.EXCEPT) {
       unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
@@ -116,15 +168,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             "See Apache Drill JIRA: DRILL-1921");
         throw new UnsupportedOperationException();
       }
-    }
-
-    // Throw exceptions if window functions are disabled
-    if(sqlCall.getOperator().getKind().equals(SqlKind.OVER)
-        && !context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {
-      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-          "Window functions are disabled\n" +
-          "See Apache Drill JIRA: DRILL-2559");
-      throw new UnsupportedOperationException();
     }
 
     // Disable Function
