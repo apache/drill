@@ -90,12 +90,15 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     }
   }
 
+  // Note: the logic of handling * column for Writer is moved to ProjectForWriterVisitor.
+
   @Override
   public Prel visitWriter(WriterPrel prel, Void value) throws RuntimeException {
-    Prel child = ((Prel) prel.getInput(0)).accept(this, null);
+    RelNode child = ((Prel) prel.getInput(0)).accept(this, null);
     if (prefixedForStar) {
       prefixedForWriter = true;
-      return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
+      // return insertProjUnderScreenOrWriter(prel, prel.getInput().getRowType(), child);
+      return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(child));
     } else {
       return prel;
     }

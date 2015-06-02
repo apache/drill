@@ -19,6 +19,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
@@ -38,4 +39,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public interface CreateTableEntry {
 
   Writer getWriter(PhysicalOperator child) throws IOException;
+
+  List<String> getPartitionColumns();
 }

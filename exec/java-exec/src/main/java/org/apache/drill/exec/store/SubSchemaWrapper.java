@@ -25,6 +25,7 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
 import com.google.common.collect.ImmutableList;
@@ -57,8 +58,8 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
-  public CreateTableEntry createNewTable(String tableName) {
-    return innerSchema.createNewTable(tableName);
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+    return innerSchema.createNewTable(tableName, partitionColumns);
   }
 
   @Override

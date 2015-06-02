@@ -19,6 +19,14 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Writer;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
@@ -28,9 +36,12 @@ import org.apache.calcite.plan.RelTraitSet;
 
 public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
 
+  private final List<Integer> partitionKeys;
+
   public DrillWriterRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, CreateTableEntry createTableEntry) {
     super(DRILL_LOGICAL, cluster, traitSet, input, createTableEntry);
     setRowType();
+    this.partitionKeys = resolvePartitionKeys();
   }
 
   @Override
@@ -47,4 +58,26 @@ public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
         .setCreateTableEntry(getCreateTableEntry())
         .build();
   }
+
+
+  private List<Integer> resolvePartitionKeys(){
+    final List<Integer> keys = Lists.newArrayList();
+    final RelDataType inputRowType = getInput().getRowType();
+    final List<String> partitionCol = getCreateTableEntry().getPartitionColumns();
+
+    for (final String col : partitionCol) {
+      final RelDataTypeField field = inputRowType.getField(col, false, false);
+      Preconditions.checkArgument(field != null,
+          String.format("partition col %s could not be resolved in table's column lists!", col));
+      keys.add(field.getIndex());
+    }
+
+    return keys;
+  }
+
+  public List<Integer> getPartitionKeys() {
+    return this.partitionKeys;
+  }
+
+
 }

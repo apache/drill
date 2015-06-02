@@ -18,8 +18,10 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.store.ischema.Records;
 
 /**
  * Implements <code>CreateTableEntry</code> interface to create new tables in FileSystem storage.
@@ -41,24 +44,29 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
   private FileSystemConfig storageConfig;
   private FormatPlugin formatPlugin;
   private String location;
+  private final List<String> partitionColumns;
 
   @JsonCreator
   public FileSystemCreateTableEntry(@JsonProperty("storageConfig") FileSystemConfig storageConfig,
                                     @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
                                     @JsonProperty("location") String location,
+                                    @JsonProperty("partitionColumn") List<String> partitionColumns,
                                     @JacksonInject StoragePluginRegistry engineRegistry)
       throws ExecutionSetupException {
     this.storageConfig = storageConfig;
     this.formatPlugin = engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   public FileSystemCreateTableEntry(FileSystemConfig storageConfig,
                                     FormatPlugin formatPlugin,
-                                    String location) {
+                                    String location,
+                                    List<String> partitionColumns) {
     this.storageConfig = storageConfig;
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   @JsonProperty("storageConfig")
@@ -73,6 +81,11 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
 
   @Override
   public Writer getWriter(PhysicalOperator child) throws IOException {
-    return formatPlugin.getWriter(child, location);
+    return formatPlugin.getWriter(child, location, partitionColumns);
+  }
+
+  @Override
+  public List<String> getPartitionColumns() {
+    return partitionColumns;
   }
 }

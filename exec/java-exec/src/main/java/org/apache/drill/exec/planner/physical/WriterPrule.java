@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
@@ -25,6 +31,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
+
+import java.util.List;
 
 public class WriterPrule extends Prule{
   public static final RelOptRule INSTANCE = new WriterPrule();
@@ -36,10 +44,11 @@ public class WriterPrule extends Prule{
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillWriterRelBase writer = call.rel(0);
+    final DrillWriterRel writer = call.rel(0);
     final RelNode input = call.rel(1);
 
-    final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
+    final RelCollation collation = getCollation(writer.getPartitionKeys());
+    final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation);
     final RelNode convertedInput = convert(input, traits);
 
     if (!new WriteTraitPull(call).go(writer, convertedInput)) {
@@ -49,6 +58,15 @@ public class WriterPrule extends Prule{
       call.transformTo(newWriter);
     }
   }
+
+  private RelCollation getCollation(List<Integer> keys){
+    List<RelFieldCollation> fields = Lists.newArrayList();
+    for (int key : keys) {
+      fields.add(new RelFieldCollation(key));
+    }
+    return RelCollationImpl.of(fields);
+  }
+
 
   private class WriteTraitPull extends SubsetTransformer<DrillWriterRelBase, RuntimeException> {
 

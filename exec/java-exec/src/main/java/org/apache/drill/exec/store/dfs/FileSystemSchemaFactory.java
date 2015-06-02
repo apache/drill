@@ -28,6 +28,7 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -147,8 +148,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
-    public CreateTableEntry createNewTable(String tableName) {
-      return defaultSchema.createNewTable(tableName);
+    public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
+      return defaultSchema.createNewTable(tableName, partitionColumns);
     }
 
     @Override

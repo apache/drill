@@ -19,8 +19,10 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.calcite.tools.Planner;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
@@ -39,24 +41,28 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.util.Pointer;
 
 public class SqlCreateTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER) {
     @Override
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      return new SqlCreateTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2]);
+      Preconditions.checkArgument(operands.length == 4, "SqlCreateTable.createCall() has to get 4 operands!");
+      return new SqlCreateTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], (SqlNodeList) operands[2], operands[3]);
     }
   };
 
-  private SqlIdentifier tblName;
-  private SqlNodeList fieldList;
-  private SqlNode query;
+  private final SqlIdentifier tblName;
+  private final SqlNodeList fieldList;
+  private final SqlNodeList partitionColumns;
+  private final SqlNode query;
 
-  public SqlCreateTable(SqlParserPos pos, SqlIdentifier tblName, SqlNodeList fieldList, SqlNode query) {
+  public SqlCreateTable(SqlParserPos pos, SqlIdentifier tblName, SqlNodeList fieldList, SqlNodeList partitionColumns, SqlNode query) {
     super(pos);
     this.tblName = tblName;
     this.fieldList = fieldList;
+    this.partitionColumns = partitionColumns;
     this.query = query;
   }
 
@@ -70,6 +76,7 @@ public class SqlCreateTable extends DrillSqlCall {
     List<SqlNode> ops = Lists.newArrayList();
     ops.add(tblName);
     ops.add(fieldList);
+    ops.add(partitionColumns);
     ops.add(query);
     return ops;
   }
@@ -79,14 +86,12 @@ public class SqlCreateTable extends DrillSqlCall {
     writer.keyword("CREATE");
     writer.keyword("TABLE");
     tblName.unparse(writer, leftPrec, rightPrec);
-    if (fieldList != null && fieldList.size() > 0) {
-      writer.keyword("(");
-      fieldList.get(0).unparse(writer, leftPrec, rightPrec);
-      for (int i=1; i<fieldList.size(); i++) {
-        writer.keyword(",");
-        fieldList.get(i).unparse(writer, leftPrec, rightPrec);
-      }
-      writer.keyword(")");
+    if (fieldList.size() > 0) {
+      SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, fieldList);
+    }
+    if (partitionColumns.size() > 0) {
+      writer.keyword("PARTITION BY");
+      SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, partitionColumns);
     }
     writer.keyword("AS");
     query.unparse(writer, leftPrec, rightPrec);
@@ -120,10 +125,6 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public List<String> getFieldNames() {
-    if (fieldList == null) {
-      return ImmutableList.of();
-    }
-
     List<String> columnNames = Lists.newArrayList();
     for(SqlNode node : fieldList.getList()) {
       columnNames.add(node.toString());
@@ -131,5 +132,14 @@ public class SqlCreateTable extends DrillSqlCall {
     return columnNames;
   }
 
+  public List<String> getPartitionColumns() {
+    List<String> columnNames = Lists.newArrayList();
+    for(SqlNode node : partitionColumns.getList()) {
+      columnNames.add(node.toString());
+    }
+    return columnNames;
+  }
+
   public SqlNode getQuery() { return query; }
+
 }

@@ -154,7 +154,7 @@ SqlNodeList ParseFieldList(String relType) :
     }
     |
     {
-        return null;
+        return SqlNodeList.EMPTY;
     }
 }
 
@@ -208,16 +208,23 @@ SqlNode SqlCreateTable() :
     SqlParserPos pos;
     SqlIdentifier tblName;
     SqlNodeList fieldList;
+    SqlNodeList partitionFieldList;
     SqlNode query;
 }
 {
+    {
+        partitionFieldList = SqlNodeList.EMPTY;
+    }
     <CREATE> { pos = getPos(); }
     <TABLE>
     tblName = CompoundIdentifier()
     fieldList = ParseFieldList("Table")
+    (   <PARTITION> <BY>
+        partitionFieldList = ParseFieldList("Partition")
+    )?
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
-        return new SqlCreateTable(pos, tblName, fieldList, query);
+        return new SqlCreateTable(pos, tblName, fieldList, partitionFieldList, query);
     }
 }

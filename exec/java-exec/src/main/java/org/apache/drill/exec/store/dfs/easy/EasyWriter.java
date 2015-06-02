@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
@@ -38,12 +40,14 @@ public class EasyWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyWriter.class);
 
   private final String location;
+  private final List<String> partitionColumns;
   private final EasyFormatPlugin<?> formatPlugin;
 
   @JsonCreator
   public EasyWriter(
       @JsonProperty("child") PhysicalOperator child,
       @JsonProperty("location") String location,
+      @JsonProperty("partitionColumns") List<String> partitionColumns,
       @JsonProperty("storage") StoragePluginConfig storageConfig,
       @JsonProperty("format") FormatPluginConfig formatConfig,
       @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
@@ -52,15 +56,18 @@ public class EasyWriter extends AbstractWriter {
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   public EasyWriter(PhysicalOperator child,
                          String location,
+                         List<String> partitionColumns,
                          EasyFormatPlugin<?> formatPlugin) {
 
     super(child);
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   @JsonProperty("location")
@@ -85,7 +92,7 @@ public class EasyWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new EasyWriter(child, location, formatPlugin);
+    return new EasyWriter(child, location, partitionColumns, formatPlugin);
   }
 
   @Override

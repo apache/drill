@@ -32,7 +32,8 @@ import org.apache.calcite.plan.RelTraitSet;
 
 public class WriterPrel extends DrillWriterRelBase implements Prel {
 
-
+  public static final String PARTITION_COMPARATOR_FIELD = "P_A_R_T_I_T_I_O_N_C_O_M_P_A_R_A_T_O_R";
+  public static final String PARTITION_COMPARATOR_FUNC = "newPartitionValue";
 
   public WriterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, CreateTableEntry createTableEntry) {
     super(Prel.DRILL_PHYSICAL, cluster, traits, child, createTableEntry);

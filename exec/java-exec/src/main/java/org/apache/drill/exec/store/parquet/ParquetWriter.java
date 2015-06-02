@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
@@ -39,12 +41,14 @@ public class ParquetWriter extends AbstractWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriter.class);
 
   private final String location;
+  private final List<String> partitionColumns;
   private final ParquetFormatPlugin formatPlugin;
 
   @JsonCreator
   public ParquetWriter(
           @JsonProperty("child") PhysicalOperator child,
           @JsonProperty("location") String location,
+          @JsonProperty("partitionColumns") List<String> partitionColumns,
           @JsonProperty("storage") StoragePluginConfig storageConfig,
           @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
 
@@ -52,15 +56,18 @@ public class ParquetWriter extends AbstractWriter {
     this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, new ParquetFormatConfig());
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   public ParquetWriter(PhysicalOperator child,
                        String location,
+                       List<String> partitionColumns,
                        ParquetFormatPlugin formatPlugin) {
 
     super(child);
     this.formatPlugin = formatPlugin;
     this.location = location;
+    this.partitionColumns = partitionColumns;
   }
 
   @JsonProperty("location")
@@ -71,6 +78,11 @@ public class ParquetWriter extends AbstractWriter {
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig(){
     return formatPlugin.getStorageConfig();
+  }
+
+  @JsonProperty("partitionColumns")
+  public List<String> getPartitionColumns() {
+    return partitionColumns;
   }
 
   @JsonIgnore
@@ -85,7 +97,7 @@ public class ParquetWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new ParquetWriter(child, location, formatPlugin);
+    return new ParquetWriter(child, location, partitionColumns, formatPlugin);
   }
 
   @Override

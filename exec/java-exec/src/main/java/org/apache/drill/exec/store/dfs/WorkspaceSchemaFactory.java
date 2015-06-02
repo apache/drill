@@ -31,6 +31,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -256,7 +257,7 @@ public class WorkspaceSchemaFactory {
     }
 
     @Override
-    public CreateTableEntry createNewTable(String tableName) {
+    public CreateTableEntry createNewTable(String tableName, List<String> partitonColumns) {
       String storage = schemaConfig.getOption(ExecConstants.OUTPUT_FORMAT_OPTION).string_val;
       FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
       if (formatPlugin == null) {
@@ -268,7 +269,8 @@ public class WorkspaceSchemaFactory {
       return new FileSystemCreateTableEntry(
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
-          config.getLocation() + Path.SEPARATOR + tableName);
+          config.getLocation() + Path.SEPARATOR + tableName,
+          partitonColumns);
     }
 
     @Override

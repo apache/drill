@@ -31,6 +31,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
@@ -115,7 +116,13 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
         .build();
   }
 
-  public CreateTableEntry createNewTable(String tableName) {
+  /**
+   *
+   * @param tableName : new table name.
+   * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
+   * @return
+   */
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
     throw UserException.unsupportedError()
         .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
         .build();

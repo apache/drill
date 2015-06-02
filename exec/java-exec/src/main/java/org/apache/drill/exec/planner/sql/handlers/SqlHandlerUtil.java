@@ -17,14 +17,24 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.TypedSqlNode;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
@@ -37,6 +47,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.exec.store.ischema.Records;
 
+import java.util.AbstractList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -123,6 +134,89 @@ public class SqlHandlerUtil {
     }
   }
 
+  /**
+   *  Resolve the partition columns specified in "PARTITION BY" clause of CTAS statement.
+   *
+   *  A partition column is resolved, either (1) the same column appear in the select list of CTAS
+   *  or (2) CTAS has a * in select list.
+   *
+   *  In the second case, a PROJECT with ITEM expression would be created and returned.
+   *  Throw validation error if a partition column is not resolved correctly.
+   *
+   * @param input : the RelNode represents the select statement in CTAS.
+   * @param partitionColumns : the list of partition columns.
+   * @return : 1) the original RelNode input, if all partition columns are in select list of CTAS
+   *           2) a New Project, if a partition column is resolved to * column in select list
+   *           3) validation error, if partition column is not resolved.
+   */
+  public static RelNode qualifyPartitionCol(RelNode input, List<String> partitionColumns) {
+
+    final RelDataType inputRowType = input.getRowType();
+
+    final List<RexNode> colRefStarExprs = Lists.newArrayList();
+    final List<String> colRefStarNames = Lists.newArrayList();
+    final RexBuilder builder = input.getCluster().getRexBuilder();
+    final int originalFieldSize = inputRowType.getFieldCount();
+
+    for (final String col : partitionColumns) {
+      final RelDataTypeField field = inputRowType.getField(col, false, false);
+
+      if (field == null) {
+        throw UserException.validationError()
+            .message("Partition column %s is not in the SELECT list of CTAS!", col)
+            .build();
+      } else {
+        if (field.getName().startsWith(StarColumnHelper.STAR_COLUMN)) {
+          colRefStarNames.add(col);
+
+          final List<RexNode> operands = Lists.newArrayList();
+          operands.add(new RexInputRef(field.getIndex(), field.getType()));
+          operands.add(builder.makeLiteral(col));
+          final RexNode item = builder.makeCall(SqlStdOperatorTable.ITEM, operands);
+          colRefStarExprs.add(item);
+        }
+      }
+    }
+
+    if (colRefStarExprs.isEmpty()) {
+      return input;
+    } else {
+      final List<String> names =
+          new AbstractList<String>() {
+            @Override
+            public String get(int index) {
+              if (index < originalFieldSize) {
+                return inputRowType.getFieldNames().get(index);
+              } else {
+                return colRefStarNames.get(index - originalFieldSize);
+              }
+            }
+
+            @Override
+            public int size() {
+              return originalFieldSize + colRefStarExprs.size();
+            }
+          };
+
+      final List<RexNode> refs =
+          new AbstractList<RexNode>() {
+            public int size() {
+              return originalFieldSize + colRefStarExprs.size();
+            }
+
+            public RexNode get(int index) {
+              if (index < originalFieldSize) {
+                return RexInputRef.of(index, inputRowType.getFieldList());
+              } else {
+                return colRefStarExprs.get(index - originalFieldSize);
+              }
+            }
+          };
+
+      return RelOptUtil.createProject(input, refs, names, false);
+    }
+  }
+
   public static Table getTableFromSchema(AbstractSchema drillSchema, String tblName) {
     try {
       return drillSchema.getTable(tblName);
@@ -133,4 +227,15 @@ public class SqlHandlerUtil {
               "in schema [%s]: %s", tblName, drillSchema.getFullSchemaName(), e.getMessage()), e);
     }
   }
+
+  public static void unparseSqlNodeList(SqlWriter writer, int leftPrec, int rightPrec, SqlNodeList fieldList) {
+    writer.keyword("(");
+    fieldList.get(0).unparse(writer, leftPrec, rightPrec);
+    for (int i = 1; i<fieldList.size(); i++) {
+      writer.keyword(",");
+      fieldList.get(i).unparse(writer, leftPrec, rightPrec);
+    }
+    writer.keyword(")");
+  }
+
 }

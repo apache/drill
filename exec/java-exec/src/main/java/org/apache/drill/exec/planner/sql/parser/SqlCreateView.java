@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -86,14 +87,8 @@ public class SqlCreateView extends DrillSqlCall {
     }
     writer.keyword("VIEW");
     viewName.unparse(writer, leftPrec, rightPrec);
-    if (fieldList != null && fieldList.size() > 0) {
-      writer.keyword("(");
-      fieldList.get(0).unparse(writer, leftPrec, rightPrec);
-      for (int i=1; i<fieldList.size(); i++) {
-        writer.keyword(",");
-        fieldList.get(i).unparse(writer, leftPrec, rightPrec);
-      }
-      writer.keyword(")");
+    if (fieldList.size() > 0) {
+      SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, fieldList);
     }
     writer.keyword("AS");
     query.unparse(writer, leftPrec, rightPrec);
@@ -121,10 +116,6 @@ public class SqlCreateView extends DrillSqlCall {
   }
 
   public List<String> getFieldNames() {
-    if (fieldList == null) {
-      return ImmutableList.of();
-    }
-
     List<String> fieldNames = Lists.newArrayList();
     for (SqlNode node : fieldList.getList()) {
       fieldNames.add(node.toString());
