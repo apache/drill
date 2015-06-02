@@ -17,20 +17,17 @@ The WITH clause supports the following syntax:
 
 ## Parameters
 
-_with\_subquery\_table\_name_
-
+*with_subquery_table_name*  
 A unique name for a temporary table that defines the results of a WITH clause
 subquery. You cannot use duplicate names within a single WITH clause. You must
 give each subquery a table name that can be referenced in the FROM clause.
 
-_column\_name_
-
+*column_name*  
 An optional list of output column names for the WITH clause subquery,
 separated by commas. The number of column names specified must be equal to or
 less than the number of columns defined by the subquery.
 
-_query_
-
+query  
 Any SELECT query that Drill supports. See
 [SELECT]({{ site.baseurl }}/docs/SELECT+Statements).
 
@@ -44,12 +41,9 @@ reuse the results for query optimization.
 
 You can use a WITH clause in the following SQL statements:
 
-  * SELECT (including subqueries within SELECT statements)
-
+  * SELECT (including subqueries within SELECT statements)  
   * CREATE TABLE AS
-
   * CREATE VIEW
-
   * EXPLAIN
 
 You can reference the temporary tables in the FROM clause of the query. If the

@@ -43,7 +43,7 @@ The following table lists the clients, storage plugins, and types of queries tha
 </table>
 
 ## Impersonation and Views
-You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/_docs/create-view) Command.
+You can use views with impersonation to provide granular access to data and protect sensitive information. When you create a view, Drill stores the view definition in a file and suffixes the file with .drill.view. For example, if you create a view named myview, Drill creates a view file named myview.drill.view and saves it in the current workspace or the workspace specified, such as dfs.views.myview. See [CREATE VIEW]({{site.baseurl}}/docs/create-view) Command.
 
 You can create a view and grant read permissions on the view to give other users access to the data that the view references. When a user queries the view, Drill impersonates the view owner to access the underlying data. If the user tries to access the data directory, Drill returns a permission denied error. A user with read access to a view can create new views from the originating view to further restrict access on data.
 
@@ -83,17 +83,17 @@ An administrator can set the maximum number of hops on views to limit the number
  
 The following example depicts a scenario where the maximum hop number is set to 3, and Drill must impersonate three users to access data when Chad queries a view that Jane created:
 
-![]({{ site.baseurl }}/_docs/img/user_hops_no_join.PNG)
+![]({{ site.baseurl }}/docs/img/user_hops_no_join.PNG)
 
 In the previous example, Joe created V3 from the views that user Frank created. In the following example, Joe created V3 by joining a view that Frank created with a view that Bob created. 
  
-![]({{ site.baseurl }}/_docs/img/user_hops_joined_view.PNG)  
+![]({{ site.baseurl }}/docs/img/user_hops_joined_view.PNG)  
 
 Although V3 was created by joining two different views, the number of hops remains at 3 because Drill does not read the views at the same time. Drill reads V2 first and then reads V1.  
 
 In the next example, Bob queries V4 which was created by Frank. Frank's view was created from several underlying views. Charlie created V2 by joining Jane's V1 with Kris's V1.2. Kris's V1.2 was created from Amy's V1.1, increasing the complexity of the chaining. Assuming that the hop limit is set at 4, this scenario exceeds the limit.  
 
-![]({{ site.baseurl }}/_docs/img/user_hops_four.PNG)  
+![]({{ site.baseurl }}/docs/img/user_hops_four.PNG)  
 
 When Bob queries Franks’s view, Drill returns an error stating that the query cannot complete because the number of hops required to access the data exceeds the maximum hop setting of 4.
 

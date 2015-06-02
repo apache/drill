@@ -13,3 +13,5 @@ Drill provides two standard output files:
 * drill.log
 
 Drill also provides a special file, drillbit_queries.json, on each Drill node. This log provides the QueryID and profile for every query run on a Drillbit. The Profile view in the Drill Web UI lists the last one-hundred queries that Drill ran. To see information for queries beyond the last one-hundred, you can view the drillbit_queries.json file on each Drill node.
+
+Drill also provides [audit logging]({{site.baseurl}}/docs/query-audit-logging/) of queries executed by various drillbits in the cluster. 

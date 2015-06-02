@@ -16,27 +16,33 @@ Create a DSN that an application can use to connect to Drill data sources. If
 you want to create a DSN for a 32-bit application, you must use the 32-bit
 version of the ODBC Administrator to create the DSN.
 
-  1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**.  
-The ODBC Data Source Administrator window appears.
+1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**.  
+   
+    To launch the 32-bit version of the ODBC driver on a 64-bit machine, run:
+`C:\WINDOWS\SysWOW64\odbcad32.exe`.  
+    The ODBC Data Source Administrator window appears.  
+2. Create a system or user DSN on the **System DSN** or **User DSN** tab, respectively. A system DSN is available for all users who log in to the machine. A user DSN is available to the user who creates the DSN.  
+3. Click **Add**.  
+4. Select **MapR Drill ODBC Driver** and click **Finish**.  
+   The _MapR Drill ODBC Driver DSN Setup_ window appears.
+5. In the **Data Source Name** field, enter a name for the DSN.  
+6. Optionally, enter a description of the DSN in the Description field.
+7. In the Connection Type section, select one of the following connection types:  
+   * ZooKeeper Quorum  
+   * Direct to Drillbit  
+8. If you select **ZooKeeper Quorum**, provide values for the following properties:  
+   * Quorum  
+     A comma separated list of ZooKeeper nodes in the following format:  
+     `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .`  
+   * Cluster ID  
+     Name of the drillbit cluster, drillbits1 by default. Check the `drill-override.conf` file for any cluster name changes.  
 
-     To launch the 32-bit version of the ODBC driver on a 64-bit machine, run:
-`C:\WINDOWS\SysWOW64\odbcad32.exe`.
-  2. Click the **System DSN** tab to create a system DSN or click the **User DSN** tab to create a user DSN. A system DSN is available for all users who log in to the machine. A user DSN is available to the user who creates the DSN.
-  3. Click **Add**.
-  4. Select **MapR Drill ODBC Driver** and click **Finish**.  
-     The _MapR Drill ODBC Driver DSN Setup_ window appears.
-  5. In the **Data Source Name** field, enter a name for the DSN,
-  6. Optionally, enter a description of the DSN in the Description field.
-  7. In the Connection Type section, select a connection type and enter the associated connection details:
-
-     <table style='table-layout:fixed;width:100%'><tbody><tr><th>Connection Type</th><th >Properties</th><th >Descriptions</th></tr><tr><td rowspan="2" valign="top" width="10%">Zookeeper Quorum</td><td valign="top" style='width: 100px;'>Quorum</td><td valign="top" style='width: 400px;'>A comma-separated list of servers in a Zookeeper cluster.For example, &lt;ip_zookeepernode1&gt;:5181,&lt;ip_zookeepernode21&gt;:5181,…</td></tr><tr><td valign="top">ClusterID</td><td valign="top">Name of the drillbit cluster. The default is drillbits1. You may need to specify a different value if the cluster ID was changed in the drill-override.conf file.</td></tr><tr><td colspan="1" valign="top">Direct to Drillbit</td><td colspan="1" valign="top"> </td><td colspan="1" valign="top">Provide the IP address or host name of the Drill server and the port number that that the Drill server is listening on.  The port number defaults to 31010. You may need to specify a different value if the port number was changed in the drill-override.conf file.</td></tr></tbody></table>
-     For information on selecting the appropriate connection type, see [Connection Types]({{ site.baseurl }}/docs/configuring-connections-on-windows/#connection-type).
-  8. In the **Default Schema** field, select the default schema that you want to connect to.
-     For more information about the schemas that appear in this list, see Schemas.
-  9. Optionally, perform one of the following operations:
-
-     <table ><tbody><tr><th >Option</th><th >Action</th></tr><tr><td valign="top">Update the configuration of the advanced properties.</td><td valign="top">Edit the default values in the <strong>Advanced Properties</strong> section. <br />For more information, see <a href="#advanced-properties">Advanced Properties</a>.</td></tr><tr><td valign="top">Configure the types of events that you want the driver to log.</td><td valign="top">Click <strong>Logging Options</strong>. <br />For more information, see <a href="#logging-options">Logging Options</a>.</td></tr><tr><td valign="top">Create views or explore Drill sources.</td><td valign="top">Click <strong>Drill Explorer</strong>. <br />For more information, see <a href="/docs/using-drill-explorer-on-windows">Using Drill Explorer</a> to Browse Data and Create Views.</td></tr></tbody></table>
-  10. Click **OK** to save the DSN.
+    If you select Direct to Drillbit, provide the IP address or host name of the Drill server and the Drill listen port number, 31010 by default. Check the `drill-override.conf` file for any port changes.  
+9. In **Default Schema**, select the [default schema]({{site.baseurl}}/docs/configuring-connections-on-windows/#schema) to connect to.  
+10. Optionally, perform the following operations:  
+    * Update the [advanced properties]({{site.baseurl}}/docs/configuring-connections-on-windows/#advanced-properties) configuration.  
+    * Configure [logging options]({{site.baseurl}}/docs/configuring-connections-on-windows/#logging-options) to log types of events.  
+11. Click **OK** to save the DSN.
 
 ## Configuration Options
 

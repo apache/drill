@@ -12,10 +12,11 @@ Each computer where you install the driver must meet the following system
 requirements:
 
   * One of the following operating systems (32- and 64-bit editions are supported):
-    * Windows® Vista
+    * Windows® 8 and 8.1
     * Windows® 7 Professional
-    * Windows® Server 2008 R2
-  * .NET Framework 2.0 is required to run the Drill Explorer application.
+    * Windows® Server 2012, 2012 R2
+    * Windows® Server 2008, 2013 R2
+  * .NET Framework 4.5.2 is required to run the Drill Explorer application.
   * 60 MB of available disk space
   * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s). If not, create the following entry for the Drill node(s) in the `%WINDIR%\system32\drivers\etc\hosts` file:
     

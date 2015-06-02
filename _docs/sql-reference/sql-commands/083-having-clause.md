@@ -7,7 +7,7 @@ The HAVING clause filters group rows created by the GROUP BY clause. The HAVING 
 ## Syntax
 The HAVING clause supports the following syntax:  
 
-`[ HAVING  boolean_expression ]`  
+       HAVING  boolean_expression 
 
 ## Expression  
 A *boolean expression* can include one or more of the following operators:  

@@ -7,13 +7,10 @@ The OFFSET clause provides a way to skip a specified number of first rows in a r
 ## Syntax
 The OFFSET clause supports the following syntax:
 
-       [ OFFSET start { ROW | ROWS } ]
-
-Specifying ALL returns all records, which is equivalent to omitting the LIMIT clause from the SELECT statement.
+       OFFSET start { ROW | ROWS }
 
 ## Parameters
 *rows*  
-
 Specifies the number of rows Drill should skip before returning the result set. 
 
 ## Usage Notes  

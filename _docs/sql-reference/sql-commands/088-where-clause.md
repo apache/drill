@@ -28,11 +28,11 @@ A boolean expression can include one or more of the following operators:
 ## Examples
 The following query compares order totals where the states are California and New York:  
 
-       0: jdbc:drill:> select o1.cust_id, sum(o1.order_total) as ny_sales,
-       (select sum(o2.order_total) from hive.orders o2
-       where o1.cust_id=o2.cust_id and state='ca') as ca_sales
-       from hive.orders o1 where o1.state='ny' group by o1.cust_id
-       order by cust_id limit 20;
+       0: jdbc:drill:> SELECT o1.cust_id, sum(o1.order_total) AS ny_sales,
+       (SELECT SUM(o2.order_total) FROM hive.orders o2
+       WHERE o1.cust_id=o2.cust_id and state='ca') AS ca_sales
+       FROM hive.orders o1 WHERE o1.state='ny' GROUP BY o1.cust_id
+       ORDER BY cust_id LIMIT 20;
        +------------+------------+------------+
        |  cust_id   |  ny_sales  |  ca_sales  |
        +------------+------------+------------+

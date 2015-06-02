@@ -8,21 +8,21 @@ The LIMIT clause limits the result set to the specified number of rows. You can 
 ## Syntax
 The LIMIT clause supports the following syntax:  
 
-       [ LIMIT { count | ALL } ]
+       LIMIT { count | ALL }
 
 Specifying ALL returns all records, which is equivalent to omitting the LIMIT clause from the SELECT statement.
 
 ## Parameters
 *count*  
-
 Specifies the maximum number of rows to return.
 If the count expression evaluates to NULL, Drill treats it as LIMIT ALL. 
 
 ## Examples
 The following example query includes the ORDER BY and LIMIT clauses and returns the top 20 sales totals by month and state:  
 
-       0: jdbc:drill:> select `month`, state, sum(order_total) as sales from orders group by `month`, state
-       order by 3 desc limit 20;
+       0: jdbc:drill:> SELECT `month`, state, SUM(order_total)
+       AS sales FROM orders GROUP BY `month`, state
+       ORDER BY 3 DESC LIMIT 20;
        +------------+------------+------------+
        |   month    |   state    |   sales    |
        +------------+------------+------------+
