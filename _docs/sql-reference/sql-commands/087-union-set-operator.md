@@ -26,9 +26,10 @@ Any SELECT query that Drill supports. See SELECT.
 ## Examples
 The following example uses the UNION ALL set operator to combine click activity data before and after a marketing campaign. The data in the example exists in the `dfs.clicks workspace`.
  
-       0: jdbc:drill:> select t.trans_id transaction, t.user_info.cust_id customer from `clicks/clicks.campaign.json` t 
-       union all 
-       select u.trans_id, u.user_info.cust_id  from `clicks/clicks.json` u limit 5;
+       0: jdbc:drill:> SELECT t.trans_id transaction, t.user_info.cust_id customer 
+       FROM `clicks/clicks.campaign.json` t 
+       UNION ALL
+       SELECT u.trans_id, u.user_info.cust_id FROM `clicks/clicks.json` u LIMIT 5;
        +-------------+------------+
        | transaction |  customer  |
        +-------------+------------+
