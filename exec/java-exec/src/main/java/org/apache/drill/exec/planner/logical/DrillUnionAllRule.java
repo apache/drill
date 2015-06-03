@@ -34,17 +34,23 @@ import org.apache.calcite.util.trace.CalciteTrace;
 /**
  * Rule that converts a {@link LogicalUnion} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
  */
-public class DrillUnionRule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new DrillUnionRule();
+public class DrillUnionAllRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillUnionAllRule();
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
-  private DrillUnionRule() {
+  private DrillUnionAllRule() {
     super(RelOptHelper.any(LogicalUnion.class, Convention.NONE), "DrillUnionRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final LogicalUnion union = (LogicalUnion) call.rel(0);
+
+    // This rule applies to Union-All only
+    if(!union.all) {
+      return;
+    }
+
     final RelTraitSet traits = union.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final List<RelNode> convertedInputs = new ArrayList<>();
     for (RelNode input : union.getInputs()) {

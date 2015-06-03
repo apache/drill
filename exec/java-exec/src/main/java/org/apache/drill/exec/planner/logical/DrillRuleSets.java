@@ -28,6 +28,7 @@ import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
+import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
 
 import org.apache.calcite.rel.rules.FilterMergeRule;
@@ -121,6 +122,9 @@ public class DrillRuleSets {
     if (DRILL_BASIC_RULES == null) {
 
       DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
+      // Add support for Distinct Union (by using Union-All followed by Distinct)
+      UnionToDistinctRule.INSTANCE,
+
       // Add support for WHERE style joins.
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
@@ -165,7 +169,7 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE,
+      DrillUnionAllRule.INSTANCE,
       DrillValuesRule.INSTANCE
       )
       .build());
@@ -207,8 +211,6 @@ public class DrillRuleSets {
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
-
-    // ruleList.add(UnionDistinctPrule.INSTANCE);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

@@ -138,17 +138,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       throw new UnsupportedOperationException();
     }
 
-    // Disable unsupported Union
-    if(sqlCall.getKind() == SqlKind.UNION) {
-      SqlSetOperator op = (SqlSetOperator) sqlCall.getOperator();
-      if(!op.isAll()) {
-        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
-            sqlCall.getOperator().getName() + " is not supported\n" +
-            "See Apache Drill JIRA: DRILL-1921");
-        throw new UnsupportedOperationException();
-      }
-    }
-
     // Disable unsupported JOINs
     if(sqlCall.getKind() == SqlKind.JOIN) {
       SqlJoin join = (SqlJoin) sqlCall;

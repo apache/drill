@@ -77,24 +77,6 @@ public class TestDisabledFunctionality extends BaseTestQuery{
     }
   }
 
-  @Test(expected = UnsupportedRelOperatorException.class)  // see DRILL-1921
-  public void testDisabledUnion() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) UNION (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledUnionDistinct() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) UNION DISTINCT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledIntersect() throws Exception {
     try {
