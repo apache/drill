@@ -39,7 +39,14 @@ Includes one or more *table_references* and is typically followed by the WHERE, 
        Because Drill works with schema-less data sources, you cannot use positional aliases (1, 2, etc.) to refer to SELECT list columns, except in the ORDER BY clause.
 
    * *subquery*  
-   A query expression that evaluates to a table. The table exists only for the duration of the query and is typically given a name or alias, though an alias is not required. You can also define column names for tables that derive from subqueries. Naming column aliases is important when you want to join the results of subqueries to other tables and when you want to select or constrain those columns elsewhere in the query. A subquery may contain an ORDER BY clause, but this clause may have no effect if a LIMIT or OFFSET clause is not also specified.
+   A query expression that evaluates to a table. The table exists only for the duration of the query and is typically given a name or alias, though an alias is not required. You can also define column names for tables that derive from subqueries. Naming column aliases is important when you want to join the results of subqueries to other tables and when you want to select or constrain those columns elsewhere in the query. A subquery may contain an ORDER BY clause, but this clause may have no effect if a LIMIT or OFFSET clause is not also specified. You can use the following subquery operators in Drill queries. These operators all return Boolean results.  
+       * ALL  
+       * ANY  
+       * EXISTS  
+       * IN  
+       * SOME  
+      
+       In general, correlated subqueries are supported. EXISTS and NOT EXISTS subqueries that do not contain a correlation join are not yet supported.
 
    * *join_type*  
    Specifies one of the following join types:  
@@ -61,6 +68,23 @@ Return all of the rows that the equivalent inner join would return plus non-matc
 
 ## Usage Notes  
    * Joined columns must have comparable data types.
-   * A join with the ON syntax retains both joining columns in its intermediate result set.
+   * A join with the ON syntax retains both joining columns in its intermediate result set.  
 
+## Example  
+
+       0: jdbc:drill:zk=local> SELECT tbl1.id, tbl1.type 
+       FROM dfs.`/Users/brumsby/drill/donuts.json` 
+       AS tbl1
+       JOIN
+       dfs.`/Users/brumsby/drill/moredonuts.json` as tbl2
+       ON tbl1.id=tbl2.id;
+       
+       +------------+------------+
+       |     id     |    type    |
+       +------------+------------+
+       | 0001       | donut      |
+       +------------+------------+
+       
+       1 row selected (0.395 seconds)
+       
 

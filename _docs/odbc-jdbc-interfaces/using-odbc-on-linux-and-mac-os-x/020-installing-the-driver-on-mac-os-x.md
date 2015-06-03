@@ -64,8 +64,8 @@ libraries:
   * Installed iODBC driver manager libraries: libiodbc.dylib and libiodbcinst.dylib
   * Installed MapR Drill ODBC Driver for Drill shared libraries
 
-For example, if the iODBC driver manager using the DMG provided on the iODBC web site, libraries are installed in
-`/usr/local/iODBC/lib`, then set `DYLD_LIBRARY_PATH` to include that path and the path to the MapR Drill ODBC Driver. For example, use the following command to set the environment variable to both paths:
+If you installed the iODBC driver manager using the DMG, libraries are installed in
+`/usr/local/iODBC/lib`, set the `DYLD_LIBRARY_PATH` to include that path and the path to the MapR Drill ODBC Driver. For example, use the following command to set the environment variable to both paths:
 
 `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal`
 
