@@ -21,11 +21,11 @@ Verify that your system meets the following prerequisites before you start.
 
   * Mac OS X version 10.6.8 or later
   * 100 MB of available disk space
-  * iODBC 3.52.7 or above
+  * iODBC 3.52.7 or later
   * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).   
 If not, create the following entry in `/etc/hosts` for the Drill node(s):  
 `<drill-machine-IP> <drill-machine-hostname>`  
-Example: `127.0.1.1 apachedemo`
+Example: `127.0.0.1 localhost`
 
 To install the driver, you need Administrator privileges on the computer.
 
@@ -58,17 +58,16 @@ To install the driver, complete the following steps:
 
 ## Step 3: Updating the DYLD_LIBRARY_PATH Environment Variable
 
-The DYLD_LIBRARY_PATH environment variable must include paths to the following
+The Dynamic Link editor library path environment variable DYLD_LIBRARY_PATH must include paths to the following
 libraries:
 
-  * Installed ODBC driver manager libraries
+  * Installed iODBC driver manager libraries: libiodbc.dylib and libiodbcinst.dylib
   * Installed MapR Drill ODBC Driver for Drill shared libraries
 
-For example, if the ODBC driver manager libraries are installed in
-`/usr/local/lib`, then set `DYLD_LIBRARY_PATH` to the following:
+For example, if the iODBC driver manager using the DMG provided on the iODBC web site, libraries are installed in
+`/usr/local/iODBC/lib`, then set `DYLD_LIBRARY_PATH` to include that path and the path to the MapR Drill ODBC Driver. For example, use the following command to set the environment variable to both paths:
 
-`export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib:/opt/mapr/drillodb
-c/lib/universal`
+`export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal`
 
 #### Next Step
 

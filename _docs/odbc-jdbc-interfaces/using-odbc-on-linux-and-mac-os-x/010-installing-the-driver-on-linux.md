@@ -34,7 +34,7 @@ Verify that your system meets the system requirements before you start.
 If not, create the following entry in `/etc/hosts` for the Drill node(s):  
 
     `<drill-machine-IP> <drill-machine-hostname>`  
-    Example: `127.0.1.1 apachedemo`
+    Example: `127.0.0.1 localhost`
 
 To install the driver, you need Administrator privileges on the computer.
 
@@ -96,11 +96,11 @@ You can have both 32- and 64-bit versions of the driver installed at the same ti
 Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
 
 For example, if you are using a 64-bit client application and ODBC driver
-manager libraries are installed in` /usr/local/lib`, then set
+manager libraries are installed in `/usr/local/lib`, then set
 `LD_LIBRARY_PATH` as follows:  
+
 `export LD_LIBRARY_PATH=/usr/local/lib:/opt/simba/drillodbc/lib/64`  
-Refer to your Linux shell documentation for details on how to set environment
-variables permanently.
+
 
 #### Next Step
 

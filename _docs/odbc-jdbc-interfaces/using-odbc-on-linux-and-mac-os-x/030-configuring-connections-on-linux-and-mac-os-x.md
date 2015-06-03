@@ -10,44 +10,37 @@ on Linux or Mac OS X, you must update the following configuration files:
   * `odbcinst.ini`
   * `mapr.drillodbc.ini`
 
-You can locate the configuration files in your home directory, or in`
-/opt/mapr/drillobdc/Setup`.
+You can locate the configuration in `/opt/mapr/drillobdc/Setup`.
 
 {% include startnote.html %}The installer for the Mac OS X version of the driver creates a sample User DSN that some driver managers use in ~/Library/ODBC/odbc.ini and ~/.odbc.ini.{% include endnote.html %}
 
 To configure an ODBC connection for Linux or Mac OS X, complete the following
 steps:
 
-  * Step 1: Set Evironment Variables (Linux only)
+  * Step 1: Set Environment Variables (Linux only)
   * Step 2: Define the ODBC Data Sources in odbc.ini
   * Step 3: (Optional) Define the ODBC Driver in odbcinst.ini
   * Step 4: Configure the MapR Drill ODBC Driver
-
-Once you have completed the required steps, refer to [Testing the ODBC
-Connection on Linux and Mac OS X]({{ site.baseurl }}/docs/testing-the-odbc-connection).
 
 ## Sample Configuration Files
 
 The driver installation contains sample configuration files in the ~/`Setup`
 directory that you can use as a reference.
 
-The sample files appear in the directory listings by default because the
-filenames do not begin with a (.) Filenames that begin with a (.) are hidden.
-If the default location is used for `odbc.ini` and `odbcinst.ini`, file names
-must begin with a period (.). For `mapr.drillodbc.ini`, the file name must
-begin with a (.) and must reside in your home directory.
-
 If the configuration files do not already exist in your home directory, copy
-the sample configuration files to that directory and rename them. If the
-configuration files already exist in your home directory, you can use the
-sample configuration files as a guide for modifying the existing configuration
-files.
+the sample configuration files to that directory and rename them as hidden files:
+
+* .mapr.drillodbc.ini
+* .odbc.ini
+* .odbcinst.ini
+
+If the configuration files already exist in your home directory, you can use the sample configuration files as a guide for modifying the existing configuration files.
 
 ----------
 
-## Step 1: Set Evironment Variables (Linux only)
+## Step 1: Set Environment Variables (Linux only)
 
-You must set the following environment variables to point to the` odbc.ini`
+Set the following environment variables to point to the` odbc.ini`
 and `mapr.drillodbc.ini `configuration files, respectively:
 
   * `ODBCINI` (point to `odbc.ini`)
