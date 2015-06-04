@@ -61,4 +61,4 @@ steps:
 
 ## Querying Compressed Files
 
-You can query compressed GZfiles, such as JSON and CSV, as well as uncompressed files having the .json extension. The file extension specified in the `formats . . . extensions` property of the storage plugin must precede the gz extension in the GZ file name. For example, `proddata.json.gz` or `mydata.csv.gz` are valid file names to use in a query, as shown in the example in ["Querying the GZ File Directly"]({{site.baseurl"}}/docs/querying-plain-text-files/#query-the-gz-file-directly).
+You can query compressed GZ files, such as JSON and CSV, as well as uncompressed files having the .json extension. The file extension specified in the `formats . . . extensions` property of the storage plugin must precede the gz extension in the file name. For example, `proddata.json.gz` or `mydata.csv.gz` are valid file names to use in a query, as shown in the example in ["Querying the GZ File Directly"]({{site.baseurl"}}/docs/querying-plain-text-files/#query-the-gz-file-directly).
