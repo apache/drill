@@ -59,35 +59,35 @@ public class Records {
       this.TABLE_NAME = tableName;
 
       this.COLUMN_NAME = field.getName();
-      RelDataType type = field.getType();
-      SqlTypeName sqlType = type.getSqlTypeName();
+      final RelDataType relDataType = field.getType();
+      final SqlTypeName sqlTypeName = relDataType.getSqlTypeName();
 
       this.ORDINAL_POSITION = field.getIndex();
-      this.IS_NULLABLE = type.isNullable() ? "YES" : "NO";
+      this.IS_NULLABLE = relDataType.isNullable() ? "YES" : "NO";
 
-      if (sqlType == SqlTypeName.ARRAY || sqlType == SqlTypeName.MAP || sqlType == SqlTypeName.ROW) {
+      if (sqlTypeName == SqlTypeName.ARRAY || sqlTypeName == SqlTypeName.MAP || sqlTypeName == SqlTypeName.ROW) {
         // For complex types use SqlTypeName's toString method to display the
         // inside elements.
-        String typeString = type.toString();
+        String typeString = relDataType.toString();
 
         // RelDataType.toString prints "RecordType" for "STRUCT".
-        this.DATA_TYPE = type.toString().replace("RecordType", "STRUCT");
+        this.DATA_TYPE = relDataType.toString().replace("RecordType", "STRUCT");
       } else {
-        this.DATA_TYPE = sqlType.toString();
+        this.DATA_TYPE = sqlTypeName.toString();
       }
 
-      this.NUMERIC_PRECISION_RADIX = (sqlType == SqlTypeName.DECIMAL) ? 10 : -1; // TODO: where do we get radix?
+      this.NUMERIC_PRECISION_RADIX = (sqlTypeName == SqlTypeName.DECIMAL) ? 10 : -1; // TODO: where do we get radix?
 
-      if (sqlType == SqlTypeName.VARCHAR) {
+      if (sqlTypeName == SqlTypeName.VARCHAR) {
         // Max length is stored as precision in Optiq.
-        this.CHARACTER_MAXIMUM_LENGTH = (sqlType.allowsPrec()) ? type.getPrecision() : -1;
+        this.CHARACTER_MAXIMUM_LENGTH = (sqlTypeName.allowsPrec()) ? relDataType.getPrecision() : -1;
         this.NUMERIC_PRECISION = -1;
       } else {
         this.CHARACTER_MAXIMUM_LENGTH = -1;
-        this.NUMERIC_PRECISION = (sqlType.allowsPrec()) ? type.getPrecision() : -1;
+        this.NUMERIC_PRECISION = (sqlTypeName.allowsPrec()) ? relDataType.getPrecision() : -1;
       }
 
-      this.NUMERIC_SCALE = (sqlType.allowsScale())?type.getScale(): -1;
+      this.NUMERIC_SCALE = (sqlTypeName.allowsScale())?relDataType.getScale(): -1;
     }
   }
 

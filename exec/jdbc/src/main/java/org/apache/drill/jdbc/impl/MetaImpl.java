@@ -57,21 +57,23 @@ class MetaImpl implements Meta {
   /** (Maximum) precision of BIGINT. */
   private static final int PREC_BIGINT   = 19;
 
+  /** Precision of REAL. */
+  // TEMPORARY partial change (corrected to 7 in Part 2):
+  private static final int PREC_REAL   = 15;
   /** Precision of FLOAT. */
   private static final int PREC_FLOAT  =  7;
   /** Precision of DOUBLE. */
   private static final int PREC_DOUBLE = 15;
-  /** Precision of REAL. */
-  private static final int PREC_REAL   = PREC_DOUBLE;
 
   /** Scale of INTEGER types. */
   private static final int SCALE_INTEGRAL = 0;
+  // TEMPORARY partial change (corrected to 7 in Part 2):
+  /** JDBC conventional(?) scale value for REAL. */
+  private static final int SCALE_REAL = 15;
   /** JDBC conventional(?) scale value for FLOAT. */
   private static final int SCALE_FLOAT = 7;
   /** JDBC conventional(?) scale value for DOUBLE. */
   private static final int SCALE_DOUBLE = 15;
-  /** JDBC conventional(?) scale value for REAL. */
-  private static final int SCALE_REAL = SCALE_DOUBLE;
 
   /** (Apparent) maximum precision for starting unit of INTERVAL type. */
   private static final int PREC_INTERVAL_LEAD_MAX = 10;
@@ -360,9 +362,9 @@ class MetaImpl implements Meta {
         //   NUM_PREC_RADIX coordinated)?  INFORMATION_SCHEMA.COLUMNS's value
         //   are supposed to be in bits (per the SQL spec.).  What does JDBC
         //   require and allow?
+        + "\n    WHEN 'REAL'                         THEN " + PREC_REAL
         + "\n    WHEN 'FLOAT'                        THEN " + PREC_FLOAT
         + "\n    WHEN 'DOUBLE'                       THEN " + PREC_DOUBLE
-        + "\n    WHEN 'REAL'                         THEN " + PREC_REAL
 
         // "For character data, ... the length in characters":
         // TODO:  BUG:  DRILL-2459:  For CHARACTER / CHAR, length is not in
@@ -430,9 +432,9 @@ class MetaImpl implements Meta {
         + "\n         'BIGINT'                       THEN " + SCALE_INTEGRAL
         + "\n    WHEN 'DECIMAL', "
         + "\n         'NUMERIC'                      THEN NUMERIC_SCALE "
+        + "\n    WHEN 'REAL'                         THEN " + SCALE_REAL
         + "\n    WHEN 'FLOAT'                        THEN " + SCALE_FLOAT
         + "\n    WHEN 'DOUBLE'                       THEN " + SCALE_DOUBLE
-        + "\n    WHEN 'REAL'                         THEN " + SCALE_REAL
         + "\n    WHEN 'INTERVAL'                     THEN NUMERIC_SCALE "
         + "\n    WHEN 'INTERVAL_YEAR_MONTH'          THEN 0 "
         + "\n    WHEN 'INTERVAL_DAY_TIME'            THEN NUMERIC_SCALE "
@@ -446,9 +448,9 @@ class MetaImpl implements Meta {
         + "\n         'BIGINT'                       THEN " + RADIX_INTEGRAL
         + "\n    WHEN 'DECIMAL', "
         + "\n         'NUMERIC'                      THEN " + RADIX_DECIMAL
-        + "\n    WHEN 'FLOAT', "
-        + "\n         'DOUBLE', "
-        + "\n         'REAL'                         THEN " + RADIX_APPROXIMATE
+        + "\n    WHEN 'REAL', "
+        + "\n         'FLOAT', "
+        + "\n         'DOUBLE'                       THEN " + RADIX_APPROXIMATE
         + "\n    WHEN 'INTERVAL_YEAR_MONTH', "
         + "\n         'INTERVAL_DAY_TIME'            THEN " + RADIX_INTERVAL
         + "\n    ELSE                                     NULL"
