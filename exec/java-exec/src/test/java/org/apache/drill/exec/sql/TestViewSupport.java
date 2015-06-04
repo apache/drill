@@ -66,8 +66,8 @@ public class TestViewSupport extends TestBaseViewSupport {
           .unOrdered()
           .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
           .baselineValues("cust_id", "BIGINT", "YES")
-          .baselineValues("fname", "VARCHAR", "YES")
-          .baselineValues("country", "VARCHAR", "YES")
+          .baselineValues("fname", "CHARACTER VARYING", "YES")
+          .baselineValues("country", "CHARACTER VARYING", "YES")
           .go();
 
       testBuilder()
@@ -454,7 +454,7 @@ public class TestViewSupport extends TestBaseViewSupport {
           .unOrdered()
           .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
           .baselineValues("id", "INTEGER", "YES")
-          .baselineValues("name", "VARCHAR", "YES")
+          .baselineValues("name", "CHARACTER VARYING", "YES")
           .baselineValues("bday", "DATE", "YES")
           .go();
     } finally {

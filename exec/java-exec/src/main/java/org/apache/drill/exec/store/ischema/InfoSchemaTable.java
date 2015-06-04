@@ -89,6 +89,8 @@ public abstract class InfoSchemaTable {
 
   /** Layout for the CATALOGS table. */
   static public class Catalogs extends InfoSchemaTable {
+    // NOTE:  Nothing seems to verify that the types here (apparently used
+    // by SQL validation) match the types of the fields in Records.Catalogs).
     private static final List<Field> fields = ImmutableList.of(
         Field.create(CATS_COL_CATALOG_NAME, VARCHAR),
         Field.create(CATS_COL_CATALOG_DESCRIPTION, VARCHAR),
@@ -106,6 +108,8 @@ public abstract class InfoSchemaTable {
 
   /** Layout for the SCHEMATA table. */
   public static class Schemata extends InfoSchemaTable {
+    // NOTE:  Nothing seems to verify that the types here (apparently used
+    // by SQL validation) match the types of the fields in Records.Schemata).
     private static final List<Field> fields = ImmutableList.of(
         Field.create(SCHS_COL_CATALOG_NAME, VARCHAR),
         Field.create(SCHS_COL_SCHEMA_NAME, VARCHAR),
@@ -125,6 +129,8 @@ public abstract class InfoSchemaTable {
 
   /** Layout for the TABLES table. */
   public static class Tables extends InfoSchemaTable {
+    // NOTE:  Nothing seems to verify that the types here (apparently used
+    // by SQL validation) match the types of the fields in Records.Tables).
     private static final List<Field> fields = ImmutableList.of(
         Field.create(SHRD_COL_TABLE_CATALOG, VARCHAR),
         Field.create(SHRD_COL_TABLE_SCHEMA, VARCHAR),
@@ -143,6 +149,8 @@ public abstract class InfoSchemaTable {
 
   /** Layout for the VIEWS table. */
   static public class Views extends InfoSchemaTable {
+    // NOTE:  Nothing seems to verify that the types here (apparently used
+    // by SQL validation) match the types of the fields in Records.Views).
     private static final List<Field> fields = ImmutableList.of(
         Field.create(SHRD_COL_TABLE_CATALOG, VARCHAR),
         Field.create(SHRD_COL_TABLE_SCHEMA, VARCHAR),
@@ -161,18 +169,45 @@ public abstract class InfoSchemaTable {
 
   /** Layout for the COLUMNS table. */
   public static class Columns extends InfoSchemaTable {
+    // COLUMNS columns, from SQL standard:
+    // 1. TABLE_CATALOG
+    // 2. TABLE_SCHEMA
+    // 3. TABLE_NAME
+    // 4. COLUMN_NAME
+    // 5. ORDINAL_POSITION
+    // 6. COLUMN_DEFAULT
+    // 7. IS_NULLABLE
+    // 8. DATA_TYPE
+    // 9. CHARACTER_MAXIMUM_LENGTH
+    // 10. CHARACTER_OCTET_LENGTH
+    // 11. NUMERIC_PRECISION
+    // 12. NUMERIC_PRECISION_RADIX
+    // 13. NUMERIC_SCALE
+    // 14. DATETIME_PRECISION
+    // 15. INTERVAL_TYPE
+    // 16. INTERVAL_PRECISION
+    // 17. CHARACTER_SET_CATALOG ...
+
+    // NOTE:  Nothing seems to verify that the types here (apparently used
+    // by SQL validation) match the types of the fields in Records.Columns).
     private static final List<Field> fields = ImmutableList.of(
         Field.create(SHRD_COL_TABLE_CATALOG, VARCHAR),
         Field.create(SHRD_COL_TABLE_SCHEMA, VARCHAR),
         Field.create(SHRD_COL_TABLE_NAME, VARCHAR),
         Field.create(COLS_COL_COLUMN_NAME, VARCHAR),
         Field.create(COLS_COL_ORDINAL_POSITION, INT),
+        Field.create(COLS_COL_COLUMN_DEFAULT, VARCHAR),
         Field.create(COLS_COL_IS_NULLABLE, VARCHAR),
         Field.create(COLS_COL_DATA_TYPE, VARCHAR),
         Field.create(COLS_COL_CHARACTER_MAXIMUM_LENGTH, INT),
+        Field.create(COLS_COL_CHARACTER_OCTET_LENGTH, INT),
+        Field.create(COLS_COL_NUMERIC_PRECISION, INT),
         Field.create(COLS_COL_NUMERIC_PRECISION_RADIX, INT),
         Field.create(COLS_COL_NUMERIC_SCALE, INT),
-        Field.create(COLS_COL_NUMERIC_PRECISION, INT));
+        Field.create(COLS_COL_DATETIME_PRECISION, INT),
+        Field.create(COLS_COL_INTERVAL_TYPE, VARCHAR),
+        Field.create(COLS_COL_INTERVAL_PRECISION, INT)
+        );
 
     public Columns() {
       super(TAB_COLUMNS, fields);

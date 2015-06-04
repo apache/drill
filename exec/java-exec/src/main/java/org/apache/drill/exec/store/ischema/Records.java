@@ -18,9 +18,13 @@
 
 package org.apache.drill.exec.store.ischema;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class Records {
 
@@ -41,18 +45,32 @@ public class Records {
 
   /** Pojo object for a record in INFORMATION_SCHEMA.COLUMNS */
   public static class Column {
+    private static final Logger logger = getLogger( Column.class );
+
+    // TODO:  Resolve:  Do we have such a constant elsewhere?  If so, use it.
+    // If not, where should this really live?:
+    private static final int MAX_UTF8_BYTES_PER_CHARACTER = 4;
+
     public final String TABLE_CATALOG;
     public final String TABLE_SCHEMA;
     public final String TABLE_NAME;
     public final String COLUMN_NAME;
     public final int ORDINAL_POSITION;
+    public final String COLUMN_DEFAULT;
     public final String IS_NULLABLE;
     public final String DATA_TYPE;
-    public final int CHARACTER_MAXIMUM_LENGTH;
-    public final int NUMERIC_PRECISION_RADIX;
-    public final int NUMERIC_SCALE;
-    public final int NUMERIC_PRECISION;
+    public final Integer CHARACTER_MAXIMUM_LENGTH;
+    public final Integer CHARACTER_OCTET_LENGTH;
+    public final Integer NUMERIC_PRECISION;
+    public final Integer NUMERIC_PRECISION_RADIX;
+    public final Integer NUMERIC_SCALE;
+    public final Integer DATETIME_PRECISION;
+    public final String INTERVAL_TYPE;
+    public final Integer INTERVAL_PRECISION;
 
+    // See:
+    // - ISO/IEC 9075-11:2011(E) 5.21 COLUMNS view
+    // - ISO/IEC 9075-11:2011(E) 6.22 DATA_TYPE_DESCRIPTOR base table
     public Column(String catalog, String schemaName, String tableName, RelDataTypeField field) {
       this.TABLE_CATALOG = catalog;
       this.TABLE_SCHEMA = schemaName;
@@ -60,34 +78,227 @@ public class Records {
 
       this.COLUMN_NAME = field.getName();
       final RelDataType relDataType = field.getType();
+
+      // (Like SQL data type names, but not standard ones.)
       final SqlTypeName sqlTypeName = relDataType.getSqlTypeName();
 
-      this.ORDINAL_POSITION = field.getIndex();
+      // Get 1-based column ordinal position from 0-based field/column index:
+      this.ORDINAL_POSITION = 1 + field.getIndex();
+
+      this.COLUMN_DEFAULT = null;
       this.IS_NULLABLE = relDataType.isNullable() ? "YES" : "NO";
 
-      if (sqlTypeName == SqlTypeName.ARRAY || sqlTypeName == SqlTypeName.MAP || sqlTypeName == SqlTypeName.ROW) {
-        // For complex types use SqlTypeName's toString method to display the
-        // inside elements.
-        String typeString = relDataType.toString();
-
-        // RelDataType.toString prints "RecordType" for "STRUCT".
-        this.DATA_TYPE = relDataType.toString().replace("RecordType", "STRUCT");
-      } else {
-        this.DATA_TYPE = sqlTypeName.toString();
+      switch ( sqlTypeName ) {
+        // 1. SqlTypeName enumerators whose names (currently) match SQL's values
+        //    for DATA_TYPE (those which have been seen in tests and verified):
+        case BOOLEAN:
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case BIGINT:
+        case DECIMAL:
+        case FLOAT:
+        case REAL:
+        case DOUBLE:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
+        //   INTERVAL_YEAR_MONTH - Not identical; see below.
+        //   INTERVAL_DAY_TIME   - Not identical; see below.
+        //   CHAR                - Not identical; see below.
+        //   VARCHAR             - Not identical; see below.
+        case BINARY:
+        //   VARBINARY           - Not identical; see below.
+        // TODO(DRILL-3253): Update these once we have test plugin supporting
+        // all needed types:
+        //   NULL        - Not seen/explicitly addressed.
+        //   ANY         -  " "
+        //   SYMBOL      -  " "
+        //   MULTISET    -  " "
+        case ARRAY:
+        case MAP:
+        //   DISTINCT    - Not seen/explicitly addressed.
+        //   STRUCTURED  -  " "
+        //   ROW         -  " "
+        //   OTHER       -  " "
+        //   CURSOR      -  " "
+        //   COLUMN_LIST -  " "
+          this.DATA_TYPE = sqlTypeName.name();
+          break;
+        // 2.  SqlTypeName enumerators whose names (currently) do not match SQL's
+        //     values for DATA_TYPE:
+        case CHAR:                this.DATA_TYPE = "CHARACTER";         break;
+        case VARCHAR:             this.DATA_TYPE = "CHARACTER VARYING"; break;
+        case VARBINARY:           this.DATA_TYPE = "BINARY VARYING";    break;
+        case INTERVAL_YEAR_MONTH: this.DATA_TYPE = "INTERVAL";          break;
+        case INTERVAL_DAY_TIME:   this.DATA_TYPE = "INTERVAL";          break;
+        // 3:  SqlTypeName enumerators not yet seen and confirmed or handled.
+        default:
+          logger.warn( "Type not handled explicitly (code needs review): "
+                       + sqlTypeName );
+          this.DATA_TYPE = sqlTypeName.toString();
+          break;
       }
 
-      this.NUMERIC_PRECISION_RADIX = (sqlTypeName == SqlTypeName.DECIMAL) ? 10 : -1; // TODO: where do we get radix?
+      // Note: The branches are in the same order as SQL constraint
+      // DATA_TYPE_DESCRIPTOR_DATA_TYPE_CHECK_COMBINATIONS.
+      switch ( sqlTypeName ) {
+        case CHAR:
+        case VARCHAR:
+          this.CHARACTER_MAXIMUM_LENGTH = relDataType.getPrecision();
+          if ( this.CHARACTER_MAXIMUM_LENGTH
+              < Integer.MAX_VALUE / MAX_UTF8_BYTES_PER_CHARACTER ) {
+            this.CHARACTER_OCTET_LENGTH =
+                this.CHARACTER_MAXIMUM_LENGTH * MAX_UTF8_BYTES_PER_CHARACTER;
+          }
+          else {
+            this.CHARACTER_OCTET_LENGTH = Integer.MAX_VALUE;
+          }
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case BINARY:
+        case VARBINARY:
+          this.CHARACTER_MAXIMUM_LENGTH = relDataType.getPrecision();
+          this.CHARACTER_OCTET_LENGTH = this.CHARACTER_MAXIMUM_LENGTH;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case BIGINT:
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          // This NUMERIC_PRECISION is in bits since NUMERIC_PRECISION_RADIX is 2.
+          switch ( sqlTypeName ) {
+            case TINYINT:  NUMERIC_PRECISION =  8; break;
+            case SMALLINT: NUMERIC_PRECISION = 16; break;
+            case INTEGER:  NUMERIC_PRECISION = 32; break;
+            case BIGINT:   NUMERIC_PRECISION = 64; break;
+            default:
+              throw new AssertionError(
+                  "Unexpected " + sqlTypeName.getClass().getName() + " value "
+                  + sqlTypeName );
+              //break;
+          }
+          this.NUMERIC_PRECISION_RADIX = 2;
+          this.NUMERIC_SCALE = 0;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case DECIMAL:
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          // This NUMERIC_PRECISION is in decimal digits since
+          // NUMERIC_PRECISION_RADIX is 10.
+          this.NUMERIC_PRECISION = relDataType.getPrecision();
+          this.NUMERIC_PRECISION_RADIX = 10;
+          this.NUMERIC_SCALE = relDataType.getScale();
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case REAL:
+        case FLOAT:
+        case DOUBLE:
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          // This NUMERIC_PRECISION is in bits since NUMERIC_PRECISION_RADIX is 2.
+          switch ( sqlTypeName ) {
+            case REAL:   NUMERIC_PRECISION = 24; break;
+            case FLOAT:  NUMERIC_PRECISION = 24; break;
+            case DOUBLE: NUMERIC_PRECISION = 53; break;
+            default:
+              throw new AssertionError(
+                  "Unexpected type " + sqlTypeName + " in approximate-types branch" );
+              //break;
+          }
+          this.NUMERIC_PRECISION_RADIX = 2;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          // TODO:  Resolve whether this gets _SQL_-defined precision.
+          // (RelDataType.getPrecision()'s doc. says "JDBC-defined
+          // precision.")
+          this.DATETIME_PRECISION = relDataType.getPrecision();
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+          break;
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_DAY_TIME:
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.NUMERIC_SCALE = null;
+          switch ( sqlTypeName ) {
+            case INTERVAL_YEAR_MONTH:
+              // NOTE:  Apparently can't get use RelDataType, etc.; it seems to
+              // apply a default fractional seconds precision of 6 for SECOND,
+              // even though SECOND does not exist for this case.
+              this.DATETIME_PRECISION = 0;
+              break;
+            case INTERVAL_DAY_TIME:
+              this.DATETIME_PRECISION =
+                  relDataType
+                  .getIntervalQualifier()
+                  .getFractionalSecondPrecision(
+                      DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM );
+              break;
+            default:
+              throw new AssertionError(
+                  "Unexpected type " + sqlTypeName + " in interval-types branch" );
+              //break;
+          }
+          {
+            final TimeUnit start = relDataType.getIntervalQualifier().getStartUnit();
+            final TimeUnit end = relDataType.getIntervalQualifier().getEndUnit();
+            // NOTE: getEndUnit() returns null instead of YEAR for "INTERVAL YEAR".
+            if ( start == end || null == end ) {
+              this.INTERVAL_TYPE = start.name();
+            }
+            else {
+              this.INTERVAL_TYPE = start + " TO " + end;
+            }
+          }
+          this.INTERVAL_PRECISION =
+              relDataType
+              .getIntervalQualifier()
+              .getStartPrecision(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
+          break;
 
-      if (sqlTypeName == SqlTypeName.VARCHAR) {
-        // Max length is stored as precision in Optiq.
-        this.CHARACTER_MAXIMUM_LENGTH = (sqlTypeName.allowsPrec()) ? relDataType.getPrecision() : -1;
-        this.NUMERIC_PRECISION = -1;
-      } else {
-        this.CHARACTER_MAXIMUM_LENGTH = -1;
-        this.NUMERIC_PRECISION = (sqlTypeName.allowsPrec()) ? relDataType.getPrecision() : -1;
+        default:
+          this.NUMERIC_PRECISION_RADIX = null;
+          this.CHARACTER_MAXIMUM_LENGTH = null;
+          this.CHARACTER_OCTET_LENGTH = null;
+          this.NUMERIC_PRECISION = null;
+          this.NUMERIC_SCALE = null;
+          this.DATETIME_PRECISION = null;
+          this.INTERVAL_TYPE = null;
+          this.INTERVAL_PRECISION = null;
+        break;
       }
 
-      this.NUMERIC_SCALE = (sqlTypeName.allowsScale())?relDataType.getScale(): -1;
     }
   }
 

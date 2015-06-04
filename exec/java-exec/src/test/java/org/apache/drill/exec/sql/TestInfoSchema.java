@@ -153,9 +153,9 @@ public class TestInfoSchema extends BaseTestQuery {
         .unOrdered()
         .optionSettingQueriesForTestQuery("USE INFORMATION_SCHEMA")
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("CATALOG_NAME", "VARCHAR", "NO")
-        .baselineValues("CATALOG_DESCRIPTION", "VARCHAR", "NO")
-        .baselineValues("CATALOG_CONNECT", "VARCHAR", "NO")
+        .baselineValues("CATALOG_NAME", "CHARACTER VARYING", "NO")
+        .baselineValues("CATALOG_DESCRIPTION", "CHARACTER VARYING", "NO")
+        .baselineValues("CATALOG_CONNECT", "CHARACTER VARYING", "NO")
         .go();
   }
 
@@ -165,10 +165,10 @@ public class TestInfoSchema extends BaseTestQuery {
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("TABLE_CATALOG", "VARCHAR", "NO")
-        .baselineValues("TABLE_SCHEMA", "VARCHAR", "NO")
-        .baselineValues("TABLE_NAME", "VARCHAR", "NO")
-        .baselineValues("TABLE_TYPE", "VARCHAR", "NO")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
         .go();
   }
 
@@ -190,10 +190,10 @@ public class TestInfoSchema extends BaseTestQuery {
           .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
           .unOrdered()
           .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-          .baselineValues("TABLE_CATALOG", "VARCHAR", "NO")
-          .baselineValues("TABLE_SCHEMA", "VARCHAR", "NO")
-          .baselineValues("TABLE_NAME", "VARCHAR", "NO")
-          .baselineValues("TABLE_TYPE", "VARCHAR", "NO")
+          .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
           .go();
     } finally {
       test("DROP VIEW dfs_test.tmp.`TABLES`");
@@ -207,7 +207,7 @@ public class TestInfoSchema extends BaseTestQuery {
         .unOrdered()
         .optionSettingQueriesForTestQuery("USE INFORMATION_SCHEMA")
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("TABLE_CATALOG", "VARCHAR", "NO")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
         .go();
   }
 
@@ -217,7 +217,7 @@ public class TestInfoSchema extends BaseTestQuery {
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("TABLE_CATALOG", "VARCHAR", "NO")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
         .go();
   }
 
@@ -228,9 +228,9 @@ public class TestInfoSchema extends BaseTestQuery {
         .unOrdered()
         .optionSettingQueriesForTestQuery("USE INFORMATION_SCHEMA")
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("TABLE_CATALOG", "VARCHAR", "NO")
-        .baselineValues("TABLE_SCHEMA", "VARCHAR", "NO")
-        .baselineValues("TABLE_NAME", "VARCHAR", "NO")
+        .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
         .go();
   }
 
@@ -240,8 +240,8 @@ public class TestInfoSchema extends BaseTestQuery {
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.SCHEMATA 'SCHEMA%'")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("SCHEMA_NAME", "VARCHAR", "NO")
-        .baselineValues("SCHEMA_OWNER", "VARCHAR", "NO")
+        .baselineValues("SCHEMA_NAME", "CHARACTER VARYING", "NO")
+        .baselineValues("SCHEMA_OWNER", "CHARACTER VARYING", "NO")
         .go();
   }
 

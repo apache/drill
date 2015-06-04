@@ -35,50 +35,19 @@ import org.apache.drill.common.util.DrillStringUtils;
 class MetaImpl implements Meta {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetaImpl.class);
 
-  // TODO:  Use more central version of these constants if availabe.
+  // TODO:  Use more central version of these constants if available.
 
-  /** Radix used to report precision and scale of integral exact numeric types. */
-  private static final int RADIX_INTEGRAL = 10;
-  /** Radix used to report precision and scale of non-integral exact numeric
-      types (DECIMAL). */
-  private static final int RADIX_DECIMAL = 10;
-  /** Radix used to report precision and scale of approximate numeric types
-      (FLOAT, etc.). */
-  private static final int RADIX_APPROXIMATE = 10;
+  /** JDBC conventional(?) number of fractional decimal digits for REAL. */
+  private static final int DECIMAL_DIGITS_REAL = 7;
+  /** JDBC conventional(?) number of fractional decimal digits for FLOAT. */
+  private static final int DECIMAL_DIGITS_FLOAT = DECIMAL_DIGITS_REAL;
+  /** JDBC conventional(?) number of fractional decimal digits for DOUBLE. */
+  private static final int DECIMAL_DIGITS_DOUBLE = 15;
+
+  /** Radix used to report precisions of "datetime" types. */
+  private static final int RADIX_DATETIME = 10;
   /** Radix used to report precisions of interval types. */
   private static final int RADIX_INTERVAL = 10;
-
-  /** (Maximum) precision of TINYINT. */
-  private static final int PREC_TINYINT  = 3;
-  /** (Maximum) precision of SMALLINT. */
-  private static final int PREC_SMALLINT = 5;
-  /** (Maximum) precision of INTEGER. */
-  private static final int PREC_INTEGER  = 10;
-  /** (Maximum) precision of BIGINT. */
-  private static final int PREC_BIGINT   = 19;
-
-  /** Precision of REAL. */
-  // TEMPORARY partial change (corrected to 7 in Part 2):
-  private static final int PREC_REAL   = 15;
-  /** Precision of FLOAT. */
-  private static final int PREC_FLOAT  =  7;
-  /** Precision of DOUBLE. */
-  private static final int PREC_DOUBLE = 15;
-
-  /** Scale of INTEGER types. */
-  private static final int SCALE_INTEGRAL = 0;
-  // TEMPORARY partial change (corrected to 7 in Part 2):
-  /** JDBC conventional(?) scale value for REAL. */
-  private static final int SCALE_REAL = 15;
-  /** JDBC conventional(?) scale value for FLOAT. */
-  private static final int SCALE_FLOAT = 7;
-  /** JDBC conventional(?) scale value for DOUBLE. */
-  private static final int SCALE_DOUBLE = 15;
-
-  /** (Apparent) maximum precision for starting unit of INTERVAL type. */
-  private static final int PREC_INTERVAL_LEAD_MAX = 10;
-  /** (Apparent) maximum fractional seconds precision for INTERVAL type. */
-  private static final int PREC_INTERVAL_TRAIL_MAX = 9;
 
 
   final DrillConnectionImpl connection;
@@ -199,19 +168,21 @@ class MetaImpl implements Meta {
         + "\n  CASE DATA_TYPE "
         // (All values in JDBC 4.0/Java 7 java.sql.Types except for types.NULL:)
 
-        // Exact-match cases:
+        + "\n    WHEN 'ARRAY'                       THEN " + Types.ARRAY
+
         + "\n    WHEN 'BIGINT'                      THEN " + Types.BIGINT
         + "\n    WHEN 'BINARY'                      THEN " + Types.BINARY
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'BIT'                         THEN " + Types.BIT
+        + "\n    WHEN 'BINARY LARGE OBJECT'         THEN " + Types.BLOB
+        + "\n    WHEN 'BINARY VARYING'              THEN " + Types.VARBINARY
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'BLOB', 'BINARY LARGE OBJECT' THEN " + Types.BLOB
+        + "\n    WHEN 'BIT'                         THEN " + Types.BIT
         + "\n    WHEN 'BOOLEAN'                     THEN " + Types.BOOLEAN
 
-        + "\n    WHEN 'CHAR', 'CHARACTER'           THEN " + Types.CHAR
+        + "\n    WHEN 'CHARACTER'                   THEN " + Types.CHAR
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'CLOB', 'CHARACTER LARGE OBJECT' "
-        + "\n                                       THEN " + Types.CLOB
+        + "\n    WHEN 'CHARACTER LARGE OBJECT'      THEN " + Types.CLOB
+        + "\n    WHEN 'CHARACTER VARYING'           THEN " + Types.VARCHAR
 
         // Resolve:  Not seen in Drill yet.  Can it appear?:
         + "\n    WHEN 'DATALINK'                    THEN " + Types.DATALINK
@@ -224,13 +195,7 @@ class MetaImpl implements Meta {
         + "\n    WHEN 'FLOAT'                       THEN " + Types.FLOAT
 
         + "\n    WHEN 'INTEGER'                     THEN " + Types.INTEGER
-
-        // Drill's INFORMATION_SCHEMA's COLUMNS currently has
-        // "INTERVAL_YEAR_MONTH" and "INTERVAL_DAY_TIME" instead of SQL standard
-        // 'INTERVAL'.
-        + "\n    WHEN 'INTERVAL', "
-        + "\n         'INTERVAL_YEAR_MONTH', "
-        + "\n         'INTERVAL_DAY_TIME'           THEN " + Types.OTHER
+        + "\n    WHEN 'INTERVAL'                    THEN " + Types.OTHER
 
         // Resolve:  Not seen in Drill yet.  Can it ever appear?:
         + "\n    WHEN 'JAVA_OBJECT'                 THEN " + Types.JAVA_OBJECT
@@ -242,10 +207,12 @@ class MetaImpl implements Meta {
         // Resolve:  Not seen in Drill yet.  Can it appear?:
         + "\n    WHEN 'LONGVARCHAR'                 THEN " + Types.LONGVARCHAR
 
+        + "\n    WHEN 'MAP'                         THEN " + Types.OTHER
+
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'NCHAR', 'NATIONAL CHARACTER' THEN " + Types.NCHAR
+        + "\n    WHEN 'NATIONAL CHARACTER'          THEN " + Types.NCHAR
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'NCLOB', 'NATIONAL CHARACTER LARGE OBJECT' "
+        + "\n    WHEN 'NATIONAL CHARACTER LARGE OBJECT' "
         + "\n                                       THEN " + Types.NCLOB
         // TODO:  Resolve following about NULL (and then update comment and code):
         // It is not clear whether Types.NULL can represent a type (perhaps the
@@ -256,16 +223,14 @@ class MetaImpl implements Meta {
         // (No NUMERIC--Drill seems to map any to DECIMAL currently.)
         + "\n    WHEN 'NUMERIC'                     THEN " + Types.NUMERIC
         // Resolve:  Not seen in Drill yet.  Can it appear?:
-        + "\n    WHEN 'NVARCHAR', 'NATIONAL CHARACTER VARYING' "
-        + "\n                                       THEN " + Types.NVARCHAR
+        + "\n    WHEN 'NATIONAL CHARACTER'          THEN " + Types.NCHAR
+        // Resolve:  Not seen in Drill yet.  Can it appear?:
+        + "\n    WHEN 'NATIONAL CHARACTER VARYING'  THEN " + Types.NVARCHAR
 
         // Resolve:  Unexpectedly, has appeared in Drill.  Should it?
         + "\n    WHEN 'OTHER'                       THEN " + Types.OTHER
 
         + "\n    WHEN 'REAL'                        THEN " + Types.REAL
-        // SQL source syntax:
-        //   <reference type> ::=
-        //     REF <left paren> <referenced type> <right paren> [ <scope clause> ]
         // Resolve:  Not seen in Drill yet.  Can it appear?:
         + "\n    WHEN 'REF'                         THEN " + Types.REF
         // Resolve:  Not seen in Drill yet.  Can it appear?:
@@ -274,60 +239,16 @@ class MetaImpl implements Meta {
         + "\n    WHEN 'SMALLINT'                    THEN " + Types.SMALLINT
         // Resolve:  Not seen in Drill yet.  Can it appear?:
         + "\n    WHEN 'SQLXML'                      THEN " + Types.SQLXML
+        + "\n    WHEN 'STRUCT'                      THEN " + Types.STRUCT
 
         + "\n    WHEN 'TIME'                        THEN " + Types.TIME
         + "\n    WHEN 'TIMESTAMP'                   THEN " + Types.TIMESTAMP
         + "\n    WHEN 'TINYINT'                     THEN " + Types.TINYINT
 
-        + "\n    WHEN 'VARBINARY', 'BINARY VARYING' THEN " + Types.VARBINARY
-        + "\n    WHEN 'VARCHAR', 'CHARACTER VARYING' "
-        + "\n                                       THEN " + Types.VARCHAR
-
-        + "\n    ELSE"
-        // Pattern-match cases:
-        + "\n      CASE "
-
-        // TODO:  RESOLVE:  How does ARRAY appear in COLUMNS.DATA_TYPE?
-        // - Only at end (with no maximum size, as "VARCHAR(65535) ARRAY")?
-        // - Possibly with maximum size (as "... ARRAY[10]")?
-        // - Then, how should it appear in JDBC ("ARRAY"? "... ARRAY"?)
-        // (SQL source syntax:
-        //   <array type> ::=
-        //     <data type> ARRAY
-        //       [ <left bracket or trigraph> <maximum cardinality>
-        //         <right bracket or trigraph> ]
-        + "\n        WHEN DATA_TYPE LIKE '% ARRAY'  THEN " + Types.ARRAY
-
-        // TODO:  RESOLVE:  How does MAP appear in COLUMNS.DATA_TYPE?
-        // - Only at end?
-        // - Otherwise?
-        // TODO:  RESOLVE:  Should it map to Types.OTHER or something else?
-        // Has appeared in Drill.  Should it?
-        + "\n        WHEN DATA_TYPE LIKE '% MAP'    THEN " + Types.OTHER
-
-        // TODO:  RESOLVE:  How does "STRUCT" appear?
-        // - Only at beginning (as "STRUCT(INTEGER sint, BOOLEAN sboolean")?
-        // - Otherwise too?
-        // - Then, how should it appear in JDBC ("STRUCT"? "STRUCT(...)"?)
-        + "\n        WHEN DATA_TYPE LIKE 'STRUCT(%' THEN " + Types.STRUCT
-
-        + "\n        ELSE                                " + Types.OTHER
-        + "\n      END "
+        + "\n    ELSE                                    " + Types.OTHER
         + "\n  END                                    as  DATA_TYPE, "
 
-        /*    6                                           TYPE_NAME */
-        // Map Drill's current info. schema values to what SQL standard
-        // specifies (for DATA_TYPE)--and assume that that's what JDBC wants.
-        + "\n  CASE DATA_TYPE "
-        + "\n    WHEN 'INTERVAL_YEAR_MONTH', "
-        + "\n         'INTERVAL_DAY_TIME'     THEN 'INTERVAL'"
-        // TODO:  Resolve how non-scalar types should appear in
-        // INFORMATION_SCHEMA.COLUMNS and here in JDBC:
-        // - "ARRAY" or "... ARRAY"?
-        // - "MAP" or "... MAP"?
-        // - "STRUCT" or "STRUCT(...)"?
-        + "\n    ELSE                               DATA_TYPE "
-        + "\n  END                                    as TYPE_NAME, "
+        + /*  6 */ "\n  DATA_TYPE                     as  TYPE_NAME, "
 
         /*    7                                           COLUMN_SIZE */
         /* "... COLUMN_SIZE ....
@@ -341,119 +262,108 @@ class MetaImpl implements Meta {
          * Null is returned for data types where the column size is not applicable."
          *
          * Note:  "Maximum precision" seems to mean the maximum number of
-         * significant decimal digits that can appear (not the number of digits
-         * that can be counted on, and not the maximum number of characters
-         * needed to display a value).
+         * significant digits that can appear (not the number of decimal digits
+         * that can be counted on, and not the maximum number of (decimal)
+         * characters needed to display a value).
          */
         + "\n  CASE DATA_TYPE "
 
-        // "For numeric data, ... the maximum precision":
-        //   TODO:  Change literals to references to declared constant fields:
-        // - exact numeric types:
-        //   (in decimal digits, coordinated with NUM_PREC_RADIX = 10)
-        + "\n    WHEN 'TINYINT'                      THEN " + PREC_TINYINT
-        + "\n    WHEN 'SMALLINT'                     THEN " + PREC_SMALLINT
-        + "\n    WHEN 'INTEGER'                      THEN " + PREC_INTEGER
-        + "\n    WHEN 'BIGINT'                       THEN " + PREC_BIGINT
-        + "\n    WHEN 'DECIMAL', 'NUMERIC'           THEN NUMERIC_PRECISION "
-        // - approximate numeric types:
-        //   (in decimal digits, coordinated with NUM_PREC_RADIX = 10)
-        // TODO:  REVISIT:  Should these be in bits or decimal digits (with
-        //   NUM_PREC_RADIX coordinated)?  INFORMATION_SCHEMA.COLUMNS's value
-        //   are supposed to be in bits (per the SQL spec.).  What does JDBC
-        //   require and allow?
-        + "\n    WHEN 'REAL'                         THEN " + PREC_REAL
-        + "\n    WHEN 'FLOAT'                        THEN " + PREC_FLOAT
-        + "\n    WHEN 'DOUBLE'                       THEN " + PREC_DOUBLE
+        // 1. "For numeric data, ... the maximum precision":
+        + "\n    WHEN 'TINYINT', 'SMALLINT', 'INTEGER', 'BIGINT', "
+        + "\n         'DECIMAL', 'NUMERIC', "
+        + "\n         'REAL', 'FLOAT', 'DOUBLE' "
+        + "\n                         THEN NUMERIC_PRECISION "
 
-        // "For character data, ... the length in characters":
-        // TODO:  BUG:  DRILL-2459:  For CHARACTER / CHAR, length is not in
-        // CHARACTER_MAXIMUM_LENGTH but in NUMERIC_PRECISION.
-        // Workaround:
-        + "\n    WHEN 'VARCHAR', 'CHARACTER VARYING' "
-        + "\n                                    THEN CHARACTER_MAXIMUM_LENGTH "
-        + "\n    WHEN 'CHAR', 'CHARACTER', "
-        + "\n         'NCHAR', 'NATIONAL CHAR', 'NATIONAL CHARACTER' "
-        + "\n                                        THEN NUMERIC_PRECISION "
+        // 2. "For character data, ... the length in characters":
+        + "\n    WHEN 'CHARACTER', 'CHARACTER VARYING' "
+        + "\n                         THEN CHARACTER_MAXIMUM_LENGTH "
 
-        // "For datetime datatypes ... length ... String representation
-        // (assuming the maximum ... precision of ... fractional seconds ...)":
-        + "\n    WHEN 'DATE'            THEN 10 "              // YYYY-MM-DD
-        + "\n    WHEN 'TIME'            THEN "
+        // 3. "For datetime datatypes ... length ... String representation
+        //    (assuming the maximum ... precision of ... fractional seconds ...)":
+        // SQL datetime types:
+        + "\n    WHEN 'DATE'          THEN 10 "            // YYYY-MM-DD
+        + "\n    WHEN 'TIME'          THEN "
         + "\n      CASE "
-        + "\n        WHEN NUMERIC_PRECISION > 0 "              // HH:MM:SS.sss
-        + "\n                           THEN          8 + 1 + NUMERIC_PRECISION"
-        + "\n        ELSE                             8"       // HH:MM:SS
+        + "\n        WHEN DATETIME_PRECISION > 0 "         // HH:MM:SS.sss
+        + "\n                         THEN          8 + 1 + DATETIME_PRECISION"
+        + "\n        ELSE                           8"     // HH:MM:SS
         + "\n      END "
-        + "\n    WHEN 'TIMESTAMP'       THEN "
-        + "\n      CASE "                          // date + "T" + time (above)
-        + "\n        WHEN NUMERIC_PRECISION > 0 "
-        + "                             THEN 10 + 1 + 8 + 1 + NUMERIC_PRECISION"
-        + "\n        ELSE                    10 + 1 + 8"
+        + "\n    WHEN 'TIMESTAMP'     THEN "
+        + "\n      CASE "                                  // date + "T" + time
+        + "\n        WHEN DATETIME_PRECISION > 0 "
+        + "                           THEN 10 + 1 + 8 + 1 + DATETIME_PRECISION"
+        + "\n        ELSE                  10 + 1 + 8"
+        + "\n      END "
+        // SQL interval types:
+        // Note:  Not addressed by JDBC 4.1; providing length of current string
+        // representation (not length of, say, interval literal).
+        + "\n    WHEN 'INTERVAL'      THEN "
+        + "\n      INTERVAL_PRECISION "
+        + "\n      + "
+        + "\n      CASE INTERVAL_TYPE "
+        // a. Single field, not SECOND:
+        + "\n        WHEN 'YEAR', 'MONTH', 'DAY' THEN 2 "  // like P...Y
+        + "\n        WHEN 'HOUR', 'MINUTE'       THEN 3 "  // like PT...M
+        // b. Two adjacent fields, no SECOND:
+        + "\n        WHEN 'YEAR TO MONTH'        THEN 5 "  // P...Y12M
+        + "\n        WHEN 'DAY TO HOUR'          THEN 6 "  // P...DT12H
+        + "\n        WHEN 'HOUR TO MINUTE'       THEN 6 "  // PT...H12M
+        // c. Three contiguous fields, no SECOND:
+        + "\n        WHEN 'DAY TO MINUTE'        THEN 9 "  // P...DT12H12M
+        // d. With SECOND field:
+        + "\n        ELSE "
+        + "\n          CASE INTERVAL_TYPE "
+        + "\n            WHEN 'DAY TO SECOND'    THEN 12 " // P...DT12H12M12...S
+        + "\n            WHEN 'HOUR TO SECOND'   THEN  9 " // PT...H12M12...S
+        + "\n            WHEN 'MINUTE TO SECOND' THEN  6 " // PT...M12...S
+        + "\n            WHEN 'SECOND'           THEN  3 " // PT......S
+        + "\n            ELSE "                  // Make net result be -1:
+        // WORKAROUND:  This "0" is to work around Drill's failure to support
+        // unary minus syntax (negation):
+        + "\n                                    0-INTERVAL_PRECISION - 1 "
+        + "\n          END "
+        + "\n          + "
+        + "\n          DATETIME_PRECISION"
+        + "\n          + "
+        + "\n          CASE " // If frac. digits, also add 1 for decimal point.
+        + "\n            WHEN DATETIME_PRECISION > 0 THEN 1"
+        + "\n            ELSE                             0 "
+        + "\n          END"
+        // - For INTERVAL ... TO SECOND(0): "P...DT12H12M12S"
         + "\n      END "
 
-        // TODO:  DRILL-2531:  When DRILL-2519 is fixed, use start and end unit
-        // and start-unit precision to implement maximum width more precisely
-        // (narrowly) than this workaround:
-        // For INTERVAL_YEAR_MONTH, maximum width is from "P1234567890Y12M"
-        // (5 + apparent maximum start unit precision of 10)
-        // unit precision):
-        + "\n    WHEN 'INTERVAL_YEAR_MONTH' "
-        + "\n                                        THEN 5 + "
-                                                          + PREC_INTERVAL_LEAD_MAX
-        // For INTERVAL_DAY_TIME, maximum width is from
-        // "P1234567890D12H12M12.123456789S" (12 + apparent maximum start unit
-        // precision of 10 + apparent maximum seconds fractional precision of 9):
-        + "\n    WHEN 'INTERVAL_DAY_TIME' "
-        + "\n                                        THEN 12 + "
-                                                          + ( PREC_INTERVAL_LEAD_MAX
-                                                             + PREC_INTERVAL_TRAIL_MAX )
+        // 4. "For binary data, ... the length in bytes":
+        + "\n    WHEN 'BINARY', 'BINARY VARYING' "
+        + "\n                         THEN CHARACTER_MAXIMUM_LENGTH "
 
-        // "For binary data, ... the length in bytes":
-        // BUG:  DRILL-2459:  BINARY and BINARY VARYING / VARBINARY length is
-        // not in CHARACTER_MAXIMUM_LENGTH but in NUMERIC_PRECISION.
-        // Workaround:
-        + "\n    WHEN 'VARBINARY', 'BINARY VARYING', "
-        + "\n         'BINARY'                       THEN NUMERIC_PRECISION "
+        // 5. "For ... ROWID datatype...": Not in Drill?
 
-        // "For ... ROWID datatype...": Not in Drill?
-
-        // "Null ... for data types [for which] ... not applicable.":
-        + "\n    ELSE                                     NULL "
+        // 6. "Null ... for data types [for which] ... not applicable.":
+        + "\n    ELSE                      NULL "
         + "\n  END                                    as  COLUMN_SIZE, "
 
         + /*  8 */ "\n  CHARACTER_MAXIMUM_LENGTH      as  BUFFER_LENGTH, "
 
         /*    9                                           DECIMAL_DIGITS */
         + "\n  CASE  DATA_TYPE"
-        + "\n    WHEN 'TINYINT', "
-        + "\n         'SMALLINT', "
-        + "\n         'INTEGER', "
-        + "\n         'BIGINT'                       THEN " + SCALE_INTEGRAL
-        + "\n    WHEN 'DECIMAL', "
-        + "\n         'NUMERIC'                      THEN NUMERIC_SCALE "
-        + "\n    WHEN 'REAL'                         THEN " + SCALE_REAL
-        + "\n    WHEN 'FLOAT'                        THEN " + SCALE_FLOAT
-        + "\n    WHEN 'DOUBLE'                       THEN " + SCALE_DOUBLE
-        + "\n    WHEN 'INTERVAL'                     THEN NUMERIC_SCALE "
-        + "\n    WHEN 'INTERVAL_YEAR_MONTH'          THEN 0 "
-        + "\n    WHEN 'INTERVAL_DAY_TIME'            THEN NUMERIC_SCALE "
+        + "\n    WHEN 'TINYINT', 'SMALLINT', 'INTEGER', 'BIGINT', "
+        + "\n         'DECIMAL', 'NUMERIC'        THEN NUMERIC_SCALE "
+        + "\n    WHEN 'REAL'                      THEN " + DECIMAL_DIGITS_REAL
+        + "\n    WHEN 'FLOAT'                     THEN " + DECIMAL_DIGITS_FLOAT
+        + "\n    WHEN 'DOUBLE'                    THEN " + DECIMAL_DIGITS_DOUBLE
+        + "\n    WHEN 'DATE', 'TIME', 'TIMESTAMP' THEN DATETIME_PRECISION "
+        + "\n    WHEN 'INTERVAL'                  THEN DATETIME_PRECISION "
         + "\n  END                                    as  DECIMAL_DIGITS, "
 
         /*   10                                           NUM_PREC_RADIX */
         + "\n  CASE DATA_TYPE "
-        + "\n    WHEN 'TINYINT', "
-        + "\n         'SMALLINT', "
-        + "\n         'INTEGER', "
-        + "\n         'BIGINT'                       THEN " + RADIX_INTEGRAL
-        + "\n    WHEN 'DECIMAL', "
-        + "\n         'NUMERIC'                      THEN " + RADIX_DECIMAL
-        + "\n    WHEN 'REAL', "
-        + "\n         'FLOAT', "
-        + "\n         'DOUBLE'                       THEN " + RADIX_APPROXIMATE
-        + "\n    WHEN 'INTERVAL_YEAR_MONTH', "
-        + "\n         'INTERVAL_DAY_TIME'            THEN " + RADIX_INTERVAL
-        + "\n    ELSE                                     NULL"
+        + "\n    WHEN 'TINYINT', 'SMALLINT', 'INTEGER', 'BIGINT', "
+        + "\n         'DECIMAL', 'NUMERIC', "
+        + "\n         'REAL', 'FLOAT', 'DOUBLE'   THEN NUMERIC_PRECISION_RADIX "
+        // (NUMERIC_PRECISION_RADIX is NULL for these:)
+        + "\n    WHEN 'INTERVAL'                  THEN " + RADIX_INTERVAL
+        + "\n    WHEN 'DATE', 'TIME', 'TIMESTAMP' THEN " + RADIX_DATETIME
+        + "\n    ELSE                                  NULL"
         + "\n  END                                    as  NUM_PREC_RADIX, "
 
         /*   11                                           NULLABLE */
@@ -465,23 +375,21 @@ class MetaImpl implements Meta {
         + "\n  END                                    as  NULLABLE, "
 
         + /* 12 */ "\n  CAST( NULL as VARCHAR )       as  REMARKS, "
-        + /* 13 */ "\n  CAST( NULL as VARCHAR )       as  COLUMN_DEF, "
+        + /* 13 */ "\n  COLUMN_DEFAULT                as  COLUMN_DEF, "
         + /* 14 */ "\n  0                             as  SQL_DATA_TYPE, "
         + /* 15 */ "\n  0                             as  SQL_DATETIME_SUB, "
 
         /*   16                                           CHAR_OCTET_LENGTH */
         + "\n  CASE DATA_TYPE"
-        + "\n    WHEN 'VARCHAR', 'CHARACTER VARYING' "
-        + "\n                                 THEN 4 * CHARACTER_MAXIMUM_LENGTH "
-        + "\n    WHEN 'CHAR', 'CHARACTER', "
-        + "\n         'NCHAR', 'NATIONAL CHAR', 'NATIONAL CHARACTER' "
-        // TODO:  BUG:  DRILL-2459:  For CHARACTER / CHAR, length is not in
-        // CHARACTER_MAXIMUM_LENGTH but in NUMERIC_PRECISION.  Workaround:
-        + "\n                                 THEN 4 * NUMERIC_PRECISION "
+        + "\n    WHEN 'CHARACTER', "
+        + "\n         'CHARACTER VARYING', "
+        + "\n         'NATIONAL CHARACTER', "
+        + "\n         'NATIONAL CHARACTER VARYING' "
+        + "\n                                 THEN CHARACTER_OCTET_LENGTH "
         + "\n    ELSE                              NULL "
         + "\n  END                                    as  CHAR_OCTET_LENGTH, "
 
-        + /* 17 */ "\n  1 + ORDINAL_POSITION          as  ORDINAL_POSITION, "
+        + /* 17 */ "\n  ORDINAL_POSITION              as  ORDINAL_POSITION, "
         + /* 18 */ "\n  IS_NULLABLE                   as  IS_NULLABLE, "
         + /* 19 */ "\n  CAST( NULL as VARCHAR )       as  SCOPE_CATALOG, "
         + /* 20 */ "\n  CAST( NULL as VARCHAR )       as  SCOPE_SCHEMA, "

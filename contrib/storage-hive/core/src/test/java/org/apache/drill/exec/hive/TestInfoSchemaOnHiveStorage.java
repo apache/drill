@@ -24,7 +24,7 @@ import org.junit.Test;
 public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   private static final String[] baselineCols = new String[] {"COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE"};
   private static final Object[] expVal1 = new Object[] {"key", "INTEGER", "YES"};
-  private static final Object[] expVal2 = new Object[] {"value", "VARCHAR", "YES"};
+  private static final Object[] expVal2 = new Object[] {"value", "CHARACTER VARYING", "YES"};
 
   @Test
   public void showTablesFromDb() throws Exception{
@@ -142,7 +142,9 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
 
   @Test
   public void varCharMaxLengthAndDecimalPrecisionInInfoSchema() throws Exception{
-    final String query = "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE " +
+    final String query =
+        "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, " +
+        "       NUMERIC_PRECISION_RADIX, NUMERIC_PRECISION, NUMERIC_SCALE " +
         "FROM INFORMATION_SCHEMA.`COLUMNS` " +
         "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'infoschematest' AND " +
         "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
@@ -152,11 +154,16 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .sqlQuery(query)
         .unOrdered()
         .optionSettingQueriesForTestQuery("USE hive")
-        .baselineColumns("COLUMN_NAME", "DATA_TYPE", "CHARACTER_MAXIMUM_LENGTH", "NUMERIC_PRECISION", "NUMERIC_SCALE")
-        .baselineValues("inttype", "INTEGER", -1, -1, -1)
-        .baselineValues("decimaltype", "DECIMAL", -1, 38, 2)
-        .baselineValues("stringtype", "VARCHAR", 65535, -1, -1)
-        .baselineValues("varchartype", "VARCHAR", 20, -1, -1)
+        .baselineColumns("COLUMN_NAME",
+                         "DATA_TYPE",
+                         "CHARACTER_MAXIMUM_LENGTH",
+                         "NUMERIC_PRECISION_RADIX",
+                         "NUMERIC_PRECISION",
+                         "NUMERIC_SCALE")
+        .baselineValues("inttype",     "INTEGER",            null,    2,   32,    0)
+        .baselineValues("decimaltype", "DECIMAL",            null,   10,   38,    2)
+        .baselineValues("stringtype",  "CHARACTER VARYING", 65535, null, null, null)
+        .baselineValues("varchartype", "CHARACTER VARYING",    20, null, null, null)
         .go();
   }
 
