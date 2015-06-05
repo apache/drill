@@ -15,7 +15,7 @@ HBase = 20G
 Yarn = 20G  
 OS = 8G  
 
-If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Drill 20G.
+If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Yarn 20G.
 
 {% include startnote.html %}Drill will execute queries within Yarn soon.{% include endnote.html %} [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142)
 
@@ -33,7 +33,7 @@ Configure NodeManager and ResourceManager to reconfigure the total memory requir
 Modify MapReduce memory to suit your application needs. Remaining memory is typically given to YARN applications. 
 
 ## How to Manage Drill CPU Resources
-Currently, you do not manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
+Currently, you cannot manage CPU resources within Drill. [Use Linux `cgroups`](http://en.wikipedia.org/wiki/Cgroups) to manage the CPU resources.
 
 ## How to Manage Disk Resources
 
