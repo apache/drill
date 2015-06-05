@@ -48,10 +48,10 @@ the following steps:
               "enabled" : true,
               "connection" : "hdfs://10.10.30.156:8020/",
               "workspaces" : {
-                "root : {
+                "root" : {
                   "location" : "/user/root/drill",
                   "writable" : true,
-                  "defaultinputformat" : "null"
+                  "defaultinputformat" : null
                 }
               },
               "formats" : {
