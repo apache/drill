@@ -135,27 +135,6 @@
             "title": "Adding Custom Functions to Drill", 
             "url": "/docs/adding-custom-functions-to-drill/"
         }, 
-        "Advanced Properties": {
-            "breadcrumbs": [
-                {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Testing the ODBC Connection", 
-            "next_url": "/docs/testing-the-odbc-connection/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Using a Connection String", 
-            "previous_url": "/docs/using-a-connection-string/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/060-advanced-properties.md", 
-            "title": "Advanced Properties", 
-            "url": "/docs/advanced-properties/"
-        }, 
         "Aggregate and Aggregate Statistical": {
             "breadcrumbs": [
                 {
@@ -1110,8 +1089,8 @@
         "Configuring Connections on Linux and Mac OS X": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -1119,20 +1098,20 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Driver Configuration Options", 
-            "next_url": "/docs/driver-configuration-options/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Installing the Driver on Mac OS X", 
-            "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/030-configuring-connections-on-linux-and-mac-os-x.md", 
+            "next_title": "Testing the ODBC Connection", 
+            "next_url": "/docs/testing-the-odbc-connection/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "ODBC Configuration Reference", 
+            "previous_url": "/docs/odbc-configuration-reference/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
             "title": "Configuring Connections on Linux and Mac OS X", 
             "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
         }, 
         "Configuring Connections on Windows": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -1142,10 +1121,10 @@
             "children": [], 
             "next_title": "Connecting to ODBC Data Sources", 
             "next_url": "/docs/connecting-to-odbc-data-sources/", 
-            "parent": "Using ODBC on Windows", 
-            "previous_title": "Installing the Driver on Windows", 
-            "previous_url": "/docs/installing-the-driver-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/020-configuring-connections-on-windows.md", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "Testing the ODBC Connection", 
+            "previous_url": "/docs/testing-the-odbc-connection/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
             "title": "Configuring Connections on Windows", 
             "url": "/docs/configuring-connections-on-windows/"
         }, 
@@ -1187,6 +1166,108 @@
             "title": "Configuring Multitenant Resources", 
             "url": "/docs/configuring-multitenant-resources/"
         }, 
+        "Configuring ODBC": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Connections on Linux and Mac OS X", 
+                    "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "Configuring ODBC", 
+                    "previous_url": "/docs/configuring-odbc/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                    "title": "ODBC Configuration Reference", 
+                    "url": "/docs/odbc-configuration-reference/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Testing the ODBC Connection", 
+                    "next_url": "/docs/testing-the-odbc-connection/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "ODBC Configuration Reference", 
+                    "previous_url": "/docs/odbc-configuration-reference/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
+                    "title": "Configuring Connections on Linux and Mac OS X", 
+                    "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring Connections on Windows", 
+                    "next_url": "/docs/configuring-connections-on-windows/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                    "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                    "title": "Testing the ODBC Connection", 
+                    "url": "/docs/testing-the-odbc-connection/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Connecting to ODBC Data Sources", 
+                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "Testing the ODBC Connection", 
+                    "previous_url": "/docs/testing-the-odbc-connection/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
+                    "title": "Configuring Connections on Windows", 
+                    "url": "/docs/configuring-connections-on-windows/"
+                }
+            ], 
+            "next_title": "ODBC Configuration Reference", 
+            "next_url": "/docs/odbc-configuration-reference/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Installing the Driver on Windows", 
+            "previous_url": "/docs/installing-the-driver-on-windows/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
+            "title": "Configuring ODBC", 
+            "url": "/docs/configuring-odbc/"
+        }, 
         "Configuring Resources for a Shared Drillbit": {
             "breadcrumbs": [
                 {
@@ -1207,23 +1288,6 @@
             "relative_path": "_docs/configure-drill/060-configuring-a-shared-drillbit.md", 
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
-        }, 
-        "Configuring Tibco Spotfire Server with Drill": {
-            "breadcrumbs": [
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Tibco Spotfire with Drill", 
-            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
-            "title": "Configuring Tibco Spotfire Server with Drill", 
-            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
         }, 
         "Configuring User Authentication": {
             "breadcrumbs": [
@@ -1623,8 +1687,8 @@
         "Connecting to ODBC Data Sources": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -1632,12 +1696,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Tableau Examples", 
-            "next_url": "/docs/tableau-examples/", 
-            "parent": "Using ODBC on Windows", 
-            "previous_title": "Configuring Connections on Windows", 
-            "previous_url": "/docs/configuring-connections-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
+            "next_title": "Using Drill Explorer on Windows", 
+            "next_url": "/docs/using-drill-explorer-on-windows/", 
+            "parent": "Using Drill Explorer", 
+            "previous_title": "Using Drill Explorer", 
+            "previous_url": "/docs/using-drill-explorer/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/010-connecting-to-odbc-data-sources.md", 
             "title": "Connecting to ODBC Data Sources", 
             "url": "/docs/connecting-to-odbc-data-sources/"
         }, 
@@ -2814,27 +2878,6 @@
             "title": "Drill in 10 Minutes", 
             "url": "/docs/drill-in-10-minutes/"
         }, 
-        "Driver Configuration Options": {
-            "breadcrumbs": [
-                {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Using a Connection String", 
-            "next_url": "/docs/using-a-connection-string/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/040-driver-configuration-options.md", 
-            "title": "Driver Configuration Options", 
-            "url": "/docs/driver-configuration-options/"
-        }, 
         "EXPLAIN": {
             "breadcrumbs": [
                 {
@@ -3846,8 +3889,8 @@
         "Installing the Driver on Linux": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -3857,18 +3900,18 @@
             "children": [], 
             "next_title": "Installing the Driver on Mac OS X", 
             "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "ODBC on Linux and Mac Introduction", 
-            "previous_url": "/docs/odbc-on-linux-and-mac-introduction/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/010-installing-the-driver-on-linux.md", 
+            "parent": "Installing the ODBC Driver", 
+            "previous_title": "Installing the ODBC Driver", 
+            "previous_url": "/docs/installing-the-odbc-driver/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/010-installing-the-driver-on-linux.md", 
             "title": "Installing the Driver on Linux", 
             "url": "/docs/installing-the-driver-on-linux/"
         }, 
         "Installing the Driver on Mac OS X": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -3876,20 +3919,20 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Connections on Linux and Mac OS X", 
-            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
+            "next_title": "Installing the Driver on Windows", 
+            "next_url": "/docs/installing-the-driver-on-windows/", 
+            "parent": "Installing the ODBC Driver", 
             "previous_title": "Installing the Driver on Linux", 
             "previous_url": "/docs/installing-the-driver-on-linux/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/020-installing-the-driver-on-mac-os-x.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/020-installing-the-driver-on-mac-os-x.md", 
             "title": "Installing the Driver on Mac OS X", 
             "url": "/docs/installing-the-driver-on-mac-os-x/"
         }, 
         "Installing the Driver on Windows": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -3897,14 +3940,95 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Connections on Windows", 
-            "next_url": "/docs/configuring-connections-on-windows/", 
-            "parent": "Using ODBC on Windows", 
-            "previous_title": "Using ODBC on Windows", 
-            "previous_url": "/docs/using-odbc-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/010-installing-the-driver-on-windows.md", 
+            "next_title": "Configuring ODBC", 
+            "next_url": "/docs/configuring-odbc/", 
+            "parent": "Installing the ODBC Driver", 
+            "previous_title": "Installing the Driver on Mac OS X", 
+            "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
             "title": "Installing the Driver on Windows", 
             "url": "/docs/installing-the-driver-on-windows/"
+        }, 
+        "Installing the ODBC Driver": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing the ODBC Driver", 
+                            "url": "/docs/installing-the-odbc-driver/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing the Driver on Mac OS X", 
+                    "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                    "parent": "Installing the ODBC Driver", 
+                    "previous_title": "Installing the ODBC Driver", 
+                    "previous_url": "/docs/installing-the-odbc-driver/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/010-installing-the-driver-on-linux.md", 
+                    "title": "Installing the Driver on Linux", 
+                    "url": "/docs/installing-the-driver-on-linux/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing the ODBC Driver", 
+                            "url": "/docs/installing-the-odbc-driver/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing the Driver on Windows", 
+                    "next_url": "/docs/installing-the-driver-on-windows/", 
+                    "parent": "Installing the ODBC Driver", 
+                    "previous_title": "Installing the Driver on Linux", 
+                    "previous_url": "/docs/installing-the-driver-on-linux/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/020-installing-the-driver-on-mac-os-x.md", 
+                    "title": "Installing the Driver on Mac OS X", 
+                    "url": "/docs/installing-the-driver-on-mac-os-x/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing the ODBC Driver", 
+                            "url": "/docs/installing-the-odbc-driver/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring ODBC", 
+                    "next_url": "/docs/configuring-odbc/", 
+                    "parent": "Installing the ODBC Driver", 
+                    "previous_title": "Installing the Driver on Mac OS X", 
+                    "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
+                    "title": "Installing the Driver on Windows", 
+                    "url": "/docs/installing-the-driver-on-windows/"
+                }
+            ], 
+            "next_title": "Installing the Driver on Linux", 
+            "next_url": "/docs/installing-the-driver-on-linux/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using JDBC with SQuirreL on Windows", 
+            "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/030-installing-the-odbc-driver.md", 
+            "title": "Installing the ODBC Driver", 
+            "url": "/docs/installing-the-odbc-driver/"
         }, 
         "Interfaces Introduction": {
             "breadcrumbs": [
@@ -4617,11 +4741,11 @@
             "title": "Nested Data Limitations", 
             "url": "/docs/nested-data-limitations/"
         }, 
-        "ODBC on Linux and Mac Introduction": {
+        "ODBC Configuration Reference": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -4629,14 +4753,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing the Driver on Linux", 
-            "next_url": "/docs/installing-the-driver-on-linux/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Using ODBC on Linux and Mac OS X", 
-            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/005-odbc-on-linux-and-mac-introduction.md", 
-            "title": "ODBC on Linux and Mac Introduction", 
-            "url": "/docs/odbc-on-linux-and-mac-introduction/"
+            "next_title": "Configuring Connections on Linux and Mac OS X", 
+            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "Configuring ODBC", 
+            "previous_url": "/docs/configuring-odbc/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+            "title": "ODBC Configuration Reference", 
+            "url": "/docs/odbc-configuration-reference/"
         }, 
         "ODBC/JDBC Interfaces": {
             "breadcrumbs": [], 
@@ -4666,8 +4790,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using ODBC on Linux and Mac OS X", 
-                    "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                    "next_title": "Installing the ODBC Driver", 
+                    "next_url": "/docs/installing-the-odbc-driver/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
@@ -4686,29 +4810,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing the Driver on Linux", 
-                            "next_url": "/docs/installing-the-driver-on-linux/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Using ODBC on Linux and Mac OS X", 
-                            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/005-odbc-on-linux-and-mac-introduction.md", 
-                            "title": "ODBC on Linux and Mac Introduction", 
-                            "url": "/docs/odbc-on-linux-and-mac-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4718,18 +4821,18 @@
                             "children": [], 
                             "next_title": "Installing the Driver on Mac OS X", 
                             "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "ODBC on Linux and Mac Introduction", 
-                            "previous_url": "/docs/odbc-on-linux-and-mac-introduction/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/010-installing-the-driver-on-linux.md", 
+                            "parent": "Installing the ODBC Driver", 
+                            "previous_title": "Installing the ODBC Driver", 
+                            "previous_url": "/docs/installing-the-odbc-driver/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/010-installing-the-driver-on-linux.md", 
                             "title": "Installing the Driver on Linux", 
                             "url": "/docs/installing-the-driver-on-linux/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4737,20 +4840,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "next_title": "Installing the Driver on Windows", 
+                            "next_url": "/docs/installing-the-driver-on-windows/", 
+                            "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Linux", 
                             "previous_url": "/docs/installing-the-driver-on-linux/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/020-installing-the-driver-on-mac-os-x.md", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/020-installing-the-driver-on-mac-os-x.md", 
                             "title": "Installing the Driver on Mac OS X", 
                             "url": "/docs/installing-the-driver-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4758,108 +4861,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Driver Configuration Options", 
-                            "next_url": "/docs/driver-configuration-options/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "next_title": "Configuring ODBC", 
+                            "next_url": "/docs/configuring-odbc/", 
+                            "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Mac OS X", 
                             "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/030-configuring-connections-on-linux-and-mac-os-x.md", 
-                            "title": "Configuring Connections on Linux and Mac OS X", 
-                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Using a Connection String", 
-                            "next_url": "/docs/using-a-connection-string/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/040-driver-configuration-options.md", 
-                            "title": "Driver Configuration Options", 
-                            "url": "/docs/driver-configuration-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Advanced Properties", 
-                            "next_url": "/docs/advanced-properties/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Driver Configuration Options", 
-                            "previous_url": "/docs/driver-configuration-options/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/050-using-a-connection-string.md", 
-                            "title": "Using a Connection String", 
-                            "url": "/docs/using-a-connection-string/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Testing the ODBC Connection", 
-                            "next_url": "/docs/testing-the-odbc-connection/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Using a Connection String", 
-                            "previous_url": "/docs/using-a-connection-string/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/060-advanced-properties.md", 
-                            "title": "Advanced Properties", 
-                            "url": "/docs/advanced-properties/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Using ODBC on Windows", 
-                            "next_url": "/docs/using-odbc-on-windows/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Advanced Properties", 
-                            "previous_url": "/docs/advanced-properties/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/070-testing-the-odbc-connection.md", 
-                            "title": "Testing the ODBC Connection", 
-                            "url": "/docs/testing-the-odbc-connection/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
+                            "title": "Installing the Driver on Windows", 
+                            "url": "/docs/installing-the-driver-on-windows/"
                         }
                     ], 
-                    "next_title": "ODBC on Linux and Mac Introduction", 
-                    "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
+                    "next_title": "Installing the Driver on Linux", 
+                    "next_url": "/docs/installing-the-driver-on-linux/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using JDBC with SQuirreL on Windows", 
                     "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/030-installing-the-odbc-driver.md", 
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -4872,8 +4891,50 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Connections on Linux and Mac OS X", 
+                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC", 
+                            "previous_url": "/docs/configuring-odbc/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                            "title": "ODBC Configuration Reference", 
+                            "url": "/docs/odbc-configuration-reference/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "ODBC Configuration Reference", 
+                            "previous_url": "/docs/odbc-configuration-reference/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
+                            "title": "Configuring Connections on Linux and Mac OS X", 
+                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4883,18 +4944,18 @@
                             "children": [], 
                             "next_title": "Configuring Connections on Windows", 
                             "next_url": "/docs/configuring-connections-on-windows/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Using ODBC on Windows", 
-                            "previous_url": "/docs/using-odbc-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/010-installing-the-driver-on-windows.md", 
-                            "title": "Installing the Driver on Windows", 
-                            "url": "/docs/installing-the-driver-on-windows/"
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                            "title": "Testing the ODBC Connection", 
+                            "url": "/docs/testing-the-odbc-connection/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4904,39 +4965,53 @@
                             "children": [], 
                             "next_title": "Connecting to ODBC Data Sources", 
                             "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Installing the Driver on Windows", 
-                            "previous_url": "/docs/installing-the-driver-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/020-configuring-connections-on-windows.md", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Testing the ODBC Connection", 
+                            "previous_url": "/docs/testing-the-odbc-connection/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
                             "title": "Configuring Connections on Windows", 
                             "url": "/docs/configuring-connections-on-windows/"
-                        }, 
+                        }
+                    ], 
+                    "next_title": "ODBC Configuration Reference", 
+                    "next_url": "/docs/odbc-configuration-reference/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Installing the Driver on Windows", 
+                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Drill Explorer", 
+                    "next_url": "/docs/using-drill-explorer/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Connections on Windows", 
+                    "previous_url": "/docs/configuring-connections-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-connecting-to-data-sources.md", 
+                    "title": "Connecting to ODBC Data Sources", 
+                    "url": "/docs/connecting-to-odbc-data-sources/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Tableau Examples", 
-                            "next_url": "/docs/tableau-examples/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Configuring Connections on Windows", 
-                            "previous_url": "/docs/configuring-connections-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                            "title": "Connecting to ODBC Data Sources", 
-                            "url": "/docs/connecting-to-odbc-data-sources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Using Drill Explorer", 
+                                    "url": "/docs/using-drill-explorer/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4946,18 +5021,78 @@
                             "children": [], 
                             "next_title": "Using Drill Explorer on Windows", 
                             "next_url": "/docs/using-drill-explorer-on-windows/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Connecting to ODBC Data Sources", 
-                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
-                            "title": "Tableau Examples", 
-                            "url": "/docs/tableau-examples/"
+                            "parent": "Using Drill Explorer", 
+                            "previous_title": "Using Drill Explorer", 
+                            "previous_url": "/docs/using-drill-explorer/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/010-connecting-to-odbc-data-sources.md", 
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Using Drill Explorer", 
+                                    "url": "/docs/using-drill-explorer/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Drill with BI Tools", 
+                            "next_url": "/docs/using-drill-with-bi-tools/", 
+                            "parent": "Using Drill Explorer", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/020-using-drill-explorer-on-windows.md", 
+                            "title": "Using Drill Explorer on Windows", 
+                            "url": "/docs/using-drill-explorer-on-windows/"
+                        }
+                    ], 
+                    "next_title": "Connecting to ODBC Data Sources", 
+                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Connecting to ODBC Data Sources", 
+                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Tableau Examples", 
+                            "next_url": "/docs/tableau-examples/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Drill with BI Tools", 
+                            "previous_url": "/docs/using-drill-with-bi-tools/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/010-using-odbc-with-bi-tools-introduction.md", 
+                            "title": "Using Drill with BI Tools Introduction", 
+                            "url": "/docs/using-drill-with-bi-tools-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -4967,107 +5102,106 @@
                             "children": [], 
                             "next_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "parent": "Using ODBC on Windows", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Drill with BI Tools Introduction", 
+                            "previous_url": "/docs/using-drill-with-bi-tools-introduction/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/020-tableau-examples.md", 
+                            "title": "Tableau Examples", 
+                            "url": "/docs/tableau-examples/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Tibco Spotfire with Drill", 
+                            "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "parent": "Using Drill with BI Tools", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/050-using-drill-explorer-on-windows.md", 
-                            "title": "Using Drill Explorer on Windows", 
-                            "url": "/docs/using-drill-explorer-on-windows/"
-                        }
-                    ], 
-                    "next_title": "Installing the Driver on Windows", 
-                    "next_url": "/docs/installing-the-driver-on-windows/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Testing the ODBC Connection", 
-                    "previous_url": "/docs/testing-the-odbc-connection/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/040-using-odbc-on-windows.md", 
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/030-using-microstrategy-analytics-with-apache-drill.md", 
+                            "title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+                        }, 
                         {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
+                            "title": "Using Tibco Spotfire with Drill", 
+                            "url": "/docs/using-tibco-spotfire-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Server", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Tibco Spotfire with Drill", 
+                            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
+                            "title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
+                            "title": "Using Apache Drill with Tableau 9 Server", 
+                            "url": "/docs/using-apache-drill-with-tableau-9-server/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Using Tibco Spotfire with Drill", 
-                    "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "next_title": "Using Drill with BI Tools Introduction", 
+                    "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
-                    "title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
-                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
-                    "title": "Using Tibco Spotfire with Drill", 
-                    "url": "/docs/using-tibco-spotfire-with-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Tibco Spotfire with Drill", 
-                    "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
-                    "title": "Configuring Tibco Spotfire Server with Drill", 
-                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
-                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
-                    "title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/080-using-apache-drill-with-tableau-9-server.md", 
-                    "title": "Using Apache Drill with Tableau 9 Server", 
-                    "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 
@@ -9554,8 +9688,8 @@
         "Tableau Examples": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -9563,20 +9697,20 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Drill Explorer on Windows", 
-            "next_url": "/docs/using-drill-explorer-on-windows/", 
-            "parent": "Using ODBC on Windows", 
-            "previous_title": "Connecting to ODBC Data Sources", 
-            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
+            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Drill with BI Tools Introduction", 
+            "previous_url": "/docs/using-drill-with-bi-tools-introduction/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/020-tableau-examples.md", 
             "title": "Tableau Examples", 
             "url": "/docs/tableau-examples/"
         }, 
         "Testing the ODBC Connection": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -9584,12 +9718,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using ODBC on Windows", 
-            "next_url": "/docs/using-odbc-on-windows/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Advanced Properties", 
-            "previous_url": "/docs/advanced-properties/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/070-testing-the-odbc-connection.md", 
+            "next_title": "Configuring Connections on Windows", 
+            "next_url": "/docs/configuring-connections-on-windows/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
             "title": "Testing the ODBC Connection", 
             "url": "/docs/testing-the-odbc-connection/"
         }, 
@@ -9951,6 +10085,10 @@
         "Using Apache Drill with Tableau 9 Desktop": {
             "breadcrumbs": [
                 {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
                     "title": "ODBC/JDBC Interfaces", 
                     "url": "/docs/odbc-jdbc-interfaces/"
                 }
@@ -9958,15 +10096,19 @@
             "children": [], 
             "next_title": "Using Apache Drill with Tableau 9 Server", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
-            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Tibco Spotfire with Drill", 
+            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
             "title": "Using Apache Drill with Tableau 9 Desktop", 
             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
         }, 
         "Using Apache Drill with Tableau 9 Server": {
             "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
                     "url": "/docs/odbc-jdbc-interfaces/"
@@ -9975,10 +10117,10 @@
             "children": [], 
             "next_title": "Query Data", 
             "next_url": "/docs/query-data/", 
-            "parent": "ODBC/JDBC Interfaces", 
+            "parent": "Using Drill with BI Tools", 
             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/080-using-apache-drill-with-tableau-9-server.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
             "title": "Using Apache Drill with Tableau 9 Server", 
             "url": "/docs/using-apache-drill-with-tableau-9-server/"
         }, 
@@ -9999,11 +10141,71 @@
             "title": "Using Custom Functions in Queries", 
             "url": "/docs/using-custom-functions-in-queries/"
         }, 
+        "Using Drill Explorer": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill Explorer", 
+                            "url": "/docs/using-drill-explorer/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Drill Explorer on Windows", 
+                    "next_url": "/docs/using-drill-explorer-on-windows/", 
+                    "parent": "Using Drill Explorer", 
+                    "previous_title": "Using Drill Explorer", 
+                    "previous_url": "/docs/using-drill-explorer/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/010-connecting-to-odbc-data-sources.md", 
+                    "title": "Connecting to ODBC Data Sources", 
+                    "url": "/docs/connecting-to-odbc-data-sources/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill Explorer", 
+                            "url": "/docs/using-drill-explorer/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Drill with BI Tools", 
+                    "next_url": "/docs/using-drill-with-bi-tools/", 
+                    "parent": "Using Drill Explorer", 
+                    "previous_title": "Connecting to ODBC Data Sources", 
+                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/020-using-drill-explorer-on-windows.md", 
+                    "title": "Using Drill Explorer on Windows", 
+                    "url": "/docs/using-drill-explorer-on-windows/"
+                }
+            ], 
+            "next_title": "Connecting to ODBC Data Sources", 
+            "next_url": "/docs/connecting-to-odbc-data-sources/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Connecting to ODBC Data Sources", 
+            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+            "title": "Using Drill Explorer", 
+            "url": "/docs/using-drill-explorer/"
+        }, 
         "Using Drill Explorer on Windows": {
             "breadcrumbs": [
                 {
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -10011,14 +10213,179 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-            "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "parent": "Using ODBC on Windows", 
-            "previous_title": "Tableau Examples", 
-            "previous_url": "/docs/tableau-examples/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/050-using-drill-explorer-on-windows.md", 
+            "next_title": "Using Drill with BI Tools", 
+            "next_url": "/docs/using-drill-with-bi-tools/", 
+            "parent": "Using Drill Explorer", 
+            "previous_title": "Connecting to ODBC Data Sources", 
+            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/020-using-drill-explorer-on-windows.md", 
             "title": "Using Drill Explorer on Windows", 
             "url": "/docs/using-drill-explorer-on-windows/"
+        }, 
+        "Using Drill with BI Tools": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Tableau Examples", 
+                    "next_url": "/docs/tableau-examples/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Drill with BI Tools", 
+                    "previous_url": "/docs/using-drill-with-bi-tools/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/010-using-odbc-with-bi-tools-introduction.md", 
+                    "title": "Using Drill with BI Tools Introduction", 
+                    "url": "/docs/using-drill-with-bi-tools-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Drill with BI Tools Introduction", 
+                    "previous_url": "/docs/using-drill-with-bi-tools-introduction/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/020-tableau-examples.md", 
+                    "title": "Tableau Examples", 
+                    "url": "/docs/tableau-examples/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Tibco Spotfire with Drill", 
+                    "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Tableau Examples", 
+                    "previous_url": "/docs/tableau-examples/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/030-using-microstrategy-analytics-with-apache-drill.md", 
+                    "title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+                    "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
+                    "title": "Using Tibco Spotfire with Drill", 
+                    "url": "/docs/using-tibco-spotfire-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Tibco Spotfire with Drill", 
+                    "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
+                    "title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
+                    "title": "Using Apache Drill with Tableau 9 Server", 
+                    "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                }
+            ], 
+            "next_title": "Using Drill with BI Tools Introduction", 
+            "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Using Drill Explorer on Windows", 
+            "previous_url": "/docs/using-drill-explorer-on-windows/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+            "title": "Using Drill with BI Tools", 
+            "url": "/docs/using-drill-with-bi-tools/"
+        }, 
+        "Using Drill with BI Tools Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Tableau Examples", 
+            "next_url": "/docs/tableau-examples/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Drill with BI Tools", 
+            "previous_url": "/docs/using-drill-with-bi-tools/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/010-using-odbc-with-bi-tools-introduction.md", 
+            "title": "Using Drill with BI Tools Introduction", 
+            "url": "/docs/using-drill-with-bi-tools-introduction/"
         }, 
         "Using JDBC with SQuirreL on Windows": {
             "breadcrumbs": [
@@ -10028,8 +10395,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using ODBC on Linux and Mac OS X", 
-            "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+            "next_title": "Installing the ODBC Driver", 
+            "next_url": "/docs/installing-the-odbc-driver/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Interfaces Introduction", 
             "previous_url": "/docs/interfaces-introduction/", 
@@ -10040,6 +10407,10 @@
         "Using MicroStrategy Analytics with Apache Drill": {
             "breadcrumbs": [
                 {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
                     "title": "ODBC/JDBC Interfaces", 
                     "url": "/docs/odbc-jdbc-interfaces/"
                 }
@@ -10047,321 +10418,12 @@
             "children": [], 
             "next_title": "Using Tibco Spotfire with Drill", 
             "next_url": "/docs/using-tibco-spotfire-with-drill/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Drill Explorer on Windows", 
-            "previous_url": "/docs/using-drill-explorer-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Tableau Examples", 
+            "previous_url": "/docs/tableau-examples/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/030-using-microstrategy-analytics-with-apache-drill.md", 
             "title": "Using MicroStrategy Analytics with Apache Drill", 
             "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
-        }, 
-        "Using ODBC on Linux and Mac OS X": {
-            "breadcrumbs": [
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing the Driver on Linux", 
-                    "next_url": "/docs/installing-the-driver-on-linux/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Using ODBC on Linux and Mac OS X", 
-                    "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/005-odbc-on-linux-and-mac-introduction.md", 
-                    "title": "ODBC on Linux and Mac Introduction", 
-                    "url": "/docs/odbc-on-linux-and-mac-introduction/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing the Driver on Mac OS X", 
-                    "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "ODBC on Linux and Mac Introduction", 
-                    "previous_url": "/docs/odbc-on-linux-and-mac-introduction/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/010-installing-the-driver-on-linux.md", 
-                    "title": "Installing the Driver on Linux", 
-                    "url": "/docs/installing-the-driver-on-linux/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Connections on Linux and Mac OS X", 
-                    "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Installing the Driver on Linux", 
-                    "previous_url": "/docs/installing-the-driver-on-linux/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/020-installing-the-driver-on-mac-os-x.md", 
-                    "title": "Installing the Driver on Mac OS X", 
-                    "url": "/docs/installing-the-driver-on-mac-os-x/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Driver Configuration Options", 
-                    "next_url": "/docs/driver-configuration-options/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Installing the Driver on Mac OS X", 
-                    "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/030-configuring-connections-on-linux-and-mac-os-x.md", 
-                    "title": "Configuring Connections on Linux and Mac OS X", 
-                    "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using a Connection String", 
-                    "next_url": "/docs/using-a-connection-string/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                    "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/040-driver-configuration-options.md", 
-                    "title": "Driver Configuration Options", 
-                    "url": "/docs/driver-configuration-options/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Advanced Properties", 
-                    "next_url": "/docs/advanced-properties/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Driver Configuration Options", 
-                    "previous_url": "/docs/driver-configuration-options/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/050-using-a-connection-string.md", 
-                    "title": "Using a Connection String", 
-                    "url": "/docs/using-a-connection-string/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Testing the ODBC Connection", 
-                    "next_url": "/docs/testing-the-odbc-connection/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Using a Connection String", 
-                    "previous_url": "/docs/using-a-connection-string/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/060-advanced-properties.md", 
-                    "title": "Advanced Properties", 
-                    "url": "/docs/advanced-properties/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Linux and Mac OS X", 
-                            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using ODBC on Windows", 
-                    "next_url": "/docs/using-odbc-on-windows/", 
-                    "parent": "Using ODBC on Linux and Mac OS X", 
-                    "previous_title": "Advanced Properties", 
-                    "previous_url": "/docs/advanced-properties/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/070-testing-the-odbc-connection.md", 
-                    "title": "Testing the ODBC Connection", 
-                    "url": "/docs/testing-the-odbc-connection/"
-                }
-            ], 
-            "next_title": "ODBC on Linux and Mac Introduction", 
-            "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using JDBC with SQuirreL on Windows", 
-            "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
-            "title": "Using ODBC on Linux and Mac OS X", 
-            "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-        }, 
-        "Using ODBC on Windows": {
-            "breadcrumbs": [
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Windows", 
-                            "url": "/docs/using-odbc-on-windows/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Connections on Windows", 
-                    "next_url": "/docs/configuring-connections-on-windows/", 
-                    "parent": "Using ODBC on Windows", 
-                    "previous_title": "Using ODBC on Windows", 
-                    "previous_url": "/docs/using-odbc-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/010-installing-the-driver-on-windows.md", 
-                    "title": "Installing the Driver on Windows", 
-                    "url": "/docs/installing-the-driver-on-windows/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Windows", 
-                            "url": "/docs/using-odbc-on-windows/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Connecting to ODBC Data Sources", 
-                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                    "parent": "Using ODBC on Windows", 
-                    "previous_title": "Installing the Driver on Windows", 
-                    "previous_url": "/docs/installing-the-driver-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/020-configuring-connections-on-windows.md", 
-                    "title": "Configuring Connections on Windows", 
-                    "url": "/docs/configuring-connections-on-windows/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Windows", 
-                            "url": "/docs/using-odbc-on-windows/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Tableau Examples", 
-                    "next_url": "/docs/tableau-examples/", 
-                    "parent": "Using ODBC on Windows", 
-                    "previous_title": "Configuring Connections on Windows", 
-                    "previous_url": "/docs/configuring-connections-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                    "title": "Connecting to ODBC Data Sources", 
-                    "url": "/docs/connecting-to-odbc-data-sources/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Windows", 
-                            "url": "/docs/using-odbc-on-windows/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Drill Explorer on Windows", 
-                    "next_url": "/docs/using-drill-explorer-on-windows/", 
-                    "parent": "Using ODBC on Windows", 
-                    "previous_title": "Connecting to ODBC Data Sources", 
-                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
-                    "title": "Tableau Examples", 
-                    "url": "/docs/tableau-examples/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using ODBC on Windows", 
-                            "url": "/docs/using-odbc-on-windows/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                    "parent": "Using ODBC on Windows", 
-                    "previous_title": "Tableau Examples", 
-                    "previous_url": "/docs/tableau-examples/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/050-using-drill-explorer-on-windows.md", 
-                    "title": "Using Drill Explorer on Windows", 
-                    "url": "/docs/using-drill-explorer-on-windows/"
-                }
-            ], 
-            "next_title": "Installing the Driver on Windows", 
-            "next_url": "/docs/installing-the-driver-on-windows/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Testing the ODBC Connection", 
-            "previous_url": "/docs/testing-the-odbc-connection/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/040-using-odbc-on-windows.md", 
-            "title": "Using ODBC on Windows", 
-            "url": "/docs/using-odbc-on-windows/"
         }, 
         "Using SQL Functions, Clauses, and Joins": {
             "breadcrumbs": [
@@ -10387,25 +10449,8 @@
         "Using Tibco Spotfire with Drill": {
             "breadcrumbs": [
                 {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Configuring Tibco Spotfire Server with Drill", 
-            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-            "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
-            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
-            "title": "Using Tibco Spotfire with Drill", 
-            "url": "/docs/using-tibco-spotfire-with-drill/"
-        }, 
-        "Using a Connection String": {
-            "breadcrumbs": [
-                {
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
                 }, 
                 {
                     "title": "ODBC/JDBC Interfaces", 
@@ -10413,14 +10458,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Advanced Properties", 
-            "next_url": "/docs/advanced-properties/", 
-            "parent": "Using ODBC on Linux and Mac OS X", 
-            "previous_title": "Driver Configuration Options", 
-            "previous_url": "/docs/driver-configuration-options/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/050-using-a-connection-string.md", 
-            "title": "Using a Connection String", 
-            "url": "/docs/using-a-connection-string/"
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
+            "title": "Using Tibco Spotfire with Drill", 
+            "url": "/docs/using-tibco-spotfire-with-drill/"
         }, 
         "Value Vectors": {
             "breadcrumbs": [
@@ -11735,8 +11780,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using ODBC on Linux and Mac OS X", 
-                    "next_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
+                    "next_title": "Installing the ODBC Driver", 
+                    "next_url": "/docs/installing-the-odbc-driver/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
@@ -11755,29 +11800,8 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing the Driver on Linux", 
-                            "next_url": "/docs/installing-the-driver-on-linux/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Using ODBC on Linux and Mac OS X", 
-                            "previous_url": "/docs/using-odbc-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/005-odbc-on-linux-and-mac-introduction.md", 
-                            "title": "ODBC on Linux and Mac Introduction", 
-                            "url": "/docs/odbc-on-linux-and-mac-introduction/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -11787,18 +11811,18 @@
                             "children": [], 
                             "next_title": "Installing the Driver on Mac OS X", 
                             "next_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "ODBC on Linux and Mac Introduction", 
-                            "previous_url": "/docs/odbc-on-linux-and-mac-introduction/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/010-installing-the-driver-on-linux.md", 
+                            "parent": "Installing the ODBC Driver", 
+                            "previous_title": "Installing the ODBC Driver", 
+                            "previous_url": "/docs/installing-the-odbc-driver/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/010-installing-the-driver-on-linux.md", 
                             "title": "Installing the Driver on Linux", 
                             "url": "/docs/installing-the-driver-on-linux/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -11806,20 +11830,20 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "next_title": "Installing the Driver on Windows", 
+                            "next_url": "/docs/installing-the-driver-on-windows/", 
+                            "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Linux", 
                             "previous_url": "/docs/installing-the-driver-on-linux/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/020-installing-the-driver-on-mac-os-x.md", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/020-installing-the-driver-on-mac-os-x.md", 
                             "title": "Installing the Driver on Mac OS X", 
                             "url": "/docs/installing-the-driver-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -11827,108 +11851,24 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Driver Configuration Options", 
-                            "next_url": "/docs/driver-configuration-options/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
+                            "next_title": "Configuring ODBC", 
+                            "next_url": "/docs/configuring-odbc/", 
+                            "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Mac OS X", 
                             "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/030-configuring-connections-on-linux-and-mac-os-x.md", 
-                            "title": "Configuring Connections on Linux and Mac OS X", 
-                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Using a Connection String", 
-                            "next_url": "/docs/using-a-connection-string/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/040-driver-configuration-options.md", 
-                            "title": "Driver Configuration Options", 
-                            "url": "/docs/driver-configuration-options/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Advanced Properties", 
-                            "next_url": "/docs/advanced-properties/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Driver Configuration Options", 
-                            "previous_url": "/docs/driver-configuration-options/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/050-using-a-connection-string.md", 
-                            "title": "Using a Connection String", 
-                            "url": "/docs/using-a-connection-string/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Testing the ODBC Connection", 
-                            "next_url": "/docs/testing-the-odbc-connection/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Using a Connection String", 
-                            "previous_url": "/docs/using-a-connection-string/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/060-advanced-properties.md", 
-                            "title": "Advanced Properties", 
-                            "url": "/docs/advanced-properties/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Linux and Mac OS X", 
-                                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Using ODBC on Windows", 
-                            "next_url": "/docs/using-odbc-on-windows/", 
-                            "parent": "Using ODBC on Linux and Mac OS X", 
-                            "previous_title": "Advanced Properties", 
-                            "previous_url": "/docs/advanced-properties/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-linux-and-mac-os-x/070-testing-the-odbc-connection.md", 
-                            "title": "Testing the ODBC Connection", 
-                            "url": "/docs/testing-the-odbc-connection/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
+                            "title": "Installing the Driver on Windows", 
+                            "url": "/docs/installing-the-driver-on-windows/"
                         }
                     ], 
-                    "next_title": "ODBC on Linux and Mac Introduction", 
-                    "next_url": "/docs/odbc-on-linux-and-mac-introduction/", 
+                    "next_title": "Installing the Driver on Linux", 
+                    "next_url": "/docs/installing-the-driver-on-linux/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using JDBC with SQuirreL on Windows", 
                     "previous_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/030-using-odbc-on-linux-and-mac-os-x.md", 
-                    "title": "Using ODBC on Linux and Mac OS X", 
-                    "url": "/docs/using-odbc-on-linux-and-mac-os-x/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/030-installing-the-odbc-driver.md", 
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11941,8 +11881,50 @@
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring Connections on Linux and Mac OS X", 
+                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC", 
+                            "previous_url": "/docs/configuring-odbc/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/010-odbc-configuration-reference.md", 
+                            "title": "ODBC Configuration Reference", 
+                            "url": "/docs/odbc-configuration-reference/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "ODBC Configuration Reference", 
+                            "previous_url": "/docs/odbc-configuration-reference/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
+                            "title": "Configuring Connections on Linux and Mac OS X", 
+                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -11952,18 +11934,18 @@
                             "children": [], 
                             "next_title": "Configuring Connections on Windows", 
                             "next_url": "/docs/configuring-connections-on-windows/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Using ODBC on Windows", 
-                            "previous_url": "/docs/using-odbc-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/010-installing-the-driver-on-windows.md", 
-                            "title": "Installing the Driver on Windows", 
-                            "url": "/docs/installing-the-driver-on-windows/"
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
+                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                            "title": "Testing the ODBC Connection", 
+                            "url": "/docs/testing-the-odbc-connection/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -11973,39 +11955,53 @@
                             "children": [], 
                             "next_title": "Connecting to ODBC Data Sources", 
                             "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Installing the Driver on Windows", 
-                            "previous_url": "/docs/installing-the-driver-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/020-configuring-connections-on-windows.md", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Testing the ODBC Connection", 
+                            "previous_url": "/docs/testing-the-odbc-connection/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
                             "title": "Configuring Connections on Windows", 
                             "url": "/docs/configuring-connections-on-windows/"
-                        }, 
+                        }
+                    ], 
+                    "next_title": "ODBC Configuration Reference", 
+                    "next_url": "/docs/odbc-configuration-reference/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Installing the Driver on Windows", 
+                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Drill Explorer", 
+                    "next_url": "/docs/using-drill-explorer/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Configuring Connections on Windows", 
+                    "previous_url": "/docs/configuring-connections-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-connecting-to-data-sources.md", 
+                    "title": "Connecting to ODBC Data Sources", 
+                    "url": "/docs/connecting-to-odbc-data-sources/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Tableau Examples", 
-                            "next_url": "/docs/tableau-examples/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Configuring Connections on Windows", 
-                            "previous_url": "/docs/configuring-connections-on-windows/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/030-connecting-to-data-sources.md", 
-                            "title": "Connecting to ODBC Data Sources", 
-                            "url": "/docs/connecting-to-odbc-data-sources/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Using Drill Explorer", 
+                                    "url": "/docs/using-drill-explorer/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -12015,18 +12011,78 @@
                             "children": [], 
                             "next_title": "Using Drill Explorer on Windows", 
                             "next_url": "/docs/using-drill-explorer-on-windows/", 
-                            "parent": "Using ODBC on Windows", 
-                            "previous_title": "Connecting to ODBC Data Sources", 
-                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/040-tableau-examples.md", 
-                            "title": "Tableau Examples", 
-                            "url": "/docs/tableau-examples/"
+                            "parent": "Using Drill Explorer", 
+                            "previous_title": "Using Drill Explorer", 
+                            "previous_url": "/docs/using-drill-explorer/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/010-connecting-to-odbc-data-sources.md", 
+                            "title": "Connecting to ODBC Data Sources", 
+                            "url": "/docs/connecting-to-odbc-data-sources/"
                         }, 
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Using ODBC on Windows", 
-                                    "url": "/docs/using-odbc-on-windows/"
+                                    "title": "Using Drill Explorer", 
+                                    "url": "/docs/using-drill-explorer/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Drill with BI Tools", 
+                            "next_url": "/docs/using-drill-with-bi-tools/", 
+                            "parent": "Using Drill Explorer", 
+                            "previous_title": "Connecting to ODBC Data Sources", 
+                            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/020-using-drill-explorer-on-windows.md", 
+                            "title": "Using Drill Explorer on Windows", 
+                            "url": "/docs/using-drill-explorer-on-windows/"
+                        }
+                    ], 
+                    "next_title": "Connecting to ODBC Data Sources", 
+                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Connecting to ODBC Data Sources", 
+                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Tableau Examples", 
+                            "next_url": "/docs/tableau-examples/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Drill with BI Tools", 
+                            "previous_url": "/docs/using-drill-with-bi-tools/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/010-using-odbc-with-bi-tools-introduction.md", 
+                            "title": "Using Drill with BI Tools Introduction", 
+                            "url": "/docs/using-drill-with-bi-tools-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
                                 }, 
                                 {
                                     "title": "ODBC/JDBC Interfaces", 
@@ -12036,107 +12092,106 @@
                             "children": [], 
                             "next_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "next_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "parent": "Using ODBC on Windows", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Drill with BI Tools Introduction", 
+                            "previous_url": "/docs/using-drill-with-bi-tools-introduction/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/020-tableau-examples.md", 
+                            "title": "Tableau Examples", 
+                            "url": "/docs/tableau-examples/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Tibco Spotfire with Drill", 
+                            "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "parent": "Using Drill with BI Tools", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-odbc-on-windows/050-using-drill-explorer-on-windows.md", 
-                            "title": "Using Drill Explorer on Windows", 
-                            "url": "/docs/using-drill-explorer-on-windows/"
-                        }
-                    ], 
-                    "next_title": "Installing the Driver on Windows", 
-                    "next_url": "/docs/installing-the-driver-on-windows/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Testing the ODBC Connection", 
-                    "previous_url": "/docs/testing-the-odbc-connection/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/040-using-odbc-on-windows.md", 
-                    "title": "Using ODBC on Windows", 
-                    "url": "/docs/using-odbc-on-windows/"
-                }, 
-                {
-                    "breadcrumbs": [
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/030-using-microstrategy-analytics-with-apache-drill.md", 
+                            "title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+                        }, 
                         {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+                            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
+                            "title": "Using Tibco Spotfire with Drill", 
+                            "url": "/docs/using-tibco-spotfire-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Server", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Tibco Spotfire with Drill", 
+                            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
+                            "title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
+                            "title": "Using Apache Drill with Tableau 9 Server", 
+                            "url": "/docs/using-apache-drill-with-tableau-9-server/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Using Tibco Spotfire with Drill", 
-                    "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "next_title": "Using Drill with BI Tools Introduction", 
+                    "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-microstrategy-analytics-with-apache-drill.md", 
-                    "title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
-                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
-                    "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-tibco-spotfire-with-drill.md", 
-                    "title": "Using Tibco Spotfire with Drill", 
-                    "url": "/docs/using-tibco-spotfire-with-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Tibco Spotfire with Drill", 
-                    "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/065-configuring-spotfire-server.md", 
-                    "title": "Configuring Tibco Spotfire Server with Drill", 
-                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
-                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-apache-drill-with-tableau-9-desktop.md", 
-                    "title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/080-using-apache-drill-with-tableau-9-server.md", 
-                    "title": "Using Apache Drill with Tableau 9 Server", 
-                    "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
                 }
             ], 
             "next_title": "Interfaces Introduction", 

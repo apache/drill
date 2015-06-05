@@ -1,5 +1,5 @@
 ---
-title: "Using ODBC on Windows"
+title: "Configuring ODBC"
 parent: "ODBC/JDBC Interfaces"
 ---
 

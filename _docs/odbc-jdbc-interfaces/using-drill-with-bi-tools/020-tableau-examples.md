@@ -1,9 +1,9 @@
 ---
 title: "Tableau Examples"
-parent: "Using ODBC on Windows"
+parent: "Using Drill with BI Tools"
 ---
 You can generate reports in Tableau using ODBC connections to Drill data
-sources. Each example in this section takes you through the steps to create a
+sources on Windows. Each example in this section takes you through the steps to create a
 DSN to a Drill data source and then access the data in Tableau 8.1.
 
 This section includes the following examples:
@@ -29,10 +29,10 @@ and then visualize the data in Tableau.
 In this step, we will create a DSN that accesses a Hive table.
 
   1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator.**
-     The _ODBC Data Source Administrator _window appears.
+     The *ODBC Data Source Administrator* window appears.
   2. On the **System DSN** tab, click **Add**.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
-     The _MapR Drill ODBC Driver DSN Setup_ window appears.
+     The *MapR Drill ODBC Driver DSN Setup* window appears.
   4. Enter a name for the data source.
   5. Specify the connection type based on your requirements. The connection type provides the DSN access to Drill Data Sources.  
 In this example, we are connecting to a Zookeeper Quorum.
@@ -49,7 +49,7 @@ In this example, we are connecting to a Zookeeper Quorum.
 Now, we can connect to Hive tables.
 
   1. In Tableau, click **Data > Connect to Data**.
-  2. In the _On a server_ section, click **Other Databases (ODBC**).  
+  2. In the *On a server* section, click **Other Databases (ODBC**).  
      The *Generic ODBC Connection* dialog appears.
   3. In the *Connect Using* section, select the DSN that connects to the Hive table.   
 -or-  
@@ -58,13 +58,13 @@ select the MapR Drill ODBC driver from the list and click **Connect.** Then,
 configure the connection to the Hive table and click **OK**.
   4. In the **Schema** field, select the Hive schema.  
      In this example, the Hive schema is named hive.default.
-  5. In the _Table_ section, verify that **Single Table** is selected and then click the Search icon.  
+  5. In the *Table* section, verify that **Single Table** is selected and then click the Search icon.  
      A list of tables appears.
   6. Select the table from the list and click **Select**.   
      In this example, the table name is student_hive.
   7. Click **OK** to complete the connection.  
      ![]({{ site.baseurl }}/docs/img/ODBC_HiveConnection.png)
-  8. In the _Data Connection_ dialog, click **Connect Live**.
+  8. In the *Data Connection* dialog, click **Connect Live**.
 
 ----------
 
@@ -99,10 +99,10 @@ where we can create a view of an HBase table. Then, we will use the ODBC
 Administrator to create a DSN that connects to the view.
 
   1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**.  
-     The _ODBC Data Source Administrator_ window appears.
+     The *ODBC Data Source Administrator* window appears.
   2. On the System DSN tab, click **Add**.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.
-     The _MapR Drill ODBC Driver DSN Setup_ window appears.
+     The *MapR Drill ODBC Driver DSN Setup* window appears.
   4. Specify the Connection Type based on your requirements.
      The connection type provides the DSN access to a Drillbit. For more
 information, see [Connection Type]({{ site.baseurl }}/docs/configuring-connections-on-windows/#connection-type).
@@ -151,7 +151,7 @@ view.
 Now, we can connect to the view in Tableau.
 
   1. In Tableau, click **Data > Connect to Data**.
-  2. In the _On a server_ section, click **Other Databases (ODBC)**.  
+  2. In the *On a server* section, click **Other Databases (ODBC)**.  
      The *Generic ODBC Connection* dialog appears.
   3. In the *Connect Using* section, select the DSN that connects to the schema that contains the view that you created.   
      -or-  
@@ -195,12 +195,12 @@ the data in Tableau.
      The *ODBC Data Source Administrator* window appears.
   2. On the **System DSN** tab, click **Add**.
   3. Select **MapR Drill ODBC Driver** and click **Finish**.  
-     The _MapR Drill ODBC Driver DSN Setup_ window appears.
+     The *MapR Drill ODBC Driver DSN Setup* window appears.
   4. Enter a data source name.
   5. Specify the connection type based on your requirements. See [Connection Type]({{ site.baseurl }}/docs/configuring-connections-on-windows/#connection-type) for more information.  
      The connection type provides the DSN access to a Drillbit.  
      In this example, we will connect to a Zookeeper Quorum.
-  6. In the _Schema_ section, select the schema associated with the data source that contains the Parquet file that you want to access. Then, click **OK**.  
+  6. In the *Schema* section, select the schema associated with the data source that contains the Parquet file that you want to access. Then, click **OK**.  
      In this example, the Parquet file is available in the dfs.default schema.  
       ![]({{ site.baseurl }}/docs/img/Parquet_DSN.png)  
      You can use this DSN to access multiple files from the same schema.  
@@ -221,7 +221,7 @@ the data in Tableau.
 Now, we can create a connection to the Parquet file using the custom SQL.
 
   1. In Tableau, click **Data > Connect to Data**.
-  2. In the _On a server_ section, click **Other Databases (ODBC).**
+  2. In the *On a server* section, click **Other Databases (ODBC).**
      The *Generic ODBC Connection* dialog appears.
   3. In the *Connect Using* section, select the DSN that connects to the data source.  
      In this example, Files-DrillDataSources was selected.
@@ -239,7 +239,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
 
   7. Click **OK** to complete the connection.  
      ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)
-  8. In the _Data Connection dialog_, click **Connect Live**.
+  8. In the *Data Connection dialog*, click **Connect Live**.
 
 #### Step 3. Visualize the Data in Tableau
 

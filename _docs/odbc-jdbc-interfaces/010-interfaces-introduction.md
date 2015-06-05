@@ -6,7 +6,7 @@ You can connect to Apache Drill through the following interfaces:
 
   * Drill shell
   * Drill Web UI
-  * [ODBC]({{ site.baseurl }}/docs/odbc-jdbc-interfaces#using-odbc-to-access-apache-drill-from-bi-tools)*
+  * [ODBC]({{ site.baseurl }}/docs/installing-the-odbc-driver/)*
   * [JDBC]({{ site.baseurl }}/docs/using-jdbc/)
   * C++ API
 

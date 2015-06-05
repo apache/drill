@@ -1,7 +1,6 @@
-
 ---
-title: "ODBC on Windows Introduction"
-parent: "Using ODBC on Windows"
+title: "Using Drill with BI Tools Introduction"
+parent: "Using Drill with BI Tools"
 ---
 The MapR Drill ODBC driver provides BI tools access to Drill’s flexible query
 capabilities so that users can quickly explore various data sources. The MapR
@@ -9,24 +8,11 @@ Drill ODBC driver includes Drill Explorer, which is a simple user interface
 that enables users to examine the content of data sources and create views
 before visualizing the data in a BI tool.
 
-Once you install the MapR Drill ODBC Driver, you can create ODBC DSNs to Drill
+Once you install the MapR Drill ODBC Driver on Windows, you can create ODBC DSNs to Drill
 data sources using the ODBC Administrator tool and then use the DSNs to access
 the data from BI tools that work with ODBC. Drill can connect to data with
 well-defined schemas, such as Hive. Drill can also connect directly to data
 that is self-describing, such as HBase, Parquet, JSON, CSV, and TSV.
-
-Complete the following steps to connect to a Drill data source from a BI tool
-using ODBC:
-
-  * [Step 1. Install the MapR Drill ODBC Driver]({{ site.baseurl }}/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows)
-  * [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/step-2-configure-odbc-connections-to-drill-data-sources)
-  * [Step 3. Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool)
-
-For examples of how you can use the MapR Drill ODBC Driver to connect to Drill
-Data Sources from BI tools, see [Step 3. Connect to Drill Data Sources from a
-BI Tool]({{ site.baseurl }}/docs/step-3-connect-to-drill-data-sources-from-a-bi-tool). While the documentation includes examples for Tableau, you can use
-this driver with any BI tool that works with ODBC, such as Excel,
-MicroStrategy, and Toad.
 
 The following figure shows how a BI tool on Windows uses an ODBC connection to
 access data from a Hive table:

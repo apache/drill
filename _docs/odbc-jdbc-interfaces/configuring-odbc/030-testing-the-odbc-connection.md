@@ -1,6 +1,6 @@
 ---
 title: "Testing the ODBC Connection"
-parent: "Using ODBC on Linux and Mac OS X"
+parent: "Configuring ODBC"
 ---
 To test the ODBC connection on Linux and Mac OS X, you can use an ODBC-enabled client application. For a
 basic connection test, you can also use the test utilities that are packaged

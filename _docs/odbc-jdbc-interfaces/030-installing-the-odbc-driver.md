@@ -1,5 +1,5 @@
 ---
-title: "Using ODBC on Linux and Mac OS X"
+title: "Installing the ODBC Driver"
 parent: "ODBC/JDBC Interfaces"
 ---
 

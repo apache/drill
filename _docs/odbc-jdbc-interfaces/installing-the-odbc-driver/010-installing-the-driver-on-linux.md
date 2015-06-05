@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-parent: "Using ODBC on Linux and Mac OS X"
+parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to
 the Drill service. You can install the 32- or 64-bit driver on Linux. Install

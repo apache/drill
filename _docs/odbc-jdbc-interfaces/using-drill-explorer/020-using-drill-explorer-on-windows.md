@@ -1,6 +1,6 @@
 ---
 title: "Using Drill Explorer on Windows"
-parent: "Using ODBC on Windows"
+parent: "Using Drill Explorer"
 ---
 Drill Explorer is a simple user interface that is embedded within the ODBC
 DSN. Drill Explorer enables users to understand the metadata and data before
