@@ -7,9 +7,9 @@ the Drill service.
 
 To install the MapR Drill ODBC Driver, complete the following steps:
 
-  * Step 1: Downloading the MapR Drill ODBC Driver 
-  * Step 2: Installing the MapR Drill ODBC Driver 
-  * Step 3: Updating the DYLD_LIBRARY_PATH Environment Variable
+  * [Step 1: Downloading the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-1:-downloading-the-mapr-drill-odbc-driver) 
+  * [Step 2: Installing the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2:-installing-the-mapr-drill-odbc-driver) 
+  * [Step 3: Checking the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)
 
 After you complete the installation steps, complete the steps listed in
 [Configuring ODBC Connections on Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x)
@@ -19,11 +19,11 @@ Verify that your system meets the following prerequisites before you start.
 
 **System Requirements**
 
-  * Mac OS X version 10.6.8 or later
-  * 100 MB of available disk space
-  * iODBC 3.52.7 or later
-  * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).   
-If not, create the following entry in `/etc/hosts` for the Drill node(s):  
+  * Mac OS X version 10.6.8 or later  
+  * 100 MB of available disk space  
+  * iODBC 3.52.7 or later  
+    The iodbc-config file in the `/usr/local/iODBC/bin` includes the version.  
+  * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).  If necessary, create the following entry in `/etc/hosts` for the Drill node(s):  
 `<drill-machine-IP> <drill-machine-hostname>`  
 Example: `127.0.0.1 localhost`
 
@@ -54,20 +54,16 @@ To install the driver, complete the following steps:
   * `/opt/mapr/drillodbc/Setup` – Sample configuration files directory
   * `/opt/mapr/drillodbc/lib/universal` – Binaries directory
 
-----------
+## Step 3: Checking the MapR Drill ODBC Driver version
 
-## Step 3: Updating the DYLD_LIBRARY_PATH Environment Variable
+To check the version of the driver you installed, use the following command on the terminal command line:
 
-The Dynamic Link editor library path environment variable DYLD_LIBRARY_PATH must include paths to the following
-libraries:
-
-  * Installed iODBC driver manager libraries: libiodbc.dylib and libiodbcinst.dylib
-  * Installed MapR Drill ODBC Driver for Drill shared libraries
-
-If you installed the iODBC driver manager using the DMG, libraries are installed in
-`/usr/local/iODBC/lib`, set the `DYLD_LIBRARY_PATH` to include that path and the path to the MapR Drill ODBC Driver. For example, use the following command to set the environment variable to both paths:
-
-`export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal`
+    $ pkgutil --info mapr.drillodbc
+    package-id: mapr.drillodbc
+    version: 1.0.0
+    volume: /
+    location: 
+    install-time: 1433465518
 
 #### Next Step
 

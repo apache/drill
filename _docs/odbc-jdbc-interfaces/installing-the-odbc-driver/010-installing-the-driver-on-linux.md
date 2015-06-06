@@ -83,23 +83,15 @@ File| Description
 `/opt/mapr/drillodbc/lib/32 `| 32-bit shared libraries directory.  
 `/opt/mapr/drillodbc/lib/64`| 64-bit shared libraries directory.  
   
-## Step 3: Setting the LD_LIBRARY_PATH Environment Variable
+## Step 3: Checking the MapR Drill ODBC Driver version
 
-The `LD_LIBRARY_PATH` environment variable must include the paths to the
-following:
+To check the version of the driver you installed, use the following command on the terminal command line:
 
-  * Installed ODBC driver manager libraries
-  * Installed MapR ODBC Driver for Apache Drill shared libraries
+`yum list | grep maprdrillodbc`
 
-You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
-{% include startimportant.html %}Do not include the paths to both 32- and 64-bit shared libraries in LD_LIBRARY PATH at the same time.{% include endimportant.html %}
-Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
+or
 
-For example, if you are using a 64-bit client application and ODBC driver
-manager libraries are installed in `/usr/local/lib`, then set
-`LD_LIBRARY_PATH` as follows:  
-
-`export LD_LIBRARY_PATH=/usr/local/lib:/opt/simba/drillodbc/lib/64`  
+`rpm -qa | grep maprdrillodbc`
 
 
 #### Next Step

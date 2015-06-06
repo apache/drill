@@ -1,5 +1,5 @@
 ---
-title: "Configuring Connections on Windows"
+title: "Configuring ODBC on Windows"
 parent: "Configuring ODBC"
 ---
 

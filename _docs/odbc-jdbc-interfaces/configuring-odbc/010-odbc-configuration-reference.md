@@ -18,8 +18,8 @@ The following table provides a list of the configuration options and a brief des
 | Catalog            | DRILL                                     | The name of the synthetic catalog under which all of the schemas/databases are organized.                                                                               |
 | ConnectionType     | Direct or ZooKeeper                       | Direct connects to a Drill server using Host and Port properties. ZooKeeper connects to a ZooKeeper cluster using ZKQuorum and ZKClusterID properties.                  |
 | Driver             | MapR Drill ODBC Driver                    | The name of the installed driver.                                                                                                                                       |
-| Host               | \<host name\>                             | If the ConnectionType property is set to Direct, then set the host name of the Drill server using the Host property.                                                    |
-| Port               | 31010                                     | If the ConnectionType property is set to Direct, then set the port on which the Drill server listen port.                                                               |
+| Host               | \<host name\>                             | If the ConnectionType property is set to Direct, set the host name of the Drill server using the Host property.                                                         |
+| Port               | 31010                                     | If the ConnectionType property is set to Direct, set the e TCP port on which the Drill server is listening.                                                             |
 | Schema             | \<schema name\>                           | The name of the database schema or storage plugin name to use when the query does not explicitly specify the schema or storage plugin.                                  |
 | ZKClusterID        | drillbits1                                | If the ConnectionType property is set to ZooKeeper, then set ZKClusterID to the name of the Drillbit cluster to use.                                                    |
 | ZKQuorum           | \<IP address\>,\<IP address\> . . .       | If the ConnectionType property is set to ZooKeeper, then use ZKQuorum to indicate the server(s) in your ZooKeeper cluster. Separate multiple servers using a comma (,). |
@@ -102,10 +102,10 @@ set when using the MapR Drill ODBC Driver.
 |----------------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | HandshakeTimeout           | 5                       | An integer value representing the number of seconds that the driver waits before aborting an attempt to connect to a data source. When set to a value of 0, the driver does not abort connection attempts. |
 | QueryTimeout               | 180                     | An integer value representing the number of seconds for the driver to wait before automatically stopping a query. When set to a value of 0, the driver does not stop queries automatically.                |
-| TimestampTZDisplayTimezone | local                   | Two values are possible:local—Timestamps are dependent on the time zone of the user.utc—Timestamps appear in Coordinated Universal Time (UTC).                                                             |
+| TimestampTZDisplayTimezone | local                   | Two values are possible: local—Timestamps are dependent on the time zone of the user. utc—Timestamps appear in Coordinated Universal Time (UTC).                                                           |
 | ExcludedSchemas            | sys, INFORMATION_SCHEMA | The value of ExcludedSchemas is a list of schemas that do not appear in client applications such as Drill Explorer, Tableau, and Excel. Separate schemas in the list using a comma (,).                    |
 | CastAnyToVarchar           | true                    | Casts the ANY data type returned from SQL column calls into type “VARCHAR”.                                                                                                                                |
-| NumberOfPrefetchBuffers    | 5                       | The number of data buffers Drill uses when accessing memory.                                                                                                                                               |
+| NumberOfPrefetchBuffers    | 5                       | The size of the record batch queue in the driver. When set to a value below 1, the value defaults to 1.                                                                                                    |
 
 ### Connection String Examples
 
@@ -144,5 +144,28 @@ The following log levels are available:
 * DEBUG: Logs detailed events that may help to debug issues.
 * TRACE: Logs finer-grained events than the DEBUG level.
 
-#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
+### Enabling Logging
+
+To enable logging:
+
+1. Open the mapr.drillodbc.ini configuration file in a text editor.  
+2. Set the LogLevel key to the desired level of information to include in log files. For
+example:  
+`LogLevel=2`
+3. Set the LogPath key to the full path to the folder where you want to save log files. For example:  
+`LogPath=/localhome/employee/Documents`
+4. Save the mapr.drillodbc.ini configuration file.  
+The Simba ODBC Driver for Apache Drill produces two log files at the location you specify using the Log Path field:  
+   * driver.log provides a log of driver activities
+   * drillclient.log provides a log of Drill client activities
+
+### Disabling Logging
+
+To disable logging:
+
+1. Open the mapr.drillodbc.ini configuration file in a text editor.
+2. Set the LogLevel key to 0
+3. Save the mapr.drillodbc.ini configuration file.
+
+#### What's Next? Go to [Connecting to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
 

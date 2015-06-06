@@ -1086,48 +1086,6 @@
             "title": "Configure Drill Introduction", 
             "url": "/docs/configure-drill-introduction/"
         }, 
-        "Configuring Connections on Linux and Mac OS X": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuring ODBC", 
-                    "url": "/docs/configuring-odbc/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Testing the ODBC Connection", 
-            "next_url": "/docs/testing-the-odbc-connection/", 
-            "parent": "Configuring ODBC", 
-            "previous_title": "ODBC Configuration Reference", 
-            "previous_url": "/docs/odbc-configuration-reference/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
-            "title": "Configuring Connections on Linux and Mac OS X", 
-            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
-        }, 
-        "Configuring Connections on Windows": {
-            "breadcrumbs": [
-                {
-                    "title": "Configuring ODBC", 
-                    "url": "/docs/configuring-odbc/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Connecting to ODBC Data Sources", 
-            "next_url": "/docs/connecting-to-odbc-data-sources/", 
-            "parent": "Configuring ODBC", 
-            "previous_title": "Testing the ODBC Connection", 
-            "previous_url": "/docs/testing-the-odbc-connection/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
-            "title": "Configuring Connections on Windows", 
-            "url": "/docs/configuring-connections-on-windows/"
-        }, 
         "Configuring Drill Memory": {
             "breadcrumbs": [
                 {
@@ -1186,8 +1144,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Connections on Linux and Mac OS X", 
-                    "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                    "next_title": "Configuring ODBC on Linux/Mac OS X", 
+                    "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "Configuring ODBC", 
                     "previous_url": "/docs/configuring-odbc/", 
@@ -1207,14 +1165,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Testing the ODBC Connection", 
-                    "next_url": "/docs/testing-the-odbc-connection/", 
+                    "next_title": "Configuring ODBC on Windows", 
+                    "next_url": "/docs/configuring-odbc-on-windows/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "ODBC Configuration Reference", 
                     "previous_url": "/docs/odbc-configuration-reference/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
-                    "title": "Configuring Connections on Linux and Mac OS X", 
-                    "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
+                    "title": "Configuring ODBC on Linux/Mac OS X", 
+                    "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1228,35 +1186,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Connections on Windows", 
-                    "next_url": "/docs/configuring-connections-on-windows/", 
+                    "next_title": "Testing the ODBC Connection", 
+                    "next_url": "/docs/testing-the-odbc-connection/", 
                     "parent": "Configuring ODBC", 
-                    "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                    "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                    "previous_title": "Configuring ODBC on Linux/Mac OS X", 
+                    "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
+                    "title": "Configuring ODBC on Windows", 
+                    "url": "/docs/configuring-odbc-on-windows/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Drill Explorer", 
+                    "next_url": "/docs/using-drill-explorer/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "Configuring ODBC on Windows", 
+                    "previous_url": "/docs/configuring-odbc-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-testing-the-odbc-connection.md", 
                     "title": "Testing the ODBC Connection", 
                     "url": "/docs/testing-the-odbc-connection/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Configuring ODBC", 
-                            "url": "/docs/configuring-odbc/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Connecting to ODBC Data Sources", 
-                    "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                    "parent": "Configuring ODBC", 
-                    "previous_title": "Testing the ODBC Connection", 
-                    "previous_url": "/docs/testing-the-odbc-connection/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
-                    "title": "Configuring Connections on Windows", 
-                    "url": "/docs/configuring-connections-on-windows/"
                 }
             ], 
             "next_title": "ODBC Configuration Reference", 
@@ -1267,6 +1225,48 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
             "title": "Configuring ODBC", 
             "url": "/docs/configuring-odbc/"
+        }, 
+        "Configuring ODBC on Linux/Mac OS X": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring ODBC on Windows", 
+            "next_url": "/docs/configuring-odbc-on-windows/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "ODBC Configuration Reference", 
+            "previous_url": "/docs/odbc-configuration-reference/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
+            "title": "Configuring ODBC on Linux/Mac OS X", 
+            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
+        }, 
+        "Configuring ODBC on Windows": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Testing the ODBC Connection", 
+            "next_url": "/docs/testing-the-odbc-connection/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
+            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
+            "title": "Configuring ODBC on Windows", 
+            "url": "/docs/configuring-odbc-on-windows/"
         }, 
         "Configuring Resources for a Shared Drillbit": {
             "breadcrumbs": [
@@ -4753,8 +4753,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Connections on Linux and Mac OS X", 
-            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+            "next_title": "Configuring ODBC on Linux/Mac OS X", 
+            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
             "parent": "Configuring ODBC", 
             "previous_title": "Configuring ODBC", 
             "previous_url": "/docs/configuring-odbc/", 
@@ -4900,8 +4900,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "next_title": "Configuring ODBC on Linux/Mac OS X", 
+                            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -4921,14 +4921,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Testing the ODBC Connection", 
-                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "next_title": "Configuring ODBC on Windows", 
+                            "next_url": "/docs/configuring-odbc-on-windows/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
-                            "title": "Configuring Connections on Linux and Mac OS X", 
-                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
+                            "title": "Configuring ODBC on Linux/Mac OS X", 
+                            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -4942,35 +4942,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Windows", 
-                            "next_url": "/docs/configuring-connections-on-windows/", 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
+                            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
+                            "title": "Configuring ODBC on Windows", 
+                            "url": "/docs/configuring-odbc-on-windows/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Drill Explorer", 
+                            "next_url": "/docs/using-drill-explorer/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC on Windows", 
+                            "previous_url": "/docs/configuring-odbc-on-windows/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-testing-the-odbc-connection.md", 
                             "title": "Testing the ODBC Connection", 
                             "url": "/docs/testing-the-odbc-connection/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring ODBC", 
-                                    "url": "/docs/configuring-odbc/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Connecting to ODBC Data Sources", 
-                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "parent": "Configuring ODBC", 
-                            "previous_title": "Testing the ODBC Connection", 
-                            "previous_url": "/docs/testing-the-odbc-connection/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
-                            "title": "Configuring Connections on Windows", 
-                            "url": "/docs/configuring-connections-on-windows/"
                         }
                     ], 
                     "next_title": "ODBC Configuration Reference", 
@@ -4981,23 +4981,6 @@
                     "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
                     "title": "Configuring ODBC", 
                     "url": "/docs/configuring-odbc/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Drill Explorer", 
-                    "next_url": "/docs/using-drill-explorer/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Configuring Connections on Windows", 
-                    "previous_url": "/docs/configuring-connections-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-connecting-to-data-sources.md", 
-                    "title": "Connecting to ODBC Data Sources", 
-                    "url": "/docs/connecting-to-odbc-data-sources/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -5053,9 +5036,9 @@
                     "next_title": "Connecting to ODBC Data Sources", 
                     "next_url": "/docs/connecting-to-odbc-data-sources/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Connecting to ODBC Data Sources", 
-                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+                    "previous_title": "Testing the ODBC Connection", 
+                    "previous_url": "/docs/testing-the-odbc-connection/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-drill-explorer.md", 
                     "title": "Using Drill Explorer", 
                     "url": "/docs/using-drill-explorer/"
                 }, 
@@ -5199,7 +5182,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
                     "title": "Using Drill with BI Tools", 
                     "url": "/docs/using-drill-with-bi-tools/"
                 }
@@ -9718,12 +9701,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Connections on Windows", 
-            "next_url": "/docs/configuring-connections-on-windows/", 
+            "next_title": "Using Drill Explorer", 
+            "next_url": "/docs/using-drill-explorer/", 
             "parent": "Configuring ODBC", 
-            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+            "previous_title": "Configuring ODBC on Windows", 
+            "previous_url": "/docs/configuring-odbc-on-windows/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-testing-the-odbc-connection.md", 
             "title": "Testing the ODBC Connection", 
             "url": "/docs/testing-the-odbc-connection/"
         }, 
@@ -10195,9 +10178,9 @@
             "next_title": "Connecting to ODBC Data Sources", 
             "next_url": "/docs/connecting-to-odbc-data-sources/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Connecting to ODBC Data Sources", 
-            "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+            "previous_title": "Testing the ODBC Connection", 
+            "previous_url": "/docs/testing-the-odbc-connection/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/050-using-drill-explorer.md", 
             "title": "Using Drill Explorer", 
             "url": "/docs/using-drill-explorer/"
         }, 
@@ -10362,7 +10345,7 @@
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "Using Drill Explorer on Windows", 
             "previous_url": "/docs/using-drill-explorer-on-windows/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
             "title": "Using Drill with BI Tools", 
             "url": "/docs/using-drill-with-bi-tools/"
         }, 
@@ -11890,8 +11873,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Linux and Mac OS X", 
-                            "next_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
+                            "next_title": "Configuring ODBC on Linux/Mac OS X", 
+                            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -11911,14 +11894,14 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Testing the ODBC Connection", 
-                            "next_url": "/docs/testing-the-odbc-connection/", 
+                            "next_title": "Configuring ODBC on Windows", 
+                            "next_url": "/docs/configuring-odbc-on-windows/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-connections-on-linux-and-mac-os-x.md", 
-                            "title": "Configuring Connections on Linux and Mac OS X", 
-                            "url": "/docs/configuring-connections-on-linux-and-mac-os-x/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
+                            "title": "Configuring ODBC on Linux/Mac OS X", 
+                            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -11932,35 +11915,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring Connections on Windows", 
-                            "next_url": "/docs/configuring-connections-on-windows/", 
+                            "next_title": "Testing the ODBC Connection", 
+                            "next_url": "/docs/testing-the-odbc-connection/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Configuring Connections on Linux and Mac OS X", 
-                            "previous_url": "/docs/configuring-connections-on-linux-and-mac-os-x/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-testing-the-odbc-connection.md", 
+                            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
+                            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
+                            "title": "Configuring ODBC on Windows", 
+                            "url": "/docs/configuring-odbc-on-windows/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Drill Explorer", 
+                            "next_url": "/docs/using-drill-explorer/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC on Windows", 
+                            "previous_url": "/docs/configuring-odbc-on-windows/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-testing-the-odbc-connection.md", 
                             "title": "Testing the ODBC Connection", 
                             "url": "/docs/testing-the-odbc-connection/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Configuring ODBC", 
-                                    "url": "/docs/configuring-odbc/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Connecting to ODBC Data Sources", 
-                            "next_url": "/docs/connecting-to-odbc-data-sources/", 
-                            "parent": "Configuring ODBC", 
-                            "previous_title": "Testing the ODBC Connection", 
-                            "previous_url": "/docs/testing-the-odbc-connection/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/040-configuring-connections-on-windows.md", 
-                            "title": "Configuring Connections on Windows", 
-                            "url": "/docs/configuring-connections-on-windows/"
                         }
                     ], 
                     "next_title": "ODBC Configuration Reference", 
@@ -11971,23 +11954,6 @@
                     "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
                     "title": "Configuring ODBC", 
                     "url": "/docs/configuring-odbc/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Using Drill Explorer", 
-                    "next_url": "/docs/using-drill-explorer/", 
-                    "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Configuring Connections on Windows", 
-                    "previous_url": "/docs/configuring-connections-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/050-connecting-to-data-sources.md", 
-                    "title": "Connecting to ODBC Data Sources", 
-                    "url": "/docs/connecting-to-odbc-data-sources/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12043,9 +12009,9 @@
                     "next_title": "Connecting to ODBC Data Sources", 
                     "next_url": "/docs/connecting-to-odbc-data-sources/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Connecting to ODBC Data Sources", 
-                    "previous_url": "/docs/connecting-to-odbc-data-sources/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-explorer.md", 
+                    "previous_title": "Testing the ODBC Connection", 
+                    "previous_url": "/docs/testing-the-odbc-connection/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/050-using-drill-explorer.md", 
                     "title": "Using Drill Explorer", 
                     "url": "/docs/using-drill-explorer/"
                 }, 
@@ -12189,7 +12155,7 @@
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Using Drill Explorer on Windows", 
                     "previous_url": "/docs/using-drill-explorer-on-windows/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/070-using-drill-with-bi-tools.md", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
                     "title": "Using Drill with BI Tools", 
                     "url": "/docs/using-drill-with-bi-tools/"
                 }

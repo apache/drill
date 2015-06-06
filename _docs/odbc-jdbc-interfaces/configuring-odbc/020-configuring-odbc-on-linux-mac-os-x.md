@@ -1,5 +1,5 @@
 ---
-title: "Configuring Connections on Linux and Mac OS X"
+title: "Configuring ODBC on Linux/Mac OS X"
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
@@ -26,11 +26,18 @@ In your home directory, use sudo to rename the files as hidden files:
 * .odbc.ini
 * .odbcinst.ini
 
-If the configuration files already exist in your home directory, you can use the sample configuration files as a guide for modifying the existing configuration files as described in Steps 2-4.
+The installer for Mac OS X creates a sample user DSN in odbc.ini in either of the following locations:
+
+* ~/Library/ODBC/odbc.ini
+* ~/.odbc.ini
+
+Depending on the driver manager you use, the user DSN in one of these files will be effective.
 
 ----------
 
-## Step 1: Set Environment Variables (Linux only)
+## Step 1: Set Environment Variables 
+
+### Linux
 
 Set the following environment variables to point to the `.odbc.ini`
 and `.mapr.drillodbc.ini` configuration files, respectively:
@@ -38,8 +45,32 @@ and `.mapr.drillodbc.ini` configuration files, respectively:
   * `ODBCINI` (point to `.odbc.ini`)
   * `MAPRDRILLINI` (point to `.mapr.drillodbc.ini`)
 
-{% include startnote.html %}You do not need to set these variables for the Mac OS X version of the driver.{% include endnote.html %}
+The `LD_LIBRARY_PATH` environment variable must include the paths to the
+following:
 
+  * Installed ODBC driver manager libraries
+  * Installed MapR ODBC Driver for Apache Drill shared libraries
+
+You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
+{% include startimportant.html %}Do not include the paths to both 32- and 64-bit shared libraries in LD_LIBRARY PATH at the same time.{% include endimportant.html %}
+Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
+
+For example, if you are using a 64-bit client application and ODBC driver
+manager libraries are installed in `/usr/local/lib`, then set
+`LD_LIBRARY_PATH` as follows:  
+
+`export LD_LIBRARY_PATH=/usr/local/lib:/opt/simba/drillodbc/lib/64`  
+
+### Mac OS X
+
+Create or modify the `/etc/launchd.conf` file to set environment variables. Set the SIMBAINI variable to point to the `.mapr.drillodbc.ini` file, the ODBCSYSINI varialbe to the `.odbcinst.ini` file, the ODBCINI variable to the `.odbc.ini` file, and the DYLD_LIBRARY_PATH to the location of the dynamic linker (DYLD) libraries and to the MapR Drill ODBC Driver. If you installed the iODBC driver manager using the DMG, the DYLD libraries are installed in `/usr/local/iODBC/lib`. The launchd.conf file should look something like this:
+
+    setenv SIMBAINI /Users/joeuser/.mapr.drillodbc.ini
+    setenv ODBCSYSINI /Users/joeuser/.odbcinst.ini
+    setenv ODBCINI /Users/joeuser/.odbc.ini
+    launchctl setenv DYLD_LIBRARY_PATH /usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal
+
+Restart the Mac OS X or run `launchctl load /etc/launchd.conf`.
 ----------
 
 ## Step 2: Define the ODBC Data Sources in .odbc.ini
@@ -52,12 +83,12 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
     # Specify any global ODBC configuration here such as ODBC tracing.
   
     [ODBC Data Sources]
-    My MapR Drill DSN=MapR Drill ODBC Driver
+    Sample MapR Drill DSN=MapR Drill ODBC Driver
   
     [Sample MapR Drill DSN]
     # Description: DSN Description.
     # This key is not necessary and is only to give a description of the data source.
-    Description=My MapR Drill ODBC Driver DSN
+    Description=Sample MapR Drill ODBC Driver DSN
     # Driver: The location where the ODBC driver is installed to.
     Driver=/opt/mapr/drillodbc/lib/universal/libmaprdrillodbc.dylib
   
@@ -65,10 +96,10 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
     # If ConnectionType is Direct, include Host and Port. If ConnectionType is ZooKeeper, include ZKQuorum and ZKClusterID
     # They can also be specified in the connection string.
     ConnectionType=Direct
-    HOST=
-    PORT=
-    ZKQuorum=localhost:2181
-    ZKClusterID=drillbits1
+    HOST=localhost
+    PORT=31010
+    ZKQuorum=
+    ZKClusterID=
     AdvancedProperties={HandshakeTimeout=5;QueryTimeout=180;TimestampTZDisplayTimeout=utc;ExcludedSchemas=sys,INFORMATION_SCHEMA}
     Catalog=DRILL
     Schema=

@@ -16,15 +16,15 @@ You can connect to Apache Drill through the following interfaces:
 
 MapR provides ODBC drivers for Windows, Mac OS X, and Linux. It is recommended
 that you install the latest version of Apache Drill with the latest version of
-the Drill ODBC driver.
+the MapR Drill ODBC driver.
 
-For example, if you have Apache Drill 0.8 and a Drill ODBC driver installed on
+For example, if you have Apache Drill 0.8 and a MapR Drill ODBC driver installed on
 your machine, and then you upgrade to Apache Drill 1.0, do not assume that the
-Drill ODBC driver installed on your machine will work with the new version of
-Apache Drill. Install the latest available Drill ODBC driver to ensure that
+MapR Drill ODBC driver installed on your machine will work with the new version of
+Apache Drill. Install the latest available MapR Drill ODBC driver to ensure that
 the two components work together.
 
-You can access the latest Drill ODBC drivers in the following location:
+You can access the latest MapR Drill ODBC drivers in the following location:
 
 <http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc>
 
