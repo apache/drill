@@ -18,14 +18,12 @@
 
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rex.RexLiteral;
 
 public class DrillWindowRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillWindowRule();
@@ -45,7 +43,7 @@ public class DrillWindowRule extends RelOptRule {
             window.getCluster(),
             traits,
             convertedInput,
-            Lists.<RexLiteral>newArrayList(),
+            window.constants,
             window.getRowType(),
             window.groups));
   }

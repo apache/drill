@@ -109,15 +109,16 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
-      args.add(new FieldReference(fn.get(i)));
+      if (i < fn.size()) {
+        args.add(new FieldReference(fn.get(i)));
+      }
     }
 
     // for count(1).
     if (args.isEmpty()) {
       args.add(new ValueExpressions.LongExpression(1l));
     }
-    LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
-    return expr;
+    return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
   }
 
   @Override
