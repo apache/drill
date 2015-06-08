@@ -47,7 +47,8 @@ import java.util.Map;
 public interface DrillResultSet extends ResultSet  {
 
   /**
-   * Gets the ID the associated query (the query results this ResultSet presents).
+   * Gets the ID of the associated query (the query whose results this ResultSet
+   * presents).
    */
   String getQueryId();
 

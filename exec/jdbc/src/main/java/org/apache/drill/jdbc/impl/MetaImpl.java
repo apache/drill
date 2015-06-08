@@ -81,11 +81,6 @@ class MetaImpl implements Meta {
     return "";
   }
 
-  // TODO:  BUG: null is not a proper empty result set.
-  private static ResultSet getEmptyResultSet() {
-    return null;
-  }
-
   private ResultSet s(String s) {
     try {
       logger.debug("Running {}", s);
@@ -97,6 +92,21 @@ class MetaImpl implements Meta {
       throw new DrillRuntimeException("Failure while attempting to get DatabaseMetadata.", e);
     }
 
+  }
+
+  /**
+   * Returns interim generic empty result set.
+   * <p>
+   *   (Does not return specific columns expected (and visible in metadata) for
+   *   specific get methods.)
+   * </p>
+   */
+  private ResultSet getEmptyResultSet() {
+    return s(
+        "SELECT '' AS `Interim zero-row result set` "  // dummy row type
+        + "FROM INFORMATION_SCHEMA.CATALOGS "          // any table
+        + "LIMIT 0"                                    // zero rows
+        );
   }
 
   @Override

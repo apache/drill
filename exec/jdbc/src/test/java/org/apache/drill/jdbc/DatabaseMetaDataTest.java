@@ -44,6 +44,7 @@ import java.sql.SQLException;
 public class DatabaseMetaDataTest {
 
   private static Connection connection;
+  private static DatabaseMetaData dbmd;
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
@@ -51,6 +52,7 @@ public class DatabaseMetaDataTest {
     // Connection--and other JDBC objects--on test method failure, but this test
     // class uses some objects across methods.)
     connection = new Driver().connect( "jdbc:drill:zk=local", null );
+    dbmd = connection.getMetaData();
   }
 
   @AfterClass
@@ -58,32 +60,352 @@ public class DatabaseMetaDataTest {
     connection.close();
   }
 
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //  allProceduresAreCallable()
+  //  allTablesAreSelectable()
+  //  getURL()
+  //  getUserName()
+  //  isReadOnly()
+  //  nullsAreSortedHigh()
+  //  nullsAreSortedLow()
+  //  nullsAreSortedAtStart()
+  //  nullsAreSortedAtEnd()
+  //  getDatabaseProductName()
+  //  getDatabaseProductVersion()
+  //  getDriverName()
+  //  getDriverVersion()
+  //  getDriverMajorVersion();
+  //  getDriverMinorVersion();
+  //  usesLocalFiles()
+  //  usesLocalFilePerTable()
+  //  supportsMixedCaseIdentifiers()
+  //  storesUpperCaseIdentifiers()
+  //  storesLowerCaseIdentifiers()
+  //  storesMixedCaseIdentifiers()
+  //  supportsMixedCaseQuotedIdentifiers()
+  //  storesUpperCaseQuotedIdentifiers()
+  //  storesLowerCaseQuotedIdentifiers()
+  //  storesMixedCaseQuotedIdentifiers()
+  //  getIdentifierQuoteString()
+  //  getSQLKeywords()
+  //  getNumericFunctions()
+  //  getStringFunctions()
+  //  getSystemFunctions()
+  //  getTimeDateFunctions()
+  //  getSearchStringEscape()
+  //  getExtraNameCharacters()
+  //  supportsAlterTableWithAddColumn()
+  //  supportsAlterTableWithDropColumn()
+  //  supportsColumnAliasing()
+  //  nullPlusNonNullIsNull()
+  //  supportsConvert()
+  //  supportsConvert(int fromType, int toType)
+  //  supportsTableCorrelationNames()
+  //  supportsDifferentTableCorrelationNames()
+  //  supportsExpressionsInOrderBy()
+  //  supportsOrderByUnrelated()
+  //  supportsGroupBy()
+  //  supportsGroupByUnrelated()
+  //  supportsGroupByBeyondSelect()
+  //  supportsLikeEscapeClause()
+  //  supportsMultipleResultSets()
+  //  supportsMultipleTransactions()
+  //  supportsNonNullableColumns()
+  //  supportsMinimumSQLGrammar()
+  //  supportsCoreSQLGrammar()
+  //  supportsExtendedSQLGrammar()
+  //  supportsANSI92EntryLevelSQL()
+  //  supportsANSI92IntermediateSQL()
+  //  supportsANSI92FullSQL()
+  //  supportsIntegrityEnhancementFacility()
+  //  supportsOuterJoins()
+  //  supportsFullOuterJoins()
+  //  supportsLimitedOuterJoins()
+  //  getSchemaTerm()
+  //  getProcedureTerm()
+  //  getCatalogTerm()
+  //  isCatalogAtStart()
+  //  getCatalogSeparator()
+  //  supportsSchemasInDataManipulation()
+  //  supportsSchemasInProcedureCalls()
+  //  supportsSchemasInTableDefinitions()
+  //  supportsSchemasInIndexDefinitions()
+  //  supportsSchemasInPrivilegeDefinitions()
+  //  supportsCatalogsInDataManipulation()
+  //  supportsCatalogsInProcedureCalls()
+  //  supportsCatalogsInTableDefinitions()
+  //  supportsCatalogsInIndexDefinitions()
+  //  supportsCatalogsInPrivilegeDefinitions()
+  //  supportsPositionedDelete()
+  //  supportsPositionedUpdate()
+  //  supportsSelectForUpdate()
+  //  supportsStoredProcedures()
+  //  supportsSubqueriesInComparisons()
+  //  supportsSubqueriesInExists()
+  //  supportsSubqueriesInIns()
+  //  supportsSubqueriesInQuantifieds()
+  //  supportsCorrelatedSubqueries()
+  //  supportsUnion()
+  //  supportsUnionAll()
+  //  supportsOpenCursorsAcrossCommit()
+  //  supportsOpenCursorsAcrossRollback()
+  //  supportsOpenStatementsAcrossCommit()
+  //  supportsOpenStatementsAcrossRollback()
+  //  getMaxBinaryLiteralLength()
+  //  getMaxCharLiteralLength()
+  //  getMaxColumnNameLength()
+  //  getMaxColumnsInGroupBy()
+  //  getMaxColumnsInIndex()
+  //  getMaxColumnsInOrderBy()
+  //  getMaxColumnsInSelect()
+  //  getMaxColumnsInTable()
+  //  getMaxConnections()
+  //  getMaxCursorNameLength()
+  //  getMaxIndexLength()
+  //  getMaxSchemaNameLength()
+  //  getMaxProcedureNameLength()
+  //  getMaxCatalogNameLength()
+  //  getMaxRowSize()
+  //  doesMaxRowSizeIncludeBlobs()
+  //  getMaxStatementLength()
+  //  getMaxStatements()
+  //  getMaxTableNameLength()
+  //  getMaxTablesInSelect()
+  //  getMaxUserNameLength()
+  //  getDefaultTransactionIsolation()
+  //  supportsTransactions()
+  //  supportsTransactionIsolationLevel(int level)
+  //  supportsDataDefinitionAndDataManipulationTransactions()
+  //  supportsDataManipulationTransactionsOnly()
+  //  dataDefinitionCausesTransactionCommit()
+  //  dataDefinitionIgnoredInTransactions()
+
+
   @Test
   public void testGetDefaultTransactionIsolationSaysNone() throws SQLException {
-    final DatabaseMetaData md = connection.getMetaData();
-    assertThat( md.getDefaultTransactionIsolation(), equalTo( TRANSACTION_NONE ) );
+    assertThat( dbmd.getDefaultTransactionIsolation(), equalTo( TRANSACTION_NONE ) );
   }
 
   @Test
   public void testSupportsTransactionsSaysNo() throws SQLException {
-    assertThat( connection.getMetaData().supportsTransactions(), equalTo( false ) );
+    assertThat( dbmd.supportsTransactions(), equalTo( false ) );
   }
 
   @Test
   public void testSupportsTransactionIsolationLevelNoneSaysYes()
       throws SQLException {
-    final DatabaseMetaData md = connection.getMetaData();
-    assertTrue( md.supportsTransactionIsolationLevel( TRANSACTION_NONE ) );
+    assertTrue( dbmd.supportsTransactionIsolationLevel( TRANSACTION_NONE ) );
   }
 
   @Test
   public void testSupportsTransactionIsolationLevelOthersSayNo()
       throws SQLException {
-    final DatabaseMetaData md = connection.getMetaData();
-    assertFalse( md.supportsTransactionIsolationLevel( TRANSACTION_READ_UNCOMMITTED ) );
-    assertFalse( md.supportsTransactionIsolationLevel( TRANSACTION_READ_COMMITTED ) );
-    assertFalse( md.supportsTransactionIsolationLevel( TRANSACTION_REPEATABLE_READ ) );
-    assertFalse( md.supportsTransactionIsolationLevel( TRANSACTION_SERIALIZABLE ) );
+    assertFalse( dbmd.supportsTransactionIsolationLevel( TRANSACTION_READ_UNCOMMITTED ) );
+    assertFalse( dbmd.supportsTransactionIsolationLevel( TRANSACTION_READ_COMMITTED ) );
+    assertFalse( dbmd.supportsTransactionIsolationLevel( TRANSACTION_REPEATABLE_READ ) );
+    assertFalse( dbmd.supportsTransactionIsolationLevel( TRANSACTION_SERIALIZABLE ) );
   }
+
+  @Test
+  public void testGetProceduresReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getProcedures( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetProcedureColumnsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getProcedureColumns( null, null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //  getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
+  //  getSchemas()
+  //  getCatalogs()
+
+
+  @Test
+  public void testGetTableTypesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getTableTypes(), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //  getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+
+
+  @Test
+  public void testGetColumnPrivilegesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getColumnPrivileges( null, null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetTablePrivilegesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getTablePrivileges( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetBestRowIdentifierReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getBestRowIdentifier( null, null, "%", DatabaseMetaData.bestRowTemporary, true ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetVersionColumnsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getVersionColumns( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetPrimaryKeysReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getPrimaryKeys( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetImportedKeysReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getImportedKeys( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetExportedKeysReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getExportedKeys( null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetCrossReferenceReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getCrossReference( null, null, "%", null, null, "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetTypeInfoReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getTypeInfo(), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetIndexInfoReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getIndexInfo( null, null, "%", false, true ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  // --------------------------JDBC 2.0-----------------------------
+  //  supportsResultSetType(int type)
+  //  supportsResultSetConcurrency(int type, int concurrency)
+  //  ownUpdatesAreVisible(int type)
+  //  ownDeletesAreVisible(int type)
+  //  ownInsertsAreVisible(int type)
+  //  othersUpdatesAreVisible(int type)
+  //  othersDeletesAreVisible(int type)
+  //  othersInsertsAreVisible(int type)
+  //  updatesAreDetected(int type)
+  //  deletesAreDetected(int type)
+  //  insertsAreDetected(int type)
+  //  supportsBatchUpdates()
+
+
+  @Test
+  public void testGetUDTsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getUDTs( null, null, "%", null ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  // getConnection()
+  // ------------------- JDBC 3.0 -------------------------
+  //  supportsSavepoints()
+  //  supportsNamedParameters()
+  //  supportsMultipleOpenResults()
+  //  supportsGetGeneratedKeys()
+
+
+  @Test
+  public void testGetSuperTypesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getSuperTypes( null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetSuperTablesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getSuperTables( null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetAttributesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getAttributes( null, null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //  supportsResultSetHoldability(int holdability)
+  //  getResultSetHoldability()
+  //  getDatabaseMajorVersion()
+  //  getDatabaseMinorVersion()
+  //  getJDBCMajorVersion()
+  //  getJDBCMinorVersion()
+  //  getSQLStateType()
+  //  locatorsUpdateCopy()
+  //  supportsStatementPooling()
+  //- ------------------------ JDBC 4.0 -----------------------------------
+  //  getRowIdLifetime()
+  //  getSchemas(String catalog, String schemaPattern)
+  //  getSchemas(String, String)
+
+
+  @Test
+  public void testGetClientInfoPropertiesReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getClientInfoProperties(), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+
+  @Test
+  public void testGetFunctionsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getFunctions( null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  @Test
+  public void testGetFunctionColumnsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getFunctionColumns( null, null, "%", null ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //  supportsStoredFunctionsUsingCallSyntax()
+  //  autoCommitFailureClosesAllResultSets()
+  //??--------------------------JDBC 4.1 -----------------------------
+
+
+  @Test
+  public void testGetPseudoColumnsReturnsNonNull() throws SQLException {
+    assertThat( dbmd.getPseudoColumns( null, null, "%", "%" ), notNullValue() );
+  }
+  // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
+  //   generatedKeyAlwaysReturned()
+
+
 
 }

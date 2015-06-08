@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
+import org.apache.drill.jdbc.DrillDatabaseMetaData;
 
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaDatabaseMetaData;
@@ -29,7 +30,8 @@ import net.hydromatic.avatica.AvaticaDatabaseMetaData;
 /**
  * Drill's implementation of {@link DatabaseMetaData}.
  */
-class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData {
+class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
+                                implements DrillDatabaseMetaData {
 
   protected DrillDatabaseMetaDataImpl( AvaticaConnection connection ) {
     super( connection );
