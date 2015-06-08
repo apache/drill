@@ -616,6 +616,10 @@ public class UserException extends DrillRuntimeException {
     return context.getErrorId();
   }
 
+  public DrillPBError.ErrorType getErrorType() {
+    return errorType;
+  }
+
   public String getErrorLocation() {
     DrillbitEndpoint ep = context.getEndpoint();
     if (ep != null) {

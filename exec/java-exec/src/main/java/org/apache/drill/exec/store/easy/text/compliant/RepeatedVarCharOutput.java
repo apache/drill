@@ -132,13 +132,14 @@ class RepeatedVarCharOutput extends TextOutput {
       if (!isStarQuery) {
         String pathStr;
         for (SchemaPath path : columns) {
-          assert path.getRootSegment().isNamed();
+          assert path.getRootSegment().isNamed() : "root segment should be named";
           pathStr = path.getRootSegment().getPath();
           Preconditions.checkArgument(pathStr.equals(COL_NAME) || (pathStr.equals("*") && path.getRootSegment().getChild() == null),
-              "Selected column(s) must have name 'columns' or must be plain '*'");
+              String.format("Selected column '%s' must have name 'columns' or must be plain '*'", pathStr));
 
           if (path.getRootSegment().getChild() != null) {
-            Preconditions.checkArgument(path.getRootSegment().getChild().isArray(), "Selected column must be an array index");
+            Preconditions.checkArgument(path.getRootSegment().getChild().isArray(),
+              String.format("Selected column '%s' must be an array index", pathStr));
             int index = path.getRootSegment().getChild().getArraySegment().getIndex();
             columnIds.add(index);
           }

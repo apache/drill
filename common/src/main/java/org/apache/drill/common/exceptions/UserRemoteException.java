@@ -28,7 +28,7 @@ public class UserRemoteException extends UserException {
   private final DrillPBError error;
 
   public UserRemoteException(DrillPBError error) {
-    super(null, "Drill Remote Exception", null);
+    super(error.getErrorType(), "Drill Remote Exception", null);
     this.error = error;
   }
 

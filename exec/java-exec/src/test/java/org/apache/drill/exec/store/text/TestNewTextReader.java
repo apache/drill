@@ -17,17 +17,19 @@
  */
 package org.apache.drill.exec.store.text;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.BaseTestQuery;
-import org.junit.Assert;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.Test;
 
 public class TestNewTextReader extends BaseTestQuery {
 
   @Test
   public void fieldDelimiterWithinQuotes() throws Exception {
-    test("select columns[1] as col1 from cp.`textinput/input1.csv`");
     testBuilder()
         .sqlQuery("select columns[1] as col1 from cp.`textinput/input1.csv`")
         .unOrdered()
@@ -37,14 +39,25 @@ public class TestNewTextReader extends BaseTestQuery {
   }
 
   @Test
-  public void ensureFailureOnNewLineDelimiterWithinQuotes() throws Exception {
+  public void ensureFailureOnNewLineDelimiterWithinQuotes() {
     try {
       test("select columns[1] as col1 from cp.`textinput/input2.csv`");
+      fail("Expected exception not thrown.");
     } catch (Exception e) {
       assertTrue(e.getMessage().contains("Cannot use newline character within quoted string"));
-      return;
     }
-    Assert.fail("Expected exception not thrown.");
   }
 
+  @Test
+  public void ensureColumnNameDisplayedinError() throws Exception {
+    final String COL_NAME = "col1";
+
+    try {
+      test("select max(columns[1]) as %s from cp.`textinput/input1.csv` where %s is not null", COL_NAME, COL_NAME);
+      fail("Query should have failed");
+    } catch(UserRemoteException ex) {
+      assertEquals(ErrorType.DATA_READ, ex.getErrorType());
+      assertTrue("Error message should contain " + COL_NAME, ex.getMessage().contains(COL_NAME));
+    }
+  }
 }

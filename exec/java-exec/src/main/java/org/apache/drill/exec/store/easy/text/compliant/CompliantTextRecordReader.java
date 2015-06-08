@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -112,6 +113,8 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       reader.start();
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(String.format("Failure while setting up text reader for file %s", split.getPath()), e);
+    } catch (IllegalArgumentException e) {
+      throw UserException.dataReadError(e).addContext("File Path", split.getPath().toString()).build(logger);
     }
   }
 
