@@ -57,6 +57,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private static final int INITIAL_BYTE_COUNT = 4096 * DEFAULT_RECORD_BYTE_COUNT;
   private static final int MIN_BYTE_COUNT = 4096;
 
+  public final static String OFFSETS_VECTOR_NAME = "offsets";
+  private final static MaterializedField offsetsField =
+    MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4));
   private final UInt${type.width}Vector offsetVector;
   private final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
 
@@ -71,7 +74,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.offsetVector = new UInt${type.width}Vector(null, allocator);
+    this.offsetVector = new UInt${type.width}Vector(offsetsField, allocator);
     this.oAccessor = offsetVector.getAccessor();
     this.accessor = new Accessor();
     this.mutator = new Mutator();

@@ -44,9 +44,11 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     super(field, allocator, callBack);
     // create the hierarchy of the child vectors based on the materialized field
     for (MaterializedField child : field.getChildren()) {
-      String fieldName = child.getLastName();
-      ValueVector  v = TypeHelper.getNewVector(child, allocator, callBack);
-      putVector(fieldName, v);
+      if (!child.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
+        String fieldName = child.getLastName();
+        ValueVector v = TypeHelper.getNewVector(child, allocator, callBack);
+        putVector(fieldName, v);
+      }
     }
   }
 

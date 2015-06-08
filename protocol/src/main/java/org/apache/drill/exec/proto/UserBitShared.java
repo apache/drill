@@ -8136,31 +8136,21 @@ public final class UserBitShared {
      */
     int getVarByteLength();
 
-    // optional int32 group_count = 6;
+    // optional int32 buffer_length = 6;
     /**
-     * <code>optional int32 group_count = 6;</code>
+     * <code>optional int32 buffer_length = 6;</code>
      *
      * <pre>
-     * number of groups.  (number of repeated records)
+     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
      * </pre>
-     */
-    boolean hasGroupCount();
-    /**
-     * <code>optional int32 group_count = 6;</code>
-     *
-     * <pre>
-     * number of groups.  (number of repeated records)
-     * </pre>
-     */
-    int getGroupCount();
-
-    // optional int32 buffer_length = 7;
-    /**
-     * <code>optional int32 buffer_length = 7;</code>
      */
     boolean hasBufferLength();
     /**
-     * <code>optional int32 buffer_length = 7;</code>
+     * <code>optional int32 buffer_length = 6;</code>
+     *
+     * <pre>
+     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
+     * </pre>
      */
     int getBufferLength();
   }
@@ -8261,11 +8251,6 @@ public final class UserBitShared {
             }
             case 48: {
               bitField0_ |= 0x00000010;
-              groupCount_ = input.readInt32();
-              break;
-            }
-            case 56: {
-              bitField0_ |= 0x00000020;
               bufferLength_ = input.readInt32();
               break;
             }
@@ -8456,41 +8441,25 @@ public final class UserBitShared {
       return varByteLength_;
     }
 
-    // optional int32 group_count = 6;
-    public static final int GROUP_COUNT_FIELD_NUMBER = 6;
-    private int groupCount_;
+    // optional int32 buffer_length = 6;
+    public static final int BUFFER_LENGTH_FIELD_NUMBER = 6;
+    private int bufferLength_;
     /**
-     * <code>optional int32 group_count = 6;</code>
+     * <code>optional int32 buffer_length = 6;</code>
      *
      * <pre>
-     * number of groups.  (number of repeated records)
+     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
      * </pre>
      */
-    public boolean hasGroupCount() {
+    public boolean hasBufferLength() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int32 group_count = 6;</code>
+     * <code>optional int32 buffer_length = 6;</code>
      *
      * <pre>
-     * number of groups.  (number of repeated records)
+     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
      * </pre>
-     */
-    public int getGroupCount() {
-      return groupCount_;
-    }
-
-    // optional int32 buffer_length = 7;
-    public static final int BUFFER_LENGTH_FIELD_NUMBER = 7;
-    private int bufferLength_;
-    /**
-     * <code>optional int32 buffer_length = 7;</code>
-     */
-    public boolean hasBufferLength() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
-    /**
-     * <code>optional int32 buffer_length = 7;</code>
      */
     public int getBufferLength() {
       return bufferLength_;
@@ -8502,7 +8471,6 @@ public final class UserBitShared {
       child_ = java.util.Collections.emptyList();
       valueCount_ = 0;
       varByteLength_ = 0;
-      groupCount_ = 0;
       bufferLength_ = 0;
     }
     private byte memoizedIsInitialized = -1;
@@ -8533,10 +8501,7 @@ public final class UserBitShared {
         output.writeInt32(5, varByteLength_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt32(6, groupCount_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeInt32(7, bufferLength_);
+        output.writeInt32(6, bufferLength_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -8569,11 +8534,7 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, groupCount_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(7, bufferLength_);
+          .computeInt32Size(6, bufferLength_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -8716,10 +8677,8 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000008);
         varByteLength_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
-        groupCount_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000020);
         bufferLength_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -8784,10 +8743,6 @@ public final class UserBitShared {
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.groupCount_ = groupCount_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000020;
-        }
         result.bufferLength_ = bufferLength_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -8842,9 +8797,6 @@ public final class UserBitShared {
         }
         if (other.hasVarByteLength()) {
           setVarByteLength(other.getVarByteLength());
-        }
-        if (other.hasGroupCount()) {
-          setGroupCount(other.getGroupCount());
         }
         if (other.hasBufferLength()) {
           setBufferLength(other.getBufferLength());
@@ -9524,83 +9476,50 @@ public final class UserBitShared {
         return this;
       }
 
-      // optional int32 group_count = 6;
-      private int groupCount_ ;
+      // optional int32 buffer_length = 6;
+      private int bufferLength_ ;
       /**
-       * <code>optional int32 group_count = 6;</code>
+       * <code>optional int32 buffer_length = 6;</code>
        *
        * <pre>
-       * number of groups.  (number of repeated records)
+       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
        * </pre>
        */
-      public boolean hasGroupCount() {
+      public boolean hasBufferLength() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional int32 group_count = 6;</code>
+       * <code>optional int32 buffer_length = 6;</code>
        *
        * <pre>
-       * number of groups.  (number of repeated records)
+       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
        * </pre>
-       */
-      public int getGroupCount() {
-        return groupCount_;
-      }
-      /**
-       * <code>optional int32 group_count = 6;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public Builder setGroupCount(int value) {
-        bitField0_ |= 0x00000020;
-        groupCount_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 group_count = 6;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public Builder clearGroupCount() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        groupCount_ = 0;
-        onChanged();
-        return this;
-      }
-
-      // optional int32 buffer_length = 7;
-      private int bufferLength_ ;
-      /**
-       * <code>optional int32 buffer_length = 7;</code>
-       */
-      public boolean hasBufferLength() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
-      /**
-       * <code>optional int32 buffer_length = 7;</code>
        */
       public int getBufferLength() {
         return bufferLength_;
       }
       /**
-       * <code>optional int32 buffer_length = 7;</code>
+       * <code>optional int32 buffer_length = 6;</code>
+       *
+       * <pre>
+       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
+       * </pre>
        */
       public Builder setBufferLength(int value) {
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000020;
         bufferLength_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 buffer_length = 7;</code>
+       * <code>optional int32 buffer_length = 6;</code>
+       *
+       * <pre>
+       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
+       * </pre>
        */
       public Builder clearBufferLength() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000020);
         bufferLength_ = 0;
         onChanged();
         return this;
@@ -20894,86 +20813,86 @@ public final class UserBitShared {
       "(\010\"\205\001\n\010NamePart\022(\n\004type\030\001 \001(\0162\032.exec.sha" +
       "red.NamePart.Type\022\014\n\004name\030\002 \001(\t\022$\n\005child",
       "\030\003 \001(\0132\025.exec.shared.NamePart\"\033\n\004Type\022\010\n" +
-      "\004NAME\020\000\022\t\n\005ARRAY\020\001\"\351\001\n\017SerializedField\022%" +
+      "\004NAME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017SerializedField\022%" +
       "\n\nmajor_type\030\001 \001(\0132\021.common.MajorType\022(\n" +
       "\tname_part\030\002 \001(\0132\025.exec.shared.NamePart\022" +
       "+\n\005child\030\003 \003(\0132\034.exec.shared.SerializedF" +
       "ield\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_le" +
-      "ngth\030\005 \001(\005\022\023\n\013group_count\030\006 \001(\005\022\025\n\rbuffe" +
-      "r_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_id\030" +
-      "\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\206\002\n\013Quer" +
-      "yResult\0228\n\013query_state\030\001 \001(\0162#.exec.shar",
-      "ed.QueryResult.QueryState\022&\n\010query_id\030\002 " +
-      "\001(\0132\024.exec.shared.QueryId\022(\n\005error\030\003 \003(\013" +
-      "2\031.exec.shared.DrillPBError\"k\n\nQueryStat" +
-      "e\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED" +
-      "\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CANCELLA" +
-      "TION_REQUESTED\020\005\"p\n\tQueryData\022&\n\010query_i" +
-      "d\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n\trow_cou" +
-      "nt\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.Reco" +
-      "rdBatchDef\"\227\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022" +
-      "\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.sha",
-      "red.QueryResult.QueryState\022\017\n\004user\030\004 \001(\t" +
-      ":\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.DrillbitEndp" +
-      "oint\"\272\003\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec" +
-      ".shared.QueryId\022$\n\004type\030\002 \001(\0162\026.exec.sha" +
-      "red.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(" +
-      "\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007forema" +
-      "n\030\007 \001(\0132\026.exec.DrillbitEndpoint\0222\n\005state" +
-      "\030\010 \001(\0162#.exec.shared.QueryResult.QuerySt" +
-      "ate\022\027\n\017total_fragments\030\t \001(\005\022\032\n\022finished" +
-      "_fragments\030\n \001(\005\022;\n\020fragment_profile\030\013 \003",
-      "(\0132!.exec.shared.MajorFragmentProfile\022\017\n" +
-      "\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024\n\014verbose" +
-      "Error\030\016 \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022\n\nerror_n" +
-      "ode\030\020 \001(\t\"t\n\024MajorFragmentProfile\022\031\n\021maj" +
-      "or_fragment_id\030\001 \001(\005\022A\n\026minor_fragment_p" +
-      "rofile\030\002 \003(\0132!.exec.shared.MinorFragment" +
-      "Profile\"\350\002\n\024MinorFragmentProfile\022)\n\005stat" +
-      "e\030\001 \001(\0162\032.exec.shared.FragmentState\022(\n\005e" +
-      "rror\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n" +
-      "\021minor_fragment_id\030\003 \001(\005\0226\n\020operator_pro",
-      "file\030\004 \003(\0132\034.exec.shared.OperatorProfile" +
-      "\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023" +
-      "\n\013memory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010" +
-      " \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEn" +
-      "dpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\rlast_prog" +
-      "ress\030\013 \001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_" +
-      "profile\030\001 \003(\0132\032.exec.shared.StreamProfil" +
-      "e\022\023\n\013operator_id\030\003 \001(\005\022\025\n\roperator_type\030" +
-      "\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_na" +
-      "nos\030\006 \001(\003\022#\n\033peak_local_memory_allocated",
-      "\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Met" +
-      "ricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamPr" +
-      "ofile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022" +
-      "\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetri" +
-      "c_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double" +
-      "_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTRO" +
-      "L\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType" +
-      "\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*\207\001\n" +
-      "\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_" +
-      "ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022",
-      "\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATI" +
-      "ON_REQUESTED\020\006*\335\005\n\020CoreOperatorType\022\021\n\rS" +
-      "INGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006" +
-      "FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOI" +
-      "N\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SE" +
-      "NDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022" +
-      "\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT" +
-      "\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_SEND" +
-      "ER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_REM" +
-      "OVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_N",
-      "_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n" +
-      "\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_GR" +
-      "OUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM_" +
-      "TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQU" +
-      "ET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEXT" +
-      "_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SUB" +
-      "_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017COM" +
-      "PLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 \022\022\n" +
-      "\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_" +
-      "LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B.\n\033org.ap",
-      "ache.drill.exec.protoB\rUserBitSharedH\001"
+      "ngth\030\005 \001(\005\022\025\n\rbuffer_length\030\006 \001(\005\"7\n\nNod" +
+      "eStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footp" +
+      "rint\030\002 \001(\003\"\206\002\n\013QueryResult\0228\n\013query_stat" +
+      "e\030\001 \001(\0162#.exec.shared.QueryResult.QueryS",
+      "tate\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Que" +
+      "ryId\022(\n\005error\030\003 \003(\0132\031.exec.shared.DrillP" +
+      "BError\"k\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007RUN" +
+      "NING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006F" +
+      "AILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005\"p\n\tQ" +
+      "ueryData\022&\n\010query_id\030\001 \001(\0132\024.exec.shared" +
+      ".QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\013" +
+      "2\033.exec.shared.RecordBatchDef\"\227\001\n\tQueryI" +
+      "nfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005sta" +
+      "te\030\003 \001(\0162#.exec.shared.QueryResult.Query",
+      "State\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132" +
+      "\026.exec.DrillbitEndpoint\"\272\003\n\014QueryProfile" +
+      "\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004ty" +
+      "pe\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005star" +
+      "t\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004p" +
+      "lan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.Drillb" +
+      "itEndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared." +
+      "QueryResult.QueryState\022\027\n\017total_fragment" +
+      "s\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020f" +
+      "ragment_profile\030\013 \003(\0132!.exec.shared.Majo",
+      "rFragmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005err" +
+      "or\030\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_" +
+      "id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\"t\n\024MajorFra" +
+      "gmentProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022" +
+      "A\n\026minor_fragment_profile\030\002 \003(\0132!.exec.s" +
+      "hared.MinorFragmentProfile\"\350\002\n\024MinorFrag" +
+      "mentProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared" +
+      ".FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.sha" +
+      "red.DrillPBError\022\031\n\021minor_fragment_id\030\003 " +
+      "\001(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.sha",
+      "red.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022" +
+      "\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027" +
+      "\n\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(" +
+      "\0132\026.exec.DrillbitEndpoint\022\023\n\013last_update" +
+      "\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017Operat" +
+      "orProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec." +
+      "shared.StreamProfile\022\023\n\013operator_id\030\003 \001(" +
+      "\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_nanos\030" +
+      "\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_loc" +
+      "al_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(",
+      "\0132\030.exec.shared.MetricValue\022\022\n\nwait_nano" +
+      "s\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(" +
+      "\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013M" +
+      "etricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_va" +
+      "lue\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\nRpcCh" +
+      "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004" +
+      "USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020" +
+      "\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013\n\007SEN" +
+      "DING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNI" +
+      "NG\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAI",
+      "LED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Co" +
+      "reOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BRO" +
+      "ADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGR" +
+      "EGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031" +
+      "\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020" +
+      "MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_" +
+      "SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEI" +
+      "VER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030S" +
+      "ELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_A" +
+      "GGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_S",
+      "ORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020" +
+      "\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SU" +
+      "B_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_" +
+      "SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT" +
+      "_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB" +
+      "_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEM" +
+      "A_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRO" +
+      "DUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006" +
+      "WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_S" +
+      "UB_SCAN\020$B.\n\033org.apache.drill.exec.proto",
+      "B\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -21033,7 +20952,7 @@ public final class UserBitShared {
           internal_static_exec_shared_SerializedField_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_SerializedField_descriptor,
-              new java.lang.String[] { "MajorType", "NamePart", "Child", "ValueCount", "VarByteLength", "GroupCount", "BufferLength", });
+              new java.lang.String[] { "MajorType", "NamePart", "Child", "ValueCount", "VarByteLength", "BufferLength", });
           internal_static_exec_shared_NodeStatus_descriptor =
             getDescriptor().getMessageTypes().get(9);
           internal_static_exec_shared_NodeStatus_fieldAccessorTable = new

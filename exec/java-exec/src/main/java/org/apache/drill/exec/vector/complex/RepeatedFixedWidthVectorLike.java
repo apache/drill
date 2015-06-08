@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.DrillBuf;
-
 /**
  * A {@link org.apache.drill.exec.vector.ValueVector} mix-in that can be used in conjunction with
  * {@link RepeatedValueVector} subtypes.
@@ -39,18 +37,4 @@ public interface RepeatedFixedWidthVectorLike {
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  int load(int valueCount, int innerValueCount, DrillBuf buf);
-
-//  public interface RepeatedAccessor extends Accessor {
-//    public int getGroupCount();
-//    public int getValueCount();
-//    public int getGroupSizeAtIndex(int index);
-//    public ValueVector getAllChildValues();
-//  }
-//
-//  public interface RepeatedMutator extends Mutator {
-//    public void setValueCounts(int parentValueCount, int childValueCount);
-//    public void setRepetitionAtIndexSafe(int index, int repetitionCount);
-//    public BaseDataValueVector getDataVector();
-//  }
 }

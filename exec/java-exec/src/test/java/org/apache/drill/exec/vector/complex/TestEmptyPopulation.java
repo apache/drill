@@ -41,7 +41,7 @@ public class TestEmptyPopulation extends BaseTestQuery {
 
   @Before
   public void initialize() {
-    offsets = new UInt4Vector(null, allocator);
+    offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
     offsets.allocateNewSafe();
     accessor = offsets.getAccessor();
     mutator = offsets.getMutator();

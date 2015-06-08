@@ -30,7 +30,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
-  private static interface Function<T> {
+  private interface Function<T> {
     void apply(T param);
   }
 

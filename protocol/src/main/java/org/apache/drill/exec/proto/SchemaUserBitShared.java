@@ -1090,10 +1090,8 @@ public final class SchemaUserBitShared
                     output.writeInt32(4, message.getValueCount(), false);
                 if(message.hasVarByteLength())
                     output.writeInt32(5, message.getVarByteLength(), false);
-                if(message.hasGroupCount())
-                    output.writeInt32(6, message.getGroupCount(), false);
                 if(message.hasBufferLength())
-                    output.writeInt32(7, message.getBufferLength(), false);
+                    output.writeInt32(6, message.getBufferLength(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.SerializedField message)
             {
@@ -1152,9 +1150,6 @@ public final class SchemaUserBitShared
                             builder.setVarByteLength(input.readInt32());
                             break;
                         case 6:
-                            builder.setGroupCount(input.readInt32());
-                            break;
-                        case 7:
                             builder.setBufferLength(input.readInt32());
                             break;
                         default:
@@ -1202,8 +1197,7 @@ public final class SchemaUserBitShared
                 case 3: return "child";
                 case 4: return "valueCount";
                 case 5: return "varByteLength";
-                case 6: return "groupCount";
-                case 7: return "bufferLength";
+                case 6: return "bufferLength";
                 default: return null;
             }
         }
@@ -1220,8 +1214,7 @@ public final class SchemaUserBitShared
             fieldMap.put("child", 3);
             fieldMap.put("valueCount", 4);
             fieldMap.put("varByteLength", 5);
-            fieldMap.put("groupCount", 6);
-            fieldMap.put("bufferLength", 7);
+            fieldMap.put("bufferLength", 6);
         }
     }
 

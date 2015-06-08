@@ -68,7 +68,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     super(field, allocator, callBack);
-    this.offsets = new UInt4Vector(null, allocator);
+    this.offsets = new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator);
     this.emptyPopulator = new EmptyValuePopulator(offsets);
   }
 
@@ -433,43 +433,43 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
 
 
   @Override
-  public void load(SerializedField metadata, DrillBuf buf) {
-    List<SerializedField> fields = metadata.getChildList();
+  public void load(SerializedField metadata, DrillBuf buffer) {
+    final List<SerializedField> children = metadata.getChildList();
 
-    int bufOffset = offsets.load(metadata.getGroupCount()+1, buf);
+    final SerializedField offsetField = children.get(0);
+    offsets.load(offsetField, buffer);
+    int bufOffset = offsetField.getBufferLength();
 
-    for (SerializedField fmd : fields) {
-      MaterializedField fieldDef = MaterializedField.create(fmd);
-      ValueVector v = getChild(fieldDef.getLastName());
-      if (v == null) {
+    for (int i=1; i<children.size(); i++) {
+      final SerializedField child = children.get(i);
+      final MaterializedField fieldDef = MaterializedField.create(child);
+      ValueVector vector = getChild(fieldDef.getLastName());
+      if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
-        v = TypeHelper.getNewVector(fieldDef, allocator);
-        putChild(fieldDef.getLastName(), v);
+        vector = TypeHelper.getNewVector(fieldDef, allocator);
+        putChild(fieldDef.getLastName(), vector);
       }
-      if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
-        v.clear();
-      } else {
-        v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
-      }
-      bufOffset += fmd.getBufferLength();
+      final int vectorLength = child.getBufferLength();
+      vector.load(child, buffer.slice(bufOffset, vectorLength));
+      bufOffset += vectorLength;
     }
 
-    Preconditions.checkArgument(bufOffset == buf.capacity());
+    assert bufOffset == buffer.capacity();
   }
 
 
   @Override
   public SerializedField getMetadata() {
-    SerializedField.Builder b = getField() //
+    SerializedField.Builder builder = getField() //
         .getAsBuilder() //
         .setBufferLength(getBufferSize()) //
-        .setGroupCount(accessor.getValueCount())
         // while we don't need to actually read this on load, we need it to make sure we don't skip deserialization of this vector
-        .setValueCount(accessor.getInnerValueCount());
-    for (ValueVector v : getChildren()) {
-      b.addChild(v.getMetadata());
+        .setValueCount(accessor.getValueCount());
+    builder.addChild(offsets.getMetadata());
+    for (final ValueVector child : getChildren()) {
+      builder.addChild(child.getMetadata());
     }
-    return b.build();
+    return builder.build();
   }
 
   @Override
@@ -481,21 +481,23 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
 
     @Override
     public Object getObject(int index) {
-      List<Object> l = new JsonStringArrayList();
+      final List<Object> list = new JsonStringArrayList();
       int end = offsets.getAccessor().get(index+1);
       String fieldName;
       for (int i =  offsets.getAccessor().get(index); i < end; i++) {
         Map<String, Object> vv = Maps.newLinkedHashMap();
         for (MaterializedField field:getField().getChildren()) {
-          fieldName = field.getLastName();
-          Object value = getChild(fieldName).getAccessor().getObject(i);
-          if (value != null) {
-            vv.put(fieldName, value);
+          if (!field.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
+            fieldName = field.getLastName();
+            final Object value = getChild(fieldName).getAccessor().getObject(i);
+            if (value != null) {
+              vv.put(fieldName, value);
+            }
           }
         }
-        l.add(vv);
+        list.add(vv);
       }
-      return l;
+      return list;
     }
 
     @Override
@@ -594,10 +596,5 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
     for(ValueVector vector:getChildren()) {
       vector.clear();
     }
-  }
-
-  @Override
-  public int load(int valueCount, int innerValueCount, DrillBuf buf) {
-    throw new UnsupportedOperationException();
   }
 }

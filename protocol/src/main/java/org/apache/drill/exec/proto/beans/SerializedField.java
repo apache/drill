@@ -54,7 +54,6 @@ public final class SerializedField implements Externalizable, Message<Serialized
     private List<SerializedField> child;
     private int valueCount;
     private int varByteLength;
-    private int groupCount;
     private int bufferLength;
 
     public SerializedField()
@@ -126,19 +125,6 @@ public final class SerializedField implements Externalizable, Message<Serialized
     public SerializedField setVarByteLength(int varByteLength)
     {
         this.varByteLength = varByteLength;
-        return this;
-    }
-
-    // groupCount
-
-    public int getGroupCount()
-    {
-        return groupCount;
-    }
-
-    public SerializedField setGroupCount(int groupCount)
-    {
-        this.groupCount = groupCount;
         return this;
     }
 
@@ -230,9 +216,6 @@ public final class SerializedField implements Externalizable, Message<Serialized
                     message.varByteLength = input.readInt32();
                     break;
                 case 6:
-                    message.groupCount = input.readInt32();
-                    break;
-                case 7:
                     message.bufferLength = input.readInt32();
                     break;
                 default:
@@ -268,11 +251,8 @@ public final class SerializedField implements Externalizable, Message<Serialized
         if(message.varByteLength != 0)
             output.writeInt32(5, message.varByteLength, false);
 
-        if(message.groupCount != 0)
-            output.writeInt32(6, message.groupCount, false);
-
         if(message.bufferLength != 0)
-            output.writeInt32(7, message.bufferLength, false);
+            output.writeInt32(6, message.bufferLength, false);
     }
 
     public String getFieldName(int number)
@@ -284,8 +264,7 @@ public final class SerializedField implements Externalizable, Message<Serialized
             case 3: return "child";
             case 4: return "valueCount";
             case 5: return "varByteLength";
-            case 6: return "groupCount";
-            case 7: return "bufferLength";
+            case 6: return "bufferLength";
             default: return null;
         }
     }
@@ -304,8 +283,7 @@ public final class SerializedField implements Externalizable, Message<Serialized
         __fieldMap.put("child", 3);
         __fieldMap.put("valueCount", 4);
         __fieldMap.put("varByteLength", 5);
-        __fieldMap.put("groupCount", 6);
-        __fieldMap.put("bufferLength", 7);
+        __fieldMap.put("bufferLength", 6);
     }
     
 }

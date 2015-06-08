@@ -245,28 +245,28 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void load(SerializedField metadata, DrillBuf buf) {
-    List<SerializedField> fields = metadata.getChildList();
+    final List<SerializedField> fields = metadata.getChildList();
     valueCount = metadata.getValueCount();
 
     int bufOffset = 0;
-    for (SerializedField fmd : fields) {
-      MaterializedField fieldDef = MaterializedField.create(fmd);
+    for (final SerializedField child : fields) {
+      final MaterializedField fieldDef = MaterializedField.create(child);
 
-      ValueVector v = getChild(fieldDef.getLastName());
-      if (v == null) {
+      ValueVector vector = getChild(fieldDef.getLastName());
+      if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
-        v = TypeHelper.getNewVector(fieldDef, allocator);
-        putChild(fieldDef.getLastName(), v);
+        vector = TypeHelper.getNewVector(fieldDef, allocator);
+        putChild(fieldDef.getLastName(), vector);
       }
-      if (fmd.getValueCount() == 0 && (!fmd.hasGroupCount() || fmd.getGroupCount() == 0)) {
-        v.clear();
+      if (child.getValueCount() == 0) {
+        vector.clear();
       } else {
-        v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
+        vector.load(child, buf.slice(bufOffset, child.getBufferLength()));
       }
-      bufOffset += fmd.getBufferLength();
+      bufOffset += child.getBufferLength();
     }
 
-    Preconditions.checkArgument(bufOffset == buf.capacity());
+    assert bufOffset == buf.capacity();
   }
 
   @Override

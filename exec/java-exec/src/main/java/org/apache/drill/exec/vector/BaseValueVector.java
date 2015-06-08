@@ -35,7 +35,7 @@ public abstract class BaseValueVector implements ValueVector {
   public static final int INITIAL_VALUE_ALLOCATION = 4096;
 
   protected BaseValueVector(MaterializedField field, BufferAllocator allocator) {
-    this.field = field;
+    this.field = Preconditions.checkNotNull(field, "field cannot be null");
     this.allocator = Preconditions.checkNotNull(allocator, "allocator cannot be null");
   }
 

@@ -40,10 +40,10 @@ import org.apache.drill.exec.vector.ZeroVector;
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
 
   public final static ValueVector DEFAULT_DATA_VECTOR = ZeroVector.INSTANCE;
-  public final static String OFFSETS_VECTOR_NAME = "offsets";
-  public final static String DATA_VECTOR_NAME = "data";
+  public final static String OFFSETS_VECTOR_NAME = "$offsets$";
+  public final static String DATA_VECTOR_NAME = "$data$";
 
-  private final static MaterializedField offsetsField =
+  public final static MaterializedField OFFSETS_FIELD =
       MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(TypeProtos.MinorType.UINT4));
 
   protected final UInt4Vector offsets;
@@ -55,7 +55,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   protected BaseRepeatedValueVector(MaterializedField field, BufferAllocator allocator, ValueVector vector) {
     super(field, allocator);
-    this.offsets = new UInt4Vector(offsetsField, allocator);
+    this.offsets = new UInt4Vector(OFFSETS_FIELD, allocator);
     this.vector = Preconditions.checkNotNull(vector, "data vector cannot be null");
   }
 
@@ -110,8 +110,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   @Override
   protected UserBitShared.SerializedField.Builder getMetadataBuilder() {
     return super.getMetadataBuilder()
-        .setGroupCount(getAccessor().getValueCount())
-        .setValueCount(getAccessor().getInnerValueCount())
+        .addChild(offsets.getMetadata())
         .addChild(vector.getMetadata());
   }
 
@@ -145,6 +144,21 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       clear();
     }
     return buffers;
+  }
+
+  @Override
+  public void load(UserBitShared.SerializedField metadata, DrillBuf buffer) {
+    final UserBitShared.SerializedField offsetMetadata = metadata.getChild(0);
+    offsets.load(offsetMetadata, buffer);
+
+    final UserBitShared.SerializedField vectorMetadata = metadata.getChild(1);
+    if (getDataVector() == DEFAULT_DATA_VECTOR) {
+      addOrGetVector(VectorDescriptor.create(vectorMetadata.getMajorType()));
+    }
+
+    final int offsetLength = offsetMetadata.getBufferLength();
+    final int vectorLength = vectorMetadata.getBufferLength();
+    vector.load(vectorMetadata, buffer.slice(offsetLength, vectorLength));
   }
 
   /**

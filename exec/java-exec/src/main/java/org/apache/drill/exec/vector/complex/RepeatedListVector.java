@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Collection;
@@ -187,11 +188,6 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    protected SerializedField.Builder getMetadataBuilder() {
-      return super.getMetadataBuilder();
-    }
-
-    @Override
     public TransferPair getTransferPair(FieldReference ref) {
       return makeTransferPair(new DelegateRepeatedVector(ref, allocator));
     }
@@ -214,23 +210,6 @@ public class RepeatedListVector extends AbstractContainerVector
     @Override
     public FieldReader getReader() {
       throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void load(SerializedField metadata, DrillBuf buffer) {
-      //TODO(DRILL-2997): get rid of the notion of "group count" completely
-      final int valueCount = metadata.getGroupCount();
-      final int bufOffset = offsets.load(valueCount + 1, buffer);
-      final SerializedField childField = metadata.getChildList().get(0);
-      if (getDataVector() == DEFAULT_DATA_VECTOR) {
-        addOrGetVector(VectorDescriptor.create(childField.getMajorType()));
-      }
-
-      if (childField.getValueCount() == 0) {
-        vector.clear();
-      } else {
-        vector.load(childField, buffer.slice(bufOffset, childField.getBufferLength()));
-      }
     }
 
     public void copyFromSafe(int fromIndex, int thisIndex, DelegateRepeatedVector from) {
@@ -282,13 +261,13 @@ public class RepeatedListVector extends AbstractContainerVector
     super(field, allocator, callBack);
     this.delegate = Preconditions.checkNotNull(delegate);
 
-    final Collection<MaterializedField> children = field.getChildren();
+    final List<MaterializedField> children = Lists.newArrayList(field.getChildren());
     final int childSize = children.size();
-    // repeated list vector cannot have more than one child
-    assert childSize < 2;
-    final boolean hasChild = childSize == 1;
+    assert childSize < 3;
+    final boolean hasChild = childSize > 0;
     if (hasChild) {
-      final MaterializedField child = children.iterator().next();
+      // the last field is data field
+      final MaterializedField child = children.get(childSize-1);
       addOrGetVector(VectorDescriptor.create(child));
     }
   }
@@ -431,11 +410,6 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
-  public int load(int valueCount, int innerValueCount, DrillBuf buf) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public VectorWithOrdinal getChildVectorWithOrdinal(String name) {
     if (name != null) {
       return null;
@@ -443,15 +417,8 @@ public class RepeatedListVector extends AbstractContainerVector
     return new VectorWithOrdinal(delegate.getDataVector(), 0);
   }
 
-
   public void copyFromSafe(int fromIndex, int thisIndex, RepeatedListVector from) {
     delegate.copyFromSafe(fromIndex, thisIndex, from.delegate);
   }
-
-
-//  protected void setVector(ValueVector newVector) {
-//    vector = Preconditions.checkNotNull(newVector);
-//    getField().addChild(newVector.getField());
-//  }
 
 }
