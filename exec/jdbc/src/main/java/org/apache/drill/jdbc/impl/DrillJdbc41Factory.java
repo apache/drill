@@ -67,8 +67,8 @@ public class DrillJdbc41Factory extends DrillFactory {
   }
 
   @Override
-  public DrillDatabaseMetaData newDatabaseMetaData(AvaticaConnection connection) {
-    return new DrillDatabaseMetaData((DrillConnectionImpl) connection);
+  public DrillDatabaseMetaDataImpl newDatabaseMetaData(AvaticaConnection connection) {
+    return new DrillDatabaseMetaDataImpl((DrillConnectionImpl) connection);
   }
 
 

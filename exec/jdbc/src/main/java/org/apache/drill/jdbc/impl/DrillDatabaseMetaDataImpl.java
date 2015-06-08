@@ -29,9 +29,9 @@ import net.hydromatic.avatica.AvaticaDatabaseMetaData;
 /**
  * Drill's implementation of {@link DatabaseMetaData}.
  */
-class DrillDatabaseMetaData extends AvaticaDatabaseMetaData {
+class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData {
 
-  protected DrillDatabaseMetaData( AvaticaConnection connection ) {
+  protected DrillDatabaseMetaDataImpl( AvaticaConnection connection ) {
     super( connection );
   }
 
