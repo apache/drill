@@ -45,5 +45,7 @@ version of the ODBC Administrator to create the DSN.
     * Configure [logging options]({{site.baseurl}}/docs/configuring-connections-on-windows/#logging-options) to log types of events.  
 11. Click **OK** to save the DSN.
 
-#### What's Next? Go to [Step 3. Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
+### Next Step
+
+[Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
 

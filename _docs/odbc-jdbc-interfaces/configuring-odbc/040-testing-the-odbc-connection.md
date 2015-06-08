@@ -20,7 +20,7 @@ To test the ODBC connection Mac OS X, follow these steps.
 3. Click **Test**.  
    The Login for Sample MapR Drill DSN dialog appears.  
    ![]({{ site.baseurl }}/docs/img/odbc-mac2.png)  
-4. If you configured Basic Authentication in the .odbc.ini, enter the user name and password you also configured; otherwise, click OK.  
+4. If you configured Basic Authentication in the `.odbc.ini`, enter the user name and password you also configured; otherwise, click **OK**.  
    The success message appears.  
    ![]({{ site.baseurl }}/docs/img/odbc-mac3.png)  
 

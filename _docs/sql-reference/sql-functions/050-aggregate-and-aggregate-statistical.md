@@ -17,7 +17,7 @@ MAX(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as arg
 MIN(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
 SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY, or INTERVALYEAR| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
 
-\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. [Enable the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type)) if performance is not an issue.
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommented.
 
 MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 

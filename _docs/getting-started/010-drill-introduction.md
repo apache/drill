@@ -14,13 +14,13 @@ with existing Apache Hive and Apache HBase deployments.
 Apache Drill 1.0 offers the following new features:
 
 * Many performance planning and execution [improvements](/docs/performance-tuning-introduction/).
-* Updated [Drill shell]({{site.baseurl}}/docs/configuring-the-drill-shell/#examples-of-configuring-the-drill-shell) and now formats query results having fewer than 70 characters in a column.
+* Updated [Drill shell]({{site.baseurl}}/docs/configuring-the-drill-shell) now formats query results.
 * [Query audit logging]({{site.baseurl}}/docs/getting-query-information/) for getting the query history on a Drillbit.
 * Improved connection handling.
 * New Errors tab in the Query Profiles UI that facilitates troubleshooting and distributed storing of profiles.
 * Support for a new storage plugin input format: [Avro](http://avro.apache.org/docs/current/spec.html)
 
-In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` system option to `true`.
+In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommented.
 
 ## Apache Drill Key Features
 
