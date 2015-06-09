@@ -22,6 +22,7 @@ import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
+import org.apache.calcite.sql.SqlSelectKeyword;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlWindow;
@@ -99,6 +100,84 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             throw new UnsupportedOperationException();
           }
 
+          // DRILL-3182, DRILL-3195
+          SqlCall over = (SqlCall) nodeInSelectList;
+          if(over.getOperandList().get(0) instanceof SqlCall) {
+            SqlCall function = (SqlCall) over.getOperandList().get(0);
+
+            // DRILL-3195:
+            // The following window functions are temporarily disabled
+            // NTILE(), LAG(), LEAD(), FIRST_VALUE(), LAST_VALUE()
+            String functionName = function.getOperator().getName().toUpperCase();
+            switch(functionName) {
+              case "NTILE":
+              case "LAG":
+              case "LEAD":
+              case "FIRST_VALUE":
+              case "LAST_VALUE":
+                unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                    "The window function " + functionName + " is not supported\n" +
+                    "See Apache Drill JIRA: DRILL-3195");
+                throw new UnsupportedOperationException();
+
+              default:
+                break;
+            }
+
+
+            // DRILL-3182
+            // Window function with DISTINCT qualifier is temporarily disabled
+            if(function.getFunctionQuantifier() != null
+                && function.getFunctionQuantifier().getValue() == SqlSelectKeyword.DISTINCT) {
+              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "DISTINCT for window aggregate functions is not currently supported\n" +
+                  "See Apache Drill JIRA: DRILL-3182");
+              throw new UnsupportedOperationException();
+            }
+          }
+
+          // DRILL-3188
+          // Disable frame which is other than the default
+          // (i.e., BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+          if(((SqlCall) nodeInSelectList).operand(1) instanceof SqlWindow) {
+            SqlWindow window = (SqlWindow) ((SqlCall) nodeInSelectList).operand(1);
+
+            SqlNode lowerBound = window.getLowerBound();
+            SqlNode upperBound = window.getUpperBound();
+
+            // If no frame is specified
+            // it is a default frame
+            boolean isSupported = (lowerBound == null && upperBound == null);
+
+            // When OVER clause contain an ORDER BY clause the following frames are equivalent to the default frame:
+                // RANGE UNBOUNDED PRECEDING
+                // RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            if(window.getOrderList().size() != 0
+                && !window.isRows()
+                    && SqlWindow.isUnboundedPreceding(lowerBound)
+                        && (upperBound == null || SqlWindow.isCurrentRow(upperBound))) {
+              isSupported = true;
+            }
+
+            // When OVER clause doesn't contain an ORDER BY clause, the following are equivalent to the default frame:
+                // RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+                // ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            if(window.getOrderList().size() == 0
+                && SqlWindow.isUnboundedPreceding(lowerBound)
+                    && SqlWindow.isUnboundedFollowing(upperBound)) {
+              isSupported = true;
+            }
+
+            if(!isSupported) {
+              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "This type of window frame is currently not supported \n" +
+                  "See Apache Drill JIRA: DRILL-3188");
+              throw new UnsupportedOperationException();
+            }
+          }
+
+          // DRILL-3196
+          // Disable multiple partitions in a SELECT-CLAUSE
           SqlNode window = ((SqlCall) nodeInSelectList).operand(1);
 
           // Partition window is referenced as a SqlIdentifier,
@@ -119,12 +198,12 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
           if(definedWindow == null) {
             definedWindow = window;
           } else {
-           if(!definedWindow.equalsDeep(window, false)) {
-             unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-                 "Multiple window definitions in a single SELECT list is not currently supported \n" +
-                 "See Apache Drill JIRA: DRILL-3196");
-             throw new UnsupportedOperationException();
-           }
+            if(!definedWindow.equalsDeep(window, false)) {
+              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "Multiple window definitions in a single SELECT list is not currently supported \n" +
+                  "See Apache Drill JIRA: DRILL-3196");
+              throw new UnsupportedOperationException();
+            }
           }
         }
       }
