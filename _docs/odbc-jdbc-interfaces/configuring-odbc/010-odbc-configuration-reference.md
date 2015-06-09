@@ -76,7 +76,7 @@ driver connected to returns the query results.
 
 ### Schema
 
-The name of a schema, or storage plugin, from the default schema list of the data sources that you have configured to
+The name of a schema, or [storage plugin]({ site.baseurl }}/docs/storage-plugin-registration/), from the default schema list of the data sources that you have configured to
 use with Drill. Queries on other schemas can still be issued by explicitly specifying the schema in the query.
 
 Views that you create using the Drill Explorer do not appear under the schema

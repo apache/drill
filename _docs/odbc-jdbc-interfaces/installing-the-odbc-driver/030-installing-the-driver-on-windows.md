@@ -4,7 +4,13 @@ parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32-bit and 64-bit
 applications on Windows. Both versions of the driver can be installed on a 64-bit
-machine.
+machine. 
+
+To install the MapR Drill ODBC Driver, verify that your system meets the [prerequisites] before you start, and then complete the following steps described in detail in this document:
+
+* [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-1:-download-the-mapr-drill-odbc-driver)
+* [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-2:-install-the-mapr-drill-odbc-driver)
+* [Step 3: Verify the installation]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-3:-verify-the-installation)
 
 ##  System Requirements
 
@@ -25,18 +31,34 @@ requirements:
 
 To install the driver, you need Administrator privileges on the computer.
 
-## Installing the Driver
+----------
 
-  1. Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection:
-     * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC32.msi)
-     * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC64.msi)
-  2. Double-click the installer from the location where you downloaded it.
-  3. Click **Next.**
-  4. Select the check box to accept the terms of the License Agreement and click **Next**.
-  5. Verify or change the install location. Then, click **Next**.
-  6. Click **Install**.
-  7. When the installation completes, click **Finish**.
-  8. To verify the installation, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**. Then, click the **Drivers** tab and verify that the MapR Drill ODBC Driver appears in the list of drivers that are installed on the computer.
+## Step 1: Download the MapR Drill ODBC Driver
+
+Download the installer that corresponds to the bitness of the client application from which you want to create an ODBC connection:
+
+* [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC32.msi)  
+* [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC64.msi)
+
+----------
+
+## Step 2: Install the MapR Drill ODBC Driver
+
+1. Double-click the installer from the location where you downloaded it.
+2. Click **Next.**
+3. Select the check box to accept the terms of the License Agreement and click **Next**.
+4. Verify or change the install location. Then, click **Next**.
+5. Click **Install**.
+6. When the installation completes, click **Finish**.
+
+----------
+
+## Step 3: Verify the installation
+
+To verify the installation, perform the following steps:
+
+1. Click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**. 
+2. Click the **Drivers** tab and verify that the MapR Drill ODBC Driver appears in the list of drivers that are installed on the computer.
 
 ## The Tableau Data-connection Customization (TDC) File
 
@@ -48,11 +70,12 @@ The MapR Drill ODBC driver installer automatically installs the TDC file if the 
 
 **To install the MapRDrillODBC.TDC file manually:**
 
-  1. Click **Start > All Programs > MapR Drill ODBC Driver <version> (32|64-bit) > Install Tableau TDC File**. 
-  2. When the installation completes, press any key to continue.   
+1. Click **Start > All Programs > MapR Drill ODBC Driver <version> (32|64-bit) > Install Tableau TDC File**. 
+2. When the installation completes, press any key to continue.   
 For example, you can press the SPACEBAR key.
 
 If the installation of the TDC file fails, this is likely due to your Tableau repository being in location other than the default one.  In this case, manually copy the My Tableau Repository to C:\Users\<user>\Documents\My Tableau Repository. Repeat the procedure to install the MapRDrillODBC.TDC file manually.
 
 
-#### What's Next? Go to [Step 2. Configure ODBC Connections to Drill Data Sources]({{ site.baseurl }}/docs/configuring-connections-on-windows).
+### Next Step 
+[Configuring ODBC on Windows]({{ site.baseurl }}/docs/configuring-odbc-on-windows).

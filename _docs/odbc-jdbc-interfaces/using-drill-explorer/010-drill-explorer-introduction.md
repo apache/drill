@@ -1,10 +1,11 @@
 ---
-title: "Connecting to ODBC Data Sources"
+title: "Drill Explorer Introduction"
 parent: "Using Drill Explorer"
 ---
 
-Typically, you use Drill Explorer to explore data or to
-create a view before you connect to the data from a BI tool. In an ODBC-compliant BI tool, use the ODBC DSN to create an ODBC connection
+Drill Explorer is a user interface for browsing Drill data
+sources, previewing the results of a SQL query, and creating a view. Typically, you use Drill Explorer to explore data or to
+create a view before you connect to the data from a BI tool. For example, before designing a report using a BI reporting tool, use Drill Explorer to familiarize yourself with the data. In an ODBC-compliant BI tool, use the ODBC DSN to create an ODBC connection
 with one of the methods applicable to the data source type. 
 
 To connect Drill to a Hive data source, follow these steps:

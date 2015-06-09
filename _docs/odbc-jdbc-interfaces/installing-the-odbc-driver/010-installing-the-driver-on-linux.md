@@ -8,18 +8,15 @@ the version of the driver that matches the architecture of the client
 application that you use to access Drill. The 64-bit editions of Linux support
 32- and 64-bit applications.
 
-To install the MapR Drill ODBC Driver, complete the following steps:
+To install the MapR Drill ODBC Driver, verify that your system meets the [prerequisites] before you start, and then complete the following steps described in detail in this document:
 
-  * Step 1: Downloading the MapR Drill ODBC Driver 
-  * Step 2: Installing the MapR Drill ODBC Driver
-  * Step 3: Setting the LD_LIBRARY_PATH Environment Variable
-
-After you complete the installation steps, complete the steps listed in
-[Configuring ODBC Connections on Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x).
+  * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-mapr-drill-odbc-driver) 
+  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-mapr-drill-odbc-driver)
+  * [Step 3: Set the LD_LIBRARY_PATH Environment Variable]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-3:-check-the-mapr-drill-odbc-driver-version)
 
 Verify that your system meets the system requirements before you start.
 
-**System Requirements**
+## System Requirements
 
   * One of the following distributions (32- and 64-bit editions are supported):
     * Red Hat® Enterprise Linux® (RHEL) 5.0/6.0
@@ -38,14 +35,14 @@ If not, create the following entry in `/etc/hosts` for the Drill node(s):
 
 To install the driver, you need Administrator privileges on the computer.
 
-## Step 1: Downloading the MapR Drill ODBC Driver
+## Step 1: Download the MapR Drill ODBC Driver
 
 Click on a link below to download the driver:
 
   * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-32bit-1.0.0.i686.rpm)
   * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-1.0.0.x86_64.rpm)
 
-## Step 2: Installing the MapR Drill ODBC Driver
+## Step 2: Install the MapR Drill ODBC Driver
 
 To install the driver, complete the following steps:
 
@@ -83,7 +80,7 @@ File| Description
 `/opt/mapr/drillodbc/lib/32 `| 32-bit shared libraries directory.  
 `/opt/mapr/drillodbc/lib/64`| 64-bit shared libraries directory.  
   
-## Step 3: Checking the MapR Drill ODBC Driver version
+## Step 3: Check the MapR Drill ODBC Driver version
 
 To check the version of the driver you installed, use the following command on the terminal command line:
 
@@ -94,8 +91,7 @@ or
 `rpm -qa | grep maprdrillodbc`
 
 
-#### Next Step
+### Next Step
 
-Complete the steps listed in [Configuring ODBC Connections for Linux and Mac
-OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x).
+[Configuring ODBC on Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-connections-on-linux-and-mac-os-x).
 
