@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.window;
 
+import java.util.Properties;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
@@ -24,8 +26,6 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.Properties;
 
 public class TestWindowFrame extends BaseTestQuery {
 
@@ -63,15 +63,10 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   private void runTest(final String tableName, final boolean withOrderBy) throws Exception {
-    runSQL(String.format("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
 
-    try {
-      DrillTestWrapper testWrapper = withOrderBy ?
-        buildWindowWithOrderByQuery(tableName) : buildWindowQuery(tableName);
-      testWrapper.run();
-    } finally {
-      runSQL(String.format("alter session set `%s`= false", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
-    }
+    DrillTestWrapper testWrapper = withOrderBy ?
+      buildWindowWithOrderByQuery(tableName) : buildWindowQuery(tableName);
+    testWrapper.run();
   }
 
   /**
@@ -170,13 +165,17 @@ public class TestWindowFrame extends BaseTestQuery {
 
   @Test // DRILL-3218
   public void testMaxVarChar() throws Exception {
-    runSQL(String.format("alter session set `%s`= true", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
-
-    try {
-      test("select max(cast(columns[2] as char(2))) over(partition by cast(columns[2] as char(2)) order by cast(columns[0] as int)) from dfs_test.`%s/window/allData.csv`", TEST_RES_PATH);
-    } finally {
-      runSQL(String.format("alter session set `%s`= false", ExecConstants.ENABLE_WINDOW_FUNCTIONS));
-    }
-
+    test("select max(cast(columns[2] as char(2))) over(partition by cast(columns[2] as char(2)) order by cast(columns[0] as int)) from dfs_test.`%s/window/allData.csv`", TEST_RES_PATH);
   }
+
+  @Test // DRILL-1862
+  public void testEmptyPartitionBy() throws Exception {
+    test("SELECT employee_id, position_id, salary, SUM(salary) OVER(ORDER BY position_id) FROM cp.`employee.json` LIMIT 10");
+  }
+
+  @Test // DRILL-3172
+  public void testEmptyOverClause() throws Exception {
+    test("SELECT employee_id, position_id, salary, SUM(salary) OVER() FROM cp.`employee.json` LIMIT 10");
+  }
+
 }

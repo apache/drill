@@ -22,7 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.sun.java.swing.plaf.windows.resources.windows;
+
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.util.BitSets;
@@ -58,14 +58,25 @@ public class WindowPrule extends RelOptRule {
     // TODO: Order window based on existing partition by
     //input.getTraitSet().subsumes()
 
+    boolean partitionby = false;
     for (final Ord<Window.Group> w : Ord.zip(window.groups)) {
       Window.Group windowBase = w.getValue();
-      DrillDistributionTrait distOnAllKeys =
-          new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
-              ImmutableList.copyOf(getDistributionFields(windowBase)));
+      RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
+      if (windowBase.keys.size() > 0) {
+        DrillDistributionTrait distOnAllKeys =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+                ImmutableList.copyOf(getDistributionFields(windowBase)));
 
-      RelCollation collation = getCollation(windowBase);
-      RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnAllKeys);
+        partitionby = true;
+        traits = traits.plus(distOnAllKeys);
+      }
+
+      // Add collation trait if either partition-by or order-by is specified.
+      if (partitionby || windowBase.orderKeys.getFieldCollations().size() > 0) {
+        RelCollation collation = getCollation(windowBase);
+        traits = traits.plus(collation);
+      }
+
       final RelNode convertedInput = convert(input, traits);
 
       List<RelDataTypeField> newRowFields = Lists.newArrayList();
@@ -115,6 +126,11 @@ public class WindowPrule extends RelOptRule {
     call.transformTo(input);
   }
 
+  /**
+   * Create a RelCollation that has partition-by as the leading keys followed by order-by keys
+   * @param window The window specification
+   * @return a RelCollation with {partition-by keys, order-by keys}
+   */
   private RelCollation getCollation(Window.Group window) {
     List<RelFieldCollation> fields = Lists.newArrayList();
     for (int group : BitSets.toIter(window.keys)) {
