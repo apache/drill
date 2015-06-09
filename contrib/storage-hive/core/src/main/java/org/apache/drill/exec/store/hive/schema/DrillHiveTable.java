@@ -82,10 +82,8 @@ public class DrillHiveTable extends DrillTable{
         return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
 
       case BYTE:
-        return typeFactory.createSqlType(SqlTypeName.TINYINT);
-
       case SHORT:
-        return typeFactory.createSqlType(SqlTypeName.SMALLINT);
+        return typeFactory.createSqlType(SqlTypeName.INTEGER);
 
       case INT:
         return typeFactory.createSqlType(SqlTypeName.INTEGER);

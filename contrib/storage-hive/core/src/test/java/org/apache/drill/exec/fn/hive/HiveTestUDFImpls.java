@@ -151,6 +151,7 @@ public class HiveTestUDFImpls {
     }
   }
 
+  // TODO(DRILL-2470) - re-enable the test case for this function in TestSampleHiveUDFs
   @Description(name = "testHiveUDFBYTE", value = "_FUNC_(BYTE) - Tests byte data as input and output")
   public static class GenericUDFTestBYTE extends GenericUDFTestBase {
     public GenericUDFTestBYTE() {
@@ -158,6 +159,7 @@ public class HiveTestUDFImpls {
     }
   }
 
+  // TODO(DRILL-2470) - re-enable the test case for this function in TestSampleHiveUDFs
   @Description(name = "testHiveUDFSHORT", value = "_FUNC_(SHORT) - Tests short data as input and output")
   public static class GenericUDFTestSHORT extends GenericUDFTestBase {
     public GenericUDFTestSHORT() {

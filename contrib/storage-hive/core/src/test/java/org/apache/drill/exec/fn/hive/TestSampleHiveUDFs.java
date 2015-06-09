@@ -47,6 +47,7 @@ public class TestSampleHiveUDFs extends HiveTestBase {
     helper(query, expected);
   }
 
+  @Ignore("DRILL-2470")
   @Test
   public void byteInOut() throws Exception{
     String query = "SELECT testHiveUDFByte(tinyint_field) as col1 FROM hive.readtest";
@@ -54,6 +55,7 @@ public class TestSampleHiveUDFs extends HiveTestBase {
     helper(query, expected);
   }
 
+  @Ignore("DRILL-2470")
   @Test
   public void shortInOut() throws Exception{
     String query = "SELECT testHiveUDFShort(smallint_field) as col1 FROM hive.readtest";

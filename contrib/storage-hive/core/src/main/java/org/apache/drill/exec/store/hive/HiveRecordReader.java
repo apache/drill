@@ -359,8 +359,6 @@ public class HiveRecordReader extends AbstractRecordReader {
         return TypeProtos.MinorType.VARBINARY;
       case BOOLEAN:
         return MinorType.BIT;
-      case BYTE:
-        return MinorType.TINYINT;
       case DECIMAL: {
 
         if (context.getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
@@ -375,12 +373,15 @@ public class HiveRecordReader extends AbstractRecordReader {
         return MinorType.FLOAT8;
       case FLOAT:
         return MinorType.FLOAT4;
+      // TODO (DRILL-2470)
+      // Byte and short (tinyint and smallint in SQL types) are currently read as integers
+      // as these smaller integer types are not fully supported in Drill today.
+      case SHORT:
+      case BYTE:
       case INT:
         return MinorType.INT;
       case LONG:
         return MinorType.BIGINT;
-      case SHORT:
-        return MinorType.SMALLINT;
       case STRING:
       case VARCHAR:
         return MinorType.VARCHAR;
@@ -451,14 +452,6 @@ public class HiveRecordReader extends AbstractRecordReader {
           }
           break;
         }
-        case BYTE: {
-          TinyIntVector v = (TinyIntVector) vector;
-          byte value = (byte) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
         case DOUBLE: {
           Float8Vector v = (Float8Vector) vector;
           double value = (double) val;
@@ -475,6 +468,8 @@ public class HiveRecordReader extends AbstractRecordReader {
           }
           break;
         }
+        case BYTE:
+        case SHORT:
         case INT: {
           IntVector v = (IntVector) vector;
           int value = (int) val;
@@ -486,14 +481,6 @@ public class HiveRecordReader extends AbstractRecordReader {
         case LONG: {
           BigIntVector v = (BigIntVector) vector;
           long value = (long) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case SHORT: {
-          SmallIntVector v = (SmallIntVector) vector;
-          short value = (short) val;
           for (int j = 0; j < recordCount; j++) {
             v.getMutator().setSafe(j, value);
           }
@@ -603,8 +590,6 @@ public class HiveRecordReader extends AbstractRecordReader {
         return value.getBytes();
       case BOOLEAN:
         return Boolean.parseBoolean(value);
-      case BYTE:
-        return Byte.parseByte(value);
       case DECIMAL: {
         DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
         return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
@@ -614,12 +599,12 @@ public class HiveRecordReader extends AbstractRecordReader {
         return Double.parseDouble(value);
       case FLOAT:
         return Float.parseFloat(value);
+      case BYTE:
+      case SHORT:
       case INT:
         return Integer.parseInt(value);
       case LONG:
         return Long.parseLong(value);
-      case SHORT:
-        return Short.parseShort(value);
       case STRING:
       case VARCHAR:
         return value.getBytes();
