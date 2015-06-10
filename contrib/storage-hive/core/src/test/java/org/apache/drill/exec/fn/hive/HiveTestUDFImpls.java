@@ -103,7 +103,7 @@ public class HiveTestUDFImpls {
 
     @Override
     public Object evaluate(DeferredObject[] arguments) throws HiveException {
-      if (arguments[0] == null) {
+      if (arguments[0] == null || arguments[0].get() == null) {
         return null;
       }
 

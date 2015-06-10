@@ -91,14 +91,14 @@ public class TestSampleHiveUDFs extends HiveTestBase {
   @Test
   public void stringInOut() throws Exception{
     String query = "SELECT testHiveUDFString(string_field) as col1 FROM hive.readtest";
-    String expected = "col1\n" + "stringfield\n" + "\n";
+    String expected = "col1\n" + "stringfield\n" + "null\n";
     helper(query, expected);
   }
 
   @Test
   public void binaryInOut() throws Exception{
     String query = "SELECT testHiveUDFBinary(binary_field) as col1 FROM hive.readtest";
-    String expected = "col1\n" + "binaryfield\n" + "\n";
+    String expected = "col1\n" + "binaryfield\n" + "null\n";
     helper(query, expected);    helper(query, expected);
   }
 

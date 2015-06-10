@@ -125,11 +125,7 @@ public class TestHiveStorage extends HiveTestBase {
                   new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
                   new DateTime(Date.valueOf("2013-07-05").getTime()))
               .baselineValues( // All fields are null, but partition fields have non-null values
-                  "", // For binary (varchar, string too) empty value is considered as empty string instead of "null"
-                  null, null, null, null, null, null, null, null, null, null, null, null,
-                  "", // string_field
-                  "", // varchar_field
-                  null, null,
+                  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                   "binary",
                   true,
                   (byte) 64,

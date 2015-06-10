@@ -179,7 +179,8 @@ public class HiveTestDataGenerator {
         "  varchar_part VARCHAR(50)," +
         "  timestamp_part TIMESTAMP," +
         "  date_part DATE" +
-        ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE"
+        ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
+        "TBLPROPERTIES ('serialization.null.format'='') "
     );
 
     // Add a partition to table 'readtest'
