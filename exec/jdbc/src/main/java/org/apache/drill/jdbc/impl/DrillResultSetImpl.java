@@ -184,7 +184,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
     // Read first (schema-only) batch to initialize result-set metadata from
     // (initial) schema before Statement.execute...(...) returns result set:
-    cursor.next();
+    cursor.loadInitialSchema();
 
     return this;
   }

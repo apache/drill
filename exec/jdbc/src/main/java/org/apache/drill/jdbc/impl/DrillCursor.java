@@ -56,8 +56,7 @@ class DrillCursor implements Cursor {
   /** ... corresponds to current schema. */
   private DrillColumnMetaDataList columnMetaDataList;
 
-  /** Whether we're past the special first call to this.next() from
-   * DrillResultSetImpl.execute(). */
+  /** Whether loadInitialSchema() has been called. */
   private boolean initialSchemaLoaded = false;
 
   /** Whether after first batch.  (Re skipping spurious empty batches.) */
@@ -65,7 +64,8 @@ class DrillCursor implements Cursor {
 
   /**
    * Whether the next call to this.next() should just return {@code true} rather
-   * than trying to actually advance to the next record.
+   * than calling nextRowInternally() to try to advance to the next
+   * record.
    * <p>
    *   Currently, can be true only for first call to next().
    * </p>
@@ -120,33 +120,17 @@ class DrillCursor implements Cursor {
   }
 
   /**
-   * Advances this cursor to the next row, if any, or to after the sequence of
-   * rows if no next row.  However, the first call does not advance to the first
-   * row, only reading schema information.
+   * ...
    * <p>
-   *   Is to be called (once) from {@link DrillResultSetImpl#execute()}, and
-   *   then from {@link AvaticaResultSet#next()}.
+   *   Is to be called (once) from {@link #loadInitialSchema} for
+   *   {@link DrillResultSetImpl#execute()}, and then (repeatedly) from
+   *   {@link #next()} for {@link AvaticaResultSet#next()}.
    * </p>
    *
    * @return  whether cursor is positioned at a row (false when after end of
    *   results)
    */
-  @Override
-  public boolean next() throws SQLException {
-    if (!initialSchemaLoaded) {
-      initialSchemaLoaded = true;
-      returnTrueForNextCallToNext = true;
-    } else if (returnTrueForNextCallToNext && !afterLastRow) {
-      // We have a deferred "not after end" to report--reset and report that.
-      returnTrueForNextCallToNext = false;
-      return true;
-    }
-
-    if (afterLastRow) {
-      // We're already after end of rows/records--just report that after end.
-      return false;
-    }
-
+  private boolean nextRowInternally() throws SQLException {
     if (currentRecordNumber + 1 < currentBatchHolder.getRecordCount()) {
       // Have next row in current batch--just advance index and report "at a row."
       currentRecordNumber++;
@@ -161,28 +145,29 @@ class DrillCursor implements Cursor {
         // (Apparently:)  Skip any spurious empty batches (batches that have
         // zero rows and/or null data, other than the first batch (which carries
         // the (initial) schema but no rows)).
-        while ( qrb != null
-                && ( qrb.getHeader().getRowCount() == 0
-                     || qrb.getData() == null )
-                && afterFirstBatch ) {
-          // Empty message--dispose of and try to get another.
-          logger.warn( "Spurious batch read: {}", qrb );
-
-          qrb.release();
-
-          qrb = resultsListener.getNext();
-
-          // NOTE:  It is unclear why this check does not check getRowCount()
-          // as the loop condition above does.
-          if ( qrb != null && qrb.getData() == null ) {
-            // Got another batch with null data--dispose of and report "no more
-            // rows".
+        if ( afterFirstBatch ) {
+          while ( qrb != null
+                  && ( qrb.getHeader().getRowCount() == 0
+                      || qrb.getData() == null ) ) {
+            // Empty message--dispose of and try to get another.
+            logger.warn( "Spurious batch read: {}", qrb );
 
             qrb.release();
 
-            // NOTE:  It is unclear why this returns false but doesn't set
-            // afterLastRow (as we do when we normally return false).
-            return false;
+            qrb = resultsListener.getNext();
+
+            // NOTE:  It is unclear why this check does not check getRowCount()
+            // as the loop condition above does.
+            if ( qrb != null && qrb.getData() == null ) {
+              // Got another batch with null data--dispose of and report "no more
+              // rows".
+
+              qrb.release();
+
+              // NOTE:  It is unclear why this returns false but doesn't set
+              // afterLastRow (as we do when we normally return false).
+              return false;
+            }
           }
         }
 
@@ -243,6 +228,63 @@ class DrillCursor implements Cursor {
         throw new SQLException( "Unexpected RuntimeException: " + e.toString(), e );
       }
 
+    }
+  }
+
+  /**
+   * Advances to first batch to load schema data into result set metadata.
+   * <p>
+   *   To be called once from {@link DrillResultSetImpl#execute()} before
+   *   {@link next()} is called from {@link AvaticaResultSet#next()}.
+   * <p>
+   */
+  void loadInitialSchema() throws SQLException {
+    if ( initialSchemaLoaded ) {
+      throw new IllegalStateException(
+          "loadInitialSchema() called a second time" );
+    }
+    assert ! afterLastRow : "afterLastRow already true in loadInitialSchema()";
+    assert ! afterFirstBatch : "afterLastRow already true in loadInitialSchema()";
+    assert -1 == currentRecordNumber
+        : "currentRecordNumber not -1 (is " + currentRecordNumber
+          + ") in loadInitialSchema()";
+    assert 0 == currentBatchHolder.getRecordCount()
+        : "currentBatchHolder.getRecordCount() not 0 (is "
+          + currentBatchHolder.getRecordCount() + " in loadInitialSchema()";
+
+    returnTrueForNextCallToNext = true;
+
+    nextRowInternally();
+
+    initialSchemaLoaded = true;
+  }
+
+  /**
+   * Advances this cursor to the next row, if any, or to after the sequence of
+   * rows if no next row.
+   *
+   * @return  whether cursor is positioned at a row (false when after end of
+   *   results)
+   */
+  @Override
+  public boolean next() throws SQLException {
+    if ( ! initialSchemaLoaded ) {
+      throw new IllegalStateException(
+          "next() called but loadInitialSchema() was not called" );
+    }
+    assert afterFirstBatch : "afterFirstBatch still false in next()";
+
+    if ( afterLastRow ) {
+      // We're already after end of rows/records--just report that after end.
+      return false;
+    }
+    else if ( returnTrueForNextCallToNext ) {
+      // We have a deferred "not after end" to report--reset and report that.
+      returnTrueForNextCallToNext = false;
+      return true;
+    }
+    else {
+      return nextRowInternally();
     }
   }
 
