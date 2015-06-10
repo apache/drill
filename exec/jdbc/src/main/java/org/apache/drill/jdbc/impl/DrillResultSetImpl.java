@@ -99,7 +99,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
    *          cancelation and no QueryCanceledSqlException had been thrown yet
    *          for this ResultSet
    * @throws  AlreadyClosedSqlException  if ResultSet is closed
-   * @throws SQLException if error in calling {@link #isClosed()}
+   * @throws  SQLException  if error in calling {@link #isClosed()}
    */
   private void checkNotClosed() throws SQLException {
     if ( isClosed() ) {
@@ -181,6 +181,9 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       // but JDBC client certainly could.
       throw new SQLException( "Interrupted", e );
     }
+
+    // Read first (schema-only) batch to initialize result-set metadata from
+    // (initial) schema before Statement.execute...(...) returns result set:
     cursor.next();
 
     return this;

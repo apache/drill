@@ -31,33 +31,58 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
 
 
 class DrillCursor implements Cursor {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
+  private static final Logger logger = getLogger( DrillCursor.class );
 
   private static final String UNKNOWN = "--UNKNOWN--";
 
-  /** The associated java.sql.ResultSet implementation. */
+  /** The associated {@link java.sql.ResultSet} implementation. */
   private final DrillResultSetImpl resultSet;
 
+  /** Holds current batch of records (none before first load). */
   private final RecordBatchLoader currentBatch;
+
   private final DrillResultSetImpl.ResultsListener resultsListener;
 
-  // TODO:  Doc.:  Say what's started (set of rows?  just current result batch?)
+  /** Whether we're past the special first call to this.next() from
+   * DrillResultSetImpl.execute(). */
   private boolean started = false;
+
+  /** Whether cursor is after the end of the sequence of records/rows. */
   private boolean finished = false;
-  // TODO:  Doc.: Say what "readFirstNext" means.
+
+  /**
+   * Whether the next call to this.next() should just return {@code true} rather
+   * than trying to actually advance to the next record.
+   * <p>
+   *   Currently, can be true only for first call to next().
+   * </p>
+   * <p>
+   *   (Relates to loadInitialSchema()'s calling nextRowInternally()
+   *   one "extra" time
+   *   (extra relative to number of ResultSet.next() calls) at the beginning to
+   *   get first batch and schema before Statement.execute...(...) even returns.
+   * </p>
+   */
   private boolean redoFirstNext = false;
-  // TODO:  Doc.: First what? (First batch? record? "next" call/operation?)
+
+  /** Whether on first batch.  (Re skipping spurious empty batches.) */
   private boolean first = true;
 
+  /** ... corresponds to current schema. */
   private DrillColumnMetaDataList columnMetaDataList;
+
+  /** Schema of current batch (null before first load). */
   private BatchSchema schema;
 
-  /** Zero-based index of current record in record batch. */
+  /** Zero-based offset of current record in record batch.
+   * (Not <i>row</i> number.) */
   private int currentRecordNumber = -1;
-  private long recordBatchCount;
+
   private final DrillAccessorList accessors = new DrillAccessorList();
 
 
@@ -80,49 +105,75 @@ class DrillCursor implements Cursor {
   }
 
   @Override
-  public List<Accessor> createAccessors(List<ColumnMetaData> types, Calendar localCalendar, Factory factory) {
+  public List<Accessor> createAccessors(List<ColumnMetaData> types,
+                                        Calendar localCalendar, Factory factory) {
     columnMetaDataList = (DrillColumnMetaDataList) types;
     return accessors;
   }
 
-  // TODO:  Doc.:  Specify what the return value actually means.  (The wording
-  // "Moves to the next row" and "Whether moved" from the documentation of the
-  // implemented interface (net.hydromatic.avatica.Cursor) doesn't address
-  // moving past last row or how to evaluate "whether moved" on the first call.
-  // In particular, document what the return value indicates about whether we're
-  // currently at a valid row (or whether next() can be called again, or
-  // whatever it does indicate), especially the first time this next() called
-  // for a new result.
+  /**
+   * Advances this cursor to the next row, if any, or to after the sequence of
+   * rows if no next row.  However, the first call does not advance to the first
+   * row, only reading schema information.
+   * <p>
+   *   Is to be called (once) from {@link DrillResultSetImpl#execute()}, and
+   *   then from {@link AvaticaResultSet#next()}.
+   * </p>
+   *
+   * @return  whether cursor is positioned at a row (false when after end of
+   *   results)
+   */
   @Override
   public boolean next() throws SQLException {
     if (!started) {
       started = true;
       redoFirstNext = true;
     } else if (redoFirstNext && !finished) {
+      // We have a deferred "not after end" to report--reset and report that.
       redoFirstNext = false;
       return true;
     }
 
     if (finished) {
+      // We're already after end of rows/records--just report that after end.
       return false;
     }
 
     if (currentRecordNumber + 1 < currentBatch.getRecordCount()) {
-      // Next index is in within current batch--just increment to that record.
+      // Have next row in current batch--just advance index and report "at a row."
       currentRecordNumber++;
       return true;
     } else {
-      // Next index is not in current batch (including initial empty batch--
-      // (try to) get next batch.
+      // No (more) records in any current batch--try to get first or next batch.
+      // (First call always takes this branch.)
+
       try {
         QueryDataBatch qrb = resultsListener.getNext();
-        recordBatchCount++;
-        while (qrb != null && (qrb.getHeader().getRowCount() == 0 || qrb.getData() == null ) && !first) {
+
+        // (Apparently:)  Skip any spurious empty batches (batches that have
+        // zero rows and/or null data, other than the first batch (which carries
+        // the (initial) schema but no rows)).
+        while ( qrb != null
+                && ( qrb.getHeader().getRowCount() == 0
+                     || qrb.getData() == null )
+                && ! first ) {
+          // Empty message--dispose of and try to get another.
+          logger.warn( "Spurious batch read: {}", qrb );
+
           qrb.release();
+
           qrb = resultsListener.getNext();
-          recordBatchCount++;
-          if(qrb != null && qrb.getData()==null){
+
+          // NOTE:  It is unclear why this check does not check getRowCount()
+          // as the loop condition above does.
+          if ( qrb != null && qrb.getData() == null ) {
+            // Got another batch with null data--dispose of and report "no more
+            // rows".
+
             qrb.release();
+
+            // NOTE:  It is unclear why this returns false but doesn't set
+            // afterLastRow (as we do when we normally return false).
             return false;
           }
         }
@@ -130,11 +181,17 @@ class DrillCursor implements Cursor {
         first = false;
 
         if (qrb == null) {
-          currentBatch.clear();
+          // End of batches--clean up, set state to done, report after last row.
+
+          currentBatch.clear();  // (We load it so we clear it.)
           finished = true;
           return false;
         } else {
+          // Got next (or first) batch--reset record offset to beginning,
+          // assimilate schema if changed, ... ???
+
           currentRecordNumber = 0;
+
           final boolean changed;
           try {
             changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
@@ -146,6 +203,7 @@ class DrillCursor implements Cursor {
           if (changed) {
             updateColumns();
           }
+
           if (redoFirstNext && currentBatch.getRecordCount() == 0) {
             redoFirstNext = false;
           }
@@ -178,16 +236,12 @@ class DrillCursor implements Cursor {
     }
   }
 
-  void updateColumns() {
+  private void updateColumns() {
     accessors.generateAccessors(this, currentBatch);
     columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
     if (getResultSet().changeListener != null) {
       getResultSet().changeListener.schemaChanged(schema);
     }
-  }
-
-  public long getRecordBatchCount() {
-    return recordBatchCount;
   }
 
   @Override
