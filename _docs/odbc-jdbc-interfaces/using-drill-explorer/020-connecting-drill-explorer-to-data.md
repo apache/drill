@@ -38,13 +38,13 @@ To start Drill Explorer from Apps:
 
 To start Drill Explorer from the ODBC Administrator:
 
-1. In ODBC Administrator, on the **System DSN** tab in System Data Sources, select MapR ODBC Driver for Drill DSN.  
+1. In ODBC Administrator, on the **System DSN** tab in System Data Sources, a DSN. For example, select the sample MapR ODBC Driver for Drill DSN.  
    ![]({{ site.baseurl }}/docs/img/odbc-configure1.png)
-   Alternatively, if you set up a user DSN, select **User DSN**, and select the configured Driver.
+   Alternatively, if you set up a user DSN, select **User DSN**, and select a DSN.
 3. Click **Configure**.  
-   The MapR Drill ODBC Driver DSN Setup dialog appears with a preconfigured sample DSN.  
+   The DSN Setup dialog appears showing the configured properties.  
    ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
-4. Click **Drill Explorer** at the bottom of the MapR Drill ODBC Driver DSN Setup dialog.
+4. Click **Drill Explorer** at the bottom of the dialog.
    Drill Explorer appears.
 
 
