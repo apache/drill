@@ -30,8 +30,8 @@ Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting bina
 
 Refer to the following tables for information about the data types to use for casting:
 
-* [Supported Data Types for Casting]({{ site.baseurl }}/docs/supported-data-types-for-casting)
-* [Explicit Type Casting Maps]({{ site.baseurl }}/docs/explicit-type-casting-maps)
+* [Supported Data Types for Casting]({{ site.baseurl }}/docs/supported-data-types)
+* [Explicit Type Casting Maps]({{ site.baseurl }}/docs/supported-data-types/#explicit-type-casting-maps)
 
 
 ## Data Type Conversion Examples
