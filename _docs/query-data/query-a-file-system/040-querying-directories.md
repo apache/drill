@@ -89,3 +89,5 @@ first level down from logs, `dir1` to the next level, and so on.
     +------------+------------+------------+------------+------------+------------+------------+------------+------------+-------------+
     10 rows selected (0.583 seconds)
 
+You can use [query directory functions]({{site.baseurl}}/docs/query-directory-functions/) to restrict a query to one of a number of subdirectories and to prevent Drill from scanning all data in directories.
+

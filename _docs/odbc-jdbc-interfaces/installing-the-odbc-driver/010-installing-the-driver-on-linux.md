@@ -8,7 +8,7 @@ the version of the driver that matches the architecture of the client
 application that you use to access Drill. The 64-bit editions of Linux support
 32- and 64-bit applications.
 
-To install the MapR Drill ODBC Driver, verify that your system meets the [prerequisites] before you start, and then complete the following steps described in detail in this document:
+To ensure success, install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-linux/) before you start, and then complete the following steps described in detail in this document:
 
   * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-1:-download-the-mapr-drill-odbc-driver) 
   * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-linux/#step-2:-install-the-mapr-drill-odbc-driver)

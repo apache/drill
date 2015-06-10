@@ -1220,8 +1220,8 @@
             "next_title": "ODBC Configuration Reference", 
             "next_url": "/docs/odbc-configuration-reference/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Installing the Driver on Windows", 
-            "previous_url": "/docs/installing-the-driver-on-windows/", 
+            "previous_title": "Installing the TDC File on Windows", 
+            "previous_url": "/docs/installing-the-tdc-file-on-windows/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
             "title": "Configuring ODBC", 
             "url": "/docs/configuring-odbc/"
@@ -3961,8 +3961,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring ODBC", 
-            "next_url": "/docs/configuring-odbc/", 
+            "next_title": "Installing the TDC File on Windows", 
+            "next_url": "/docs/installing-the-tdc-file-on-windows/", 
             "parent": "Installing the ODBC Driver", 
             "previous_title": "Installing the Driver on Mac OS X", 
             "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
@@ -4032,14 +4032,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC", 
-                    "next_url": "/docs/configuring-odbc/", 
+                    "next_title": "Installing the TDC File on Windows", 
+                    "next_url": "/docs/installing-the-tdc-file-on-windows/", 
                     "parent": "Installing the ODBC Driver", 
                     "previous_title": "Installing the Driver on Mac OS X", 
                     "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
                     "title": "Installing the Driver on Windows", 
                     "url": "/docs/installing-the-driver-on-windows/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Installing the ODBC Driver", 
+                            "url": "/docs/installing-the-odbc-driver/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring ODBC", 
+                    "next_url": "/docs/configuring-odbc/", 
+                    "parent": "Installing the ODBC Driver", 
+                    "previous_title": "Installing the Driver on Windows", 
+                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/040-installing-the-tdc-file-on-windows.md", 
+                    "title": "Installing the TDC File on Windows", 
+                    "url": "/docs/installing-the-tdc-file-on-windows/"
                 }
             ], 
             "next_title": "Installing the Driver on Linux", 
@@ -4050,6 +4071,27 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/030-installing-the-odbc-driver.md", 
             "title": "Installing the ODBC Driver", 
             "url": "/docs/installing-the-odbc-driver/"
+        }, 
+        "Installing the TDC File on Windows": {
+            "breadcrumbs": [
+                {
+                    "title": "Installing the ODBC Driver", 
+                    "url": "/docs/installing-the-odbc-driver/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring ODBC", 
+            "next_url": "/docs/configuring-odbc/", 
+            "parent": "Installing the ODBC Driver", 
+            "previous_title": "Installing the Driver on Windows", 
+            "previous_url": "/docs/installing-the-driver-on-windows/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/040-installing-the-tdc-file-on-windows.md", 
+            "title": "Installing the TDC File on Windows", 
+            "url": "/docs/installing-the-tdc-file-on-windows/"
         }, 
         "Interfaces Introduction": {
             "breadcrumbs": [
@@ -4882,14 +4924,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC", 
-                            "next_url": "/docs/configuring-odbc/", 
+                            "next_title": "Installing the TDC File on Windows", 
+                            "next_url": "/docs/installing-the-tdc-file-on-windows/", 
                             "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Mac OS X", 
                             "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
                             "title": "Installing the Driver on Windows", 
                             "url": "/docs/installing-the-driver-on-windows/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC", 
+                            "next_url": "/docs/configuring-odbc/", 
+                            "parent": "Installing the ODBC Driver", 
+                            "previous_title": "Installing the Driver on Windows", 
+                            "previous_url": "/docs/installing-the-driver-on-windows/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/040-installing-the-tdc-file-on-windows.md", 
+                            "title": "Installing the TDC File on Windows", 
+                            "url": "/docs/installing-the-tdc-file-on-windows/"
                         }
                     ], 
                     "next_title": "Installing the Driver on Linux", 
@@ -4997,8 +5060,8 @@
                     "next_title": "ODBC Configuration Reference", 
                     "next_url": "/docs/odbc-configuration-reference/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Installing the Driver on Windows", 
-                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "previous_title": "Installing the TDC File on Windows", 
+                    "previous_url": "/docs/installing-the-tdc-file-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
                     "title": "Configuring ODBC", 
                     "url": "/docs/configuring-odbc/"
@@ -11897,14 +11960,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC", 
-                            "next_url": "/docs/configuring-odbc/", 
+                            "next_title": "Installing the TDC File on Windows", 
+                            "next_url": "/docs/installing-the-tdc-file-on-windows/", 
                             "parent": "Installing the ODBC Driver", 
                             "previous_title": "Installing the Driver on Mac OS X", 
                             "previous_url": "/docs/installing-the-driver-on-mac-os-x/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/030-installing-the-driver-on-windows.md", 
                             "title": "Installing the Driver on Windows", 
                             "url": "/docs/installing-the-driver-on-windows/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing the ODBC Driver", 
+                                    "url": "/docs/installing-the-odbc-driver/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC", 
+                            "next_url": "/docs/configuring-odbc/", 
+                            "parent": "Installing the ODBC Driver", 
+                            "previous_title": "Installing the Driver on Windows", 
+                            "previous_url": "/docs/installing-the-driver-on-windows/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/installing-the-odbc-driver/040-installing-the-tdc-file-on-windows.md", 
+                            "title": "Installing the TDC File on Windows", 
+                            "url": "/docs/installing-the-tdc-file-on-windows/"
                         }
                     ], 
                     "next_title": "Installing the Driver on Linux", 
@@ -12012,8 +12096,8 @@
                     "next_title": "ODBC Configuration Reference", 
                     "next_url": "/docs/odbc-configuration-reference/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Installing the Driver on Windows", 
-                    "previous_url": "/docs/installing-the-driver-on-windows/", 
+                    "previous_title": "Installing the TDC File on Windows", 
+                    "previous_url": "/docs/installing-the-tdc-file-on-windows/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/040-configuring-odbc.md", 
                     "title": "Configuring ODBC", 
                     "url": "/docs/configuring-odbc/"

@@ -59,4 +59,9 @@ using the following format:
 
 To test the ODBC connection on Windows, follow these steps:
 
-1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
+1. Follow instructions to configure the ODBC connection on Windows.  
+   The MapR Drill ODBC Driver DSN Setup dialog is displayed.
+   ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
+
+2. Click the Test Button.
+   ![]({{ site.baseurl }}/docs/img/odbc-test.png)

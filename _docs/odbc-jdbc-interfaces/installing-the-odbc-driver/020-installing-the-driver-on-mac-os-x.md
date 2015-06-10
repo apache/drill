@@ -5,7 +5,7 @@ parent: "Installing the ODBC Driver"
 Install the MapR Drill ODBC Driver on the machine from which you connect to
 the Drill service.
 
-To install the MapR Drill ODBC Driver, verify that your system meets the [prerequisites]({{site.baseurl}}/docs/install-the-driver-on-mac-os-x/#system-requirements) before you start, and then complete the following steps described in detail in this document:
+To ensure success, install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/install-the-driver-on-mac-os-x/#system-requirements) before you start, and then complete the following steps described in detail in this document:
 
   * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/install-the-driver-on-mac-os-x/#step-1:-download-the-mapr-drill-odbc-driver) 
   * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/install-the-driver-on-mac-os-x/#step-2:-install-the-mapr-drill-odbc-driver) 

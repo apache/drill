@@ -13,39 +13,47 @@ sources:
 
 ## Create a Data Source Name (DSN)
 
-Create a DSN that an application can use to connect to Drill data sources. If
+Create a DSN to connect to Drill data sources. If
 you want to create a DSN for a 32-bit application, you must use the 32-bit
 version of the ODBC Administrator to create the DSN.
 
-1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**.  
+1. Click **Start**, and locate the ODBC Administrator app that you installed, and click the ODBC Administrator app icon to start the app.
+   The ODBC Data Source Administrator dialog appears.
+   ![]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
+
+2. Click the **System DSN** tab, and in System Data Sources, select MapR ODBC Driver for Drill DSN.
+   ![]({{ site.baseurl }}/docs/img/odbc-configure1.png)
+   The system DSN is available for all users who log in to the machine. You can set up a user DSN is available only to the user who creates the DSN.  
+3. Click **Configure**.  
+   The MapR Drill ODBC Driver DSN Setup dialog appears with a preconfigured sample DSN. The following screenshot shows a possible DSN configuration for using Drill in embedded mode.
+   ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
    
-    To launch the 32-bit version of the ODBC driver on a 64-bit machine, run:
-`C:\WINDOWS\SysWOW64\odbcad32.exe`.  
-    The ODBC Data Source Administrator window appears.  
-2. Create a system or user DSN on the **System DSN** or **User DSN** tab, respectively. A system DSN is available for all users who log in to the machine. A user DSN is available to the user who creates the DSN.  
-3. Click **Add**.  
-4. Select **MapR Drill ODBC Driver** and click **Finish**.  
-   The _MapR Drill ODBC Driver DSN Setup_ window appears.
-5. In the **Data Source Name** field, enter a name for the DSN.  
-6. Optionally, enter a description of the DSN in the Description field.
-7. In the Connection Type section, select one of the following connection types:  
-   * ZooKeeper Quorum  
-   * Direct to Drillbit  
-8. If you select **ZooKeeper Quorum**, provide values for the following properties:  
+### Authentication Options
+To password protect the DSN, uncomment the AuthenticationType, select Basic Authentication in the Authentication Type dropdown, and configure UID and PWD properties. To configure no password protection, select No Authentication.
+
+### Direct to Drillbit and ZooKeeper Quorum Options
+In the Connection Type section, Direct to Drillbit is selected for using Drill in embedded mode. To use Drill in embedded mode, set ConnectionType to Direct and define HOST and PORT properties. For example:
+
+* `HOST=localhost`  
+* `PORT=31010`
+
+Check the `drill-override.conf` file for any port changes.  
+
+To use Drill in distributed mode, select **ZooKeeper Quorum**.
+![]({{ site.baseurl }}/docs/img/odbc-configure3.png)
+
+If you select **ZooKeeper Quorum**, provide values for the following properties:  
    * Quorum  
      A comma separated list of ZooKeeper nodes in the following format:  
      `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .`  
    * Cluster ID  
-     Name of the drillbit cluster, drillbits1 by default. Check the `drill-override.conf` file for any cluster name changes.  
+     Name of the drillbit cluster, drillbits1 by default. 
 
-    If you select Direct to Drillbit, provide the IP address or host name of the Drill server and the Drill listen port number, 31010 by default. Check the `drill-override.conf` file for any port changes.  
-9. In **Default Schema**, select the [default schema]({{site.baseurl}}/docs/configuring-connections-on-windows/#schema) to connect to.  
-10. Optionally, perform the following operations:  
-    * Update the [advanced properties]({{site.baseurl}}/docs/configuring-connections-on-windows/#advanced-properties) configuration.  
-    * Configure [logging options]({{site.baseurl}}/docs/configuring-connections-on-windows/#logging-options) to log types of events.  
-11. Click **OK** to save the DSN.
+Check the `drill-override.conf` file for ZooKeeper node information and for any cluster name changes. 
+
+[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer].
 
 ### Next Step
 
-[Connect to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
+[Testing the ODBC Connection]({{ site.baseurl }}/docs/testing-the-odbc-connection/).
 
