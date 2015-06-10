@@ -1103,6 +1103,27 @@
             "title": "Configuring Drill Memory", 
             "url": "/docs/configuring-drill-memory/"
         }, 
+        "Configuring JReport with Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Query Data", 
+            "next_url": "/docs/query-data/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Apache Drill with Tableau 9 Server", 
+            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/080-configuring-jreport.md", 
+            "title": "Configuring JReport with Drill", 
+            "url": "/docs/configuring-jreport-with-drill/"
+        }, 
         "Configuring Multitenant Resources": {
             "breadcrumbs": [
                 {
@@ -5209,14 +5230,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Data", 
-                            "next_url": "/docs/query-data/", 
+                            "next_title": "Configuring JReport with Drill", 
+                            "next_url": "/docs/configuring-jreport-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
                             "title": "Using Apache Drill with Tableau 9 Server", 
                             "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Apache Drill with Tableau 9 Server", 
+                            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/080-configuring-jreport.md", 
+                            "title": "Configuring JReport with Drill", 
+                            "url": "/docs/configuring-jreport-with-drill/"
                         }
                     ], 
                     "next_title": "Using Drill with BI Tools Introduction", 
@@ -6310,8 +6352,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tableau 9 Server", 
-            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+            "previous_title": "Configuring JReport with Drill", 
+            "previous_url": "/docs/configuring-jreport-with-drill/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
@@ -10140,8 +10182,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Query Data", 
-            "next_url": "/docs/query-data/", 
+            "next_title": "Configuring JReport with Drill", 
+            "next_url": "/docs/configuring-jreport-with-drill/", 
             "parent": "Using Drill with BI Tools", 
             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
@@ -10393,14 +10435,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Data", 
-                    "next_url": "/docs/query-data/", 
+                    "next_title": "Configuring JReport with Drill", 
+                    "next_url": "/docs/configuring-jreport-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                     "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
                     "title": "Using Apache Drill with Tableau 9 Server", 
                     "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Data", 
+                    "next_url": "/docs/query-data/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Apache Drill with Tableau 9 Server", 
+                    "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/080-configuring-jreport.md", 
+                    "title": "Configuring JReport with Drill", 
+                    "url": "/docs/configuring-jreport-with-drill/"
                 }
             ], 
             "next_title": "Using Drill with BI Tools Introduction", 
@@ -12224,14 +12287,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Query Data", 
-                            "next_url": "/docs/query-data/", 
+                            "next_title": "Configuring JReport with Drill", 
+                            "next_url": "/docs/configuring-jreport-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Apache Drill with Tableau 9 Desktop", 
                             "previous_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/070-using-apache-drill-with-tableau-9-server.md", 
                             "title": "Using Apache Drill with Tableau 9 Server", 
                             "url": "/docs/using-apache-drill-with-tableau-9-server/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Query Data", 
+                            "next_url": "/docs/query-data/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Apache Drill with Tableau 9 Server", 
+                            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/080-configuring-jreport.md", 
+                            "title": "Configuring JReport with Drill", 
+                            "url": "/docs/configuring-jreport-with-drill/"
                         }
                     ], 
                     "next_title": "Using Drill with BI Tools Introduction", 
@@ -12629,8 +12713,8 @@
             "next_title": "Query Data Introduction", 
             "next_url": "/docs/query-data-introduction/", 
             "parent": "", 
-            "previous_title": "Using Apache Drill with Tableau 9 Server", 
-            "previous_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+            "previous_title": "Configuring JReport with Drill", 
+            "previous_url": "/docs/configuring-jreport-with-drill/", 
             "relative_path": "_docs/070-query-data.md", 
             "title": "Query Data", 
             "url": "/docs/query-data/"
