@@ -3,4 +3,4 @@ select
   sum(salary) over pos_win `sum`
 from
   dfs_test.`%s/window/%s`
-window pos_win as (partition by position_id)
+window pos_win as %s

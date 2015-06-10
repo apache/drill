@@ -40,29 +40,36 @@ public class TestWindowFrame extends BaseTestQuery {
     updateTestCluster(1, DrillConfig.create(props));
   }
 
-  private DrillTestWrapper buildWindowQuery(final String tableName) throws Exception {
+  private DrillTestWrapper buildWindowQuery(final String tableName, final boolean withPartitionBy) throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q1.sql"), TEST_RES_PATH, tableName))
+      .sqlQuery(String.format(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()"))
       .ordered()
-      .csvBaselineFile("window/" + tableName + ".tsv")
+      .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".tsv")
       .baselineColumns("count", "sum")
       .build();
   }
 
-  private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName) throws Exception {
+  private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName, final boolean withPartitionBy) throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName))
+      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)":"(order by sub)"))
       .ordered()
-      .csvBaselineFile("window/" + tableName + ".subs.tsv")
+      .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".oby.tsv")
       .baselineColumns("count", "sum", "row_number", "rank", "dense_rank", "cume_dist", "percent_rank")
       .build();
   }
 
-  private void runTest(final String tableName, final boolean withOrderBy) throws Exception {
+  private void runTest(final String tableName, final boolean withPartitionBy, final boolean withOrderBy) throws Exception {
 
     DrillTestWrapper testWrapper = withOrderBy ?
-      buildWindowWithOrderByQuery(tableName) : buildWindowQuery(tableName);
+      buildWindowWithOrderByQuery(tableName, withPartitionBy) : buildWindowQuery(tableName, withPartitionBy);
     testWrapper.run();
+  }
+
+  private void runTest(final String tableName) throws Exception {
+    runTest(tableName, true, true);
+    runTest(tableName, true, false);
+    runTest(tableName, false, true);
+    runTest(tableName, false, false);
   }
 
   /**
@@ -70,15 +77,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P1() throws Exception {
-    runTest("b1.p1", false);
-  }
-
-  /**
-   * Single batch with a single partition (position_id column) and multiple sub-partitions (sub column)
-   */
-  @Test
-  public void testB1P1OrderBy() throws Exception {
-    runTest("b1.p1", true);
+    runTest("b1.p1");
   }
 
   /**
@@ -86,16 +85,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P2() throws Exception {
-    runTest("b1.p2", false);
-  }
-
-  /**
-   * Single batch with 2 partitions (position_id column)
-   * with order by clause
-   */
-  @Test
-  public void testB1P2OrderBy() throws Exception {
-    runTest("b1.p2", true);
+    runTest("b1.p2");
   }
 
   /**
@@ -103,12 +93,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P2() throws Exception {
-    runTest("b2.p2", false);
-  }
-
-  @Test
-  public void testB2P2OrderBy() throws Exception {
-    runTest("b2.p2", true);
+    runTest("b2.p2");
   }
 
   /**
@@ -116,16 +101,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P4() throws Exception {
-    runTest("b2.p4", false);
-  }
-
-  /**
-   * 2 batches with 4 partitions, one partition has rows in both batches
-   * no sub partition has rows in both batches
-   */
-  @Test
-  public void testB2P4OrderBy() throws Exception {
-    runTest("b2.p4", true);
+    runTest("b2.p4");
   }
 
   /**
@@ -133,16 +109,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB3P2() throws Exception {
-    runTest("b3.p2", false);
-  }
-
-  /**
-   * 3 batches with 2 partitions, one partition has rows in all 3 batches
-   * 2 subs have rows in 2 batches
-   */
-  @Test
-  public void testB3P2OrderBy() throws Exception {
-    runTest("b3.p2", true);
+    runTest("b3.p2");
   }
 
   /**
@@ -150,13 +117,8 @@ public class TestWindowFrame extends BaseTestQuery {
    * current batch without the need to call next(incoming).
    */
   @Test
-  public void testb4P4() throws Exception {
-    runTest("b4.p4", false);
-  }
-
-  @Test
-  public void testb4P4OrderBy() throws Exception {
-    runTest("b4.p4", true);
+  public void testB4P4() throws Exception {
+    runTest("b4.p4");
   }
 
   @Test // DRILL-1862

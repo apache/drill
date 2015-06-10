@@ -7,4 +7,4 @@ select
   cume_dist() over pos_win `cume_dist`,
   percent_rank() over pos_win `percent_rank`
 from dfs_test.`%s/window/%s`
-window pos_win as (partition by position_id order by sub)
+window pos_win as %s

@@ -190,10 +190,14 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
             this.schema = incoming.getSchema();
           }
         case OK:
-          batches.add(new WindowDataBatch(incoming, context));
+          if (incoming.getRecordCount() > 0) {
+            batches.add(new WindowDataBatch(incoming, context));
+          } else {
+            logger.trace("incoming has 0 records, it won't be added to batches");
+          }
           break;
         default:
-          throw new UnsupportedOperationException("Unsupported upstrean state " + upstream);
+          throw new UnsupportedOperationException("Unsupported upstream state " + upstream);
       }
     }
 
@@ -240,6 +244,10 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       framer = createFramer(incoming);
     } catch (IOException | ClassTransformationException e) {
       throw new SchemaChangeException("Exception when creating the schema", e);
+    }
+
+    if (incoming.getRecordCount() > 0) {
+      batches.add(new WindowDataBatch(incoming, getContext()));
     }
   }
 

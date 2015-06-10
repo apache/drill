@@ -1,24 +1,24 @@
 // partition rows 10, subs [1, 2, 3]
-// partition rows 30, subs [3, 4, 5, 6, 7, 8]
-// partition rows 20, subs [8, 9, 10]
-// partition rows 20, subs [10, 11]
-{ "employee_id":37, "position_id":2, "sub":8, "salary":18 }
-{ "employee_id":52, "position_id":3, "sub":9, "salary":19 }
-{ "employee_id":16, "position_id":2, "sub":4, "salary":14 }
-{ "employee_id":20, "position_id":2, "sub":5, "salary":15 }
-{ "employee_id":5, "position_id":1, "sub":3, "salary":13 }
-{ "employee_id":45, "position_id":3, "sub":8, "salary":18 }
-{ "employee_id":40, "position_id":3, "sub":8, "salary":18 }
-{ "employee_id":1, "position_id":1, "sub":2, "salary":12 }
-{ "employee_id":48, "position_id":3, "sub":9, "salary":19 }
-{ "employee_id":13, "position_id":2, "sub":4, "salary":14 }
+// partition rows 30, subs [4, 5, 6, 7, 8]
+// partition rows 20, subs [9, 10]
+// partition rows 20, subs [11, 12]
+{ "employee_id":10, "position_id":2, "sub":4, "salary":14 }
+{ "employee_id":0, "position_id":1, "sub":1, "salary":11 }
+{ "employee_id":61, "position_id":4, "sub":11, "salary":21 }
 { "employee_id":70, "position_id":4, "sub":11, "salary":21 }
-{ "employee_id":47, "position_id":3, "sub":8, "salary":18 }
-{ "employee_id":24, "position_id":2, "sub":6, "salary":16 }
-{ "employee_id":8, "position_id":1, "sub":3, "salary":13 }
-{ "employee_id":63, "position_id":4, "sub":10, "salary":20 }
-{ "employee_id":32, "position_id":2, "sub":7, "salary":17 }
-{ "employee_id":58, "position_id":3, "sub":10, "salary":20 }
-{ "employee_id":10, "position_id":2, "sub":3, "salary":13 }
+{ "employee_id":20, "position_id":2, "sub":6, "salary":16 }
 { "employee_id":22, "position_id":2, "sub":6, "salary":16 }
-{ "employee_id":61, "position_id":4, "sub":10, "salary":20 }
+{ "employee_id":49, "position_id":3, "sub":10, "salary":20 }
+{ "employee_id":34, "position_id":2, "sub":8, "salary":18 }
+{ "employee_id":8, "position_id":1, "sub":3, "salary":13 }
+{ "employee_id":24, "position_id":2, "sub":6, "salary":16 }
+{ "employee_id":38, "position_id":2, "sub":8, "salary":18 }
+{ "employee_id":29, "position_id":2, "sub":7, "salary":17 }
+{ "employee_id":23, "position_id":2, "sub":6, "salary":16 }
+{ "employee_id":2, "position_id":1, "sub":2, "salary":12 }
+{ "employee_id":56, "position_id":3, "sub":10, "salary":20 }
+{ "employee_id":9, "position_id":1, "sub":3, "salary":13 }
+{ "employee_id":26, "position_id":2, "sub":7, "salary":17 }
+{ "employee_id":1, "position_id":1, "sub":2, "salary":12 }
+{ "employee_id":27, "position_id":2, "sub":7, "salary":17 }
+{ "employee_id":39, "position_id":2, "sub":8, "salary":18 }
