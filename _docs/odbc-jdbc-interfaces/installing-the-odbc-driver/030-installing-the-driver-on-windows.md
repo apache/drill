@@ -17,10 +17,9 @@ To ensure success, install the MapR Drill ODBC Driver on a system that meets the
 Each computer where you install the driver must meet the following system
 requirements:
 
-  * One of the following operating systems (32- and 64-bit editions are supported):
+  * The 32- and 64-bit editions of the following operating systems are recommended:
     * Windows® 8 and 8.1
     * Windows® 7 Professional
-    * Windows® Server 2012, 2012 R2
     * Windows® Server 2008, 2013 R2
   * .NET Framework 4.5, installed and enabled by default on Windows 8 and later
   * 60 MB of available disk space

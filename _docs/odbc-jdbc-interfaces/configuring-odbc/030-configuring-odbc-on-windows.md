@@ -11,17 +11,17 @@ sources:
 
 **Prerequisite:** An Apache Drill installation must be [configured]({{ site.baseurl }}/docs/connect-a-data-source-introduction/) to access the data sources that you want to connect to.  For information about how to install Apache Drill, see [Install Drill]({{ site.baseurl }}/docs/install-drill).
 
-## Create a Data Source Name (DSN)
+## Sample ODBC Configuration (DSN)
 
-Create a DSN to connect to Drill data sources. If
+You can see how to create a DSN to connect to Drill data sources by taking a look at the preconfigured sample that the installer sets up. If
 you want to create a DSN for a 32-bit application, you must use the 32-bit
 version of the ODBC Administrator to create the DSN.
 
-1. Click **Start**, and locate the ODBC Administrator app that you installed, and click the ODBC Administrator app icon to start the app.
+1. Click **Start**, and locate the ODBC Administrator app that you installed, and click  ODBC Administrator to start the app.
    The ODBC Data Source Administrator dialog appears.
    ![]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
 
-2. Click the **System DSN** tab, and in System Data Sources, select MapR ODBC Driver for Drill DSN.
+2. On the **System DSN** tab in System Data Sources, select the sample MapR ODBC Driver for Drill DSN.
    ![]({{ site.baseurl }}/docs/img/odbc-configure1.png)
    The system DSN is available for all users who log in to the machine. You can set up a user DSN is available only to the user who creates the DSN.  
 3. Click **Configure**.  
