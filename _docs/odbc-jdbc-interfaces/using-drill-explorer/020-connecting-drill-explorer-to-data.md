@@ -2,7 +2,7 @@
 title: "Connecting Drill Explorer to Data"
 parent: "Using Drill Explorer"
 ---
-The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. On a single-node, embedded Drill cluster, start the Drill shell. On a distributed Drill cluster, start the Drillbit.
+The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. On a single-node, embedded Drill cluster, [start the Drill shell]({{site.baseurl}}/docs/installing-drill-in-embedded-mode/). On a distributed Drill cluster, [start the Drillbit]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
 
 ## Connecting Drill Explorer to Data on Mac OS X
 
@@ -21,11 +21,31 @@ The way you start Drill Explorer differs depending on your platform, but regardl
 
 ## Starting Drill Explorer on Windows
 
-1. To launch the ODBC Administrator, click **Start > All Programs > MapR Drill ODBC Driver 1.0 (32|64-bit) > (32|64-bit) ODBC Administrator**.
-2. Click the **User DSN** tab or the **System DSN** tab and then select the DSN that corresponds to the Drill data source that you want to explore.
+You can start Drill Explorer from Apps or from the ODBC Administrator.
+
+To start Drill Explorer from Apps:
+
+1. Click **Start**, and locate the MaprR Drill ODBC Driver 1.0 app group in Apps.
+   The MapR Drill ODBC Driver 1.0 group includes Drill Explorer.
+   ![]({{ site.baseurl }}/docs/img/odbc-user-dsn.png)
+
+2. Click **Drill Explorer**.
+   The ODBC Connection dialog appears.
+3. Select the DSN that you want to explore. For example, select the sample MapR ODBC Driver for Drill DSN.
+   ![]({{ site.baseurl }}/docs/img/odbc-explorer-connect.png)
+   Drill Explorer appears.
+   ![]({{ site.baseurl }}/docs/img/odbc-explorer-win.png)
+
+To start Drill Explorer from the ODBC Administrator:
+
+1. In ODBC Administrator, on the **System DSN** tab in System Data Sources, select MapR ODBC Driver for Drill DSN.  
+   ![]({{ site.baseurl }}/docs/img/odbc-configure1.png)
+   Alternatively, if you set up a user DSN, select **User DSN**, and select the configured Driver.
 3. Click **Configure**.  
-   The _MapR Drill ODBC Driver DSN Setup_ dialog appears.
-4. Click **Drill Explorer**.
+   The MapR Drill ODBC Driver DSN Setup dialog appears with a preconfigured sample DSN.  
+   ![]({{ site.baseurl }}/docs/img/odbc-configure2.png)
+4. Click **Drill Explorer** at the bottom of the MapR Drill ODBC Driver DSN Setup dialog.
+   Drill Explorer appears.
 
 
 
