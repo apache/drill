@@ -21,8 +21,12 @@ import java.sql.Time;
 
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
-
 public class TimePrintMillis extends Time {
+  private static final String[] leadingZeroes = {"", "0", "00"};
+
+  // Desired length of the milli second portion should be 3
+  private static final int DESIRED_MILLIS_LENGTH = 3;
+
   public TimePrintMillis(long time) {
     super(time);
   }
@@ -30,13 +34,23 @@ public class TimePrintMillis extends Time {
   @Override
   public String toString () {
     int millis = (int) (getTime() % DateUtility.secondsToMillis);
-    String baseTime = super.toString();
+    StringBuilder time = new StringBuilder().append(super.toString());
 
     if (millis > 0) {
-      baseTime  = baseTime + "." + Integer.toString(millis);
+      String millisString = Integer.toString(millis);
+
+      // dot to separate the fractional seconds
+      time.append(".");
+
+      int millisLength = millisString.length();
+      if (millisLength < DESIRED_MILLIS_LENGTH) {
+        // add necessary leading zeroes
+        time.append(leadingZeroes[DESIRED_MILLIS_LENGTH - millisLength]);
+      }
+      time.append(millisString);
     }
 
-    return baseTime;
+    return time.toString();
   }
 }
 
