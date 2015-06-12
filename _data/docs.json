@@ -4185,8 +4185,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using JDBC with SQuirreL on Windows", 
-            "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
+            "next_title": "Using the JDBC Driver", 
+            "next_url": "/docs/using-the-jdbc-driver/", 
             "parent": "ODBC/JDBC Interfaces", 
             "previous_title": "ODBC/JDBC Interfaces", 
             "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -4920,8 +4920,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using JDBC with SQuirreL on Windows", 
-                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
+                    "next_title": "Using the JDBC Driver", 
+                    "next_url": "/docs/using-the-jdbc-driver/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -4937,11 +4937,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing the ODBC Driver", 
-                    "next_url": "/docs/installing-the-odbc-driver/", 
+                    "next_title": "Using JDBC with SQuirreL on Windows", 
+                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/015-using-jdbc-driver.md", 
+                    "title": "Using the JDBC Driver", 
+                    "url": "/docs/using-the-jdbc-driver/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing the ODBC Driver", 
+                    "next_url": "/docs/installing-the-odbc-driver/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using the JDBC Driver", 
+                    "previous_url": "/docs/using-the-jdbc-driver/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
                     "title": "Using JDBC with SQuirreL on Windows", 
                     "url": "/docs/using-jdbc-with-squirrel-on-windows/"
@@ -10633,8 +10650,8 @@
             "next_title": "Installing the ODBC Driver", 
             "next_url": "/docs/installing-the-odbc-driver/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Interfaces Introduction", 
-            "previous_url": "/docs/interfaces-introduction/", 
+            "previous_title": "Using the JDBC Driver", 
+            "previous_url": "/docs/using-the-jdbc-driver/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
             "title": "Using JDBC with SQuirreL on Windows", 
             "url": "/docs/using-jdbc-with-squirrel-on-windows/"
@@ -10701,6 +10718,23 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
             "title": "Using Tibco Spotfire with Drill", 
             "url": "/docs/using-tibco-spotfire-with-drill/"
+        }, 
+        "Using the JDBC Driver": {
+            "breadcrumbs": [
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using JDBC with SQuirreL on Windows", 
+            "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
+            "parent": "ODBC/JDBC Interfaces", 
+            "previous_title": "Interfaces Introduction", 
+            "previous_url": "/docs/interfaces-introduction/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/015-using-jdbc-driver.md", 
+            "title": "Using the JDBC Driver", 
+            "url": "/docs/using-the-jdbc-driver/"
         }, 
         "Value Vectors": {
             "breadcrumbs": [
@@ -11998,8 +12032,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using JDBC with SQuirreL on Windows", 
-                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
+                    "next_title": "Using the JDBC Driver", 
+                    "next_url": "/docs/using-the-jdbc-driver/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "ODBC/JDBC Interfaces", 
                     "previous_url": "/docs/odbc-jdbc-interfaces/", 
@@ -12015,11 +12049,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing the ODBC Driver", 
-                    "next_url": "/docs/installing-the-odbc-driver/", 
+                    "next_title": "Using JDBC with SQuirreL on Windows", 
+                    "next_url": "/docs/using-jdbc-with-squirrel-on-windows/", 
                     "parent": "ODBC/JDBC Interfaces", 
                     "previous_title": "Interfaces Introduction", 
                     "previous_url": "/docs/interfaces-introduction/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/015-using-jdbc-driver.md", 
+                    "title": "Using the JDBC Driver", 
+                    "url": "/docs/using-the-jdbc-driver/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing the ODBC Driver", 
+                    "next_url": "/docs/installing-the-odbc-driver/", 
+                    "parent": "ODBC/JDBC Interfaces", 
+                    "previous_title": "Using the JDBC Driver", 
+                    "previous_url": "/docs/using-the-jdbc-driver/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/020-using-jdbc-with-squirrel-on-windows.md", 
                     "title": "Using JDBC with SQuirreL on Windows", 
                     "url": "/docs/using-jdbc-with-squirrel-on-windows/"
