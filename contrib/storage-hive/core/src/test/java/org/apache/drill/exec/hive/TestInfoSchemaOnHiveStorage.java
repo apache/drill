@@ -45,6 +45,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
         .baselineValues("hive.db1", "kv_db1")
+        .baselineValues("hive.db1", "avro")
         .go();
   }
 

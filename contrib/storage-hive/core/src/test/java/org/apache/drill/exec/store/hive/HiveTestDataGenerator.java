@@ -26,10 +26,12 @@ import java.util.Map;
 
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -118,6 +120,8 @@ public class HiveTestDataGenerator {
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", dbDir));
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     conf.set("hive.metastore.warehouse.dir", whDir);
+    conf.set("mapred.job.tracker", "local");
+    conf.set("hive.exec.scratchdir",  Files.createTempDir().getAbsolutePath() + File.separator + "scratch_dir");
 
     SessionState ss = new SessionState(conf);
     SessionState.start(ss);
@@ -129,6 +133,16 @@ public class HiveTestDataGenerator {
     createTableAndLoadData(hiveDriver, "default", "kv", testDataFile);
     executeQuery(hiveDriver, "CREATE DATABASE IF NOT EXISTS db1");
     createTableAndLoadData(hiveDriver, "db1", "kv_db1", testDataFile);
+
+    // Create an Avro format based table backed by schema in a separate file
+    final String avroCreateQuery = String.format("CREATE TABLE db1.avro " +
+        "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' " +
+        "STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' " +
+        "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' " +
+        "TBLPROPERTIES ('avro.schema.url'='file:///%s')", getSchemaFile("avro_test_schema.json"));
+
+    executeQuery(hiveDriver, avroCreateQuery);
+    executeQuery(hiveDriver, "INSERT INTO TABLE db1.avro SELECT * FROM default.kv");
 
     executeQuery(hiveDriver, "USE default");
 
@@ -297,6 +311,15 @@ public class HiveTestDataGenerator {
     for (int i=1; i<=5; i++) {
       printWriter.println (String.format("%d, key_%d", i, i));
     }
+    printWriter.close();
+
+    return file.getPath();
+  }
+
+  private String getSchemaFile(final String resource) throws Exception {
+    final File file = getTempFile();
+    PrintWriter printWriter = new PrintWriter(file);
+    printWriter.write(BaseTestQuery.getFile(resource));
     printWriter.close();
 
     return file.getPath();

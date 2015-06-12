@@ -176,4 +176,14 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineValues(1, " key_1")
         .go();
   }
+
+  @Test // DRILL-745
+  public void queryingHiveAvroTable() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM hive.db1.avro ORDER BY key DESC LIMIT 1")
+        .unOrdered()
+        .baselineColumns("key", "value")
+        .baselineValues(5, " key_5")
+        .go();
+  }
 }
