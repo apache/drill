@@ -68,7 +68,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   private final DrillClient client;
   // TODO:  Resolve:  Since is barely manipulated here in DrillResultSetImpl,
   //  move down into DrillCursor and have this.clean() have cursor clean it.
-  final RecordBatchLoader currentBatch;
+  final RecordBatchLoader batchLoader;
   final DrillCursor cursor;
   boolean hasPendingCancelationNotification;
 
@@ -82,7 +82,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     resultsListener = new ResultsListener( batchQueueThrottlingThreshold );
     DrillConnection c = (DrillConnection) statement.getConnection();
     DrillClient client = c.getClient();
-    currentBatch = new RecordBatchLoader(client.getAllocator());
+    batchLoader = new RecordBatchLoader(client.getAllocator());
     this.client = client;
     cursor = new DrillCursor(this);
   }
@@ -133,7 +133,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       client.cancelQuery(resultsListener.getQueryId());
     }
     resultsListener.close();
-    currentBatch.clear();
+    batchLoader.clear();
   }
 
   @Override

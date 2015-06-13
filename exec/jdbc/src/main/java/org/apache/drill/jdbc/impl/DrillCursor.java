@@ -44,16 +44,16 @@ class DrillCursor implements Cursor {
   private final DrillResultSetImpl resultSet;
 
   /** Holds current batch of records (none before first load). */
-  private final RecordBatchLoader currentBatch;
+  private final RecordBatchLoader currentBatchHolder;
 
   private final DrillResultSetImpl.ResultsListener resultsListener;
 
   /** Whether we're past the special first call to this.next() from
    * DrillResultSetImpl.execute(). */
-  private boolean started = false;
+  private boolean initialSchemaLoaded = false;
 
   /** Whether cursor is after the end of the sequence of records/rows. */
-  private boolean finished = false;
+  private boolean afterLastRow = false;
 
   /**
    * Whether the next call to this.next() should just return {@code true} rather
@@ -68,10 +68,10 @@ class DrillCursor implements Cursor {
    *   get first batch and schema before Statement.execute...(...) even returns.
    * </p>
    */
-  private boolean redoFirstNext = false;
+  private boolean returnTrueForNextCallToNext = false;
 
   /** Whether on first batch.  (Re skipping spurious empty batches.) */
-  private boolean first = true;
+  private boolean beforeFirstBatch = true;
 
   /** ... corresponds to current schema. */
   private DrillColumnMetaDataList columnMetaDataList;
@@ -92,7 +92,7 @@ class DrillCursor implements Cursor {
    */
   DrillCursor(final DrillResultSetImpl resultSet) {
     this.resultSet = resultSet;
-    currentBatch = resultSet.currentBatch;
+    currentBatchHolder = resultSet.batchLoader;
     resultsListener = resultSet.resultsListener;
   }
 
@@ -125,21 +125,21 @@ class DrillCursor implements Cursor {
    */
   @Override
   public boolean next() throws SQLException {
-    if (!started) {
-      started = true;
-      redoFirstNext = true;
-    } else if (redoFirstNext && !finished) {
+    if (!initialSchemaLoaded) {
+      initialSchemaLoaded = true;
+      returnTrueForNextCallToNext = true;
+    } else if (returnTrueForNextCallToNext && !afterLastRow) {
       // We have a deferred "not after end" to report--reset and report that.
-      redoFirstNext = false;
+      returnTrueForNextCallToNext = false;
       return true;
     }
 
-    if (finished) {
+    if (afterLastRow) {
       // We're already after end of rows/records--just report that after end.
       return false;
     }
 
-    if (currentRecordNumber + 1 < currentBatch.getRecordCount()) {
+    if (currentRecordNumber + 1 < currentBatchHolder.getRecordCount()) {
       // Have next row in current batch--just advance index and report "at a row."
       currentRecordNumber++;
       return true;
@@ -156,7 +156,7 @@ class DrillCursor implements Cursor {
         while ( qrb != null
                 && ( qrb.getHeader().getRowCount() == 0
                      || qrb.getData() == null )
-                && ! first ) {
+                && ! beforeFirstBatch ) {
           // Empty message--dispose of and try to get another.
           logger.warn( "Spurious batch read: {}", qrb );
 
@@ -178,13 +178,13 @@ class DrillCursor implements Cursor {
           }
         }
 
-        first = false;
+        beforeFirstBatch = false;
 
         if (qrb == null) {
           // End of batches--clean up, set state to done, report after last row.
 
-          currentBatch.clear();  // (We load it so we clear it.)
-          finished = true;
+          currentBatchHolder.clear();  // (We load it so we clear it.)
+          afterLastRow = true;
           return false;
         } else {
           // Got next (or first) batch--reset record offset to beginning,
@@ -192,20 +192,22 @@ class DrillCursor implements Cursor {
 
           currentRecordNumber = 0;
 
-          final boolean changed;
+          final boolean schemaChanged;
           try {
-            changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
+            schemaChanged = currentBatchHolder.load(qrb.getHeader().getDef(),
+                                                    qrb.getData());
           }
           finally {
             qrb.release();
           }
-          schema = currentBatch.getSchema();
-          if (changed) {
+          schema = currentBatchHolder.getSchema();
+          if (schemaChanged) {
             updateColumns();
           }
 
-          if (redoFirstNext && currentBatch.getRecordCount() == 0) {
-            redoFirstNext = false;
+          if (returnTrueForNextCallToNext
+              && currentBatchHolder.getRecordCount() == 0) {
+            returnTrueForNextCallToNext = false;
           }
           return true;
         }
@@ -237,7 +239,7 @@ class DrillCursor implements Cursor {
   }
 
   private void updateColumns() {
-    accessors.generateAccessors(this, currentBatch);
+    accessors.generateAccessors(this, currentBatchHolder);
     columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
     if (getResultSet().changeListener != null) {
       getResultSet().changeListener.schemaChanged(schema);
@@ -246,7 +248,7 @@ class DrillCursor implements Cursor {
 
   @Override
   public void close() {
-    // currentBatch is owned by resultSet and cleaned up by
+    // currentBatchHolder is owned by resultSet and cleaned up by
     // DrillResultSet.cleanup()
 
     // listener is owned by resultSet and cleaned up by
