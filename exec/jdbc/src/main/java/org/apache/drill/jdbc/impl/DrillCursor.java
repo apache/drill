@@ -70,8 +70,8 @@ class DrillCursor implements Cursor {
    */
   private boolean returnTrueForNextCallToNext = false;
 
-  /** Whether on first batch.  (Re skipping spurious empty batches.) */
-  private boolean beforeFirstBatch = true;
+  /** Whether after first batch.  (Re skipping spurious empty batches.) */
+  private boolean afterFirstBatch = false;
 
   /** ... corresponds to current schema. */
   private DrillColumnMetaDataList columnMetaDataList;
@@ -156,7 +156,7 @@ class DrillCursor implements Cursor {
         while ( qrb != null
                 && ( qrb.getHeader().getRowCount() == 0
                      || qrb.getData() == null )
-                && ! beforeFirstBatch ) {
+                && afterFirstBatch ) {
           // Empty message--dispose of and try to get another.
           logger.warn( "Spurious batch read: {}", qrb );
 
@@ -178,7 +178,7 @@ class DrillCursor implements Cursor {
           }
         }
 
-        beforeFirstBatch = false;
+        afterFirstBatch = true;
 
         if (qrb == null) {
           // End of batches--clean up, set state to done, report after last row.
