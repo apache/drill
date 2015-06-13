@@ -48,12 +48,20 @@ class DrillCursor implements Cursor {
 
   private final DrillResultSetImpl.ResultsListener resultsListener;
 
+  private final DrillAccessorList accessors = new DrillAccessorList();
+
+  /** Schema of current batch (null before first load). */
+  private BatchSchema schema;
+
+  /** ... corresponds to current schema. */
+  private DrillColumnMetaDataList columnMetaDataList;
+
   /** Whether we're past the special first call to this.next() from
    * DrillResultSetImpl.execute(). */
   private boolean initialSchemaLoaded = false;
 
-  /** Whether cursor is after the end of the sequence of records/rows. */
-  private boolean afterLastRow = false;
+  /** Whether after first batch.  (Re skipping spurious empty batches.) */
+  private boolean afterFirstBatch = false;
 
   /**
    * Whether the next call to this.next() should just return {@code true} rather
@@ -70,20 +78,12 @@ class DrillCursor implements Cursor {
    */
   private boolean returnTrueForNextCallToNext = false;
 
-  /** Whether after first batch.  (Re skipping spurious empty batches.) */
-  private boolean afterFirstBatch = false;
-
-  /** ... corresponds to current schema. */
-  private DrillColumnMetaDataList columnMetaDataList;
-
-  /** Schema of current batch (null before first load). */
-  private BatchSchema schema;
+  /** Whether cursor is after the end of the sequence of records/rows. */
+  private boolean afterLastRow = false;
 
   /** Zero-based offset of current record in record batch.
    * (Not <i>row</i> number.) */
   private int currentRecordNumber = -1;
-
-  private final DrillAccessorList accessors = new DrillAccessorList();
 
 
   /**
@@ -109,6 +109,14 @@ class DrillCursor implements Cursor {
                                         Calendar localCalendar, Factory factory) {
     columnMetaDataList = (DrillColumnMetaDataList) types;
     return accessors;
+  }
+
+  private void updateColumns() {
+    accessors.generateAccessors(this, currentBatchHolder);
+    columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
+    if (getResultSet().changeListener != null) {
+      getResultSet().changeListener.schemaChanged(schema);
+    }
   }
 
   /**
@@ -235,14 +243,6 @@ class DrillCursor implements Cursor {
         throw new SQLException( "Unexpected RuntimeException: " + e.toString(), e );
       }
 
-    }
-  }
-
-  private void updateColumns() {
-    accessors.generateAccessors(this, currentBatchHolder);
-    columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
-    if (getResultSet().changeListener != null) {
-      getResultSet().changeListener.schemaChanged(schema);
     }
   }
 
