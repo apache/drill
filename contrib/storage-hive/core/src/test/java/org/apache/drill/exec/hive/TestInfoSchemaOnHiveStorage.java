@@ -93,7 +93,13 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   // When table name is fully qualified with schema name (sub-schema is non-default schema)
   @Test
   public void describeTable2() throws Exception{
-    describeHelper(null, "DESCRIBE hive.`db1`.kv_db1");
+    testBuilder()
+        .sqlQuery("DESCRIBE hive.`db1`.kv_db1")
+        .unOrdered()
+        .baselineColumns(baselineCols)
+        .baselineValues("key", "CHARACTER VARYING", "YES")
+        .baselineValues("value", "CHARACTER VARYING", "YES")
+        .go();
   }
 
   // When table is qualified with just the top level schema. It should look for the table in default sub-schema within
@@ -113,7 +119,13 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
   // given as single level schema name.
   @Test
   public void describeTable5() throws Exception {
-    describeHelper(null, "DESCRIBE `hive.db1`.kv_db1");
+    testBuilder()
+        .sqlQuery("DESCRIBE `hive.db1`.kv_db1")
+        .unOrdered()
+        .baselineColumns(baselineCols)
+        .baselineValues("key", "CHARACTER VARYING", "YES")
+        .baselineValues("value", "CHARACTER VARYING", "YES")
+        .go();
   }
 
   // When current default schema is just the top-level schema name and the table has no schema qualifier. It should
@@ -187,8 +199,8 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .unOrdered()
         .optionSettingQueriesForTestQuery("USE hive.db1")
         .baselineColumns("key", "value")
-        .baselineValues(1, " key_1")
-        .baselineValues(2, " key_2")
+        .baselineValues("1", " key_1")
+        .baselineValues("2", " key_2")
         .go();
   }
 }

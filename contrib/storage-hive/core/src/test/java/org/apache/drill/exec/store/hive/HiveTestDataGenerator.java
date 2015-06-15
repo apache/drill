@@ -130,9 +130,21 @@ public class HiveTestDataGenerator {
     // generate (key, value) test data
     String testDataFile = generateTestDataFile();
 
-    createTableAndLoadData(hiveDriver, "default", "kv", testDataFile);
+    // Create a (key, value) schema table with Text SerDe which is available in hive-serdes.jar
+    executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS default.kv(key INT, value STRING) " +
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(hiveDriver, "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE default.kv");
+
+    // Create a (key, value) schema table in non-default database with RegexSerDe which is available in hive-contrib.jar
+    // Table with RegExSerde is expected to have columns of STRING type only.
     executeQuery(hiveDriver, "CREATE DATABASE IF NOT EXISTS db1");
-    createTableAndLoadData(hiveDriver, "db1", "kv_db1", testDataFile);
+    executeQuery(hiveDriver, "CREATE TABLE db1.kv_db1(key STRING, value STRING) " +
+        "ROW FORMAT SERDE 'org.apache.hadoop.hive.contrib.serde2.RegexSerDe' " +
+        "WITH SERDEPROPERTIES (" +
+        "  \"input.regex\" = \"([0-9]*), (.*_[0-9]*)\", " +
+        "  \"output.format.string\" = \"%1$s, %2$s\"" +
+        ") ");
+    executeQuery(hiveDriver, "INSERT INTO TABLE db1.kv_db1 SELECT * FROM default.kv");
 
     // Create an Avro format based table backed by schema in a separate file
     final String avroCreateQuery = String.format("CREATE TABLE db1.avro " +
@@ -291,14 +303,6 @@ public class HiveTestDataGenerator {
         String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=2)", testDateDataFile));
 
     ss.close();
-  }
-
-  private void createTableAndLoadData(Driver hiveDriver, String dbName, String tblName, String dataFile) {
-    executeQuery(hiveDriver, String.format("USE %s", dbName));
-    executeQuery(hiveDriver, String.format("CREATE TABLE IF NOT EXISTS %s.%s(key INT, value STRING) "+
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE", dbName, tblName));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s.%s", dataFile, dbName, tblName));
   }
 
   private File getTempFile() throws Exception {

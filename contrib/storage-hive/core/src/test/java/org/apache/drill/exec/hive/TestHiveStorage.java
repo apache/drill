@@ -186,4 +186,14 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineValues(5, " key_5")
         .go();
   }
+
+  @Test // DRILL-3266
+  public void queryingTableWithSerDeInHiveContribJar() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM hive.db1.kv_db1 ORDER BY key DESC LIMIT 1")
+        .unOrdered()
+        .baselineColumns("key", "value")
+        .baselineValues("5", " key_5")
+        .go();
+  }
 }
