@@ -96,7 +96,7 @@ public class SqlCreateView extends DrillSqlCall {
 
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
-    return new ViewHandler.CreateView(config.getPlanner(), config.getContext());
+    return new ViewHandler.CreateView(config);
   }
 
   public List<String> getSchemaPath() {

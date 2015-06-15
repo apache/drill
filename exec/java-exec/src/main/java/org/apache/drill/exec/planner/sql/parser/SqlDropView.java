@@ -73,7 +73,7 @@ public class SqlDropView extends DrillSqlCall {
 
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
-    return new DropView(config.getContext());
+    return new DropView(config);
   }
 
   public List<String> getSchemaPath() {
