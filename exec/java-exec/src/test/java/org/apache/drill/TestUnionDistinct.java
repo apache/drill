@@ -680,4 +680,29 @@ public class TestUnionDistinct extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-3296
+  public void testGroupByUnionDistinct() throws Exception {
+    String query = "select n_nationkey from \n" +
+        "(select n_nationkey from cp.`tpch/nation.parquet` \n" +
+        "union select n_nationkey from cp.`tpch/nation.parquet`) \n" +
+        "group by n_nationkey";
+
+
+    // Validate the plan
+    final String[] expectedPlan = {"HashAgg.*\n" +
+        ".*UnionAll"};
+    final String[] excludedPlan = {"HashAgg.*\n.*HashAgg"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    // Validate the result
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .csvBaselineFile("testframework/unionDistinct/testGroupByUnionDistinct.tsv")
+        .baselineTypes(TypeProtos.MinorType.INT)
+        .baselineColumns("n_nationkey")
+        .build()
+        .run();
+  }
 }

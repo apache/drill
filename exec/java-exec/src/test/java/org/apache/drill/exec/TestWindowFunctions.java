@@ -213,4 +213,14 @@ public class TestWindowFunctions extends BaseTestQuery {
     test(query2);
     test(query3);
   }
+
+  @Test // DRILL-3204
+  public void testWindowWithJoin() throws Exception {
+    final String query = "select sum(t1.r_regionKey) over(partition by t1.r_regionKey)  \n" +
+        "from cp.`tpch/region.parquet` t1, cp.`tpch/nation.parquet` t2 \n" +
+        "where t1.r_regionKey = t2.n_nationKey \n" +
+        "group by t1.r_regionKey";
+
+    test(query);
+  }
 }
