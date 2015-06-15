@@ -6,7 +6,7 @@ The way you start Drill Explorer differs depending on your platform, but regardl
 
 ## Connecting Drill Explorer to Data on Mac OS X
 
-1. On a node that is running Drill, go to the `/Applications` directory, and run the Drill Explorer app.  
+1. On a node that is running Drill, run Drill Explorer.  The Drill Explorer app is located in the `/Applications` directory.  
    The Drill Explorer console appears.  
 2. Click **Connect** on the console.  
    The Drill Explorer dialog appears.  

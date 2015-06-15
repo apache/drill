@@ -1,43 +1,98 @@
 ---
-title: "Browsing Data and Creating Views"
+title: "Browsing Data and Defining Views"
 parent: "Using Drill Explorer"
 ---
-After connecting Drill Explorer to data, the Browse and SQL tab appear on the right side of the console. On the Browse tab, you view any metadata that might exist for a schema that you access with Drill. On the SQL tab, you preview the results
+After connecting Drill Explorer to data, the Browse and SQL tabs appear on the right side of the console. On the Browse tab, you view any metadata that might exist for a schema that you access with Drill. On the SQL tab, you preview the results
 of custom queries and save the results as a view.
 
 ## Browsing Data
 
-You can browse files and directories if you have permission to read them. The following example shows how browse Drill sample data.
+You can browse files and directories if you have permission to read them. In the Schemas pane, you expand branches until you find the file or table you want to view, and then select it. 
+
+Tip: To avoid error messages, which you can ignore, expand directories carefully by clicking on the arrow instead of the directory name until you find valid data. 
+
+In the Browse tab, the Metadata pane displays the structure, if there is any, of the selected table or file. The Preview pane displays the actual data. The SQL tab displays the statement that returns the data you see in the Browse tab.
+
+To update data after making changes in the data source, right-click a file, table, view, schema, or directory in the Schemas pane, and select Refresh. The scope of the update is limited to the item you right-click.
+
+The following example shows how to browse data using the sample MapR ODBC Driver DSN.
 
 1. Start Drill if necessary.  
-2. Check that the Schema property in the `.odbc.ini` is blank, which puts the default `dfs` schema into effect.  
-3. Start Drill Explorer and connect to the sample DSN.  
-4. In the **Schemas** section of Drill Explorer, on the **Browse** tab, navigate to the ` Drill installation directory, to the `sample-data` directory. Click `nation.parquet`.  
+2. Start Drill Explorer and connect to the sample DSN.  
+3. In the **Schemas** pane of Drill Explorer, on the **Browse** tab, navigate to the `sample-data` directory in the dfs.default schema. Click `nation.parquet`.  
+   The data from `nation.parquet` appears in the Preview pane.
    ![nation parquet]({{ site.baseurl }}/docs/img/explorer-nation-data.png) 
 
 
-## Creating a View
+## Defining a View
+After browsing data, you can define, preview, and save a view of file-based data. On the SQL tab, modify the statement in View Definition SQL to select the data you want to view. Click **Create As** to navigate to the location for saving the view. You need to save the view to a location that you define as `writable` in the storage plugin definition. After saving a view, a message is displayed about the status of the operation. Click **Copy** to copy the message.
 
-1. Start Drill if necessary.  
-2. Check that the Schema property in the .odbc.ini is blank, which puts the default `dfs`schema into effect.  
-3. Start Drill Explorer and connect to the sample DSN.  
-4. In the **Schemas** section on the **Browse** tab, navigate to the the data source that you want to create a view for.  
-   After you select a data souce, the metadata and data displays on the Browse tab and the SQL that is used to access the data displays on the SQL tab.  
-5. Click the **SQL** tab.  
-6. In the **View Definition SQL** field, enter the SQL query that you want to create a view for.  
-7. Click **Preview**.   
-   If the results are not as expected, you can edit the SQL query and click
-Preview again.  
-8. Click **Create As**.  
-   The _Create As_ dialog displays.  
-9. In the **Schema** field, select the schema where you want to save the view.  
+The following example defines and saves a view of a few columns of `nation.parquet` data.
+
+1. Start Drill.  
+2. Start Drill Explorer and connect to the sample DSN.  
+3. In the **Schemas** section on the **Browse** tab, navigate to the `/sample-data/nation.parquet` in the `dfs.default` schema. 
+4. On the **SQL** tab, in the **View Definition SQL** field, enter a query, as described in the [Specifying Column Names](). For example, modify the SELECT statement as follows:
+
+        SELECT N_NAME, N_REGIONKEY FROM `dfs.default`.`./Users/drilluser/drill/apache-drill-1.0.0/sample-data/nation.parquet` WHERE N_REGIONKEY IN (2, 4)
+   Do not put a semicolon at the end of the SQL statement.  
+5. Click **Preview**.
+   ![nation parquet]({{ site.baseurl }}/docs/img/odbc-define-view.png) 
+6. Click **Create As**.  
+   The _Create As_ dialog is displayed.
+   ![nation parquet]({{ site.baseurl }}/docs/img/odbc-create-as.png) 
+7. From the list of schemas, select the schema that defines the location for saving the view. For example, accept the [dfs.tmp]({{site.baseurl}}/docs/query-directory-functions/#query-directory-function-example) schema because the default `dfs` storage plugin defines the `tmp` directory as writable.
    You can save views only to file-based schemas.  
-10. In the **View Name** field, enter a descriptive name for the view.  
+8. In **View Name**, enter a name for the view.  
     Do not include spaces in the view name.  
-11. Click **Save**.   
-    The status and any error message associated with the view creation displays in
-the Create As dialog. When a view saves successfully, the Save button changes
-to a Close button.  
-12. Click **Close**.
+9. Click **Save** and check **Overwrite Existing Views** if you want to save over an existing view.   
+    The status message associated appears.  
+10. Click **Close**.
 
+Views that you create using the Drill Explorer do not appear under the schema
+associated with the data source type. Access the views from
+the file-based schema that you selected when saving the view.
 
+## Specifying Column Names
+
+Use of the SQL asterisk (*) selector to return all columns in a table is limited. Tableau might not connect to your Drill data source successfully using
+the SQL view that Drill Explorer creates. Modify the
+queries generated by Drill Explorer to specify columns to return based on the following
+syntax guidelines, depending on the schema type or file format.
+
+Specify individual columns when defining a view in Drill Explorer instead of attempting to select all, as shown in the following examples.
+
+`SELECT CAST(account['name'] AS varchar(20)) FROM hbase.students`
+
+`SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet``
+
+`SELECT column1 FROM `dfs`.`default`.`./opt/drill/interval.json``
+
+To query nested elements, use the following syntax, where menu is a child of column1:
+
+`SELECT column1['menu'] FROM `dfs`.`default`.`./opt/drill/interval.json``
+
+You can query elements that are multiple levels deep. Continuing the example, if
+menuitem is a child of menu, then use the following syntax:
+
+`SELECT column1['menu']['menuitem'] FROM `dfs`.`default`.`./opt/drill/interval.json``
+
+## Casting Data Requirements
+
+In SQL statements, you need to cast
+binary data to another format explicitly to view the data. For example, the following query
+displays results from an HBase database in binary format:  
+`SELECT account['name'] FROM hbase.students`
+
+The following query displays the same results in string format:  
+`SELECT CAST(account['name'] AS varchar(20)) FROM
+hbase.students`
+
+The following query displays results from a Parquet file in binary format:  
+`SELECT column1 FROM `dfs`.`default`.`./opt/drill/test.parquet``
+
+The following query displays the same results in string format:
+
+`SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet``
+
+You can also cast the data as other data types, such as integer or date formats/

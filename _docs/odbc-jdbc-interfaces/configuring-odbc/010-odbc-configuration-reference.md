@@ -30,7 +30,7 @@ The following table provides a list of the configuration options and a brief des
 
 ### Catalog
 
-This value defaults to DRILL and cannot be changed.
+This value defaults to DRILL and cannot be changed. The driver adds a synthetic catalog named DRILL under which all of the schemas and databases are organized. The driver maps the ODBC schema to the DRILL catalog.
 
 ### Connection Type
 
@@ -82,6 +82,16 @@ use with Drill. Queries on other schemas can still be issued by explicitly speci
 Views that you create using the Drill Explorer do not appear under the schema
 associated with the data source type. Instead, the views can be accessed from
 the file-based schema that you selected when saving the view.
+
+The driver supports the following schema types:
+
+* HBase
+* Distributed File System (DFS), supporting the following file formats:
+  * Parquet  
+  * JSON
+  * CSV
+  * TSV
+* Hive
 
 ### Advanced Properties
 

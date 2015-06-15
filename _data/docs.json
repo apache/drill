@@ -547,6 +547,27 @@
             "title": "Archived Pages", 
             "url": "/docs/archived-pages/"
         }, 
+        "Browsing Data and Defining Views": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill Explorer", 
+                    "url": "/docs/using-drill-explorer/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Drill with BI Tools", 
+            "next_url": "/docs/using-drill-with-bi-tools/", 
+            "parent": "Using Drill Explorer", 
+            "previous_title": "Connecting Drill Explorer to Data", 
+            "previous_url": "/docs/connecting-drill-explorer-to-data/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/030-browsing-data-and-creating-views.md", 
+            "title": "Browsing Data and Defining Views", 
+            "url": "/docs/browsing-data-and-defining-views/"
+        }, 
         "CASE": {
             "breadcrumbs": [
                 {
@@ -1696,8 +1717,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Drill Explorer to Browse Data", 
-            "next_url": "/docs/using-drill-explorer-to-browse-data/", 
+            "next_title": "Browsing Data and Defining Views", 
+            "next_url": "/docs/browsing-data-and-defining-views/", 
             "parent": "Using Drill Explorer", 
             "previous_title": "Drill Explorer Introduction", 
             "previous_url": "/docs/drill-explorer-introduction/", 
@@ -5107,8 +5128,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Drill Explorer to Browse Data", 
-                            "next_url": "/docs/using-drill-explorer-to-browse-data/", 
+                            "next_title": "Browsing Data and Defining Views", 
+                            "next_url": "/docs/browsing-data-and-defining-views/", 
                             "parent": "Using Drill Explorer", 
                             "previous_title": "Drill Explorer Introduction", 
                             "previous_url": "/docs/drill-explorer-introduction/", 
@@ -5134,8 +5155,8 @@
                             "previous_title": "Connecting Drill Explorer to Data", 
                             "previous_url": "/docs/connecting-drill-explorer-to-data/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/030-browsing-data-and-creating-views.md", 
-                            "title": "Using Drill Explorer to Browse Data", 
-                            "url": "/docs/using-drill-explorer-to-browse-data/"
+                            "title": "Browsing Data and Defining Views", 
+                            "url": "/docs/browsing-data-and-defining-views/"
                         }
                     ], 
                     "next_title": "Drill Explorer Introduction", 
@@ -5285,8 +5306,8 @@
                     "next_title": "Using Drill with BI Tools Introduction", 
                     "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Drill Explorer to Browse Data", 
-                    "previous_url": "/docs/using-drill-explorer-to-browse-data/", 
+                    "previous_title": "Browsing Data and Defining Views", 
+                    "previous_url": "/docs/browsing-data-and-defining-views/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
                     "title": "Using Drill with BI Tools", 
                     "url": "/docs/using-drill-with-bi-tools/"
@@ -10270,8 +10291,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Drill Explorer to Browse Data", 
-                    "next_url": "/docs/using-drill-explorer-to-browse-data/", 
+                    "next_title": "Browsing Data and Defining Views", 
+                    "next_url": "/docs/browsing-data-and-defining-views/", 
                     "parent": "Using Drill Explorer", 
                     "previous_title": "Drill Explorer Introduction", 
                     "previous_url": "/docs/drill-explorer-introduction/", 
@@ -10297,8 +10318,8 @@
                     "previous_title": "Connecting Drill Explorer to Data", 
                     "previous_url": "/docs/connecting-drill-explorer-to-data/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/030-browsing-data-and-creating-views.md", 
-                    "title": "Using Drill Explorer to Browse Data", 
-                    "url": "/docs/using-drill-explorer-to-browse-data/"
+                    "title": "Browsing Data and Defining Views", 
+                    "url": "/docs/browsing-data-and-defining-views/"
                 }
             ], 
             "next_title": "Drill Explorer Introduction", 
@@ -10309,27 +10330,6 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/050-using-drill-explorer.md", 
             "title": "Using Drill Explorer", 
             "url": "/docs/using-drill-explorer/"
-        }, 
-        "Using Drill Explorer to Browse Data": {
-            "breadcrumbs": [
-                {
-                    "title": "Using Drill Explorer", 
-                    "url": "/docs/using-drill-explorer/"
-                }, 
-                {
-                    "title": "ODBC/JDBC Interfaces", 
-                    "url": "/docs/odbc-jdbc-interfaces/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Using Drill with BI Tools", 
-            "next_url": "/docs/using-drill-with-bi-tools/", 
-            "parent": "Using Drill Explorer", 
-            "previous_title": "Connecting Drill Explorer to Data", 
-            "previous_url": "/docs/connecting-drill-explorer-to-data/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/030-browsing-data-and-creating-views.md", 
-            "title": "Using Drill Explorer to Browse Data", 
-            "url": "/docs/using-drill-explorer-to-browse-data/"
         }, 
         "Using Drill with BI Tools": {
             "breadcrumbs": [
@@ -10469,8 +10469,8 @@
             "next_title": "Using Drill with BI Tools Introduction", 
             "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
             "parent": "ODBC/JDBC Interfaces", 
-            "previous_title": "Using Drill Explorer to Browse Data", 
-            "previous_url": "/docs/using-drill-explorer-to-browse-data/", 
+            "previous_title": "Browsing Data and Defining Views", 
+            "previous_url": "/docs/browsing-data-and-defining-views/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
             "title": "Using Drill with BI Tools", 
             "url": "/docs/using-drill-with-bi-tools/"
@@ -12143,8 +12143,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Drill Explorer to Browse Data", 
-                            "next_url": "/docs/using-drill-explorer-to-browse-data/", 
+                            "next_title": "Browsing Data and Defining Views", 
+                            "next_url": "/docs/browsing-data-and-defining-views/", 
                             "parent": "Using Drill Explorer", 
                             "previous_title": "Drill Explorer Introduction", 
                             "previous_url": "/docs/drill-explorer-introduction/", 
@@ -12170,8 +12170,8 @@
                             "previous_title": "Connecting Drill Explorer to Data", 
                             "previous_url": "/docs/connecting-drill-explorer-to-data/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-explorer/030-browsing-data-and-creating-views.md", 
-                            "title": "Using Drill Explorer to Browse Data", 
-                            "url": "/docs/using-drill-explorer-to-browse-data/"
+                            "title": "Browsing Data and Defining Views", 
+                            "url": "/docs/browsing-data-and-defining-views/"
                         }
                     ], 
                     "next_title": "Drill Explorer Introduction", 
@@ -12321,8 +12321,8 @@
                     "next_title": "Using Drill with BI Tools Introduction", 
                     "next_url": "/docs/using-drill-with-bi-tools-introduction/", 
                     "parent": "ODBC/JDBC Interfaces", 
-                    "previous_title": "Using Drill Explorer to Browse Data", 
-                    "previous_url": "/docs/using-drill-explorer-to-browse-data/", 
+                    "previous_title": "Browsing Data and Defining Views", 
+                    "previous_url": "/docs/browsing-data-and-defining-views/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/060-using-drill-with-bi-tools.md", 
                     "title": "Using Drill with BI Tools", 
                     "url": "/docs/using-drill-with-bi-tools/"

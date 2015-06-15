@@ -27,6 +27,7 @@ Verify that your system meets the system requirements before you start.
     * iODBC 3.52.7 or above  
       OR 
     * unixODBC 2.2.12 or above
+    On Linux, 3.52.7 is available as a tarball. After unpacking the tarball, see the README for instructions about building the driver manager.
   * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).   
 If not, create the following entry in `/etc/hosts` for the Drill node(s):  
 
@@ -37,10 +38,11 @@ To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Download the MapR Drill ODBC Driver
 
-Click on a link below to download the driver:
+  * [MapR Drill ODBC Driver (32-bit)]
 
-  * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-32bit-1.0.0.i686.rpm)
-  * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-1.0.0.x86_64.rpm)
+         wget http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-32bit-1.0.0.i686.rpm
+  * [MapR Drill ODBC Driver (64-bit)]
+         wget http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-1.0.0.x86_64.rpm
 
 ## Step 2: Install the MapR Drill ODBC Driver
 
@@ -52,13 +54,11 @@ To install the driver, complete the following steps:
 
      **RedHat/CentOS**
      
-     `yum localinstall --nogpgcheck RPMFileName`
+     `yum localinstall --nogpgcheck <RPMFileName>`
 
      **SUSE**
      
      `zypper install RPMFileName`
-
-{% include startnote.html %}The MapR Drill ODBC Driver dependencies need to be resolved.{% include endnote.html %}
 
 The MapR Drill ODBC Driver depends on the following resources:
 
@@ -66,9 +66,8 @@ The MapR Drill ODBC Driver depends on the following resources:
   * `cyrus-sasl-gssapi-2.1.22-7` or above
   * `cyrus-sasl-plain-2.1.22-7` or above
 
-If the package manager in your Linux distribution cannot resolve the
-dependencies automatically when installing the driver, download and manually
-install the packages.
+The MapR Drill ODBC Driver typically resolves dependencies automatically. If not, error messages during the installation indicate that the package manager in your Linux distribution cannot resolve the
+dependencies automatically. In this case, manually install the packages.
 
 The following table provides a list of the MapR Drill ODBC Driver file
 locations and descriptions:
@@ -82,13 +81,13 @@ File| Description
   
 ## Step 3: Check the MapR Drill ODBC Driver version
 
-To check the version of the driver you installed, use the following command on the terminal command line:
+To check the version of the driver you installed, use the following case-sensitive command on the terminal command line:
 
-`yum list | grep maprdrillodbc`
+`yum list | grep MapRDrillODBC`
 
 or
 
-`rpm -qa | grep maprdrillodbc`
+`rpm -qa | grep MapRDrillodbc`
 
 
 ### Next Step

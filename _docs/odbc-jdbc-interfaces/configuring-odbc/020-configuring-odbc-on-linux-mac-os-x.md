@@ -20,7 +20,7 @@ on Linux or Mac OS X, copy the following configuration files in `/opt/mapr/drill
 * `odbc.ini`
 * `odbcinst.ini`
 
-In your home directory, use sudo to rename the files as hidden files:
+In your home directory, rename the files as hidden files. Use sudo if necessary:
 
 * .mapr.drillodbc.ini
 * .odbc.ini
@@ -39,27 +39,16 @@ Depending on the driver manager you use, the user DSN in one of these files will
 
 ### Linux
 
-Set the following environment variables to point to the `.odbc.ini`
-and `.mapr.drillodbc.ini` configuration files, respectively:
-
-  * `ODBCINI` (point to `.odbc.ini`)
-  * `MAPRDRILLINI` (point to `.mapr.drillodbc.ini`)
-
-The `LD_LIBRARY_PATH` environment variable must include the paths to the
-following:
-
-  * Installed ODBC driver manager libraries
-  * Installed MapR ODBC Driver for Apache Drill shared libraries
+1. Set the ODBCINI environment variable to point to the `.odbc.ini` in your home directory. For example:  
+   `export ODBCINI=~/.odbc.ini`
+2. Set the MAPRDRILLINI environment variable to point to `.mapr.drillodbc.ini` in your home directory. For example:  
+   `export MAPRDRILLINI=~/.mapr.drillodbc.ini`
+3. Set the LD_LIBRARY_PATH environment variable  to point to your ODBC driver manager libraries and the MapR ODBC Driver for Apache Drill shared libraries. For example:  
+   `export LD_LIBRARY_PATH=/usr/local/lib:/opt/mapr/drillodbc/lib/64`
 
 You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
 {% include startimportant.html %}Do not include the paths to both 32- and 64-bit shared libraries in LD_LIBRARY PATH at the same time.{% include endimportant.html %}
 Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
-
-For example, if you are using a 64-bit client application and ODBC driver
-manager libraries are installed in `/usr/local/lib`, then set
-`LD_LIBRARY_PATH` as follows:  
-
-`export LD_LIBRARY_PATH=/usr/local/lib:/opt/simba/drillodbc/lib/64`  
 
 ### Mac OS X
 
