@@ -1,20 +1,20 @@
 ---
-title: "Configuring ODBC on Linux/Mac OS X"
+title: "Configuring ODBC on Mac OS X"
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data
 sources and drivers. To configure an ODBC connection for Linux or Mac OS X, complete the following
 steps:
 
-* Step 1: Set Environment Variables (Linux only)
-* Step 2: Define the ODBC Data Sources in odbc.ini
-* Step 3: (Optional) Define the ODBC Driver in odbcinst.ini
-* Step 4: Configure the MapR Drill ODBC Driver
+* [Step 1: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-1:-set-environment-variables) (Linux only)
+* [Step 2: Define the ODBC Data Sources in odbc.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-2:-define-the-odbc-data-sources-in-.odbc.ini)
+* [Step 3: (Optional) Define the ODBC Driver in odbcinst.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-3:-(optional)-define-the-odbc-driver-in-.odbcinst.ini)
+* [Step 4: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#configuring-.mapr.drillodbc.ini)
 
 ## Sample Configuration Files
 
 Before you connect to Drill through an ODBC client tool
-on Linux or Mac OS X, copy the following configuration files in `/opt/mapr/drillobdc/Setup` to your home directory unless the files already exist in your home directory:
+on Mac OS X, copy the following configuration files in `/opt/mapr/drillobdc/Setup` to your home directory unless the files already exist in your home directory:
 
 * `mapr.drillodbc.ini`
 * `odbc.ini`
@@ -37,21 +37,6 @@ Depending on the driver manager you use, the user DSN in one of these files will
 
 ## Step 1: Set Environment Variables 
 
-### Linux
-
-1. Set the ODBCINI environment variable to point to the `.odbc.ini` in your home directory. For example:  
-   `export ODBCINI=~/.odbc.ini`
-2. Set the MAPRDRILLINI environment variable to point to `.mapr.drillodbc.ini` in your home directory. For example:  
-   `export MAPRDRILLINI=~/.mapr.drillodbc.ini`
-3. Set the LD_LIBRARY_PATH environment variable  to point to your ODBC driver manager libraries and the MapR ODBC Driver for Apache Drill shared libraries. For example:  
-   `export LD_LIBRARY_PATH=/usr/local/lib:/opt/mapr/drillodbc/lib/64`
-
-You can have both 32- and 64-bit versions of the driver installed at the same time on the same computer. 
-{% include startimportant.html %}Do not include the paths to both 32- and 64-bit shared libraries in LD_LIBRARY PATH at the same time.{% include endimportant.html %}
-Only include the path to the shared libraries corresponding to the driver matching the bitness of the client application used.
-
-### Mac OS X
-
 Create or modify the `/etc/launchd.conf` file to set environment variables. Set the SIMBAINI variable to point to the `.mapr.drillodbc.ini` file, the ODBCSYSINI varialbe to the `.odbcinst.ini` file, the ODBCINI variable to the `.odbc.ini` file, and the DYLD_LIBRARY_PATH to the location of the dynamic linker (DYLD) libraries and to the MapR Drill ODBC Driver. If you installed the iODBC driver manager using the DMG, the DYLD libraries are installed in `/usr/local/iODBC/lib`. The launchd.conf file should look something like this:
 
     setenv SIMBAINI /Users/joeuser/.mapr.drillodbc.ini
@@ -64,9 +49,25 @@ Restart the Mac OS X or run `launchctl load /etc/launchd.conf`.
 
 ## Step 2: Define the ODBC Data Sources in .odbc.ini
 
-Define the ODBC data sources in the `~/.odbc.ini` configuration file for your environment. The following sample shows a possible configuration for using Drill in embedded mode. 
+Define the ODBC data sources in the `~/.odbc.ini` configuration file for your environment. 
 
-**Example**
+You set the following properties for using Drill in embedded mode:
+
+    ConnectionType=Direct
+    HOST=localhost
+    PORT=31010
+    ZKQuorum=
+    ZKClusterID=
+
+You set the following properties for using Drill in distributed mode:
+
+    ConnectionType=ZooKeeper
+    HOST=
+    PORT=
+    ZKQuorum=<host name>:<port>,<host name>:<port> . . . <host name>:<port>
+    ZKClusterID=<cluster name in `drill-override.conf`>
+
+The following sample shows a possible configuration for using Drill in embedded mode. 
           
     [ODBC]
     # Specify any global ODBC configuration here such as ODBC tracing.
@@ -76,9 +77,9 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
   
     [Sample MapR Drill DSN]
     # Description: DSN Description.
-    # This key is not necessary and is only to give a description of the data source.
+    # This key is not necessary and only describes the data source.
     Description=Sample MapR Drill ODBC Driver DSN
-    # Driver: The location where the ODBC driver is installed to.
+    # Driver: The location where the ODBC driver is installed.
     Driver=/opt/mapr/drillodbc/lib/universal/libmaprdrillodbc.dylib
   
     # The DriverUnicodeEncoding setting is only used for SimbaDM
@@ -103,18 +104,22 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
     Catalog=DRILL
     Schema=
 
+
 ### Authentication Properties
 To password protect the DSN, uncomment the AuthenticationType, select Basic Authentication for the AuthenticationType, and configure UID and PWD properties.
 
-### Direct to Drillbit and ZooKeeper Quorum Properties
-To use Drill in distributed mode, set ConnectionType to Zookeeper, get the ZKQuorum and ZKClusterID values from the `drill-override.conf` file, and define the ZKQuorum and ZKClusterID properties. For example:
+### Direct and ZooKeeper Quorum Properties
+To use Drill in distributed mode, set ConnectionType to Zookeeper, get the ZKQuorum and ZKClusterID values from the `drill-override.conf` file, and define the ZKQuorum and ZKClusterID properties. Format ZKQuorum as a comma separated list of ZooKeeper nodes in the following format:  
+`<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .` 
 
-* `ZKQuorum=localhost:2181`  
-* `ZKClusterID=drillbits1`
+For example:
 
-To use Drill in embedded mode, set ConnectionType to Direct and define HOST and PORT properties. For example:
+* `ZKQuorum=centos23:5181,centos28:5181,centos29:5181`  
+* `ZKClusterID=docs41cluster-drillbits`
 
-* `HOST=localhost`  
+To use Drill in local mode, do not define the ZKQuorum and ZKClusterID properties. Start Drill using the drill-localhost command, set ConnectionType to Direct, and define HOST and PORT properties. For example:
+
+* `HOST=centos32.lab:5181`  
 * `PORT=31010`
 
 [Driver Configuration Options]({{ site.baseurl }}/docs/odbc-configuration-reference/#configuration-options) describes configuration options available for controlling the
@@ -164,17 +169,15 @@ To configure the MapR Drill ODBC Driver in the `mapr.drillodbc.ini` configuratio
 
   1. Open the `mapr.drillodbc.ini` configuration file in a text editor.
   2. Edit the DriverManagerEncoding setting if necessary. The value is typically UTF-16 or UTF-32, but depends on the driver manager used. iODBC uses UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager documentation for the correct setting.
-  3. Edit the `ODBCInstLib` setting. The value is the name of the `ODBCInst` shared library for the ODBC driver manager that you use. The configuration file defaults to the shared library for `iODBC`. In Linux, the shared library name for iODBC is `libiodbcinst.so`. In Mac OS X, the shared library name for `iODBC` is `libiodbcinst.dylib`.
-     {% include startnote.html %}Review your ODBC Driver Manager documentation for the correct
-setting.{% include endnote.html %} 
+  3. Edit the `ODBCInstLib` setting. The value is the name of the `ODBCInst` shared library for the ODBC driver manager that you use. The configuration file defaults to the shared library for `iODBC`. The shared library name for `iODBC` is `libiodbcinst.dylib`.
+      
      Specify an absolute or relative filename for the library. If you use
 the relative file name, include the path to the library in the library path
-environment variable. In Linux, the library path environment variable is named
-`LD_LIBRARY_PATH`. In Mac OS X, the library path environment variable is
+environment variable. The library path environment variable is
 named `DYLD_LIBRARY_PATH`.
   4. Save the `mapr.drillodbc.ini` configuration file.
 
 ### Next Step
 
-Refer to [Testing the ODBC Connection on Linux and Mac OS X]({{ site.baseurl }}/docs/testing-the-odbc-connection).
+Refer to [Testing the ODBC Connection]({{ site.baseurl }}/docs/testing-the-odbc-connection).
 

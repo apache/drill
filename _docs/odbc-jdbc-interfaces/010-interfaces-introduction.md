@@ -7,17 +7,14 @@ You can connect to Apache Drill through the following interfaces:
   * Drill shell
   * Drill Web UI
   * [ODBC]({{ site.baseurl }}/docs/installing-the-odbc-driver/)*
-  * [JDBC]({{ site.baseurl }}/docs/using-jdbc/)
+  * [JDBC]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows/)
   * C++ API
 
 *Apache Drill does not have an open source ODBC driver. However, MapR provides an ODBC 3.8 driver developed specifically for connecting Apache Drill to BI tools. 
 
 ## Using ODBC to Access Apache Drill from BI Tools
 
-MapR provides an ODBC 3.8 driver that connects Windows, Mac OS X, and Linux to Apache Drill and BI tools. Install the latest version of Apache Drill with the latest version of
-the MapR Drill ODBC driver. For example, if you have Apache Drill 0.8 and a MapR Drill ODBC driver installed on your machine, and you upgrade to Apache Drill 1.0, do not assume that the
-MapR Drill ODBC driver installed on your machine will work with the new version of
-Apache Drill. Use latest MapR Drill ODBC driver and Apache Drill versions.
+MapR provides an ODBC 3.8 driver that connects Windows, Mac OS X, and Linux to Apache Drill and BI tools. Install the latest version of Apache Drill with the latest version of the MapR Drill ODBC driver. An ODBC driver that you installed with a older version of Drill probably will not work with an upgraded version of Drill.
 
 Access the latest MapR Drill ODBC drivers in the following location:
 

@@ -2,7 +2,11 @@
 title: "Connecting Drill Explorer to Data"
 parent: "Using Drill Explorer"
 ---
-The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. On a single-node, embedded Drill cluster, [start the Drill shell]({{site.baseurl}}/docs/installing-drill-in-embedded-mode/). On a distributed Drill cluster, [start the Drillbit]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
+The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. 
+
+## Connecting Drill Explorer to Data on Linux
+
+You need an X-11 XDisplay to use Drill Explorer on Linux. Run the DrillExplorer executable in `/opt/mapr/drillodbc/DrillExplorer`, and then follow instructions from step 2 in the next section, "Connecting Drill Explorer to Data on Mac OS X."
 
 ## Connecting Drill Explorer to Data on Mac OS X
 

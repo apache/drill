@@ -4,9 +4,9 @@ parent: "Configuring ODBC"
 ---
 The procedure for testing the ODBC connection differs depending on your platform, as described in the following sections:
 
-* [Testing the ODBC Connection on Mac OS X](/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-mac-os-x)
-* [Testing the ODBC Connection on Linux](/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-linux)
-* [Testing the ODBC Connection on Windows](/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-windows)
+* [Testing the ODBC Connection on Mac OS X]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-mac-os-x)
+* [Testing the ODBC Connection on Linux]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-linux)
+* [Testing the ODBC Connection on Windows]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-windows)
 
 ## Testing the ODBC Connection on Mac OS X
 
@@ -26,8 +26,7 @@ To test the ODBC connection Mac OS X, follow these steps.
 
 ## Testing the ODBC Connection on Linux
 
-To test the ODBC connection on Linux use the test utilities that are packaged
-with your driver manager installation: `iodbctest` and `iodbctestw`. Use `iodbctest` to
+To test the ODBC connection on Linux use the test utilities in the `samples` directory of the driver manager installation: `iodbctest` and `iodbctestw`. Use `iodbctest` to
 test how your driver works with an ANSI application. Use `iodbctestw` to test
 how your driver works with a Unicode application.
 
@@ -36,24 +35,54 @@ There are 32-bit and 64-bit installations of the iODBC driver manager available.
 Visit [http://www.iodbc.org](http://www.iodbc.org/) for further details on
 using the iODBC driver manager.
 
-To test the ODBC connection on Linux, follow these steps:
+**Example**
 
-1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
-2. Run `iodbctest` or `iodbctestw`. The program prompts you for an ODBC connection string.
-2. If you do not remember the DSN name, type a question mark (?) to see a list of DSNs.
-3. If you are connecting directly to a Drillbit, type an ODBC connection string using the following format:
+To test the ODBC connection on a Linux cluster, follow these steps:
 
-     `DRIVER=MapR Drill ODBC Driver;ConnectionType=Direct;Host=HostName;Port=PortNumber`
+1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/). For example, to start Drill in local mode on a linux cluster:
+        [root@centos23 drill-1.0.0]# bin/drill-localhost
+        apache drill 1.0.0 
+        "the only truly happy people are children, the creative minority and drill users"
+
+2. Run `iodbctest` or `iodbctestw`. 
+   The prompt for an ODBC connection string appears.
+        [root@centos23 libiodbc-3.52.7]# samples/iodbctest
+        iODBC Demonstration program
+        This program shows an interactive SQL processor
+        Driver Manager: 03.52.0709.0909
+
+        Enter ODBC connect string (? shows list): ?
+
+3. Type ? to see the DSN name.
+   Output is:
+
+        DSN                              | Driver                                  
+        ------------------------------------------------------------------------------
+        Sample MapR Drill DSN 64         | MapR Drill ODBC Driver 64-bit           
+        Enter ODBC connect string (? shows list):
+
+4. If you are connecting directly to a Drillbit, type an ODBC connection string using the following format:
+
+     `DSN=<DSN name>;ConnectionType=Direct;Host=<Host Name>;Port=<Port Number>`
      
      OR
      
-     If you are connecting to a ZooKeeper cluster, type an ODBC connection string
-using the following format:
+     If you are connecting to a ZooKeeper cluster, type an ODBC connection string using the following format:
 
-     `DRIVER=MapR Drill ODBC Driver;ConnectionType=ZooKeeper;ZKQuorum=Server1:Port1
-,Server2:Port2;ZKClusterID=DrillbitName`
+     `DSN=<DSN Name>;ConnectionType=ZooKeeper;ZKQuorum=<Server1:Port1>
+,<Server2:Port2>;ZKClusterID=<Cluster Name>`
 
-     If the connection is successful, the `SQL>` prompt appears.
+   The following example shows a connection string:
+
+   `DSN=Sample MapR Drill DSN 64;ConnectionType=Direct;Host=localhost;Port=31010`
+
+   The output of a successful test is:
+
+   `Driver: 1.0.0.1001 (MapR Drill ODBC Driver)
+
+        SQL> `
+
+     After he `SQL>` prompt appears, go to the Drill shell to run commands. Do not attempt to run SQL commands from this prompt.
 
 ## Testing the ODBC Connection on Windows
 

@@ -1165,8 +1165,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC on Linux/Mac OS X", 
-                    "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                    "next_title": "Configuring ODBC on Linux", 
+                    "next_url": "/docs/configuring-odbc-on-linux/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "Configuring ODBC", 
                     "previous_url": "/docs/configuring-odbc/", 
@@ -1186,14 +1186,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring ODBC on Windows", 
-                    "next_url": "/docs/configuring-odbc-on-windows/", 
+                    "next_title": "Configuring ODBC on Mac OS X", 
+                    "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                     "parent": "Configuring ODBC", 
                     "previous_title": "ODBC Configuration Reference", 
                     "previous_url": "/docs/odbc-configuration-reference/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
-                    "title": "Configuring ODBC on Linux/Mac OS X", 
-                    "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
+                    "title": "Configuring ODBC on Linux", 
+                    "url": "/docs/configuring-odbc-on-linux/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configuring ODBC", 
+                            "url": "/docs/configuring-odbc/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuring ODBC on Windows", 
+                    "next_url": "/docs/configuring-odbc-on-windows/", 
+                    "parent": "Configuring ODBC", 
+                    "previous_title": "Configuring ODBC on Linux", 
+                    "previous_url": "/docs/configuring-odbc-on-linux/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/025-configuring-odbc-on-mac-os-x.md", 
+                    "title": "Configuring ODBC on Mac OS X", 
+                    "url": "/docs/configuring-odbc-on-mac-os-x/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1210,8 +1231,8 @@
                     "next_title": "Testing the ODBC Connection", 
                     "next_url": "/docs/testing-the-odbc-connection/", 
                     "parent": "Configuring ODBC", 
-                    "previous_title": "Configuring ODBC on Linux/Mac OS X", 
-                    "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                    "previous_title": "Configuring ODBC on Mac OS X", 
+                    "previous_url": "/docs/configuring-odbc-on-mac-os-x/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
                     "title": "Configuring ODBC on Windows", 
                     "url": "/docs/configuring-odbc-on-windows/"
@@ -1247,7 +1268,28 @@
             "title": "Configuring ODBC", 
             "url": "/docs/configuring-odbc/"
         }, 
-        "Configuring ODBC on Linux/Mac OS X": {
+        "Configuring ODBC on Linux": {
+            "breadcrumbs": [
+                {
+                    "title": "Configuring ODBC", 
+                    "url": "/docs/configuring-odbc/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuring ODBC on Mac OS X", 
+            "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
+            "parent": "Configuring ODBC", 
+            "previous_title": "ODBC Configuration Reference", 
+            "previous_url": "/docs/odbc-configuration-reference/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
+            "title": "Configuring ODBC on Linux", 
+            "url": "/docs/configuring-odbc-on-linux/"
+        }, 
+        "Configuring ODBC on Mac OS X": {
             "breadcrumbs": [
                 {
                     "title": "Configuring ODBC", 
@@ -1262,11 +1304,11 @@
             "next_title": "Configuring ODBC on Windows", 
             "next_url": "/docs/configuring-odbc-on-windows/", 
             "parent": "Configuring ODBC", 
-            "previous_title": "ODBC Configuration Reference", 
-            "previous_url": "/docs/odbc-configuration-reference/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
-            "title": "Configuring ODBC on Linux/Mac OS X", 
-            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
+            "previous_title": "Configuring ODBC on Linux", 
+            "previous_url": "/docs/configuring-odbc-on-linux/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/025-configuring-odbc-on-mac-os-x.md", 
+            "title": "Configuring ODBC on Mac OS X", 
+            "url": "/docs/configuring-odbc-on-mac-os-x/"
         }, 
         "Configuring ODBC on Windows": {
             "breadcrumbs": [
@@ -1283,8 +1325,8 @@
             "next_title": "Testing the ODBC Connection", 
             "next_url": "/docs/testing-the-odbc-connection/", 
             "parent": "Configuring ODBC", 
-            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
-            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+            "previous_title": "Configuring ODBC on Mac OS X", 
+            "previous_url": "/docs/configuring-odbc-on-mac-os-x/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
             "title": "Configuring ODBC on Windows", 
             "url": "/docs/configuring-odbc-on-windows/"
@@ -3599,7 +3641,7 @@
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
-                            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                            "relative_path": "_docs/install/050-starting-drill-in-distributed-mode.md", 
                             "title": "Starting Drill in Distributed Mode", 
                             "url": "/docs/starting-drill-in-distributed-mode/"
                         }
@@ -3707,7 +3749,7 @@
                     "parent": "Installing Drill in Distributed Mode", 
                     "previous_title": "Installing Drill on the Cluster", 
                     "previous_url": "/docs/installing-drill-on-the-cluster/", 
-                    "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                    "relative_path": "_docs/install/050-starting-drill-in-distributed-mode.md", 
                     "title": "Starting Drill in Distributed Mode", 
                     "url": "/docs/starting-drill-in-distributed-mode/"
                 }
@@ -4837,8 +4879,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring ODBC on Linux/Mac OS X", 
-            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+            "next_title": "Configuring ODBC on Linux", 
+            "next_url": "/docs/configuring-odbc-on-linux/", 
             "parent": "Configuring ODBC", 
             "previous_title": "Configuring ODBC", 
             "previous_url": "/docs/configuring-odbc/", 
@@ -5005,8 +5047,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Linux/Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "next_title": "Configuring ODBC on Linux", 
+                            "next_url": "/docs/configuring-odbc-on-linux/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -5026,14 +5068,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Windows", 
-                            "next_url": "/docs/configuring-odbc-on-windows/", 
+                            "next_title": "Configuring ODBC on Mac OS X", 
+                            "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
-                            "title": "Configuring ODBC on Linux/Mac OS X", 
-                            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
+                            "title": "Configuring ODBC on Linux", 
+                            "url": "/docs/configuring-odbc-on-linux/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC on Windows", 
+                            "next_url": "/docs/configuring-odbc-on-windows/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC on Linux", 
+                            "previous_url": "/docs/configuring-odbc-on-linux/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/025-configuring-odbc-on-mac-os-x.md", 
+                            "title": "Configuring ODBC on Mac OS X", 
+                            "url": "/docs/configuring-odbc-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -5050,8 +5113,8 @@
                             "next_title": "Testing the ODBC Connection", 
                             "next_url": "/docs/testing-the-odbc-connection/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "previous_title": "Configuring ODBC on Mac OS X", 
+                            "previous_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
                             "title": "Configuring ODBC on Windows", 
                             "url": "/docs/configuring-odbc-on-windows/"
@@ -9503,7 +9566,7 @@
             "parent": "Installing Drill in Distributed Mode", 
             "previous_title": "Installing Drill on the Cluster", 
             "previous_url": "/docs/installing-drill-on-the-cluster/", 
-            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+            "relative_path": "_docs/install/050-starting-drill-in-distributed-mode.md", 
             "title": "Starting Drill in Distributed Mode", 
             "url": "/docs/starting-drill-in-distributed-mode/"
         }, 
@@ -11314,7 +11377,7 @@
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
-                            "relative_path": "_docs/install/050-starting-drill-in-distributed mode.md", 
+                            "relative_path": "_docs/install/050-starting-drill-in-distributed-mode.md", 
                             "title": "Starting Drill in Distributed Mode", 
                             "url": "/docs/starting-drill-in-distributed-mode/"
                         }
@@ -12020,8 +12083,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Linux/Mac OS X", 
-                            "next_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "next_title": "Configuring ODBC on Linux", 
+                            "next_url": "/docs/configuring-odbc-on-linux/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "Configuring ODBC", 
                             "previous_url": "/docs/configuring-odbc/", 
@@ -12041,14 +12104,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configuring ODBC on Windows", 
-                            "next_url": "/docs/configuring-odbc-on-windows/", 
+                            "next_title": "Configuring ODBC on Mac OS X", 
+                            "next_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "parent": "Configuring ODBC", 
                             "previous_title": "ODBC Configuration Reference", 
                             "previous_url": "/docs/odbc-configuration-reference/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux-mac-os-x.md", 
-                            "title": "Configuring ODBC on Linux/Mac OS X", 
-                            "url": "/docs/configuring-odbc-on-linux-mac-os-x/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/020-configuring-odbc-on-linux.md", 
+                            "title": "Configuring ODBC on Linux", 
+                            "url": "/docs/configuring-odbc-on-linux/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Configuring ODBC", 
+                                    "url": "/docs/configuring-odbc/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Configuring ODBC on Windows", 
+                            "next_url": "/docs/configuring-odbc-on-windows/", 
+                            "parent": "Configuring ODBC", 
+                            "previous_title": "Configuring ODBC on Linux", 
+                            "previous_url": "/docs/configuring-odbc-on-linux/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/025-configuring-odbc-on-mac-os-x.md", 
+                            "title": "Configuring ODBC on Mac OS X", 
+                            "url": "/docs/configuring-odbc-on-mac-os-x/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -12065,8 +12149,8 @@
                             "next_title": "Testing the ODBC Connection", 
                             "next_url": "/docs/testing-the-odbc-connection/", 
                             "parent": "Configuring ODBC", 
-                            "previous_title": "Configuring ODBC on Linux/Mac OS X", 
-                            "previous_url": "/docs/configuring-odbc-on-linux-mac-os-x/", 
+                            "previous_title": "Configuring ODBC on Mac OS X", 
+                            "previous_url": "/docs/configuring-odbc-on-mac-os-x/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/configuring-odbc/030-configuring-odbc-on-windows.md", 
                             "title": "Configuring ODBC on Windows", 
                             "url": "/docs/configuring-odbc-on-windows/"

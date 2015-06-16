@@ -37,21 +37,22 @@ In the Connection Type section, Direct to Drillbit is selected for using Drill i
 * `HOST=localhost`  
 * `PORT=31010`
 
-Check the `drill-override.conf` file for any port changes.  
+Check the `drill-override.conf` file for any port changes. 
 
-To use Drill in distributed mode, select **ZooKeeper Quorum**.
+To use Drill in distributed mode, select ZooKeeper Quorum. 
+
+If you select ZooKeeper Quorum, provide values for the following properties:
+
+* Quorum
+  A comma separated list of ZooKeeper nodes in the following format:
+  `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .`
+* Cluster ID
+  Name of the drillbit cluster. Check the drill-override.conf file for ZooKeeper node information and for any cluster name changes.
+
+ Check the `drill-override.conf` file for the cluster name.
 ![]({{ site.baseurl }}/docs/img/odbc-configure3.png)
 
-If you select **ZooKeeper Quorum**, provide values for the following properties:  
-   * Quorum  
-     A comma separated list of ZooKeeper nodes in the following format:  
-     `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .`  
-   * Cluster ID  
-     Name of the drillbit cluster, drillbits1 by default. 
-
-Check the `drill-override.conf` file for ZooKeeper node information and for any cluster name changes. 
-
-[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer].
+[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/).
 
 ### Next Step
 
