@@ -17,8 +17,12 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.sql.SQLException;
+import org.apache.drill.jdbc.DrillPreparedStatement;
 
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+
+import net.hydromatic.avatica.AvaticaParameter;
 import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaPreparedStatement;
 
@@ -31,7 +35,8 @@ import net.hydromatic.avatica.AvaticaPreparedStatement;
  * </p>
  */
 abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
-    implements DrillRemoteStatement {
+    implements DrillPreparedStatement,
+               DrillRemoteStatement {
 
   protected DrillPreparedStatementImpl(DrillConnectionImpl connection,
                                        AvaticaPrepareResult prepareResult,
@@ -49,8 +54,15 @@ abstract class DrillPreparedStatementImpl extends AvaticaPreparedStatement
   }
 
   @Override
+  protected AvaticaParameter getParameter(int param) throws SQLException {
+    throw new SQLFeatureNotSupportedException(
+        "Prepared-statement dynamic parameters are not supported.");
+  }
+
+  @Override
   public void cleanUp() {
     final DrillConnectionImpl connection1 = (DrillConnectionImpl) connection;
     connection1.openStatementsRegistry.removeStatement(this);
   }
+
 }
