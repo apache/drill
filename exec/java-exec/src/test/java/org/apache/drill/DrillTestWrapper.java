@@ -538,7 +538,7 @@ public class DrillTestWrapper {
         break;
       }
       if (!found) {
-        throw new Exception("Did not find expected record in result set: " + printRecord(expectedRecord));
+        throw new Exception(String.format("After matching %d records, did not find expected record in result set: %s", counter, printRecord(expectedRecord)));
       } else {
         actualRecords.remove(i);
         counter++;

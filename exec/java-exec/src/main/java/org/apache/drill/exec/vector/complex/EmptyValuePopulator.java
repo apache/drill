@@ -43,7 +43,7 @@ public class EmptyValuePopulator {
     final UInt4Vector.Accessor accessor = offsets.getAccessor();
     final UInt4Vector.Mutator mutator = offsets.getMutator();
     final int lastSet = Math.max(accessor.getValueCount() - 1, 0);
-    final int previousEnd = accessor.get(lastSet);
+    final int previousEnd = accessor.get(lastSet);//0 ? 0 : accessor.get(lastSet);
     for (int i = lastSet; i < lastIndex; i++) {
       mutator.setSafe(i + 1, previousEnd);
     }

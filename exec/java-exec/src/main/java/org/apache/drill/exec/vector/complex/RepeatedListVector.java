@@ -153,7 +153,10 @@ public class RepeatedListVector extends AbstractContainerVector
 
       @Override
       public void splitAndTransfer(int startIndex, int length) {
-        throw new UnsupportedOperationException("Repeated list does not support split & transfer operation");
+        target.allocateNew();
+        for (int i = 0; i < length; i++) {
+          copyValueSafe(startIndex + i, i);
+        }
       }
 
       @Override

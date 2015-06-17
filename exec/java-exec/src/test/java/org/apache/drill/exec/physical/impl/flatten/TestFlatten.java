@@ -17,13 +17,22 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.flatten;
 
+import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.fn.interp.TestConstantFolding;
+import org.apache.drill.exec.util.JsonStringHashMap;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.util.List;
 
 public class TestFlatten extends BaseTestQuery {
 
@@ -36,12 +45,149 @@ public class TestFlatten extends BaseTestQuery {
    */
   public static boolean RUN_ADVANCED_TESTS = false;
 
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
   public void testFlattenFailure() throws Exception {
     test("select flatten(complex), rownum from cp.`/store/json/test_flatten_mappify2.json`");
 //    test("select complex, rownum from cp.`/store/json/test_flatten_mappify2.json`");
   }
+
+  @Test
+  public void testFlatten_Drill2162_complex() throws Exception {
+    String path = folder.getRoot().toPath().toString();
+
+    String jsonRecords = BaseTestQuery.getFile("flatten/complex_transaction_example_data.json");
+    int numCopies = 700;
+    new TestConstantFolding.SmallFileCreator(folder)
+        .setRecord(jsonRecords)
+        .createFiles(1, numCopies, "json");
+
+    List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
+        mapOf("uid", 1l,
+            "lst_lst_0", listOf(1l, 2l, 3l, 4l, 5l),
+            "lst_lst_1", listOf(2l, 3l, 4l, 5l, 6l),
+            "lst_lst", listOf(
+            listOf(1l, 2l, 3l, 4l, 5l),
+            listOf(2l, 3l, 4l, 5l, 6l))
+        ),
+        mapOf("uid", 2l,
+            "lst_lst_0", listOf(1l, 2l, 3l, 4l, 5l),
+            "lst_lst_1", listOf(2l, 3l, 4l, 5l, 6l),
+            "lst_lst", listOf(
+            listOf(1l, 2l, 3l, 4l, 5l),
+            listOf(2l, 3l, 4l, 5l, 6l))
+        )
+    );
+
+    List<JsonStringHashMap<String, Object>> result = flatten(flatten(flatten(data, "lst_lst_1"), "lst_lst_0"), "lst_lst");
+
+    TestBuilder builder = testBuilder()
+        .sqlQuery("select uid, flatten(d.lst_lst[1]) lst1, flatten(d.lst_lst[0]) lst0, flatten(d.lst_lst) lst from " +
+                  "dfs.`" + path + "/bigfile/bigfile.json` d")
+        .unOrdered()
+        .baselineColumns("uid", "lst1", "lst0", "lst");
+    for (int i = 0; i < numCopies; i++) {
+      for (JsonStringHashMap<String, Object> record : result) {
+        builder.baselineValues(record.get("uid"), record.get("lst_lst_1"), record.get("lst_lst_0"), record.get("lst_lst"));
+      }
+    }
+    builder.go();
+  };
+
+  @Test
+  public void testFlattenReferenceImpl() throws Exception {
+    List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
+        mapOf("a",1,
+              "b",2,
+              "list_col", listOf(10,9),
+              "nested_list_col",listOf(
+                  listOf(100,99),
+                  listOf(1000,999)
+            )));
+    List<JsonStringHashMap<String, Object>> result = flatten(flatten(flatten(data, "list_col"), "nested_list_col"), "nested_list_col");
+     List<JsonStringHashMap<String, Object>> expectedResult = Lists.newArrayList(
+        mapOf("nested_list_col", 100,  "list_col", 10,"a", 1, "b",2),
+        mapOf("nested_list_col", 99,   "list_col", 10,"a", 1, "b",2),
+        mapOf("nested_list_col", 1000, "list_col", 10,"a", 1, "b",2),
+        mapOf("nested_list_col", 999,  "list_col", 10,"a", 1, "b",2),
+        mapOf("nested_list_col", 100,  "list_col", 9, "a", 1, "b",2),
+        mapOf("nested_list_col", 99,   "list_col", 9, "a", 1, "b",2),
+        mapOf("nested_list_col", 1000, "list_col", 9, "a", 1, "b",2),
+        mapOf("nested_list_col", 999,  "list_col", 9, "a", 1, "b",2)
+    );
+    int i = 0;
+    for (JsonStringHashMap record : result) {
+      assertEquals(record, expectedResult.get(i));
+      i++;
+    }
+  }
+
+  private List<JsonStringHashMap<String, Object>> flatten(
+      List<JsonStringHashMap<String,Object>> incomingRecords,
+      String colToFlatten) {
+    return flatten(incomingRecords, colToFlatten, colToFlatten);
+  }
+
+  private List<JsonStringHashMap<String, Object>> flatten(
+      List<JsonStringHashMap<String,Object>> incomingRecords,
+      String colToFlatten,
+      String flattenedDataColName) {
+    List<JsonStringHashMap<String,Object>> output = Lists.newArrayList();
+    for (JsonStringHashMap<String, Object> incomingRecord : incomingRecords) {
+      List dataToFlatten = (List) incomingRecord.get(colToFlatten);
+      for (int i = 0; i < dataToFlatten.size(); i++) {
+        final JsonStringHashMap newRecord = new JsonStringHashMap();
+        newRecord.put(flattenedDataColName, dataToFlatten.get(i));
+        for (String s : incomingRecord.keySet()) {
+          if (s.equals(colToFlatten)) {
+            continue;
+          }
+          newRecord.put(s, incomingRecord.get(s));
+        }
+        output.add(newRecord);
+      }
+    }
+    return output;
+  }
+
+  @Test
+  public void testFlatten_Drill2162_simple() throws Exception {
+    String path = folder.getRoot().toPath().toString();
+
+    List<Long> inputList = Lists.newArrayList();
+    String jsonRecord = "{ \"int_list\" : [";
+    final int listSize = 30;
+    for (int i = 1; i < listSize; i++ ) {
+      jsonRecord += i + ", ";
+      inputList.add((long) i);
+    }
+    jsonRecord += listSize + "] }";
+    inputList.add((long) listSize);
+    int numRecords = 3000;
+    new TestConstantFolding.SmallFileCreator(folder)
+        .setRecord(jsonRecord)
+        .createFiles(1, numRecords, "json");
+
+    List<JsonStringHashMap<String,Object>> data = Lists.newArrayList(
+        mapOf("int_list", inputList)
+    );
+
+    List<JsonStringHashMap<String, Object>> result = flatten(data, "int_list");
+
+    TestBuilder builder = testBuilder()
+        .sqlQuery("select flatten(int_list) as int_list from dfs.`" + path + "/bigfile/bigfile.json`")
+        .unOrdered()
+        .baselineColumns("int_list");
+
+    for (int i = 0; i < numRecords; i++) {
+      for (JsonStringHashMap<String, Object> record : result) {
+        builder.baselineValues(record.get("int_list"));
+      }
+    }
+    builder.go();
+  };
 
   @Test
   public void drill1671() throws Exception{
@@ -53,6 +199,36 @@ public class TestFlatten extends BaseTestQuery {
   @Ignore("not yet fixed")
   public void drill1660() throws Exception {
     test("select * from cp.`/flatten/empty-rm.json`");
+  }
+
+  @Test // repeated list within a repeated map
+  public void drill1673() throws Exception {
+    String path = folder.getRoot().toPath().toString();
+
+    String jsonRecords = BaseTestQuery.getFile("store/json/1673.json");
+    int numCopies = 25000;
+    new TestConstantFolding.SmallFileCreator(folder)
+        .setRecord(jsonRecords)
+        .createFiles(1, numCopies, "json");
+
+    TestBuilder builder = testBuilder()
+        .sqlQuery("select t.fixed_column as fixed_column, " +
+                  "flatten(t.list_column) as list_col " +
+                  "from dfs.`" + path + "/bigfile/bigfile.json` as t")
+        .baselineColumns("fixed_column", "list_col")
+        .unOrdered();
+    Object map1 = mapOf("id1", "1",
+                        "name", "zhu",
+                        "num", listOf(listOf(1l, 2l, 3l)));
+    Object map2 = mapOf("id1", "2",
+                      "name", "hao",
+                      "num", listOf(listOf(4l, 5l, 6l)));
+    for (int i = 0; i < numCopies; i++) {
+      builder.baselineValues("abc", map1);
+      builder.baselineValues("abc", map2);
+    }
+
+    builder.go();
   }
 
   @Test
@@ -87,8 +263,6 @@ public class TestFlatten extends BaseTestQuery {
         ") event_info\n" +
         "on transaction_info.max_event_time = event_info.event.event_time;");
   }
-
-
 
   @Test
   public void testKVGenFlatten1() throws Exception {
