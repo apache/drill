@@ -29,6 +29,7 @@ import org.apache.calcite.util.BitSets;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillWindowRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -43,7 +44,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 
 import java.util.List;
 
-public class WindowPrule extends RelOptRule {
+public class WindowPrule extends Prule {
   public static final RelOptRule INSTANCE = new WindowPrule();
 
   private WindowPrule() {
@@ -59,6 +60,7 @@ public class WindowPrule extends RelOptRule {
     //input.getTraitSet().subsumes()
 
     boolean partitionby = false;
+    boolean addMerge = false;
     for (final Ord<Window.Group> w : Ord.zip(window.groups)) {
       Window.Group windowBase = w.getValue();
       RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
@@ -69,6 +71,18 @@ public class WindowPrule extends RelOptRule {
 
         partitionby = true;
         traits = traits.plus(distOnAllKeys);
+      } else if (windowBase.orderKeys.getFieldCollations().size() > 0) {
+        // if only the order-by clause is specified, there is a single partition
+        // consisting of all the rows, so we do a distributed sort followed by a
+        // single merge as the input of the window operator
+        DrillDistributionTrait distKeys =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+                ImmutableList.copyOf(getDistributionFieldsFromCollation(windowBase)));
+
+        traits = traits.plus(distKeys);
+        if(!isSingleMode(call)) {
+          addMerge = true;
+        }
       }
 
       // Add collation trait if either partition-by or order-by is specified.
@@ -77,7 +91,13 @@ public class WindowPrule extends RelOptRule {
         traits = traits.plus(collation);
       }
 
-      final RelNode convertedInput = convert(input, traits);
+      RelNode convertedInput = convert(input, traits);
+
+      if (addMerge) {
+        traits = traits.plus(DrillDistributionTrait.SINGLETON);
+        convertedInput = new SingleMergeExchangePrel(window.getCluster(), traits,
+                         convertedInput, windowBase.collation());
+      }
 
       List<RelDataTypeField> newRowFields = Lists.newArrayList();
       for(RelDataTypeField field : convertedInput.getRowType().getFieldList()) {
@@ -150,6 +170,19 @@ public class WindowPrule extends RelOptRule {
       DrillDistributionTrait.DistributionField field = new DrillDistributionTrait.DistributionField(group);
       groupByFields.add(field);
     }
+
     return groupByFields;
   }
+
+  private List<DistributionField> getDistributionFieldsFromCollation(Window.Group window) {
+    List<DistributionField> distFields = Lists.newArrayList();
+
+    for (RelFieldCollation relField : window.collation().getFieldCollations()) {
+      DistributionField field = new DistributionField(relField.getFieldIndex());
+      distFields.add(field);
+    }
+
+    return distFields;
+  }
+
 }

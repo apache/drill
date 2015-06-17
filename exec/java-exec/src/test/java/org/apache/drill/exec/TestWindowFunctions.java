@@ -19,11 +19,15 @@ package org.apache.drill.exec;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.junit.Test;
 
 public class TestWindowFunctions extends BaseTestQuery {
+  static final String WORKING_PATH = TestTools.getWorkingPath();
+  static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
+
   private static void throwAsUnsupportedException(UserException ex) throws Exception {
     SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
     throw ex;
@@ -223,4 +227,24 @@ public class TestWindowFunctions extends BaseTestQuery {
 
     test(query);
   }
+
+  @Test // DRILL-3298
+  public void testCountEmptyPartitionByWithExchange() throws Exception {
+    String query = String.format("select count(*) over (order by o_orderpriority) as cnt from dfs.`%s/multilevel/parquet` where o_custkey < 100", TEST_RES_PATH);
+    try {
+      testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("cnt")
+        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
+        .baselineValues(1l)
+        .baselineValues(4l)
+        .baselineValues(4l)
+        .baselineValues(4l)
+        .build().run();
+    } finally {
+      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
+
 }
