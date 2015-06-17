@@ -111,11 +111,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   private static ResultSet mdrOptBOOLEAN;
 
+  // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
   private static ResultSet mdrReqTINYINT;
   private static ResultSet mdrOptSMALLINT;
   private static ResultSet mdrReqINTEGER;
   private static ResultSet mdrOptBIGINT;
 
+  // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
   private static ResultSet mdrOptREAL;
   private static ResultSet mdrOptFLOAT;
   private static ResultSet mdrReqDOUBLE;
@@ -227,17 +229,21 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertTrue( util.next() );
     assertTrue( "Error setting schema for test: " + util.getString( 2 ),
                 util.getBoolean( 1 ) );
+    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
     util = stmt.executeQuery(
         ""
         +   "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS SELECT "
         + "\n  CAST( NULL    AS BOOLEAN            ) AS mdrOptBOOLEAN,        "
         + "\n  "
-        + "\n  CAST(    1    AS TINYINT            ) AS mdrReqTINYINT,        "
-        + "\n  CAST( NULL    AS SMALLINT           ) AS mdrOptSMALLINT,       "
+        + "\n  CAST(    1    AS INT            ) AS mdrReqTINYINT,        "
+        + "\n  CAST( NULL    AS INT           ) AS mdrOptSMALLINT,       "
+        //+ "\n  CAST(    1    AS TINYINT            ) AS mdrReqTINYINT,        "
+        //+ "\n  CAST( NULL    AS SMALLINT           ) AS mdrOptSMALLINT,       "
         + "\n  CAST(    2    AS INTEGER            ) AS mdrReqINTEGER,        "
         + "\n  CAST( NULL    AS BIGINT             ) AS mdrOptBIGINT,         "
         + "\n  "
-        + "\n  CAST( NULL    AS REAL               ) AS mdrOptREAL,           "
+        + "\n  CAST( NULL    AS FLOAT               ) AS mdrOptREAL,           "
+        //+ "\n  CAST( NULL    AS REAL               ) AS mdrOptREAL,           "
         + "\n  CAST( NULL    AS FLOAT              ) AS mdrOptFLOAT,          "
         + "\n  CAST(  3.3    AS DOUBLE             ) AS mdrReqDOUBLE,         "
         + "\n  "
@@ -280,12 +286,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
     mdrOptBOOLEAN        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBOOLEAN" );
 
-    mdrReqTINYINT        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTINYINT" );
-    mdrOptSMALLINT       = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptSMALLINT" );
+    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    //mdrReqTINYINT        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTINYINT" );
+    //mdrOptSMALLINT       = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptSMALLINT" );
     mdrReqINTEGER        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTEGER" );
     mdrOptBIGINT         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBIGINT" );
 
-    mdrOptREAL           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptREAL" );
+    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    //mdrOptREAL           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptREAL" );
     mdrOptFLOAT          = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptFLOAT" );
     mdrReqDOUBLE         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDOUBLE" );
 
@@ -600,11 +608,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "DATA_TYPE" ), equalTo( Types.BOOLEAN ) );
   }
 
+  @Ignore( "until tinyint is implemented. (DRILL-2470)" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "DATA_TYPE" ), equalTo( Types.TINYINT ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "DATA_TYPE" ), equalTo( Types.SMALLINT ) );
@@ -620,6 +630,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "DATA_TYPE" ), equalTo( Types.BIGINT ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "DATA_TYPE" ), equalTo( Types.REAL ) );
@@ -774,11 +785,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "TYPE_NAME" ), equalTo( "BOOLEAN" ) );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "TYPE_NAME" ), equalTo( "TINYINT" ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "TYPE_NAME" ), equalTo( "SMALLINT" ) );
@@ -794,6 +807,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "TYPE_NAME" ), equalTo( "BIGINT" ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "TYPE_NAME" ), equalTo( "REAL" ) );
@@ -954,12 +968,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "COLUMN_SIZE" ), nullValue() );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqTINYINT() throws SQLException {
     // 8 bits
     assertThat( getIntOrNull( mdrReqTINYINT, "COLUMN_SIZE" ), equalTo( 8 ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     // 16 bits
@@ -978,6 +994,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "COLUMN_SIZE" ), equalTo( 64 ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptREAL() throws SQLException {
     // 24 bits of precision
@@ -1264,11 +1281,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "DECIMAL_DIGITS" ), nullValue() );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
@@ -1284,6 +1303,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "DECIMAL_DIGITS" ), equalTo( 7 ) );
@@ -1561,11 +1581,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "NUM_PREC_RADIX" ), nullValue() );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
@@ -1581,6 +1603,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "NUM_PREC_RADIX" ), equalTo( 2 ) );
@@ -1731,6 +1754,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrOptBOOLEAN, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqTINYINT() throws SQLException {
     // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
@@ -1738,6 +1762,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrReqTINYINT, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -1750,6 +1775,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrOptBIGINT, "NULLABLE" ), equalTo( columnNullable ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -2115,11 +2141,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "CHAR_OCTET_LENGTH" ), nullValue() );
@@ -2130,6 +2158,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTEGER, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptBIGINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "CHAR_OCTET_LENGTH" ), nullValue() );
@@ -2281,11 +2310,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "ORDINAL_POSITION" ), equalTo( 1 ) );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "ORDINAL_POSITION" ), equalTo( 2 ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "ORDINAL_POSITION" ), equalTo( 3 ) );
@@ -2301,6 +2332,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "ORDINAL_POSITION" ), equalTo( 5 ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "ORDINAL_POSITION" ), equalTo( 6 ) );
@@ -2371,11 +2403,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
+  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
+  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
@@ -2391,6 +2425,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
+  @Ignore( "until REAL is implemented. (DRILL-2470)" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
