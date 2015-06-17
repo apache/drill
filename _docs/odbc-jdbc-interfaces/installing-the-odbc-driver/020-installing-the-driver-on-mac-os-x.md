@@ -63,4 +63,4 @@ To check the version of the driver you installed, use the following command on t
 
 ### Next Step
 
-[Configuring ODBC on Linux and Mac OS X]({{ site.baseurl }}/docs/configuring-odbc-on-linux-mac-os-x/).
+[Configuring ODBC on Mac OS X]({{ site.baseurl }}/docs/configuring-odbc-on-mac-os-x/).

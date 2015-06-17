@@ -177,5 +177,5 @@ To disable logging:
 2. Set the LogLevel key to 0
 3. Save the mapr.drillodbc.ini configuration file.
 
-#### What's Next? Go to [Connecting to Drill Data Sources from a BI Tool]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
+#### What's Next? Go to [Connecting to ODBC Data Sources]({{ site.baseurl }}/docs/connecting-to-odbc-data-sources).
 

@@ -9,8 +9,6 @@ sources:
   * Create a Data Source Name
   * Create an ODBC Connection String
 
-**Prerequisite:** An Apache Drill installation must be [configured]({{ site.baseurl }}/docs/connect-a-data-source-introduction/) to access the data sources that you want to connect to.  For information about how to install Apache Drill, see [Install Drill]({{ site.baseurl }}/docs/install-drill).
-
 ## Sample ODBC Configuration (DSN)
 
 You can see how to create a DSN to connect to Drill data sources by taking a look at the preconfigured sample that the installer sets up. If
@@ -52,7 +50,7 @@ If you select ZooKeeper Quorum, provide values for the following properties:
  Check the `drill-override.conf` file for the cluster name.
 ![]({{ site.baseurl }}/docs/img/odbc-configure3.png)
 
-[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/).
+[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/) sections describe the options at the bottom of this dialog.
 
 ### Next Step
 

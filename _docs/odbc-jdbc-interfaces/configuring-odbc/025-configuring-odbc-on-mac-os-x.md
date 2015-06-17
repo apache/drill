@@ -6,10 +6,10 @@ ODBC driver managers use configuration files to define and configure ODBC data
 sources and drivers. To configure an ODBC connection for Linux or Mac OS X, complete the following
 steps:
 
-* [Step 1: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-1:-set-environment-variables) (Linux only)
+* [Step 1: Set Environment Variables]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-1:-set-environment-variables)
 * [Step 2: Define the ODBC Data Sources in odbc.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-2:-define-the-odbc-data-sources-in-.odbc.ini)
 * [Step 3: (Optional) Define the ODBC Driver in odbcinst.ini]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-3:-(optional)-define-the-odbc-driver-in-.odbcinst.ini)
-* [Step 4: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#configuring-.mapr.drillodbc.ini)
+* [Step 4: Configure the MapR Drill ODBC Driver]({{site.baseurl}}/docs/configuring-odbc-on-mac-os-x/#step-4:-configure-the-mapr-drill-odbc-driver)
 
 ## Sample Configuration Files
 
@@ -45,6 +45,7 @@ Create or modify the `/etc/launchd.conf` file to set environment variables. Set 
     launchctl setenv DYLD_LIBRARY_PATH /usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal
 
 Restart the Mac OS X or run `launchctl load /etc/launchd.conf`.
+
 ----------
 
 ## Step 2: Define the ODBC Data Sources in .odbc.ini

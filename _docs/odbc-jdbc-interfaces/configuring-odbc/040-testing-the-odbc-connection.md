@@ -4,25 +4,9 @@ parent: "Configuring ODBC"
 ---
 The procedure for testing the ODBC connection differs depending on your platform, as described in the following sections:
 
-* [Testing the ODBC Connection on Mac OS X]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-mac-os-x)
 * [Testing the ODBC Connection on Linux]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-linux)
+* [Testing the ODBC Connection on Mac OS X]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-mac-os-x)
 * [Testing the ODBC Connection on Windows]({{site.baseurl}}/docs/testing-the-odbc-connection/#testing-the-odbc-connection-on-windows)
-
-## Testing the ODBC Connection on Mac OS X
-
-To test the ODBC connection Mac OS X, follow these steps.
-
-1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
-2. Start the iODBC Administrator.app in `/Applications`.  
-   The iODBC Data Source Administrator dialog appears.  
-2. On the User DSN tab, select the MapR Drill DSN.  
-   ![]({{ site.baseurl }}/docs/img/odbc-mac1.png)  
-3. Click **Test**.  
-   The Login for Sample MapR Drill DSN dialog appears.  
-   ![]({{ site.baseurl }}/docs/img/odbc-mac2.png)  
-4. If you configured Basic Authentication in the `.odbc.ini`, enter the user name and password you also configured; otherwise, click **OK**.  
-   The success message appears.  
-   ![]({{ site.baseurl }}/docs/img/odbc-mac3.png)  
 
 ## Testing the ODBC Connection on Linux
 
@@ -84,6 +68,22 @@ To test the ODBC connection on a Linux cluster, follow these steps:
 
      After he `SQL>` prompt appears, go to the Drill shell to run commands. Do not attempt to run SQL commands from this prompt.
 
+## Testing the ODBC Connection on Mac OS X
+
+To test the ODBC connection on Mac OS X, follow these steps.
+
+1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
+2. Start the iODBC Administrator.app in `/Applications`.  
+   The iODBC Data Source Administrator dialog appears.  
+2. On the User DSN tab, select the MapR Drill DSN.  
+   ![]({{ site.baseurl }}/docs/img/odbc-mac1.png)  
+3. Click **Test**.  
+   The Login for Sample MapR Drill DSN dialog appears.  
+   ![]({{ site.baseurl }}/docs/img/odbc-mac2.png)  
+4. If you configured Basic Authentication in the `.odbc.ini`, enter the user name and password you also configured; otherwise, click **OK**.  
+   The success message appears.  
+   ![]({{ site.baseurl }}/docs/img/odbc-mac3.png)  
+   
 ## Testing the ODBC Connection on Windows
 
 To test the ODBC connection on Windows, follow these steps:

@@ -63,12 +63,12 @@ The `dfs` definition includes format definitions.
         "root": {
           "location": "/mapr/demo.mapr.com/data",
           "writable": false,
-          "defaultinputformat": null
+          "defaultInputFormat": null
         },
         "clicks": {
           "location": "/mapr/demo.mapr.com/data/nested",
           "writable": true,
-          "defaultinputformat": "parquet"
+          "defaultInputFormat": "parquet"
         },
      . . .
      "formats": {

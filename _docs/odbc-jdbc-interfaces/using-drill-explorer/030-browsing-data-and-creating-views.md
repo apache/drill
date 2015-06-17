@@ -95,4 +95,4 @@ The following query displays the same results in string format:
 
 `SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet``
 
-You can also cast the data as other data types, such as integer or date formats/
+You can also cast the data as other data types, such as integer or date formats.

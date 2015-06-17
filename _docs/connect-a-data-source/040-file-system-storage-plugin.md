@@ -32,7 +32,7 @@ the following steps:
                 "root": {
                   "location": "/user/max/donuts",
                   "writable": false,
-                  "defaultinputformat": null
+                  "defaultInputFormat": null
                  }
               },
                  "formats" : {
@@ -51,7 +51,7 @@ the following steps:
                 "root" : {
                   "location" : "/user/root/drill",
                   "writable" : true,
-                  "defaultinputformat" : null
+                  "defaultInputFormat" : null
                 }
               },
               "formats" : {
@@ -80,7 +80,7 @@ workspace named `json_files` configured to point Drill to the
         "json_files" : {
           "location" : "/users/max/drill/json/",
           "writable" : false,
-          "defaultinputformat" : json
+          "defaultInputFormat" : json
        } 
     },
 
