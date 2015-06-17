@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-import org.apache.drill.common.types.MajorType;
-
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
 
@@ -27,6 +25,8 @@ package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.*;
@@ -43,6 +43,14 @@ public class TypeHelper {
   // a high value like this will not inflate the size for small values
   public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
 
+  private static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
+    return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
+  }
+
+  private static String buildErrorMessage(final String operation, final MajorType type) {
+    return buildErrorMessage(operation, type.getMinorType(), type.getMode());
+  }
+
   public static int getSize(MajorType major) {
     switch (major.getMinorType()) {
 <#list vv.types as type>
@@ -57,15 +65,16 @@ public class TypeHelper {
       case FIXED16CHAR: return major.getWidth();
       case FIXEDBINARY: return major.getWidth();
     }
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
 
   public static SqlAccessor getSqlAccessor(ValueVector vector){
-    switch(vector.getField().getType().getMinorType()){
+    final MajorType type = vector.getField().getType();
+    switch(type.getMinorType()){
     <#list vv.types as type>
     <#list type.minor as minor>
     case ${minor.class?upper_case}:
-      switch (vector.getField().getType().getMode()) {
+      switch (type.getMode()) {
         case REQUIRED:
           return new ${minor.class}Accessor((${minor.class}Vector) vector);
         case OPTIONAL:
@@ -79,7 +88,7 @@ public class TypeHelper {
     case LIST:
       return new GenericAccessor(vector);
     }
-    throw new UnsupportedOperationException("Unable to find sql accessor for minor type [" + vector.getField().getType().getMinorType() + "] and mode [" + vector.getField().getType().getMode() + "]");
+    throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
   }
   
   public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type){
@@ -123,7 +132,7 @@ public class TypeHelper {
     default:
       break;
     }
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(buildErrorMessage("get value vector class", type, mode));
   }
   public static Class<?> getReaderClassName( MinorType type, DataMode mode, boolean isSingularRepeated){
     switch (type) {
@@ -161,7 +170,7 @@ public class TypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException();    
+      throw new UnsupportedOperationException(buildErrorMessage("get reader class name", type, mode));
   }
   
   public static Class<?> getWriterInterface( MinorType type, DataMode mode){
@@ -176,7 +185,7 @@ public class TypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException();    
+      throw new UnsupportedOperationException(buildErrorMessage("get writer interface", type, mode));
   }
   
   public static Class<?> getWriterImpl( MinorType type, DataMode mode){
@@ -212,7 +221,7 @@ public class TypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException();    
+      throw new UnsupportedOperationException(buildErrorMessage("get writer implementation", type, mode));
   }
 
   public static Class<?> getHolderReaderImpl( MinorType type, DataMode mode){
@@ -233,7 +242,7 @@ public class TypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException();    
+      throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
   }
   
   public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
@@ -260,7 +269,7 @@ public class TypeHelper {
       default:
         break;
       }
-      throw new UnsupportedOperationException("Unable to find holder type for minorType: " + type);
+      throw new UnsupportedOperationException(buildErrorMessage("get holder type", type, mode));
   }
 
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
@@ -303,7 +312,7 @@ public class TypeHelper {
       break;
     }
     // All ValueVector types have been handled.
-    throw new UnsupportedOperationException(type.getMinorType() + " type is not supported. Mode: " + type.getMode());
+    throw new UnsupportedOperationException(buildErrorMessage("get new vector", type));
   }
 
   public static ValueHolder getValue(ValueVector vector, int index) {
@@ -349,11 +358,9 @@ public class TypeHelper {
       holder = new ObjectHolder();
       ((ObjectHolder)holder).obj = ((ObjectVector) vector).getAccessor().getObject(index)         ;
       break;
-    default:
-      throw new UnsupportedOperationException(type + " type is not supported.");
     }
 
-    throw new UnsupportedOperationException(type + " type is not supported.");
+    throw new UnsupportedOperationException(buildErrorMessage("get value", type));
   }
 
   public static void setValue(ValueVector vector, int index, ValueHolder holder) {
@@ -379,7 +386,7 @@ public class TypeHelper {
       ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       return;
     default:
-      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
+      throw new UnsupportedOperationException(buildErrorMessage("set value", type));
     }
   }
 
@@ -407,7 +414,7 @@ public class TypeHelper {
       case GENERIC_OBJECT:
         ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
       default:
-        throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
+        throw new UnsupportedOperationException(buildErrorMessage("set value safe", type));
     }
   }
 
@@ -441,7 +448,6 @@ public class TypeHelper {
    * @return
    */
   public static ValueHolder createValueHolder(MajorType type) {
-    ValueHolder holder;
     switch(type.getMinorType()) {
       <#list vv.types as type>
       <#list type.minor as minor>
@@ -460,7 +466,7 @@ public class TypeHelper {
       case GENERIC_OBJECT:
         return new ObjectHolder();
       default:
-        throw new UnsupportedOperationException(type + " type is not supported for 'createValueHolder' method.");
+        throw new UnsupportedOperationException(buildErrorMessage("create value holder", type));
     }
   }
 
@@ -483,7 +489,7 @@ public class TypeHelper {
       </#list>
       </#list>
       default:
-        throw new UnsupportedOperationException(type + " type is not supported for 'isNull' method.");
+        throw new UnsupportedOperationException(buildErrorMessage("check is null", type));
     }
   }
 
@@ -517,7 +523,7 @@ public class TypeHelper {
       </#list>
       </#list>
       default:
-        throw new UnsupportedOperationException(type + " type is not supported for 'deNullify' method.");
+        throw new UnsupportedOperationException(buildErrorMessage("deNullify", type));
     }
   }
 
@@ -545,7 +551,7 @@ public class TypeHelper {
       </#list>
       </#list>
       default:
-        throw new UnsupportedOperationException(type + " type is not supported for 'nullify' method.");
+        throw new UnsupportedOperationException(buildErrorMessage("nullify", type));
     }
   }
 

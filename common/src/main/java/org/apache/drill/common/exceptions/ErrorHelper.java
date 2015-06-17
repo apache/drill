@@ -40,8 +40,9 @@ class ErrorHelper {
 
     Throwable ex = cause;
     while (ex != null) {
+      message = ex.getClass().getSimpleName();
       if (ex.getMessage() != null) {
-        message = ex.getClass().getName() + ": " + ex.getMessage();
+        message += ": " + ex.getMessage();
       }
 
       if (ex.getCause() != null && ex.getCause() != ex) {
