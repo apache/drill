@@ -63,6 +63,7 @@ import org.apache.drill.exec.work.ExecErrorConstants;
  * Utilities for Drill's planner.
  */
 public class DrillOptiq {
+  public static final String UNSUPPORTED_REX_NODE_ERROR = "Cannot convert RexNode to equivalent Drill expression. ";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
 
   /**
@@ -206,9 +207,10 @@ public class DrillOptiq {
       }
 
     }
-    private LogicalExpression doUnknown(Object o){
-      logger.warn("Doesn't currently support consumption of {}.", o);
-      return NullExpression.INSTANCE;
+    private LogicalExpression doUnknown(RexNode o){
+      // raise an error
+      throw UserException.planError().message(UNSUPPORTED_REX_NODE_ERROR +
+              "RexNode Class: %s, RexNode Digest: %s", o.getClass().getName(), o.toString()).build();
     }
     @Override
     public LogicalExpression visitLocalRef(RexLocalRef localRef) {
