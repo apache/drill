@@ -20,7 +20,7 @@ package org.apache.drill.jdbc;
 import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 
 public class SQLConversionException extends InvalidAccessException {
-  private static final long serialVersionUID = 2015_04-07L;
+  private static final long serialVersionUID = 2015_04_07L;
 
   SQLConversionException( String message ) {
     super( message );
