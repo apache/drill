@@ -8136,21 +8136,13 @@ public final class UserBitShared {
      */
     int getVarByteLength();
 
-    // optional int32 buffer_length = 6;
+    // optional int32 buffer_length = 7;
     /**
-     * <code>optional int32 buffer_length = 6;</code>
-     *
-     * <pre>
-     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-     * </pre>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     boolean hasBufferLength();
     /**
-     * <code>optional int32 buffer_length = 6;</code>
-     *
-     * <pre>
-     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-     * </pre>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     int getBufferLength();
   }
@@ -8249,7 +8241,7 @@ public final class UserBitShared {
               varByteLength_ = input.readInt32();
               break;
             }
-            case 48: {
+            case 56: {
               bitField0_ |= 0x00000010;
               bufferLength_ = input.readInt32();
               break;
@@ -8441,25 +8433,17 @@ public final class UserBitShared {
       return varByteLength_;
     }
 
-    // optional int32 buffer_length = 6;
-    public static final int BUFFER_LENGTH_FIELD_NUMBER = 6;
+    // optional int32 buffer_length = 7;
+    public static final int BUFFER_LENGTH_FIELD_NUMBER = 7;
     private int bufferLength_;
     /**
-     * <code>optional int32 buffer_length = 6;</code>
-     *
-     * <pre>
-     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-     * </pre>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     public boolean hasBufferLength() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int32 buffer_length = 6;</code>
-     *
-     * <pre>
-     *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-     * </pre>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     public int getBufferLength() {
       return bufferLength_;
@@ -8501,7 +8485,7 @@ public final class UserBitShared {
         output.writeInt32(5, varByteLength_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt32(6, bufferLength_);
+        output.writeInt32(7, bufferLength_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -8534,7 +8518,7 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(6, bufferLength_);
+          .computeInt32Size(7, bufferLength_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -9476,34 +9460,22 @@ public final class UserBitShared {
         return this;
       }
 
-      // optional int32 buffer_length = 6;
+      // optional int32 buffer_length = 7;
       private int bufferLength_ ;
       /**
-       * <code>optional int32 buffer_length = 6;</code>
-       *
-       * <pre>
-       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-       * </pre>
+       * <code>optional int32 buffer_length = 7;</code>
        */
       public boolean hasBufferLength() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional int32 buffer_length = 6;</code>
-       *
-       * <pre>
-       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-       * </pre>
+       * <code>optional int32 buffer_length = 7;</code>
        */
       public int getBufferLength() {
         return bufferLength_;
       }
       /**
-       * <code>optional int32 buffer_length = 6;</code>
-       *
-       * <pre>
-       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-       * </pre>
+       * <code>optional int32 buffer_length = 7;</code>
        */
       public Builder setBufferLength(int value) {
         bitField0_ |= 0x00000020;
@@ -9512,11 +9484,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>optional int32 buffer_length = 6;</code>
-       *
-       * <pre>
-       *optional int32 group_count = 6; // number of groups.  (number of repeated records)
-       * </pre>
+       * <code>optional int32 buffer_length = 7;</code>
        */
       public Builder clearBufferLength() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -20818,7 +20786,7 @@ public final class UserBitShared {
       "\tname_part\030\002 \001(\0132\025.exec.shared.NamePart\022" +
       "+\n\005child\030\003 \003(\0132\034.exec.shared.SerializedF" +
       "ield\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_le" +
-      "ngth\030\005 \001(\005\022\025\n\rbuffer_length\030\006 \001(\005\"7\n\nNod" +
+      "ngth\030\005 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\nNod" +
       "eStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footp" +
       "rint\030\002 \001(\003\"\206\002\n\013QueryResult\0228\n\013query_stat" +
       "e\030\001 \001(\0162#.exec.shared.QueryResult.QueryS",
