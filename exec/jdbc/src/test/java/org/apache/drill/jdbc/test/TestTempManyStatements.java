@@ -47,7 +47,7 @@ public class TestTempManyStatements extends JdbcTestBase {
   public final TestRule TIMEOUT = TestTools.getTimeoutRule( 900_000 );
 
 
-  @Ignore
+  @Ignore( "???" )
   @Test
   public void testCreateStatementsUntilOutOfHeap() throws SQLException, InterruptedException {
     System.err.println( "toSqueeze ..." );
