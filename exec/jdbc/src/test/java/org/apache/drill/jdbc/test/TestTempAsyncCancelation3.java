@@ -74,6 +74,7 @@ public class TestTempAsyncCancelation3 extends JdbcTestBase {
     }
   }
 
+  @Ignore( "???" )
   @Test
   public void testNameThis() throws SQLException, InterruptedException {
     final ExecutorService executor = Executors.newFixedThreadPool( 20 ); // cached?
