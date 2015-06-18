@@ -32,6 +32,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -46,6 +47,7 @@ public class TestTempManyEmbeddedDrillBits extends JdbcTestBase {
   public final TestRule TIMEOUT = TestTools.getTimeoutRule( 900_000 );
 
 
+  @Ignore
   @Test
   public void testCreateStatementsUntilOutOfHeap() throws SQLException, InterruptedException {
     System.err.println( "toSqueeze ..." );
