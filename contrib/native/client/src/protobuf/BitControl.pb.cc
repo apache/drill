@@ -37,6 +37,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* PlanFragment_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   PlanFragment_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Collector_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Collector_reflection_ = NULL;
 const ::google::protobuf::Descriptor* QueryContextInformation_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   QueryContextInformation_reflection_ = NULL;
@@ -121,7 +124,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(InitializeFragments));
   PlanFragment_descriptor_ = file->message_type(4);
-  static const int PlanFragment_offsets_[14] = {
+  static const int PlanFragment_offsets_[15] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, handle_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, network_cost_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, cpu_cost_),
@@ -136,6 +139,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, credentials_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, options_json_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, context_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, collector_),
   };
   PlanFragment_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -148,7 +152,25 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(PlanFragment));
-  QueryContextInformation_descriptor_ = file->message_type(5);
+  Collector_descriptor_ = file->message_type(5);
+  static const int Collector_offsets_[4] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, opposite_major_fragment_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, incoming_minor_fragment_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, supports_out_of_order_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, is_spooling_),
+  };
+  Collector_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Collector_descriptor_,
+      Collector::default_instance_,
+      Collector_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Collector, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Collector));
+  QueryContextInformation_descriptor_ = file->message_type(6);
   static const int QueryContextInformation_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, query_start_time_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(QueryContextInformation, time_zone_),
@@ -165,7 +187,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(QueryContextInformation));
-  WorkQueueStatus_descriptor_ = file->message_type(6);
+  WorkQueueStatus_descriptor_ = file->message_type(7);
   static const int WorkQueueStatus_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, endpoint_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(WorkQueueStatus, queue_length_),
@@ -182,7 +204,7 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(WorkQueueStatus));
-  FinishedReceiver_descriptor_ = file->message_type(7);
+  FinishedReceiver_descriptor_ = file->message_type(8);
   static const int FinishedReceiver_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, receiver_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedReceiver, sender_),
@@ -222,6 +244,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     PlanFragment_descriptor_, &PlanFragment::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Collector_descriptor_, &Collector::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     QueryContextInformation_descriptor_, &QueryContextInformation::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     WorkQueueStatus_descriptor_, &WorkQueueStatus::default_instance());
@@ -242,6 +266,8 @@ void protobuf_ShutdownFile_BitControl_2eproto() {
   delete InitializeFragments_reflection_;
   delete PlanFragment::default_instance_;
   delete PlanFragment_reflection_;
+  delete Collector::default_instance_;
+  delete Collector_reflection_;
   delete QueryContextInformation::default_instance_;
   delete QueryContextInformation_reflection_;
   delete WorkQueueStatus::default_instance_;
@@ -272,7 +298,7 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013"
     "2\030.exec.bit.FragmentHandle\"G\n\023Initialize"
     "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c"
-    "ontrol.PlanFragment\"\314\003\n\014PlanFragment\022(\n\006"
+    "ontrol.PlanFragment\"\374\003\n\014PlanFragment\022(\n\006"
     "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024"
     "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021"
     "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025"
@@ -284,24 +310,29 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "ials\030\016 \001(\0132\034.exec.shared.UserCredentials"
     "\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001(\0132"
     ").exec.bit.control.QueryContextInformati"
-    "on\"c\n\027QueryContextInformation\022\030\n\020query_s"
-    "tart_time\030\001 \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023de"
-    "fault_schema_name\030\003 \001(\t\"f\n\017WorkQueueStat"
-    "us\022(\n\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndp"
-    "oint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_tim"
-    "e\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030"
-    "\001 \001(\0132\030.exec.bit.FragmentHandle\022(\n\006sende"
-    "r\030\002 \001(\0132\030.exec.bit.FragmentHandle*\323\002\n\007Rp"
-    "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE"
-    "\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_"
-    "CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISH"
-    "ED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT"
-    "_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_Q"
-    "UERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022"
-    "\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP_FRAGME"
-    "NT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP"
-    "_QUERY_STATUS\020\016B+\n\033org.apache.drill.exec"
-    ".protoB\nBitControlH\001", 1660);
+    "on\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.control"
+    ".Collector\"\210\001\n\tCollector\022\"\n\032opposite_maj"
+    "or_fragment_id\030\001 \001(\005\022#\n\027incoming_minor_f"
+    "ragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_ord"
+    "er\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n\027QueryCo"
+    "ntextInformation\022\030\n\020query_start_time\030\001 \001"
+    "(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schema_"
+    "name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n\010endpoin"
+    "t\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014queue"
+    "_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003\"h\n\020Fi"
+    "nishedReceiver\022*\n\010receiver\030\001 \001(\0132\030.exec."
+    "bit.FragmentHandle\022(\n\006sender\030\002 \001(\0132\030.exe"
+    "c.bit.FragmentHandle*\323\002\n\007RpcType\022\r\n\tHAND"
+    "SHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n\030REQ_INI"
+    "TIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCEL_FRAGME"
+    "NT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022\027\n\023REQ_F"
+    "RAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020"
+    "REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_CANCEL\020\017"
+    "\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\030\n\024RESP_FRAGM"
+    "ENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023"
+    "\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS"
+    "\020\016B+\n\033org.apache.drill.exec.protoB\nBitCo"
+    "ntrolH\001", 1847);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
@@ -309,6 +340,7 @@ void protobuf_AddDesc_BitControl_2eproto() {
   FragmentStatus::default_instance_ = new FragmentStatus();
   InitializeFragments::default_instance_ = new InitializeFragments();
   PlanFragment::default_instance_ = new PlanFragment();
+  Collector::default_instance_ = new Collector();
   QueryContextInformation::default_instance_ = new QueryContextInformation();
   WorkQueueStatus::default_instance_ = new WorkQueueStatus();
   FinishedReceiver::default_instance_ = new FinishedReceiver();
@@ -317,6 +349,7 @@ void protobuf_AddDesc_BitControl_2eproto() {
   FragmentStatus::default_instance_->InitAsDefaultInstance();
   InitializeFragments::default_instance_->InitAsDefaultInstance();
   PlanFragment::default_instance_->InitAsDefaultInstance();
+  Collector::default_instance_->InitAsDefaultInstance();
   QueryContextInformation::default_instance_->InitAsDefaultInstance();
   WorkQueueStatus::default_instance_->InitAsDefaultInstance();
   FinishedReceiver::default_instance_->InitAsDefaultInstance();
@@ -1337,6 +1370,7 @@ const int PlanFragment::kMemMaxFieldNumber;
 const int PlanFragment::kCredentialsFieldNumber;
 const int PlanFragment::kOptionsJsonFieldNumber;
 const int PlanFragment::kContextFieldNumber;
+const int PlanFragment::kCollectorFieldNumber;
 #endif  // !_MSC_VER
 
 PlanFragment::PlanFragment()
@@ -1455,6 +1489,7 @@ void PlanFragment::Clear() {
       if (context_ != NULL) context_->::exec::bit::control::QueryContextInformation::Clear();
     }
   }
+  collector_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -1676,6 +1711,21 @@ bool PlanFragment::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(138)) goto parse_collector;
+        break;
+      }
+
+      // repeated .exec.bit.control.Collector collector = 17;
+      case 17: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_collector:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_collector()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(138)) goto parse_collector;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1781,6 +1831,12 @@ void PlanFragment::SerializeWithCachedSizes(
       16, this->context(), output);
   }
 
+  // repeated .exec.bit.control.Collector collector = 17;
+  for (int i = 0; i < this->collector_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      17, this->collector(i), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1877,6 +1933,13 @@ void PlanFragment::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         16, this->context(), target);
+  }
+
+  // repeated .exec.bit.control.Collector collector = 17;
+  for (int i = 0; i < this->collector_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        17, this->collector(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1981,6 +2044,14 @@ int PlanFragment::ByteSize() const {
     }
 
   }
+  // repeated .exec.bit.control.Collector collector = 17;
+  total_size += 2 * this->collector_size();
+  for (int i = 0; i < this->collector_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->collector(i));
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -2006,6 +2077,7 @@ void PlanFragment::MergeFrom(const ::google::protobuf::Message& from) {
 
 void PlanFragment::MergeFrom(const PlanFragment& from) {
   GOOGLE_CHECK_NE(&from, this);
+  collector_.MergeFrom(from.collector_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_handle()) {
       mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
@@ -2088,6 +2160,7 @@ void PlanFragment::Swap(PlanFragment* other) {
     std::swap(credentials_, other->credentials_);
     std::swap(options_json_, other->options_json_);
     std::swap(context_, other->context_);
+    collector_.Swap(&other->collector_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -2099,6 +2172,356 @@ void PlanFragment::Swap(PlanFragment* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = PlanFragment_descriptor_;
   metadata.reflection = PlanFragment_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Collector::kOppositeMajorFragmentIdFieldNumber;
+const int Collector::kIncomingMinorFragmentFieldNumber;
+const int Collector::kSupportsOutOfOrderFieldNumber;
+const int Collector::kIsSpoolingFieldNumber;
+#endif  // !_MSC_VER
+
+Collector::Collector()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Collector::InitAsDefaultInstance() {
+}
+
+Collector::Collector(const Collector& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Collector::SharedCtor() {
+  _cached_size_ = 0;
+  opposite_major_fragment_id_ = 0;
+  supports_out_of_order_ = false;
+  is_spooling_ = false;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Collector::~Collector() {
+  SharedDtor();
+}
+
+void Collector::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void Collector::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Collector::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Collector_descriptor_;
+}
+
+const Collector& Collector::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_BitControl_2eproto();
+  return *default_instance_;
+}
+
+Collector* Collector::default_instance_ = NULL;
+
+Collector* Collector::New() const {
+  return new Collector;
+}
+
+void Collector::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    opposite_major_fragment_id_ = 0;
+    supports_out_of_order_ = false;
+    is_spooling_ = false;
+  }
+  incoming_minor_fragment_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Collector::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 opposite_major_fragment_id = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &opposite_major_fragment_id_)));
+          set_has_opposite_major_fragment_id();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_incoming_minor_fragment;
+        break;
+      }
+
+      // repeated int32 incoming_minor_fragment = 2 [packed = true];
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_incoming_minor_fragment:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, this->mutable_incoming_minor_fragment())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 1, 18, input, this->mutable_incoming_minor_fragment())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(24)) goto parse_supports_out_of_order;
+        break;
+      }
+
+      // optional bool supports_out_of_order = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_supports_out_of_order:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &supports_out_of_order_)));
+          set_has_supports_out_of_order();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(32)) goto parse_is_spooling;
+        break;
+      }
+
+      // optional bool is_spooling = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_is_spooling:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_spooling_)));
+          set_has_is_spooling();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Collector::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional int32 opposite_major_fragment_id = 1;
+  if (has_opposite_major_fragment_id()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->opposite_major_fragment_id(), output);
+  }
+
+  // repeated int32 incoming_minor_fragment = 2 [packed = true];
+  if (this->incoming_minor_fragment_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(2, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_incoming_minor_fragment_cached_byte_size_);
+  }
+  for (int i = 0; i < this->incoming_minor_fragment_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32NoTag(
+      this->incoming_minor_fragment(i), output);
+  }
+
+  // optional bool supports_out_of_order = 3;
+  if (has_supports_out_of_order()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->supports_out_of_order(), output);
+  }
+
+  // optional bool is_spooling = 4;
+  if (has_is_spooling()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->is_spooling(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Collector::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional int32 opposite_major_fragment_id = 1;
+  if (has_opposite_major_fragment_id()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->opposite_major_fragment_id(), target);
+  }
+
+  // repeated int32 incoming_minor_fragment = 2 [packed = true];
+  if (this->incoming_minor_fragment_size() > 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
+      2,
+      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
+      target);
+    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
+      _incoming_minor_fragment_cached_byte_size_, target);
+  }
+  for (int i = 0; i < this->incoming_minor_fragment_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteInt32NoTagToArray(this->incoming_minor_fragment(i), target);
+  }
+
+  // optional bool supports_out_of_order = 3;
+  if (has_supports_out_of_order()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->supports_out_of_order(), target);
+  }
+
+  // optional bool is_spooling = 4;
+  if (has_is_spooling()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->is_spooling(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Collector::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional int32 opposite_major_fragment_id = 1;
+    if (has_opposite_major_fragment_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->opposite_major_fragment_id());
+    }
+
+    // optional bool supports_out_of_order = 3;
+    if (has_supports_out_of_order()) {
+      total_size += 1 + 1;
+    }
+
+    // optional bool is_spooling = 4;
+    if (has_is_spooling()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  // repeated int32 incoming_minor_fragment = 2 [packed = true];
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->incoming_minor_fragment_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::
+        Int32Size(this->incoming_minor_fragment(i));
+    }
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _incoming_minor_fragment_cached_byte_size_ = data_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Collector::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Collector* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Collector*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Collector::MergeFrom(const Collector& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  incoming_minor_fragment_.MergeFrom(from.incoming_minor_fragment_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_opposite_major_fragment_id()) {
+      set_opposite_major_fragment_id(from.opposite_major_fragment_id());
+    }
+    if (from.has_supports_out_of_order()) {
+      set_supports_out_of_order(from.supports_out_of_order());
+    }
+    if (from.has_is_spooling()) {
+      set_is_spooling(from.is_spooling());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Collector::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Collector::CopyFrom(const Collector& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Collector::IsInitialized() const {
+
+  return true;
+}
+
+void Collector::Swap(Collector* other) {
+  if (other != this) {
+    std::swap(opposite_major_fragment_id_, other->opposite_major_fragment_id_);
+    incoming_minor_fragment_.Swap(&other->incoming_minor_fragment_);
+    std::swap(supports_out_of_order_, other->supports_out_of_order_);
+    std::swap(is_spooling_, other->is_spooling_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Collector::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Collector_descriptor_;
+  metadata.reflection = Collector_reflection_;
   return metadata;
 }
 

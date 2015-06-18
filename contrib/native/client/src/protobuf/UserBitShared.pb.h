@@ -1321,13 +1321,6 @@ class SerializedField : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 var_byte_length() const;
   inline void set_var_byte_length(::google::protobuf::int32 value);
 
-  // optional int32 group_count = 6;
-  inline bool has_group_count() const;
-  inline void clear_group_count();
-  static const int kGroupCountFieldNumber = 6;
-  inline ::google::protobuf::int32 group_count() const;
-  inline void set_group_count(::google::protobuf::int32 value);
-
   // optional int32 buffer_length = 7;
   inline bool has_buffer_length() const;
   inline void clear_buffer_length();
@@ -1345,8 +1338,6 @@ class SerializedField : public ::google::protobuf::Message {
   inline void clear_has_value_count();
   inline void set_has_var_byte_length();
   inline void clear_has_var_byte_length();
-  inline void set_has_group_count();
-  inline void clear_has_group_count();
   inline void set_has_buffer_length();
   inline void clear_has_buffer_length();
 
@@ -1357,11 +1348,10 @@ class SerializedField : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::exec::shared::SerializedField > child_;
   ::google::protobuf::int32 value_count_;
   ::google::protobuf::int32 var_byte_length_;
-  ::google::protobuf::int32 group_count_;
   ::google::protobuf::int32 buffer_length_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -4066,37 +4056,15 @@ inline void SerializedField::set_var_byte_length(::google::protobuf::int32 value
   var_byte_length_ = value;
 }
 
-// optional int32 group_count = 6;
-inline bool SerializedField::has_group_count() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void SerializedField::set_has_group_count() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void SerializedField::clear_has_group_count() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void SerializedField::clear_group_count() {
-  group_count_ = 0;
-  clear_has_group_count();
-}
-inline ::google::protobuf::int32 SerializedField::group_count() const {
-  return group_count_;
-}
-inline void SerializedField::set_group_count(::google::protobuf::int32 value) {
-  set_has_group_count();
-  group_count_ = value;
-}
-
 // optional int32 buffer_length = 7;
 inline bool SerializedField::has_buffer_length() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void SerializedField::set_has_buffer_length() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void SerializedField::clear_has_buffer_length() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void SerializedField::clear_buffer_length() {
   buffer_length_ = 0;

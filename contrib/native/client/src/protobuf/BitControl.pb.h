@@ -44,6 +44,7 @@ class BitStatus;
 class FragmentStatus;
 class InitializeFragments;
 class PlanFragment;
+class Collector;
 class QueryContextInformation;
 class WorkQueueStatus;
 class FinishedReceiver;
@@ -624,6 +625,18 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::exec::bit::control::QueryContextInformation* release_context();
   inline void set_allocated_context(::exec::bit::control::QueryContextInformation* context);
 
+  // repeated .exec.bit.control.Collector collector = 17;
+  inline int collector_size() const;
+  inline void clear_collector();
+  static const int kCollectorFieldNumber = 17;
+  inline const ::exec::bit::control::Collector& collector(int index) const;
+  inline ::exec::bit::control::Collector* mutable_collector(int index);
+  inline ::exec::bit::control::Collector* add_collector();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector >&
+      collector() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector >*
+      mutable_collector();
+
   // @@protoc_insertion_point(class_scope:exec.bit.control.PlanFragment)
  private:
   inline void set_has_handle();
@@ -670,10 +683,11 @@ class PlanFragment : public ::google::protobuf::Message {
   ::exec::shared::UserCredentials* credentials_;
   ::std::string* options_json_;
   ::exec::bit::control::QueryContextInformation* context_;
+  ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector > collector_;
   bool leaf_fragment_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(14 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitControl_2eproto();
   friend void protobuf_AssignDesc_BitControl_2eproto();
@@ -681,6 +695,122 @@ class PlanFragment : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static PlanFragment* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Collector : public ::google::protobuf::Message {
+ public:
+  Collector();
+  virtual ~Collector();
+
+  Collector(const Collector& from);
+
+  inline Collector& operator=(const Collector& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Collector& default_instance();
+
+  void Swap(Collector* other);
+
+  // implements Message ----------------------------------------------
+
+  Collector* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Collector& from);
+  void MergeFrom(const Collector& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 opposite_major_fragment_id = 1;
+  inline bool has_opposite_major_fragment_id() const;
+  inline void clear_opposite_major_fragment_id();
+  static const int kOppositeMajorFragmentIdFieldNumber = 1;
+  inline ::google::protobuf::int32 opposite_major_fragment_id() const;
+  inline void set_opposite_major_fragment_id(::google::protobuf::int32 value);
+
+  // repeated int32 incoming_minor_fragment = 2 [packed = true];
+  inline int incoming_minor_fragment_size() const;
+  inline void clear_incoming_minor_fragment();
+  static const int kIncomingMinorFragmentFieldNumber = 2;
+  inline ::google::protobuf::int32 incoming_minor_fragment(int index) const;
+  inline void set_incoming_minor_fragment(int index, ::google::protobuf::int32 value);
+  inline void add_incoming_minor_fragment(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      incoming_minor_fragment() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_incoming_minor_fragment();
+
+  // optional bool supports_out_of_order = 3;
+  inline bool has_supports_out_of_order() const;
+  inline void clear_supports_out_of_order();
+  static const int kSupportsOutOfOrderFieldNumber = 3;
+  inline bool supports_out_of_order() const;
+  inline void set_supports_out_of_order(bool value);
+
+  // optional bool is_spooling = 4;
+  inline bool has_is_spooling() const;
+  inline void clear_is_spooling();
+  static const int kIsSpoolingFieldNumber = 4;
+  inline bool is_spooling() const;
+  inline void set_is_spooling(bool value);
+
+  // @@protoc_insertion_point(class_scope:exec.bit.control.Collector)
+ private:
+  inline void set_has_opposite_major_fragment_id();
+  inline void clear_has_opposite_major_fragment_id();
+  inline void set_has_supports_out_of_order();
+  inline void clear_has_supports_out_of_order();
+  inline void set_has_is_spooling();
+  inline void clear_has_is_spooling();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > incoming_minor_fragment_;
+  mutable int _incoming_minor_fragment_cached_byte_size_;
+  ::google::protobuf::int32 opposite_major_fragment_id_;
+  bool supports_out_of_order_;
+  bool is_spooling_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_BitControl_2eproto();
+  friend void protobuf_AssignDesc_BitControl_2eproto();
+  friend void protobuf_ShutdownFile_BitControl_2eproto();
+
+  void InitAsDefaultInstance();
+  static Collector* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1703,6 +1833,126 @@ inline void PlanFragment::set_allocated_context(::exec::bit::control::QueryConte
   } else {
     clear_has_context();
   }
+}
+
+// repeated .exec.bit.control.Collector collector = 17;
+inline int PlanFragment::collector_size() const {
+  return collector_.size();
+}
+inline void PlanFragment::clear_collector() {
+  collector_.Clear();
+}
+inline const ::exec::bit::control::Collector& PlanFragment::collector(int index) const {
+  return collector_.Get(index);
+}
+inline ::exec::bit::control::Collector* PlanFragment::mutable_collector(int index) {
+  return collector_.Mutable(index);
+}
+inline ::exec::bit::control::Collector* PlanFragment::add_collector() {
+  return collector_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector >&
+PlanFragment::collector() const {
+  return collector_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector >*
+PlanFragment::mutable_collector() {
+  return &collector_;
+}
+
+// -------------------------------------------------------------------
+
+// Collector
+
+// optional int32 opposite_major_fragment_id = 1;
+inline bool Collector::has_opposite_major_fragment_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Collector::set_has_opposite_major_fragment_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Collector::clear_has_opposite_major_fragment_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Collector::clear_opposite_major_fragment_id() {
+  opposite_major_fragment_id_ = 0;
+  clear_has_opposite_major_fragment_id();
+}
+inline ::google::protobuf::int32 Collector::opposite_major_fragment_id() const {
+  return opposite_major_fragment_id_;
+}
+inline void Collector::set_opposite_major_fragment_id(::google::protobuf::int32 value) {
+  set_has_opposite_major_fragment_id();
+  opposite_major_fragment_id_ = value;
+}
+
+// repeated int32 incoming_minor_fragment = 2 [packed = true];
+inline int Collector::incoming_minor_fragment_size() const {
+  return incoming_minor_fragment_.size();
+}
+inline void Collector::clear_incoming_minor_fragment() {
+  incoming_minor_fragment_.Clear();
+}
+inline ::google::protobuf::int32 Collector::incoming_minor_fragment(int index) const {
+  return incoming_minor_fragment_.Get(index);
+}
+inline void Collector::set_incoming_minor_fragment(int index, ::google::protobuf::int32 value) {
+  incoming_minor_fragment_.Set(index, value);
+}
+inline void Collector::add_incoming_minor_fragment(::google::protobuf::int32 value) {
+  incoming_minor_fragment_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+Collector::incoming_minor_fragment() const {
+  return incoming_minor_fragment_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+Collector::mutable_incoming_minor_fragment() {
+  return &incoming_minor_fragment_;
+}
+
+// optional bool supports_out_of_order = 3;
+inline bool Collector::has_supports_out_of_order() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Collector::set_has_supports_out_of_order() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Collector::clear_has_supports_out_of_order() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Collector::clear_supports_out_of_order() {
+  supports_out_of_order_ = false;
+  clear_has_supports_out_of_order();
+}
+inline bool Collector::supports_out_of_order() const {
+  return supports_out_of_order_;
+}
+inline void Collector::set_supports_out_of_order(bool value) {
+  set_has_supports_out_of_order();
+  supports_out_of_order_ = value;
+}
+
+// optional bool is_spooling = 4;
+inline bool Collector::has_is_spooling() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Collector::set_has_is_spooling() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Collector::clear_has_is_spooling() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Collector::clear_is_spooling() {
+  is_spooling_ = false;
+  clear_has_is_spooling();
+}
+inline bool Collector::is_spooling() const {
+  return is_spooling_;
+}
+inline void Collector::set_is_spooling(bool value) {
+  set_has_is_spooling();
+  is_spooling_ = value;
 }
 
 // -------------------------------------------------------------------
