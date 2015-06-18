@@ -96,7 +96,7 @@ public class TestTempAsyncCancelation3 extends JdbcTestBase {
                               + ": Q#" + taskId + ": executing ..." );
           ResultSet rs =
               statement.executeQuery(
-                  "SELECT * FROM `dfs.root`.`/tmp/DRILL-2993.csv` LIMIT 1000000"
+                  "SELECT * FROM `dfs.root`.`/tmp/1000000_lines_of_99_x_characters.csv` LIMIT 1000000"
                   );
           System.err.println( Thread.currentThread().getName()
                               + ": Q#" + taskId + " ... executed, releasing latch, receiving ..." );

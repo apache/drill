@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -80,6 +81,7 @@ public class TestTempCancelationAndConcurrencyEtc extends JdbcTestBase {
     executeRepeatedly_simple( 100 );
   }
 
+  @Ignore
   @Test
   public void testExecuteRepeatly_simple_1000() throws SQLException {
     executeRepeatedly_simple( 1000 );
