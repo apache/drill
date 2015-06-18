@@ -76,12 +76,13 @@ public class TestTempCancelationAndConcurrencyEtc extends JdbcTestBase {
     executeRepeatedly_simple( 10 );
   }
 
+  @Ignore( "???" )
   @Test
   public void testExecuteRepeatly_simple_100() throws SQLException {
     executeRepeatedly_simple( 100 );
   }
 
-  @Ignore
+  @Ignore( "???" )
   @Test
   public void testExecuteRepeatly_simple_1000() throws SQLException {
     executeRepeatedly_simple( 1000 );
