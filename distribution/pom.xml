@@ -28,19 +28,16 @@
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
-      <classifier>rebuffed</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
-      <classifier>rebuffed</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
-      <classifier>rebuffed</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>

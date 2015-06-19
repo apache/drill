@@ -84,9 +84,9 @@
       <!-- Now, select which projects to include in this module-set. -->
       <includes>
         <include>org.apache.drill.exec:drill-jdbc:jar</include>
-        <include>org.apache.drill:drill-protocol:jar:rebuffed</include>
-        <include>org.apache.drill:drill-common:jar:rebuffed</include>
-        <include>org.apache.drill.exec:drill-java-exec:jar:rebuffed</include>
+        <include>org.apache.drill:drill-protocol:jar</include>
+        <include>org.apache.drill:drill-common:jar</include>
+        <include>org.apache.drill.exec:drill-java-exec:jar</include>
         <include>org.apache.drill.contrib.storage-hive:drill-storage-hive-core</include>
         <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded</include>
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
