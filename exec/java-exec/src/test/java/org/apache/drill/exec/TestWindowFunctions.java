@@ -247,4 +247,32 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  /* Verify the output of aggregate functions (which are reduced
+    * eg: avg(x) = sum(x)/count(x)) return results of the correct
+    * data type (double)
+    */
+  @Test
+  public void testAvgVarianceWindowFunctions() throws Exception {
+    final String avgQuery = "select avg(n_nationkey) over (partition by n_nationkey) col1 " +
+        "from cp.`tpch/nation.parquet` " +
+        "where n_nationkey = 1";
+
+    testBuilder()
+        .sqlQuery(avgQuery)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(1.0d)
+        .go();
+
+    final String varianceQuery = "select var_pop(n_nationkey) over (partition by n_nationkey) col1 " +
+        "from cp.`tpch/nation.parquet` " +
+        "where n_nationkey = 1";
+
+    testBuilder()
+        .sqlQuery(varianceQuery)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(0.0d)
+        .go();
+  }
 }
