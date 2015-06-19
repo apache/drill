@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import static org.apache.drill.TestBuilder.listOf;
 
+@Ignore("????")
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
