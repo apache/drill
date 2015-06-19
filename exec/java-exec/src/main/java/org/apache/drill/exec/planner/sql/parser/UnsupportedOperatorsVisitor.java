@@ -91,6 +91,11 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       // This is used to keep track of the window function which has been defined
       SqlNode definedWindow = null;
       for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+        if(nodeInSelectList.getKind() == SqlKind.AS
+            && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
+          nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
+        }
+
         if(nodeInSelectList.getKind() == SqlKind.OVER) {
           // Throw exceptions if window functions are disabled
           if(!context.getOptions().getOption(ExecConstants.ENABLE_WINDOW_FUNCTIONS).bool_val) {

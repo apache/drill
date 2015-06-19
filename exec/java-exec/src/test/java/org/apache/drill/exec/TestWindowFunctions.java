@@ -197,6 +197,19 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  @Test(expected = UnsupportedFunctionException.class) // DRILL-3326
+  public void testWindowWithAlias() throws Exception {
+    try {
+      String query = "explain plan for SELECT sum(n_nationkey) OVER (PARTITION BY n_name ORDER BY n_name ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) as col2 \n" +
+          "from cp.`tpch/nation.parquet`";
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
   @Test // DRILL-3188
   public void testWindowFrameEquivalentToDefault() throws Exception {
     final String query1 = "explain plan for select sum(n_nationKey) over(partition by n_nationKey order by n_nationKey) \n" +
