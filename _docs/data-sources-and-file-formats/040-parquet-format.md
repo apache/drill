@@ -21,7 +21,7 @@ Apache Drill includes the following support for Parquet:
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
 ## Writing Parquet Files
-CREATE TABLE AS SELECT (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
+CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 
 Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.
 

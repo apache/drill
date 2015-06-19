@@ -6,7 +6,7 @@ Drill extends SQL to work with Hadoop-scale data and to explore smaller-scale da
 
 Drill provides language support for pointing to [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction) interfaces that Drill uses to interact with data sources. Use the name of a storage plugin to specify a file system *database* as a prefix in queries when you refer to objects across databases. Query files, including compressed .gz files, and [directories]({{ site.baseurl }}/docs/querying-directories), as you would query an SQL table. You can query multiple files in a directory.
 
-Drill extends the SELECT statement for reading complex, multi-structured data. The extended CREATE TABLE AS SELECT provides the capability to write data of complex/multi-structured data types. Drill extends the [lexical rules](http://drill.apache.org/docs/lexical-structure) for working with files and directories, such as using back ticks for including file names, directory names, and reserved words in queries. Drill syntax supports using the file system as a persistent store for query profiles and diagnostic information.
+Drill extends the SELECT statement for reading complex, multi-structured data. The extended CREATE TABLE AS provides the capability to write data of complex/multi-structured data types. Drill extends the [lexical rules](http://drill.apache.org/docs/lexical-structure) for working with files and directories, such as using back ticks for including file names, directory names, and reserved words in queries. Drill syntax supports using the file system as a persistent store for query profiles and diagnostic information.
 
 ## Extensions for Hive- and HBase-related Data Sources
 

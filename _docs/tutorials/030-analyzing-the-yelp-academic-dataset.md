@@ -315,7 +315,7 @@ Note that Drill views are lightweight, and can just be created in the local
 file system. Drill in standalone mode comes with a dfs.tmp workspace, which we
 can use to create views (or you can can define your own workspaces on a local
 or distributed file system). If you want to persist the data physically
-instead of in a logical view, you can use CREATE TABLE AS SELECT syntax.
+instead of in a logical view, you can use CREATE TABLE AS syntax.
 
     0: jdbc:drill:zk=local> create or replace view dfs.tmp.businessreviews as 
     Select b.name,b.stars,b.state,b.city,r.votes.funny,r.votes.useful,r.votes.cool, r.`date` 

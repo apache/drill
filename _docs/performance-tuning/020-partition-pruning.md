@@ -5,17 +5,30 @@ parent: "Performance Tuning"
 
 Partition pruning is a performance optimization that limits the number of files and partitions that Drill reads when querying file systems and Hive tables. When you partition data, Drill only reads a subset of the files that reside in a file system or a subset of the partitions in a Hive table when a query matches certain filter criteria.
  
-The query planner in Drill evaluates the filters as part of a Filter operator. If no partition filters are present, the underlying Scan operator reads all files in all directories and then sends the data to operators downstream, such as Filter. When partition filters are present, the query planner determines if it can push the filters down to the Scan such that the Scan only reads the directories that match the partition filters, thus reducing disk I/O.
+The query planner in Drill performs partition pruning by evaluating the filters. If no partition filters are present, the underlying Scan operator reads all files in all directories and then sends the data to operators, such as Filter, downstream. When partition filters are present, the query planner pushes the filters down to the Scan if possible. The Scan reads only the directories that match the partition filters, thus reducing disk I/O.
 
-## Determining a Partitioning Scheme  
+## How to Use Partition Pruning
 
-You can organize your data in such a way that maximizes partition pruning in Drill to optimize performance. Currently, you must partition data manually for a query to take advantage of partition pruning in Drill.
+You can partition data manually or automatically to take advantage of partition pruning in Drill. In Drill 1.0 and earlier, you need to organize your data in such a way to take advantage of partition pruning. In Drill 1.1.0 and later, if the data source is Parquet, you can partition data automatically using CTAS--no data organization tasks required. 
+
+## Automatic Partitioning
+Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [[PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statemebnt.
+
+Automatic partitioning creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there could be multiple files for the same partition value.
+
+Partition pruning uses the Parquet column statistics to determine which columns to use to prune.
+
+## Manual Partitioning
  
-Partitioning data requires you to determine a partitioning scheme, or a logical way to store the data in a hierarchy of directories. You can then use CTAS to create Parquet files from the original data, specifying filter conditions, and then move the files into the correlating directories in the hierarchy. Once you have partitioned the data, you can create and query views on the data.
- 
-### Partitioning Example  
+1. Devise a logical way to store the data in a hierarchy of directories. 
+2. Use CTAS to create Parquet files from the original data, specifying filter conditions.
+3. Move the files into directories in the hierarchy. 
 
-If you have several text files with log data which span multiple years, and you want to partition the data by year and quarter, you could create the following hierarchy of directories:  
+After partitioning the data, create and query views on the data.
+ 
+### Manual Partitioning Example  
+
+Suppose you have text files containing several years of log data. To partition the data by year and quarter, create the following hierarchy of directories:  
        
        …/logs/1994/Q1  
        …/logs/1994/Q2  
@@ -30,7 +43,7 @@ If you have several text files with log data which span multiple years, and you 
        …/logs/1996/Q3  
        …/logs/1996/Q4  
 
-Once the directory structure is in place, run CTAS with a filter condition in the year and quarter for Q1 1994.
+Run the following CTAS statement, filtering on the Q1 1994 data.
  
           CREATE TABLE TT_1994_Q1 
               AS SELECT * FROM <raw table data in text format >

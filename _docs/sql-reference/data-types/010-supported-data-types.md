@@ -71,7 +71,7 @@ changes in the data processing, Drill regenerates the code as necessary.
 ## Casting and Converting Data Types
 
 In Drill, you cast or convert data to the required type for moving data from one data source to another or to make the data readable.
-You do not assign a data type to every column name in a CREATE TABLE statement to define the table as you do in database software. Instead, you use the CREATE TABLE AS SELECT (CTAS) statement with one or more of the following functions to define the table:
+You do not assign a data type to every column name in a CREATE TABLE statement to define the table as you do in database software. Instead, you use the CREATE TABLE AS (CTAS) statement with one or more of the following functions to define the table:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)    
 * [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)   

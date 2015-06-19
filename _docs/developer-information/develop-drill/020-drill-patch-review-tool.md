@@ -128,7 +128,7 @@ review board. So you need to configure an override to use the non-http url.
 You can do this by adding a config file like this:
 
 	jkreps$ cat ~/.reviewboardrc
-	REPOSITORY = 'git://git.apache.org/incubator-drill.git'
+	REPOSITORY = 'git://git.apache.org/drill.git'
 	TARGET_GROUPS = 'drill-git'
 GUESS_FIELDS = True
 

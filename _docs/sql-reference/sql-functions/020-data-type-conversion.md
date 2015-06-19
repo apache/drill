@@ -261,7 +261,7 @@ This example assumes you are working in the Drill Sandbox. The `maprdb` storage 
 
 ### Convert the Binary HBase Students Table to JSON Data
 
-First, you set the storage format to JSON. Next, you use the CREATE TABLE AS SELECT (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types) as the file format because the data you are converting from and then to consists of strings.
+First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types) as the file format because the data you are converting from and then to consists of strings.
 
 1. Start Drill on the Drill Sandbox and set the default storage format from Parquet to JSON.
 

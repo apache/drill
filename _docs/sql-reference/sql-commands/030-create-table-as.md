@@ -6,7 +6,7 @@ You can create tables in Drill by using the CTAS command:
 
     CREATE TABLE new_table_name AS <query>;
 
-where query is any valid Drill query. Each table you create must have a unique
+where query is a SELECT statement. Each table you create must have a unique
 name. You can include an optional column list for the new table. For example:
 
     create table logtable(transid, prodid) as select transaction_id, product_id from ...
@@ -17,7 +17,7 @@ You can store table data in one of three formats:
   * parquet
   * json
 
-The parquet and json formats can be used to store complex data.
+The parquet and json formats can be used to store complex data. Drill automatically partitions data stored in parquet when you use the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause.
 
 To set the output format for a Drill table, set the `store.format` option with
 the ALTER SYSTEM or ALTER SESSION command. For example:
