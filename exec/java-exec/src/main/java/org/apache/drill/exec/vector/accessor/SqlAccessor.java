@@ -63,6 +63,14 @@ public interface SqlAccessor {
   MajorType getType();
 
   /**
+   * Reports the class returned by getObject() of this accessor.
+   * <p>
+   *  (Is for {@link ResultSetMetaData#getColumnClassName(...)}.)
+   * </p>
+   */
+  Class<?> getObjectClass();
+
+  /**
    * Reports whether the logical value is a SQL NULL.
    */
   boolean isNull(int rowOffset);

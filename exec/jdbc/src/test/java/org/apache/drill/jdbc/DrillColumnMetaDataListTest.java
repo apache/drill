@@ -20,6 +20,7 @@ package org.apache.drill.jdbc;
 import net.hydromatic.avatica.ColumnMetaData;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
@@ -30,7 +31,9 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.apache.drill.common.types.TypeProtos.MajorType;
 import static org.apache.drill.common.types.TypeProtos.MinorType;
@@ -67,13 +70,15 @@ public class DrillColumnMetaDataListTest {
     // Create mock columns
     final MaterializedField exampleIntField = mock(MaterializedField.class);
     MajorType exampleIntType = MajorType.newBuilder().setMinorType(MinorType.INT).build();
-    when(exampleIntField.getAsSchemaPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testInt"));
+    when(exampleIntField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testInt"));
     when(exampleIntField.getType()).thenReturn(exampleIntType);
+    when(exampleIntField.getDataMode()).thenReturn(DataMode.OPTIONAL);
 
     final MaterializedField exampleStringField = mock(MaterializedField.class);
     MajorType exampleStringType = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).build();
-    when(exampleStringField.getAsSchemaPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testString"));
+    when(exampleStringField.getPath()).thenReturn(SchemaPath.getSimplePath("/path/to/testString"));
     when(exampleStringField.getType()).thenReturn(exampleStringType);
+    when(exampleStringField.getDataMode()).thenReturn(DataMode.REQUIRED);
 
     oneElementList = new DrillColumnMetaDataList();
     BatchSchema oneElementSchema = mock(BatchSchema.class);
@@ -91,7 +96,10 @@ public class DrillColumnMetaDataListTest {
           }
         }
     ).when(oneElementSchema).getColumn(Mockito.anyInt());
-    oneElementList.updateColumnMetaData("testCatalog", "testSchema", "testTable", oneElementSchema);
+    List<Class<?>> oneClassList = new ArrayList<>();
+    oneClassList.add(Integer.class);
+    oneElementList.updateColumnMetaData("testCatalog", "testSchema", "testTable",
+                                        oneElementSchema, oneClassList);
 
     twoElementList = new DrillColumnMetaDataList();
     BatchSchema twoElementSchema = mock(BatchSchema.class);
@@ -111,7 +119,11 @@ public class DrillColumnMetaDataListTest {
         }
       }
     ).when(twoElementSchema).getColumn(Mockito.anyInt());
-    twoElementList.updateColumnMetaData("testCatalog", "testSchema", "testTable", twoElementSchema);
+    List<Class<?>> twoClassList = new ArrayList<>();
+    twoClassList.add(Integer.class);
+    twoClassList.add(String.class);
+    twoElementList.updateColumnMetaData("testCatalog", "testSchema", "testTable",
+                                        twoElementSchema, twoClassList);
   }
 
   @After

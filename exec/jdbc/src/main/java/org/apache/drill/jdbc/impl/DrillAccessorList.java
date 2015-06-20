@@ -31,14 +31,14 @@ import org.apache.drill.exec.vector.accessor.SqlAccessor;
 class DrillAccessorList extends BasicList<Accessor>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAccessorList.class);
 
-  private Accessor[] accessors = new Accessor[0];
+  private AvaticaDrillSqlAccessor[] accessors = new AvaticaDrillSqlAccessor[0];
   // TODO  Rename to lastColumnAccessed and/or document.
   // TODO  Why 1, rather than, say, -1?
   private int lastColumn = 1;
 
-  void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch){
+  void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch) {
     int cnt = currentBatch.getSchema().getFieldCount();
-    accessors = new Accessor[cnt];
+    accessors = new AvaticaDrillSqlAccessor[cnt];
     for(int i =0; i < cnt; i++){
       final ValueVector vector = currentBatch.getValueAccessorById(null, i).getValueVector();
       final SqlAccessor acc =
@@ -50,7 +50,7 @@ class DrillAccessorList extends BasicList<Accessor>{
   }
 
   @Override
-  public Accessor get(int index) {
+  public AvaticaDrillSqlAccessor get(int index) {
     lastColumn = index;
     return accessors[index];
   }

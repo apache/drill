@@ -46,6 +46,11 @@ class TypeConvertingSqlAccessor implements SqlAccessor {
   }
 
   @Override
+  public Class<?> getObjectClass() {
+    return innerAccessor.getObjectClass();
+  }
+
+  @Override
   public boolean isNull( int rowOffset ) {
     return innerAccessor.isNull( rowOffset );
   }

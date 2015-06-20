@@ -45,6 +45,11 @@ public class BoundCheckingAccessor implements SqlAccessor {
   }
 
   @Override
+  public Class<?> getObjectClass() {
+    return delegate.getObjectClass();
+  }
+
+  @Override
   public boolean isNull(int rowOffset) {
     return delegate.isNull(rowOffset);
   }
