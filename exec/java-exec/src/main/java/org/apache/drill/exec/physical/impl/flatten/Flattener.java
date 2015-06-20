@@ -29,7 +29,7 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 public interface Flattener {
 
   public abstract void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
-  public abstract int flattenRecords(int startIndex, int recordCount, int firstOutputIndex);
+  public abstract int flattenRecords(int recordCount, int firstOutputIndex);
   public void setFlattenField(RepeatedValueVector repeatedColumn);
   public RepeatedValueVector getFlattenField();
   public void resetGroupIndex();

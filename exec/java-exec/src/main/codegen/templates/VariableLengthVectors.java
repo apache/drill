@@ -69,7 +69,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private final UInt${type.width}Vector.Accessor oAccessor;
 
 
-  private int allocationTotalByteCount = INITIAL_BYTE_COUNT;
+  private int allocationSizeInBytes = INITIAL_BYTE_COUNT;
   private int allocationMonitor = 0;
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
@@ -264,9 +264,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public void setInitialCapacity(int numRecords) {
-    allocationTotalByteCount = numRecords * DEFAULT_RECORD_BYTE_COUNT;
-    offsetVector.setInitialCapacity(numRecords + 1);
+  public void setInitialCapacity(final int valueCount) {
+    final long size = 1L * valueCount * ${type.width};
+    if (size > MAX_ALLOCATION_SIZE) {
+      throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
+    }
+    allocationSizeInBytes = (int)size;
+    offsetVector.setInitialCapacity(valueCount + 1);
   }
 
   public void allocateNew() {
@@ -277,15 +281,20 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   @Override
   public boolean allocateNewSafe() {
-    clear();
+    long curAllocationSize = allocationSizeInBytes;
     if (allocationMonitor > 10) {
-      allocationTotalByteCount = Math.max(MIN_BYTE_COUNT, (int) (allocationTotalByteCount / 2));
+      curAllocationSize = Math.max(MIN_BYTE_COUNT, curAllocationSize / 2);
       allocationMonitor = 0;
     } else if (allocationMonitor < -2) {
-      allocationTotalByteCount = (int) (allocationTotalByteCount * 2);
+      curAllocationSize = curAllocationSize * 2L;
       allocationMonitor = 0;
     }
 
+    if (curAllocationSize > MAX_ALLOCATION_SIZE) {
+      return false;
+    }
+
+    clear();
     /* Boolean to keep track if all the memory allocations were successful
      * Used in the case of composite vectors when we need to allocate multiple
      * buffers for multiple vectors. If one of the allocations failed we need to
@@ -293,15 +302,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      */
     boolean success = false;
     try {
-      DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
+      final int requestedSize = (int)curAllocationSize;
+      DrillBuf newBuf = allocator.buffer(requestedSize);
       if (newBuf == null) {
         return false;
       }
       this.data = newBuf;
-      if (!offsetVector.allocateNewSafe()) {
-        return false;
-      }
-      success = true;
+      success = offsetVector.allocateNewSafe();
     } finally {
       if (!success) {
         clear();
@@ -309,40 +316,44 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
     data.readerIndex(0);
     offsetVector.zeroVector();
-    return true;
+    return success;
   }
 
   public void allocateNew(int totalBytes, int valueCount) {
     clear();
     assert totalBytes >= 0;
     try {
-      DrillBuf newBuf = allocator.buffer(totalBytes);
+      final DrillBuf newBuf = allocator.buffer(totalBytes);
       if (newBuf == null) {
         throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
       }
-      this.data = newBuf;
+      data = newBuf;
       offsetVector.allocateNew(valueCount + 1);
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (DrillRuntimeException e) {
       clear();
       throw e;
     }
     data.readerIndex(0);
-    allocationTotalByteCount = totalBytes;
+    allocationSizeInBytes = totalBytes;
     offsetVector.zeroVector();
   }
 
-    public void reAlloc() {
-      allocationTotalByteCount *= 2;
-      DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
-      if(newBuf == null){
-        throw new OutOfMemoryRuntimeException(
-          String.format("Failure while reallocating buffer of %d bytes", allocationTotalByteCount));
-      }
-
-      newBuf.setBytes(0, data, 0, data.capacity());
-      data.release();
-      data = newBuf;
+  public void reAlloc() {
+    final long newAllocationSize = allocationSizeInBytes*2L;
+    if (newAllocationSize > MAX_ALLOCATION_SIZE)  {
+      throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
     }
+
+    final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
+    if(newBuf == null) {
+      throw new OutOfMemoryRuntimeException(
+        String.format("Failure while reallocating buffer of %d bytes", newAllocationSize));
+    }
+    newBuf.setBytes(0, data, 0, data.capacity());
+    data.release();
+    data = newBuf;
+    allocationSizeInBytes = (int)newAllocationSize;
+  }
 
   public void decrementAllocationMonitor() {
     if (allocationMonitor > 0) {

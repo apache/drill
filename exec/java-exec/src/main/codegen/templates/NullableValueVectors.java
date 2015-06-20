@@ -131,9 +131,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
      */
     boolean success = false;
     try {
-      if(!values.allocateNewSafe()) return false;
-      if(!bits.allocateNewSafe()) return false;
-      success = true;
+      success = values.allocateNewSafe() && bits.allocateNewSafe();
     } finally {
       if (!success) {
         clear();
@@ -142,7 +140,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
-    return true;
+    return success;
   }
 
   @Override
@@ -150,7 +148,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     try {
       values.allocateNew(totalBytes, valueCount);
       bits.allocateNew(valueCount);
-    } catch(OutOfMemoryRuntimeException e){
+    } catch(DrillRuntimeException e) {
       clear();
       throw e;
     }
@@ -196,7 +194,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     try {
       values.allocateNew();
       bits.allocateNew();
-    } catch(OutOfMemoryRuntimeException e) {
+    } catch(DrillRuntimeException e) {
       clear();
       throw e;
     }
@@ -215,9 +213,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
      */
     boolean success = false;
     try {
-      if(!values.allocateNewSafe()) return false;
-      if(!bits.allocateNewSafe()) return false;
-      success = true;
+      success = values.allocateNewSafe() && bits.allocateNewSafe();
     } finally {
       if (!success) {
         clear();
@@ -226,7 +222,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
-    return true;
+    return success;
   }
 
   @Override

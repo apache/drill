@@ -30,6 +30,8 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.*;
+import org.apache.drill.common.exceptions.*;
+import org.apache.drill.exec.exception.*;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.*;

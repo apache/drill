@@ -48,7 +48,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
+  private int allocationSizeInBytes = INITIAL_VALUE_ALLOCATION * ${type.width};
   private int allocationMonitor = 0;
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
@@ -73,8 +73,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   @Override
-  public void setInitialCapacity(int numRecords) {
-    allocationValueCount = numRecords;
+  public void setInitialCapacity(final int valueCount) {
+    final long size = 1L * valueCount * ${type.width};
+    if (size > MAX_ALLOCATION_SIZE) {
+      throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
+    }
+    allocationSizeInBytes = (int)size;
   }
 
   public void allocateNew() {
@@ -84,42 +88,50 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   public boolean allocateNewSafe() {
-    clear();
+    long curAllocationSize = allocationSizeInBytes;
     if (allocationMonitor > 10) {
-      allocationValueCount = Math.max(8, (int) (allocationValueCount / 2));
+      curAllocationSize = Math.max(8, curAllocationSize / 2);
       allocationMonitor = 0;
     } else if (allocationMonitor < -2) {
-      allocationValueCount = (int) (allocationValueCount * 2);
+      curAllocationSize = allocationSizeInBytes * 2L;
       allocationMonitor = 0;
     }
 
-    DrillBuf newBuf = allocator.buffer(allocationValueCount * ${type.width});
-    if(newBuf == null) {
+    try{
+      allocateBytes(curAllocationSize);
+    } catch (DrillRuntimeException ex) {
       return false;
     }
-
-    this.data = newBuf;
-    this.data.readerIndex(0);
     return true;
   }
 
   /**
-   * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
+   * Allocate a new buffer that supports setting at least the provided number of values. May actually be sized bigger
+   * depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
+   *
+   * Note that the maximum number of values a vector can allocate is Integer.MAX_VALUE / value width.
+   *
    * @param valueCount
    * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
    */
-  public void allocateNew(int valueCount) {
-    clear();
+  public void allocateNew(final int valueCount) {
+    allocateBytes(valueCount * ${type.width});
+  }
 
-    DrillBuf newBuf = allocator.buffer(valueCount * ${type.width});
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(
-        String.format("Failure while allocating buffer of %d bytes",valueCount * ${type.width}));
+  private void allocateBytes(final long size) {
+    if (size > MAX_ALLOCATION_SIZE) {
+      throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
 
-    this.data = newBuf;
-    this.data.readerIndex(0);
-    this.allocationValueCount = valueCount;
+    final int curSize = (int)size;
+    clear();
+    final DrillBuf newBuf = allocator.buffer(curSize);
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", size));
+    }
+    data = newBuf;
+    data.readerIndex(0);
+    allocationSizeInBytes = curSize;
   }
 
 /**
@@ -128,12 +140,15 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
  * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
  */
   public void reAlloc() {
-    logger.info("Realloc vector {}. [{}] -> [{}]", field, allocationValueCount * ${type.width}, allocationValueCount * 2 * ${type.width});
-    allocationValueCount *= 2;
-    DrillBuf newBuf = allocator.buffer(allocationValueCount * ${type.width});
+    final long newAllocationSize = allocationSizeInBytes * 2L;
+    if (newAllocationSize > MAX_ALLOCATION_SIZE)  {
+      throw new OversizedAllocationException("Unable to expand the buffer. Max allowed buffer size is reached.");
+    }
+
+    logger.debug("Reallocating vector [{}]. # of bytes: [{}] -> [{}]", field, allocationSizeInBytes, newAllocationSize);
+    final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
     if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(
-      String.format("Failure while reallocating buffer to %d bytes",allocationValueCount * ${type.width}));
+      throw new OutOfMemoryRuntimeException(String.format("Failure while reallocating buffer to %d bytes", newAllocationSize));
     }
 
     newBuf.setBytes(0, data, 0, data.capacity());
@@ -141,6 +156,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     newBuf.writerIndex(data.writerIndex());
     data.release();
     data = newBuf;
+    allocationSizeInBytes = (int)newAllocationSize;
   }
 
   public void zeroVector() {

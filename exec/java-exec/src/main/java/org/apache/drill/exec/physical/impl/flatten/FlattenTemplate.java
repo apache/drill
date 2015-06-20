@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.inject.Named;
 
+import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -32,9 +33,11 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class FlattenTemplate implements Flattener {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenTemplate.class);
+  private static final Logger logger = LoggerFactory.getLogger(FlattenTemplate.class);
 
   private static final int OUTPUT_BATCH_SIZE = 4*1024;
 
@@ -48,14 +51,11 @@ public abstract class FlattenTemplate implements Flattener {
 
   // this allows for groups to be written between batches if we run out of space, for cases where we have finished
   // a batch on the boundary it will be set to 0
-  private int childIndexWithinCurrGroup;
-  // calculating the current group size requires reading the start and end out of the offset vector, this only happens
-  // once and is stored here for faster reference
-  private int currGroupSize;
-  private int childIndex;
+  private int innerValueIndex;
+  private int currentInnerValueIndex;
 
   public FlattenTemplate() throws SchemaChangeException {
-    childIndexWithinCurrGroup = -1;
+    innerValueIndex = -1;
   }
 
   @Override
@@ -69,8 +69,7 @@ public abstract class FlattenTemplate implements Flattener {
   }
 
   @Override
-  public final int flattenRecords(int startIndex, final int recordCount, int firstOutputIndex) {
-    startIndex = childIndex;
+  public final int flattenRecords(final int recordCount, final int firstOutputIndex) {
     switch (svMode) {
       case FOUR_BYTE:
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
@@ -79,35 +78,47 @@ public abstract class FlattenTemplate implements Flattener {
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
 
       case NONE:
-        if (childIndexWithinCurrGroup == -1) {
-          childIndexWithinCurrGroup = 0;
+        if (innerValueIndex == -1) {
+          innerValueIndex = 0;
         }
+        final int initialInnerValueIndex = currentInnerValueIndex;
+        // restore state to local stack
+        int valueIndexLocal = valueIndex;
+        int innerValueIndexLocal = innerValueIndex;
+        int currentInnerValueIndexLocal = currentInnerValueIndex;
         outer: {
+          int outputIndex = firstOutputIndex;
           final int valueCount = accessor.getValueCount();
-          for ( ; valueIndex < valueCount; valueIndex++) {
-            currGroupSize = accessor.getInnerValueCountAt(valueIndex);
-            for ( ; childIndexWithinCurrGroup < currGroupSize; childIndexWithinCurrGroup++) {
-              if (firstOutputIndex == OUTPUT_BATCH_SIZE) {
+          for ( ; valueIndexLocal < valueCount; valueIndexLocal++) {
+            final int innerValueCount = accessor.getInnerValueCountAt(valueIndexLocal);
+            for ( ; innerValueIndexLocal < innerValueCount; innerValueIndexLocal++) {
+              if (outputIndex == OUTPUT_BATCH_SIZE) {
                 break outer;
               }
-              doEval(valueIndex, firstOutputIndex);
-              firstOutputIndex++;
-              childIndex++;
+              try {
+                doEval(valueIndexLocal, outputIndex);
+              } catch (OversizedAllocationException ex) {
+                // unable to flatten due to a soft buffer overflow. split the batch here and resume execution.
+                logger.debug("Reached allocation limit. Splitting the batch at input index: {} - inner index: {} - current completed index: {}",
+                    valueIndexLocal, innerValueIndexLocal, currentInnerValueIndexLocal) ;
+                break outer;
+              }
+              outputIndex++;
+              currentInnerValueIndexLocal++;
             }
-            childIndexWithinCurrGroup = 0;
+            innerValueIndexLocal = 0;
           }
         }
-//        System.out.println(String.format("startIndex %d, recordCount %d, firstOutputIndex: %d, currGroupSize: %d, childIndexWithinCurrGroup: %d, groupIndex: %d", startIndex, recordCount, firstOutputIndex, currGroupSize, childIndexWithinCurrGroup, groupIndex));
-//        try{
-////          Thread.sleep(1000);
-//        }catch(Exception e){
-//
-//        }
-
+        // save state to heap
+        valueIndex = valueIndexLocal;
+        innerValueIndex = innerValueIndexLocal;
+        currentInnerValueIndex = currentInnerValueIndexLocal;
+        // transfer the computed range
+        final int delta = currentInnerValueIndexLocal - initialInnerValueIndex;
         for (TransferPair t : transfers) {
-          t.splitAndTransfer(startIndex, childIndex - startIndex);
+          t.splitAndTransfer(initialInnerValueIndex, delta);
         }
-        return childIndex - startIndex;
+        return delta;
 
       default:
         throw new UnsupportedOperationException();
@@ -133,8 +144,7 @@ public abstract class FlattenTemplate implements Flattener {
   @Override
   public void resetGroupIndex() {
     this.valueIndex = 0;
-    this.currGroupSize = 0;
-    this.childIndex = 0;
+    this.currentInnerValueIndex = 0;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);

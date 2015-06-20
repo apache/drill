@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -43,7 +44,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private final Mutator mutator = new Mutator();
 
   private int valueCount;
-  private int allocationValueCount = INITIAL_VALUE_ALLOCATION;
+  private int allocationSizeInBytes = INITIAL_VALUE_ALLOCATION;
   private int allocationMonitor = 0;
 
   public BitVector(MaterializedField field, BufferAllocator allocator) {
@@ -66,7 +67,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public int getValueCapacity() {
-    return data.capacity() * 8;
+    return (int)Math.min((long)Integer.MAX_VALUE, data.capacity() * 8L);
   }
 
   private int getByteIndex(int index) {
@@ -74,8 +75,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public void setInitialCapacity(int numRecords) {
-    allocationValueCount = numRecords;
+  public void setInitialCapacity(final int valueCount) {
+    allocationSizeInBytes = getSizeFromCount(valueCount);
   }
 
   public void allocateNew() {
@@ -85,24 +86,20 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   public boolean allocateNewSafe() {
-    clear();
+    long curAllocationSize = allocationSizeInBytes;
     if (allocationMonitor > 10) {
-      allocationValueCount = Math.max(8, (int) (allocationValueCount / 2));
+      curAllocationSize = Math.max(8, allocationSizeInBytes / 2);
       allocationMonitor = 0;
     } else if (allocationMonitor < -2) {
-      allocationValueCount = (int) (allocationValueCount * 2);
+      curAllocationSize = allocationSizeInBytes * 2L;
       allocationMonitor = 0;
     }
 
-    clear();
-    int valueSize = getSizeFromCount(allocationValueCount);
-    DrillBuf newBuf = allocator.buffer(valueSize);
-    if (newBuf == null) {
+    try {
+      allocateBytes(curAllocationSize);
+    } catch (OutOfMemoryRuntimeException ex) {
       return false;
     }
-
-    data = newBuf;
-    zeroVector();
     return true;
   }
 
@@ -113,32 +110,46 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    *          The number of values which can be contained within this vector.
    */
   public void allocateNew(int valueCount) {
-    clear();
-    int valueSize = getSizeFromCount(valueCount);
-    DrillBuf newBuf = allocator.buffer(valueSize);
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of d% bytes.", valueSize));
+    final int size = getSizeFromCount(valueCount);
+    allocateBytes(size);
+  }
+
+  private void allocateBytes(final long size) {
+    if (size > MAX_ALLOCATION_SIZE) {
+      throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
 
+    final int curSize = (int)size;
+    clear();
+    final DrillBuf newBuf = allocator.buffer(curSize);
+    if (newBuf == null) {
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of d% bytes.", curSize));
+    }
     data = newBuf;
     zeroVector();
+    allocationSizeInBytes = curSize;
   }
 
   /**
    * Allocate new buffer with double capacity, and copy data into the new buffer. Replace vector's buffer with new buffer, and release old one
    */
   public void reAlloc() {
-    allocationValueCount *= 2;
-    int valueSize = getSizeFromCount(allocationValueCount);
-    DrillBuf newBuf = allocator.buffer(valueSize);
+    final long newAllocationSize = allocationSizeInBytes * 2L;
+    if (newAllocationSize > MAX_ALLOCATION_SIZE) {
+      throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
+    }
+
+    final int curSize = (int)newAllocationSize;
+    final DrillBuf newBuf = allocator.buffer(curSize);
     if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes.", valueSize));
+      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes.", newAllocationSize));
     }
 
     newBuf.setZero(0, newBuf.capacity());
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
+    allocationSizeInBytes =  curSize;
   }
 
   /**
@@ -154,7 +165,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     clear();
     this.valueCount = valueCount;
     int len = getSizeFromCount(valueCount);
-    data = (DrillBuf) buf.slice(0, len);
+    data = buf.slice(0, len);
     data.retain();
     return len;
   }
