@@ -24,6 +24,10 @@ import java.lang.Override;
 <#list ["", "Nullable"] as mode>
 <#assign name = mode + minor.class?cap_first />
 <#assign javaType = (minor.javaType!type.javaType) />
+<#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
+<#-- Class returned by ResultSet.getObject(...): -->
+<#assign jdbcObjectClass = minor.jdbcObjectClass ! friendlyType />
+
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/accessor/${name}Accessor.java" />
 <#include "/@includes/license.ftl" />
 
@@ -60,6 +64,11 @@ public class ${name}Accessor extends AbstractSqlAccessor {
   }
 
  <#if minor.class != "TimeStamp" && minor.class != "Time" && minor.class != "Date">
+  @Override
+  public Class<?> getObjectClass() {
+    return ${jdbcObjectClass}.class;
+  }
+
   public Object getObject(int index) {
    <#if mode == "Nullable">
     if (ac.isNull(index)) {
@@ -161,6 +170,11 @@ public class ${name}Accessor extends AbstractSqlAccessor {
 
   <#if minor.class == "TimeStampTZ">
 
+  @Override
+  public Class<?> getObjectClass() {
+    return Timestamp.class;
+  }
+
   public Object getObject(int index) {
     return getTimestamp(index);
   }
@@ -200,6 +214,11 @@ public class ${name}Accessor extends AbstractSqlAccessor {
   }
   <#elseif minor.class == "Date">
 
+  @Override
+  public Class<?> getObjectClass() {
+    return Date.class;
+  }
+
   public Object getObject(int index) {
    <#if mode == "Nullable">
     if (ac.isNull(index)) {
@@ -223,6 +242,11 @@ public class ${name}Accessor extends AbstractSqlAccessor {
 
   <#elseif minor.class == "TimeStamp">
 
+  @Override
+  public Class<?> getObjectClass() {
+    return Timestamp.class;
+  }
+
   public Object getObject(int index) {
    <#if mode == "Nullable">
     if (ac.isNull(index)) {
@@ -245,6 +269,11 @@ public class ${name}Accessor extends AbstractSqlAccessor {
   }
 
   <#elseif minor.class == "Time">
+
+  @Override
+  public Class<?> getObjectClass() {
+    return Time.class;
+  }
 
   public Object getObject(int index) {
     return getTime(index);

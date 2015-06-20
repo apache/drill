@@ -41,7 +41,7 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
 
   @Override
   public int size() {
-    return (columns.size());
+    return columns.size();
   }
 
   @Override
@@ -49,121 +49,80 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
     return columns.get(index);
   }
 
-  public void updateColumnMetaData(String catalogName, String schemaName, String tableName, BatchSchema schema){
+  /**
+   * Gets AvaticaType carrying both JDBC {@code java.sql.Type.*} type code
+   * and SQL type name for given RPC-level type (from batch schema).
+   */
+  private static AvaticaType getAvaticaType( MajorType rpcDateType ) {
+    final String sqlTypeName = Types.getSqlTypeName( rpcDateType );
+    final int jdbcTypeId = Types.getJdbcTypeCode( rpcDateType );
+    return ColumnMetaData.scalar( jdbcTypeId, sqlTypeName,
+                                  Rep.BOOLEAN /* dummy value, unused */ );
+  }
 
-    columns = new ArrayList<ColumnMetaData>(schema.getFieldCount());
-    for(int i = 0; i < schema.getFieldCount(); i++){
-      MaterializedField f = schema.getColumn(i);
-      MajorType t = f.getType();
-      ColumnMetaData col = new ColumnMetaData( //
-          i, // ordinal
-          false, // autoIncrement
-          true, // caseSensitive
-          false, // searchable
-          false, // currency
-          f.getDataMode() == DataMode.OPTIONAL ? ResultSetMetaData.columnNullable : ResultSetMetaData.columnNoNulls, //nullability
-          !Types.isUnSigned(t), // signed
-          10, // display size.
-          f.getAsSchemaPath().getRootSegment().getPath(), // label
-          f.getAsSchemaPath().getRootSegment().getPath(), // columnname
-          schemaName, // schemaname
-          t.hasPrecision() ? t.getPrecision() : 0, // precision
-          t.hasScale() ? t.getScale() : 0, // scale
-          null, // tablename is null so sqlline doesn't try to retrieve primary keys.
-          catalogName, // catalogname
-          getAvaticaType(t),  // sql type
-          true, // readonly
-          false, // writable
-          false, // definitely writable
-          "none" // column class name
+  public void updateColumnMetaData(String catalogName, String schemaName,
+                                   String tableName, BatchSchema schema,
+                                   List<Class<?>> getObjectClasses ) {
+    final List<ColumnMetaData> newColumns =
+        new ArrayList<ColumnMetaData>(schema.getFieldCount());
+    for (int colOffset = 0; colOffset < schema.getFieldCount(); colOffset++) {
+      final MaterializedField field = schema.getColumn(colOffset);
+      Class<?> objectClass = getObjectClasses.get( colOffset );
+
+      final String columnName = field.getPath().getRootSegment().getPath();
+
+      final MajorType rpcDataType = field.getType();
+      final AvaticaType bundledSqlDataType = getAvaticaType(rpcDataType);
+      final String columnClassName = objectClass.getName();
+
+      final int nullability;
+      switch ( field.getDataMode() ) {
+        case OPTIONAL: nullability = ResultSetMetaData.columnNullable; break;
+        case REQUIRED: nullability = ResultSetMetaData.columnNoNulls;  break;
+        // Should REPEATED still map to columnNoNulls? or to columnNullable?
+        case REPEATED: nullability = ResultSetMetaData.columnNoNulls;  break;
+        default:
+          throw new AssertionError( "Unexpected new DataMode value '"
+                                    + field.getDataMode().name() + "'" );
+      }
+      final boolean isSigned = Types.isJdbcSignedType( rpcDataType );
+
+      // TODO(DRILL-3355):  TODO(DRILL-3356):  When string lengths, precisions,
+      // interval kinds, etc., are available from RPC-level data, implement:
+      // - precision for ResultSetMetadata.getPrecision(...) (like
+      //   getColumns()'s COLUMN_SIZE)
+      // - scale for getScale(...), and
+      // - and displaySize for getColumnDisplaySize(...).
+      final int precision =
+          rpcDataType.hasPrecision() ? rpcDataType.getPrecision() : 0;
+      final int scale = rpcDataType.hasScale() ? rpcDataType.getScale() : 0;
+      final int displaySize = 10;
+
+      ColumnMetaData col = new ColumnMetaData(
+          colOffset,    // (zero-based ordinal (for Java arrays/lists).)
+          false,        /* autoIncrement */
+          false,        /* caseSensitive */
+          true,         /* searchable */
+          false,        /* currency */
+          nullability,
+          isSigned,
+          displaySize,
+          columnName,   /* label */
+          columnName,   /* columnName */
+          schemaName,
+          precision,
+          scale,
+          tableName,
+          catalogName,
+          bundledSqlDataType,
+          true,         /* readOnly */
+          false,        /* writable */
+          false,        /* definitelyWritable */
+          columnClassName
          );
-      columns.add(col);
+      newColumns.add(col);
     }
-  }
-
-  private static AvaticaType getAvaticaType(MajorType t){
-    final int jdbcTypeId = Types.getJdbcType(t);
-    return ColumnMetaData.scalar(jdbcTypeId, getJdbcTypeName(jdbcTypeId), Rep.BOOLEAN /* dummy value, unused */);
-  }
-
-  private static String getJdbcTypeName(int type) {
-    switch (type) {
-    case java.sql.Types.BIT:
-        return "BIT";
-    case java.sql.Types.TINYINT:
-        return "TINYINT";
-    case java.sql.Types.SMALLINT:
-        return "SMALLINT";
-    case java.sql.Types.INTEGER:
-        return "INTEGER";
-    case java.sql.Types.BIGINT:
-        return "BIGINT";
-    case java.sql.Types.FLOAT:
-        return "FLOAT";
-    case java.sql.Types.REAL:
-        return "REAL";
-    case java.sql.Types.DOUBLE:
-        return "DOUBLE";
-    case java.sql.Types.NUMERIC:
-        return "NUMERIC";
-    case java.sql.Types.DECIMAL:
-        return "DECIMAL";
-    case java.sql.Types.CHAR:
-        return "CHAR";
-    case java.sql.Types.VARCHAR:
-        return "VARCHAR";
-    case java.sql.Types.LONGVARCHAR:
-        return "LONGVARCHAR";
-    case java.sql.Types.DATE:
-        return "DATE";
-    case java.sql.Types.TIME:
-        return "TIME";
-    case java.sql.Types.TIMESTAMP:
-        return "TIMESTAMP";
-    case java.sql.Types.BINARY:
-        return "BINARY";
-    case java.sql.Types.VARBINARY:
-        return "VARBINARY";
-    case java.sql.Types.LONGVARBINARY:
-        return "LONGVARBINARY";
-    case java.sql.Types.NULL:
-        return "NULL";
-    case java.sql.Types.OTHER:
-        return "OTHER";
-    case java.sql.Types.JAVA_OBJECT:
-        return "JAVA_OBJECT";
-    case java.sql.Types.DISTINCT:
-        return "DISTINCT";
-    case java.sql.Types.STRUCT:
-        return "STRUCT";
-    case java.sql.Types.ARRAY:
-        return "ARRAY";
-    case java.sql.Types.BLOB:
-        return "BLOB";
-    case java.sql.Types.CLOB:
-        return "CLOB";
-    case java.sql.Types.REF:
-        return "REF";
-    case java.sql.Types.DATALINK:
-        return "DATALINK";
-    case java.sql.Types.BOOLEAN:
-        return "BOOLEAN";
-    case java.sql.Types.ROWID:
-        return "ROWID";
-    case java.sql.Types.NCHAR:
-        return "NCHAR";
-    case java.sql.Types.NVARCHAR:
-        return "NVARCHAR";
-    case java.sql.Types.LONGNVARCHAR:
-        return "LONGNVARCHAR";
-    case java.sql.Types.NCLOB:
-        return "NCLOB";
-    case java.sql.Types.SQLXML:
-        return "SQLXML";
-    default:
-        logger.error( "Unexpected java.sql.Types value {}", type );
-        return "unknown java.sql.Types value " + type;
-    }
+    columns = newColumns;
   }
 
   @Override

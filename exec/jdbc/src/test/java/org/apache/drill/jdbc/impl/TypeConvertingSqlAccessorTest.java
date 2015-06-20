@@ -59,6 +59,11 @@ public class TypeConvertingSqlAccessorTest {
     }
 
     @Override
+    public Class<?> getObjectClass() {
+      throw new RuntimeException( "Unexpected use of getObjectClass(...)" );
+    }
+
+    @Override
     public MajorType getType() {
       return type;
     }

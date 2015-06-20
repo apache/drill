@@ -43,7 +43,7 @@ import static java.sql.ResultSetMetaData.columnNullableUnknown;
 import java.sql.SQLException;
 import java.sql.Types;
 
-// NOTE: TempInformationSchemaColumnsTest and DatabaseMetaDataGetColumnsTest
+// NOTE: TestInformationSchemaColumns and DatabaseMetaDataGetColumnsTest
 // have identical sections.  (Cross-maintain them for now; factor out later.)
 
 // TODO:  MOVE notes to implementation (have this not (just) in test).
@@ -94,7 +94,6 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   /** Overall (connection-level) metadata. */
   private static DatabaseMetaData dbMetadata;
-
 
   /** getColumns result metadata.  For checking columns themselves (not cell
    *  values or row order). */
@@ -229,7 +228,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertTrue( util.next() );
     assertTrue( "Error setting schema for test: " + util.getString( 2 ),
                 util.getBoolean( 1 ) );
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2470): Adjust when TINYINT is implemented:
+    // TODO(DRILL-2470): Adjust when SMALLINT is implemented:
+    // TODO(DRILL-2683): Adjust when REAL is implemented:
     util = stmt.executeQuery(
         ""
         +   "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS SELECT "
@@ -286,13 +287,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
     mdrOptBOOLEAN        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBOOLEAN" );
 
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2470): Uncomment when TINYINT is implemented:
     //mdrReqTINYINT        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTINYINT" );
+    // TODO(DRILL-2470): Uncomment when SMALLINT is implemented:
     //mdrOptSMALLINT       = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptSMALLINT" );
     mdrReqINTEGER        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTEGER" );
     mdrOptBIGINT         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBIGINT" );
 
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2683): Uncomment when REAL is implemented:
     //mdrOptREAL           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptREAL" );
     mdrOptFLOAT          = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptFLOAT" );
     mdrReqDOUBLE         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDOUBLE" );
@@ -399,7 +401,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_CAT_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 1 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 1 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -407,12 +410,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 1 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_TABLE_CAT_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 1 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -442,7 +445,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TABLE_SCHEM_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "TABLE_SCHEM" ),
                 equalTo( "hive_test.default" ) );
@@ -457,7 +460,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_SCHEM_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 2 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 2 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -465,18 +469,17 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 2 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_TABLE_SCHEM_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 2 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
   public void test_TABLE_SCHEM_hasRightNullability() throws SQLException {
-    // To-do:  CHECK:  Why columnNullable, when seemingly known nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 rowsMetadata.isNullable( 2 ), equalTo( columnNoNulls ) );
   }
@@ -507,7 +510,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_NAME_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 3 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 3 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -515,19 +519,17 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 3 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_TABLE_NAME_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 3 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
   public void test_TABLE_NAME_hasRightNullability() throws SQLException {
-    // To-do:  CHECK:  Why columnNullable, when seemingly known nullable?
-    // (Why not like TABLE_CAT, which does have columnNoNulls?)
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 rowsMetadata.isNullable( 3 ), equalTo( columnNoNulls ) );
   }
@@ -552,7 +554,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_NAME_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "COLUMN_NAME" ), equalTo( "listtype" ) );
   }
@@ -566,7 +568,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_NAME_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 4 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 4 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -574,19 +577,17 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 4 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_COLUMN_NAME_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 4 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
   public void test_COLUMN_NAME_hasRightNullability() throws SQLException {
-    // To-do:  CHECK:  Why columnNullable, when seemingly known nullable?
-    // (Why not like TABLE_CAT, which does have columnNoNulls?)
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 rowsMetadata.isNullable( 4 ), equalTo( columnNoNulls ) );
   }
@@ -608,13 +609,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "DATA_TYPE" ), equalTo( Types.BOOLEAN ) );
   }
 
-  @Ignore( "until tinyint is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "DATA_TYPE" ), equalTo( Types.TINYINT ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "DATA_TYPE" ), equalTo( Types.SMALLINT ) );
@@ -630,7 +631,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "DATA_TYPE" ), equalTo( Types.BIGINT ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "DATA_TYPE" ), equalTo( Types.REAL ) );
@@ -707,13 +708,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "DATA_TYPE" ), equalTo( Types.ARRAY ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( "java.sql.Types.* type code",
                 getIntOrNull( mdrReqMAP, "DATA_TYPE" ), equalTo( Types.OTHER ) );
@@ -723,13 +724,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "DATA_TYPE" ), equalTo( Types.STRUCT ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( "java.sql.Types.* type code",
                 getIntOrNull( mdrUnkUnion, "DATA_TYPE" ), equalTo( Types.OTHER ) );
@@ -753,10 +754,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 5 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_DATA_TYPE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 5 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -785,13 +784,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "TYPE_NAME" ), equalTo( "BOOLEAN" ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "TYPE_NAME" ), equalTo( "TINYINT" ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "TYPE_NAME" ), equalTo( "SMALLINT" ) );
@@ -807,7 +806,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "TYPE_NAME" ), equalTo( "BIGINT" ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "TYPE_NAME" ), equalTo( "REAL" ) );
@@ -830,12 +829,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrReqVARCHAR_10() throws SQLException {
-    assertThat( mdrReqVARCHAR_10.getString( "TYPE_NAME" ), equalTo( "CHARACTER VARYING" ) );
+    assertThat( mdrReqVARCHAR_10.getString( "TYPE_NAME" ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptVARCHAR() throws SQLException {
-    assertThat( mdrOptVARCHAR.getString( "TYPE_NAME" ), equalTo( "CHARACTER VARYING" ) );
+    assertThat( mdrOptVARCHAR.getString( "TYPE_NAME" ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -845,12 +846,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptVARBINARY_16() throws SQLException {
-    assertThat( mdrOptVARBINARY_16.getString( "TYPE_NAME" ), equalTo( "BINARY VARYING" ) );
+    assertThat( mdrOptVARBINARY_16.getString( "TYPE_NAME" ),
+                equalTo( "BINARY VARYING" ) );
   }
 
   @Test
   public void test_TYPE_NAME_hasRightValue_mdrOptBINARY_1048576CHECK() throws SQLException {
-    assertThat( mdrOptBINARY_1048576.getString( "TYPE_NAME" ), equalTo( "BINARY VARYING" ) );
+    assertThat( mdrOptBINARY_1048576.getString( "TYPE_NAME" ),
+                equalTo( "BINARY VARYING" ) );
   }
 
   @Test
@@ -886,25 +889,25 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TYPE_NAME_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "TYPE_NAME" ), equalTo( "ARRAY" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TYPE_NAME_hasRightValue_tbdMAP() throws SQLException {
     assertThat( mdrReqMAP.getString( "TYPE_NAME" ), equalTo( "MAP" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TYPE_NAME_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( mdrUnkSTRUCT.getString( "TYPE_NAME" ), equalTo( "STRUCT" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TYPE_NAME_hasRightValue_tbdUnion() throws SQLException {
     assertThat( mdrUnkUnion.getString( "TYPE_NAME" ), equalTo( "OTHER" ) );
     fail( "Expected value is not resolved yet." );
@@ -917,7 +920,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TYPE_NAME_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 6 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 6 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -925,18 +929,17 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 6 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_TYPE_NAME_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 6 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
   public void test_TYPE_NAME_hasRightNullability() throws SQLException {
-    // To-do:  CHECK:  Why columnNullable, when seemingly known nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 rowsMetadata.isNullable( 6 ), equalTo( columnNoNulls ) );
   }
@@ -968,14 +971,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "COLUMN_SIZE" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqTINYINT() throws SQLException {
     // 8 bits
     assertThat( getIntOrNull( mdrReqTINYINT, "COLUMN_SIZE" ), equalTo( 8 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     // 16 bits
@@ -994,7 +997,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "COLUMN_SIZE" ), equalTo( 64 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptREAL() throws SQLException {
     // 24 bits of precision
@@ -1054,7 +1057,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 8  /* HH:MM:SS */  ) );
   }
 
-  @Ignore( "until datetime precision is implemented" )
+  @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptTIME_7() throws SQLException {
     assertThat( getIntOrNull( mdrOptTIME_7, "COLUMN_SIZE" ),
@@ -1110,8 +1113,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 12 ) );  // "P123DT12H12M"
   }
 
-
-  @Ignore( "until fixed:  fractional secs. prec. gets start unit prec. (DRILL-3244) " )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_2D_S5, "COLUMN_SIZE" ),
@@ -1136,7 +1138,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 7 ) );  // "PT1H12M"
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3H_S1, "COLUMN_SIZE" ),
@@ -1174,7 +1176,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 equalTo( 13 ) );  // "PT123.123456S"
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_3S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S1, "COLUMN_SIZE" ),
@@ -1189,25 +1191,25 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_SIZE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "COLUMN_SIZE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_SIZE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "COLUMN_SIZE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_SIZE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "COLUMN_SIZE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_SIZE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "COLUMN_SIZE" ), nullValue() );
   }
@@ -1227,10 +1229,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 7 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_COLUMN_SIZE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 7 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -1281,13 +1281,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "DECIMAL_DIGITS" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
@@ -1303,7 +1303,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "DECIMAL_DIGITS" ), equalTo( 7 ) );
@@ -1362,7 +1362,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqTIME, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until datetime precision is implemented" )
+  @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptTIME_7() throws SQLException {
     assertThat( getIntOrNull( mdrOptTIME_7, "DECIMAL_DIGITS" ), equalTo( 7 ) );
@@ -1374,7 +1374,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrOptTIME_7, "DECIMAL_DIGITS" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until datetime precision is implemented" )
+  @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrOptTIMESTAMP() throws SQLException {
     // 6 is default datetime precision for TIMESTAMP.
@@ -1424,7 +1424,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_3D_Mi, "DECIMAL_DIGITS" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_2D_S5, "DECIMAL_DIGITS" ), equalTo( 5 ) );
@@ -1454,7 +1454,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_1H_Mi, "DECIMAL_DIGITS" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqINTERVAL_3H_S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3H_S1, "DECIMAL_DIGITS" ), equalTo( 1 ) );
@@ -1495,7 +1495,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S, "DECIMAL_DIGITS" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqINTERVAL_3S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S, "DECIMAL_DIGITS" ), equalTo( 1 ) );
@@ -1508,25 +1508,25 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DECIMAL_DIGITS_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "DECIMAL_DIGITS" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DECIMAL_DIGITS_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "DECIMAL_DIGITS" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DECIMAL_DIGITS_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "DECIMAL_DIGITS" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DECIMAL_DIGITS_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "DECIMAL_DIGITS" ), nullValue() );
   }
@@ -1546,10 +1546,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 9 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_DECIMAL_DIGITS_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 9 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -1581,13 +1579,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "NUM_PREC_RADIX" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
@@ -1603,7 +1601,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "NUM_PREC_RADIX" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "NUM_PREC_RADIX" ), equalTo( 2 ) );
@@ -1680,25 +1678,25 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUM_PREC_RADIX_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "NUM_PREC_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUM_PREC_RADIX_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "NUM_PREC_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUM_PREC_RADIX_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NUM_PREC_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUM_PREC_RADIX_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "NUM_PREC_RADIX" ), nullValue() );
   }
@@ -1718,10 +1716,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 10 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_NUM_PREC_RADIX_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 10 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -1754,15 +1750,14 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrOptBOOLEAN, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqTINYINT() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqTINYINT, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -1775,7 +1770,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
                 getIntOrNull( mdrOptBIGINT, "NULLABLE" ), equalTo( columnNullable ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -1784,7 +1779,6 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrOptFLOAT() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrOptFLOAT, "NULLABLE" ), equalTo( columnNullable ) );
   }
@@ -1797,21 +1791,18 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqINTEGER() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqINTEGER, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqDECIMAL_5_3() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqDECIMAL_5_3, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqVARCHAR_10() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqVARCHAR_10, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
@@ -1824,7 +1815,6 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqCHAR_5() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqCHAR_5, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
@@ -1843,7 +1833,6 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_NULLABLE_hasRightValue_mdrReqDATE() throws SQLException {
-    // To-do:  CHECK:  Why columnNullableUnknown, when seemingly known non-nullable?
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrReqDATE, "NULLABLE" ), equalTo( columnNoNulls ) );
   }
@@ -1879,7 +1868,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NULLABLE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "NULLABLE" ), equalTo( columnNoNulls ) );
     // To-do:  Determine which.
@@ -1889,7 +1878,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NULLABLE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "NULLABLE" ), equalTo( columnNoNulls ) );
     // To-do:  Determine which.
@@ -1898,8 +1887,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqMAP, "NULLABLE" ), equalTo( columnNullableUnknown ) );
   }
 
-  @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NULLABLE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NULLABLE" ), equalTo( columnNullable ) );
     // To-do:  Determine which.
@@ -1908,8 +1897,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NULLABLE" ), equalTo( columnNullableUnknown ) );
   }
 
-  @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
   @Test
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NULLABLE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 getIntOrNull( mdrUnkUnion, "NULLABLE" ), equalTo( columnNullable ) );
@@ -1936,10 +1925,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 11 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_NULLABLE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 11 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -1974,7 +1961,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_REMARKS_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 12 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 12 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -1982,12 +1970,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 12 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_REMARKS_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 12 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2022,7 +2010,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_DEF_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 13 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 13 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2030,12 +2019,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 13 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_COLUMN_DEF_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 13 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2046,7 +2035,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
 
   ////////////////////////////////////////////////////////////
-  // #14: SQL_DATA_??TYPE:
+  // #14: SQL_DATA_TYPE:
   // - JDBC:  "14. ... int => unused"
   // - Drill:
   // - (Meta): INTEGER(?);
@@ -2075,10 +2064,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 14 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SQL_DATA_TYPE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 14 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -2114,10 +2101,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 15 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SQL_DATETIME_SUB_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 15 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -2141,13 +2126,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "CHAR_OCTET_LENGTH" ), nullValue() );
@@ -2158,7 +2143,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTEGER, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightValue_mdrOptBIGINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "CHAR_OCTET_LENGTH" ), nullValue() );
@@ -2241,25 +2226,25 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHAR_OCTET_LENGTH_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHAR_OCTET_LENGTH_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHAR_OCTET_LENGTH_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHAR_OCTET_LENGTH_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "CHAR_OCTET_LENGTH" ), nullValue() );
   }
@@ -2279,10 +2264,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 16 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_CHAR_OCTET_LENGTH_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 16 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -2310,13 +2293,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "ORDINAL_POSITION" ), equalTo( 1 ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "ORDINAL_POSITION" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "ORDINAL_POSITION" ), equalTo( 3 ) );
@@ -2332,7 +2315,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "ORDINAL_POSITION" ), equalTo( 5 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "ORDINAL_POSITION" ), equalTo( 6 ) );
@@ -2349,7 +2332,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+    @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_ORDINAL_POSITION_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "ORDINAL_POSITION" ), equalTo( 14 ) );
   }
@@ -2369,10 +2352,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 17 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_ORDINAL_POSITION_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 17 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -2403,13 +2384,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
@@ -2425,7 +2406,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
@@ -2502,7 +2483,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
     // To-do:  Determine which.
@@ -2512,7 +2493,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( mdrReqMAP.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
     // To-do:  Determine which.
@@ -2522,7 +2503,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( mdrUnkSTRUCT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
     // To-do:  Determine which.
@@ -2532,7 +2513,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( mdrUnkUnion.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
     // To-do:  Determine which.
@@ -2548,7 +2529,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_NULLABLE_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 18 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 18 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2556,12 +2538,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 18 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_IS_NULLABLE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 18 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -2597,7 +2579,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_CATALOG_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 19 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 19 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2605,12 +2588,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 19 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SCOPE_CATALOG_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 19 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2645,7 +2628,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_SCHEMA_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 20 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 20 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2653,12 +2637,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 20 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SCOPE_SCHEMA_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 20 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2693,7 +2677,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_TABLE_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 21 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 21 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2701,12 +2686,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 21 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SCOPE_TABLE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 21 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2753,10 +2738,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 22 ), equalTo( Types.INTEGER ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_SOURCE_DATA_TYPE_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.Integer" is correct:
     assertThat( rowsMetadata.getColumnClassName( 22 ),
                 equalTo( Integer.class.getName() ) );
   }
@@ -2784,7 +2767,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_AUTOINCREMENT_hasRightValue_mdrOptBOOLEAN() throws SQLException {
-    // TODO:  Can is be 'NO' (not auto-increment) rather than '' (unknown)?
+    // TODO:  Can it be 'NO' (not auto-increment) rather than '' (unknown)?
     assertThat( mdrOptBOOLEAN.getString( "IS_AUTOINCREMENT" ), equalTo( "" ) );
   }
 
@@ -2797,7 +2780,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_AUTOINCREMENT_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 23 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 23 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2805,12 +2789,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 23 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_IS_AUTOINCREMENT_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 23 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
@@ -2836,7 +2820,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_GENERATEDCOLUMN_hasRightValue_mdrOptBOOLEAN() throws SQLException {
-    // TODO:  Can is be 'NO' (not auto-increment) rather than '' (unknown)?
+    // TODO:  Can it be 'NO' (not auto-increment) rather than '' (unknown)?
     assertThat( mdrOptBOOLEAN.getString( "IS_GENERATEDCOLUMN" ), equalTo( "" ) );
   }
 
@@ -2849,7 +2833,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_GENERATEDCOLUMN_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 24 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 24 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2857,12 +2842,12 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
     assertThat( rowsMetadata.getColumnType( 24 ), equalTo( Types.VARCHAR ) );
   }
 
-  @Ignore( "until fixed (\"none\" -> right class name) (DRILL-2137)" )
   @Test
   public void test_IS_GENERATEDCOLUMN_hasRightClass() throws SQLException {
-    // TODO:  Confirm that this "java.lang.String" is correct:
+    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 24 ),
-                equalTo( String.class.getName() ) );
+                anyOf( equalTo( String.class.getName() ),
+                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
   }
 
   @Test
