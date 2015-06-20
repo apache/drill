@@ -10,7 +10,7 @@ We welcome contributions to the project. If you're interested in contributing, t
 
 | Name | Alias (email is &lt;alias&gt;@apache.org) |
 |------|-------|
-| **Jacques Nadeau (PMC Chair and VP Apache Drill)** | **jacques** |
+| Jacques Nadeau | jacques |
 | Tomer Shiran | tshiran |
 | Ted Dunning | tdunning |
 | Jason Frantz | jason |
