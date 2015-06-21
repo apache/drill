@@ -25,8 +25,9 @@ import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 
 public class DrillHiveViewTable extends DrillHiveTable implements DrillViewInfoProvider {
 
-  public DrillHiveViewTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
-    super(storageEngineName, plugin, readEntry);
+  public DrillHiveViewTable(String storageEngineName, HiveStoragePlugin plugin, String userName,
+      HiveReadEntry readEntry) {
+    super(storageEngineName, plugin, userName, readEntry);
   }
 
   @Override

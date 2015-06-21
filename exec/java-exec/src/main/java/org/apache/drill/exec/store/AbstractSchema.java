@@ -38,7 +38,7 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer {
+public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
   protected final List<String> schemaPath;
@@ -186,5 +186,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
     return true;
   }
 
-
+  @Override
+  public void close() throws Exception {
+    // no-op: default implementation for most implementations.
+  }
 }

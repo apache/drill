@@ -18,13 +18,8 @@
 package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,8 +39,6 @@ import static org.junit.Assert.assertThat;
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW and CREATE TABLE
  */
 public class TestImpersonationMetadata extends BaseTestImpersonation {
-  private static final String MINIDFS_STORAGE_PLUGIN_NAME = "minidfs" + TestImpersonationMetadata.class.getSimpleName();
-
   private static final String user1 = "drillTestUser1";
   private static final String user2 = "drillTestUser2";
 
@@ -58,50 +51,39 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   }
 
   @BeforeClass
-  public static void addMiniDfsBasedStorage() throws Exception {
+  public static void setup() throws Exception {
     startMiniDfsCluster(TestImpersonationMetadata.class.getSimpleName());
-
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
-
-    final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
-    miniDfsPluginConfig.connection = conf.get(FileSystem.FS_DEFAULT_NAME_KEY);
-
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap(lfsPluginConfig.workspaces);
-
-    createTestWorkspaces(workspaces);
-
-    miniDfsPluginConfig.workspaces = workspaces;
-    miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
-    miniDfsPluginConfig.setEnabled(true);
-
-    pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
+    startDrillCluster(true);
+    addMiniDfsBasedStorage(createTestWorkspaces());
   }
 
-  private static void createTestWorkspaces(Map<String, WorkspaceConfig> workspaces) throws Exception {
+  private static Map<String , WorkspaceConfig> createTestWorkspaces() throws Exception {
     // Create "/tmp" folder and set permissions to "777"
-    final FileSystem fs = dfsCluster.getFileSystem();
     final Path tmpPath = new Path("/tmp");
     fs.delete(tmpPath, true);
     FileSystem.mkdirs(fs, tmpPath, new FsPermission((short)0777));
 
+    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
+
     // Create /drillTestGrp0_700 directory with permissions 700 (owned by user running the tests)
-    createAndAddWorkspace(fs, "drillTestGrp0_700", "/drillTestGrp0_700", (short)0700, processUser, group0, workspaces);
+    createAndAddWorkspace("drillTestGrp0_700", "/drillTestGrp0_700", (short)0700, processUser, group0, workspaces);
 
     // Create /drillTestGrp0_750 directory with permissions 750 (owned by user running the tests)
-    createAndAddWorkspace(fs, "drillTestGrp0_750", "/drillTestGrp0_750", (short)0750, processUser, group0, workspaces);
+    createAndAddWorkspace("drillTestGrp0_750", "/drillTestGrp0_750", (short)0750, processUser, group0, workspaces);
 
     // Create /drillTestGrp0_755 directory with permissions 755 (owned by user running the tests)
-    createAndAddWorkspace(fs, "drillTestGrp0_755", "/drillTestGrp0_755", (short)0755, processUser, group0, workspaces);
+    createAndAddWorkspace("drillTestGrp0_755", "/drillTestGrp0_755", (short)0755, processUser, group0, workspaces);
 
     // Create /drillTestGrp0_770 directory with permissions 770 (owned by user running the tests)
-    createAndAddWorkspace(fs, "drillTestGrp0_770", "/drillTestGrp0_770", (short)0770, processUser, group0, workspaces);
+    createAndAddWorkspace("drillTestGrp0_770", "/drillTestGrp0_770", (short)0770, processUser, group0, workspaces);
 
     // Create /drillTestGrp0_777 directory with permissions 777 (owned by user running the tests)
-    createAndAddWorkspace(fs, "drillTestGrp0_777", "/drillTestGrp0_777", (short)0777, processUser, group0, workspaces);
+    createAndAddWorkspace("drillTestGrp0_777", "/drillTestGrp0_777", (short)0777, processUser, group0, workspaces);
 
     // Create /drillTestGrp1_700 directory with permissions 700 (owned by user1)
-    createAndAddWorkspace(fs, "drillTestGrp1_700", "/drillTestGrp1_700", (short)0700, user1, group1, workspaces);
+    createAndAddWorkspace("drillTestGrp1_700", "/drillTestGrp1_700", (short)0700, user1, group1, workspaces);
+
+    return workspaces;
   }
 
   @Test // DRILL-3037
@@ -278,7 +260,6 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     } finally {
       // There is no drop table, we need to delete the table directory through FileSystem object
-      final FileSystem fs = dfsCluster.getFileSystem();
       final Path tablePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName);
       if (fs.exists(tablePath)) {
         fs.delete(tablePath, true);

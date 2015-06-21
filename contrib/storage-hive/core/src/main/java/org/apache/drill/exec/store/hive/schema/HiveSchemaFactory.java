@@ -18,187 +18,105 @@
 package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
-import org.apache.drill.exec.store.hive.HiveTable;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.thrift.TException;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class HiveSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
 
-  private static final String DATABASES = "databases";
-
-  private final HiveMetaStoreClient mClient;
-  private LoadingCache<String, List<String>> databases;
-  private LoadingCache<String, List<String>> tableNameLoader;
-  private LoadingCache<String, LoadingCache<String, HiveReadEntry>> tableLoaders;
-  private HiveStoragePlugin plugin;
-  private final String schemaName;
+  private final DrillHiveMetaStoreClient globalMetastoreClient;
+  private final HiveStoragePlugin plugin;
   private final Map<String, String> hiveConfigOverride;
+  private final String schemaName;
+  private final HiveConf hiveConf;
+  private final boolean isDrillImpersonationEnabled;
+  private final boolean isHS2DoAsSet;
 
   public HiveSchemaFactory(HiveStoragePlugin plugin, String name, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
 
     this.hiveConfigOverride = hiveConfigOverride;
-    HiveConf hiveConf = new HiveConf();
+    hiveConf = new HiveConf();
     if (hiveConfigOverride != null) {
       for (Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-        hiveConf.set(entry.getKey(), entry.getValue());
+        final String property = entry.getKey();
+        final String value = entry.getValue();
+        hiveConf.set(property, value);
+        logger.trace("HiveConfig Override {}={}", property, value);
       }
     }
 
-    try {
-      this.mClient = new HiveMetaStoreClient(hiveConf);
-    } catch (MetaException e) {
-      throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
-    }
+    isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
+    isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
-    databases = CacheBuilder //
-        .newBuilder() //
-        .expireAfterAccess(1, TimeUnit.MINUTES) //
-        .build(new DatabaseLoader());
-
-    tableNameLoader = CacheBuilder //
-        .newBuilder() //
-        .expireAfterAccess(1, TimeUnit.MINUTES) //
-        .build(new TableNameLoader());
-
-    tableLoaders = CacheBuilder //
-        .newBuilder() //
-        .expireAfterAccess(4, TimeUnit.HOURS) //
-        .maximumSize(20) //
-        .build(new TableLoaderLoader());
-  }
-
-  private class TableNameLoader extends CacheLoader<String, List<String>> {
-
-    @Override
-    public List<String> load(String dbName) throws Exception {
+    if (!isDrillImpersonationEnabled) {
       try {
-        return mClient.getAllTables(dbName);
-      } catch (TException e) {
-        logger.warn("Failure while attempting to get hive tables", e);
-        mClient.reconnect();
-        return mClient.getAllTables(dbName);
+        globalMetastoreClient = DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
+      } catch (MetaException e) {
+        throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
       }
-    }
-
-  }
-
-  private class DatabaseLoader extends CacheLoader<String, List<String>> {
-
-    @Override
-    public List<String> load(String key) throws Exception {
-      if (!DATABASES.equals(key)) {
-        throw new UnsupportedOperationException();
-      }
-      try {
-        return mClient.getAllDatabases();
-      } catch (TException e) {
-        logger.warn("Failure while attempting to get hive tables", e);
-        mClient.reconnect();
-        return mClient.getAllDatabases();
-      }
+    } else {
+      globalMetastoreClient = null;
     }
   }
 
-  private class TableLoaderLoader extends CacheLoader<String, LoadingCache<String, HiveReadEntry>> {
-
-    @Override
-    public LoadingCache<String, HiveReadEntry> load(String key) throws Exception {
-      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build(new TableLoader(key));
-    }
-
-  }
-
-  private class TableLoader extends CacheLoader<String, HiveReadEntry> {
-
-    private final String dbName;
-
-    public TableLoader(String dbName) {
-      super();
-      this.dbName = dbName;
-    }
-
-    @Override
-    public HiveReadEntry load(String key) throws Exception {
-      Table t = null;
-      try {
-        t = mClient.getTable(dbName, key);
-      } catch (TException e) {
-        mClient.reconnect();
-        t = mClient.getTable(dbName, key);
-      }
-
-      if (t == null) {
-        throw new UnknownTableException(String.format("Unable to find table '%s'.", key));
-      }
-
-      List<Partition> partitions = null;
-      try {
-        partitions = mClient.listPartitions(dbName, key, Short.MAX_VALUE);
-      } catch (TException e) {
-        mClient.reconnect();
-        partitions = mClient.listPartitions(dbName, key, Short.MAX_VALUE);
-      }
-
-      List<HiveTable.HivePartition> hivePartitions = Lists.newArrayList();
-      for (Partition part : partitions) {
-        hivePartitions.add(new HiveTable.HivePartition(part));
-      }
-
-      if (hivePartitions.size() == 0) {
-        hivePartitions = null;
-      }
-      return new HiveReadEntry(new HiveTable(t), hivePartitions, hiveConfigOverride);
-
-    }
-
+  /**
+   * Does Drill needs to impersonate as user connected to Drill when reading data from Hive warehouse location?
+   * @return True when both Drill impersonation and Hive impersonation are enabled.
+   */
+  private boolean needToImpersonateReadingData() {
+    return isDrillImpersonationEnabled && isHS2DoAsSet;
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    HiveSchema schema = new HiveSchema(schemaName);
+    DrillHiveMetaStoreClient mClientForSchemaTree = globalMetastoreClient;
+    if (isDrillImpersonationEnabled) {
+      try {
+        mClientForSchemaTree = DrillHiveMetaStoreClient.createClientWithAuthz(hiveConf, hiveConfigOverride,
+            schemaConfig.getUserName(), schemaConfig.getIgnoreAuthErrors());
+      } catch (final TException e) {
+        throw new IOException("Failure setting up Hive metastore client.", e);
+      }
+    }
+    HiveSchema schema = new HiveSchema(schemaConfig, mClientForSchemaTree, schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
   }
 
   class HiveSchema extends AbstractSchema {
 
+    private final SchemaConfig schemaConfig;
+    private final DrillHiveMetaStoreClient mClient;
     private HiveDatabaseSchema defaultSchema;
 
-    public HiveSchema(String name) {
+    public HiveSchema(final SchemaConfig schemaConfig, final DrillHiveMetaStoreClient mClient, final String name) {
       super(ImmutableList.<String>of(), name);
+      this.schemaConfig = schemaConfig;
+      this.mClient = mClient;
       getSubSchema("default");
     }
 
@@ -206,24 +124,23 @@ public class HiveSchemaFactory implements SchemaFactory {
     public AbstractSchema getSubSchema(String name) {
       List<String> tables;
       try {
-        List<String> dbs = databases.get(DATABASES);
+        List<String> dbs = mClient.getDatabases();
         if (!dbs.contains(name)) {
-          logger.debug(String.format("Database '%s' doesn't exists in Hive storage '%s'", name, schemaName));
+          logger.debug("Database '{}' doesn't exists in Hive storage '{}'", name, schemaName);
           return null;
         }
-        tables = tableNameLoader.get(name);
+        tables = mClient.getTableNames(name);
         HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, name);
         if (name.equals("default")) {
           this.defaultSchema = schema;
         }
         return schema;
-      } catch (ExecutionException e) {
+      } catch (final TException e) {
         logger.warn("Failure while attempting to access HiveDatabase '{}'.", name, e.getCause());
         return null;
       }
 
     }
-
 
     void setHolder(SchemaPlus plusOfThis) {
       for (String s : getSubSchemaNames()) {
@@ -239,9 +156,9 @@ public class HiveSchemaFactory implements SchemaFactory {
     @Override
     public Set<String> getSubSchemaNames() {
       try {
-        List<String> dbs = databases.get(DATABASES);
+        List<String> dbs = mClient.getDatabases();
         return Sets.newHashSet(dbs);
-      } catch (ExecutionException e) {
+      } catch (final TException e) {
         logger.warn("Failure while getting Hive database list.", e);
       }
       return super.getSubSchemaNames();
@@ -263,25 +180,19 @@ public class HiveSchemaFactory implements SchemaFactory {
       return defaultSchema.getTableNames();
     }
 
-    List<String> getTableNames(String dbName) {
-      try{
-        return tableNameLoader.get(dbName);
-      } catch (ExecutionException e) {
-        logger.warn("Failure while loading table names for database '{}'.", dbName, e.getCause());
-        return Collections.emptyList();
-      }
-    }
-
     DrillTable getDrillTable(String dbName, String t) {
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if (entry == null) {
         return null;
       }
 
+      final String userToImpersonate = needToImpersonateReadingData() ? schemaConfig.getUserName() :
+          ImpersonationUtil.getProcessUserName();
+
       if (entry.getJdbcTableType() == TableType.VIEW) {
-        return new DrillHiveViewTable(schemaName, plugin, entry);
+        return new DrillHiveViewTable(schemaName, plugin, userToImpersonate, entry);
       } else {
-        return new DrillHiveTable(schemaName, plugin, entry);
+        return new DrillHiveTable(schemaName, plugin, userToImpersonate, entry);
       }
     }
 
@@ -290,8 +201,8 @@ public class HiveSchemaFactory implements SchemaFactory {
         dbName = "default";
       }
       try{
-        return tableLoaders.get(dbName).get(t);
-      }catch(ExecutionException e) {
+        return mClient.getHiveReadEntry(dbName, t);
+      }catch(final TException e) {
         logger.warn("Exception occurred while trying to read table. {}.{}", dbName, t, e.getCause());
         return null;
       }
@@ -307,6 +218,12 @@ public class HiveSchemaFactory implements SchemaFactory {
       return HiveStoragePluginConfig.NAME;
     }
 
+    @Override
+    public void close() throws Exception {
+      if (mClient != null) {
+        mClient.close();
+      }
+    }
   }
 
 }

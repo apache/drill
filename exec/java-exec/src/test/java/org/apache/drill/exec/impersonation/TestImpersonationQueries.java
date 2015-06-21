@@ -17,20 +17,15 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,47 +42,15 @@ import static org.junit.Assert.assertThat;
  * a nested view.
  */
 public class TestImpersonationQueries extends BaseTestImpersonation {
-  private static final String MINIDFS_STORAGE_PLUGIN_NAME = "minidfs" + TestImpersonationQueries.class.getSimpleName();
-
-  private static final String[] org1Users = { "user0_1", "user1_1", "user2_1", "user3_1", "user4_1", "user5_1" };
-  private static final String[] org1Groups = { "group0_1", "group1_1", "group2_1", "group3_1", "group4_1", "group5_1" };
-  private static final String[] org2Users = { "user0_2", "user1_2", "user2_2", "user3_2", "user4_2", "user5_2" };
-  private static final String[] org2Groups = { "group0_2", "group1_2", "group2_2", "group3_2", "group4_2", "group5_2" };
-
-  static {
-    // "user0_1" belongs to "groups0_1". From "user1_1" onwards each user belongs to corresponding group and the group
-    // before it, i.e "user1_1" belongs to "group1_1" and "group0_1" and so on.
-    UserGroupInformation.createUserForTesting(org1Users[0], new String[] { org1Groups[0] });
-    for(int i=1; i<org1Users.length; i++) {
-      UserGroupInformation.createUserForTesting(org1Users[i], new String[] { org1Groups[i], org1Groups[i-1] });
-    }
-
-    UserGroupInformation.createUserForTesting(org2Users[0], new String[] { org2Groups[0] });
-    for(int i=1; i<org2Users.length; i++) {
-      UserGroupInformation.createUserForTesting(org2Users[i], new String[] { org2Groups[i], org2Groups[i-1] });
-    }
+  @BeforeClass
+  public static void setup() throws Exception {
+    startMiniDfsCluster(TestImpersonationQueries.class.getSimpleName());
+    startDrillCluster(true);
+    addMiniDfsBasedStorage(createTestWorkspaces());
+    createTestData();
   }
 
-  @BeforeClass
-  public static void addMiniDfsBasedStorageAndGenerateTestData() throws Exception {
-    startMiniDfsCluster(TestImpersonationQueries.class.getSimpleName());
-
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
-
-    final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
-    miniDfsPluginConfig.connection = conf.get(FileSystem.FS_DEFAULT_NAME_KEY);
-
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap(lfsPluginConfig.workspaces);
-
-    createTestWorkspaces(workspaces);
-
-    miniDfsPluginConfig.workspaces = workspaces;
-    miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
-    miniDfsPluginConfig.setEnabled(true);
-
-    pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
-
+  private static void createTestData() throws Exception {
     // Create test tables/views
 
     // Create copy of "lineitem" table in /user/user0_1 owned by user0_1:group0_1 with permissions 750. Only user0_1
@@ -111,26 +74,29 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     return MINIDFS_STORAGE_PLUGIN_NAME + "." + user;
   }
 
-  private static void createTestWorkspaces(Map<String, WorkspaceConfig> workspaces) throws Exception {
+  private static Map<String, WorkspaceConfig> createTestWorkspaces() throws Exception {
     // Create "/tmp" folder and set permissions to "777"
-    final FileSystem fs = dfsCluster.getFileSystem();
     final Path tmpPath = new Path("/tmp");
     fs.delete(tmpPath, true);
     FileSystem.mkdirs(fs, tmpPath, new FsPermission((short)0777));
+
+    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
 
     // create user directory (ex. "/user/user0_1", with ownership "user0_1:group0_1" and perms 755) for every user.
     for(int i=0; i<org1Users.length; i++) {
       final String user = org1Users[i];
       final String group = org1Groups[i];
-      createAndAddWorkspace(fs, user, getUserHome(user), (short)0755, user, group, workspaces);
+      createAndAddWorkspace(user, getUserHome(user), (short)0755, user, group, workspaces);
     }
 
     // create user directory (ex. "/user/user0_2", with ownership "user0_2:group0_2" and perms 755) for every user.
     for(int i=0; i<org2Users.length; i++) {
       final String user = org2Users[i];
       final String group = org2Groups[i];
-      createAndAddWorkspace(fs, user, getUserHome(user), (short)0755, user, group, workspaces);
+      createAndAddWorkspace(user, getUserHome(user), (short)0755, user, group, workspaces);
     }
+
+    return workspaces;
   }
 
   private static void createTestTable(String user, String group, String tableName) throws Exception {
@@ -141,7 +107,6 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Change the ownership and permissions manually. Currently there is no option to specify the default permissions
     // and ownership for new tables.
     final Path tablePath = new Path(getUserHome(user), tableName);
-    final FileSystem fs = dfsCluster.getFileSystem();
 
     fs.setOwner(tablePath, user, group);
     fs.setPermission(tablePath, new FsPermission((short)0750));
@@ -208,7 +173,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     // Verify the view file created has the expected permissions and ownership
     Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
-    FileStatus status = dfsCluster.getFileSystem().getFileStatus(viewFilePath);
+    FileStatus status = fs.getFileStatus(viewFilePath);
     assertEquals(viewGroup, status.getGroup());
     assertEquals(viewOwner, status.getOwner());
     assertEquals(viewPerms, status.getPermission().toShort());
@@ -244,7 +209,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(), containsString("PERMISSION ERROR: " +
-            "Not authorized to read table [lineitem] in schema [minidfsTestImpersonationQueries.user0_1]"));
+            String.format("Not authorized to read table [lineitem] in schema [%s.user0_1]",
+                MINIDFS_STORAGE_PLUGIN_NAME)));
   }
 
 

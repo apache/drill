@@ -24,7 +24,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
 
-import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
@@ -32,16 +31,16 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.google.common.collect.Maps;
 
+import static org.apache.drill.BaseTestQuery.getTempDir;
+import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
+
 public class HiveTestDataGenerator {
   private static final String HIVE_TEST_PLUGIN_NAME = "hive";
-  private static final int RETRIES = 5;
   private static HiveTestDataGenerator instance;
 
   private final String dbDir;
@@ -50,13 +49,8 @@ public class HiveTestDataGenerator {
 
   public static synchronized HiveTestDataGenerator getInstance() throws Exception {
     if (instance == null) {
-      final File db = Files.createTempDir();
-      db.deleteOnExit();
-      final String dbDir = db.getAbsolutePath() + File.separator + "metastore_db";
-
-      final File wh = Files.createTempDir();
-      wh.deleteOnExit();
-      final String whDir = wh.getAbsolutePath();
+      final String dbDir = getTempDir("metastore_db");
+      final String whDir = getTempDir("warehouse");
 
       instance = new HiveTestDataGenerator(dbDir, whDir);
       instance.generateTestData();
@@ -121,7 +115,8 @@ public class HiveTestDataGenerator {
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     conf.set("hive.metastore.warehouse.dir", whDir);
     conf.set("mapred.job.tracker", "local");
-    conf.set("hive.exec.scratchdir",  Files.createTempDir().getAbsolutePath() + File.separator + "scratch_dir");
+    conf.set(ConfVars.SCRATCHDIR.varname,  getTempDir("scratch_dir"));
+    conf.set(ConfVars.LOCALSCRATCHDIR.varname, getTempDir("local_scratch_dir"));
 
     SessionState ss = new SessionState(conf);
     SessionState.start(ss);
@@ -151,7 +146,8 @@ public class HiveTestDataGenerator {
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' " +
         "STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' " +
         "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' " +
-        "TBLPROPERTIES ('avro.schema.url'='file:///%s')", getSchemaFile("avro_test_schema.json"));
+        "TBLPROPERTIES ('avro.schema.url'='file:///%s')",
+        BaseTestQuery.getPhysicalFileFromResource("avro_test_schema.json"));
 
     executeQuery(hiveDriver, avroCreateQuery);
     executeQuery(hiveDriver, "INSERT INTO TABLE db1.avro SELECT * FROM default.kv");
@@ -320,15 +316,6 @@ public class HiveTestDataGenerator {
     return file.getPath();
   }
 
-  private String getSchemaFile(final String resource) throws Exception {
-    final File file = getTempFile();
-    PrintWriter printWriter = new PrintWriter(file);
-    printWriter.write(BaseTestQuery.getFile(resource));
-    printWriter.close();
-
-    return file.getPath();
-  }
-
   private String generateTestDataFileWithDate() throws Exception {
     final File file = getTempFile();
 
@@ -355,24 +342,4 @@ public class HiveTestDataGenerator {
 
     return file.getPath();
   }
-
-  private void executeQuery(Driver hiveDriver, String query) {
-    CommandProcessorResponse response = null;
-    boolean failed = false;
-    int retryCount = RETRIES;
-
-    try {
-      response = hiveDriver.run(query);
-    } catch(CommandNeedRetryException ex) {
-      if (--retryCount == 0) {
-        failed = true;
-      }
-    }
-
-    if (failed || response.getResponseCode() != 0 ) {
-      throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
-        query, (response != null ? response.getErrorMessage() : "")));
-    }
-  }
-
 }

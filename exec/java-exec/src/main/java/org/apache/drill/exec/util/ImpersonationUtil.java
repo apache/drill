@@ -130,19 +130,7 @@ public class ImpersonationUtil {
    * @return
    */
   public static DrillFileSystem createFileSystem(String proxyUserName, Configuration fsConf) {
-    return createFileSystem(proxyUserName, fsConf, null);
-  }
-
-  /**
-   * Create DrillFileSystem for given <i>proxyUserName</i>, configuration and stats.
-   *
-   * @param proxyUserName Name of the user whom to impersonate while accessing the FileSystem contents.
-   * @param fsConf FileSystem configuration.
-   * @param stats OperatorStats for DrillFileSystem (optional)
-   * @return
-   */
-  public static DrillFileSystem createFileSystem(String proxyUserName, Configuration fsConf, OperatorStats stats) {
-    return createFileSystem(createProxyUgi(proxyUserName), fsConf, stats);
+    return createFileSystem(createProxyUgi(proxyUserName), fsConf, null);
   }
 
   /** Helper method to create DrillFileSystem */
@@ -152,7 +140,7 @@ public class ImpersonationUtil {
     try {
       fs = proxyUserUgi.doAs(new PrivilegedExceptionAction<DrillFileSystem>() {
         public DrillFileSystem run() throws Exception {
-          logger.debug("Creating DrillFileSystem for proxy user: " + UserGroupInformation.getCurrentUser());
+          logger.trace("Creating DrillFileSystem for proxy user: " + UserGroupInformation.getCurrentUser());
           return new DrillFileSystem(fsConf, stats);
         }
       });

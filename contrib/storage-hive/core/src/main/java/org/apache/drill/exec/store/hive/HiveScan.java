@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
@@ -61,6 +63,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.apache.hadoop.security.UserGroupInformation;
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {
@@ -104,7 +107,7 @@ public class HiveScan extends AbstractGroupScan {
     this.storagePluginName = storagePluginName;
     this.storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(storagePluginName);
     this.columns = columns;
-    getSplits();
+    getSplitsWithUGI();
     endpoints = storagePlugin.getContext().getBits();
   }
 
@@ -113,7 +116,7 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.storagePlugin = storagePlugin;
-    getSplits();
+    getSplitsWithUGI();
     endpoints = storagePlugin.getContext().getBits();
     this.storagePluginName = storagePlugin.getName();
   }
@@ -133,6 +136,22 @@ public class HiveScan extends AbstractGroupScan {
 
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  private void getSplitsWithUGI() throws ExecutionSetupException {
+    final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(getUserName());
+    try {
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        public Void run() throws Exception {
+          getSplits();
+          return null;
+        }
+      });
+    } catch (final InterruptedException | IOException e) {
+      final String errMsg = String.format("Failed to create input splits: %s", e.getMessage());
+      logger.error(errMsg, e);
+      throw new DrillRuntimeException(errMsg, e);
+    }
   }
 
   private void getSplits() throws ExecutionSetupException {
@@ -169,12 +188,10 @@ public class HiveScan extends AbstractGroupScan {
     final Path path = new Path(sd.getLocation());
     final FileSystem fs = path.getFileSystem(job);
 
-    // Use new JobConf that has FS configuration
-    final JobConf jobWithFsConf = new JobConf(fs.getConf());
     if (fs.exists(path)) {
-      FileInputFormat.addInputPath(jobWithFsConf, path);
-      format = jobWithFsConf.getInputFormat();
-      for (final InputSplit split : format.getSplits(jobWithFsConf, 1)) {
+      FileInputFormat.addInputPath(job, path);
+      format = job.getInputFormat();
+      for (final InputSplit split : format.getSplits(job, 1)) {
         inputSplits.add(split);
         partitionMap.put(split, partition);
       }

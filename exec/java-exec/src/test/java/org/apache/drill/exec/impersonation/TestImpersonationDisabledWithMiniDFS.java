@@ -17,51 +17,32 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.hadoop.fs.FileSystem;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Map;
-
 public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation {
-  private static final String MINIDFS_STORAGE_PLUGIN_NAME =
-      "minidfs" + TestImpersonationDisabledWithMiniDFS.class.getSimpleName();
 
   @BeforeClass
-  public static void addMiniDfsBasedStorage() throws Exception {
+  public static void setup() throws Exception {
     startMiniDfsCluster(TestImpersonationDisabledWithMiniDFS.class.getSimpleName(), false);
+    startDrillCluster(false);
+    addMiniDfsBasedStorage(Maps.<String, WorkspaceConfig>newHashMap());
+    createTestData();
+  }
 
-    // Create a HDFS based storage plugin based on local storage plugin and add it to plugin registry (connection string
-    // for mini dfs is varies for each run).
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    final FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs_test").getConfig();
-
-    final FileSystemConfig miniDfsPluginConfig = new FileSystemConfig();
-    miniDfsPluginConfig.connection = conf.get(FileSystem.FS_DEFAULT_NAME_KEY);
-
-    Map<String, WorkspaceConfig> workspaces = Maps.newHashMap(lfsPluginConfig.workspaces);
-    createAndAddWorkspace(dfsCluster.getFileSystem(), "dfstemp", "/tmp", (short)0777, processUser, processUser, workspaces);
-
-    miniDfsPluginConfig.workspaces = workspaces;
-    miniDfsPluginConfig.formats = ImmutableMap.copyOf(lfsPluginConfig.formats);
-    miniDfsPluginConfig.setEnabled(true);
-
-    pluginRegistry.createOrUpdate(MINIDFS_STORAGE_PLUGIN_NAME, miniDfsPluginConfig, true);
-
+  private static void createTestData() throws Exception {
     // Create test table in minidfs.tmp schema for use in test queries
-    test(String.format("CREATE TABLE %s.dfstemp.dfsRegion AS SELECT * FROM cp.`region.json`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`",
+        MINIDFS_STORAGE_PLUGIN_NAME));
   }
 
   @Test // DRILL-3037
   public void testSimpleQuery() throws Exception {
     final String query =
-        String.format("SELECT sales_city, sales_country FROM dfstemp.dfsRegion ORDER BY region_id DESC LIMIT 2");
+        String.format("SELECT sales_city, sales_country FROM tmp.dfsRegion ORDER BY region_id DESC LIMIT 2");
 
     testBuilder()
         .optionSettingQueriesForTestQuery(String.format("USE %s", MINIDFS_STORAGE_PLUGIN_NAME))

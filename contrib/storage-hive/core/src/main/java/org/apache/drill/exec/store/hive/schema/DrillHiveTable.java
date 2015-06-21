@@ -45,8 +45,8 @@ public class DrillHiveTable extends DrillTable{
 
   protected final Table hiveTable;
 
-  public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
-    super(storageEngineName, plugin, readEntry);
+  public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, String userName, HiveReadEntry readEntry) {
+    super(storageEngineName, plugin, userName, readEntry);
     this.hiveTable = new Table(readEntry.getTable());
   }
 

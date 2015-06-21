@@ -17,7 +17,9 @@
  */
 package org.apache.drill;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -360,6 +363,34 @@ public class BaseTestQuery extends ExecTest {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
     return Resources.toString(url, Charsets.UTF_8);
+  }
+
+  /**
+   * Copy the resource (ex. file on classpath) to a physical file on FileSystem.
+   * @param resource
+   * @return
+   * @throws IOException
+   */
+  public static String getPhysicalFileFromResource(final String resource) throws IOException {
+    final File file = File.createTempFile("tempfile", ".txt");
+    file.deleteOnExit();
+    PrintWriter printWriter = new PrintWriter(file);
+    printWriter.write(BaseTestQuery.getFile(resource));
+    printWriter.close();
+
+    return file.getPath();
+  }
+
+  /**
+   * Create a temp directory to store the given <i>dirName</i>
+   * @param dirName
+   * @return Full path including temp parent directory and given directory name.
+   */
+  public static String getTempDir(final String dirName) {
+    File dir = Files.createTempDir();
+    dir.deleteOnExit();
+
+    return dir.getAbsolutePath() + File.separator + dirName;
   }
 
   private static class SilentListener implements UserResultsListener {

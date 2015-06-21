@@ -19,11 +19,14 @@ package org.apache.drill.exec.ops;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -38,6 +41,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.QueryOptionManager;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -69,6 +73,8 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
 
+  private final List<SchemaPlus> schemaTreesToClose;
+
   /*
    * Flag to indicate if close has been called, after calling close the first
    * time this is set to true and the close method becomes a no-op.
@@ -96,6 +102,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
     bufferManager = new BufferManager(this.allocator, null);
     viewExpansionContext = new ViewExpansionContext(this);
+    schemaTreesToClose = Lists.newArrayList();
   }
 
   public PlannerSettings getPlannerSettings() {
@@ -141,7 +148,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
    * @param userName User who owns the schema tree.
    * @return Root of the schema tree.
    */
-  public SchemaPlus getRootSchema(String userName) {
+  public SchemaPlus getRootSchema(final String userName) {
     final String schemaUser = isImpersonationEnabled() ? userName : ImpersonationUtil.getProcessUserName();
     final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, this).build();
     return getRootSchema(schemaConfig);
@@ -156,6 +163,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     try {
       final SchemaPlus rootSchema = SimpleCalciteSchema.createRootSchema(false);
       drillbitContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
+      schemaTreesToClose.add(rootSchema);
       return rootSchema;
     } catch(IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
@@ -236,12 +244,34 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
   public void close() throws Exception {
     try {
       if (!closed) {
-        // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
-        bufferManager.close();
-        allocator.close();
+        List<AutoCloseable> toClose = Lists.newArrayList();
+
+        // TODO(DRILL-1942) the new allocator has this capability built-in, so we can remove bufferManager and
+        // allocator from the toClose list.
+        toClose.add(bufferManager);
+        toClose.add(allocator);
+
+        for(SchemaPlus tree : schemaTreesToClose) {
+          addSchemasToCloseList(tree, toClose);
+        }
+
+        AutoCloseables.close(toClose.toArray(new AutoCloseable[0]));
       }
     } finally {
       closed = true;
+    }
+  }
+
+  private void addSchemasToCloseList(final SchemaPlus tree, final List<AutoCloseable> toClose) {
+    for(String subSchemaName : tree.getSubSchemaNames()) {
+      addSchemasToCloseList(tree.getSubSchema(subSchemaName), toClose);
+    }
+
+    try {
+      AbstractSchema drillSchemaImpl =  tree.unwrap(AbstractSchema.class);
+      toClose.add(drillSchemaImpl);
+    } catch (ClassCastException e) {
+      // Ignore as the SchemaPlus is not an implementation of Drill schema.
     }
   }
 }
