@@ -39,7 +39,8 @@ package org.apache.drill.exec.vector.complex.impl;
 /* This class is generated using freemarker and the ListWriters.java template */
 @SuppressWarnings("unused")
 public class ${mode}ListWriter extends AbstractFieldWriter{
-  
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
+
   static enum Mode { INIT, IN_MAP, IN_LIST <#list vv.types as type><#list type.minor as minor>, IN_${minor.class?upper_case}</#list></#list> }
 
   private final String name;
@@ -98,7 +99,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
       return writer;
     }
 
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("MAP", mode.name())).build();
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("MAP", mode.name())).build(logger);
 
   }
   
@@ -117,7 +118,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
       return writer;
     }
 
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("LIST", mode.name())).build();
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("LIST", mode.name())).build(logger);
 
   }
   
@@ -144,7 +145,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
       return writer;
     }
 
-  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("${upperName}", mode.name())).build();
+  throw UserException.unsupportedError().message(getUnsupportedErrorMsg("${upperName}", mode.name())).build(logger);
 
   }
   </#list></#list>

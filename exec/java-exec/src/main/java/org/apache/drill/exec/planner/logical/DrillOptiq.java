@@ -210,7 +210,7 @@ public class DrillOptiq {
     private LogicalExpression doUnknown(RexNode o){
       // raise an error
       throw UserException.planError().message(UNSUPPORTED_REX_NODE_ERROR +
-              "RexNode Class: %s, RexNode Digest: %s", o.getClass().getName(), o.toString()).build();
+              "RexNode Class: %s, RexNode Digest: %s", o.getClass().getName(), o.toString()).build(logger);
     }
     @Override
     public LogicalExpression visitLocalRef(RexLocalRef localRef) {
@@ -262,7 +262,7 @@ public class DrillOptiq {
           throw UserException
               .unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
-              .build();
+              .build(logger);
         }
 
         int precision = call.getType().getPrecision();

@@ -429,7 +429,7 @@ final class TextReader {
           .message(
               "Drill failed to read your text file.  Drill supports up to %d columns in a text file.  Your file appears to have more than that.",
               RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
-          .build();
+          .build(logger);
     }
 
     String message = null;

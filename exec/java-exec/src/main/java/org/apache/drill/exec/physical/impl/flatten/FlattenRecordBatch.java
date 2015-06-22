@@ -132,7 +132,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
           field.getValueClass(), typedFieldId.getFieldIds()).getValueVector());
       flattener.setFlattenField(vector);
     } catch (Exception ex) {
-      throw UserException.unsupportedError(ex).message("Trying to flatten a non-repeated field.").build();
+      throw UserException.unsupportedError(ex).message("Trying to flatten a non-repeated field.").build(logger);
     }
   }
 

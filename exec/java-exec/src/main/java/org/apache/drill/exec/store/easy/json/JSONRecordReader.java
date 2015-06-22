@@ -158,7 +158,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     exceptionBuilder.pushContext("Record ", currentRecordNumberInFile())
             .pushContext("File ", hadoopPath.toUri().getPath());
 
-    throw exceptionBuilder.build();
+    throw exceptionBuilder.build(logger);
   }
 
   private long currentRecordNumberInFile() {

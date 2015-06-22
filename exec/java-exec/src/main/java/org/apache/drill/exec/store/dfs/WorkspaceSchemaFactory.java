@@ -175,7 +175,7 @@ public class WorkspaceSchemaFactory {
           throw UserException
               .permissionError(e)
               .message("Not authorized to list view tables in schema [%s]", getFullSchemaName())
-              .build();
+              .build(logger);
         }
       } catch (Exception e) {
         logger.warn("Failure while trying to list .view.drill files in workspace [{}]", getFullSchemaName(), e);
@@ -209,10 +209,9 @@ public class WorkspaceSchemaFactory {
         } catch(AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());
-            throw UserException
-                .permissionError(e)
-                .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
-                .build();
+            throw UserException.permissionError(e)
+              .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
+              .build(logger);
           }
         } catch(IOException e) {
           logger.warn("Failure while trying to list view tables in workspace [{}]", name, getFullSchemaName(), e);
@@ -226,10 +225,9 @@ public class WorkspaceSchemaFactory {
             } catch (AccessControlException e) {
               if (!schemaConfig.getIgnoreAuthErrors()) {
                 logger.debug(e.getMessage());
-                throw UserException
-                    .permissionError(e)
-                    .message("Not authorized to read view [%s] in schema [%s]", name, getFullSchemaName())
-                    .build();
+                throw UserException.permissionError(e)
+                  .message("Not authorized to read view [%s] in schema [%s]", name, getFullSchemaName())
+                  .build(logger);
               }
             } catch (IOException e) {
               logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", name, getFullSchemaName(), e);
@@ -312,10 +310,9 @@ public class WorkspaceSchemaFactory {
       } catch (AccessControlException e) {
         if (!schemaConfig.getIgnoreAuthErrors()) {
           logger.debug(e.getMessage());
-          throw UserException
-              .permissionError(e)
-              .message("Not authorized to read table [%s] in schema [%s]", key, getFullSchemaName())
-              .build();
+          throw UserException.permissionError(e)
+            .message("Not authorized to read table [%s] in schema [%s]", key, getFullSchemaName())
+            .build(logger);
         }
       } catch (IOException e) {
         logger.debug("Failed to create DrillTable with root {} and name {}", config.getLocation(), key, e);

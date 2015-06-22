@@ -150,7 +150,7 @@ public abstract class TimedRunnable<V> implements Runnable {
           logger.error(errMsg);
           throw UserException.resourceError()
               .message(errMsg)
-              .build();
+              .build(logger);
         }
       } finally {
         if (!threadPool.isShutdown()) {

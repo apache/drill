@@ -130,7 +130,8 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
               return IterOutcome.NONE;
             case OUT_OF_MEMORY:
               // because we don't support schema changes, it is safe to fail the query right away
-              context.fail(UserException.memoryError().build());
+              context.fail(UserException.memoryError()
+                .build(logger));
               // FALL-THROUGH
             case STOP:
               return IterOutcome.STOP;

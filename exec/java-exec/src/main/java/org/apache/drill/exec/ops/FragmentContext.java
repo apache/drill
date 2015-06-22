@@ -162,7 +162,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     } catch(final OutOfMemoryException | OutOfMemoryRuntimeException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())
-        .build();
+        .build(logger);
     } catch(final Throwable e) {
       throw new ExecutionSetupException("Failure while getting memory allocator for fragment.", e);
     }

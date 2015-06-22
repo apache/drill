@@ -141,7 +141,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       return aggregator.getOutcome();
     case UPDATE_AGGREGATOR:
       context.fail(UserException.unsupportedError()
-        .message("Hash aggregate does not support schema changes").build());
+        .message("Hash aggregate does not support schema changes").build(logger));
       close();
       killIncoming(false);
       return IterOutcome.STOP;

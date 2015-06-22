@@ -108,7 +108,7 @@ public class ViewExpansionContext {
               String.format("Cannot issue token for view expansion as issuing the token exceeds the " +
                   "maximum allowed number of user hops (%d) in chained impersonation.", maxChainedUserHops);
           logger.error(errMsg);
-          throw UserException.permissionError().message(errMsg).build();
+          throw UserException.permissionError().message(errMsg).build(logger);
         }
       }
 

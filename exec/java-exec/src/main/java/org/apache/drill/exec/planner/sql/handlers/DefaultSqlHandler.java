@@ -101,9 +101,10 @@ import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
 
   protected final SqlHandlerConfig config;
   protected final QueryContext context;
@@ -126,13 +127,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     targetSliceSize = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
   }
 
-  protected void log(String name, RelNode node) {
+  protected static void log(final String name, final RelNode node, final Logger logger) {
     if (logger.isDebugEnabled()) {
       logger.debug(name + " : \n" + RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES));
     }
   }
 
-  protected void log(String name, Prel node) {
+  protected void log(final String name, final Prel node, final Logger logger) {
     String plan = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);
     if(textPlan != null){
       textPlan.value = plan;
@@ -143,7 +144,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
   }
 
-  protected void log(String name, PhysicalPlan plan) throws JsonProcessingException {
+  protected void log(final String name, final PhysicalPlan plan, final Logger logger) throws JsonProcessingException {
     if (logger.isDebugEnabled()) {
       String planText = plan.unparse(context.getConfig().getMapper().writer());
       logger.debug(name + " : \n" + planText);
@@ -157,15 +158,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
-    log("Optiq Logical", queryRelNode);
+    log("Optiq Logical", queryRelNode, logger);
     DrillRel drel = convertToDrel(queryRelNode, validatedRowType);
 
-    log("Drill Logical", drel);
+    log("Drill Logical", drel, logger);
     Prel prel = convertToPrel(drel);
-    log("Drill Physical", prel);
+    log("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
-    log("Drill Plan", plan);
+    log("Drill Plan", plan, logger);
     return plan;
   }
 
@@ -271,7 +272,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     if (context.getPlannerSettings().isMemoryEstimationEnabled()
       && !MemoryEstimationVisitor.enoughMemory(phyRelNode, queryOptions, context.getActiveEndpoints().size())) {
-      log("Not enough memory for this plan", phyRelNode);
+      log("Not enough memory for this plan", phyRelNode, logger);
       logger.debug("Re-planning without hash operations.");
 
       queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHJOIN.getOptionName(), false));
@@ -511,7 +512,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   private RelNode logicalPlanningVolcanoAndLopt(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
 
     final RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_CONVERT_RULES, relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
-    log("VolCalciteRel", convertedRelNode);
+    log("VolCalciteRel", convertedRelNode, logger);
 
     final RelNode loptNode = getLoptJoinOrderTree(
         convertedRelNode,
@@ -520,7 +521,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY,
         DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY);
 
-    log("HepCalciteRel", loptNode);
+    log("HepCalciteRel", loptNode, logger);
 
     return loptNode;
   }

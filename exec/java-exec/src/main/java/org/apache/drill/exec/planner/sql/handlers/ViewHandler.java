@@ -40,7 +40,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 
 public abstract class ViewHandler extends DefaultSqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
 
   protected QueryContext context;
 
@@ -86,7 +86,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
           throw UserException.validationError()
               .message("A non-view table with given name [%s] already exists in schema [%s]",
                   newViewName, schemaPath)
-              .build();
+              .build(logger);
         }
 
         if (existingTable.getJdbcTableType() == Schema.TableType.VIEW && !createView.getReplace()) {
@@ -94,7 +94,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
           throw UserException.validationError()
               .message("A view with given name [%s] already exists in schema [%s]",
                   newViewName, schemaPath)
-              .build();
+              .build(logger);
         }
       }
 
@@ -125,11 +125,11 @@ public abstract class ViewHandler extends DefaultSqlHandler {
       if (existingTable != null && existingTable.getJdbcTableType() != Schema.TableType.VIEW) {
         throw UserException.validationError()
             .message("[%s] is not a VIEW in schema [%s]", viewToDrop, schemaPath)
-            .build();
+            .build(logger);
       } else if (existingTable == null) {
         throw UserException.validationError()
             .message("Unknown view [%s] in schema [%s].", viewToDrop, schemaPath)
-            .build();
+            .build(logger);
       }
 
       drillSchema.dropView(viewToDrop);

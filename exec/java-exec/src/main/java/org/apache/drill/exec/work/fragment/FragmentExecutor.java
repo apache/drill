@@ -267,7 +267,7 @@ public class FragmentExecutor implements Runnable {
 
     } catch (OutOfMemoryError | OutOfMemoryRuntimeException e) {
       if (!(e instanceof OutOfMemoryError) || "Direct buffer memory".equals(e.getMessage())) {
-        fail(UserException.memoryError(e).build());
+        fail(UserException.memoryError(e).build(logger));
       } else {
         // we have a heap out of memory error. The JVM in unstable, exit.
         System.err.println("Node ran out of Heap memory, exiting.");
@@ -325,7 +325,7 @@ public class FragmentExecutor implements Runnable {
       final UserException uex = UserException.systemError(deferredException.getAndClear())
           .addIdentity(getContext().getIdentity())
           .addContext("Fragment", handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId())
-          .build();
+          .build(logger);
       listener.fail(fragmentContext.getHandle(), uex);
     } else {
       listener.stateChanged(fragmentContext.getHandle(), outcome);

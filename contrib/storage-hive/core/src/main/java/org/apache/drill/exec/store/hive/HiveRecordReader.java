@@ -364,7 +364,7 @@ public class HiveRecordReader extends AbstractRecordReader {
         if (context.getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
           throw UserException.unsupportedError()
               .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
-              .build();
+              .build(logger);
         }
         DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
         return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());

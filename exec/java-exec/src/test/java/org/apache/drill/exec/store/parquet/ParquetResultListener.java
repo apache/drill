@@ -174,7 +174,7 @@ public class ParquetResultListener implements UserResultsListener {
         }
         assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
       } catch (AssertionError e) {
-        submissionFailed(UserException.systemError(e).build());
+        submissionFailed(UserException.systemError(e).build(logger));
       }
     }
 

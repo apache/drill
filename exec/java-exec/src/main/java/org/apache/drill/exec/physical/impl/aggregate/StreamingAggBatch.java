@@ -188,7 +188,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     case UPDATE_AGGREGATOR:
       context.fail(UserException.unsupportedError()
         .message("Streaming aggregate does not support schema changes")
-        .build());
+        .build(logger));
       close();
       killIncoming(false);
       return IterOutcome.STOP;

@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ShowTablesHandler extends DefaultSqlHandler {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShowTablesHandler.class);
 
   public ShowTablesHandler(SqlHandlerConfig config) { super(config); }
 
@@ -73,7 +74,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
         // If the default schema is a root schema, throw an error to select a default schema
         throw UserException.validationError()
             .message("No default schema selected. Select a schema using 'USE schema' command")
-            .build();
+            .build(logger);
       }
 
       final AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schema);

@@ -43,7 +43,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 
 public class ExplainHandler extends DefaultSqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
 
   private ResultMode mode;
   private SqlExplainLevel level = SqlExplainLevel.ALL_ATTRIBUTES;
@@ -57,9 +57,9 @@ public class ExplainHandler extends DefaultSqlHandler {
     final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
     final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
-    log("Optiq Logical", queryRelNode);
+    log("Optiq Logical", queryRelNode, logger);
     DrillRel drel = convertToDrel(queryRelNode, validatedRowType);
-    log("Drill Logical", drel);
+    log("Drill Logical", drel, logger);
 
     if (mode == ResultMode.LOGICAL) {
       LogicalExplain logicalResult = new LogicalExplain(drel, level, context);
@@ -67,10 +67,10 @@ public class ExplainHandler extends DefaultSqlHandler {
     }
 
     Prel prel = convertToPrel(drel);
-    log("Drill Physical", prel);
+    log("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
-    log("Drill Plan", plan);
+    log("Drill Plan", plan, logger);
     PhysicalExplain physicalResult = new PhysicalExplain(prel, plan, level, context);
     return DirectPlan.createDirectPlan(context, physicalResult);
   }

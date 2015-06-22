@@ -56,6 +56,8 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
 public class CreateTableHandler extends DefaultSqlHandler {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CreateTableHandler.class);
+
   public CreateTableHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
     super(config, textPlan);
   }
@@ -81,21 +83,21 @@ public class CreateTableHandler extends DefaultSqlHandler {
     if (SqlHandlerUtil.getTableFromSchema(drillSchema, newTblName) != null) {
       throw UserException.validationError()
           .message("A table or view with given name [%s] already exists in schema [%s]", newTblName, schemaPath)
-          .build();
+          .build(logger);
     }
 
     final RelNode newTblRelNodeWithPCol = SqlHandlerUtil.qualifyPartitionCol(newTblRelNode, sqlCreateTable.getPartitionColumns());
 
-    log("Optiq Logical", newTblRelNodeWithPCol);
+    log("Optiq Logical", newTblRelNodeWithPCol, logger);
 
     // Convert the query to Drill Logical plan and insert a writer operator on top.
     DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTblName, sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType());
-    log("Drill Logical", drel);
+    log("Drill Logical", drel, logger);
     Prel prel = convertToPrel(drel, newTblRelNode.getRowType(), sqlCreateTable.getPartitionColumns());
-    log("Drill Physical", prel);
+    log("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
-    log("Drill Plan", plan);
+    log("Drill Plan", plan, logger);
 
     return plan;
   }
@@ -186,7 +188,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
           if (field == null) {
             throw UserException.validationError()
                 .message("Partition column %s is not in the SELECT list of CTAS!", colName)
-                .build();
+                .build(logger);
           }
 
           partitionColumnExprs.add(RexInputRef.of(field.getIndex(), childRowType));

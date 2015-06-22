@@ -40,7 +40,7 @@ import org.apache.calcite.sql.SqlNode;
 
 
 public class ShowFileHandler extends DefaultSqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
   public ShowFileHandler(SqlHandlerConfig config) {
     super(config);
@@ -72,7 +72,7 @@ public class ShowFileHandler extends DefaultSqlHandler {
       if (drillSchema == null) {
         throw UserException.validationError()
             .message("Invalid FROM/IN clause [%s]", from.toString())
-            .build();
+            .build(logger);
       }
     }
 
@@ -83,7 +83,7 @@ public class ShowFileHandler extends DefaultSqlHandler {
       throw UserException.validationError()
           .message("SHOW FILES is supported in workspace type schema only. Schema [%s] is not a workspace schema.",
               SchemaUtilites.getSchemaPath(drillSchema))
-          .build();
+          .build(logger);
     }
 
     // Get the file system object

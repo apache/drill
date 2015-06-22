@@ -20,6 +20,7 @@ package org.apache.drill.common.exceptions;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.slf4j.Logger;
 
 /**
  * Base class for all user exception. The goal is to separate out common error conditions where we can give users
@@ -27,7 +28,7 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
  * <p>Throwing a user exception will guarantee it's message will be displayed to the user, along with any context
  * information added to the exception at various levels while being sent to the client.
  * <p>A specific class of user exceptions are system exception. They represent system level errors that don't display
- * any specific error message to the user apart from "A system error has occurend" along with informations to retrieve
+ * any specific error message to the user apart from "A system error has occurred" along with information to retrieve
  * the details of the exception from the logs.
  * <p>Although system exception should only display a generic message to the user, for now they will display the root
  * error message, until all user errors are properly sent from the server side.
@@ -37,7 +38,6 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
  * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType
  */
 public class UserException extends DrillRuntimeException {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserException.class);
 
   public static final String MEMORY_ERROR_MSG = "One or more nodes ran out of memory while executing the query.";
 
@@ -64,8 +64,8 @@ public class UserException extends DrillRuntimeException {
   /**
    * Wraps the passed exception inside a system error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#SYSTEM
    *
@@ -94,8 +94,8 @@ public class UserException extends DrillRuntimeException {
   /**
    * Wraps the passed exception inside a connection error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#CONNECTION
    *
@@ -120,8 +120,8 @@ public class UserException extends DrillRuntimeException {
   /**
    * Wraps the passed exception inside a data read error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#DATA_READ
    *
@@ -146,8 +146,8 @@ public class UserException extends DrillRuntimeException {
   /**
    * Wraps the passed exception inside a data write error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#DATA_WRITE
    *
@@ -172,8 +172,8 @@ public class UserException extends DrillRuntimeException {
   /**
    * Wraps the passed exception inside a function error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#FUNCTION
    *
@@ -196,10 +196,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * Wraps the passed exception inside a system error.
+   * Wraps the passed exception inside a parse error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PARSE
    *
@@ -222,10 +222,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * wraps the passed exception inside a system error.
+   * wraps the passed exception inside a validation error.
    * <p>the cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>if the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>if the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#VALIDATION
    *
@@ -248,10 +248,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * Wraps the passed exception inside a system error.
+   * Wraps the passed exception inside a permission error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PERMISSION
    *
@@ -274,10 +274,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * Wraps the passed exception inside a system error.
+   * Wraps the passed exception inside a plan error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PLAN
    *
@@ -300,10 +300,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * Wraps the passed exception inside a system error.
+   * Wraps the passed exception inside a resource error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#RESOURCE
    *
@@ -326,10 +326,10 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
-   * Wraps the passed exception inside a system error.
+   * Wraps the passed exception inside a unsupported error.
    * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
-   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build()} instead
-   * of creating a new exception. Any added context will be added to the user exception as well.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception as well.
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#UNSUPPORTED_OPERATION
    *
@@ -502,12 +502,13 @@ public class UserException extends DrillRuntimeException {
     }
 
     /**
-     * builds a user exception or returns the wrapped one.
+     * builds a user exception or returns the wrapped one. If the error is a system error, the error message is logged
+     * to the given {@link Logger}.
      *
+     * @param logger the logger to write to
      * @return user exception
      */
-    public UserException build() {
-
+    public UserException build(final Logger logger) {
       if (uex != null) {
         return uex;
       }

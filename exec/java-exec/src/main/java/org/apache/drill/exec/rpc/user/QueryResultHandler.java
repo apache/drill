@@ -123,7 +123,7 @@ public class QueryResultHandler {
         try {
           resultsListener.queryCompleted(queryState);
         } catch ( Exception e ) {
-          resultsListener.submissionFailed(UserException.systemError(e).build());
+          resultsListener.submissionFailed(UserException.systemError(e).build(logger));
         }
       } else {
         logger.warn("queryState {} was ignored", queryState);
@@ -164,7 +164,7 @@ public class QueryResultHandler {
       // That releases batch if successful.
     } catch ( Exception e ) {
       batch.release();
-      resultsListener.submissionFailed(UserException.systemError(e).build());
+      resultsListener.submissionFailed(UserException.systemError(e).build(logger));
     }
   }
 
@@ -198,7 +198,7 @@ public class QueryResultHandler {
 
   private void failAll() {
     for (UserResultsListener l : queryIdToResultsListenersMap.values()) {
-      l.submissionFailed(UserException.systemError(new RpcException("Received result without QueryId")).build());
+      l.submissionFailed(UserException.systemError(new RpcException("Received result without QueryId")).build(logger));
     }
   }
 
@@ -297,7 +297,7 @@ public class QueryResultHandler {
       public void operationComplete(Future<Void> future) throws Exception {
         resultsListener.submissionFailed(UserException.connectionError()
             .message("Connection %s closed unexpectedly.", connection.getName())
-            .build());
+            .build(logger));
       }
 
     }
@@ -309,7 +309,7 @@ public class QueryResultHandler {
       }
 
       closeFuture.removeListener(closeListener);
-      resultsListener.submissionFailed(UserException.systemError(ex).build());
+      resultsListener.submissionFailed(UserException.systemError(ex).build(logger));
 
     }
 
@@ -362,7 +362,7 @@ public class QueryResultHandler {
       closeFuture.removeListener(closeListener);
 
       // Throw an interrupted UserException?
-      resultsListener.submissionFailed(UserException.systemError(ex).build());
+      resultsListener.submissionFailed(UserException.systemError(ex).build(logger));
     }
   }
 

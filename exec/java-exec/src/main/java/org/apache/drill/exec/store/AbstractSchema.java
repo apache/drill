@@ -101,7 +101,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
   public boolean createView(View view) throws IOException {
     throw UserException.unsupportedError()
         .message("Creating new view is not supported in schema [%s]", getSchemaPath())
-        .build();
+        .build(logger);
   }
 
   /**
@@ -113,7 +113,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
   public void dropView(String viewName) throws IOException {
     throw UserException.unsupportedError()
         .message("Dropping a view is supported in schema [%s]", getSchemaPath())
-        .build();
+        .build(logger);
   }
 
   /**
@@ -125,7 +125,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer 
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {
     throw UserException.unsupportedError()
         .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
-        .build();
+        .build(logger);
   }
 
   /**

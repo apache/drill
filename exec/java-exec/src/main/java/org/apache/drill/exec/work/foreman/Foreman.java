@@ -246,7 +246,7 @@ public class Foreman implements Runnable {
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
     } catch (final OutOfMemoryException | OutOfMemoryRuntimeException e) {
-      moveToState(QueryState.FAILED, UserException.memoryError(e).build());
+      moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
@@ -257,7 +257,7 @@ public class Foreman implements Runnable {
         moveToState(QueryState.FAILED,
             UserException.resourceError(e)
                 .message("One or more nodes ran out of memory while executing the query.")
-                .build());
+                .build(logger));
       } else {
         /*
          * FragmentExecutors use a DrillbitStatusListener to watch out for the death of their query's Foreman. So, if we
@@ -496,7 +496,7 @@ public class Foreman implements Runnable {
             .message(
                 "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
                 queueName, queueTimeout / 1000)
-            .build();
+            .build(logger);
       }
 
     }
@@ -735,7 +735,7 @@ public class Foreman implements Runnable {
       final UserException uex;
       if (resultException != null) {
         final boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
-        uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build();
+        uex = UserException.systemError(resultException).addIdentity(queryContext.getCurrentEndpoint()).build(logger);
         resultBuilder.addError(uex.getOrCreatePBError(verbose));
       } else {
         uex = null;
@@ -1006,7 +1006,7 @@ public class Foreman implements Runnable {
               "Exceeded timeout (%d) while waiting send intermediate work fragments to remote nodes. " +
                   "Sent %d and only heard response back from %d nodes.",
               timeout, numIntFragments, numIntFragments - numberRemaining)
-          .build();
+          .build(logger);
     }
 
     // if any of the intermediate fragment submissions failed, fail the query
@@ -1030,7 +1030,7 @@ public class Foreman implements Runnable {
       throw UserException.connectionError(submissionExceptions.get(0).rpcException)
           .message("Error setting up remote intermediate fragment execution")
           .addContext("Nodes with failures", sb.toString())
-          .build();
+          .build(logger);
     }
 
     injector.injectChecked(queryContext.getExecutionControls(), "send-fragments", ForemanException.class);

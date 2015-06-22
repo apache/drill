@@ -427,7 +427,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } catch (SchemaChangeException ex) {
       kill(false);
       context.fail(UserException.unsupportedError(ex)
-        .message("Sort doesn't currently support sorts with changing schemas").build());
+        .message("Sort doesn't currently support sorts with changing schemas").build(logger));
       return IterOutcome.STOP;
     } catch(ClassTransformationException | IOException ex) {
       kill(false);

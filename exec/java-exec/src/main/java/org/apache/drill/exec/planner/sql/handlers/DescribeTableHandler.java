@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import static org.apache.drill.exec.planner.sql.parser.DrillParserUtil.CHARSET;
 
 public class DescribeTableHandler extends DefaultSqlHandler {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DescribeTableHandler.class);
 
   public DescribeTableHandler(SqlHandlerConfig config) { super(config); }
 
@@ -74,7 +75,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
       if (SchemaUtilites.isRootSchema(schema)) {
         throw UserException.validationError()
             .message("No schema selected.")
-            .build();
+            .build(logger);
       }
 
       final String tableName = Util.last(table.names);
@@ -85,7 +86,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
       if (schema.getTable(tableName) == null) {
         throw UserException.validationError()
             .message("Unknown table [%s] in schema [%s]", tableName, schemaPath)
-            .build();
+            .build(logger);
       }
 
       SqlNode schemaCondition = null;
@@ -125,7 +126,7 @@ public class DescribeTableHandler extends DefaultSqlHandler {
     } catch (Exception ex) {
       throw UserException.planError(ex)
           .message("Error while rewriting DESCRIBE query: %d", ex.getMessage())
-          .build();
+          .build(logger);
     }
   }
 }

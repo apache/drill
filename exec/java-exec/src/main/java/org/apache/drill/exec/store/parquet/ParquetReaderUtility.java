@@ -26,12 +26,13 @@ import org.apache.drill.exec.work.ExecErrorConstants;
  * Utility class where we can capture common logic between the two parquet readers
  */
 public class ParquetReaderUtility {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetReaderUtility.class);
+
   public static void checkDecimalTypeEnabled(OptionManager options) {
     if (options.getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
-      throw UserException
-          .unsupportedError()
-          .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
-          .build();
+      throw UserException.unsupportedError()
+        .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
+        .build(logger);
     }
   }
 

@@ -222,7 +222,7 @@ public class ScanBatch implements CloseableRecordBatch {
         return IterOutcome.OK;
       }
     } catch (OutOfMemoryRuntimeException ex) {
-      context.fail(UserException.memoryError(ex).build());
+      context.fail(UserException.memoryError(ex).build(logger));
       return IterOutcome.STOP;
     } catch (Exception ex) {
       logger.debug("Failed to read the batch. Stopping...", ex);

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class SchemaUtilites {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtilites.class);
   public static final Joiner SCHEMA_PATH_JOINER = Joiner.on(".").skipNulls();
 
   /**
@@ -106,7 +107,7 @@ public class SchemaUtilites {
     } catch (ClassCastException e) {
       throw UserException.validationError(e)
           .message("Schema [%s] is not a Drill schema.", getSchemaPath(schemaPlus))
-          .build();
+          .build(logger);
     }
   }
 
@@ -140,7 +141,7 @@ public class SchemaUtilites {
             givenSchemaPath)
         .addContext("Current default schema: ",
             isRootSchema(defaultSchema) ? "No default schema selected" : getSchemaPath(defaultSchema))
-        .build();
+        .build(logger);
   }
 
   /**
@@ -164,14 +165,14 @@ public class SchemaUtilites {
       throw UserException.parseError()
           .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
               "Select a schema using 'USE schema' command.")
-          .build();
+          .build(logger);
     }
 
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
     if (!drillSchema.isMutable()) {
       throw UserException.parseError()
           .message("Unable to create or drop tables/views. Schema [%s] is immutable.", getSchemaPath(schema))
-          .build();
+          .build(logger);
     }
 
     return drillSchema;

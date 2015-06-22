@@ -202,7 +202,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
               .resourceError( e )
               .addContext( "Server type", getClass().getSimpleName() )
               .message( "Drillbit could not bind to port %s.", port )
-              .build();
+              .build(logger);
         throw bindException;
       }
     }

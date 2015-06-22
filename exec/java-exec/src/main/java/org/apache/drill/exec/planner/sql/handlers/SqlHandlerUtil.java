@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class SqlHandlerUtil {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SqlHandlerUtil.class);
 
   /**
    * Resolve final RelNode of the new table (or view) for given table field list and new table definition.
@@ -89,7 +90,7 @@ public class SqlHandlerUtil {
         final String tblType = isNewTableView ? "view" : "table";
         throw UserException.validationError()
             .message("%s's field list and the %s's query field list have different counts.", tblType, tblType)
-            .build();
+            .build(logger);
       }
 
       // CTAS's query field list shouldn't have "*" when table's field list is specified.
@@ -99,7 +100,7 @@ public class SqlHandlerUtil {
           throw UserException.validationError()
               .message("%s's query field list has a '*', which is invalid when %s's field list is specified.",
                   tblType, tblType)
-              .build();
+              .build(logger);
         }
       }
 
@@ -160,7 +161,7 @@ public class SqlHandlerUtil {
       if (field == null) {
         throw UserException.validationError()
             .message("Partition column %s is not in the SELECT list of CTAS!", col)
-            .build();
+            .build(logger);
       } else {
         if (field.getName().startsWith(StarColumnHelper.STAR_COLUMN)) {
           colRefStarNames.add(col);

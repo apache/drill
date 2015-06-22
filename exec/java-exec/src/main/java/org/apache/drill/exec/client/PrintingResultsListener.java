@@ -41,6 +41,8 @@ import org.apache.drill.exec.util.VectorUtil;
 import com.google.common.base.Stopwatch;
 
 public class PrintingResultsListener implements UserResultsListener {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrintingResultsListener.class);
+
   AtomicInteger count = new AtomicInteger();
   private CountDownLatch latch = new CountDownLatch(1);
   RecordBatchLoader loader;
@@ -86,7 +88,7 @@ public class PrintingResultsListener implements UserResultsListener {
         // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
         // SchemaChangeException, so check/clean catch clause below.
       } catch (SchemaChangeException e) {
-        submissionFailed(UserException.systemError(e).build());
+        submissionFailed(UserException.systemError(e).build(logger));
       }
 
       switch(format) {

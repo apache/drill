@@ -232,7 +232,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
             ResponseSender sender = new ResponseSenderImpl(connection, msg.coordinationId);
             handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
           } catch (UserRpcException e) {
-            UserException uex = UserException.systemError(e).addIdentity(e.getEndpoint()).build();
+            UserException uex = UserException.systemError(e).addIdentity(e.getEndpoint()).build(logger);
 
             logger.error("Unexpected Error while handling request message", e);
 
