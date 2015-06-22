@@ -18,11 +18,14 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.util.ApproximateStringMatcher;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.LogicalAggregate;
@@ -51,6 +54,9 @@ import org.apache.calcite.util.NlsString;
  * output type and we will fire/ ignore certain rules (merge project rule) based on this fact.
  */
 public class PreProcessLogicalRel extends RelShuttleImpl {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PreProcessLogicalRel.class);
+
   private RelDataTypeFactory factory;
   private DrillOperatorTable table;
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
@@ -94,8 +100,26 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
 
         // check if its a convert_from or convert_to function
         if (functionName.equalsIgnoreCase("convert_from") || functionName.equalsIgnoreCase("convert_to")) {
-          assert nArgs == 2 && function.getOperands().get(1) instanceof RexLiteral;
-          String literal = ((NlsString) (((RexLiteral) function.getOperands().get(1)).getValue())).getValue();
+          String literal;
+          if (nArgs == 2) {
+            if (function.getOperands().get(1) instanceof RexLiteral) {
+              try {
+                literal = ((NlsString) (((RexLiteral) function.getOperands().get(1)).getValue())).getValue();
+              } catch (final ClassCastException e) {
+                // Caused by user entering a value with a non-string literal
+                throw getConvertFunctionInvalidTypeException(function);
+              }
+            } else {
+              // caused by user entering a non-literal
+              throw getConvertFunctionInvalidTypeException(function);
+            }
+          } else {
+            // Second operand is missing
+            throw UserException.parseError()
+                    .message("'%s' expects a string literal as a second argument.", functionName)
+                    .build(logger);
+          }
+
           RexBuilder builder = new RexBuilder(factory);
 
           // construct the new function name based on the input argument
@@ -103,7 +127,10 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
 
           // Look up the new function name in the drill operator table
           List<SqlOperator> operatorList = table.getSqlOperator(newFunctionName);
-          assert operatorList.size() > 0;
+          if (operatorList.size() == 0) {
+            // User typed in an invalid type name
+            throw getConvertFunctionException(functionName, literal);
+          }
           SqlFunction newFunction = null;
 
           // Find the SqlFunction with the correct args
@@ -113,7 +140,10 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
               break;
             }
           }
-          assert newFunction != null;
+          if (newFunction == null) {
+            // we are here because we found some dummy convert function. (See DummyConvertFrom and DummyConvertTo)
+            throw getConvertFunctionException(functionName, literal);
+          }
 
           // create the new expression to be used in the rewritten project
           newExpr = builder.makeCall(newFunction, function.getOperands().subList(0, 1));
@@ -145,6 +175,40 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     }
 
     return visitChildren(union);
+  }
+
+  private UserException getConvertFunctionInvalidTypeException(final RexCall function) {
+    // Caused by user entering a value with a numeric type
+    final String functionName = function.getOperator().getName();
+    final String typeName = function.getOperands().get(1).getType().getFullTypeString();
+    return UserException.parseError()
+            .message("Invalid type %s passed as second argument to function '%s'. " +
+                    "The function expects a literal argument.",
+                    typeName,
+                    functionName)
+            .build(logger);
+  }
+
+  private UserException getConvertFunctionException(final String functionName, final String typeName) {
+    final String newFunctionName = functionName + typeName;
+    final String typeNameToPrint = typeName.length()==0 ? "<empty_string>" : typeName;
+    final UserException.Builder exceptionBuilder = UserException.unsupportedError()
+            .message("%s does not support conversion %s type '%s'.", functionName, functionName.substring(8).toLowerCase(), typeNameToPrint);
+    // Build a nice error message
+    if (typeName.length()>0) {
+      List<String> ops = new ArrayList<>();
+      for (SqlOperator op : table.getOperatorList()) {
+        ops.add(op.getName());
+      }
+      final String bestMatch = ApproximateStringMatcher.getBestMatch(ops, newFunctionName);
+      if (bestMatch != null && bestMatch.length() > 0 && bestMatch.toLowerCase().startsWith("convert")) {
+        final StringBuilder s = new StringBuilder("Did you mean ")
+                .append(bestMatch.substring(functionName.length()))
+                .append("?");
+        exceptionBuilder.addContext(s.toString());
+      }
+    }
+    return exceptionBuilder.build(logger);
   }
 
   public void convertException() throws SqlUnsupportedException {
