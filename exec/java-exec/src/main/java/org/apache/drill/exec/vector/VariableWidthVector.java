@@ -27,34 +27,25 @@ public interface VariableWidthVector extends ValueVector{
    * @param totalBytes   Desired size of the underlying data buffer.
    * @param valueCount   Number of values in the vector.
    */
-  public void allocateNew(int totalBytes, int valueCount);
+  void allocateNew(int totalBytes, int valueCount);
 
   /**
    * Provide the maximum amount of variable width bytes that can be stored int his vector.
    * @return
    */
-  public int getByteCapacity();
+  int getByteCapacity();
 
-  /**
-   * Load the records in the provided buffer based on the given number of values.
-   * @param dataBytes   The number of bytes associated with the data array.
-   * @param valueCount Number of values the buffer contains.
-   * @param buf Incoming buffer.
-   * @return The number of bytes of the buffer that were consumed.
-   */
-  public int load(int dataBytes, int valueCount, DrillBuf buf);
+  VariableWidthMutator getMutator();
 
-  public abstract VariableWidthMutator getMutator();
+  VariableWidthAccessor getAccessor();
 
-  public abstract VariableWidthAccessor getAccessor();
-
-  public interface VariableWidthAccessor extends Accessor {
-    public int getValueLength(int index);
+  interface VariableWidthAccessor extends Accessor {
+    int getValueLength(int index);
   }
 
-  public int getCurrentSizeInBytes();
+  int getCurrentSizeInBytes();
 
-  public interface VariableWidthMutator extends Mutator {
-    public void setValueLengthSafe(int index, int length);
+  interface VariableWidthMutator extends Mutator {
+    void setValueLengthSafe(int index, int length);
   }
 }
