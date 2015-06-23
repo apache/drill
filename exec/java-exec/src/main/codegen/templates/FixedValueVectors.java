@@ -156,21 +156,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   @Override
-  public int load(int valueCount, DrillBuf buf){
-    clear();
-    int len = valueCount * ${type.width};
-    data = buf.slice(0, len);
-    data.retain();
-    data.writerIndex(len);
-    return len;
-  }
-
-  @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    assert this.field.matches(metadata) : String.format("The field %s doesn't match the provided metadata %s.", this.field, metadata);
-    int loaded = load(metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded : String.format("Expected to load %d bytes but actually loaded %d bytes", metadata.getBufferLength(), loaded);
-  }
+    final int actualLength = metadata.getBufferLength();
+    final int valueCount = metadata.getValueCount();
+    final int expectedLength = valueCount * ${type.width};
+    assert actualLength == expectedLength : String.format("Expected to load %d bytes but actually loaded %d bytes", expectedLength, actualLength);
+
+    clear();
+    data = buffer.slice(0, actualLength);
+    data.writerIndex(actualLength);
+    data.retain();
+    }
 
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());

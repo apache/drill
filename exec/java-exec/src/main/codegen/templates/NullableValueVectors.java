@@ -50,8 +50,10 @@ public final class ${className} extends BaseDataValueVector implements <#if type
 
   private final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
 
-  private final UInt1Vector bits = new UInt1Vector(MaterializedField.create(field + "_bits", Types.required(MinorType.UINT1)), allocator);
+  private final MaterializedField bitsField = MaterializedField.create("$bits$", Types.required(MinorType.UINT1));
+  private final UInt1Vector bits = new UInt1Vector(bitsField, allocator);
   private final ${valuesName} values = new ${minor.class}Vector(field, allocator);
+
   private final Mutator mutator = new Mutator();
   private final Accessor accessor = new Accessor();
 
@@ -106,16 +108,14 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     values.setInitialCapacity(numRecords);
   }
 
-  <#if type.major == "VarLen">
   @Override
-  public SerializedField getMetadata() {
-    return getMetadataBuilder()
-             .setValueCount(getAccessor().getValueCount())
-             .setVarByteLength(values.getVarByteLength())
-             .setBufferLength(getBufferSize())
-             .build();
+  public SerializedField.Builder getMetadataBuilder() {
+    return super.getMetadataBuilder()
+      .addChild(bits.getMetadata())
+      .addChild(values.getMetadata());
   }
 
+  @Override
   public void allocateNew() {
     if(!allocateNewSafe()){
       throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
@@ -143,6 +143,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     return success;
   }
 
+  <#if type.major == "VarLen">
   @Override
   public void allocateNew(int totalBytes, int valueCount) {
     try {
@@ -158,26 +159,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
-  public int load(int dataBytes, int valueCount, DrillBuf buf){
-    clear();
-    int loaded = bits.load(valueCount, buf);
-
-    // remove bits part of buffer.
-    buf = buf.slice(loaded, buf.capacity() - loaded);
-    dataBytes -= loaded;
-    loaded += values.load(dataBytes, valueCount, buf);
-    this.mutator.lastSet = valueCount;
-    return loaded;
-  }
-
-  @Override
-  public void load(SerializedField metadata, DrillBuf buffer) {
-    assert this.field.matches(metadata) : String.format("The field %s doesn't match the provided metadata %s.", this.field, metadata);
-    int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded : String.format("Expected to load %d bytes but actually loaded %d bytes", metadata.getBufferLength(), loaded);
-  }
-
-  @Override
   public int getByteCapacity(){
     return values.getByteCapacity();
   }
@@ -188,48 +169,11 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   <#else>
-
-  @Override
-  public void allocateNew() {
-    try {
-      values.allocateNew();
-      bits.allocateNew();
-    } catch(DrillRuntimeException e) {
-      clear();
-      throw e;
-    }
-    bits.zeroVector();
-    mutator.reset();
-    accessor.reset();
-  }
-
-
-  @Override
-  public boolean allocateNewSafe() {
-    /* Boolean to keep track if all the memory allocations were successful
-     * Used in the case of composite vectors when we need to allocate multiple
-     * buffers for multiple vectors. If one of the allocations failed we need to
-     * clear all the memory that we allocated
-     */
-    boolean success = false;
-    try {
-      success = values.allocateNewSafe() && bits.allocateNewSafe();
-    } finally {
-      if (!success) {
-        clear();
-      }
-    }
-    bits.zeroVector();
-    mutator.reset();
-    accessor.reset();
-    return success;
-  }
-
   @Override
   public void allocateNew(int valueCount) {
     try {
       values.allocateNew(valueCount);
-      bits.allocateNew(valueCount);
+      bits.allocateNew(valueCount+1);
     } catch(OutOfMemoryRuntimeException e) {
       clear();
       throw e;
@@ -239,37 +183,30 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     accessor.reset();
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void zeroVector() {
-    this.values.zeroVector();
-    this.bits.zeroVector();
-  }
-
   @Override
-  public int load(int valueCount, DrillBuf buf){
-    clear();
-    int loaded = bits.load(valueCount, buf);
-
-    // remove bits part of buffer.
-    buf = buf.slice(loaded, buf.capacity() - loaded);
-    loaded += values.load(valueCount, buf);
-    return loaded;
+  public void zeroVector() {
+    bits.zeroVector();
+    values.zeroVector();
   }
+  </#if>
+
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    assert this.field.matches(metadata);
-    int loaded = load(metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded;
-  }
+    clear();
+    final SerializedField bitsField = metadata.getChild(0);
+    bits.load(bitsField, buffer);
 
-  </#if>
+    final int capacity = buffer.capacity();
+    final int bitsLength = bitsField.getBufferLength();
+    final SerializedField valuesField = metadata.getChild(1);
+    values.load(valuesField, buffer.slice(bitsLength, capacity - bitsLength));
+  }
 
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());
   }
+
   public TransferPair getTransferPair(FieldReference ref){
     return new TransferImpl(getField().withPath(ref));
   }
@@ -277,7 +214,6 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   public TransferPair makeTransferPair(ValueVector to) {
     return new TransferImpl((Nullable${minor.class}Vector) to);
   }
-
 
   public void transferTo(Nullable${minor.class}Vector target){
     bits.transferTo(target.bits);
@@ -296,7 +232,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     </#if>
   }
 
-  private class TransferImpl implements TransferPair{
+  private class TransferImpl implements TransferPair {
     Nullable${minor.class}Vector to;
 
     public TransferImpl(MaterializedField field){
