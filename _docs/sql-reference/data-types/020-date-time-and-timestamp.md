@@ -63,9 +63,9 @@ When you want to use interval data in input, use INTERVAL as a keyword that intr
 
 To cast interval data to interval types you can query from a data source such as JSON, see the example in the section, ["Casting Intervals"]({{site.baseurl}}/docs/data-type-conversion/#casting-intervals).
 
-### Literal Interval Exampls
+### Literal Interval Examples
 
-In the following example, the INTERVAL keyword followed by 200 adds 200 years to the timestamp. The parentheticated 3 in `YEAR(3)` specifies the precision of the year interval, 3 digits in this case to support the hundreds interval.
+In the following example, the INTERVAL keyword followed by 200 adds 200 years to the timestamp. The 3 in parentheses in `YEAR(3)` specifies the precision of the year interval, 3 digits in this case to support the hundreds interval.
 
     SELECT CURRENT_TIMESTAMP + INTERVAL '200' YEAR(3) FROM sys.version;
     +--------------------------+

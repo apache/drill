@@ -2,7 +2,7 @@
 title: "Using the JDBC Driver"
 parent: "ODBC/JDBC Interfaces"
 ---
-This section explains how to install and use the JDBC driver for Apache Drill. For specific examples of client tool connections to Drill via JDBC, see [Using JDBC with SQuirreL]({{ site.baseurl }}/docs/.../) and [Configuring Spotfire Server]({{ site.baseurl }}/docs/.../).
+This section explains how to install and use the JDBC driver for Apache Drill. For specific examples of client tool connections to Drill via JDBC, see [Using JDBC with SQuirreL]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows) and [Configuring Spotfire Server]({{ site.baseurl }}/docs/configuring-tibco-spotfire-server-with-drill/).
 
 
 ### Prerequisites
