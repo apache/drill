@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.DrillBuf;
 
 public interface FixedWidthVector extends ValueVector{
 
@@ -26,21 +25,8 @@ public interface FixedWidthVector extends ValueVector{
    *
    * @param valueCount   Number of values in the vector.
    */
-  public void allocateNew(int valueCount);
+  void allocateNew(int valueCount);
 
-  /**
-   * Load the records in the provided buffer based on the given number of values.
-   * @param valueCount Number of values the buffer contains.
-   * @param buf Incoming buffer.
-   * @return The number of bytes of the buffer that were consumed.
-   */
-  public int load(int valueCount, DrillBuf buf);
+  void zeroVector();
 
-
-  public abstract Mutator getMutator();
-
-  /**
-   * Zero out the underlying buffer backing this vector.
-   */
-  public void zeroVector();
 }

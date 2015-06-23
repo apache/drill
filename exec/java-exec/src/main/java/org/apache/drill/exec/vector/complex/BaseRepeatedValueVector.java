@@ -100,7 +100,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
   @Override
   public int getValueCapacity() {
-    final int offsetValueCapacity = offsets.getValueCapacity() - 1;
+    final int offsetValueCapacity = Math.max(offsets.getValueCapacity() - 1, 0);
     if (vector == DEFAULT_DATA_VECTOR) {
       return offsetValueCapacity;
     }

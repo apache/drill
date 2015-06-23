@@ -415,7 +415,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
 
   @Override
   public int getValueCapacity() {
-    return offsets.getValueCapacity()-1;
+    return Math.max(offsets.getValueCapacity() - 1, 0);
   }
 
   @Override
