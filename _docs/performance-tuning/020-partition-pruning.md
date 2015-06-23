@@ -7,12 +7,12 @@ Partition pruning is a performance optimization that limits the number of files 
  
 The query planner in Drill performs partition pruning by evaluating the filters. If no partition filters are present, the underlying Scan operator reads all files in all directories and then sends the data to operators, such as Filter, downstream. When partition filters are present, the query planner pushes the filters down to the Scan if possible. The Scan reads only the directories that match the partition filters, thus reducing disk I/O.
 
-## How to Use Partition Pruning
+## How Partition Data
 
 You can partition data manually or automatically to take advantage of partition pruning in Drill. In Drill 1.0 and earlier, you need to organize your data in such a way to take advantage of partition pruning. In Drill 1.1.0 and later, if the data source is Parquet, you can partition data automatically using CTAS--no data organization tasks required. 
 
 ## Automatic Partitioning
-Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [[PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statemebnt.
+Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statemebnt.
 
 Automatic partitioning creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there could be multiple files for the same partition value.
 

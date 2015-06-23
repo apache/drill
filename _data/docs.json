@@ -511,31 +511,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "What is Apache Drill", 
-                    "previous_url": "/docs/what-is-apache-drill/", 
-                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -6168,8 +6151,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "What is Apache Drill", 
+            "previous_url": "/docs/what-is-apache-drill/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
@@ -10933,8 +10916,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Partition Pruning", 
-            "next_url": "/docs/partition-pruning/", 
+            "next_title": "Progress Reports", 
+            "next_url": "/docs/progress-reports/", 
             "parent": "Archived Pages", 
             "previous_title": "How to Run the Drill Demo", 
             "previous_url": "/docs/how-to-run-the-drill-demo/", 
@@ -15316,31 +15299,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "What is Apache Drill", 
-                    "previous_url": "/docs/what-is-apache-drill/", 
-                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -15376,8 +15342,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "What is Apache Drill", 
+            "previous_url": "/docs/what-is-apache-drill/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
