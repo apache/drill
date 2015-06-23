@@ -29,11 +29,11 @@ ${DRILL_LOG_DIR:-/var/log/drill} directory on Drill nodes.
 
 You need to configure the ZooKeeper PStore to use the Drill Web UI when running multiple Drillbits. 
 
-## Why Configure the ZooKeeper PStore
+### Why Configure the ZooKeeper PStore
 
 When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to do some Drillbits do not appear in the Completed section of the Drill Web UI. Also, some Running links that you click to get information about the running queries are broken links.
 
-## Configuring the ZooKeeper PStore
+### How to Configure the ZooKeeper PStore
 
 To configure the ZooKeeper PStore, set the `sys.store.provider.zk.blobroot` property in the `drill.exec`
 block in `<drill_installation_directory>/conf/drill-override.conf` on each
