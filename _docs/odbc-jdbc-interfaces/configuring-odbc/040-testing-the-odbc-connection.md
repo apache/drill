@@ -19,25 +19,27 @@ There are 32-bit and 64-bit installations of the iODBC driver manager available.
 Visit [http://www.iodbc.org](http://www.iodbc.org/) for further details on
 using the iODBC driver manager.
 
-**Example**
+### Example of a Test on Linux
 
 To test the ODBC connection on a Linux cluster, follow these steps:
 
-1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/). For example, to start Drill in local mode on a linux cluster:
+1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/). For example, to start Drill in local mode on a linux cluster:  
+
         [root@centos23 drill-1.0.0]# bin/drill-localhost
         apache drill 1.0.0 
         "the only truly happy people are children, the creative minority and drill users"
 
-2. Run `iodbctest` or `iodbctestw`. 
-   The prompt for an ODBC connection string appears.
+2. In the `samples` directory of the driver manager installation, run `iodbctest` or `iodbctestw`.  
+
         [root@centos23 libiodbc-3.52.7]# samples/iodbctest
-        iODBC Demonstration program
+          iODBC Demonstration program
         This program shows an interactive SQL processor
         Driver Manager: 03.52.0709.0909
+   The prompt for an ODBC connection string appears.  
 
         Enter ODBC connect string (? shows list): ?
 
-3. Type ? to see the DSN name.
+3. Type ? to see the DSN name.  
    Output is:
 
         DSN                              | Driver                                  
@@ -47,26 +49,28 @@ To test the ODBC connection on a Linux cluster, follow these steps:
 
 4. If you are connecting directly to a Drillbit, type an ODBC connection string using the following format:
 
-     `DSN=<DSN name>;ConnectionType=Direct;Host=<Host Name>;Port=<Port Number>`
+        DSN=<DSN name>;ConnectionType=Direct;Host=<Host Name>;Port=<Port Number>
      
      OR
      
      If you are connecting to a ZooKeeper cluster, type an ODBC connection string using the following format:
 
-     `DSN=<DSN Name>;ConnectionType=ZooKeeper;ZKQuorum=<Server1:Port1>
-,<Server2:Port2>;ZKClusterID=<Cluster Name>`
+        DSN=<DSN Name>;ConnectionType=ZooKeeper;ZKQuorum=<Server1:Port1>,<Server2:Port2>;ZKClusterID=<Cluster Name>`
 
-   The following example shows a connection string:
+     The output of a successful test is:  
+     `Driver: 1.0.0.1001 (MapR Drill ODBC Driver)  
+     SQL> `  
+     After the `SQL>` prompt appears, type `quit;`, and go to the Drill shell to run commands. Do not attempt to run SQL commands from this prompt.
 
-   `DSN=Sample MapR Drill DSN 64;ConnectionType=Direct;Host=localhost;Port=31010`
+### Example Connection Strings
 
-   The output of a successful test is:
+The following example shows a connection string for a direct connection:
 
-   `Driver: 1.0.0.1001 (MapR Drill ODBC Driver)
+        DSN=Sample MapR Drill DSN 64;ConnectionType=Direct;Host=localhost;Port=31010
 
-        SQL> `
+The following example shows a connection string for a ZooKeeper cluster connection:
 
-     After he `SQL>` prompt appears, go to the Drill shell to run commands. Do not attempt to run SQL commands from this prompt.
+        DSN=Sample MapR Drill DSN 64;ConnectionType=ZooKeeper;ZKQuorum=centos23.lab:5181;ZKClusterID=docs41cluster-drillbits
 
 ## Testing the ODBC Connection on Mac OS X
 
