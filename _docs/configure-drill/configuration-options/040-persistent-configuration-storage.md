@@ -24,8 +24,7 @@ modes:
 Drill uses ZooKeeper to
 store persistent configuration data. The ZooKeeper PStore provider stores all
 of the persistent configuration data in ZooKeeper except for query profile
-data. The ZooKeeper PStore provider offloads query profile data to the
-${DRILL_LOG_DIR:-/var/log/drill} directory on Drill nodes. 
+data. The ZooKeeper PStore provider offloads query profile data to the Drill log directory on Drill nodes. 
 
 You need to configure the ZooKeeper PStore to use the Drill Web UI when running multiple Drillbits. 
 
