@@ -36,7 +36,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class GNewValueFunctions {
 <#list vv.types as type>
-<#if type.major == "Fixed">
+<#if type.major == "Fixed" || type.major = "Bit">
 
 <#list type.minor as minor>
 <#list vv.modes as mode>
