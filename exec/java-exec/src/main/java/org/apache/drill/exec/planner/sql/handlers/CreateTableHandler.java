@@ -25,6 +25,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -39,6 +40,7 @@ import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
@@ -159,7 +161,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
     @Override
     public Prel visitWriter(WriterPrel prel, Void value) throws RuntimeException {
 
-      final Prel child = ((Prel)prel.getInput()).accept(this, null);
+      final Prel child = ((Prel) prel.getInput()).accept(this, null);
 
       final RelDataType childRowType = child.getRowType();
 

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -121,5 +122,10 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   public int getOperatorType() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<SchemaPath> getPartitionColumns() {
+    return Lists.newArrayList();
   }
 }

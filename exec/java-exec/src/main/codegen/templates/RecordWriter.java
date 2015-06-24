@@ -23,6 +23,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
@@ -43,10 +44,15 @@ public interface RecordWriter {
 
   /**
    * Update the schema in RecordWriter. Called at least once before starting writing the records.
-   * @param schema
+   * @param batch
    * @throws IOException
    */
-  void updateSchema(BatchSchema schema) throws IOException;
+  void updateSchema(VectorAccessible batch) throws IOException;
+
+  /**
+   * Check if the writer should start a new partition, and if so, start a new partition
+   */
+  public void checkForNewPartition(int index);
 
   /**
    * Called before starting writing fields in a record.

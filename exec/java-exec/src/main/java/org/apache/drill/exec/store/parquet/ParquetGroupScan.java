@@ -19,18 +19,28 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.holders.IntervalHolder;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
@@ -41,6 +51,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -54,14 +65,44 @@ import org.apache.drill.exec.store.schedule.BlockMapBuilder;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.Float4Vector;
+import org.apache.drill.exec.vector.Float8Vector;
+import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.NullableDecimal18Vector;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
+import org.apache.drill.exec.vector.NullableFloat8Vector;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableIntervalVector;
+import org.apache.drill.exec.vector.NullableSmallIntVector;
+import org.apache.drill.exec.vector.NullableTimeStampVector;
+import org.apache.drill.exec.vector.NullableTimeVector;
+import org.apache.drill.exec.vector.NullableTinyIntVector;
+import org.apache.drill.exec.vector.NullableUInt1Vector;
+import org.apache.drill.exec.vector.NullableUInt2Vector;
+import org.apache.drill.exec.vector.NullableUInt4Vector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.joda.time.DateTimeUtils;
+import parquet.column.statistics.Statistics;
+import parquet.format.ConvertedType;
+import parquet.format.FileMetaData;
+import parquet.format.SchemaElement;
+import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.Footer;
+import parquet.hadoop.ParquetFileWriter;
 import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
+import parquet.io.api.Binary;
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
 import com.codahale.metrics.MetricRegistry;
@@ -74,6 +115,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import parquet.schema.OriginalType;
+import parquet.schema.PrimitiveType.PrimitiveTypeName;
+import parquet.schema.Type;
 
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractFileGroupScan {
@@ -169,6 +213,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.rowGroupInfos = that.rowGroupInfos == null ? null : Lists.newArrayList(that.rowGroupInfos);
     this.selectionRoot = that.selectionRoot;
     this.columnValueCounts = that.columnValueCounts;
+    this.columnTypeMap = that.columnTypeMap;
+    this.partitionValueMap = that.partitionValueMap;
+    this.fileSet = that.fileSet;
   }
 
 
@@ -214,6 +261,12 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
   }
 
+  public Set<String> getFileSet() {
+    return fileSet;
+  }
+
+  private Set<String> fileSet = Sets.newHashSet();
+
   private void readFooterHelper(List<FileStatus> statuses) throws IOException {
     watch.reset();
     watch.start();
@@ -227,10 +280,19 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     ColumnChunkMetaData columnChunkMetaData;
 
     List<Footer> footers = FooterGatherer.getFooters(formatPlugin.getFsConf(), statuses, 16);
+    boolean first = true;
+    ParquetMetadataConverter metadataConverter = new ParquetMetadataConverter();
     for (Footer footer : footers) {
       int index = 0;
       ParquetMetadata metadata = footer.getParquetMetadata();
+      FileMetaData fileMetaData = metadataConverter.toParquetMetadata(ParquetFileWriter.CURRENT_VERSION, metadata);
+      HashMap<String, SchemaElement> schemaElements = new HashMap<>();
+      for (SchemaElement se : fileMetaData.getSchema()) {
+        schemaElements.put(se.getName(), se);
+      }
       for (BlockMetaData rowGroup : metadata.getBlocks()) {
+        String file = Path.getPathWithoutSchemeAndAuthority(footer.getFile()).toString();
+        fileSet.add(file);
         long valueCountInGrp = 0;
         // need to grab block information from HDFS
         columnChunkMetaData = rowGroup.getColumns().iterator().next();
@@ -242,28 +304,49 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         for (ColumnChunkMetaData col : rowGroup.getColumns()) {
           length += col.getTotalSize();
           valueCountInGrp = Math.max(col.getValueCount(), valueCountInGrp);
-          SchemaPath path = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
+          SchemaPath schemaPath = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
 
           long previousCount = 0;
           long currentCount = 0;
 
-          if (! columnValueCounts.containsKey(path)) {
+          if (! columnValueCounts.containsKey(schemaPath)) {
             // create an entry for this column
-            columnValueCounts.put(path, previousCount /* initialize to 0 */);
+            columnValueCounts.put(schemaPath, previousCount /* initialize to 0 */);
           } else {
-            previousCount = columnValueCounts.get(path);
+            previousCount = columnValueCounts.get(schemaPath);
           }
 
           boolean statsAvail = (col.getStatistics() != null && !col.getStatistics().isEmpty());
 
           if (statsAvail && previousCount != GroupScan.NO_COLUMN_STATS) {
             currentCount = col.getValueCount() - col.getStatistics().getNumNulls(); // only count non-nulls
-            columnValueCounts.put(path, previousCount + currentCount);
+            columnValueCounts.put(schemaPath, previousCount + currentCount);
           } else {
             // even if 1 chunk does not have stats, we cannot rely on the value count for this column
-            columnValueCounts.put(path, GroupScan.NO_COLUMN_STATS);
+            columnValueCounts.put(schemaPath, GroupScan.NO_COLUMN_STATS);
           }
 
+          // check if this column can be used for partition pruning
+          SchemaElement se = schemaElements.get(schemaPath.getAsUnescapedPath());
+          boolean partitionColumn = checkForPartitionColumn(schemaPath, col, se, first);
+          if (partitionColumn) {
+            Map<SchemaPath,Object> map = partitionValueMap.get(file);
+            if (map == null) {
+              map = Maps.newHashMap();
+              partitionValueMap.put(file, map);
+            }
+            Object value = map.get(schemaPath);
+            Object currentValue = col.getStatistics().genericGetMax();
+            if (value != null) {
+              if (value != currentValue) {
+                columnTypeMap.remove(schemaPath);
+              }
+            } else {
+              map.put(schemaPath, currentValue);
+            }
+          } else {
+            columnTypeMap.remove(schemaPath);
+          }
         }
 
         String filePath = footer.getFile().toUri().getPath();
@@ -272,6 +355,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         index++;
 
         rowCount += rowGroup.getRowCount();
+        first = false;
       }
 
     }
@@ -281,11 +365,221 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     logger.debug("Took {} ms to get row group infos", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
+  @JsonIgnore
+  private Map<SchemaPath,MajorType> columnTypeMap = Maps.newHashMap();
+
+  /**
+      * When reading the very first footer, any column is a potential partition column. So for the first footer, we check
+      * every column to see if it is single valued, and if so, add it to the list of potential partition columns. For the
+      * remaining footers, we will not find any new partition columns, but we may discover that what was previously a
+      * potential partition column now no longer qualifies, so it needs to be removed from the list.
+      * @param column
+      * @param columnChunkMetaData
+      * @param se
+      * @param first
+      * @return whether column is a potential partition column
+      */
+  private boolean checkForPartitionColumn(SchemaPath column, ColumnChunkMetaData columnChunkMetaData, SchemaElement se, boolean first) {
+    if (first) {
+      if (hasSingleValue(columnChunkMetaData)) {
+        columnTypeMap.put(column, getType(columnChunkMetaData, se));
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      if (!columnTypeMap.keySet().contains(column)) {
+        return false;
+      } else {
+        if (!hasSingleValue(columnChunkMetaData)) {
+          columnTypeMap.remove(column);
+          return false;
+        }
+        if (!getType(columnChunkMetaData, se).equals(columnTypeMap.get(column))) {
+          columnTypeMap.remove(column);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private MajorType getType(ColumnChunkMetaData columnChunkMetaData, SchemaElement schemaElement) {
+    ConvertedType originalType = schemaElement == null ? null : schemaElement.getConverted_type();
+
+    if (originalType != null) {
+      switch (originalType) {
+      case DECIMAL:
+        return Types.optional(MinorType.DECIMAL18);
+      case DATE:
+        return Types.optional(MinorType.DATE);
+      case TIME_MILLIS:
+        return Types.optional(MinorType.TIME);
+      case TIMESTAMP_MILLIS:
+        return Types.optional(MinorType.TIMESTAMP);
+      case UTF8:
+        return Types.optional(MinorType.VARCHAR);
+      case UINT_8:
+        return Types.optional(MinorType.UINT1);
+      case UINT_16:
+        return Types.optional(MinorType.UINT2);
+      case UINT_32:
+        return Types.optional(MinorType.UINT4);
+      case UINT_64:
+        return Types.optional(MinorType.UINT8);
+      case INT_8:
+        return Types.optional(MinorType.TINYINT);
+      case INT_16:
+        return Types.optional(MinorType.SMALLINT);
+      }
+    }
+
+    PrimitiveTypeName type = columnChunkMetaData.getType();
+    switch (type) {
+    case BOOLEAN:
+      return Types.optional(MinorType.BIT);
+    case INT32:
+      return Types.optional(MinorType.INT);
+    case INT64:
+      return Types.optional(MinorType.BIGINT);
+    case FLOAT:
+      return Types.optional(MinorType.FLOAT4);
+    case DOUBLE:
+      return Types.optional(MinorType.FLOAT8);
+    case BINARY:
+    case FIXED_LEN_BYTE_ARRAY:
+      return Types.optional(MinorType.VARBINARY);
+    default:
+      // Should never hit this
+      throw new UnsupportedOperationException("Unsupported type:" + type);
+    }
+  }
+
+  private boolean hasSingleValue(ColumnChunkMetaData columnChunkMetaData) {
+    Statistics stats = columnChunkMetaData.getStatistics();
+    boolean hasStats = stats != null && !stats.isEmpty();
+    if (hasStats) {
+      if (stats.genericGetMin() == null || stats.genericGetMax() == null) {
+        return false;
+      }
+      return stats.genericGetMax().equals(stats.genericGetMin());
+    } else {
+      return false;
+    }
+  }
+
   @Override
   public void modifyFileSelection(FileSelection selection) {
     entries.clear();
     for (String fileName : selection.getAsFiles()) {
       entries.add(new ReadEntryWithPath(fileName));
+    }
+  }
+
+  public MajorType getTypeForColumn(SchemaPath schemaPath) {
+    return columnTypeMap.get(schemaPath);
+  }
+
+  private Map<String,Map<SchemaPath,Object>> partitionValueMap = Maps.newHashMap();
+
+  public void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
+    String f = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
+    MinorType type = getTypeForColumn(column).getMinorType();
+    switch (type) {
+    case INT: {
+      NullableIntVector intVector = (NullableIntVector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      intVector.getMutator().setSafe(index, value);
+      return;
+    }
+    case SMALLINT: {
+      NullableSmallIntVector smallIntVector = (NullableSmallIntVector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      smallIntVector.getMutator().setSafe(index, value.shortValue());
+      return;
+    }
+    case TINYINT: {
+      NullableTinyIntVector tinyIntVector = (NullableTinyIntVector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      tinyIntVector.getMutator().setSafe(index, value.byteValue());
+      return;
+    }
+    case UINT1: {
+      NullableUInt1Vector intVector = (NullableUInt1Vector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      intVector.getMutator().setSafe(index, value.byteValue());
+      return;
+    }
+    case UINT2: {
+      NullableUInt2Vector intVector = (NullableUInt2Vector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      intVector.getMutator().setSafe(index, (char) value.shortValue());
+      return;
+    }
+    case UINT4: {
+      NullableUInt4Vector intVector = (NullableUInt4Vector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      intVector.getMutator().setSafe(index, value);
+      return;
+    }
+    case BIGINT: {
+      NullableBigIntVector bigIntVector = (NullableBigIntVector) v;
+      Long value = (Long) partitionValueMap.get(f).get(column);
+      bigIntVector.getMutator().setSafe(index, value);
+      return;
+    }
+    case FLOAT4: {
+      NullableFloat4Vector float4Vector = (NullableFloat4Vector) v;
+      Float value = (Float) partitionValueMap.get(f).get(column);
+      float4Vector.getMutator().setSafe(index, value);
+      return;
+    }
+    case FLOAT8: {
+      NullableFloat8Vector float8Vector = (NullableFloat8Vector) v;
+      Double value = (Double) partitionValueMap.get(f).get(column);
+      float8Vector.getMutator().setSafe(index, value);
+      return;
+    }
+    case VARBINARY: {
+      NullableVarBinaryVector varBinaryVector = (NullableVarBinaryVector) v;
+      Binary value = (Binary) partitionValueMap.get(f).get(column);
+      byte[] bytes = value.getBytes();
+      varBinaryVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+      return;
+    }
+    case DECIMAL18: {
+      NullableDecimal18Vector decimalVector = (NullableDecimal18Vector) v;
+      Long value = (Long) partitionValueMap.get(f).get(column);
+      decimalVector.getMutator().setSafe(index, value);
+      return;
+    }
+    case DATE: {
+      NullableDateVector dateVector = (NullableDateVector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(value - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      return;
+    }
+    case TIME: {
+      NullableTimeVector timeVector = (NullableTimeVector) v;
+      Integer value = (Integer) partitionValueMap.get(f).get(column);
+      timeVector.getMutator().set(index, value);
+      return;
+    }
+    case TIMESTAMP: {
+      NullableTimeStampVector timeStampVector = (NullableTimeStampVector) v;
+      Long value = (Long) partitionValueMap.get(f).get(column);
+      timeStampVector.getMutator().set(index, value);
+      return;
+    }
+    case VARCHAR: {
+      NullableVarCharVector varCharVector = (NullableVarCharVector) v;
+      Binary value = (Binary) partitionValueMap.get(f).get(column);
+      byte[] bytes = value.getBytes();
+      varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+      return;
+    }
+    default:
+      throw new UnsupportedOperationException("Unsupported type: " + type);
     }
   }
 
@@ -476,4 +770,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return columnValueCounts.containsKey(column) ? columnValueCounts.get(column) : 0;
   }
 
+  @Override
+  public List<SchemaPath> getPartitionColumns() {
+    return new ArrayList(columnTypeMap.keySet());
+  }
 }

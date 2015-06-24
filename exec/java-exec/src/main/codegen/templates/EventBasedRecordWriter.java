@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import org.apache.drill.exec.planner.physical.WriterPrel;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/EventBasedRecordWriter.java" />
 <#include "/@includes/license.ftl" />
@@ -25,6 +27,8 @@ package org.apache.drill.exec.store;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -54,6 +58,7 @@ public class EventBasedRecordWriter {
     int counter = 0;
 
     for (; counter < recordCount; counter++) {
+      recordWriter.checkForNewPartition(counter);
       recordWriter.startRecord();
       // write the current record
       for (FieldConverter converter : fieldConverters) {
@@ -73,6 +78,9 @@ public class EventBasedRecordWriter {
     try {
       int fieldId = 0;
       for (VectorWrapper w : batch) {
+        if (w.getField().getPath().equals(SchemaPath.getSimplePath(WriterPrel.PARTITION_COMPARATOR_FIELD))) {
+          continue;
+        }
         FieldReader reader = w.getValueVector().getReader();
         FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getLastName(), reader);
         fieldConverters.add(converter);

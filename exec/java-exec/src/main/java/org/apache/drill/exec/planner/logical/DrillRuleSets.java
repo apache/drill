@@ -155,6 +155,8 @@ public class DrillRuleSets {
 
       PruneScanRule.getFilterOnProject(context),
       PruneScanRule.getFilterOnScan(context),
+      PruneScanRule.getFilterOnProjectParquet(context),
+      PruneScanRule.getFilterOnScanParquet(context),
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.

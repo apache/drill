@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.JSONOutputRecordWriter;
@@ -90,7 +91,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   }
 
   @Override
-  public void updateSchema(BatchSchema schema) throws IOException {
+  public void updateSchema(VectorAccessible batch) throws IOException {
     // no op
   }
 

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import org.apache.drill.exec.store.AbstractRecordWriter;
+
 import java.lang.Override;
 import java.lang.UnsupportedOperationException;
 
@@ -31,6 +33,7 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -48,14 +51,16 @@ import java.util.Map;
  *
  * This is useful for text format writers such as CSV, TSV etc.
  */
-public abstract class StringOutputRecordWriter implements RecordWriter {
+public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
 
   private final BufferAllocator allocator;
   protected StringOutputRecordWriter(BufferAllocator allocator){
     this.allocator = allocator;
   }
-  
-  public void updateSchema(BatchSchema schema) throws IOException {
+
+  @Override
+  public void updateSchema(VectorAccessible batch) throws IOException {
+    BatchSchema schema = batch.getSchema();
     List<String> columnNames = Lists.newArrayList();
     for (int i=0; i < schema.getFieldCount(); i++) {
       columnNames.add(schema.getColumn(i).getLastName());

@@ -150,7 +150,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     try {
       // update the schema in RecordWriter
       stats.startSetup();
-      recordWriter.updateSchema(incoming.getSchema());
+      recordWriter.updateSchema(incoming);
       // Create two vectors for:
       //   1. Fragment unique id.
       //   2. Summary: currently contains number of records written.
