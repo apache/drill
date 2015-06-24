@@ -23,7 +23,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.DeadBuf;
 
 public class SelectionVector4 {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
   private ByteBuf data;
   private int recordCount;
@@ -67,18 +67,26 @@ public class SelectionVector4 {
 
   /**
    * Caution: This method shares the underlying buffer between this vector and the newly created one.
+   * @param batchRecordCount this will be used when creating the new vector
    * @return Newly created single batch SelectionVector4.
-   * @throws SchemaChangeException
    */
-  public SelectionVector4 createNewWrapperCurrent() {
+  public SelectionVector4 createNewWrapperCurrent(int batchRecordCount) {
     try {
       data.retain();
-      SelectionVector4 sv4 = new SelectionVector4(data, recordCount, length);
+      SelectionVector4 sv4 = new SelectionVector4(data, recordCount, batchRecordCount);
       sv4.start = this.start;
       return sv4;
     } catch (SchemaChangeException e) {
       throw new IllegalStateException("This shouldn't happen.");
     }
+  }
+
+  /**
+   * Caution: This method shares the underlying buffer between this vector and the newly created one.
+   * @return Newly created single batch SelectionVector4.
+   */
+  public SelectionVector4 createNewWrapperCurrent() {
+    return createNewWrapperCurrent(length);
   }
 
   public boolean next() {

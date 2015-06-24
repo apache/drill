@@ -242,11 +242,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     final int lastSize = last.getRecordCount();
 
     if (!isSamePartition(currentSize - 1, current, lastSize - 1, last)
-        || !isPeer(currentSize - 1, current, lastSize - 1, last)) {
-      logger.trace("frame changed, we are ready to process first saved batch");
+        /*|| !isPeer(currentSize - 1, current, lastSize - 1, last)*/) {
+      logger.trace("partition changed, we are ready to process first saved batch");
       return true;
     } else {
-      logger.trace("frame didn't change, fetch next batch");
+      logger.trace("partition didn't change, fetch next batch");
       return false;
     }
   }

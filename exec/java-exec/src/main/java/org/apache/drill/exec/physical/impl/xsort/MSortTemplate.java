@@ -47,6 +47,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
   private Queue<Integer> newRunStarts;
   private FragmentContext context;
 
+  /**
+   * This is only useful for debugging and/or unit testing. Controls the maximum size of batches exposed to downstream
+   */
+  private int desiredRecordBatchCount;
+
   @Override
   public void setup(final FragmentContext context, final BufferAllocator allocator, final SelectionVector4 vector4, final VectorContainer hyperBatch) throws SchemaChangeException{
     // we pass in the local hyperBatch since that is where we'll be reading data.
@@ -71,15 +76,13 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
     }
     final DrillBuf drillBuf = allocator.buffer(4 * totalCount);
 
-    // This is only useful for debugging: change the maximum size of batches exposed to downstream
-    // when we don't spill to disk
-    int MSORT_BATCH_MAXSIZE;
     try {
-      MSORT_BATCH_MAXSIZE = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
+      desiredRecordBatchCount = context.getConfig().getInt(ExecConstants.EXTERNAL_SORT_MSORT_MAX_BATCHSIZE);
     } catch(ConfigException.Missing e) {
-      MSORT_BATCH_MAXSIZE = Character.MAX_VALUE;
+      // value not found, use default value instead
+      desiredRecordBatchCount = Character.MAX_VALUE;
     }
-    aux = new SelectionVector4(drillBuf, totalCount, MSORT_BATCH_MAXSIZE);
+    aux = new SelectionVector4(drillBuf, totalCount, desiredRecordBatchCount);
   }
 
   /**
@@ -150,11 +153,11 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       if (outIndex < vector4.getTotalCount()) {
         copyRun(outIndex, vector4.getTotalCount());
       }
-      final SelectionVector4 tmp = aux.createNewWrapperCurrent();
+      final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
-      aux = this.vector4.createNewWrapperCurrent();
+      aux = this.vector4.createNewWrapperCurrent(desiredRecordBatchCount);
       vector4.clear();
-      this.vector4 = tmp.createNewWrapperCurrent();
+      this.vector4 = tmp.createNewWrapperCurrent(desiredRecordBatchCount);
       tmp.clear();
       runStarts = newRunStarts;
     }
