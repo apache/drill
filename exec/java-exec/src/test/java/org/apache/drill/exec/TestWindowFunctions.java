@@ -288,4 +288,18 @@ public class TestWindowFunctions extends BaseTestQuery {
         .baselineValues(0.0d)
         .go();
   }
+
+  @Test
+  public void testWindowFunctionWithKnownType() throws Exception {
+    final String query = "select sum(cast(col_int as int)) over (partition by col_varchar) as col1 " +
+        "from cp.`jsoninput/large_int.json` limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(2147483649l)
+        .go();
+
+  }
 }
