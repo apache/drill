@@ -197,6 +197,20 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  @Test(expected = UnsupportedFunctionException.class) // DRILL-3359
+  public void testFramesDefinedInWindowClause() throws Exception {
+    try {
+      final String query = "explain plan for select sum(n_nationKey) over w \n" +
+          "from cp.`tpch/nation.parquet` \n" +
+          "window w as (partition by n_nationKey order by n_nationKey rows UNBOUNDED PRECEDING)";
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
   @Test(expected = UnsupportedFunctionException.class) // DRILL-3326
   public void testWindowWithAlias() throws Exception {
     try {
