@@ -40,36 +40,41 @@ public class TestWindowFrame extends BaseTestQuery {
     updateTestCluster(1, DrillConfig.create(props));
   }
 
-  private DrillTestWrapper buildWindowQuery(final String tableName, final boolean withPartitionBy) throws Exception {
+  private DrillTestWrapper buildWindowQuery(final String tableName, final boolean withPartitionBy, final int numBatches)
+      throws Exception {
     return testBuilder()
       .sqlQuery(String.format(getFile("window/q1.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id)":"()"))
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".tsv")
       .baselineColumns("count", "sum")
+      .expectsNumBatches(numBatches)
       .build();
   }
 
-  private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName, final boolean withPartitionBy) throws Exception {
+  private DrillTestWrapper buildWindowWithOrderByQuery(final String tableName, final boolean withPartitionBy,
+                                                       final int numBatches) throws Exception {
     return testBuilder()
-      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)":"(order by sub)"))
+      .sqlQuery(String.format(getFile("window/q2.sql"), TEST_RES_PATH, tableName, withPartitionBy ? "(partition by position_id order by sub)" : "(order by sub)"))
       .ordered()
       .csvBaselineFile("window/" + tableName + (withPartitionBy ? ".pby" : "") + ".oby.tsv")
       .baselineColumns("count", "sum", "row_number", "rank", "dense_rank", "cume_dist", "percent_rank")
+      .expectsNumBatches(numBatches)
       .build();
   }
 
-  private void runTest(final String tableName, final boolean withPartitionBy, final boolean withOrderBy) throws Exception {
+  private void runTest(final String tableName, final boolean withPartitionBy, final boolean withOrderBy, final int numBatches) throws Exception {
 
     DrillTestWrapper testWrapper = withOrderBy ?
-      buildWindowWithOrderByQuery(tableName, withPartitionBy) : buildWindowQuery(tableName, withPartitionBy);
+      buildWindowWithOrderByQuery(tableName, withPartitionBy, numBatches) : buildWindowQuery(tableName, withPartitionBy, numBatches);
     testWrapper.run();
   }
 
-  private void runTest(final String tableName) throws Exception {
-    runTest(tableName, true, true);
-    runTest(tableName, true, false);
-    runTest(tableName, false, true);
-    runTest(tableName, false, false);
+  private void runTest(final String tableName, final int numBatches) throws Exception {
+    // we do expect an "extra" empty batch
+    runTest(tableName, true, true, numBatches + 1);
+    runTest(tableName, true, false, numBatches + 1);
+    runTest(tableName, false, true, numBatches + 1);
+    runTest(tableName, false, false, numBatches + 1);
   }
 
   /**
@@ -77,7 +82,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P1() throws Exception {
-    runTest("b1.p1");
+    runTest("b1.p1", 1);
   }
 
   /**
@@ -85,7 +90,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB1P2() throws Exception {
-    runTest("b1.p2");
+    runTest("b1.p2", 1);
   }
 
   /**
@@ -93,7 +98,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P2() throws Exception {
-    runTest("b2.p2");
+    runTest("b2.p2", 2);
   }
 
   /**
@@ -101,7 +106,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB2P4() throws Exception {
-    runTest("b2.p4");
+    runTest("b2.p4", 2);
   }
 
   /**
@@ -109,7 +114,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB3P2() throws Exception {
-    runTest("b3.p2");
+    runTest("b3.p2", 3);
   }
 
   /**
@@ -118,7 +123,7 @@ public class TestWindowFrame extends BaseTestQuery {
    */
   @Test
   public void testB4P4() throws Exception {
-    runTest("b4.p4");
+    runTest("b4.p4", 4);
   }
 
   @Test // DRILL-1862
