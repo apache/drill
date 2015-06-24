@@ -1054,4 +1054,41 @@ public class TestExampleQueries extends BaseTestQuery {
 
   }
 
+  @Test // DRILL-3210
+  public void testWindowFunAndStarCol() throws Exception {
+    // SingleTableQuery : star + window function
+    final String query =
+        " select * , sum(n_nationkey) over (partition by n_regionkey) as sumwin " +
+        " from cp.`tpch/nation.parquet`";
+    final String baseQuery =
+        " select n_nationkey, n_name, n_regionkey, n_comment, " +
+        "   sum(n_nationkey) over (partition by n_regionkey) as sumwin " +
+        " from cp.`tpch/nation.parquet`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery(baseQuery)
+        .build()
+        .run();;
+
+    // JoinQuery: star + window function
+    final String joinQuery =
+        " select *, sum(n.n_nationkey) over (partition by r.r_regionkey order by r.r_name) as sumwin" +
+        " from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+        " where n.n_regionkey = r.r_regionkey";
+    final String joinBaseQuery =
+        " select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment, r.r_regionkey, r.r_name, r.r_comment, " +
+        "   sum(n.n_nationkey) over (partition by r.r_regionkey order by r.r_name) as sumwin " +
+        " from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+        " where n.n_regionkey = r.r_regionkey";
+
+    testBuilder()
+        .sqlQuery(joinQuery)
+        .unOrdered()
+        .sqlBaselineQuery(joinBaseQuery)
+        .build()
+        .run();
+
+  }
+
 }

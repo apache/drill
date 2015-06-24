@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -42,9 +44,11 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.BitSets;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -60,7 +64,8 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new WindowPrel(getCluster(), traitSet, sole(inputs), constants, getRowType(), groups.get(0));
+    final RelDataType copiedRowType = deriveCopiedRowTypeFromInput(sole(inputs));
+    return new WindowPrel(getCluster(), traitSet, sole(inputs), constants, copiedRowType, groups.get(0));
   }
 
   @Override
@@ -145,4 +150,27 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
   public Iterator<Prel> iterator() {
     return PrelUtil.iter(getInput());
   }
+
+  /**
+   * Derive rowType for the copied WindowPrel based on input.
+   * When copy() is called, the input might be different from the current one's input.
+   * We have to use the new input's field in the copied WindowPrel.
+   */
+  private RelDataType deriveCopiedRowTypeFromInput(final RelNode input) {
+    final RelDataType inputRowType = input.getRowType();
+    final RelDataType windowRowType = this.getRowType();
+
+    final List<RelDataTypeField> fieldList = new ArrayList<>(inputRowType.getFieldList());
+    final int inputFieldCount = inputRowType.getFieldCount();
+    final int windowFieldCount = windowRowType.getFieldCount();
+
+    for (int i = inputFieldCount; i < windowFieldCount; i++) {
+      fieldList.add(windowRowType.getFieldList().get(i));
+    }
+
+    final RelDataType rowType = this.getCluster().getRexBuilder().getTypeFactory().createStructType(fieldList);
+
+    return rowType;
+  }
+
 }
