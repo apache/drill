@@ -118,6 +118,20 @@ public class TestCTAS extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void ctasPartitionWithEmptyList() throws Exception {
+    final String newTblName = "ctasPartitionWithEmptyList";
+
+    try {
+      final String ctasQuery = String.format("CREATE TABLE %s.%s PARTITION BY AS SELECT * from cp.`region.json`", TEMP_SCHEMA, newTblName);
+
+      errorMsgTestHelper(ctasQuery,
+          String.format("PARSE ERROR: Encountered \"AS\""));
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
     final String createTableSql = String.format(ctasSql, TEMP_SCHEMA, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);

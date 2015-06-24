@@ -136,7 +136,23 @@ SqlNode SqlUseSchema():
 }
 
 /** Parses an optional field list and makes sure no field is a "*". */
-SqlNodeList ParseFieldList(String relType) :
+SqlNodeList ParseOptionalFieldList(String relType) :
+{
+    SqlNodeList fieldList;
+}
+{
+    fieldList = ParseRequiredFieldList(relType)
+    {
+        return fieldList;
+    }
+    |
+    {
+        return SqlNodeList.EMPTY;
+    }
+}
+
+/** Parses a required field list and makes sure no field is a "*". */
+SqlNodeList ParseRequiredFieldList(String relType) :
 {
     SqlNodeList fieldList;
 }
@@ -151,10 +167,6 @@ SqlNodeList ParseFieldList(String relType) :
                 throw new ParseException(String.format("%s's field list has a '*', which is invalid.", relType));
         }
         return fieldList;
-    }
-    |
-    {
-        return SqlNodeList.EMPTY;
     }
 }
 
@@ -175,7 +187,7 @@ SqlNode SqlCreateOrReplaceView() :
     [ <OR> <REPLACE> { replaceView = true; } ]
     <VIEW>
     viewName = CompoundIdentifier()
-    fieldList = ParseFieldList("View")
+    fieldList = ParseOptionalFieldList("View")
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
@@ -218,9 +230,9 @@ SqlNode SqlCreateTable() :
     <CREATE> { pos = getPos(); }
     <TABLE>
     tblName = CompoundIdentifier()
-    fieldList = ParseFieldList("Table")
+    fieldList = ParseOptionalFieldList("Table")
     (   <PARTITION> <BY>
-        partitionFieldList = ParseFieldList("Partition")
+        partitionFieldList = ParseRequiredFieldList("Partition")
     )?
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
