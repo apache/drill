@@ -19,6 +19,7 @@ package org.apache.drill.exec;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
@@ -315,5 +316,31 @@ public class TestWindowFunctions extends BaseTestQuery {
         .baselineValues(2147483649l)
         .go();
 
+  }
+
+  @Test
+  public void testCompoundIdentifierInWindowDefinition() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/csv/1994/Q1/orders_94_q1.csv").toURI().toString();
+    String query = String.format("SELECT count(*) OVER w as col1, count(*) OVER w as col2 \n" +
+        "FROM dfs_test.`%s` \n" +
+        "WINDOW w AS (PARTITION BY columns[1] ORDER BY columns[0] DESC)", root);
+
+    // Validate the result
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col1", "col2")
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .baselineValues((long) 1, (long) 1)
+        .build()
+        .run();
   }
 }
