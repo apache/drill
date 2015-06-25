@@ -488,13 +488,16 @@ public abstract class PruneScanRule extends RelOptRule {
 
         public PathPartition(int max, String selectionRoot, String file){
           this.file = file;
+          this.dirs = new String[max];
           int start = file.indexOf(selectionRoot) + selectionRoot.length();
           String postPath = file.substring(start);
+          if (postPath.length() == 0) {
+            return;
+          }
           if(postPath.charAt(0) == '/'){
             postPath = postPath.substring(1);
           }
           String[] mostDirs = postPath.split("/");
-          this.dirs = new String[max];
           int maxLoop = Math.min(max, mostDirs.length - 1);
           for(int i =0; i < maxLoop; i++){
             this.dirs[i] = mostDirs[i];

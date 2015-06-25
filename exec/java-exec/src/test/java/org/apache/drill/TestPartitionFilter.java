@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestPartitionFilter extends PlanTestBase {
@@ -46,9 +47,24 @@ public class TestPartitionFilter extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[]{numFilesPattern, includedFilterPattern}, new String[]{});
   }
 
+  @BeforeClass
+  public static void createParquetTable() throws Exception {
+    test("alter session set `planner.disable_exchanges` = true");
+    test(String.format("create table dfs_test.tmp.parquet partition by (yr, qrtr) as select o_orderkey, o_custkey, " +
+        "o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, cast(dir0 as int) yr, dir1 qrtr " +
+        "from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
+    test("alter session set `planner.disable_exchanges` = false");
+  }
+
   @Test  //Parquet: basic test with dir0 and dir1 filters
   public void testPartitionFilter1_Parquet() throws Exception {
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test  //Parquet: basic test with dir0 and dir1 filters
+  public void testPartitionFilter1_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select yr, qrtr, o_custkey, o_orderdate from dfs_test.tmp.parquet where yr=1994 and qrtr='Q1'", TEST_RES_PATH);
     testExcludeFilter(query, 1, "Filter", 10);
   }
 
@@ -70,6 +86,12 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 5);
   }
 
+  @Test //Parquet: partition filters are combined with regular columns in an AND
+  public void testPartitionFilter2_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select yr, qrtr, o_custkey, o_orderdate from dfs_test.tmp.parquet where o_custkey < 1000 and yr=1994 and qrtr='Q1'", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 5);
+  }
+
   @Test //Json: partition filters are combined with regular columns in an AND
   public void testPartitionFilter2_Json() throws Exception {
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/json` where o_custkey < 1000 and dir0=1994 and dir1='Q1'", TEST_RES_PATH);
@@ -85,6 +107,11 @@ public class TestPartitionFilter extends PlanTestBase {
   @Test //Parquet: partition filters are ANDed and belong to a top-level OR
   public void testPartitionFilter3_Parquet() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where (dir0=1994 and dir1='Q1' and o_custkey < 500) or (dir0=1995 and dir1='Q2' and o_custkey > 500)", TEST_RES_PATH);
+    testIncludeFilter(query, 2, "Filter", 8);
+  }
+  @Test //Parquet: partition filters are ANDed and belong to a top-level OR
+  public void testPartitionFilter3_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select * from dfs_test.tmp.parquet where (yr=1994 and qrtr='Q1' and o_custkey < 500) or (yr=1995 and qrtr='Q2' and o_custkey > 500)", TEST_RES_PATH);
     testIncludeFilter(query, 2, "Filter", 8);
   }
 
@@ -106,6 +133,12 @@ public class TestPartitionFilter extends PlanTestBase {
     test(query1);
   }
 
+  @Test //Parquet: filters contain join conditions and partition filters
+  public void testPartitionFilter4_Parquet_from_CTAS() throws Exception {
+    String query1 = String.format("select t1.dir0, t1.dir1, t1.o_custkey, t1.o_orderdate, cast(t2.c_name as varchar(10)) from dfs_test.tmp.parquet t1, cp.`tpch/customer.parquet` t2 where t1.o_custkey = t2.c_custkey and t1.yr=1994 and t1.qrtr='Q1'", TEST_RES_PATH);
+    test(query1);
+  }
+
   @Test //Json: filters contain join conditions and partition filters
   public void testPartitionFilter4_Json() throws Exception {
     String query1 = String.format("select t1.dir0, t1.dir1, t1.o_custkey, t1.o_orderdate, cast(t2.c_name as varchar(10)) from dfs_test.`%s/multilevel/json` t1, cp.`tpch/customer.parquet` t2 where cast(t1.o_custkey as bigint) = cast(t2.c_custkey as bigint) and t1.dir0=1994 and t1.dir1='Q1'", TEST_RES_PATH);
@@ -121,6 +154,12 @@ public class TestPartitionFilter extends PlanTestBase {
   @Test // Parquet: IN filter
   public void testPartitionFilter5_Parquet() throws Exception {
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where dir0 in (1995, 1996)", TEST_RES_PATH);
+    testExcludeFilter(query, 8, "Filter", 80);
+  }
+
+  @Test // Parquet: IN filter
+  public void testPartitionFilter5_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select yr, qrtr, o_custkey, o_orderdate from dfs_test.tmp.parquet where yr in (1995, 1996)", TEST_RES_PATH);
     testExcludeFilter(query, 8, "Filter", 80);
   }
 
@@ -142,9 +181,21 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 8, "Filter", 46);
   }
 
+  @Test // Parquet: one side of OR has partition filter only, other side has both partition filter and non-partition filter
+  public void testPartitionFilter6_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select * from dfs_test.tmp.parquet where (yr=1995 and o_totalprice < 40000) or yr=1996", TEST_RES_PATH);
+    testIncludeFilter(query, 8, "Filter", 46);
+  }
+
   @Test // Parquet: trivial case with 1 partition filter
   public void testPartitionFilter7_Parquet() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir0=1995", TEST_RES_PATH);
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
+  @Test // Parquet: trivial case with 1 partition filter
+  public void testPartitionFilter7_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select * from dfs_test.tmp.parquet where yr=1995", TEST_RES_PATH);
     testExcludeFilter(query, 4, "Filter", 40);
   }
 
@@ -154,9 +205,21 @@ public class TestPartitionFilter extends PlanTestBase {
     testExcludeFilter(query, 6, "Filter", 60);
   }
 
+  @Test
+  public void testPartitionFilter8_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select * from dfs_test.tmp.parquet where qrtr in ('Q1','Q4')", TEST_RES_PATH);
+    testExcludeFilter(query, 6, "Filter", 60);
+  }
+
   @Test // Parquet: partition filter on subdirectory only plus non-partition filter
   public void testPartitionFilter9_Parquet() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/parquet` where dir1 in ('Q1','Q4') and o_totalprice < 40000", TEST_RES_PATH);
+    testIncludeFilter(query, 6, "Filter", 9);
+  }
+
+  @Test
+  public void testPartitionFilter9_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select * from dfs_test.tmp.parquet where qrtr in ('Q1','Q4') and o_totalprice < 40000", TEST_RES_PATH);
     testIncludeFilter(query, 6, "Filter", 9);
   }
 
