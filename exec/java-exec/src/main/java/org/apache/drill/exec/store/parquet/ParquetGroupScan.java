@@ -22,6 +22,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -212,10 +213,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.rowCount = that.rowCount;
     this.rowGroupInfos = that.rowGroupInfos == null ? null : Lists.newArrayList(that.rowGroupInfos);
     this.selectionRoot = that.selectionRoot;
-    this.columnValueCounts = that.columnValueCounts;
-    this.columnTypeMap = that.columnTypeMap;
-    this.partitionValueMap = that.partitionValueMap;
-    this.fileSet = that.fileSet;
+    this.columnValueCounts = that.columnValueCounts == null ? null : new HashMap(that.columnValueCounts);
+    this.columnTypeMap = that.columnTypeMap == null ? null : new HashMap(that.columnTypeMap);
+    this.partitionValueMap = that.partitionValueMap == null ? null : new HashMap(that.partitionValueMap);
+    this.fileSet = that.fileSet == null ? null : new HashSet(that.fileSet);
   }
 
 
@@ -271,6 +272,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     watch.reset();
     watch.start();
     Timer.Context tContext = metrics.timer(READ_FOOTER_TIMER).time();
+
+    columnTypeMap.clear();
+    fileSet.clear();
+    partitionValueMap.clear();
 
     rowGroupInfos = Lists.newArrayList();
     long start = 0, length = 0;

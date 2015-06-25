@@ -223,6 +223,18 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 6, "Filter", 9);
   }
 
+  @Test
+  public void testPartitoinFilter10_Parquet() throws Exception {
+    String query = String.format("select max(o_orderprice) from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 1);
+  }
+
+  @Test
+  public void testPartitoinFilter10_Parquet_from_CTAS() throws Exception {
+    String query = String.format("select max(o_orderprice) from dfs_test.tmp.parquet where yr=1994 and qrtr='Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 1);
+  }
+
   @Test // see DRILL-2712
   public void testMainQueryFalseCondition() throws Exception {
     String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
