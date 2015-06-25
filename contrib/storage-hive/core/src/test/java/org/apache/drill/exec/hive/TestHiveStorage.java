@@ -41,6 +41,17 @@ public class TestHiveStorage extends HiveTestBase {
         .go();
   }
 
+  @Test // DRILL-3328
+  public void convertFromOnHiveBinaryType() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT convert_from(binary_field, 'UTF8') col1 from hive.readtest")
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues("binaryfield")
+        .baselineValues(new Object[] { null })
+        .go();
+  }
+
   /**
    * Test to ensure Drill reads the all supported types correctly both normal fields (converted to Nullable types) and
    * partition fields (converted to Required types).
