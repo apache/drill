@@ -61,7 +61,7 @@ override.conf.`
 	sys.store.provider: {
 	    class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
 	    hbase: {
-	      table : "drill_store"
+	      table : "drill_store",
 	      config: {
 	      "hbase.zookeeper.quorum": "<ip_address>,<ip_address>,<ip_address >,<ip_address>",
 	      "hbase.zookeeper.property.clientPort": "2181"
@@ -84,7 +84,7 @@ override.conf` on each Drill node and then restart the Drillbit service.
 	sys.store.provider: {
 	class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
 	hbase: {
-	  table : "/tables/drill_store",
+	  table : "/tables/drill_store"
 	    }
 	},
 
