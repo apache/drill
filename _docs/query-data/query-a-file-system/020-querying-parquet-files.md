@@ -14,7 +14,7 @@ The examples assume that Drill was [installed in embedded mode]({{ site.baseurl 
 
 To view the data in the `region.parquet` file, issue the following query:
 
-        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>\sample-data\region.parquet`;
+        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/region.parquet`;
 
 The query returns the following results:
 

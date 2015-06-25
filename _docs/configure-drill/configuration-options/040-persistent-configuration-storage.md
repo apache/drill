@@ -30,7 +30,7 @@ You need to configure the ZooKeeper PStore to use the Drill Web UI when running 
 
 ### Why Configure the ZooKeeper PStore
 
-When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to do some Drillbits do not appear in the Completed section of the Drill Web UI. Also, some Running links that you click to get information about the running queries are broken links.
+When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to some Drillbits do not appear in the Completed section of the Drill Web UI. Also, some Running links that you click to get information about running queries are broken links.
 
 ### How to Configure the ZooKeeper PStore
 
@@ -61,7 +61,7 @@ override.conf.`
 	sys.store.provider: {
 	    class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
 	    hbase: {
-	      table : "drill_store",
+	      table : "drill_store"
 	      config: {
 	      "hbase.zookeeper.quorum": "<ip_address>,<ip_address>,<ip_address >,<ip_address>",
 	      "hbase.zookeeper.property.clientPort": "2181"

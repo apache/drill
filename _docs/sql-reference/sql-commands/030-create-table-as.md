@@ -4,12 +4,14 @@ parent: "SQL Commands"
 ---
 You can create tables in Drill by using the CTAS command:
 
-    CREATE TABLE new_table_name AS <query>;
+    CREATE TABLE <table name> AS <query>;
 
-where query is a SELECT statement. Each table you create must have a unique
-name. You can include an optional column list for the new table. For example:
+*table name* is a unique table table, optionally prefaced by a storage plugin name, such as dfs, a workspace, such as tmp, and a path to the write location using dot notation and back ticks.  
+*query* is a SELECT statement that can include an optional column list for the new table. 
 
-    create table logtable(transid, prodid) as select transaction_id, product_id from ...
+Example:
+
+    CREATE TABLE logtable(transid, prodid) AS SELECT transaction_id, product_id FROM ...
 
 You can store table data in one of three formats:
 
