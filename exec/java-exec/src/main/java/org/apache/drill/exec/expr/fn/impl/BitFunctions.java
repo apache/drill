@@ -34,7 +34,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
  */
 public class BitFunctions {
 
-  @FunctionTemplate(names = {"booleanOr", "or", "||"},
+  @FunctionTemplate(names = {"booleanOr", "or", "||", "orNoShortCircuit"},
                     scope = FunctionScope.SC_BOOLEAN_OPERATOR,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {

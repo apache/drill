@@ -38,6 +38,7 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -225,7 +226,17 @@ public class CreateTableHandler extends DefaultSqlHandler {
       compFuncs.add(rexBuilder.makeCall(op, ImmutableList.of(input)));
     }
 
-    return RexUtil.composeDisjunction(rexBuilder, compFuncs, false);
+    return composeDisjunction(rexBuilder, compFuncs);
+  }
+
+  private RexNode composeDisjunction(final RexBuilder rexBuilder, List<RexNode> compFuncs) {
+    final DrillSqlOperator booleanOrFunc
+             = new DrillSqlOperator("orNoShortCircuit", 2, MajorType.getDefaultInstance(), true);
+    RexNode node = compFuncs.remove(0);
+    while (!compFuncs.isEmpty()) {
+      node = rexBuilder.makeCall(booleanOrFunc, node, compFuncs.remove(0));
+    }
+    return node;
   }
 
 }
