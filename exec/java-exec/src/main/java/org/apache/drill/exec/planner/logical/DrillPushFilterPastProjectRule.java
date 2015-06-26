@@ -37,14 +37,15 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
 
   public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule();
 
-  private RexCall findItemOperator(
+  private RexCall findItemOrFlatten(
       final RexNode node,
       final List<RexNode> projExprs) {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
         public Void visitCall(RexCall call) {
-          if ("item".equals(call.getOperator().getName().toLowerCase())) {
+          if ("item".equals(call.getOperator().getName().toLowerCase()) ||
+            "flatten".equals(call.getOperator().getName().toLowerCase())) {
             throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
                                               other utility methods in RexUtil.java */
           }
@@ -56,7 +57,8 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
           RexNode n = projExprs.get(index);
           if (n instanceof RexCall) {
             RexCall r = (RexCall) n;
-            if ("item".equals(r.getOperator().getName().toLowerCase())) {
+            if ("item".equals(r.getOperator().getName().toLowerCase()) ||
+                "flatten".equals(r.getOperator().getName().toLowerCase())) {
               throw new Util.FoundOne(r);
             }
           }
@@ -86,11 +88,11 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     Filter filterRel = call.rel(0);
     Project projRel = call.rel(1);
 
-    // Don't push Filter past Project if the Filter is referencing an ITEM expression
+    // Don't push Filter past Project if the Filter is referencing an ITEM or a FLATTEN expression
     // from the Project.
     //\TODO: Ideally we should split up the filter conditions into ones that
     // reference the ITEM expression and ones that don't and push the latter past the Project
-    if (findItemOperator(filterRel.getCondition(), projRel.getProjects()) != null) {
+    if (findItemOrFlatten(filterRel.getCondition(), projRel.getProjects()) != null) {
       return;
     }
 

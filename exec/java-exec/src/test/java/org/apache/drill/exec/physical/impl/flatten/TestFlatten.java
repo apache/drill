@@ -196,6 +196,17 @@ public class TestFlatten extends BaseTestQuery {
   }
 
   @Test
+  public void drill3370() throws Exception {
+    testBuilder()
+        .sqlQuery("select a from (select flatten(arr) as a from cp.`/flatten/drill-3370.json`) where a > 100")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(131l)
+        .baselineValues(106l)
+        .go();
+  }
+
+  @Test
   @Ignore("not yet fixed")
   public void drill1660() throws Exception {
     test("select * from cp.`/flatten/empty-rm.json`");
