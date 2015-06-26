@@ -51,12 +51,7 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
         if ((columns = subScan.getColumns()) == null) {
           columns = GroupScan.ALL_COLUMNS;
         }
-        MongoClientOptions clientOptions = subScan.getMongoPluginConfig()
-            .getMongoOptions();
-        MongoCredential mongoCrendials = subScan.getMongoPluginConfig()
-            .getMongoCrendials();
-        readers.add(new MongoRecordReader(scanSpec, columns, context,
-            clientOptions, mongoCrendials));
+        readers.add(new MongoRecordReader(scanSpec, columns, context, subScan.getMongoStoragePlugin()));
       } catch (Exception e) {
         logger.error("MongoRecordReader creation failed for subScan:  "
             + subScan + ".");
