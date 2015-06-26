@@ -177,6 +177,10 @@ public class ParquetFormatPlugin implements FormatPlugin{
     return false;
   }
 
+  @Override
+  public boolean supportsAutoPartitioning() {
+    return true;
+  }
 
 
   @Override

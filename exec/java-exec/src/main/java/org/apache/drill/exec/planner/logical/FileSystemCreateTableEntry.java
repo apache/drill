@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.store.ischema.Records;
  */
 @JsonTypeName("filesystem")
 public class FileSystemCreateTableEntry implements CreateTableEntry {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemCreateTableEntry.class);
 
   private FileSystemConfig storageConfig;
   private FormatPlugin formatPlugin;
@@ -81,6 +83,12 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
 
   @Override
   public Writer getWriter(PhysicalOperator child) throws IOException {
+    if (!(formatPlugin.supportsAutoPartitioning() ||
+        partitionColumns == null || partitionColumns.size() == 0)) {
+      throw UserException.unsupportedError().message(String.format("%s format does not support auto-partitioning.",
+          formatPlugin.getName())).build(logger);
+    }
+
     return formatPlugin.getWriter(child, location, partitionColumns);
   }
 

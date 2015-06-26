@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -244,6 +245,11 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   @Override
   public boolean supportsWrite() {
     return writable;
+  }
+
+  @Override
+  public boolean supportsAutoPartitioning() {
+    return false;
   }
 
   @Override
