@@ -188,6 +188,31 @@ public class TestCTAS extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-3382
+  public void ctasWithQueryOrderby() throws Exception {
+    final String newTblName = "ctasWithQueryOrderby";
+
+    try {
+      final String ctasQuery = String.format("CREATE TABLE %s.%s   " +
+          "AS SELECT n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` order by n_nationkey",
+          TEMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      final String selectFromCreatedTable = String.format(" select n_nationkey, n_name, n_comment from %s.%s", TEMP_SCHEMA, newTblName);
+      final String baselineQuery = "select n_nationkey, n_name, n_comment from cp.`tpch/nation.parquet` order by n_nationkey";
+
+      testBuilder()
+          .sqlQuery(selectFromCreatedTable)
+          .ordered()
+          .sqlBaselineQuery(baselineQuery)
+          .build()
+          .run();
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
     final String createTableSql = String.format(ctasSql, TEMP_SCHEMA, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);
