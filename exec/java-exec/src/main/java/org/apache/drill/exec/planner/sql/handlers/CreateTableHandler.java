@@ -107,11 +107,15 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
   private DrillRel convertToDrel(RelNode relNode, AbstractSchema schema, String tableName, List<String> partitionColumns, RelDataType queryRowType)
       throws RelConversionException, SqlUnsupportedException {
-
     final DrillRel convertedRelNode = convertToDrel(relNode);
 
-    DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(),
-        convertedRelNode, schema.createNewTable(tableName, partitionColumns));
+    // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
+    // Only insert project when the field count from the child is same as that of the queryRowType.
+    final DrillRel topPreservedNameProj = queryRowType.getFieldCount() == convertedRelNode.getRowType().getFieldCount() ?
+        addRenamedProject(convertedRelNode, queryRowType) : convertedRelNode;
+
+    final DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(),
+        topPreservedNameProj, schema.createNewTable(tableName, partitionColumns));
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
 

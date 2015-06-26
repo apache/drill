@@ -132,6 +132,62 @@ public class TestCTAS extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-3377
+  public void partitionByCtasColList() throws Exception {
+    final String newTblName = "partitionByCtasColList";
+
+    try {
+      final String ctasQuery = String.format("CREATE TABLE %s.%s (cnt, rkey) PARTITION BY (cnt) " +
+          "AS SELECT count(*), n_regionkey from cp.`tpch/nation.parquet` group by n_regionkey",
+          TEMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      final String selectFromCreatedTable = String.format(" select cnt, rkey from %s.%s", TEMP_SCHEMA, newTblName);
+      final String baselineQuery = "select count(*) as cnt, n_regionkey as rkey from cp.`tpch/nation.parquet` group by n_regionkey";
+      testBuilder()
+          .sqlQuery(selectFromCreatedTable)
+          .unOrdered()
+          .sqlBaselineQuery(baselineQuery)
+          .build()
+          .run();
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
+  @Test // DRILL-3374
+  public void partitionByCtasFromView() throws Exception {
+    final String newTblName = "partitionByCtasColList";
+    final String newView = "partitionByCtasColListView";
+    try {
+      final String viewCreate = String.format("create or replace view %s.%s (col_int, col_varchar)  " +
+          "AS select cast(n_nationkey as int), cast(n_name as varchar(30)) from cp.`tpch/nation.parquet`",
+          TEMP_SCHEMA, newView);
+
+      final String ctasQuery = String.format("CREATE TABLE %s.%s PARTITION BY (col_int) AS SELECT * from %s.%s",
+          TEMP_SCHEMA, newTblName, TEMP_SCHEMA, newView);
+
+      test(viewCreate);
+      test(ctasQuery);
+
+      final String baselineQuery = "select cast(n_nationkey as int) as col_int, cast(n_name as varchar(30)) as col_varchar " +
+        "from cp.`tpch/nation.parquet`";
+      final String selectFromCreatedTable = String.format("select col_int, col_varchar from %s.%s", TEMP_SCHEMA, newTblName);
+      testBuilder()
+          .sqlQuery(selectFromCreatedTable)
+          .unOrdered()
+          .sqlBaselineQuery(baselineQuery)
+          .build()
+          .run();
+
+      final String viewDrop = String.format("DROP VIEW %s.%s", TEMP_SCHEMA, newView);
+      test(viewDrop);
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
     final String createTableSql = String.format(ctasSql, TEMP_SCHEMA, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);

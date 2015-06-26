@@ -473,7 +473,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return rel;
   }
 
-  private DrillRel addRenamedProject(DrillRel rel, RelDataType validatedRowType) {
+  protected DrillRel addRenamedProject(DrillRel rel, RelDataType validatedRowType) {
     RelDataType t = rel.getRowType();
 
     RexBuilder b = rel.getCluster().getRexBuilder();
