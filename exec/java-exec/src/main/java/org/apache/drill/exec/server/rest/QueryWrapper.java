@@ -146,23 +146,30 @@ public class QueryWrapper {
       try {
         final int rows = result.getHeader().getRowCount();
         if (result.hasData()) {
-          final RecordBatchLoader loader = new RecordBatchLoader(allocator);
-          loader.load(result.getHeader().getDef(), result.getData());
-          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-          // SchemaChangeException, so check/clean catch clause below.
-          for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-            columns.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
-          }
-          for (int i = 0; i < rows; ++i) {
-            final Map<String, String> record = Maps.newHashMap();
-            for (VectorWrapper<?> vw : loader) {
-              final String field = vw.getValueVector().getMetadata().getNamePart().getName();
-              final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
-              final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
-              final String display = value == null ? null : value.toString();
-              record.put(field, display);
+          RecordBatchLoader loader = null;
+          try {
+            loader = new RecordBatchLoader(allocator);
+            loader.load(result.getHeader().getDef(), result.getData());
+            // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+            // SchemaChangeException, so check/clean catch clause below.
+            for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
+              columns.add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
             }
-            results.add(record);
+            for (int i = 0; i < rows; ++i) {
+              final Map<String, String> record = Maps.newHashMap();
+              for (VectorWrapper<?> vw : loader) {
+                final String field = vw.getValueVector().getMetadata().getNamePart().getName();
+                final ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
+                final Object value = i < accessor.getValueCount() ? accessor.getObject(i) : null;
+                final String display = value == null ? null : value.toString();
+                record.put(field, display);
+              }
+              results.add(record);
+            }
+          } finally {
+            if (loader != null) {
+              loader.clear();
+            }
           }
         }
       } catch (SchemaChangeException e) {
