@@ -18,11 +18,13 @@
 package org.apache.drill.exec.planner.physical;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
@@ -31,6 +33,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionType;
 
 import java.util.List;
 
@@ -47,8 +51,13 @@ public class WriterPrule extends Prule{
     final DrillWriterRel writer = call.rel(0);
     final RelNode input = call.rel(1);
 
-    final RelCollation collation = getCollation(writer.getPartitionKeys());
-    final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation);
+    final List<Integer> keys = writer.getPartitionKeys();
+    final RelCollation collation = getCollation(keys);
+    final boolean hashDistribute = PrelUtil.getPlannerSettings(call.getPlanner()).getOptions().getOption(ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR);
+    final RelTraitSet traits = hashDistribute ?
+        input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(getDistribution(keys)) :
+        input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation);
+
     final RelNode convertedInput = convert(input, traits);
 
     if (!new WriteTraitPull(call).go(writer, convertedInput)) {
@@ -67,6 +76,13 @@ public class WriterPrule extends Prule{
     return RelCollationImpl.of(fields);
   }
 
+  private DrillDistributionTrait getDistribution(List<Integer> keys) {
+    List<DistributionField> fields = Lists.newArrayList();
+    for (int key : keys) {
+      fields.add(new DistributionField(key));
+    }
+    return new DrillDistributionTrait(DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(fields));
+  }
 
   private class WriteTraitPull extends SubsetTransformer<DrillWriterRelBase, RuntimeException> {
 
