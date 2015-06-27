@@ -39,6 +39,14 @@ public class TestCTASPartitionFilter extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[]{numFilesPattern}, new String[]{excludedFilterPattern});
   }
 
+  private static void testIncludeFilter(String query, int expectedNumFiles,
+                                        String includedFilterPattern, int expectedRowCount) throws Exception {
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+    String numFilesPattern = "numFiles=" + expectedNumFiles;
+    testPlanMatchingPatterns(query, new String[]{numFilesPattern, includedFilterPattern}, new String[]{});
+  }
+
   @Test
   public void withDistribution() throws Exception {
     test("alter session set `planner.slice_target` = 1");
@@ -57,5 +65,15 @@ public class TestCTASPartitionFilter extends PlanTestBase {
     test(String.format("create table orders_no_distribution partition by (o_orderpriority) as select * from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
     String query = "select * from orders_no_distribution where o_orderpriority = '1-URGENT'";
     testExcludeFilter(query, 2, "Filter", 24);
+  }
+
+  @Test
+  public void testDRILL3410() throws Exception {
+    test("alter session set `planner.slice_target` = 1");
+    test("alter session set `store.partition.hash_distribute` = true");
+    test("use dfs_test.tmp");
+    test(String.format("create table drill_3410 partition by (o_orderpriority) as select * from dfs_test.`%s/multilevel/parquet`", TEST_RES_PATH));
+    String query = "select * from drill_3410 where (o_orderpriority = '1-URGENT' and o_orderkey = 10) or (o_orderpriority = '2-HIGH' or o_orderkey = 11)";
+    testIncludeFilter(query, 1, "Filter", 34);
   }
 }

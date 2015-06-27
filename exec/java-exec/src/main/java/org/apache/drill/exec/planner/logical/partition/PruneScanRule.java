@@ -338,6 +338,8 @@ public abstract class PruneScanRule extends RelOptRule {
        condition = RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projectRel);
      }
 
+     RewriteAsBinaryOperators visitor = new RewriteAsBinaryOperators(true, filterRel.getCluster().getRexBuilder());
+     condition = condition.accept(visitor);
 
      Map<Integer, String> fieldNameMap = Maps.newHashMap();
      List<String> fieldNames = scanRel.getRowType().getFieldNames();
