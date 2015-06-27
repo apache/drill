@@ -352,4 +352,18 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test
+  public void testRankWithGroupBy() throws Exception {
+    final String query = "select dense_rank() over (order by l_suppkey) as rank1 " +
+        " from cp.`tpch/lineitem.parquet` group by l_partkey, l_suppkey order by 1 desc limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("rank1")
+        .baselineValues(100l)
+        .go();
+  }
+
 }
