@@ -69,10 +69,7 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
       default:
         throw Util.unexpected(subtype);
     }
-    RelDataType type =
-        cx.getValidator().getValidatedNodeType(call);
-    RexNode rex = cx.convertExpression(expr);
-    return cx.getRexBuilder().ensureType(type, rex, true);
+    return cx.convertExpression(expr);
   }
 
   private SqlNode expandAvg(

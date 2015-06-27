@@ -316,6 +316,15 @@ public class TestWindowFunctions extends BaseTestQuery {
         .baselineValues(2147483649l)
         .go();
 
+    final String avgQuery = "select avg(cast(col_int as int)) over (partition by col_varchar) as col1 " +
+        "from cp.`jsoninput/large_int.json` limit 1";
+
+    testBuilder()
+        .sqlQuery(avgQuery)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(1.0737418245E9d)
+        .go();
   }
 
   @Test
