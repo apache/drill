@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
+import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 
@@ -58,6 +59,8 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    *   1. Drill impersonation is enabled and
    *   2. either storage (in remote HiveMetaStore server) or SQL standard based authorization (in Hive storage plugin)
    *      is enabled
+   * @param processUserMetaStoreClient MetaStoreClient of process user. Useful for generating the delegation tokens when
+   *                                   SASL (KERBEROS or custom SASL implementations) is enabled.
    * @param hiveConf Conf including authorization configuration
    * @param hiveConfigOverride
    * @param userName User who is trying to access the Hive metadata
@@ -67,10 +70,12 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @return
    * @throws MetaException
    */
-  public static DrillHiveMetaStoreClient createClientWithAuthz(final HiveConf hiveConf,
-      final Map<String, String> hiveConfigOverride, final String userName, final boolean ignoreAuthzErrors)
-      throws MetaException {
+  public static DrillHiveMetaStoreClient createClientWithAuthz(final DrillHiveMetaStoreClient processUserMetaStoreClient,
+      final HiveConf hiveConf, final Map<String, String> hiveConfigOverride, final String userName,
+      final boolean ignoreAuthzErrors) throws MetaException {
     try {
+      boolean delegationTokenGenerated = false;
+
       final UserGroupInformation ugiForRpc; // UGI credentials to use for RPC communication with Hive MetaStore server
       if (!hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
         // If the user impersonation is disabled in Hive storage plugin (not Drill impersonation), use the process
@@ -78,11 +83,32 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
         ugiForRpc = ImpersonationUtil.getProcessUserUGI();
       } else {
         ugiForRpc = ImpersonationUtil.createProxyUgi(userName);
+        if (hiveConf.getBoolVar(ConfVars.METASTORE_USE_THRIFT_SASL)) {
+          // When SASL is enabled for proxy user create a delegation token. Currently HiveMetaStoreClient can create
+          // client transport for proxy users only when the authentication mechanims is DIGEST (through use of
+          // delegation tokens).
+          String delegationToken = processUserMetaStoreClient.getDelegationToken(userName, userName);
+          try {
+            ShimLoader.getHadoopShims().setTokenStr(ugiForRpc, delegationToken, HiveClientWithAuthz.DRILL2HMS_TOKEN);
+          } catch (IOException e) {
+            throw new DrillRuntimeException("Couldn't setup delegation token in the UGI for Hive MetaStoreClient", e);
+          }
+          delegationTokenGenerated = true;
+        }
       }
+
+      final HiveConf hiveConfForClient;
+      if (delegationTokenGenerated) {
+        hiveConfForClient = new HiveConf(hiveConf);
+        hiveConfForClient.set("hive.metastore.token.signature", HiveClientWithAuthz.DRILL2HMS_TOKEN);
+      } else {
+        hiveConfForClient = hiveConf;
+      }
+
       return ugiForRpc.doAs(new PrivilegedExceptionAction<DrillHiveMetaStoreClient>() {
         @Override
         public DrillHiveMetaStoreClient run() throws Exception {
-          return new HiveClientWithAuthz(hiveConf, hiveConfigOverride, ugiForRpc, userName, ignoreAuthzErrors);
+          return new HiveClientWithAuthz(hiveConfForClient, hiveConfigOverride, ugiForRpc, userName, ignoreAuthzErrors);
         }
       });
     } catch (final Exception e) {
@@ -197,6 +223,8 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * credentials and check authorization privileges if set.
    */
   private static class HiveClientWithAuthz extends DrillHiveMetaStoreClient {
+    public static final String DRILL2HMS_TOKEN = "DrillDelegationTokenForHiveMetaStoreServer";
+
     private final UserGroupInformation ugiForRpc;
     private final boolean ignoreAuthzErrors;
     private HiveAuthorizationHelper authorizer;
@@ -318,6 +346,13 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
         return tableLoaders.get(dbName).get(tableName);
       } catch (final ExecutionException e) {
         throw new TException(e);
+      }
+    }
+
+    @Override
+    public String getDelegationToken(String owner, String renewerKerberosPrincipalName) throws TException {
+      synchronized (this) {
+        return super.getDelegationToken(owner, renewerKerberosPrincipalName);
       }
     }
 

@@ -46,7 +46,8 @@ import com.google.common.collect.Sets;
 public class HiveSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
 
-  private final DrillHiveMetaStoreClient globalMetastoreClient;
+  // MetaStoreClient created using process user credentials
+  private final DrillHiveMetaStoreClient processUserMetastoreClient;
   private final HiveStoragePlugin plugin;
   private final Map<String, String> hiveConfigOverride;
   private final String schemaName;
@@ -72,14 +73,11 @@ public class HiveSchemaFactory implements SchemaFactory {
     isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
-    if (!isDrillImpersonationEnabled) {
-      try {
-        globalMetastoreClient = DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
-      } catch (MetaException e) {
-        throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
-      }
-    } else {
-      globalMetastoreClient = null;
+    try {
+      processUserMetastoreClient =
+          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
+    } catch (MetaException e) {
+      throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
   }
 
@@ -93,11 +91,11 @@ public class HiveSchemaFactory implements SchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    DrillHiveMetaStoreClient mClientForSchemaTree = globalMetastoreClient;
+    DrillHiveMetaStoreClient mClientForSchemaTree = processUserMetastoreClient;
     if (isDrillImpersonationEnabled) {
       try {
-        mClientForSchemaTree = DrillHiveMetaStoreClient.createClientWithAuthz(hiveConf, hiveConfigOverride,
-            schemaConfig.getUserName(), schemaConfig.getIgnoreAuthErrors());
+        mClientForSchemaTree = DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
+            hiveConfigOverride, schemaConfig.getUserName(), schemaConfig.getIgnoreAuthErrors());
       } catch (final TException e) {
         throw new IOException("Failure setting up Hive metastore client.", e);
       }
