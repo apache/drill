@@ -371,6 +371,7 @@ public abstract class PruneScanRule extends RelOptRule {
        return;
      }
 
+
      // set up the partitions
      final GroupScan groupScan = scanRel.getGroupScan();
      final FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
@@ -440,10 +441,16 @@ public abstract class PruneScanRule extends RelOptRule {
 
        logger.debug("Pruned {} => {}", files, newFiles);
 
+
        List<RexNode> conjuncts = RelOptUtil.conjunctions(condition);
        List<RexNode> pruneConjuncts = RelOptUtil.conjunctions(pruneCondition);
        conjuncts.removeAll(pruneConjuncts);
        RexNode newCondition = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), conjuncts, false);
+
+       RewriteCombineBinaryOperators reverseVisitor = new RewriteCombineBinaryOperators(true, filterRel.getCluster().getRexBuilder());
+
+       condition = condition.accept(reverseVisitor);
+       pruneCondition = pruneCondition.accept(reverseVisitor);
 
        final FileSelection newFileSelection = new FileSelection(newFiles, selectionRoot, true);
        final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
