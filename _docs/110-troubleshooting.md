@@ -54,9 +54,9 @@ If you have any of the following problems, try the suggested solution:
 * [SQLLine Error Starting Drill in Embedded Mode]({{site.baseurl}}/docs/troubleshooting/#sqlline-error-starting-drill-in-embedded-mode)
 
 ### Memory Issues
-Symptom: Memory problems occur when running in-memory operations, such as running queries that perform window functions.
+Symptom: Memory problems occur when you run certain queries, such as those that perform window functions.
 
-Solution: The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the Drill limits for running queries, such as window functions, in memory. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
+Solution: The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the memory limits per node for each running query, especially for those involving external sorts, such as window functions. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
 
 ### Query Parsing Errors
 Symptom:  

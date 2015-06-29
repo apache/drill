@@ -16,7 +16,7 @@ You can use the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause
 
 Drill writes files having names, such as 0_0_0.parquet, to the directory named in the CTAS command or to the workspace that is in use when you run the CTAS statement. You query the directory as you would query a table.
 
-The following command writes Parquet data from `nation.parquet`, installed with Drill, to the `/tmp/nation` directory.
+The following command writes Parquet data from `nation.parquet`, installed with Drill, to the `/tmp/name_key` directory.
 
     USE dfs;
     CREATE TABLE tmp.`name_key` (N_NAME, N_NATIONKEY) AS SELECT N_NATIONKEY, N_NAME FROM dfs.`/Users/drilluser/apache-drill-1.0/sample-data/nation.parquet`;
