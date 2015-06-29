@@ -30,7 +30,7 @@ public class GenericAccessor extends AbstractSqlAccessor {
 
   @Override
   public boolean isNull(int index) {
-    throw new UnsupportedOperationException();
+    return v.getAccessor().isNull(index);
   }
 
   @Override
