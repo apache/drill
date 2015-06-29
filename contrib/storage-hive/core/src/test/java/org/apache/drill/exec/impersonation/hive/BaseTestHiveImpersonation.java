@@ -62,7 +62,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     final String dbUrl = String.format("jdbc:derby:;databaseName=%s;create=true",  getTempDir("metastore_db"));
     hiveConf.set(ConfVars.METASTORECONNECTURLKEY.varname, dbUrl);
 
-    hiveConf.set(ConfVars.SCRATCHDIR.varname, getTempDir("scratch_dir"));
+    hiveConf.set(ConfVars.SCRATCHDIR.varname, "file:///" + getTempDir("scratch_dir"));
     hiveConf.set(ConfVars.LOCALSCRATCHDIR.varname, getTempDir("local_scratch_dir"));
 
     // Set MiniDFS conf in HiveConf

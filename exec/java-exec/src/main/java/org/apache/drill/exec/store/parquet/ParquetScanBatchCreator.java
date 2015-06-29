@@ -139,7 +139,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           readers.add(new DrillParquetReader(context, footer, e, newColumns, fs));
         }
         if (rowGroupScan.getSelectionRoot() != null) {
-          String[] r = rowGroupScan.getSelectionRoot().split("/");
+          String[] r = Path.getPathWithoutSchemeAndAuthority(new Path(rowGroupScan.getSelectionRoot())).toString().split("/");
           String[] p = Path.getPathWithoutSchemeAndAuthority(new Path(e.getPath())).toString().split("/");
           if (p.length > r.length) {
             String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);

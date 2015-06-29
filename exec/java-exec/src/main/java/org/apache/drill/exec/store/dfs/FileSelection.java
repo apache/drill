@@ -161,7 +161,9 @@ public class FileSelection {
       return null;
     }
     if (status.length == 1) {
-      return new FileSelection(Collections.singletonList(status[0]), p.toUri().getPath());
+      URI oneURI = status[0].getPath().toUri();
+      String selectionRoot = new Path(oneURI.getScheme(), oneURI.getAuthority(), p.toUri().getPath()).toString();
+      return new FileSelection(Collections.singletonList(status[0]), selectionRoot);
     }
     return new FileSelection(Lists.newArrayList(status), commonPath(status));
   }

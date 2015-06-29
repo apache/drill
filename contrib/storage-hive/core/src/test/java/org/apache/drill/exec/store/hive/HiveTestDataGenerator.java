@@ -147,7 +147,7 @@ public class HiveTestDataGenerator {
         "STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' " +
         "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' " +
         "TBLPROPERTIES ('avro.schema.url'='file:///%s')",
-        BaseTestQuery.getPhysicalFileFromResource("avro_test_schema.json"));
+        BaseTestQuery.getPhysicalFileFromResource("avro_test_schema.json").replace('\\', '/'));
 
     executeQuery(hiveDriver, avroCreateQuery);
     executeQuery(hiveDriver, "INSERT INTO TABLE db1.avro SELECT * FROM default.kv");

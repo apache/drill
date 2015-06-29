@@ -26,7 +26,7 @@ public class TestPlanVerificationUtilities extends PlanTestBase {
   @Test
   public void testPlanVerifier() throws Exception {
     String query = "select * from cp.`tpch/lineitem.parquet`";
-    String expectedPattern = "selectionRoot=/tpch/lineitem.parquet, numFiles=[1-9]+, ";
+    String expectedPattern = "selectionRoot=classpath:/tpch/lineitem.parquet, numFiles=[1-9]+, ";
     String excludedPattern = "part.parquet";
     testPlanMatchingPatterns(query,
         new String[] {expectedPattern}, new String[] {excludedPattern});

@@ -172,7 +172,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     for(FileWork work : scan.getWorkUnits()){
       readers.add(getRecordReader(context, dfs, work, scan.getColumns()));
       if (scan.getSelectionRoot() != null) {
-        String[] r = scan.getSelectionRoot().split("/");
+        String[] r = Path.getPathWithoutSchemeAndAuthority(new Path(scan.getSelectionRoot())).toString().split("/");
         String[] p = Path.getPathWithoutSchemeAndAuthority(new Path(work.getPath())).toString().split("/");
         if (p.length > r.length) {
           String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
