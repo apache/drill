@@ -16,8 +16,6 @@ When the base table in the SELECT statement is schema-less, include columns in t
     [ PARTITION_BY (column, . . .) ] 
     AS SELECT <column_list> FROM <source_name>;
 
-Include the columns in the PARTITION BY column list in the SELECT statement:  
-
 When columns in the source table have ambiguous names, such as COLUMNS[0], define one or more column aliases in the SELECT statement. Use the alias name or names in the CREATE TABLE list. List aliases in the same order as the corresponding columns in the SELECT statement. Matching order is important because Drill performs an overwrite operation.  
 
     CREATE TABLE dest_name (alias1, alias2, . . .) 
