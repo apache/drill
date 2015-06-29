@@ -12,7 +12,7 @@ The query planner in Drill performs partition pruning by evaluating the filters.
 You can partition data manually or automatically to take advantage of partition pruning in Drill. In Drill 1.0 and earlier, you need to organize your data in such a way to take advantage of partition pruning. In Drill 1.1.0 and later, if the data source is Parquet, you can partition data automatically using CTAS--no data organization tasks required. 
 
 ## Automatic Partitioning
-Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statemebnt.
+Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement.
 
 Automatic partitioning creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there can be multiple files for the same partition value.
 

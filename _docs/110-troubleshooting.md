@@ -28,7 +28,7 @@ Issue the following command to enable the verbose errors option:
 ## Troubleshooting Problems and Solutions
 If you have any of the following problems, try the suggested solution:
 
-* [Memory Issues]
+* [Memory Issues]({{site.baseurl}}/docs/troubleshooting/#memory-issues)
 * [Query Parsing Errors]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors)
 * [Query Parsing Errors Caused by Reserved Words]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors-caused-by-reserved-words)
 * [Table Not Found]({{site.baseurl}}/docs/troubleshooting/#table-not-found)
