@@ -171,7 +171,7 @@ if NOT "test%DRILL_CLASSPATH%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH%
 
 rem Override SQLLine's default initial transaction isolation level.  (SQLLine
 rem sets an initial level instead of leaving it at whatever the Driver's default
-rem is.) 
+rem is.)
 rem Put our property specification before previous value of DRILL_SHELL_JAVA_OPTS
 rem so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
 set DRILL_SHELL_JAVA_OPTS=-Dsqlline.isolation=TRANSACTION_NONE %DRILL_SHELL_JAVA_OPTS%
