@@ -46,7 +46,7 @@ The following table describes the attributes you configure for storage plugins.
   </tr>
   <tr>
     <td>"connection"</td>
-    <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"maprfs:///"</td>
+    <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"hdfs:///"</td>
     <td>implementation-dependent</td>
     <td>Type of distributed file system, such as HDFS, Amazon S3, or files in your file system.</td>
   </tr>

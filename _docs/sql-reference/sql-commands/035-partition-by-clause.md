@@ -2,24 +2,133 @@
 title: "PARTITION BY Clause"
 parent: "SQL Commands"
 ---
-You can take advantage of automatic partitioning in Drill 1.1 by using the PARTITION BY clause in the CTAS command:
+You can take advantage of automatic partitioning in Drill 1.1 by using the PARTITION BY clause in the CTAS command.
 
 ## Syntax
 
-	CREATE TABLE table_name [ (column_name, . . .) ] 
-    [ PARTITION_BY (column_name, . . .) ] 
-    AS SELECT_statement;
+    [ PARTITION_BY ( column_name[, . . .] ) ] 
 
-The CTAS statement that uses the PARTITION BY clause must store the data in Parquet format and meet one of the following requirements:
+Only the Parquet storage format is supported for automatic partitioning. Before using CTAS, [set the `store.format` option]({{site.baseurl}}/docs/create-table-as-ctas/#setting-the-storage-format) for the table to Parquet.
 
-* The columns in the column list in the PARTITION BY clause are included in the column list following the table_name
-* The SELECT statement has to use a * column (SELECT *) if the base table in the SELECT statement is schema-less, and when the partition column is resolved to a * column in a schema-less query, this * column cannot be a result of a join operation. 
+When the base table in the SELECT statement is schema-less, include columns in the PARTITION BY clause in the table's column list, or use a select all (SELECT *) statement:  
 
-The output of using the PARTITION BY clause creates separate files. Each file contains one partition value, and Drill can create multiple files for the same partition value.
+    CREATE TABLE dest_name [ (column, . . .) ]
+    [ PARTITION_BY (column, . . .) ] 
+    AS SELECT <column_list> FROM <source_name>;
 
-Partition pruning uses the parquet column stats to determine which which columns can be used to prune.
+Include the columns in the PARTITION BY column list in the SELECT statement:  
 
-Examples:
+When columns in the source table have ambiguous names, such as COLUMNS[0], define one or more column aliases in the SELECT statement. Use the alias name or names in the CREATE TABLE list. List aliases in the same order as the corresponding columns in the SELECT statement. Matching order is important because Drill performs an overwrite operation.  
+
+    CREATE TABLE dest_name (alias1, alias2, . . .) 
+    [ PARTITION_BY (alias1, . . . ) ] 
+    AS SELECT column1 alias1, column2 alias2, . . .;
+
+For example:
+
+    CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv`;
+
+When the partition column is resolved to * column in a schema-less query, the * column cannot be a result of join operation. 
+
+The output of CTAS using a PARTITION BY clause creates separate files. Each file contains one partition value, and Drill can create multiple files for the same partition value.
+
+[Partition pruning]({{site.baseurl}}/docs/partition-pruning/) uses the Parquet column statistics to determine which columns can be used to prune.
+
+## Partioning Example
+This example uses a tab-separated value (TSV) files that you download from a
+Google internet site. The data in the file consists of phrases from books that
+Google scans and generates for its [Google Books Ngram
+Viewer](https://storage.googleapis.com/books/ngrams/books/datasetsv2.html). You
+use the data to find the relative frequencies of Ngrams.
+
+### About the Data
+
+Each line in the TSV file has the following structure:
+
+`ngram TAB year TAB match_count TAB volume_count NEWLINE`
+
+For example, lines 1722089 and 1722090 in the file contain this data:
+
+<table ><tbody><tr><th >ngram</th><th >year</th><th colspan="1" >match_count</th><th >volume_count</th></tr><tr><td ><p class="p1">Zoological Journal of the Linnean</p></td><td >2007</td><td colspan="1" >284</td><td >101</td></tr><tr><td colspan="1" ><p class="p1">Zoological Journal of the Linnean</p></td><td colspan="1" >2008</td><td colspan="1" >257</td><td colspan="1" >87</td></tr></tbody></table> 
+  
+In 2007, "Zoological Journal of the Linnean" occurred 284 times overall in 101
+distinct books of the Google sample.
+
+### Creating a Partitioned Table of Ngram Data
+
+For this example, you can use Drill in distributed mode to write 1.7M lines of data to a distributed file system, such as HDFS. Alternatively, you can use Drill in embedded mode and write fewer lines of data to a local file system. 
+
+1. Download the compressed Google Ngram data from this location:  
+    
+        wget http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-5gram-20120701-zo.gz  
+2. Unzip the file. On Linux for example use the `gzip -d` command:  
+   `gzip -d googlebooks-eng-all-5gram-20120701-zo.gz`  
+   A file named `googlebooks-eng-all-5gram-20120701-zo` appears.
+3. Embedded mode: Move the unzipped file name to `/tmp` and add a `.tsv` extension. The Drill `dfs` storage plugin definition includes a TSV format that requires
+a file to have this extension.  
+   `mv googlebooks-eng-all-5gram-20120701-zo /tmp/googlebooks-eng-all-5gram-20120701-zo.tsv`  
+   Distributed mode: Move the unzipped file to HDFS and add a `.tsv` extension.
+   `hadoop fs -put googlebooks-eng-all-5gram-20120701-zo /tmp/googlebooks-eng-all-5gram-20120701-zo.tsv`
+4. Start the Drill shell, and use the default `dfs.tmp` workspace, which is predefined as writable.  
+   Distributed mode: This example assumes that the default `dfs` either works with your distributed file system out-of-the-box, or that you have adapted the storage plugin to your environment.  
+   `USE dfs.tmp`;  
+5. Set the `store.format` property to the default parquet if you changed the default.
+   `ALTER SESSION SET `store.format` = 'parquet';`  
+6. Partition Google Ngram data by year in a directory named `by_yr`.  
+   Embedded mode:  
+
+        CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` LIMIT 100;
+    Output is:  
+
+        +-----------+----------------------------+
+        | Fragment  | Number of records written  |
+        +-----------+----------------------------+
+        | 0_0       | 100                        |
+        +-----------+----------------------------+
+        1 row selected (5.775 seconds)
+    Distributed mode:  
+
+        CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv`;
+    Output is:
+
+        +-----------+----------------------------+
+        | Fragment  | Number of records written  |
+        +-----------+----------------------------+
+        | 0_0       | 1773829                    |
+        +-----------+----------------------------+
+        1 row selected (54.159 seconds)
+
+    Drill writes more than 1.7M rows of data to the table. The files look something like this:
+
+		0_0_1.parquet	0_0_28.parquet	0_0_46.parquet	0_0_64.parquet
+		0_0_10.parquet	0_0_29.parquet	0_0_47.parquet	0_0_65.parquet
+		0_0_11.parquet	0_0_3.parquet	0_0_48.parquet	0_0_66.parquet
+		0_0_12.parquet	0_0_30.parquet	0_0_49.parquet	0_0_67.parquet
+        . . .  
+7. Query the `by_yr` directory to check the data partitioning.  
+   `SELECT * FROM by_yr LIMIT 100`;  
+   The output looks something like this:
+
+        +-------+------------------------------------------------------------+--------------+
+        |  yr   |                           ngram                            | occurrances  |
+        +-------+------------------------------------------------------------+--------------+
+        | 1737  | Zone_NOUN ,_. and_CONJ the_DET Tippet_NOUN                 | 1            |
+        | 1737  | Zones_NOUN of_ADP the_DET Earth_NOUN ,_.                   | 2            |
+        . . .
+        | 1737  | Zobah , David slew of                                      | 1            |
+        | 1966  | zones_NOUN of_ADP the_DET medulla_NOUN ._.                 | 3            |
+        | 1966  | zone_NOUN is_VERB more_ADV or_CONJ less_ADJ                | 1            |
+        . . .
+        +-------+------------------------+-------------+
+        |  yr   |         ngram          | occurrances |
+        +-------+------------------------+-------------+
+        | 1966  | zone by virtue of the  | 1           |
+        +-------+------------------------+-------------+
+        100 rows selected (2.184 seconds)
+   Files are partitioned by year. The output is not expected to be in perfect sorted order because Drill reads files sequentially. 
+
+## Other Examples
+
 
     USE cp;
 	CREATE TABLE mytable1 PARTITION BY (r_regionkey) AS 

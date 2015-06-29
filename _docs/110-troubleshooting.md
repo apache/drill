@@ -28,6 +28,7 @@ Issue the following command to enable the verbose errors option:
 ## Troubleshooting Problems and Solutions
 If you have any of the following problems, try the suggested solution:
 
+* [Memory Issues]
 * [Query Parsing Errors]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors)
 * [Query Parsing Errors Caused by Reserved Words]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors-caused-by-reserved-words)
 * [Table Not Found]({{site.baseurl}}/docs/troubleshooting/#table-not-found)
@@ -52,6 +53,10 @@ If you have any of the following problems, try the suggested solution:
 * [Unclear Error Message]({{site.baseurl}}/docs/troubleshooting/#unclear-error-message)
 * [SQLLine Error Starting Drill in Embedded Mode]({{site.baseurl}}/docs/troubleshooting/#sqlline-error-starting-drill-in-embedded-mode)
 
+### Memory Issues
+Symptom: Memory problems occur when running in-memory operations, such as running queries that perform window functions.
+
+Solution: The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the Drill limits for running queries, such as window functions, in memory. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
 
 ### Query Parsing Errors
 Symptom:  
@@ -74,7 +79,9 @@ Solution: Enclose keywords and [identifiers that SQL cannot parse]({{site.baseur
 ``SELECT `count` FROM dfs.tmp.`test2.json```;
 
 ### Table Not Found
-Symptom:
+To resolve a Table Not Found problem that results from querying a file, try the solutions listed in this section. To resolve a Table Not Found problem that results from querying a directory, try removing or moving hidden files from the directory. Drill 1.1 and earlier might create hidden files in a directory ([DRILL-2424](https://issues.apache.org/jira/browse/DRILL-2424)). 
+
+Symptom that results from querying a file:
  
        SELECT * FROM dfs.drill.test2.json;
        Query failed: PARSE ERROR: From line 1, column 15 to line 1, column 17: Table 'dfs.drill.test2.json' not found  
@@ -85,7 +92,7 @@ Solutions:
 * Check the permission of the files with those for the the Drill user.  
 * Enclose file and path name in back ticks:  
   ``SELECT * FROM dfs.drill.`test2.json`;``  
-* Drill may not be able to determine the type of file you are trying to read. Try using Drill Default Input Format.  
+* Drill may not be able to determine the type of file you are trying to read. Try using Drill [Default Input Format]({{site.baseurl}}/docs/plugin-configuration-basics/#storage-plugin-attributes).  
 * Verify that your storage plugin is correctly configured.
 * Verify that Drill can auto-detect your file format.  Drill supports auto-detection for the following formats:  
   * CSV
