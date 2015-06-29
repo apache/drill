@@ -76,4 +76,24 @@ public class TestCTASPartitionFilter extends PlanTestBase {
     String query = "select * from drill_3410 where (o_orderpriority = '1-URGENT' and o_orderkey = 10) or (o_orderpriority = '2-HIGH' or o_orderkey = 11)";
     testIncludeFilter(query, 1, "Filter", 34);
   }
+
+  @Test
+  public void testDRILL3414() throws Exception {
+    test("alter session set `planner.slice_target` = 1");
+    test("alter session set `store.partition.hash_distribute` = true");
+    test("use dfs_test.tmp");
+    test(String.format("create table drill_3414 partition by (dir0, dir1) as select * from dfs_test.`%s/multilevel/csv`", TEST_RES_PATH));
+    String query = ("select * from drill_3414 where (dir0=1994 or dir1='Q1') and (dir0=1995 or dir1='Q2' or columns[0] > 5000)");
+    testIncludeFilter(query, 6, "Filter", 20);
+  }
+
+  @Test
+  public void testDRILL3414_2() throws Exception {
+    test("alter session set `planner.slice_target` = 1");
+    test("alter session set `store.partition.hash_distribute` = true");
+    test("use dfs_test.tmp");
+    test(String.format("create table drill_3414_2 partition by (dir0, dir1) as select * from dfs_test.`%s/multilevel/csv`", TEST_RES_PATH));
+    String query = ("select * from drill_3414_2 where (dir0=1994 or dir1='Q1') and (dir0=1995 or dir1='Q2' or columns[0] > 5000) or columns[0] < 3000");
+    testIncludeFilter(query, 1, "Filter", 120);
+  }
 }

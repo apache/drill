@@ -17,8 +17,10 @@
   */
 package org.apache.drill.exec.planner.logical.partition;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
@@ -26,6 +28,7 @@ import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexLocalRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexRangeRef;
@@ -76,6 +79,7 @@ import java.util.List;
   public RexNode visitCall(RexCall call) {
     SqlOperator op = call.getOperator();
     SqlKind kind = op.getKind();
+    RelDataType type = call.getType();
     if (kind == SqlKind.AND) {
       List<RexNode> conjuncts = Lists.newArrayList();
       for (RexNode child : call.getOperands()) {
@@ -90,7 +94,15 @@ import java.util.List;
       }
       return RexUtil.composeDisjunction(builder, disjuncts, true);
     }
-    return call;
+    return builder.makeCall(type, op, visitChildren(call));
+  }
+
+  private List<RexNode> visitChildren(RexCall call) {
+    List<RexNode> children = Lists.newArrayList();
+    for (RexNode child : call.getOperands()) {
+      children.add(child.accept(this));
+    }
+    return ImmutableList.copyOf(children);
   }
 
   @Override
@@ -106,5 +118,10 @@ import java.util.List;
   @Override
   public RexNode visitFieldAccess(RexFieldAccess fieldAccess) {
     return fieldAccess;
+  }
+
+  @Override
+  public RexNode visitLocalRef(RexLocalRef localRef) {
+    return localRef;
   }
 }
