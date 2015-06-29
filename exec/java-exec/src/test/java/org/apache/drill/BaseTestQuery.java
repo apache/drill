@@ -35,6 +35,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -352,6 +353,16 @@ public class BaseTestQuery extends ExecTest {
 
     assertNotNull("Expected a UserException", expException);
     assertThat(expException.getMessage(), containsString(expectedErrorMsg));
+  }
+
+  /**
+   * Utility method which tests given query produces a {@link UserException}
+   * with {@link org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType} being DrillPBError.ErrorType.PARSE
+   * the given message.
+   * @param testSqlQuery Test query
+   */
+  protected static void parseErrorHelper(final String testSqlQuery) throws Exception {
+    errorMsgTestHelper(testSqlQuery, UserBitShared.DrillPBError.ErrorType.PARSE.name());
   }
 
   public static String getFile(String resource) throws IOException{
