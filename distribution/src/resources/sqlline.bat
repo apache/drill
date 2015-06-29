@@ -174,7 +174,9 @@ rem sets an initial level instead of leaving it at whatever the Driver's default
 rem is.)
 rem Put our property specification before previous value of DRILL_SHELL_JAVA_OPTS
 rem so that it can still be overridden via DRILL_SHELL_JAVA_OPTS.
-set DRILL_SHELL_JAVA_OPTS=-Dsqlline.isolation=TRANSACTION_NONE %DRILL_SHELL_JAVA_OPTS%
+rem 
+rem This is not currently needed as the new SQLLine we are using doesn't isolate.
+rem set DRILL_SHELL_JAVA_OPTS=-Dsqlline.isolation=TRANSACTION_NONE %DRILL_SHELL_JAVA_OPTS%
 
 set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path="%DRILL_LOG_DIR%\sqlline.log" -Dlog.query.path="%DRILL_LOG_DIR%\sqlline_queries.log"
 
