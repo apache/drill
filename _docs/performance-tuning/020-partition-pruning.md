@@ -12,21 +12,23 @@ The query planner in Drill performs partition pruning by evaluating the filters.
 You can partition data manually or automatically to take advantage of partition pruning in Drill. In Drill 1.0 and earlier, you need to organize your data in such a way to take advantage of partition pruning. In Drill 1.1.0 and later, if the data source is Parquet, you can partition data automatically using CTAS--no data organization tasks required. 
 
 ## Automatic Partitioning
-Automatic partitioning in Drill 1.1.0 and later occurs when you write Parquet date using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement.
+Automatic partitioning in Drill 1.1 and later occurs when you write Parquet data using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement. Unlike manual partitioning, no view is required, nor is it necessary to use the [dir* variables]({{site.baseurl}}/docs/querying-directories). The Parquet writer first sorts by the partition keys, and then creates a new file when it encounters a new value for the partition columns.
 
 Automatic partitioning creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there can be multiple files for the same partition value.
 
-Partition pruning uses the Parquet column statistics to determine which columns to use to prune.
+Partition pruning uses the Parquet column statistics to determine which columns to use to prune. 
 
 ## Manual Partitioning
+
+Manual partitioning is directory-based. You perform the following steps to manually partition data.   
  
 1. Devise a logical way to store the data in a hierarchy of directories. 
 2. Use CTAS to create Parquet files from the original data, specifying filter conditions.
 3. Move the files into directories in the hierarchy. 
 
-After partitioning the data, create and query views on the data.
+After partitioning the data, you need to create a view of the partitioned data to query the data. You can use the [dir* variables]({{site.baseurl}}/docs/querying-directories) in queries to refer to subdirectories in your workspace path.
  
-### Manual Partitioning
+### Manual Partitioning Example
 
 Suppose you have text files containing several years of log data. To partition the data by year and quarter, create the following hierarchy of directories:  
        
