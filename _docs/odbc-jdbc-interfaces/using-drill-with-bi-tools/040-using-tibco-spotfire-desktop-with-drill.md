@@ -18,12 +18,10 @@ Drill uses standard ODBC connectivity to provide easy data exploration capabilit
 
 Complete the following steps to install and configure the driver:
 
-1.    Download the 64-bit MapR Drill ODBC Driver for Windows from the following location:<br> [http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)     
-**Note:** Spotfire Desktop 6.5.1 utilizes the 64-bit ODBC driver.
-2.    Complete steps 2-8 under on the following page to install the driver:<br> 
-[http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/](http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/)
-3.    Complete the steps on the following page to configure the driver:<br>
-[http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/](http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/)
+1. Download the 64-bit MapR Drill ODBC Driver for Windows from the following location:<br> [http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)     
+   {% include startnote.html %}Spotfire Desktop 6.5.1 utilizes the 64-bit ODBC driver.{% include endnote.html %}
+2. [Install the driver]({{site.baseurl}}/docs/installing-the-driver-on-windows). 
+3. [Configure ODBC]({{site.baseurl}}/docs/configuring-odbc-on-windows).
 
 ----------
 

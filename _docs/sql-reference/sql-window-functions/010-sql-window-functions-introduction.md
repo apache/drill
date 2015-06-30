@@ -2,3 +2,186 @@
 title: "SQL Window Functions Introduction"
 parent: "SQL Window Functions"
 ---
+
+Window functions operate on a set of rows and return a single value for each row from the underlying query. The term window describes the set of rows on which the function operates. A window function uses values from the rows in a window to calculate the returned values. 
+
+When you use a window function in a query, you specify a window using the OVER() clause. The OVER() clause differentiates window functions from other analytical and reporting functions. 
+
+The OVER() clause has the following capabilities:  
+
+* Defines window partitions to form groups of rows. (PARTITION BY clause)  
+* Orders rows within a partition. (ORDER BY clause)
+
+For example, the following query uses the AVG() window function to calculate the average sales for employees in Q1:  
+
+       select emp_name, dealer_id, sales, avg(sales) over() as avgsales from q1_sales;
+       +-----------------+------------+--------+-----------+
+       |    emp_name     | dealer_id  | sales  | avgsales  |
+       +-----------------+------------+--------+-----------+
+       | Beverly Lang    | 2          | 16233  | 13631     |
+       | Kameko French   | 2          | 16233  | 13631     |
+       | Ursa George     | 3          | 15427  | 13631     |
+       | Ferris Brown    | 1          | 19745  | 13631     |
+       | Noel Meyer      | 1          | 19745  | 13631     |
+       | Abel Kim        | 3          | 12369  | 13631     |
+       | Raphael Hull    | 1          | 8227   | 13631     |
+       | Jack Salazar    | 1          | 9710   | 13631     |
+       | May Stout       | 3          | 9308   | 13631     |
+       | Haviva Montoya  | 2          | 9308   | 13631     |
+       +-----------------+------------+--------+-----------+
+       10 rows selected (0.213 seconds)
+
+
+The AVG() window function operates on the rows defined in the window and returns a value for each row. 
+To compare, you can run a query using the AVG() function as a standard set function:  
+
+       select avg(sales) as avgsales from q1_sales;
+       +-----------+
+       | avgsales  |
+       +-----------+
+       | 13630.5   |
+       +-----------+
+       1 row selected (0.131 seconds)
+  
+
+The query returns one row with the average of all the values in the specified column instead of returning values for each row.  
+
+You can also include the optional PARTITION BY and ORDER BY clauses in a query. The PARTITION BY clause subdivides the window into partitions. The ORDER BY clause defines the logical order of the rows within each partition of the result set.  
+
+Window functions are applied to the rows within each partition and sorted according to the order specification.  
+
+The following query uses the AVG() window function with the PARTITION BY clause to determine the average car sales for each dealer in Q1:  
+
+       select emp_name, dealer_id, sales, avg(sales) over (PARTITION BY dealer_id) as avgsales from q1_sales;
+       +-----------------+------------+--------+-----------+
+       |    emp_name     | dealer_id  | sales  | avgsales  |
+       +-----------------+------------+--------+-----------+
+       | Ferris Brown    | 1          | 19745  | 14357     |
+       | Noel Meyer      | 1          | 19745  | 14357     |
+       | Raphael Hull    | 1          | 8227   | 14357     |
+       | Jack Salazar    | 1          | 9710   | 14357     |
+       | Beverly Lang    | 2          | 16233  | 13925     |
+       | Kameko French   | 2          | 16233  | 13925     |
+       | Haviva Montoya  | 2          | 9308   | 13925     |
+       | Ursa George     | 3          | 15427  | 12368     |
+       | Abel Kim        | 3          | 12369  | 12368     |
+       | May Stout       | 3          | 9308   | 12368     |
+       +-----------------+------------+--------+-----------+
+       10 rows selected (0.215 seconds)
+
+
+## Types of Window Functions  
+
+Currently, Drill supports the following aggregate and ranking window functions:  
+
+Aggregation  
+
+* AVG()
+* COUNT()
+* MAX()
+* MIN()
+* SUM()
+
+Ranking  
+
+* CUME_DIST()
+* DENSE_RANK()
+* PERCENT_RANK()
+* RANK()
+* ROW_NUMBER()
+
+All of the ranking functions listed depend on the sort ordering specified by the ORDER BY clause of the associated window definition. Rows that are not distinct in the ordering are called peers. The ranking functions are defined so that they give the same answer for any two peer rows.  
+
+## Syntax  
+
+       window_function (expression) 
+       OVER (
+       [ PARTITION BY expr_list ]
+       [ ORDER BY order_list ][ frame_clause ] )  
+
+where function is one of the functions described, such as AVG() and *expr_list* is:  
+
+       expression | column_name [, expr_list ]
+
+and *order_list* is:  
+
+       expression | column_name [ASC | DESC] [ NULLS { FIRST | LAST } ] [, order_list ]
+
+and the optional *frame_clause* is one of the following frames:
+
+       RANGE UNBOUNDED PRECEDING
+       RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+       ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  
+
+
+## Arguments  
+
+*window_function*  
+Any of the following functions used with the OVER clause to provide a window specification:  
+
+* AVG()
+* COUNT()
+* CUME_DIST()
+* MAX()
+* MIN()
+* SUM()
+* DENSE_RANK()
+* PERCENT_RANK()
+* RANK()
+* ROW_NUMBER()
+
+OVER()  
+OVER() is a mandatory clause that defines a window within a query result set. OVER() is a subset of SELECT and a part of the aggregate definition. A window function computes a value for each row in the window.  
+
+PARTITION BY *expr_list*  
+PARTITION BY is an optional clause that subdivides the data into partitions. Including the partition clause divides the query result set into partitions, and the window function is applied to each partition separately. Computation restarts for each partition. If you do not include a partition clause, the function calculates on the entire table or file.  
+
+ORDER BY *order_list*  
+The ORDER BY clause defines the logical order of the rows within each partition of the result set. If no PARTITION BY is specified, ORDER BY uses the entire table. ORDER BY is optional for the aggregation window functions, but required for the ranking functions. This ORDER BY clause does not relate to the ORDER BY clause that you use outside of the OVER clause.  
+
+The window function is applied to the rows within each partition sorted according to the order specification.  
+
+Column identifiers or expressions that evaluate to column identifiers are required in the order list. You can also use constants as substitutes for column names.  
+
+NULLS are treated as their own group, sorted and ranked last in ASC, and sorted and ranked first in DESC. ASC is the default sort order.  
+
+*column_name*  
+The name of a column to be partitioned by or ordered by.  
+
+ASC | DESC
+Specifies sort order, either ascending or descending.  
+
+*frame_clause*  
+The frame\_clause specifies the group of rows that create the window frame. Currently, Drill only supports the default frame RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which sets the frame as all rows from the start of the partition through the current row's last peer in the ordering, as specified by the ORDER BY clause. The frame also includes ties when ordering is not unique. You cannot explicitly state the frame specification for ranking window functions.  
+
+When the OVER clause contains an ORDER BY clause, the following frames are equivalent to the default frame: 
+ 
+       RANGE UNBOUNDED PRECEDING
+       RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  
+
+When OVER clause does not contain an ORDER BY clause, the following frames are equivalent to the default frame:  
+
+       RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+       ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  
+
+The following delimiters define the frame:  
+
+* UNBOUNDED PRECEDING means that the frame starts with the first row of the partition.
+* UNBOUNDED FOLLOWING means that the frame ends with the last row of the partition.
+* CURRENT ROW means that the frame starts or ends with the current row’s first or last peer in the ORDER BY list.  
+
+
+## Usage Notes  
+
+* You can only use window functions in the SELECT list and ORDER BY clauses of a query.  
+* Window functions precede ORDER BY.  
+* Drill processes window functions after the WHERE, GROUP BY, and HAVING clauses.  
+* Including the OVER() clause after an aggregate set function turns the function into an aggregate window function. 
+* You can use window functions to aggregate over any number of rows in the window frame. 
+
+
+
+
+
+                                                                                                                                                                                                                          

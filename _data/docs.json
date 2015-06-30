@@ -135,6 +135,27 @@
             "title": "Adding Custom Functions to Drill", 
             "url": "/docs/adding-custom-functions-to-drill/"
         }, 
+        "Aggregate Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Ranking Window Functions", 
+            "next_url": "/docs/ranking-window-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "SQL Window Functions Introduction", 
+            "previous_url": "/docs/sql-window-functions-introduction/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+            "title": "Aggregate Window Functions", 
+            "url": "/docs/aggregate-window-functions/"
+        }, 
         "Aggregate and Aggregate Statistical": {
             "breadcrumbs": [
                 {
@@ -940,7 +961,7 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
                     "title": "Configuring User Impersonation with Hive Authorization", 
                     "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
@@ -1441,7 +1462,7 @@
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Authentication", 
             "previous_url": "/docs/configuring-user-authentication/", 
-            "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+            "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
             "title": "Configuring User Impersonation with Hive Authorization", 
             "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
         }, 
@@ -4899,8 +4920,8 @@
             "next_title": "Nested Data Limitations", 
             "next_url": "/docs/nested-data-limitations/", 
             "parent": "SQL Reference", 
-            "previous_title": "SQL Window Functions Introduction", 
-            "previous_url": "/docs/sql-window-functions-introduction/", 
+            "previous_title": "SQL Window Functions Examples", 
+            "previous_url": "/docs/sql-window-functions-examples/", 
             "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
             "title": "Nested Data Functions", 
             "url": "/docs/nested-data-functions/"
@@ -7430,6 +7451,27 @@
             "title": "RPC Overview", 
             "url": "/docs/rpc-overview/"
         }, 
+        "Ranking Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Window Functions Examples", 
+            "next_url": "/docs/sql-window-functions-examples/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "Aggregate Window Functions", 
+            "previous_url": "/docs/aggregate-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+            "title": "Ranking Window Functions", 
+            "url": "/docs/ranking-window-functions/"
+        }, 
         "Release Notes": {
             "breadcrumbs": [], 
             "children": [
@@ -8798,14 +8840,77 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "Aggregate Window Functions", 
+                            "next_url": "/docs/aggregate-window-functions/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "SQL Window Functions", 
                             "previous_url": "/docs/sql-window-functions/", 
                             "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
                             "title": "SQL Window Functions Introduction", 
                             "url": "/docs/sql-window-functions-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ranking Window Functions", 
+                            "next_url": "/docs/ranking-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions Introduction", 
+                            "previous_url": "/docs/sql-window-functions-introduction/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                            "title": "Aggregate Window Functions", 
+                            "url": "/docs/aggregate-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Aggregate Window Functions", 
+                            "previous_url": "/docs/aggregate-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                            "title": "Ranking Window Functions", 
+                            "url": "/docs/ranking-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Ranking Window Functions", 
+                            "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                            "title": "SQL Window Functions Examples", 
+                            "url": "/docs/sql-window-functions-examples/"
                         }
                     ], 
                     "next_title": "SQL Window Functions Introduction", 
@@ -8934,8 +9039,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "SQL Window Functions Introduction", 
-                    "previous_url": "/docs/sql-window-functions-introduction/", 
+                    "previous_title": "SQL Window Functions Examples", 
+                    "previous_url": "/docs/sql-window-functions-examples/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
@@ -9599,14 +9704,77 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Nested Data Functions", 
-                    "next_url": "/docs/nested-data-functions/", 
+                    "next_title": "Aggregate Window Functions", 
+                    "next_url": "/docs/aggregate-window-functions/", 
                     "parent": "SQL Window Functions", 
                     "previous_title": "SQL Window Functions", 
                     "previous_url": "/docs/sql-window-functions/", 
                     "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
                     "title": "SQL Window Functions Introduction", 
                     "url": "/docs/sql-window-functions-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Ranking Window Functions", 
+                    "next_url": "/docs/ranking-window-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "SQL Window Functions Introduction", 
+                    "previous_url": "/docs/sql-window-functions-introduction/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                    "title": "Aggregate Window Functions", 
+                    "url": "/docs/aggregate-window-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Window Functions Examples", 
+                    "next_url": "/docs/sql-window-functions-examples/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "Aggregate Window Functions", 
+                    "previous_url": "/docs/aggregate-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                    "title": "Ranking Window Functions", 
+                    "url": "/docs/ranking-window-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Nested Data Functions", 
+                    "next_url": "/docs/nested-data-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "Ranking Window Functions", 
+                    "previous_url": "/docs/ranking-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                    "title": "SQL Window Functions Examples", 
+                    "url": "/docs/sql-window-functions-examples/"
                 }
             ], 
             "next_title": "SQL Window Functions Introduction", 
@@ -9618,7 +9786,7 @@
             "title": "SQL Window Functions", 
             "url": "/docs/sql-window-functions/"
         }, 
-        "SQL Window Functions Introduction": {
+        "SQL Window Functions Examples": {
             "breadcrumbs": [
                 {
                     "title": "SQL Window Functions", 
@@ -9632,6 +9800,27 @@
             "children": [], 
             "next_title": "Nested Data Functions", 
             "next_url": "/docs/nested-data-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "Ranking Window Functions", 
+            "previous_url": "/docs/ranking-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+            "title": "SQL Window Functions Examples", 
+            "url": "/docs/sql-window-functions-examples/"
+        }, 
+        "SQL Window Functions Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Aggregate Window Functions", 
+            "next_url": "/docs/aggregate-window-functions/", 
             "parent": "SQL Window Functions", 
             "previous_title": "SQL Window Functions", 
             "previous_url": "/docs/sql-window-functions/", 
@@ -11905,7 +12094,7 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
                     "title": "Configuring User Impersonation with Hive Authorization", 
                     "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
@@ -13985,14 +14174,77 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "Aggregate Window Functions", 
+                            "next_url": "/docs/aggregate-window-functions/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "SQL Window Functions", 
                             "previous_url": "/docs/sql-window-functions/", 
                             "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
                             "title": "SQL Window Functions Introduction", 
                             "url": "/docs/sql-window-functions-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ranking Window Functions", 
+                            "next_url": "/docs/ranking-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions Introduction", 
+                            "previous_url": "/docs/sql-window-functions-introduction/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                            "title": "Aggregate Window Functions", 
+                            "url": "/docs/aggregate-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Aggregate Window Functions", 
+                            "previous_url": "/docs/aggregate-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                            "title": "Ranking Window Functions", 
+                            "url": "/docs/ranking-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Ranking Window Functions", 
+                            "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                            "title": "SQL Window Functions Examples", 
+                            "url": "/docs/sql-window-functions-examples/"
                         }
                     ], 
                     "next_title": "SQL Window Functions Introduction", 
@@ -14121,8 +14373,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "SQL Window Functions Introduction", 
-                    "previous_url": "/docs/sql-window-functions-introduction/", 
+                    "previous_title": "SQL Window Functions Examples", 
+                    "previous_url": "/docs/sql-window-functions-examples/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
