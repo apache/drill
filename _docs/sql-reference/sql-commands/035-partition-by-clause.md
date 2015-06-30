@@ -2,11 +2,13 @@
 title: "PARTITION BY Clause"
 parent: "SQL Commands"
 ---
-You can take advantage of automatic partitioning in Drill 1.1 by using the PARTITION BY clause in the CTAS command.
+In Drill 1.1, using the PARTITION BY clause in the CTAS command, automatically partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) when you query the data to improve performance.  
 
 ## Syntax
 
     [ PARTITION_BY ( column_name[, . . .] ) ] 
+
+The PARTITION BY clause partitions the data by the first column_name, and then subpartitions the data by the next column_name, and so on. 
 
 Only the Parquet storage format is supported for automatic partitioning. Before using CTAS, [set the `store.format` option]({{site.baseurl}}/docs/create-table-as-ctas/#setting-the-storage-format) for the table to Parquet.
 
@@ -47,7 +49,10 @@ Each line in the TSV file has the following structure:
 
 For example, lines 1722089 and 1722090 in the file contain this data:
 
-<table ><tbody><tr><th >ngram</th><th >year</th><th colspan="1" >match_count</th><th >volume_count</th></tr><tr><td ><p class="p1">Zoological Journal of the Linnean</p></td><td >2007</td><td colspan="1" >284</td><td >101</td></tr><tr><td colspan="1" ><p class="p1">Zoological Journal of the Linnean</p></td><td colspan="1" >2008</td><td colspan="1" >257</td><td colspan="1" >87</td></tr></tbody></table> 
+| ngram                             | year | match_count | volume_count |
+|-----------------------------------|------|-------------|--------------|
+| Zoological Journal of the Linnean | 2007 | 284         | 101          |
+| Zoological Journal of the Linnean | 2008 | 257         | 87           |
   
 In 2007, "Zoological Journal of the Linnean" occurred 284 times overall in 101
 distinct books of the Google sample.
@@ -103,7 +108,7 @@ a file to have this extension.
 		0_0_11.parquet	0_0_3.parquet	0_0_48.parquet	0_0_66.parquet
 		0_0_12.parquet	0_0_30.parquet	0_0_49.parquet	0_0_67.parquet
         . . .  
-7. Query the `by_yr` directory to check the data partitioning.  
+7. Query the `by_yr` directory to check to see how the data appears.  
    `SELECT * FROM by_yr LIMIT 100`;  
    The output looks something like this:
 
@@ -114,19 +119,43 @@ a file to have this extension.
         | 1737  | Zones_NOUN of_ADP the_DET Earth_NOUN ,_.                   | 2            |
         . . .
         | 1737  | Zobah , David slew of                                      | 1            |
-        | 1966  | zones_NOUN of_ADP the_DET medulla_NOUN ._.                 | 3            |
-        | 1966  | zone_NOUN is_VERB more_ADV or_CONJ less_ADJ                | 1            |
-        . . .
-        +-------+------------------------+-------------+
-        |  yr   |         ngram          | occurrances |
-        +-------+------------------------+-------------+
         | 1966  | zone by virtue of the  | 1           |
         +-------+------------------------+-------------+
         100 rows selected (2.184 seconds)
    Files are partitioned by year. The output is not expected to be in perfect sorted order because Drill reads files sequentially. 
+8. Distributed mode: Query the data to find all ngrams in 1993.
+
+        SELECT * FROM by_yr WHERE yr=1993;
+        +-------+-------------------------------------------------------------+--------------+
+        |  yr   |                            ngram                            | occurrances  |
+        +-------+-------------------------------------------------------------+--------------+
+        | 1993  | zoom out , click the                                        | 1            |
+        | 1993  | zones on earth . _END_                                          | 4           |
+        . . .
+        | 1993  | zoology at Oxford University ,                                  | 5           |
+        | 1993  | zones_NOUN ,_. based_VERB mainly_ADV on_ADP  | 2           |
+        +-------+----------------------------------------------+-------------+
+        31,100 rows selected (5.45 seconds)
+
+    Drill performs partition pruning when you query partitioned data, which improves performance.
+9. Distributed mode: Query the unpartitioned data to compare the performance of the query of the partitioned data in the last step.
+
+        SELECT * FROM `/googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
+
+        SELECT * FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
+        +--------------------------------------------------------------------------------+
+        |                                    columns                                     |
+        +--------------------------------------------------------------------------------+
+        | ["Zone , the government of","1993","1","1"]                                    |
+        | ["Zone : Fragments for a","1993","7","7"]                                      |
+        . . .
+        | ["zooxanthellae_NOUN and_CONJ the_DET evolution_NOUN of_ADP","1993","4","3"]  |
+        +-------------------------------------------------------------------------------+
+        31,100 rows selected (8.389 seconds)
+
+    The more data you query, the greater the performance benefit is from partition pruning. 
 
 ## Other Examples
-
 
     USE cp;
 	CREATE TABLE mytable1 PARTITION BY (r_regionkey) AS 
