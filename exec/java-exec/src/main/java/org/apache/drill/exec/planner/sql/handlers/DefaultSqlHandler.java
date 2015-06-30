@@ -39,6 +39,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
+import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
 import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
@@ -446,10 +447,21 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   private RelNode convertToRel(SqlNode node) throws RelConversionException {
-    RelNode convertedNode = planner.convert(node);
+    final RelNode convertedNode = planner.convert(node);
+
+    final RelMetadataProvider provider = convertedNode.getCluster().getMetadataProvider();
+
+    // Register RelMetadataProvider with HepPlanner.
+    final List<RelMetadataProvider> list = Lists.newArrayList(provider);
+    hepPlanner.registerMetadataProviders(list);
+    final RelMetadataProvider cachingMetaDataProvider = new CachingRelMetadataProvider(ChainedRelMetadataProvider.of(list), hepPlanner);
+    convertedNode.accept(new MetaDataProviderModifier(cachingMetaDataProvider));
+
+    // HepPlanner is specifically used for Window Function planning only.
     hepPlanner.setRoot(convertedNode);
     RelNode rel = hepPlanner.findBestExp();
 
+    rel.accept(new MetaDataProviderModifier(provider));
     return rel;
   }
 
