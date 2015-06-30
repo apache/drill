@@ -2,13 +2,13 @@
 title: "PARTITION BY Clause"
 parent: "SQL Commands"
 ---
-The PARTITION BY clause in the CTAS command, automatically partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) when you query the data to improve performance.  (Drill 1.1.0)
+The PARTITION BY clause in the CTAS command automatically partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) to improve performance when you query the data. (Drill 1.1.0)
 
 ## Syntax
 
      [ PARTITION_BY ( column_name[, . . .] ) ]
 
-The PARTITION BY clause partitions the data by the first column_name, and then subpartitions the data by the next column_name, and so on. 
+The PARTITION BY clause partitions the data by the first column_name, and then subpartitions the data by the next column_name, if there is one, and so on. 
 
 Only the Parquet storage format is supported for automatic partitioning. Before using CTAS, [set the `store.format` option]({{site.baseurl}}/docs/create-table-as-ctas/#setting-the-storage-format) for the table to Parquet.
 

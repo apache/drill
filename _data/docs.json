@@ -748,8 +748,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Impersonation with Hive Authentication", 
-            "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+            "previous_title": "Configuring User Impersonation with Hive Authorization", 
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -918,8 +918,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authentication", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
@@ -940,9 +940,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
-                    "title": "Configuring User Impersonation with Hive Authentication", 
-                    "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
+                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+                    "title": "Configuring User Impersonation with Hive Authorization", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1040,8 +1040,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authentication", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1402,8 +1402,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring User Impersonation with Hive Authentication", 
-            "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+            "next_title": "Configuring User Impersonation with Hive Authorization", 
+            "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Impersonation", 
             "previous_url": "/docs/configuring-user-impersonation/", 
@@ -1428,7 +1428,7 @@
             "title": "Configuring User Impersonation", 
             "url": "/docs/configuring-user-impersonation/"
         }, 
-        "Configuring User Impersonation with Hive Authentication": {
+        "Configuring User Impersonation with Hive Authorization": {
             "breadcrumbs": [
                 {
                     "title": "Configure Drill", 
@@ -1441,9 +1441,9 @@
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Authentication", 
             "previous_url": "/docs/configuring-user-authentication/", 
-            "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
-            "title": "Configuring User Impersonation with Hive Authentication", 
-            "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
+            "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+            "title": "Configuring User Impersonation with Hive Authorization", 
+            "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
@@ -11883,8 +11883,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring User Impersonation with Hive Authentication", 
-                    "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
@@ -11905,9 +11905,9 @@
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
-                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
-                    "title": "Configuring User Impersonation with Hive Authentication", 
-                    "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
+                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authorization.md", 
+                    "title": "Configuring User Impersonation with Hive Authorization", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12005,8 +12005,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authentication", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
