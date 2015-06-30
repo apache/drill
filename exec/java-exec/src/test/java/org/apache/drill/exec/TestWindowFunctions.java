@@ -392,4 +392,15 @@ public class TestWindowFunctions extends BaseTestQuery {
         .go();
   }
 
+  @Test // DRILL-3404
+  public void testWindowSumAggIsNotNull() throws Exception {
+    String query = String.format("select count(*) cnt from (select sum ( c1 ) over ( partition by c2 order by c1 asc nulls first ) w_sum from dfs.`%s/window/table_with_nulls.parquet` ) sub_query where w_sum is not null", TEST_RES_PATH);
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("cnt")
+      .baselineValues(26l)
+      .build().run();
+  }
+
 }
