@@ -10,7 +10,7 @@ You can create tables in Drill by using the CTAS command.
 
 *name* is a unique directory name, optionally prefaced by a storage plugin name, such as dfs, and a workspace, such as tmp using [dot notation]({{site.baseurl}}/docs/workspaces).  
 *column list* is an optional list of column names or aliases in the new table.  
-*query* is a SELECT statement that needs to include aliases for ambiguous column names, such as COLUMNS[0]. 
+*query* is a SELECT statement that needs to include aliases for ambiguous column names, such as COLUMNS[0]. Using SELECT * is [not recommended]({{site.baseurl}}/docs/text-files-csv-tsv-psv/#tips-for-performant-querying) when selecting CSV, TSV, and PSV data.
 
 You can use the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in a CTAS command.
 

@@ -9,18 +9,19 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 
 **Function**| **Return Type**  
 ---|---  
-[AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)| INTERVALDAY or INTERVALYEAR
-[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)| DOUBLE
-[CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| DATE  
-[CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIME   
-[CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP 
-[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)| DATE, TIMESTAMP  
-[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)| DOUBLE  
-[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)| DATE, TIMESTAMP     
-[LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIME  
-[LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
-[NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| TIMESTAMP  
-[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)| VARCHAR  
+[AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)                               | INTERVALDAY or INTERVALYEAR
+[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)      | DOUBLE
+[CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)      | DATE  
+[CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)      | TIME   
+[CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions) | TIMESTAMP 
+[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)                                | DATE, TIMESTAMP  
+[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)                              | DOUBLE  
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)                                | DATE, TIMESTAMP     
+[LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | TIME  
+[LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)    | TIMESTAMP  
+[NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  
+[TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | VARCHAR  
+[UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -519,5 +520,52 @@ Is the time 2:00 PM?
     | false      |
     +------------+
     1 row selected (0.033 seconds)
+
+## UNIX_TIMESTAMP
+
+ Returns UNIX Epoch time, which is the number of seconds elapsed since January 1, 1970.
+
+ ### UNIX_TIMESTAMP Syntax
+
+UNIX_TIMESTAMP()
+UNIX_TIMESTAMP(string date)
+UNIX_TIMESTAMP(string date, string pattern)
+
+These functions perform the following operations, respectively:
+
+* Gets current Unix timestamp in seconds if given no arguments. 
+* Converts the time string in format yyyy-MM-dd HH:mm:ss to a Unix timestamp in seconds using the default timezone and locale.
+* Converts the time string with the given pattern to a Unix time stamp in seconds.
+
+SELECT UNIX_TIMESTAMP() FROM sys.version;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1435711031  |
++-------------+
+1 row selected (0.749 seconds)
+
+SELECT UNIX_TIMESTAMP()('2009-03-20 11:15:55') from sys.version;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1237572955  |
++-------------+
+1 row selected (1.848 seconds)
+
+SELECT UNIX_TIMESTAMP()('2009-03-20', 'yyyy-MM-dd') from sys.version;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1237532400  |
++-------------+
+1 row selected (0.181 seconds)
+
+SELECT UNIX_TIMESTAMP()('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') from sys.version;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1432912733  |
++-------------+
 
 

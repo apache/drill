@@ -15,7 +15,7 @@ function interface:
 		<dependency>
 		<groupId>org.apache.drill.exec</groupId>
 		<artifactId>drill-java-exec</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0</version>
 		</dependency>
 
   2. Create a class that implements the `DrillSimpleFunc` interface and identify the scope as `FunctionScope.SIMPLE`.

@@ -118,7 +118,7 @@ created for the steps in this example.
 
 Complete the following steps to create a view in Drill:
 
-  1. Decide which workspace you will use to create the view, and verify that the writable option is set to “true.” You can use an existing workspace, or you can create a new workspace. See [Workspaces](https://cwiki.apache.org/confluence/display/DRILL/Workspaces) for more information.  
+  1. Decide which workspace you will use to create the view, and verify that the writable option is set to “true.” You can use an existing workspace, or you can create a new workspace. See [Workspaces]({{site.baseurl}}/docs/workspaces/) for more information.  
   
         "workspaces": {
            "donuts": {

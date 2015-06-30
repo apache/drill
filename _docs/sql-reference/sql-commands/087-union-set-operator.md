@@ -2,26 +2,27 @@
 title: "UNION Set Operator"
 parent: "SQL Commands"
 ---
-The UNION set operator returns all rows in the result sets of two separate query expressions. For example, if two employee tables exist, you can use the UNION set operator to merge the two tables and build a complete list of all the employees. Drill supports UNION ALL only. Drill does not support DISTINCT.
+The UNION set operator combines the result sets of two separate query expressions. The result set of each query must have the same number of columns and compatible data types. UNION automatically removes duplicate records from the result set. UNION ALL returns all duplicate records.
 
 
 ## Syntax
 The UNION set operator supports the following syntax:
 
        query
-       { UNION ALL }
+       { UNION [ ALL ] }
        query
   
 
 ## Parameters  
 *query*  
 
-Any SELECT query that Drill supports. See SELECT.
+Any SELECT query that Drill supports. See [SELECT]({{site.baseurl}}/docs/select/).
 
 ## Usage Notes
-   * The two SELECT query expressions that represent the direct operands of the UNION must produce the same number of columns. Corresponding columns must contain compatible data types. See Supported Data Types.  
+   * The two SELECT query expressions that represent the direct operands of the UNION must produce the same number of columns. Corresponding columns must contain compatible data types. See [Supported Data Types]({{site.baseurl}}/docs/supported-data-types/).  
    * Multiple UNION operators in the same SELECT statement are evaluated left to right, unless otherwise indicated by parentheses.  
-   * You cannot use * in UNION ALL for schemaless data.
+   * You can only use * on either side of UNION when the data source has a defined schema, such as data in Hive or views.
+   * You must explicitly specify columns.
 
 ## Examples
 The following example uses the UNION ALL set operator to combine click activity data before and after a marketing campaign. The data in the example exists in the `dfs.clicks workspace`.

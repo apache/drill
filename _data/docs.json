@@ -2084,14 +2084,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Text Files: CSV, TSV, PSV", 
+                    "next_url": "/docs/text-files-csv-tsv-psv/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "Parquet Format", 
                     "previous_url": "/docs/parquet-format/", 
                     "relative_path": "_docs/data-sources-and-file-formats/050-json-data-model.md", 
                     "title": "JSON Data Model", 
                     "url": "/docs/json-data-model/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "JSON Data Model", 
+                    "previous_url": "/docs/json-data-model/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+                    "title": "Text Files: CSV, TSV, PSV", 
+                    "url": "/docs/text-files-csv-tsv-psv/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -2513,8 +2530,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "JSON Data Model", 
-            "previous_url": "/docs/json-data-model/", 
+            "previous_title": "Text Files: CSV, TSV, PSV", 
+            "previous_url": "/docs/text-files-csv-tsv-psv/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
@@ -4261,8 +4278,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Develop Custom Functions", 
-            "next_url": "/docs/develop-custom-functions/", 
+            "next_title": "Text Files: CSV, TSV, PSV", 
+            "next_url": "/docs/text-files-csv-tsv-psv/", 
             "parent": "Data Sources and File Formats", 
             "previous_title": "Parquet Format", 
             "previous_url": "/docs/parquet-format/", 
@@ -10385,6 +10402,23 @@
             "title": "Testing the ODBC Connection", 
             "url": "/docs/testing-the-odbc-connection/"
         }, 
+        "Text Files: CSV, TSV, PSV": {
+            "breadcrumbs": [
+                {
+                    "title": "Data Sources and File Formats", 
+                    "url": "/docs/data-sources-and-file-formats/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Develop Custom Functions", 
+            "next_url": "/docs/develop-custom-functions/", 
+            "parent": "Data Sources and File Formats", 
+            "previous_title": "JSON Data Model", 
+            "previous_url": "/docs/json-data-model/", 
+            "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+            "title": "Text Files: CSV, TSV, PSV", 
+            "url": "/docs/text-files-csv-tsv-psv/"
+        }, 
         "Troubleshooting": {
             "breadcrumbs": [], 
             "children": [], 
@@ -15097,14 +15131,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Text Files: CSV, TSV, PSV", 
+                    "next_url": "/docs/text-files-csv-tsv-psv/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "Parquet Format", 
                     "previous_url": "/docs/parquet-format/", 
                     "relative_path": "_docs/data-sources-and-file-formats/050-json-data-model.md", 
                     "title": "JSON Data Model", 
                     "url": "/docs/json-data-model/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "JSON Data Model", 
+                    "previous_url": "/docs/json-data-model/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+                    "title": "Text Files: CSV, TSV, PSV", 
+                    "url": "/docs/text-files-csv-tsv-psv/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -15225,8 +15276,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "JSON Data Model", 
-            "previous_url": "/docs/json-data-model/", 
+            "previous_title": "Text Files: CSV, TSV, PSV", 
+            "previous_url": "/docs/text-files-csv-tsv-psv/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"

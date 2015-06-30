@@ -137,7 +137,7 @@ a file to have this extension.
         +-------+----------------------------------------------+-------------+
         31,100 rows selected (5.45 seconds)
 
-    Drill performs partition pruning when you query partitioned data, which improves performance.
+    Drill performs partition pruning when you query partitioned data, which improves performance. Performance can be improved further by casting the yr and occurrances columns to INTEGER, as described in section ["Tips for Performant Querying"](/docs/text-files-csv-tsv-psv/#tips-for-performant-querying).
 9. Distributed mode: Query the unpartitioned data to compare the performance of the query of the partitioned data in the last step.
 
         SELECT * FROM `/googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
