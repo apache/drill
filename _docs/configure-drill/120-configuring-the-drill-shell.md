@@ -56,7 +56,7 @@ Set the output format to CSV to improve performance of a huge query.
 
 | Variable Name   | Valid Variable Values  | Description                                                                                                                                                            |
 |-----------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| autoCommit      | true/false             | Enable/disable automatic transaction commit.                                                                                                                           |
+| autoCommit      | true/false             | Enable/disable automatic transaction commit. Should remain enabled (true).                                                                                             |
 | autoSave        | true/false             | Automatically save preferences.                                                                                                                                        |
 | color           | true/false             | Control whether color is used for display.                                                                                                                             |
 | fastConnect     | true/false             | Skip building table/column list for tab-completion.                                                                                                                    |
@@ -80,3 +80,7 @@ Set the output format to CSV to improve performance of a huge query.
 | timeout         | \<integer\>            | Query timeout in seconds; less than zero means no timeout.                                                                                                             |
 | trimScripts     | true/false             | Remove trailing spaces from lines read from script files.                                                                                                              |
 | verbose         | true/false             | Show unabbreviated error messages and debug info.                                                                                                                      |
+
+### autoCommit
+
+Drill performs read-only operations primarily, and autocommits writes. Drill JDBC throws an exception if autoCommit is disabled.

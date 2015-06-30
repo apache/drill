@@ -2,11 +2,11 @@
 title: "PARTITION BY Clause"
 parent: "SQL Commands"
 ---
-In Drill 1.1, using the PARTITION BY clause in the CTAS command, automatically partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) when you query the data to improve performance.  
+The PARTITION BY clause in the CTAS command, automatically partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) when you query the data to improve performance.  (Drill 1.1.0)
 
 ## Syntax
 
-    [ PARTITION_BY ( column_name[, . . .] ) ] 
+     [ PARTITION_BY ( column_name[, . . .] ) ]
 
 The PARTITION BY clause partitions the data by the first column_name, and then subpartitions the data by the next column_name, and so on. 
 
@@ -76,7 +76,7 @@ a file to have this extension.
    Distributed mode: This example assumes that the default `dfs` either works with your distributed file system out-of-the-box, or that you have adapted the storage plugin to your environment.  
    `USE dfs.tmp`;  
 5. Set the `store.format` property to the default parquet if you changed the default.
-   `ALTER SESSION SET `store.format` = 'parquet';`  
+   ``ALTER SESSION SET `store.format` = 'parquet';``  
 6. Partition Google Ngram data by year in a directory named `by_yr`.  
    Embedded mode:  
 
@@ -109,7 +109,7 @@ a file to have this extension.
 		0_0_12.parquet	0_0_30.parquet	0_0_49.parquet	0_0_67.parquet
         . . .  
 7. Query the `by_yr` directory to check to see how the data appears.  
-   `SELECT * FROM by_yr LIMIT 100`;  
+   `SELECT * FROM by_yr LIMIT 100;`  
    The output looks something like this:
 
         +-------+------------------------------------------------------------+--------------+
@@ -153,7 +153,7 @@ a file to have this extension.
         +-------------------------------------------------------------------------------+
         31,100 rows selected (8.389 seconds)
 
-    The more data you query, the greater the performance benefit is from partition pruning. 
+    The larger the data set you query, the greater the performance benefit from partition pruning. 
 
 ## Other Examples
 

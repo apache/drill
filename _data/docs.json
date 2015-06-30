@@ -748,8 +748,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Authentication", 
-            "previous_url": "/docs/configuring-user-authentication/", 
+            "previous_title": "Configuring User Impersonation with Hive Authentication", 
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -918,14 +918,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Impersonation with Hive Authentication", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
+                    "title": "Configuring User Impersonation with Hive Authentication", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1023,8 +1040,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authentication", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1385,8 +1402,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
+            "next_title": "Configuring User Impersonation with Hive Authentication", 
+            "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Impersonation", 
             "previous_url": "/docs/configuring-user-impersonation/", 
@@ -1410,6 +1427,23 @@
             "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
             "title": "Configuring User Impersonation", 
             "url": "/docs/configuring-user-impersonation/"
+        }, 
+        "Configuring User Impersonation with Hive Authentication": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring User Authentication", 
+            "previous_url": "/docs/configuring-user-authentication/", 
+            "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
+            "title": "Configuring User Impersonation with Hive Authentication", 
+            "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
@@ -3159,8 +3193,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Nested Data Functions", 
-            "next_url": "/docs/nested-data-functions/", 
+            "next_title": "SQL Window Functions", 
+            "next_url": "/docs/sql-window-functions/", 
             "parent": "SQL Functions", 
             "previous_title": "Aggregate and Aggregate Statistical", 
             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -4865,8 +4899,8 @@
             "next_title": "Nested Data Limitations", 
             "next_url": "/docs/nested-data-limitations/", 
             "parent": "SQL Reference", 
-            "previous_title": "Functions for Handling Nulls", 
-            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "previous_title": "SQL Window Functions Introduction", 
+            "previous_url": "/docs/sql-window-functions-introduction/", 
             "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
             "title": "Nested Data Functions", 
             "url": "/docs/nested-data-functions/"
@@ -5356,33 +5390,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Tibco Spotfire Desktop with Drill", 
-                            "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
-                            "title": "Using Tibco Spotfire Desktop with Drill", 
-                            "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using Drill with BI Tools", 
-                                    "url": "/docs/using-drill-with-bi-tools/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
-                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                            "parent": "Using Drill with BI Tools", 
-                            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
-                            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
                             "title": "Using Tibco Spotfire Desktop with Drill", 
                             "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
                         }, 
@@ -8446,8 +8459,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Nested Data Functions", 
-                    "next_url": "/docs/nested-data-functions/", 
+                    "next_title": "SQL Window Functions", 
+                    "next_url": "/docs/sql-window-functions/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Aggregate and Aggregate Statistical", 
                     "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -8746,8 +8759,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -8764,6 +8777,45 @@
                     "relative_path": "_docs/sql-reference/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions", 
+                            "previous_url": "/docs/sql-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                            "title": "SQL Window Functions Introduction", 
+                            "url": "/docs/sql-window-functions-introduction/"
+                        }
+                    ], 
+                    "next_title": "SQL Window Functions Introduction", 
+                    "next_url": "/docs/sql-window-functions-introduction/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "Functions for Handling Nulls", 
+                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8882,8 +8934,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "SQL Window Functions Introduction", 
+                    "previous_url": "/docs/sql-window-functions-introduction/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
@@ -9526,6 +9578,66 @@
             "relative_path": "_docs/sql-reference/010-sql-reference-introduction.md", 
             "title": "SQL Reference Introduction", 
             "url": "/docs/sql-reference-introduction/"
+        }, 
+        "SQL Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Nested Data Functions", 
+                    "next_url": "/docs/nested-data-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "SQL Window Functions", 
+                    "previous_url": "/docs/sql-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                    "title": "SQL Window Functions Introduction", 
+                    "url": "/docs/sql-window-functions-introduction/"
+                }
+            ], 
+            "next_title": "SQL Window Functions Introduction", 
+            "next_url": "/docs/sql-window-functions-introduction/", 
+            "parent": "SQL Reference", 
+            "previous_title": "Functions for Handling Nulls", 
+            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+            "title": "SQL Window Functions", 
+            "url": "/docs/sql-window-functions/"
+        }, 
+        "SQL Window Functions Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Nested Data Functions", 
+            "next_url": "/docs/nested-data-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "SQL Window Functions", 
+            "previous_url": "/docs/sql-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+            "title": "SQL Window Functions Introduction", 
+            "url": "/docs/sql-window-functions-introduction/"
         }, 
         "Sample Data: Donuts": {
             "breadcrumbs": [
@@ -10645,33 +10757,12 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Tibco Spotfire Desktop with Drill", 
-                    "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
-                    "title": "Using Tibco Spotfire Desktop with Drill", 
-                    "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Using Drill with BI Tools", 
-                            "url": "/docs/using-drill-with-bi-tools/"
-                        }, 
-                        {
-                            "title": "ODBC/JDBC Interfaces", 
-                            "url": "/docs/odbc-jdbc-interfaces/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
-                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                    "parent": "Using Drill with BI Tools", 
-                    "previous_title": "Using Tibco Spotfire Desktop with Drill", 
-                    "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
                     "title": "Using Tibco Spotfire Desktop with Drill", 
                     "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
                 }, 
@@ -10864,9 +10955,9 @@
             "next_title": "Configuring Tibco Spotfire Server with Drill", 
             "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "parent": "Using Drill with BI Tools", 
-            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
-            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
+            "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
+            "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
             "title": "Using Tibco Spotfire Desktop with Drill", 
             "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
         }, 
@@ -11792,14 +11883,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Impersonation with Hive Authentication", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "relative_path": "_docs/configure-drill/077-configuring-user-impersonation-with-hive-authentication.md", 
+                    "title": "Configuring User Impersonation with Hive Authentication", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authentication/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11897,8 +12005,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authentication", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authentication/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -12615,33 +12723,12 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Tibco Spotfire Desktop with Drill", 
-                            "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
-                            "title": "Using Tibco Spotfire Desktop with Drill", 
-                            "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Using Drill with BI Tools", 
-                                    "url": "/docs/using-drill-with-bi-tools/"
-                                }, 
-                                {
-                                    "title": "ODBC/JDBC Interfaces", 
-                                    "url": "/docs/odbc-jdbc-interfaces/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
-                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
-                            "parent": "Using Drill with BI Tools", 
-                            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
-                            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
                             "title": "Using Tibco Spotfire Desktop with Drill", 
                             "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
                         }, 
@@ -13859,8 +13946,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -13877,6 +13964,45 @@
                     "relative_path": "_docs/sql-reference/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions", 
+                            "previous_url": "/docs/sql-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                            "title": "SQL Window Functions Introduction", 
+                            "url": "/docs/sql-window-functions-introduction/"
+                        }
+                    ], 
+                    "next_title": "SQL Window Functions Introduction", 
+                    "next_url": "/docs/sql-window-functions-introduction/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "Functions for Handling Nulls", 
+                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -13995,8 +14121,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "SQL Window Functions Introduction", 
+                    "previous_url": "/docs/sql-window-functions-introduction/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
