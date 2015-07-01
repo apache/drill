@@ -533,7 +533,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   private SelectionVector2 newSV2() throws OutOfMemoryException, InterruptedException {
     SelectionVector2 sv2 = new SelectionVector2(oContext.getAllocator());
-    if (!sv2.allocateNew(incoming.getRecordCount())) {
+    if (!sv2.allocateNewSafe(incoming.getRecordCount())) {
       try {
         spilledBatchGroups.addFirst(mergeAndSpill(batchGroups));
       } catch (SchemaChangeException e) {
@@ -550,7 +550,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
         }
         waitTime *= 2;
-        if (sv2.allocateNew(incoming.getRecordCount())) {
+        if (sv2.allocateNewSafe(incoming.getRecordCount())) {
           break;
         }
         if (waitTime >= 32) {

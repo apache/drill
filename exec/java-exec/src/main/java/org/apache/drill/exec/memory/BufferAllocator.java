@@ -39,6 +39,7 @@ public interface BufferAllocator extends Closeable {
    * @param size
    *          The size in bytes.
    * @return A new ByteBuf.
+   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
    */
   public abstract DrillBuf buffer(int size);
 
@@ -49,6 +50,7 @@ public interface BufferAllocator extends Closeable {
    * @param minSize The minimum size in bytes.
    * @param maxSize The maximum size in bytes.
    * @return A new ByteBuf.
+   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
    */
   public abstract DrillBuf buffer(int minSize, int maxSize);
 

@@ -49,9 +49,6 @@ public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
   @Override
   public ByteBuffer allocate(int sz) {
     ByteBuf bb = allocator.buffer(sz);
-    if (bb == null) {
-      throw new OutOfMemoryRuntimeException();
-    }
     ByteBuffer b = bb.nioBuffer(0, sz);
     allocatedBuffers.put(System.identityHashCode(b), bb);
     logger.debug("ParquetDirectByteBufferAllocator: Allocated "+sz+" bytes. Allocated ByteBuffer id: "+System.identityHashCode(b));

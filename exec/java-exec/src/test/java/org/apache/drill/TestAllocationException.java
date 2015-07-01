@@ -20,8 +20,8 @@ package org.apache.drill;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.exec.testing.Controls;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,26 +36,17 @@ public class TestAllocationException extends BaseTestQuery {
 
   private static final String SINGLE_MODE = "ALTER SESSION SET `planner.disable_exchanges` = true";
 
-  private void testWithException(final String fileName) throws Exception {
-    testWithException(fileName, OutOfMemoryRuntimeException.class);
-  }
-
-  private void testWithException(final String fileName, Class<? extends Throwable> exceptionClass) throws Exception{
+  private void testWithException(final String fileName) throws Exception{
     test(SINGLE_MODE);
 
-    CoordinationProtos.DrillbitEndpoint endpoint = bits[0].getContext().getEndpoint();
-
-    String controlsString = "{\"injections\":[{"
-      + "\"address\":\"" + endpoint.getAddress() + "\","
-      + "\"port\":\"" + endpoint.getUserPort() + "\","
-      + "\"type\":\"exception\","
-      + "\"siteClass\":\"" + TopLevelAllocator.class.getName() + "\","
-      + "\"desc\":\"" + TopLevelAllocator.CHILD_BUFFER_INJECTION_SITE + "\","
-      + "\"nSkip\":200,"
-      + "\"nFire\":1,"
-      + "\"exceptionClass\":\"" + exceptionClass.getName() + "\""
-      + "}]}";
-    ControlsInjectionUtil.setControls(client, controlsString);
+    final String controls = Controls.newBuilder()
+      .addException(TopLevelAllocator.class,
+        TopLevelAllocator.CHILD_BUFFER_INJECTION_SITE,
+        OutOfMemoryRuntimeException.class,
+        200,
+        1
+      ).build();
+    ControlsInjectionUtil.setControls(client, controls);
 
     String query = getFile(fileName);
 
@@ -71,12 +62,7 @@ public class TestAllocationException extends BaseTestQuery {
   }
 
   @Test
-  public void testWithNull() throws Exception{
-    testWithException("queries/tpch/01.sql");
-  }
-
-  @Test
   public void testWithOOM() throws Exception{
-    testWithException("queries/tpch/03.sql", NullPointerException.class);
+    testWithException("queries/tpch/01.sql");
   }
 }

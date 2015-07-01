@@ -64,7 +64,7 @@ public abstract class FilterTemplate2 implements Filterer{
     if (recordCount == 0) {
       return;
     }
-    if (! outgoingSelectionVector.allocateNew(recordCount)) {
+    if (! outgoingSelectionVector.allocateNewSafe(recordCount)) {
       throw new OutOfMemoryRuntimeException("Unable to allocate filter batch");
     }
     switch(svMode){

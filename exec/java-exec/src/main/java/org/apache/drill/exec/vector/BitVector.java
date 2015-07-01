@@ -121,11 +121,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     final int curSize = (int)size;
     clear();
-    final DrillBuf newBuf = allocator.buffer(curSize);
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of d% bytes.", curSize));
-    }
-    data = newBuf;
+    data = allocator.buffer(curSize);
     zeroVector();
     allocationSizeInBytes = curSize;
   }
@@ -141,15 +137,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     final int curSize = (int)newAllocationSize;
     final DrillBuf newBuf = allocator.buffer(curSize);
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes.", newAllocationSize));
-    }
-
     newBuf.setZero(0, newBuf.capacity());
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
-    allocationSizeInBytes =  curSize;
+    allocationSizeInBytes = curSize;
   }
 
   /**

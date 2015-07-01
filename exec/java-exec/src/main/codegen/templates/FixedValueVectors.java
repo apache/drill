@@ -125,11 +125,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     final int curSize = (int)size;
     clear();
-    final DrillBuf newBuf = allocator.buffer(curSize);
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", size));
-    }
-    data = newBuf;
+    data = allocator.buffer(curSize);
     data.readerIndex(0);
     allocationSizeInBytes = curSize;
   }
@@ -147,10 +143,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     logger.debug("Reallocating vector [{}]. # of bytes: [{}] -> [{}]", field, allocationSizeInBytes, newAllocationSize);
     final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
-    if (newBuf == null) {
-      throw new OutOfMemoryRuntimeException(String.format("Failure while reallocating buffer to %d bytes", newAllocationSize));
-    }
-
     newBuf.setBytes(0, data, 0, data.capacity());
     newBuf.setZero(newBuf.capacity() / 2, newBuf.capacity() / 2);
     newBuf.writerIndex(data.writerIndex());

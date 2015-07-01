@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -47,7 +46,7 @@ import com.google.common.collect.Lists;
  * from an InputStream and construct a new VectorContainer.
  */
 public class VectorAccessibleSerializable extends AbstractStreamSerializable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
   static final MetricRegistry metrics = DrillMetrics.getInstance();
   static final String WRITER_TIMER = MetricRegistry.name(VectorAccessibleSerializable.class, "writerTime");
 
@@ -114,9 +113,6 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
       int dataLength = metaData.getBufferLength();
       MaterializedField field = MaterializedField.create(metaData);
       DrillBuf buf = allocator.buffer(dataLength);
-      if (buf == null) {
-        throw new IOException(new OutOfMemoryException());
-      }
       final ValueVector vector;
       try {
         buf.writeBytes(input, dataLength);

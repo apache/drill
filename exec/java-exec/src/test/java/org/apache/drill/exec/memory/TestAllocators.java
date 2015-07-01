@@ -19,7 +19,8 @@
 package org.apache.drill.exec.memory;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
@@ -143,36 +144,23 @@ public class TestAllocators {
     ((AutoCloseable) oContext22).close();
 
     // Fragment 3 asks for more and fails
-    boolean outOfMem=false;
     try {
-      DrillBuf b31b = oContext31.getAllocator().buffer(4400000);
-      if(b31b!=null) {
-        b31b.release();
-      }else{
-        outOfMem=true;
-      }
-    }catch(Exception e){
-      outOfMem=true;
+      oContext31.getAllocator().buffer(4400000);
+      fail("Fragment 3 should fail to allocate buffer");
+    } catch (OutOfMemoryRuntimeException e) {
+      // expected
     }
-    assertEquals(true, (boolean)outOfMem);
 
     // Operator is Exempt from Fragment limits. Fragment 3 asks for more and succeeds
-    outOfMem=false;
     OperatorContext oContext32 = fragmentContext3.newOperatorContext(physicalOperator6, false);
-    DrillBuf b32=null;
     try {
-      b32=oContext32.getAllocator().buffer(4400000);
-    }catch(Exception e){
-      outOfMem=true;
-    }finally{
-      if(b32!=null) {
-        b32.release();
-      }else{
-        outOfMem=true;
-      }
+      DrillBuf b32 = oContext32.getAllocator().buffer(4400000);
+      b32.release();
+    } catch (OutOfMemoryRuntimeException e) {
+      fail("Fragment 3 failed to allocate buffer");
+    } finally {
       closeOp(oContext32);
     }
-    assertEquals(false, (boolean)outOfMem);
 
     b11.release();
     closeOp(oContext11);

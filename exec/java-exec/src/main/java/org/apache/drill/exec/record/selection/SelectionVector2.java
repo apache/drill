@@ -23,13 +23,14 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
  * A selection vector that fronts, at most, a
  */
 public class SelectionVector2 implements Closeable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
   private final BufferAllocator allocator;
   private int recordCount;
@@ -90,13 +91,18 @@ public class SelectionVector2 implements Closeable{
     buffer.setChar(index, value);
   }
 
-  public boolean allocateNew(int size){
-    clear();
-    buffer = allocator.buffer(size * RECORD_SIZE);
-    if (buffer == null) {
+  public boolean allocateNewSafe(int size) {
+    try {
+      allocateNew(size);
+    } catch (OutOfMemoryRuntimeException e) {
       return false;
     }
     return true;
+  }
+
+  public void allocateNew(int size) {
+    clear();
+    buffer = allocator.buffer(size * RECORD_SIZE);
   }
 
   @Override

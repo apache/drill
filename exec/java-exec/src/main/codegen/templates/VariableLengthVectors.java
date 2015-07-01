@@ -300,34 +300,24 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      * buffers for multiple vectors. If one of the allocations failed we need to
      * clear all the memory that we allocated
      */
-    boolean success = false;
     try {
       final int requestedSize = (int)curAllocationSize;
-      DrillBuf newBuf = allocator.buffer(requestedSize);
-      if (newBuf == null) {
-        return false;
-      }
-      this.data = newBuf;
-      success = offsetVector.allocateNewSafe();
-    } finally {
-      if (!success) {
-        clear();
-      }
+      data = allocator.buffer(requestedSize);
+      offsetVector.allocateNew();
+    } catch (OutOfMemoryRuntimeException e) {
+      clear();
+      return false;
     }
     data.readerIndex(0);
     offsetVector.zeroVector();
-    return success;
+    return true;
   }
 
   public void allocateNew(int totalBytes, int valueCount) {
     clear();
     assert totalBytes >= 0;
     try {
-      final DrillBuf newBuf = allocator.buffer(totalBytes);
-      if (newBuf == null) {
-        throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
-      }
-      data = newBuf;
+      data = allocator.buffer(totalBytes);
       offsetVector.allocateNew(valueCount + 1);
     } catch (DrillRuntimeException e) {
       clear();
@@ -345,10 +335,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     final DrillBuf newBuf = allocator.buffer((int)newAllocationSize);
-    if(newBuf == null) {
-      throw new OutOfMemoryRuntimeException(
-        String.format("Failure while reallocating buffer of %d bytes", newAllocationSize));
-    }
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
