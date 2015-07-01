@@ -353,18 +353,18 @@ public class FragmentExecutor implements Runnable {
   }
 
   private void warnStateChange(final FragmentState current, final FragmentState target) {
-    logger.warn("Ignoring unexpected state transition {} => {}.", current.name(), target.name());
+    logger.warn(fragmentName + ": Ignoring unexpected state transition {} --> {}", current.name(), target.name());
   }
 
   private void errorStateChange(final FragmentState current, final FragmentState target) {
-    final String msg = "Invalid state transition %s => %s.";
-    throw new StateTransitionException(String.format(msg, current.name(), target.name()));
+    final String msg = "%s: Invalid state transition %s --> %s";
+    throw new StateTransitionException(String.format(msg, fragmentName, current.name(), target.name()));
   }
 
   private synchronized boolean updateState(FragmentState target) {
     final FragmentHandle handle = fragmentContext.getHandle();
     final FragmentState current = fragmentState.get();
-    logger.info(fragmentName + ": State change requested from {} --> {} for ", current, target);
+    logger.info(fragmentName + ": State change requested {} --> {}", current, target);
     switch (target) {
     case CANCELLATION_REQUESTED:
       switch (current) {
