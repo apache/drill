@@ -3,7 +3,7 @@ title: "SQL Window Functions Examples"
 parent: "SQL Window Functions"
 ---
 
-The window function examples use a view named q1\_sales that was created from a CSV file named emp_sales and stored in a directory on the local file system:
+The window function examples use a view named q1\_sales that was created from a CSV file named emp_sales and stored in a directory on the local file system.
  
 The emp_sales.csv file contains the following information:  
 
@@ -51,7 +51,7 @@ You can then run the USE command to change to the schema with the file. All quer
        | true  | Default schema changed to [dfs.emp]  |
        +-------+--------------------------------------+
  
-To create the q1_sales view used in the examples, issue the following query with the CREATE VIEW command to Drill.
+To create the q1_sales view used in the examples, issue the following query with the CREATE VIEW command.
 
 Note: You must use column numbers when querying CSV files. Also, CAST the columns to a specific data type to avoid incorrect implicit casting by Drill. This can affect the accuracy of window function results. In Drill, the column array starts with 0 as the first column.
  

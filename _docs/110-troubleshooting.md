@@ -32,26 +32,26 @@ If you have any of the following problems, try the suggested solution:
 * [Query Parsing Errors]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors)
 * [Query Parsing Errors Caused by Reserved Words]({{site.baseurl}}/docs/troubleshooting/#query-parsing-errors-caused-by-reserved-words)
 * [Table Not Found]({{site.baseurl}}/docs/troubleshooting/#table-not-found)
-* [Access Nested Fields without Table Name/Alias]({{site.baseurl}}/docs/troubleshooting/#access-nested-fields-without-table-name/alias)
+* [Access Nested Fields without Table Name/Alias]({{site.baseurl}}/docs/troubleshooting/#access-nested-fields-without-table-name-alias)
 * [Unexpected Null Values for Columns in Results]({{site.baseurl}}/docs/troubleshooting/#unexpected-null-values-for-columns-in-results)
 * [Using Functions with Incorrect Data Types]({{site.baseurl}}/docs/troubleshooting/#using-functions-with-incorrect-data-types)
 * [Query Takes a Long Time to Return]({{site.baseurl}}/docs/troubleshooting/#query-takes-a-long-time-to-return)
 * [Schema Changes]({{site.baseurl}}/docs/troubleshooting/#schema-changes)
 * [Timestamps and Timezones Other Than UTC]({{site.baseurl}}/docs/troubleshooting/#timestamps-and-timezones-other-than-utc)
 * [Unexpected ODBC Issues]({{site.baseurl}}/docs/troubleshooting/#unexpected-odbc-issues)
-* [JDBC/ODBC Connection Issues with ZooKeeper]({{site.baseurl}}/docs/troubleshooting/#jdbc/odbc-connection-issues-with-zookeeper)
+* [JDBC/ODBC Connection Issues with ZooKeeper]({{site.baseurl}}/docs/troubleshooting/#jdbc-odbc-connection-issues-with-zookeeper)
 * [Metadata Queries Take a Long Time to Return]({{site.baseurl}}/docs/troubleshooting/#metadata-queries-take-a-long-time-to-return)
 * [Unexpected Results Due to Implicit Casting]({{site.baseurl}}/docs/troubleshooting/#unexpected-results-due-to-implicit-casting)
 * [Column Alias Causes an Error]({{site.baseurl}}/docs/troubleshooting/#column-alias-causes-an-error)
-* [List (Array) Contains Null]({{site.baseurl}}/docs/troubleshooting/#list-(array)-contains-null)
-* [SELECT COUNT (*) Takes a Long Time to Run]({{site.baseurl}}/docs/troubleshooting/#select-count-(*)-takes-a-long-time-to-run)
+* [List (Array) Contains Null]({{site.baseurl}}/docs/troubleshooting/#list-array-contains-null)
+* [SELECT COUNT (*) Takes a Long Time to Run]({{site.baseurl}}/docs/troubleshooting/#select-count-takes-a-long-time-to-run)
 * [Tableau Issues]({{site.baseurl}}/docs/troubleshooting/#tableau-issues)
 * [GROUP BY Using Alias]({{site.baseurl}}/docs/troubleshooting/#group-by-using-alias)
 * [Casting a VARCHAR String to an INTEGER Causes an Error]({{site.baseurl}}/docs/troubleshooting/#casting-a-varchar-string-to-an-integer-causes-an-error)
 * [Unexpected Exception during Fragment Initialization]({{site.baseurl}}/docs/troubleshooting/#unexpected-exception-during-fragment-initialization)
 * [Queries Running Out of Memory]({{site.baseurl}}/docs/troubleshooting/#queries-running-out-of-memory)
 * [Unclear Error Message]({{site.baseurl}}/docs/troubleshooting/#unclear-error-message)
-* [SQLLine Error Starting Drill in Embedded Mode]({{site.baseurl}}/docs/troubleshooting/#sqlline-error-starting-drill-in-embedded-mode)
+* [Error Starting Drill in Embedded Mode]({{site.baseurl}}/docs/troubleshooting/#error-starting-drill-in-embedded-mode)
 
 ### Memory Issues
 Symptom: Memory problems occur when you run certain queries, such as those that perform window functions.
@@ -263,7 +263,7 @@ Solution: Turn on verbose errors.
 
 Determine your currently connected drillbit using `SELECT * FROM sys.drillbits.  Then review logs Drill logs from that drillbit.
 
-### SQLLine Error Starting Drill in Embedded Mode
+### Error Starting Drill in Embedded Mode
 
 Symptom:  
 

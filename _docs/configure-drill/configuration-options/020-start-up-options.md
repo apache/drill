@@ -46,17 +46,11 @@ override.conf` file located in Drill’s` /conf` directory.
 The summary of start-up options, also known as boot options, lists default values. The following descriptions provide more detail on key options that are frequently reconfigured:
 
 * drill.exec.sys.store.provider.class  
-  
-  Defines the persistent storage (PStore) provider. The [PStore]({{ site.baseurl }}/docs/persistent-configuration-storage) holds configuration and profile data. 
-
-* drill.exec.buffer.size
-
-  Defines the amount of memory available, in terms of record batches, to hold data on the downstream side of an operation. Drill pushes data downstream as quickly as possible to make data immediately available. This requires Drill to use memory to hold the data pending operations. When data on a downstream operation is required, that data is immediately available so Drill does not have to go over the network to process it. Providing more memory to this option increases the speed at which Drill completes a query.
-
-* drill.exec.sort.external.spill.directories
-
-  Tells Drill which directory to use when spooling. Drill uses a spool and sort operation for beyond memory operations. The sorting operation is designed to spool to a Hadoop file system. The default Hadoop file system is a local file system in the /tmp directory. Spooling performance (both writing and reading back from it) is constrained by the file system. For MapR clusters, use MapReduce volumes or set up local volumes to use for spooling purposes. Volumes improve performance and stripe data across as many disks as possible.
-
+  Defines the persistent storage (PStore) provider. The [PStore]({{ site.baseurl }}/docs/persistent-configuration-storage) holds configuration and profile data.  
+* drill.exec.buffer.size  
+  Defines the amount of memory available, in terms of record batches, to hold data on the downstream side of an operation. Drill pushes data downstream as quickly as possible to make data immediately available. This requires Drill to use memory to hold the data pending operations. When data on a downstream operation is required, that data is immediately available so Drill does not have to go over the network to process it. Providing more memory to this option increases the speed at which Drill completes a query.  
+* drill.exec.sort.external.spill.directories  
+  Tells Drill which directory to use when spooling. Drill uses a spool and sort operation for beyond memory operations. The sorting operation is designed to spool to a Hadoop file system. The default Hadoop file system is a local file system in the `/tmp` directory. Spooling performance (both writing and reading back from it) is constrained by the file system. For MapR clusters, use MapReduce volumes or set up local volumes to use for spooling purposes. Volumes improve performance and stripe data across as many disks as possible.  
 * drill.exec.zk.connect  
   Provides Drill with the ZooKeeper quorum to use to connect to data sources. Change this setting to point to the ZooKeeper quorum that you want Drill to use. You must configure this option on each Drillbit node.
 

@@ -16,7 +16,7 @@ When the base table in the SELECT statement is schema-less, include columns in t
 
     CREATE TABLE dest_name [ (column, . . .) ]
     [ PARTITION_BY (column, . . .) ] 
-    AS SELECT <column_list> FROM <source_name>;
+    AS SELECT column_list FROM <source_name>;
 
 When columns in the source table have ambiguous names, such as COLUMNS[0], define one or more column aliases in the SELECT statement. Use the alias name or names in the CREATE TABLE list. List aliases in the same order as the corresponding columns in the SELECT statement. Matching order is important because Drill performs an overwrite operation.  
 
@@ -28,7 +28,7 @@ For example:
 
     CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv`;
 
-When the partition column is resolved to * column in a schema-less query, the * column cannot be a result of join operation. 
+When the partition column is resolved to * column (due to a SELECT * query) in a schema-less query, the * column cannot be a result of join operation. 
 
 The output of CTAS using a PARTITION BY clause creates separate files. Each file contains one partition value, and Drill can create multiple files for the same partition value.
 

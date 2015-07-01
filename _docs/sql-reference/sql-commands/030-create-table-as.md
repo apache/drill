@@ -6,7 +6,7 @@ You can create tables in Drill by using the CTAS command.
 
 ## Syntax
 
-    CREATE TABLE <name> [ (column list) ] AS <query>;
+    CREATE TABLE name [ (column list) ] AS query;
 
 *name* is a unique directory name, optionally prefaced by a storage plugin name, such as dfs, and a workspace, such as tmp using [dot notation]({{site.baseurl}}/docs/workspaces).  
 *column list* is an optional list of column names or aliases in the new table.  

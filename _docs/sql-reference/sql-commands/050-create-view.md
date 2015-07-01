@@ -14,13 +14,13 @@ existing views or any other available storage plugin data sources.
 
 The CREATE VIEW command supports the following syntax:
 
-    CREATE [OR REPLACE] VIEW [workspace.]view_name [ (column_name [, ...]) ] AS <query>;
+    CREATE [OR REPLACE] VIEW [workspace.]view_name [ (column_name [, ...]) ] AS query;
 
 Use CREATE VIEW to create a new view. Use CREATE OR REPLACE VIEW to replace an
 existing view with the same name. When you replace a view, the query must
 generate the same set of columns with the same column names and data types.
 
-**Note:** Follow Drill’s rules for identifiers when you name the view. See coming soon...
+**Note:** Follow Drill’s rules for identifiers when you name the view. 
 
 ## Parameters
 

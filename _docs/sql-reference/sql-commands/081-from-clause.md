@@ -28,7 +28,7 @@ Includes one or more *table_references* and is typically followed by the WHERE, 
   Name of a table or view. In Drill, you can also refer to a file system directory or a specific file.
 
    * *alias*  
-   A temporary alternative name for a table or view that provides a convenient shortcut for identifying tables in other parts of a query, such as the WHERE clause. You must supply an alias for a table derived from a subquery. In other table references, aliases are optional. The AS keyword is always optional. Drill does not support the GROUP BY alias.
+   A temporary alternative name for a table or view that provides a convenient shortcut for identifying tables in other parts of a query, such as the WHERE clause. You must supply an alias for a table derived from a subquery. Aliases might be required for [querying nested JSON]({{site.baseurl}}/docs/json-data-model/#analyzing-json). Aliases are definitely required to resolve ambiguous references, such as using the name "user" to query the Drill profiles. Drill treats "user" as a function in this case, and the returns unexpected results. If you use a table alias, Drill treats "user" as a column identifier, and the query returns expected results. The AS keyword is always optional. Drill does not support the GROUP BY alias.
 
    * *column_alias*  
    A temporary alternative name for a column in a table or view. You can use named column aliases in the SELECT list to provide meaningful names for regular columns and computed columns, such as the results of aggregate functions. You cannot reference column aliases in the following clauses:  

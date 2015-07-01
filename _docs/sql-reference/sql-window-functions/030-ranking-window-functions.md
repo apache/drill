@@ -3,11 +3,9 @@ title: "Ranking Window Functions"
 parent: "SQL Window Functions"
 ---
 
-## Ranking Window Functions
+Window functions operate on a set of rows and return a single value for each row from the underlying query. The OVER() clause differentiates window functions from other analytical and reporting functions. See [SQL Window Functions Introduction]({{site.baseurl}}/docs/sql-window-functions-introduction/). You can use ranking functions in Drill to return a ranking value for each row in a partition.  
 
-Window functions operate on a set of rows and return a single value for each row from the underlying query. See SQL Window Functions. The OVER() clause differentiates window functions from other analytical and reporting functions. 
-
-The following table lists the ranking window functions in Drill with return data types and descriptions of each function:  
+The following table lists the ranking window functions with supported data types and descriptions:  
 
 | Window Function | Return Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 |-----------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -33,12 +31,12 @@ CUME_DIST(), DENSE_RANK(), PERCENT_RANK(), RANK(), ROW_NUMBER()
 The functions do not take arguments, however the empty parentheses are required.  
 
 OVER clause  
-The window clauses for the function. The OVER clause cannot contain an explicit frame specification, but must include an ORDER BY clause. See Window Function Syntax for OVER clause syntax.
+The window clauses for the function. The OVER clause cannot contain an explicit frame specification, but must include an ORDER BY clause. See [Window Function Syntax]({{site.baseurl}}/docs/sql-window-functions-introduction/#syntax) for OVER clause syntax.
 
 
 
 ## Examples  
-The following examples show queries that use each of the ranking window functions in Drill. See Window Function Examples for information about the data and setup for these examples.
+The following examples show queries that use each of the ranking window functions in Drill. See [Window Functions Examples]({{site.baseurl}}/docs/sql-window-functions-examples/) for information about the data and setup for these examples.
  
 
 ### CUME_DIST()  

@@ -10,7 +10,7 @@ settings.
 
 The ALTER SYSTEM command supports the following syntax:
 
-    ALTER SYSTEM SET `<option_name>`=<value>;
+    ALTER SYSTEM SET `option_name` =  value;
 
 ## Parameters
 

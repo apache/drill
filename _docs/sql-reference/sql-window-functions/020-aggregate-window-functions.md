@@ -3,11 +3,9 @@ title: "Aggregate Window Functions"
 parent: "SQL Window Functions"
 ---
 
-## Aggregate Window Functions
+Window functions operate on a set of rows and return a single value for each row from the underlying query. The OVER() clause differentiates window functions from other analytical and reporting functions. See [SQL Window Functions Introduction]({{site.baseurl}}/docs/sql-window-functions-introduction/). You can use certain aggregate functions as window functions in Drill. 
 
-Window functions operate on a set of rows and return a single value for each row from the underlying query. See SQL Window Functions. You can use certain aggregate functions as window functions in Drill. The OVER() clause differentiates window functions from other analytical and reporting functions. 
-
-The following table lists the aggregate functions that you can use as window functions in Drill with supported data types and descriptions of each function:  
+The following table lists the aggregate window functions with supported data types and descriptions:  
 
 
 | Window Function | Argument Type                                                                   | Return Type                                                                                                                                               | Description                                                                                                                                                                                                                                                 |
@@ -19,7 +17,7 @@ The following table lists the aggregate functions that you can use as window fun
 | SUM()           | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY, or INTERVALYEAR | BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type | The SUM () window function returns the sum of the expression across all input values. The SUM function works with numeric values and ignores NULL values.                                                                                                   |
 
 ## Syntax  
-       window_function ( [ ALL ] <expression> ) 
+       window_function ( [ ALL ] expression ) 
        OVER ( [ PARTITION BY expr_list ] [ ORDER BY order_list frame_clause ] )
 
 
@@ -51,7 +49,7 @@ If an ORDER BY clause is used for an aggregate function, an explicit frame claus
 
 
 ## Examples  
-The following examples show queries that use each of the aggregate window functions in Drill. See Window Function Examples for information about the data and setup for these examples.
+The following examples show queries that use each of the aggregate window functions in Drill. See [SQL Window Functions Examples]({{site.baseurl}}/docs/sql-window-functions-examples/) for information about the data and setup for these examples.
  
 
 ### AVG()  
@@ -159,7 +157,7 @@ The following query uses the MIN() window function with the PARTITION BY clause 
 ### SUM()  
 The following query uses the SUM() window function to total the amount of sales for each dealer in Q1. The word sum is a reserved keyword in Drill and must be enclosed in back ticks (``).  
 
-       select dealer_id, emp_name, sales, sum(sales) over(partition by dealer_id) as `sum` from q2_sales;
+       select dealer_id, emp_name, sales, sum(sales) over(partition by dealer_id) as `sum` from q1_sales;
        +------------+-----------------+--------+--------+
        | dealer_id  |    emp_name     | sales  |  sum   |
        +------------+-----------------+--------+--------+

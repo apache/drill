@@ -52,7 +52,7 @@ Window functions are applied to the rows within each partition and sorted accord
 
 The following query uses the AVG() window function with the PARTITION BY clause to determine the average car sales for each dealer in Q1:  
 
-       select emp_name, dealer_id, sales, avg(sales) over (PARTITION BY dealer_id) as avgsales from q1_sales;
+       select emp_name, dealer_id, sales, avg(sales) over (partition by dealer_id) as avgsales from q1_sales;
        +-----------------+------------+--------+-----------+
        |    emp_name     | dealer_id  | sales  | avgsales  |
        +-----------------+------------+--------+-----------+
@@ -74,7 +74,7 @@ The following query uses the AVG() window function with the PARTITION BY clause 
 
 Currently, Drill supports the following aggregate and ranking window functions:  
 
-Aggregation  
+Aggregate   
 
 * AVG()
 * COUNT()
@@ -90,16 +90,15 @@ Ranking
 * RANK()
 * ROW_NUMBER()
 
-All of the ranking functions listed depend on the sort ordering specified by the ORDER BY clause of the associated window definition. Rows that are not distinct in the ordering are called peers. The ranking functions are defined so that they give the same answer for any two peer rows.  
+All of the ranking functions depend on the sort ordering specified by the ORDER BY clause of the associated window definition. Rows that are not distinct in the ordering are called peers. The ranking functions are defined so that they give the same answer for any two peer rows.  
 
 ## Syntax  
 
-       window_function (expression) 
-       OVER (
+       window_function (expression) OVER (
        [ PARTITION BY expr_list ]
        [ ORDER BY order_list ][ frame_clause ] )  
 
-where function is one of the functions described, such as AVG() and *expr_list* is:  
+where function is one of the functions described, such as AVG(), and *expr_list* is:  
 
        expression | column_name [, expr_list ]
 
@@ -138,13 +137,13 @@ PARTITION BY *expr_list*
 PARTITION BY is an optional clause that subdivides the data into partitions. Including the partition clause divides the query result set into partitions, and the window function is applied to each partition separately. Computation restarts for each partition. If you do not include a partition clause, the function calculates on the entire table or file.  
 
 ORDER BY *order_list*  
-The ORDER BY clause defines the logical order of the rows within each partition of the result set. If no PARTITION BY is specified, ORDER BY uses the entire table. ORDER BY is optional for the aggregation window functions, but required for the ranking functions. This ORDER BY clause does not relate to the ORDER BY clause that you use outside of the OVER clause.  
+The ORDER BY clause defines the logical order of the rows within each partition of the result set. If no PARTITION BY is specified, ORDER BY uses the entire table. ORDER BY is optional for the aggregate window functions and required for the ranking functions. This ORDER BY clause does not relate to the ORDER BY clause used outside of the OVER clause.  
 
 The window function is applied to the rows within each partition sorted according to the order specification.  
 
 Column identifiers or expressions that evaluate to column identifiers are required in the order list. You can also use constants as substitutes for column names.  
 
-NULLS are treated as their own group, sorted and ranked last in ASC, and sorted and ranked first in DESC. ASC is the default sort order.  
+NULLS are treated as their own group, sorted and ranked last in ASC and sorted and ranked first in DESC. ASC is the default sort order.  
 
 *column_name*  
 The name of a column to be partitioned by or ordered by.  
@@ -160,7 +159,7 @@ When the OVER clause contains an ORDER BY clause, the following frames are equiv
        RANGE UNBOUNDED PRECEDING
        RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  
 
-When OVER clause does not contain an ORDER BY clause, the following frames are equivalent to the default frame:  
+When the OVER clause does not contain an ORDER BY clause, the following frames are equivalent to the default frame:  
 
        RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
        ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING  

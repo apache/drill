@@ -46,7 +46,7 @@ Find the interval between midnight today, April 3, 2015, and June 13, 1957.
     +------------+
     1 row selected (0.064 seconds)
 
-Find the interval between midnight today, May 21, 2015, and hire dates of employees 578 and 761 in the `employees.json` file included with the Drill installation.
+Find the interval between midnight today, May 21, 2015, and hire dates of employees 578 and 761 in the `employees.json` file. The file is installed with Drill and located in the Drill classpath.
 
     SELECT AGE(CAST(hire_date AS TIMESTAMP)) FROM cp.`employee.json` where employee_id IN( '578','761');
     +------------------+
