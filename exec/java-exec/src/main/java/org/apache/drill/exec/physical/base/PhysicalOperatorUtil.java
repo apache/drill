@@ -32,8 +32,12 @@ public class PhysicalOperatorUtil {
   private PhysicalOperatorUtil(){}
 
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
-    Class<?>[] ops = PathScanner.scanForImplementationsArr(PhysicalOperator.class, config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
-    logger.debug("Adding Physical Operator sub types: {}", ((Object) ops) );
+    Class<?>[] ops =
+        PathScanner.scanForImplementationsArr(PhysicalOperator.class, 
+            config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
+    for (Class<?> op : ops) {
+      logger.debug("Adding physical operator {}", (Object) op );
+    }
     return ops;
   }
 
