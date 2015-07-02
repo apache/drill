@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigMergeable;
@@ -30,7 +33,8 @@ import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 abstract class NestedConfig implements Config {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedConfig.class);
+  @SuppressWarnings("unused")
+  private static final Logger logger = getLogger(NestedConfig.class);
 
   private final Config c;
 
