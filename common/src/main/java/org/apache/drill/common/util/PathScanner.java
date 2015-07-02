@@ -100,12 +100,12 @@ public class PathScanner {
   }
 
   private static Collection<URL> getMarkedPaths() {
-    Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE, true);
+    Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, true);
     return urls;
   }
 
   public static Collection<URL> getConfigURLs() {
-    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE, false);
+    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, false);
   }
 
   public static Set<URL> forResource(String name, boolean stripName, ClassLoader... classLoaders) {

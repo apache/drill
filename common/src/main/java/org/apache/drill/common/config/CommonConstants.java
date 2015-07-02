@@ -18,12 +18,30 @@
 package org.apache.drill.common.config;
 
 public interface CommonConstants {
-  public static final String CONFIG_DEFAULT = "drill-default.conf";
-  public static final String CONFIG_OVERRIDE = "drill-override.conf";
 
-  public static final String LOGICAL_OPERATOR_SCAN_PACKAGES = "drill.logical.operator.packages";
-  public static final String PHYSICAL_OPERATOR_SCAN_PACKAGES = "drill.physical.operator.packages";
-  public static final String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
-  public static final String DRILL_JAR_MARKER_FILE = "drill-module.conf";
-  public static final String LOGICAL_FUNCTION_SCAN_PACKAGES = "drill.logical.function.packages";
+  /** Default (base) configuration file name.  (Classpath resource pathname.) */
+  String CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-default.conf";
+
+  /** Module configuration files name.  (Classpath resource pathname.) */
+  String DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME = "drill-module.conf";
+
+  /** Override configuration file name.  (Classpath resource pathname.) */
+  String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
+
+  /** Configuration pathname to list of names of packages to scan for logical
+   *  operator subclasses. */
+  String LOGICAL_OPERATOR_SCAN_PACKAGES = "drill.logical.operator.packages";
+
+  /** Configuration pathname to list of names of packages to scan for physical
+   *  operator subclasses. */
+  String PHYSICAL_OPERATOR_SCAN_PACKAGES = "drill.physical.operator.packages";
+
+  /** Configuration pathname to list of names of packages to scan for function
+   *  subclasses. */
+  String LOGICAL_FUNCTION_SCAN_PACKAGES = "drill.logical.function.packages";
+
+  /** Configuration pathname to list of packages to scan for storage plugin
+   *  configuration subclasses. */
+  String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
+
 }
