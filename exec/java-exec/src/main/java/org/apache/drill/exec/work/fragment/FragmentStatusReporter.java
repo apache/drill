@@ -25,27 +25,40 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.rpc.control.ControlTunnel;
 
-public abstract class AbstractStatusReporter implements StatusReporter{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStatusReporter.class);
+/**
+ * The status reporter is responsible for receiving changes in fragment state and propagating the status back to the
+ * Foreman through a control tunnel.
+ */
+public class FragmentStatusReporter {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStatusReporter.class);
 
   private final FragmentContext context;
+  private final ControlTunnel tunnel;
 
-  public AbstractStatusReporter(final FragmentContext context) {
-    super();
+  public FragmentStatusReporter(final FragmentContext context, final ControlTunnel tunnel) {
     this.context = context;
+    this.tunnel = tunnel;
   }
 
-  private  FragmentStatus.Builder getBuilder(final FragmentState state){
-    return getBuilder(context, state, null);
+  /**
+   * Returns a {@link FragmentStatus} with the given state. {@link FragmentStatus} has additional information like
+   * metrics, etc. that is gathered from the {@link FragmentContext}.
+   *
+   * @param state the state to include in the status
+   * @return the status
+   */
+  FragmentStatus getStatus(final FragmentState state) {
+    return getStatus(state, null);
   }
 
-  public static FragmentStatus.Builder getBuilder(final FragmentContext context, final FragmentState state, final UserException ex){
+  private FragmentStatus getStatus(final FragmentState state, final UserException ex) {
     final FragmentStatus.Builder status = FragmentStatus.newBuilder();
     final MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
     context.getStats().addMetricsToStatus(b);
     b.setState(state);
-    if(ex != null){
+    if (ex != null) {
       final boolean verbose = context.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
       b.setError(ex.getOrCreatePBError(verbose));
     }
@@ -53,20 +66,26 @@ public abstract class AbstractStatusReporter implements StatusReporter{
     b.setMemoryUsed(context.getAllocator().getAllocatedMemory());
     b.setMinorFragmentId(context.getHandle().getMinorFragmentId());
     status.setProfile(b);
-    return status;
+    return status.build();
   }
 
-  @Override
-  public void stateChanged(final FragmentHandle handle, final FragmentState newState) {
-    final FragmentStatus.Builder status = getBuilder(newState);
-    logger.info("State changed for {}. New state: {}", QueryIdHelper.getQueryIdentifier(handle), newState);
-    switch(newState){
+  /**
+   * Reports the state change to the Foreman. The state is wrapped in a {@link FragmentStatus} that has additional
+   * information like metrics, etc. This additional information is gathered from the {@link FragmentContext}.
+   * NOTE: Use {@link #fail} to report state change to {@link FragmentState#FAILED}.
+   *
+   * @param newState the new state
+   */
+  void stateChanged(final FragmentState newState) {
+    final FragmentStatus status = getStatus(newState, null);
+    logger.info("{}: State to report: {}", QueryIdHelper.getQueryIdentifier(context.getHandle()), newState);
+    switch (newState) {
     case AWAITING_ALLOCATION:
     case CANCELLATION_REQUESTED:
     case CANCELLED:
     case FINISHED:
     case RUNNING:
-      statusChange(handle, status.build());
+      sendStatus(status);
       break;
     case SENDING:
       // no op.
@@ -78,17 +97,20 @@ public abstract class AbstractStatusReporter implements StatusReporter{
     }
   }
 
-  protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
-
-  @Override
-  public final void fail(final FragmentHandle handle, final UserException excep) {
-    final FragmentStatus.Builder status = getBuilder(context, FragmentState.FAILED, excep);
-    fail(handle, status);
+  private void sendStatus(final FragmentStatus status) {
+    tunnel.sendFragmentStatus(status);
   }
 
-  private void fail(final FragmentHandle handle, final FragmentStatus.Builder statusBuilder) {
-    statusChange(handle, statusBuilder.build());
+  /**
+   * {@link FragmentStatus} with the {@link FragmentState#FAILED} state is reported to the Foreman. The
+   * {@link FragmentStatus} has additional information like metrics, etc. that is gathered from the
+   * {@link FragmentContext}.
+   *
+   * @param ex the exception related to the failure
+   */
+  void fail(final UserException ex) {
+    final FragmentStatus status = getStatus(FragmentState.FAILED, ex);
+    sendStatus(status);
   }
-
 
 }

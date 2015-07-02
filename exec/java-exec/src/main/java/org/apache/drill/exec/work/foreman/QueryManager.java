@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -44,7 +43,6 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.PStore;
@@ -52,8 +50,6 @@ import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
-import org.apache.drill.exec.work.fragment.NonRootStatusReporter;
-import org.apache.drill.exec.work.fragment.StatusReporter;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.google.common.base.Preconditions;
@@ -449,11 +445,6 @@ public class QueryManager {
       logger.debug("Foreman is still waiting for completion message from {} nodes containing {} fragments", remaining,
           this.fragmentDataSet.size() - finishedFragments.get());
     }
-  }
-
-  public StatusReporter newRootStatusHandler(final FragmentContext context, final DrillbitContext dContext) {
-    final ControlTunnel tunnel = dContext.getController().getTunnel(foreman.getQueryContext().getCurrentEndpoint());
-    return new NonRootStatusReporter(context, tunnel);
   }
 
   public FragmentStatusListener getFragmentStatusListener(){

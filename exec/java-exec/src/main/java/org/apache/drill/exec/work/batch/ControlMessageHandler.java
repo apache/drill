@@ -44,8 +44,8 @@ import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
+import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
 import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
-import org.apache.drill.exec.work.fragment.NonRootStatusReporter;
 
 public class ControlMessageHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlMessageHandler.class);
@@ -130,8 +130,8 @@ public class ControlMessageHandler {
         final FragmentContext context = new FragmentContext(drillbitContext, fragment,
             drillbitContext.getFunctionImplementationRegistry());
         final ControlTunnel tunnel = drillbitContext.getController().getTunnel(fragment.getForeman());
-        final NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
-        final FragmentExecutor fr = new FragmentExecutor(context, fragment, listener);
+        final FragmentStatusReporter statusReporter = new FragmentStatusReporter(context, tunnel);
+        final FragmentExecutor fr = new FragmentExecutor(context, fragment, statusReporter);
         bee.addFragmentRunner(fr);
       } else {
         // isIntermediate, store for incoming data.

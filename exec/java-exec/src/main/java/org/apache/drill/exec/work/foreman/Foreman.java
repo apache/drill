@@ -69,6 +69,7 @@ import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -81,6 +82,7 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
+import org.apache.drill.exec.work.fragment.FragmentStatusReporter;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -124,8 +126,6 @@ public class Foreman implements Runnable {
   private boolean resume = false;
 
   private volatile DistributedLease lease; // used to limit the number of concurrent queries
-
-  private FragmentExecutor rootRunner; // root Fragment
 
   private final ExtendedLatch acceptExternalEvents = new ExtendedLatch(); // gates acceptance of external events
   private final StateListener stateListener = new StateListener(); // source of external events
@@ -935,8 +935,9 @@ public class Foreman implements Runnable {
 
     queryManager.addFragmentStatusTracker(rootFragment, true);
 
-    rootRunner = new FragmentExecutor(rootContext, rootFragment,
-        queryManager.newRootStatusHandler(rootContext, drillbitContext),
+    final ControlTunnel tunnel = drillbitContext.getController().getTunnel(queryContext.getCurrentEndpoint());
+    final FragmentExecutor rootRunner = new FragmentExecutor(rootContext, rootFragment,
+        new FragmentStatusReporter(rootContext, tunnel),
         rootOperator);
     final RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
 
@@ -945,7 +946,6 @@ public class Foreman implements Runnable {
       bee.addFragmentRunner(fragmentManager.getRunnable());
     } else {
       // if we do, record the fragment manager in the workBus.
-      // TODO aren't we managing our own work? What does this do? It looks like this will never get run
       drillbitContext.getWorkBus().addFragmentManager(fragmentManager);
     }
   }
