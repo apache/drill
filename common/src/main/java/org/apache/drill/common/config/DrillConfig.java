@@ -143,14 +143,14 @@ public final class DrillConfig extends NestedConfig{
   }
 
   private static DrillConfig create(String overrideFileName, Properties overriderProps, boolean enableServerConfigs) {
-    overrideFileName = overrideFileName == null ? CommonConstants.CONFIG_OVERRIDE : overrideFileName;
+    overrideFileName = overrideFileName == null ? CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME : overrideFileName;
 
     // first we load defaults.
     Config fallback = null;
     final ClassLoader[] classLoaders = ClasspathHelper.classLoaders();
     for (ClassLoader classLoader : classLoaders) {
-      if (classLoader.getResource(CommonConstants.CONFIG_DEFAULT) != null) {
-        fallback = ConfigFactory.load(classLoader, CommonConstants.CONFIG_DEFAULT);
+      if (classLoader.getResource(CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME) != null) {
+        fallback = ConfigFactory.load(classLoader, CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
         break;
       }
     }
