@@ -34,6 +34,8 @@ import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.drill.common.logical.data.LogicalOperatorBase;
 import org.apache.drill.common.util.PathScanner;
 import org.reflections.util.ClasspathHelper;
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -46,7 +48,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 public final class DrillConfig extends NestedConfig{
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
+  private static final Logger logger = getLogger(DrillConfig.class);
+  
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
 
