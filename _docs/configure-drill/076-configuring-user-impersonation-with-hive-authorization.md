@@ -89,11 +89,11 @@ Add the following required authorization parameters in hive-site.xml to configur
 **Value:** true  
 
 **hive.metastore.execute.setugi**  
-**Description:** Causes the metastore to execute file system operations using the client's reported user and group permissions. You must set this property on both the client and server sides. If client sets it to true and server sets it to false, the client setting is ignored.
+**Description:** Causes the metastore to execute file system operations using the client's reported user and group permissions. You must set this property on both the client and server sides. If client sets it to true and server sets it to false, the client setting is ignored.  
 **Value:** true 
 
 **hive.server2.enable.doAs**  
-**Description:** Tells HiveServer2 to execute Hive operations as the user making the calls. 
+**Description:** Tells HiveServer2 to execute Hive operations as the user making the calls.  
 **Value:** true 
 
 
@@ -140,7 +140,7 @@ Add the following required authorization parameters in hive-site.xml to configur
 
 **hive.security.authenticator.manager**  
 **Description:** Class that implements HiveAuthenticationProvider to provide the client’s username and groups.  
-**Value:** Set to:org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator  
+**Value:** org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator  
 
 **hive.security.authorization.manager**  
 **Description:** The Hive client authorization manager class name.   
@@ -201,7 +201,7 @@ Complete the following steps to modify the Hive storage plugin:
 1.  Navigate to `http://<drillbit_hostname>:8047`, and select the **Storage tab**.  
 2.  Click **Update** next to the hive instance.  
 3.  In the configuration window, add the configuration settings for the authorization type.  
-       * For storage based authorization, add the following settings:  
+    * For storage based authorization, add the following settings:  
 
               {
                type:"hive",
@@ -214,9 +214,7 @@ Complete the following steps to modify the Hive storage plugin:
                  "hive.metastore.execute.setugi" : "true"
                }
               }  
-
-       * For SQL standard based authorization, add the following settings:  
-
+   * For SQL standard based authorization, add the following settings:  
 
               {
                type:"hive",
