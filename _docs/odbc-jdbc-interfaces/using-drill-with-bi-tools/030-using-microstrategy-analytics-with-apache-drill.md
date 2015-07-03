@@ -28,10 +28,10 @@ Complete the following steps to install and configure the driver:
 
 2.	Complete steps 2-8 under *Installing the Driver* on the following page: 
 
-    https://cwiki.apache.org/confluence/display/DRILL/Using+the+MapR+ODBC+Driver+on+Windows
+    https://drill.apache.org/docs/installing-the-driver-on-windows/
 3.	Complete the steps on the following page to configure the driver:
 
-    https://cwiki.apache.org/confluence/display/DRILL/Step+2.+Configure+ODBC+Connections+to+Drill+Data+Sources 
+    https://drill.apache.org/docs/configuring-odbc-on-windows/ 
 
     {% include startnote.html %}Verify that you are using the 32-bit driver since both drivers can coexist on the same machine.{% include endnote.html %} 
 
