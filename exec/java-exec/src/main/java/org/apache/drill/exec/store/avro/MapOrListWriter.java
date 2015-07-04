@@ -66,6 +66,11 @@ public class MapOrListWriter {
     return new MapOrListWriter(map.map(name));
   }
 
+  MapOrListWriter listoftmap(final String name) {
+    assert list != null;
+    return new MapOrListWriter(list.map());
+  }
+
   MapOrListWriter list(final String name) {
     assert map != null;
     return new MapOrListWriter(map.list(name));
@@ -73,6 +78,10 @@ public class MapOrListWriter {
 
   boolean isMapWriter() {
     return map != null;
+  }
+
+  boolean isListWriter() {
+    return list != null;
   }
 
   VarCharWriter varChar(final String name) {

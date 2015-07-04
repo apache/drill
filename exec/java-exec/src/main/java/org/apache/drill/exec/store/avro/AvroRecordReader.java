@@ -22,10 +22,13 @@ import io.netty.buffer.DrillBuf;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericContainer;
@@ -53,6 +56,7 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 
 /**
@@ -164,17 +168,22 @@ public class AvroRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void process(final Object value, final Schema schema, final String fieldName, final MapOrListWriter writer) {
-
-    writer.start();
+  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriter writer) {
+    if (value == null) {
+      return;
+    }
     final Schema.Type type = schema.getType();
 
     switch (type) {
       case RECORD:
-        for (final Schema.Field field : schema.getFields()) {
+        // list field of MapOrListWriter will be non null when we want to store array of maps/records.
+        MapOrListWriter _writer = writer;
 
-          MapOrListWriter _writer = writer;
-          if (field.schema().getType() == Schema.Type.RECORD) {
+        for (final Schema.Field field : schema.getFields()) {
+          if (field.schema().getType() == Schema.Type.RECORD ||
+              (field.schema().getType() == Schema.Type.UNION &&
+              field.schema().getTypes().get(0).getType() == Schema.Type.NULL &&
+              field.schema().getTypes().get(1).getType() == Schema.Type.RECORD)) {
             _writer = writer.map(field.name());
           }
 
@@ -184,13 +193,38 @@ public class AvroRecordReader extends AbstractRecordReader {
       case ARRAY:
         assert fieldName != null;
         final GenericArray array = (GenericArray) value;
-        for (final Object o : array) {
-          process(o, array.getSchema().getElementType(), fieldName, writer.list(fieldName));
+        Schema elementSchema = array.getSchema().getElementType();
+        Type elementType = elementSchema.getType();
+        if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){
+          writer = writer.list(fieldName).listoftmap(fieldName);
+        } else {
+          writer = writer.list(fieldName);
         }
+        writer.start();
+        for (final Object o : array) {
+          process(o, elementSchema, fieldName, writer);
+        }
+        writer.end();
+        break;
+      case UNION:
+        // currently supporting only nullable union (optional fields) like ["null", "some-type"].
+        if (schema.getTypes().get(0).getType() != Schema.Type.NULL) {
+          throw new UnsupportedOperationException("Avro union type must be of the format : [\"null\", \"some-type\"]");
+        }
+        process(value, schema.getTypes().get(1), fieldName, writer);
+        break;
+      case MAP:
+        @SuppressWarnings("unchecked")
+        final HashMap<Object, Object> map = (HashMap<Object, Object>) value;
+        Schema valueSchema = schema.getValueType();
+        writer = writer.map(fieldName);
+        writer.start();
+        for (Entry<Object, Object> entry : map.entrySet()) {
+          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer);
+        }
+        writer.end();
         break;
       case FIXED:
-      case UNION:
-      case MAP:
         throw new UnsupportedOperationException("Unimplemented type: " + type.toString());
       case ENUM:  // Enum symbols are strings
       case NULL:  // Treat null type as a primitive
@@ -214,19 +248,26 @@ public class AvroRecordReader extends AbstractRecordReader {
         break;
     }
 
-    writer.end();
   }
 
   private void processPrimitive(final Object value, final Schema.Type type, final String fieldName,
                                 final MapOrListWriter writer) {
+    if (value == null) {
+      return;
+    }
 
     switch (type) {
       case STRING:
-        final Utf8 utf8 = (Utf8) value;
-        final int length = utf8.length();
+        byte[] binary = null;
+        if (value instanceof Utf8) {
+          binary = ((Utf8) value).getBytes();
+        } else {
+          binary = value.toString().getBytes(Charsets.UTF_8);
+        }
+        final int length = binary.length;
         final VarCharHolder vh = new VarCharHolder();
         ensure(length);
-        buffer.setBytes(0, utf8.getBytes());
+        buffer.setBytes(0, binary);
         vh.buffer = buffer;
         vh.start = 0;
         vh.end = length;
