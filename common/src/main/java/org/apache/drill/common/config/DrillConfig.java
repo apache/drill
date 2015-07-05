@@ -49,7 +49,7 @@ import com.typesafe.config.ConfigFactory;
 
 public final class DrillConfig extends NestedConfig{
   private static final Logger logger = getLogger(DrillConfig.class);
-  
+
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
 
