@@ -212,6 +212,14 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             "See Apache Drill JIRA: DRILL-3188");
         throw new UnsupportedOperationException();
       }
+
+      // DRILL-3189: Disable DISALLOW PARTIAL
+      if(!window.isAllowPartial()) {
+        unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+            "Disallowing partial windows is currently not supported \n" +
+            "See Apache Drill JIRA: DRILL-3189");
+        throw new UnsupportedOperationException();
+      }
     }
 
     // Disable unsupported Intersect, Except

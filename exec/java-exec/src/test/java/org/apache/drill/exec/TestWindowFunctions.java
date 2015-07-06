@@ -225,6 +225,21 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  @Test(expected = UnsupportedFunctionException.class) // DRILL-3189
+  public void testWindowWithAllowDisallow() throws Exception {
+    try {
+      final String query = "select sum(n_nationKey) over(partition by n_nationKey \n" +
+          "rows between unbounded preceding and unbounded following disallow partial) \n" +
+          "from cp.`tpch/nation.parquet` \n" +
+          "order by n_nationKey";
+
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
   @Test // DRILL-3344
   public void testWindowGroupBy() throws Exception {
     String query = "explain plan for SELECT max(n_nationkey) OVER (), n_name as col2 \n" +
