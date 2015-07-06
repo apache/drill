@@ -28,6 +28,10 @@
 
   <name>contrib/mongo-storage-plugin</name>
 
+  <properties>
+     <mongo.TestSuite>**/MongoTestSuit.class</mongo.TestSuite>
+  </properties>
+  
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -63,6 +67,12 @@
       <version>2.1.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <version>1.48.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -71,6 +81,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+	  <includes>
+	    <include>${mongo.TestSuite}</include>
+	  </includes>
           <systemProperties>
             <property>
               <name>logback.log.dir</name>
