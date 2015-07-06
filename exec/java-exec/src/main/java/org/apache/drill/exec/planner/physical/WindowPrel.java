@@ -20,8 +20,6 @@ package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.Lists;
 
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -32,14 +30,18 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.planner.common.DrillWindowRelBase;
+import org.apache.drill.exec.planner.logical.DrillOptiq;
+import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
+
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.BitSets;
 
@@ -48,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -112,10 +113,17 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
   }
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
+    DrillParseContext context = new DrillParseContext(PrelUtil.getSettings(getCluster()));
+
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
+      final int indexInConstants = i - fn.size();
       if (i < fn.size()) {
         args.add(new FieldReference(fn.get(i)));
+      } else {
+        final RexLiteral constant = constants.get(indexInConstants);
+        LogicalExpression expr = DrillOptiq.toDrill(context, getInput(), constant);
+        args.add(expr);
       }
     }
 
@@ -123,6 +131,7 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
     if (args.isEmpty()) {
       args.add(new ValueExpressions.LongExpression(1l));
     }
+
     return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
   }
 

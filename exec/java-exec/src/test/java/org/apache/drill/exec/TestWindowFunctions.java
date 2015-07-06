@@ -403,4 +403,24 @@ public class TestWindowFunctions extends BaseTestQuery {
       .build().run();
   }
 
+  @Test // DRILL-3292
+  public void testWindowConstants() throws Exception {
+    String query = "select rank() over w fn, sum(2) over w sumINTEGER, sum(employee_id) over w sumEmpId, sum(0.5) over w sumFLOAT \n" +
+        "from cp.`employee.json` \n" +
+        "where position_id = 2 \n" +
+        "window w as(partition by position_id order by employee_id)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("fn", "sumINTEGER", "sumEmpId", "sumFLOAT")
+        .baselineValues(1l, 2l, 2l, 0.5)
+        .baselineValues(2l, 4l, 6l, 1.0)
+        .baselineValues(3l, 6l, 11l, 1.5)
+        .baselineValues(4l, 8l, 31l, 2.0)
+        .baselineValues(5l, 10l, 52l, 2.5)
+        .baselineValues(6l, 12l, 74l, 3.0)
+        .build()
+        .run();
+  }
 }
