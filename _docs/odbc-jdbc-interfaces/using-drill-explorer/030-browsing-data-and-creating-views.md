@@ -62,20 +62,18 @@ syntax guidelines, depending on the schema type or file format.
 
 Specify individual columns when defining a view in Drill Explorer instead of attempting to select all, as shown in the following examples.
 
-`SELECT CAST(account['name'] AS varchar(20)) FROM hbase.students`
-
-`SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet``
-
-`SELECT column1 FROM `dfs`.`default`.`./opt/drill/interval.json``
+    SELECT CAST(account['name'] AS varchar(20)) FROM hbase.students
+    SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet`
+    SELECT column1 FROM `dfs`.`default`.`./opt/drill/interval.json`
 
 To query nested elements, use the following syntax, where menu is a child of column1:
 
-`SELECT column1['menu'] FROM `dfs`.`default`.`./opt/drill/interval.json``
+``SELECT column1['menu'] FROM `dfs`.`default`.`./opt/drill/interval.json```
 
 You can query elements that are multiple levels deep. Continuing the example, if
 menuitem is a child of menu, then use the following syntax:
 
-`SELECT column1['menu']['menuitem'] FROM `dfs`.`default`.`./opt/drill/interval.json``
+    SELECT column1['menu']['menuitem'] FROM `dfs`.`default`.`./opt/drill/interval.json`
 
 ## Casting Data Requirements
 
@@ -85,14 +83,13 @@ displays results from an HBase database in binary format:
 `SELECT account['name'] FROM hbase.students`
 
 The following query displays the same results in string format:  
-`SELECT CAST(account['name'] AS varchar(20)) FROM
-hbase.students`
+`SELECT CAST(account['name'] AS varchar(20)) FROM hbase.students`
 
 The following query displays results from a Parquet file in binary format:  
-`SELECT column1 FROM `dfs`.`default`.`./opt/drill/test.parquet``
+``SELECT column1 FROM `dfs`.`default`.`./opt/drill/test.parquet```
 
 The following query displays the same results in string format:
 
-`SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet``
+``SELECT CAST(column1 AS varchar(20)) FROM `dfs`.`default`.`./opt/drill/test.parquet```
 
 You can also cast the data as other data types, such as integer or date formats.

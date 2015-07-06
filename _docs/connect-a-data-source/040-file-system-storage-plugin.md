@@ -9,12 +9,14 @@ system on your machine by default.
 
 ## Connecting Drill to a File System
 
-In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. You configure the connection property of the storage plugin workspace to connect Drill to a distributed file system. For example, the following connection properties connect Drill to an HDFS or MapR-FS cluster:
+In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. You configure the connection property of the storage plugin workspace to connect Drill to a distributed file system. For example, the following connection properties connect Drill to an HDFS or MapR-FS cluster from a client:
 
 * HDFS  
   `"connection": "hdfs://<IP Address>:<Port>/"`  
 * MapR-FS Remote Cluster  
   `"connection": "maprfs://<IP Address>/"`  
+
+To query a file on HDFS from a node on the cluster, you can simply change the connection to from `file:///` to `hdfs:///` in the `dfs` storage plugin.
 
 To register a local or a distributed file system with Apache Drill, complete
 the following steps:

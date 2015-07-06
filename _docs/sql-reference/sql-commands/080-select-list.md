@@ -9,7 +9,7 @@ The SELECT list names the columns, functions, and expressions that you want the 
 
 The SELECT list supports the following syntax:  
 
-       SELECT  [ DISTINCT ] columns[n] | * | expression [ AS column_alias ] [, ...]  
+       SELECT  [ DISTINCT ] COLUMNS[n] | * | expression [ AS column_alias ] [, ...]  
 
 ## Parameters
 COLUMNS[*n*]  

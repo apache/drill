@@ -2,7 +2,7 @@
 title: "Configuring the Drill Shell"
 parent: "Configure Drill"
 ---
-After [starting the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), you can type queries on the shell command line. At the Drill shell command prompt, typing "help" lists the configuration and other options you can set to manage shell functionality. Apache Drill 1.0 formats the resultset output tables for readability if possible. In this release, columns having 70 characters or more cannot be formatted. This document formats all output for readability and example purposes.
+After [starting the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), you can type queries on the shell command line. At the Drill shell command prompt, typing "help" lists the configuration and other options you can set to manage shell functionality. Apache Drill 1.0 and later formats the resultset output tables for readability if possible. In this release, columns having 70 characters or more cannot be formatted. This document formats all output for readability and example purposes.
 
 Formatting tables takes time, which you might notice if running a huge query using the default `outputFormat` setting, which is `table` of the Drill shell. You can set another, more performant table formatting such as `csv`, as shown in the [examples]({{site.baseurl}}/docs/configuring-the-drill-shell/#examples-of-configuring-the-drill-shell). 
 
@@ -56,7 +56,7 @@ Set the output format to CSV to improve performance of a huge query.
 
 | Variable Name   | Valid Variable Values  | Description                                                                                                                                                            |
 |-----------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| autoCommit      | true/false             | Enable/disable automatic transaction commit.                                                                                                                           |
+| autoCommit      | true/false             | Enable/disable automatic transaction commit. Should remain enabled (true).                                                                                             |
 | autoSave        | true/false             | Automatically save preferences.                                                                                                                                        |
 | color           | true/false             | Control whether color is used for display.                                                                                                                             |
 | fastConnect     | true/false             | Skip building table/column list for tab-completion.                                                                                                                    |
@@ -80,3 +80,7 @@ Set the output format to CSV to improve performance of a huge query.
 | timeout         | \<integer\>            | Query timeout in seconds; less than zero means no timeout.                                                                                                             |
 | trimScripts     | true/false             | Remove trailing spaces from lines read from script files.                                                                                                              |
 | verbose         | true/false             | Show unabbreviated error messages and debug info.                                                                                                                      |
+
+### autoCommit
+
+Drill performs read-only operations primarily, and autocommits writes. Drill JDBC throws an exception if autoCommit is disabled.

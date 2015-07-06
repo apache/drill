@@ -19,6 +19,8 @@ You can use the schema option in the **sqlline** command to specify a storage pl
 
     C:\bin\sqlline sqlline.bat –u "jdbc:drill:schema=dfs;zk=local"
 
+If you start Drill on one network, and then want to use Drill on another network, such as your home network, restart Drill.
+
 ## Exiting the Drill Shell
 
 To exit the Drill shell, issue the following command:

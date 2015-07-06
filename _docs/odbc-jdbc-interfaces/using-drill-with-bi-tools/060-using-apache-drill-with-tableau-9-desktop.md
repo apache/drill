@@ -21,10 +21,8 @@ Complete the following steps to install and configure the driver:
 
 1. Download the 64-bit MapR Drill ODBC Driver for Windows from the following location:<br> [http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)     
 **Note:** Tableau 9.0 Desktop 64 bit can use either the 32-bit driver or the 64-bit driver.
-2. Complete steps 2-8 under on the following page to install the driver:<br> 
-[http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/](http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/)
-3. Complete the steps on the following page to configure the driver:<br>
-[http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/](http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/)
+2. [Install the ODBC driver on Windows]({{site.baseurl}}/docs/installing-the-driver-on-windows/).
+3. [Configure the driver]({{site.baseurl}}/docs/configuring-odbc-on-windows/).
 4. If Drill authentication is enabled, select **Basic Authentication** as the authentication type. Enter a valid user and password. ![drill query flow]({{ site.baseurl }}/docs/img/tableau-odbc-setup.png)
 
 Note: If you select **ZooKeeper Quorum** as the ODBC connection type, the client system must be able to resolve the hostnames of the ZooKeeper nodes. The simplest way is to add the hostnames and IP addresses for the ZooKeeper nodes to the `%WINDIR%\system32\drivers\etc\hosts` file. ![drill query flow]({{ site.baseurl }}/docs/img/tableau-odbc-setup-2.png)
@@ -36,18 +34,7 @@ Also make sure to test the ODBC connection to Drill before using it with Tableau
 
 ### Step 2: Install the Tableau Data-connection Customization (TDC) File
 
-The MapR Drill ODBC Driver includes a file named `MapRDrillODBC.TDC`. The TDC file includes customizations that improve ODBC configuration and performance when using Tableau.
-
-The MapR Drill ODBC Driver installer automatically installs the TDC file if the installer can find the Tableau installation. If you installed the MapR Drill ODBC Driver first and then installed Tableau, the TDC file is not installed automatically, and you need to install it manually. 
-
-**To install the MapRDrillODBC.TDC file manually:**
-
-  1. Click **Start > All Programs > MapR Drill ODBC Driver <version> (32|64-bit) > Install Tableau TDC File**. ![drill query flow]({{ site.baseurl }}/docs/img/install-tableau-tdc.png)
-  2. When the installation completes, press any key to continue.   
-For example, you can press the SPACEBAR key.
-
-If the installation of the TDC file fails, this is likely because your Tableau repository is not in a location other than the default one. In this case, manually copy the My Tableau Repository to the following location: `C:\Users\<user>\Documents\My Tableau Repository`. Repeat the procedure to install the `MapRDrillODBC.TDC` file manually.
-
+The MapR Drill ODBC Driver includes a file named `MapRDrillODBC.TDC`. The TDC file includes customizations that improve ODBC configuration and performance when using Tableau. The MapR Drill ODBC Driver installer automatically installs the TDC file if the installer can find the Tableau installation. If you installed the MapR Drill ODBC Driver first and then installed Tableau, the TDC file is not installed automatically, and you need to [install the TDC file manually]({{site.baseurl}}/docs/installing-the-tdc-file-on-windows/). 
 
 ----------
 

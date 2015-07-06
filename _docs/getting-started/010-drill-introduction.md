@@ -9,6 +9,14 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments. 
 
+## What's New in Apache Drill 1.1
+
+Many enhancements in Apache Drill 1.1 include the following key features:
+
+* [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)
+* [Automatic partitioning]({{site.baseurl}}) using the new [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in the CTAS command
+* [User impersonation with Hive authorization](({{site.baseurl}})
+
 ## What's New in Apache Drill 1.0
 
 Apache Drill 1.0 offers the following new features:

@@ -9,7 +9,7 @@ session. Session level settings override system level settings.
 
 The ALTER SESSION command supports the following syntax:
 
-    ALTER SESSION SET `<option_name>`=<value>;
+    ALTER SESSION SET `option_name` = value;
 
 ## Parameters
 

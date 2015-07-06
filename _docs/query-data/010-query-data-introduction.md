@@ -2,39 +2,41 @@
 title: "Query Data Introduction"
 parent: "Query Data"
 ---
-You can query local and distributed file systems, Hive, and HBase data sources
-registered with Drill. You issue the `USE
-<storage plugin>` statement to run your queries against a particular storage plugin. You use dot notation and back ticks to specify the storage plugin name and sometimes the workspace name. For example, to use the dfs storage plugin and default workspace, issue this command: ``USE dfs.`default``
+You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 
 
-Alternatively, you can omit the USE statement, and specify the storage plugin and workspace name using dot notation and back ticks. For example:
+The query specifies the data source location and include data casting. 
+
+## Specifying the Data Source Location
+The optional [USE statement]({{site.baseurl}}/docs/use) runs subsequent queries against a particular [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction/). The USE statement typically saves typing some of the storage plugin information in the FROM statement. If you omit the USE statement, specify a storage plugin, such as dfs, and optionally a workspace, such as default, and a path to the data source using dot notation and back ticks. For example:
 
 ``dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json```;
 
-You may need to use casting functions in some queries. For example, you may
-have to cast a string `"100"` to an integer in order to apply a math function
+## Casting Data
+In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to [cast the data]({{site.baseurl}}/docs/supported-data-types/#casting-and-converting-data-types) to another type. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. 
+
+For example, you have to cast a string `"100"` in a JSON file to an integer in order to apply a math function
 or an aggregate function.
 
-You can use the EXPLAIN command to analyze errors and troubleshoot queries
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types, as described in section "[CONVERT_TO and CONVERT_FROM Usage Notes](/docs/data-type-conversion/#convert_to-and-convert_from-usage-notes)".
+
+## Troubleshooting Queries
+
+In addition to testing queries interactively in the Drill shell, and examining error messages, use the [EXPLAIN command]({{site.baseurl}}/docs/explain/) to analyze errors and troubleshoot queries
 that do not run. For example, if you run into a casting error, the query plan
 text may help you isolate the problem.
 
     0: jdbc:drill:zk=local> !set maxwidth 10000
     0: jdbc:drill:zk=local> explain plan for select ... ;
 
-The set command increases the default text display (number of characters). By
+[Drill shell commands]({{site.baseurl}}/docs/configuring-the-drill-shell/) include the `!set <set variable> <value>` to increase the default text display (number of characters). By
 default, most of the plan output is hidden.
+
+## Query Syntax Tips
 
 Remember the following tips when querying data with Drill:
 
-  * Include a semicolon at the end of SQL statements, except when you issue a command with an exclamation point `(!).   
+  * Include a semicolon at the end of SQL statements, except when you issue a [Drill shell command]({{site.baseurl}}/docs/configuring-the-drill-shell/).   
     `Example: `!set maxwidth 10000`
-  * Use backticks around file and directory names that contain special characters and also around reserved words when you query a file system.   
-    The following special characters require backticks:
-
-    * . (period)
-    * / (forward slash)
-    * _ (underscore)
-    Example: ``SELECT * FROM dfs.default.`sample_data/my_sample.json`; ``
-  * `CAST` data to `VARCHAR` if an expression in a query returns `VARBINARY` as the result type in order to view the `VARBINARY` types as readable data. If you do not use the `CAST` function, Drill returns the results as byte data.    
-     Example: `CAST (VARBINARY_expr as VARCHAR(50))`
+  * Use backticks around [keywords]({{site.baseurl}}/docs/reserved-keywords), special characters, and [identifiers]({{site.baseurl}}/docs/lexical-structure/#identifier) that SQL cannot parse, such as the keyword default and a path that contains a forward slash character:
+    Example: ``SELECT * FROM dfs.`default`.`/Users/drilluser/apache-drill-1.1.0-SNAPSHOT/sample-data/nation.parquet`;``
   * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.

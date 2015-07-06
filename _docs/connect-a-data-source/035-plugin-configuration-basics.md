@@ -46,7 +46,7 @@ The following table describes the attributes you configure for storage plugins.
   </tr>
   <tr>
     <td>"connection"</td>
-    <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"maprfs:///"</td>
+    <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"hdfs:///"</td>
     <td>implementation-dependent</td>
     <td>Type of distributed file system, such as HDFS, Amazon S3, or files in your file system.</td>
   </tr>
@@ -193,6 +193,11 @@ For example, this command creates a plugin named myplugin for reading files of a
 
 If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
 
-Bootstrapping a storage plugin works only when the first drillbit in the cluster first starts up. After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin. 
+Bootstrapping a storage plugin works only when the first drillbit in the cluster first starts up. The configuration is
+stored in zookeeper, preventing Drill from picking up the boostrap-storage-plugins.json again.
+
+After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin. Alternatively, you
+can modify the entry in zookeeper by uploading the json file for
+that plugin to the /drill directory of the zookeeper installation, or just delete the /drill directory if you do not have configuration properties to preserve.
 
 If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.

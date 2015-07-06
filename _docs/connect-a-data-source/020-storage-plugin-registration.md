@@ -22,3 +22,5 @@ point to any distributed file system, such as a Hadoop or S3 file system.
 
 In the Drill sandbox,  the `dfs` storage plugin connects you to the MapR File System (MFS). Using an installation of Drill instead of the sandbox, `dfs` connects you to the root of your file system.
 
+Storage plugin configurations are saved in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). Seeing a storage plugin that you created in one version appear in the Drill Web UI of another version is expected. For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. To revert to the default storage plugins for a particular version, in embedded mode, delete the contents of this directory and restart the Drill shell.
+

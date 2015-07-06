@@ -24,15 +24,10 @@ Maven and JDK installed:
 
 ## 2\. Compile the Code
 
-    cd incubator-drill
+    cd drill
     mvn clean install -DskipTests
 
-## 3\. Explode the Tarball in the Installation Directory
-
-    mkdir ~/compiled-drill
-    tar xvzf distribution/target/*.tar.gz --strip=1 -C ~/compiled-drill
-
-Now that you have Drill installed, you can connect to Drill and query sample
+The tarball appears in distribution/target. Move the tarball to a directory for unpacking, unpack, and then you can connect to Drill and query sample
 data or you can connect Drill to your data sources.
 
   * To connect Drill to your data sources, refer to [Connect to Data Sources]({{ site.baseurl }}/docs/connect-a-data-source-introduction) for instructions.

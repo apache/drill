@@ -45,7 +45,7 @@ Only include the path to the shared libraries corresponding to the driver matchi
 
 ## Step 2: Define the ODBC Data Sources in .odbc.ini
 
-Define the ODBC data sources in the `~/.odbc.ini` configuration file for your environment. You set the following properties for using Drill in embedded mode:
+Define the ODBC data sources in the `~/.odbc.ini` configuration file for your environment. To use Drill in embedded mode, set the following properties:
 
     ConnectionType=Direct
     HOST=localhost
@@ -53,7 +53,7 @@ Define the ODBC data sources in the `~/.odbc.ini` configuration file for your en
     ZKQuorum=
     ZKClusterID=
 
-You set the following properties for using Drill in distributed mode:
+To use Drill in distributed mode, set the following properties, described in detail in section ["Direct and ZooKeeper Quorum Properties"]({{site.baseurl}}/docs/configuring-odbc-on-linux/#direct-and-zookeeper-quorum-properties):
 
     ConnectionType=ZooKeeper
     HOST=
@@ -108,7 +108,7 @@ The following Linux sample shows a possible configuration for using Drill in dis
 To password protect the DSN, uncomment the AuthenticationType, select Basic Authentication for the AuthenticationType, and configure UID and PWD properties.
 
 ### Direct and ZooKeeper Quorum Properties
-To use Drill in distributed mode, set ConnectionType to Zookeeper, get the ZKQuorum and ZKClusterID values from the `drill-override.conf` file, and define the ZKQuorum and ZKClusterID properties. Format ZKQuorum as a comma separated list of ZooKeeper nodes in the following format:  
+To use Drill in distributed mode, set ConnectionType to Zookeeper, get the ZKQuorum and ZKClusterID values from the `drill-override.conf` file, and define the ZKQuorum and ZKClusterID properties. The `drill-override.conf` is in the `/drill/drill-<version>/conf` directory. Format ZKQuorum as a comma separated list of ZooKeeper nodes in the following format:  
 `<host name/ip address> : <port number>, <host name/ip address> : <port number>, . . .` 
 
 For example:

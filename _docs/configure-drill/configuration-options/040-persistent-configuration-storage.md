@@ -19,20 +19,22 @@ modes:
   
 {% include startnote.html %}Switching between storage modes does not migrate configuration data.{% include endnote.html %}
 
-## ZooKeeper for Persistent Configuration Storage
+## Configuring ZooKeeper PStore
 
-To make Drill installation and configuration simple, Drill uses ZooKeeper to
+Drill uses ZooKeeper to
 store persistent configuration data. The ZooKeeper PStore provider stores all
 of the persistent configuration data in ZooKeeper except for query profile
-data.
+data. The ZooKeeper PStore provider offloads query profile data to the Drill log directory on Drill nodes. 
 
-The ZooKeeper PStore provider offloads query profile data to the
-${DRILL_LOG_DIR:-/var/log/drill} directory on Drill nodes. If you want the
-query profile data stored in a specific location, you can configure where
-ZooKeeper offloads the data.
+You need to configure the ZooKeeper PStore to use the Drill Web UI when running multiple Drillbits. 
 
-To modify where the ZooKeeper PStore provider offloads query profile data,
-configure the `sys.store.provider.zk.blobroot` property in the `drill.exec`
+### Why Configure the ZooKeeper PStore
+
+When you run multiple DrillBits, configure a specific location for ZooKeeper to offload the query profile data instead of accepting the default temporary location. All Drillbits in the cluster cannot access the temporary location. Consequently, when you do not configure a location on the distributed file system, queries sent to some Drillbits do not appear in the Completed section of the Drill Web UI. Also, some Running links that you click to get information about running queries are broken links.
+
+### How to Configure the ZooKeeper PStore
+
+To configure the ZooKeeper PStore, set the `sys.store.provider.zk.blobroot` property in the `drill.exec`
 block in `<drill_installation_directory>/conf/drill-override.conf` on each
 Drill node and then restart the Drillbit service.
 
@@ -82,7 +84,7 @@ override.conf` on each Drill node and then restart the Drillbit service.
 	sys.store.provider: {
 	class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
 	hbase: {
-	  table : "/tables/drill_store",
+	  table : "/tables/drill_store"
 	    }
 	},
 

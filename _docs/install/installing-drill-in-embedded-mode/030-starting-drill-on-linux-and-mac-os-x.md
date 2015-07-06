@@ -20,6 +20,8 @@ To start Drill, you can also use the **sqlline** command and a custom connection
 
     bin/sqlline –u jdbc:drill:schema=dfs;zk=local
 
+If you start Drill on one network, and then want to use Drill on another network, such as your home network, restart Drill.
+
 ## Exiting the Drill Shell
 
 To exit the Drill shell, issue the following command:

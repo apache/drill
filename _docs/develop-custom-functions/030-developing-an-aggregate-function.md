@@ -14,7 +14,7 @@ Complete the following steps to create an aggregate function:
 		<dependency>
 		<groupId>org.apache.drill.exec</groupId>
 		<artifactId>drill-java-exec</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0</version>
 		</dependency>
   2. Create a class that implements the `DrillAggFunc` interface and identify the scope as `FunctionTemplate.FunctionScope.POINT_AGGREGATE`.
 

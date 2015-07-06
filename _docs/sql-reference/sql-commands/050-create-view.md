@@ -14,13 +14,13 @@ existing views or any other available storage plugin data sources.
 
 The CREATE VIEW command supports the following syntax:
 
-    CREATE [OR REPLACE] VIEW [workspace.]view_name [ (column_name [, ...]) ] AS <query>;
+    CREATE [OR REPLACE] VIEW [workspace.]view_name [ (column_name [, ...]) ] AS query;
 
 Use CREATE VIEW to create a new view. Use CREATE OR REPLACE VIEW to replace an
 existing view with the same name. When you replace a view, the query must
 generate the same set of columns with the same column names and data types.
 
-**Note:** Follow Drill’s rules for identifiers when you name the view. See coming soon...
+**Note:** Follow Drill’s rules for identifiers when you name the view. 
 
 ## Parameters
 
@@ -118,7 +118,7 @@ created for the steps in this example.
 
 Complete the following steps to create a view in Drill:
 
-  1. Decide which workspace you will use to create the view, and verify that the writable option is set to “true.” You can use an existing workspace, or you can create a new workspace. See [Workspaces](https://cwiki.apache.org/confluence/display/DRILL/Workspaces) for more information.  
+  1. Decide which workspace you will use to create the view, and verify that the writable option is set to “true.” You can use an existing workspace, or you can create a new workspace. See [Workspaces]({{site.baseurl}}/docs/workspaces/) for more information.  
   
         "workspaces": {
            "donuts": {

@@ -135,6 +135,27 @@
             "title": "Adding Custom Functions to Drill", 
             "url": "/docs/adding-custom-functions-to-drill/"
         }, 
+        "Aggregate Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Ranking Window Functions", 
+            "next_url": "/docs/ranking-window-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "SQL Window Functions Introduction", 
+            "previous_url": "/docs/sql-window-functions-introduction/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+            "title": "Aggregate Window Functions", 
+            "url": "/docs/aggregate-window-functions/"
+        }, 
         "Aggregate and Aggregate Statistical": {
             "breadcrumbs": [
                 {
@@ -303,9 +324,9 @@
             "next_title": "Apache Drill 1.0.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Apache Drill 0.8.0 Release Notes", 
-            "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
-            "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+            "previous_title": "Apache Drill 0.9.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+            "relative_path": "_docs/rn/070-0.9.0-rn.md", 
             "title": "Apache Drill 0.9.0 Release Notes", 
             "url": "/docs/apache-drill-0-9-0-release-notes/"
         }, 
@@ -511,31 +532,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "What is Apache Drill", 
-                    "previous_url": "/docs/what-is-apache-drill/", 
-                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -601,8 +605,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE VIEW", 
-            "next_url": "/docs/create-view/", 
+            "next_title": "PARTITION BY Clause", 
+            "next_url": "/docs/partition-by-clause/", 
             "parent": "SQL Commands", 
             "previous_title": "ALTER SYSTEM", 
             "previous_url": "/docs/alter-system/", 
@@ -625,8 +629,8 @@
             "next_title": "DROP VIEW", 
             "next_url": "/docs/drop-view/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE TABLE AS (CTAS)", 
-            "previous_url": "/docs/create-table-as-ctas/", 
+            "previous_title": "PARTITION BY Clause", 
+            "previous_url": "/docs/partition-by-clause/", 
             "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
             "title": "CREATE VIEW", 
             "url": "/docs/create-view/"
@@ -765,8 +769,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Authentication", 
-            "previous_url": "/docs/configuring-user-authentication/", 
+            "previous_title": "Configuring User Impersonation with Hive Authorization", 
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -935,14 +939,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
+                    "title": "Configuring User Impersonation with Hive Authorization", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1040,8 +1061,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1373,6 +1394,27 @@
             "title": "Configuring Resources for a Shared Drillbit", 
             "url": "/docs/configuring-resources-for-a-shared-drillbit/"
         }, 
+        "Configuring Tibco Spotfire Server with Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
+            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/050-configuring-spotfire-server.md", 
+            "title": "Configuring Tibco Spotfire Server with Drill", 
+            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
+        }, 
         "Configuring User Authentication": {
             "breadcrumbs": [
                 {
@@ -1381,8 +1423,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
+            "next_title": "Configuring User Impersonation with Hive Authorization", 
+            "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Impersonation", 
             "previous_url": "/docs/configuring-user-impersonation/", 
@@ -1406,6 +1448,23 @@
             "relative_path": "_docs/configure-drill/070-configuring-user-impersonation.md", 
             "title": "Configuring User Impersonation", 
             "url": "/docs/configuring-user-impersonation/"
+        }, 
+        "Configuring User Impersonation with Hive Authorization": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring User Authentication", 
+            "previous_url": "/docs/configuring-user-authentication/", 
+            "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
+            "title": "Configuring User Impersonation with Hive Authorization", 
+            "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
@@ -2025,14 +2084,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Text Files: CSV, TSV, PSV", 
+                    "next_url": "/docs/text-files-csv-tsv-psv/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "Parquet Format", 
                     "previous_url": "/docs/parquet-format/", 
                     "relative_path": "_docs/data-sources-and-file-formats/050-json-data-model.md", 
                     "title": "JSON Data Model", 
                     "url": "/docs/json-data-model/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "JSON Data Model", 
+                    "previous_url": "/docs/json-data-model/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+                    "title": "Text Files: CSV, TSV, PSV", 
+                    "url": "/docs/text-files-csv-tsv-psv/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -2454,8 +2530,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "JSON Data Model", 
-            "previous_url": "/docs/json-data-model/", 
+            "previous_title": "Text Files: CSV, TSV, PSV", 
+            "previous_url": "/docs/text-files-csv-tsv-psv/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
@@ -3155,8 +3231,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Nested Data Functions", 
-            "next_url": "/docs/nested-data-functions/", 
+            "next_title": "SQL Window Functions", 
+            "next_url": "/docs/sql-window-functions/", 
             "parent": "SQL Functions", 
             "previous_title": "Aggregate and Aggregate Statistical", 
             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -4202,8 +4278,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Develop Custom Functions", 
-            "next_url": "/docs/develop-custom-functions/", 
+            "next_title": "Text Files: CSV, TSV, PSV", 
+            "next_url": "/docs/text-files-csv-tsv-psv/", 
             "parent": "Data Sources and File Formats", 
             "previous_title": "Parquet Format", 
             "previous_url": "/docs/parquet-format/", 
@@ -4861,8 +4937,8 @@
             "next_title": "Nested Data Limitations", 
             "next_url": "/docs/nested-data-limitations/", 
             "parent": "SQL Reference", 
-            "previous_title": "Functions for Handling Nulls", 
-            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "previous_title": "SQL Window Functions Examples", 
+            "previous_url": "/docs/sql-window-functions-examples/", 
             "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
             "title": "Nested Data Functions", 
             "url": "/docs/nested-data-functions/"
@@ -5331,8 +5407,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Tibco Spotfire with Drill", 
-                            "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "next_title": "Using Tibco Spotfire Desktop with Drill", 
+                            "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
@@ -5352,14 +5428,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
-                            "title": "Using Tibco Spotfire with Drill", 
-                            "url": "/docs/using-tibco-spotfire-with-drill/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
+                            "title": "Using Tibco Spotfire Desktop with Drill", 
+                            "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
+                            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/050-configuring-spotfire-server.md", 
+                            "title": "Configuring Tibco Spotfire Server with Drill", 
+                            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -5376,8 +5473,8 @@
                             "next_title": "Using Apache Drill with Tableau 9 Server", 
                             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
                             "parent": "Using Drill with BI Tools", 
-                            "previous_title": "Using Tibco Spotfire with Drill", 
-                            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                             "title": "Using Apache Drill with Tableau 9 Desktop", 
                             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -5502,6 +5599,27 @@
             "relative_path": "_docs/sql-reference/040-operators.md", 
             "title": "Operators", 
             "url": "/docs/operators/"
+        }, 
+        "PARTITION BY Clause": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "CREATE VIEW", 
+            "next_url": "/docs/create-view/", 
+            "parent": "SQL Commands", 
+            "previous_title": "CREATE TABLE AS (CTAS)", 
+            "previous_url": "/docs/create-table-as-ctas/", 
+            "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
+            "title": "PARTITION BY Clause", 
+            "url": "/docs/partition-by-clause/"
         }, 
         "Parquet Format": {
             "breadcrumbs": [
@@ -6105,8 +6223,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "What is Apache Drill", 
+            "previous_url": "/docs/what-is-apache-drill/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"
@@ -7350,6 +7468,27 @@
             "title": "RPC Overview", 
             "url": "/docs/rpc-overview/"
         }, 
+        "Ranking Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Window Functions Examples", 
+            "next_url": "/docs/sql-window-functions-examples/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "Aggregate Window Functions", 
+            "previous_url": "/docs/aggregate-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+            "title": "Ranking Window Functions", 
+            "url": "/docs/ranking-window-functions/"
+        }, 
         "Release Notes": {
             "breadcrumbs": [], 
             "children": [
@@ -7480,12 +7619,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.0.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
                     "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.0.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
                     "title": "Apache Drill 0.9.0 Release Notes", 
                     "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }, 
@@ -7738,8 +7894,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE VIEW", 
-                    "next_url": "/docs/create-view/", 
+                    "next_title": "PARTITION BY Clause", 
+                    "next_url": "/docs/partition-by-clause/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM", 
                     "previous_url": "/docs/alter-system/", 
@@ -7759,11 +7915,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DROP VIEW", 
-                    "next_url": "/docs/drop-view/", 
+                    "next_title": "CREATE VIEW", 
+                    "next_url": "/docs/create-view/", 
                     "parent": "SQL Commands", 
                     "previous_title": "CREATE TABLE AS (CTAS)", 
                     "previous_url": "/docs/create-table-as-ctas/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
+                    "title": "PARTITION BY Clause", 
+                    "url": "/docs/partition-by-clause/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "DROP VIEW", 
+                    "next_url": "/docs/drop-view/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "PARTITION BY Clause", 
+                    "previous_url": "/docs/partition-by-clause/", 
                     "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
                     "title": "CREATE VIEW", 
                     "url": "/docs/create-view/"
@@ -8358,8 +8535,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Nested Data Functions", 
-                    "next_url": "/docs/nested-data-functions/", 
+                    "next_title": "SQL Window Functions", 
+                    "next_url": "/docs/sql-window-functions/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Aggregate and Aggregate Statistical", 
                     "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -8658,8 +8835,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -8676,6 +8853,108 @@
                     "relative_path": "_docs/sql-reference/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Aggregate Window Functions", 
+                            "next_url": "/docs/aggregate-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions", 
+                            "previous_url": "/docs/sql-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                            "title": "SQL Window Functions Introduction", 
+                            "url": "/docs/sql-window-functions-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ranking Window Functions", 
+                            "next_url": "/docs/ranking-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions Introduction", 
+                            "previous_url": "/docs/sql-window-functions-introduction/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                            "title": "Aggregate Window Functions", 
+                            "url": "/docs/aggregate-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Aggregate Window Functions", 
+                            "previous_url": "/docs/aggregate-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                            "title": "Ranking Window Functions", 
+                            "url": "/docs/ranking-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Ranking Window Functions", 
+                            "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                            "title": "SQL Window Functions Examples", 
+                            "url": "/docs/sql-window-functions-examples/"
+                        }
+                    ], 
+                    "next_title": "SQL Window Functions Introduction", 
+                    "next_url": "/docs/sql-window-functions-introduction/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "Functions for Handling Nulls", 
+                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8794,8 +9073,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "SQL Window Functions Examples", 
+                    "previous_url": "/docs/sql-window-functions-examples/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
@@ -8900,8 +9179,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW", 
-                            "next_url": "/docs/create-view/", 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -8921,11 +9200,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
+                            "title": "PARTITION BY Clause", 
+                            "url": "/docs/partition-by-clause/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "PARTITION BY Clause", 
+                            "previous_url": "/docs/partition-by-clause/", 
                             "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
                             "title": "CREATE VIEW", 
                             "url": "/docs/create-view/"
@@ -9417,6 +9717,150 @@
             "relative_path": "_docs/sql-reference/010-sql-reference-introduction.md", 
             "title": "SQL Reference Introduction", 
             "url": "/docs/sql-reference-introduction/"
+        }, 
+        "SQL Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Aggregate Window Functions", 
+                    "next_url": "/docs/aggregate-window-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "SQL Window Functions", 
+                    "previous_url": "/docs/sql-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                    "title": "SQL Window Functions Introduction", 
+                    "url": "/docs/sql-window-functions-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Ranking Window Functions", 
+                    "next_url": "/docs/ranking-window-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "SQL Window Functions Introduction", 
+                    "previous_url": "/docs/sql-window-functions-introduction/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                    "title": "Aggregate Window Functions", 
+                    "url": "/docs/aggregate-window-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Window Functions Examples", 
+                    "next_url": "/docs/sql-window-functions-examples/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "Aggregate Window Functions", 
+                    "previous_url": "/docs/aggregate-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                    "title": "Ranking Window Functions", 
+                    "url": "/docs/ranking-window-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Nested Data Functions", 
+                    "next_url": "/docs/nested-data-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "Ranking Window Functions", 
+                    "previous_url": "/docs/ranking-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                    "title": "SQL Window Functions Examples", 
+                    "url": "/docs/sql-window-functions-examples/"
+                }
+            ], 
+            "next_title": "SQL Window Functions Introduction", 
+            "next_url": "/docs/sql-window-functions-introduction/", 
+            "parent": "SQL Reference", 
+            "previous_title": "Functions for Handling Nulls", 
+            "previous_url": "/docs/functions-for-handling-nulls/", 
+            "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+            "title": "SQL Window Functions", 
+            "url": "/docs/sql-window-functions/"
+        }, 
+        "SQL Window Functions Examples": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Nested Data Functions", 
+            "next_url": "/docs/nested-data-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "Ranking Window Functions", 
+            "previous_url": "/docs/ranking-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+            "title": "SQL Window Functions Examples", 
+            "url": "/docs/sql-window-functions-examples/"
+        }, 
+        "SQL Window Functions Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Aggregate Window Functions", 
+            "next_url": "/docs/aggregate-window-functions/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "SQL Window Functions", 
+            "previous_url": "/docs/sql-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+            "title": "SQL Window Functions Introduction", 
+            "url": "/docs/sql-window-functions-introduction/"
         }, 
         "Sample Data: Donuts": {
             "breadcrumbs": [
@@ -9958,6 +10402,23 @@
             "title": "Testing the ODBC Connection", 
             "url": "/docs/testing-the-odbc-connection/"
         }, 
+        "Text Files: CSV, TSV, PSV": {
+            "breadcrumbs": [
+                {
+                    "title": "Data Sources and File Formats", 
+                    "url": "/docs/data-sources-and-file-formats/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Develop Custom Functions", 
+            "next_url": "/docs/develop-custom-functions/", 
+            "parent": "Data Sources and File Formats", 
+            "previous_title": "JSON Data Model", 
+            "previous_url": "/docs/json-data-model/", 
+            "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+            "title": "Text Files: CSV, TSV, PSV", 
+            "url": "/docs/text-files-csv-tsv-psv/"
+        }, 
         "Troubleshooting": {
             "breadcrumbs": [], 
             "children": [], 
@@ -10328,8 +10789,8 @@
             "next_title": "Using Apache Drill with Tableau 9 Server", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
             "parent": "Using Drill with BI Tools", 
-            "previous_title": "Using Tibco Spotfire with Drill", 
-            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
             "title": "Using Apache Drill with Tableau 9 Desktop", 
             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -10515,8 +10976,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Tibco Spotfire with Drill", 
-                    "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "next_title": "Using Tibco Spotfire Desktop with Drill", 
+                    "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Tableau Examples", 
                     "previous_url": "/docs/tableau-examples/", 
@@ -10536,14 +10997,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                     "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
-                    "title": "Using Tibco Spotfire with Drill", 
-                    "url": "/docs/using-tibco-spotfire-with-drill/"
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
+                    "title": "Using Tibco Spotfire Desktop with Drill", 
+                    "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Tibco Spotfire Desktop with Drill", 
+                    "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/050-configuring-spotfire-server.md", 
+                    "title": "Configuring Tibco Spotfire Server with Drill", 
+                    "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -10560,8 +11042,8 @@
                     "next_title": "Using Apache Drill with Tableau 9 Server", 
                     "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
                     "parent": "Using Drill with BI Tools", 
-                    "previous_title": "Using Tibco Spotfire with Drill", 
-                    "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                    "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                    "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -10668,8 +11150,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Tibco Spotfire with Drill", 
-            "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+            "next_title": "Using Tibco Spotfire Desktop with Drill", 
+            "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
             "parent": "Using Drill with BI Tools", 
             "previous_title": "Tableau Examples", 
             "previous_url": "/docs/tableau-examples/", 
@@ -10698,7 +11180,7 @@
             "title": "Using SQL Functions, Clauses, and Joins", 
             "url": "/docs/using-sql-functions-clauses-and-joins/"
         }, 
-        "Using Tibco Spotfire with Drill": {
+        "Using Tibco Spotfire Desktop with Drill": {
             "breadcrumbs": [
                 {
                     "title": "Using Drill with BI Tools", 
@@ -10710,14 +11192,14 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
             "parent": "Using Drill with BI Tools", 
             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
-            "title": "Using Tibco Spotfire with Drill", 
-            "url": "/docs/using-tibco-spotfire-with-drill/"
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
+            "title": "Using Tibco Spotfire Desktop with Drill", 
+            "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
         }, 
         "Using the JDBC Driver": {
             "breadcrumbs": [
@@ -10807,8 +11289,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Partition Pruning", 
-            "next_url": "/docs/partition-pruning/", 
+            "next_title": "Progress Reports", 
+            "next_url": "/docs/progress-reports/", 
             "parent": "Archived Pages", 
             "previous_title": "How to Run the Drill Demo", 
             "previous_url": "/docs/how-to-run-the-drill-demo/", 
@@ -11641,14 +12123,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring User Impersonation with Hive Authorization", 
+                    "next_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Impersonation", 
                     "previous_url": "/docs/configuring-user-impersonation/", 
                     "relative_path": "_docs/configure-drill/075-configuring-user-authentication.md", 
                     "title": "Configuring User Authentication", 
                     "url": "/docs/configuring-user-authentication/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Authentication", 
+                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
+                    "title": "Configuring User Impersonation with Hive Authorization", 
+                    "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11746,8 +12245,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Authentication", 
-                    "previous_url": "/docs/configuring-user-authentication/", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -12443,8 +12942,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Tibco Spotfire with Drill", 
-                            "next_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "next_title": "Using Tibco Spotfire Desktop with Drill", 
+                            "next_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Tableau Examples", 
                             "previous_url": "/docs/tableau-examples/", 
@@ -12464,14 +12963,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "next_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "next_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using MicroStrategy Analytics with Apache Drill", 
                             "previous_url": "/docs/using-microstrategy-analytics-with-apache-drill/", 
-                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-with-drill.md", 
-                            "title": "Using Tibco Spotfire with Drill", 
-                            "url": "/docs/using-tibco-spotfire-with-drill/"
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/040-using-tibco-spotfire-desktop-with-drill.md", 
+                            "title": "Using Tibco Spotfire Desktop with Drill", 
+                            "url": "/docs/using-tibco-spotfire-desktop-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Tibco Spotfire Desktop with Drill", 
+                            "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/050-configuring-spotfire-server.md", 
+                            "title": "Configuring Tibco Spotfire Server with Drill", 
+                            "url": "/docs/configuring-tibco-spotfire-server-with-drill/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -12488,8 +13008,8 @@
                             "next_title": "Using Apache Drill with Tableau 9 Server", 
                             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
                             "parent": "Using Drill with BI Tools", 
-                            "previous_title": "Using Tibco Spotfire with Drill", 
-                            "previous_url": "/docs/using-tibco-spotfire-with-drill/", 
+                            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+                            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                             "title": "Using Apache Drill with Tableau 9 Desktop", 
                             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -13666,8 +14186,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Aggregate and Aggregate Statistical", 
                             "previous_url": "/docs/aggregate-and-aggregate-statistical/", 
@@ -13684,6 +14204,108 @@
                     "relative_path": "_docs/sql-reference/050-sql-functions.md", 
                     "title": "SQL Functions", 
                     "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Aggregate Window Functions", 
+                            "next_url": "/docs/aggregate-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions", 
+                            "previous_url": "/docs/sql-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/010-sql-window-functions-introduction.md", 
+                            "title": "SQL Window Functions Introduction", 
+                            "url": "/docs/sql-window-functions-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Ranking Window Functions", 
+                            "next_url": "/docs/ranking-window-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "SQL Window Functions Introduction", 
+                            "previous_url": "/docs/sql-window-functions-introduction/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/020-aggregate-window-functions.md", 
+                            "title": "Aggregate Window Functions", 
+                            "url": "/docs/aggregate-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Aggregate Window Functions", 
+                            "previous_url": "/docs/aggregate-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/030-ranking-window-functions.md", 
+                            "title": "Ranking Window Functions", 
+                            "url": "/docs/ranking-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Ranking Window Functions", 
+                            "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
+                            "title": "SQL Window Functions Examples", 
+                            "url": "/docs/sql-window-functions-examples/"
+                        }
+                    ], 
+                    "next_title": "SQL Window Functions Introduction", 
+                    "next_url": "/docs/sql-window-functions-introduction/", 
+                    "parent": "SQL Reference", 
+                    "previous_title": "Functions for Handling Nulls", 
+                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -13802,8 +14424,8 @@
                     "next_title": "Nested Data Limitations", 
                     "next_url": "/docs/nested-data-limitations/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "Functions for Handling Nulls", 
-                    "previous_url": "/docs/functions-for-handling-nulls/", 
+                    "previous_title": "SQL Window Functions Examples", 
+                    "previous_url": "/docs/sql-window-functions-examples/", 
                     "relative_path": "_docs/sql-reference/060-nested-data-functions.md", 
                     "title": "Nested Data Functions", 
                     "url": "/docs/nested-data-functions/"
@@ -13908,8 +14530,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE VIEW", 
-                            "next_url": "/docs/create-view/", 
+                            "next_title": "PARTITION BY Clause", 
+                            "next_url": "/docs/partition-by-clause/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
@@ -13929,11 +14551,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "CREATE VIEW", 
+                            "next_url": "/docs/create-view/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE TABLE AS (CTAS)", 
                             "previous_url": "/docs/create-table-as-ctas/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/035-partition-by-clause.md", 
+                            "title": "PARTITION BY Clause", 
+                            "url": "/docs/partition-by-clause/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "PARTITION BY Clause", 
+                            "previous_url": "/docs/partition-by-clause/", 
                             "relative_path": "_docs/sql-reference/sql-commands/050-create-view.md", 
                             "title": "CREATE VIEW", 
                             "url": "/docs/create-view/"
@@ -14488,14 +15131,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Text Files: CSV, TSV, PSV", 
+                    "next_url": "/docs/text-files-csv-tsv-psv/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "Parquet Format", 
                     "previous_url": "/docs/parquet-format/", 
                     "relative_path": "_docs/data-sources-and-file-formats/050-json-data-model.md", 
                     "title": "JSON Data Model", 
                     "url": "/docs/json-data-model/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "JSON Data Model", 
+                    "previous_url": "/docs/json-data-model/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
+                    "title": "Text Files: CSV, TSV, PSV", 
+                    "url": "/docs/text-files-csv-tsv-psv/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -14616,8 +15276,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "JSON Data Model", 
-            "previous_url": "/docs/json-data-model/", 
+            "previous_title": "Text Files: CSV, TSV, PSV", 
+            "previous_url": "/docs/text-files-csv-tsv-psv/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
@@ -15020,12 +15680,29 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.0.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
+                    "next_title": "Apache Drill 0.9.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-0-9-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Apache Drill 0.8.0 Release Notes", 
                     "previous_url": "/docs/apache-drill-0-8-0-release-notes/", 
                     "relative_path": "_docs/rn/070-0.9.0-rn copy.md", 
+                    "title": "Apache Drill 0.9.0 Release Notes", 
+                    "url": "/docs/apache-drill-0-9-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.0.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-0-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 0.9.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-0-9-0-release-notes/", 
+                    "relative_path": "_docs/rn/070-0.9.0-rn.md", 
                     "title": "Apache Drill 0.9.0 Release Notes", 
                     "url": "/docs/apache-drill-0-9-0-release-notes/"
                 }, 
@@ -15148,31 +15825,14 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Partition Pruning", 
-                    "next_url": "/docs/partition-pruning/", 
+                    "next_title": "Progress Reports", 
+                    "next_url": "/docs/progress-reports/", 
                     "parent": "Archived Pages", 
                     "previous_title": "How to Run the Drill Demo", 
                     "previous_url": "/docs/how-to-run-the-drill-demo/", 
                     "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
                     "title": "What is Apache Drill", 
                     "url": "/docs/what-is-apache-drill/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "What is Apache Drill", 
-                    "previous_url": "/docs/what-is-apache-drill/", 
-                    "relative_path": "_docs/archived-pages/030-partition-pruning.md", 
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
                 }
             ], 
             "next_title": "How to Run the Drill Demo", 
@@ -15208,8 +15868,8 @@
             "next_title": "2014 Q1 Drill Report", 
             "next_url": "/docs/2014-q1-drill-report/", 
             "parent": "", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "What is Apache Drill", 
+            "previous_url": "/docs/what-is-apache-drill/", 
             "relative_path": "_docs/160-progress-reports.md", 
             "title": "Progress Reports", 
             "url": "/docs/progress-reports/"

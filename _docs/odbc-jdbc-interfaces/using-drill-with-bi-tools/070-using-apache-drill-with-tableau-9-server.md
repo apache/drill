@@ -15,16 +15,14 @@ To use Apache Drill with Tableau 9 Server, complete the following steps:
 
 ### Step 1: Install and Configure the MapR Drill ODBC Driver 
 
-Drill uses standard ODBC connectivity to provide easy data-exploration capabilities on complex, schema-less data sets. For the best experience use the latest release of Apache Drill. For Tableau 9.0 Server, Drill Version 0.9 or higher is recommended.
+Drill uses standard ODBC connectivity to provide easy data-exploration capabilities on complex, schema-less data sets. The latest release of Apache Drill. For Tableau 9.0 Server, Drill Version 0.9 or higher is recommended.
 
 Complete the following steps to install and configure the driver:
 
 1. Download the 64-bit MapR Drill ODBC Driver for Windows from the following location:<br> [http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/)     
 **Note:** Tableau 9.0 Server works with the 64-bit ODBC driver.
-2. Complete steps 2-8 under on the following page to install the driver:<br> 
-[http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/](http://drill.apache.org/docs/step-1-install-the-mapr-drill-odbc-driver-on-windows/)
-3. Complete the steps on the following page to configure the driver:<br>
-[http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/](http://drill.apache.org/docs/step-2-configure-odbc-connections-to-drill-data-sources/)
+2. [Install the 64-bit ODBC driver on Windows]({{site.baseurl}}/docs/installing-the-driver-on-windows/).
+3. [Configure the driver]({{site.baseurl}}/docs/configuring-odbc-on-windows/).
 4. If Drill authentication is enabled, select **Basic Authentication** as the authentication type. Enter a valid user and password. ![drill query flow]({{ site.baseurl }}/docs/img/tableau-odbc-setup.png)
 
 Note: If you select **ZooKeeper Quorum** as the ODBC connection type, the client system must be able to resolve the hostnames of the ZooKeeper nodes. The simplest way is to add the hostnames and IP addresses for the ZooKeeper nodes to the `%WINDIR%\system32\drivers\etc\hosts` file. ![drill query flow]({{ site.baseurl }}/docs/img/tableau-odbc-setup-2.png)

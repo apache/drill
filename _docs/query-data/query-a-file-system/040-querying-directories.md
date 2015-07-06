@@ -5,8 +5,7 @@ parent: "Querying a File System"
 You can store multiple files in a directory and query them as if they were a
 single entity. You do not have to explicitly join the files. The files must be
 compatible, in the sense that they must have comparable data types and columns
-in the same order. This type of query is not limited to text files; you can
-also query directories of JSON files, for example.
+in the same order. Hidden files that do not have comparable data types can cause a [Table Not Found]({{site.baseurl}}/docs/troubleshooting/#table-not-found) error. You can query directories of files that have formats supported by Drill, such as JSON, Parquet, or text files. 
 
 For example, assume that a `testdata` directory contains two files with the
 same structure: `plays.csv` and `moreplays.csv`. The first file contains 7

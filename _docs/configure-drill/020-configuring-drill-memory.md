@@ -14,6 +14,8 @@ The JVM’s heap memory does not limit the amount of direct memory available in
 a Drillbit. The on-heap memory for Drill is typically set at 4-8G (default is 4), which should
 suffice because Drill avoids having data sit in heap memory.
 
+The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the memory limits per node for each running query, especially for those involving external sorts, such as window functions. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
+
 ## Modifying Drillbit Memory
 
 You can modify memory for each Drillbit node in your cluster. To modify the

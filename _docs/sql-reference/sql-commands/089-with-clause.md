@@ -12,7 +12,9 @@ name, an optional list of column names, and a SELECT statement.
 The WITH clause supports the following syntax:
 
     WITH with_subquery [, ...]
-    where with_subquery is:
+
+where with_subquery is:
+
     with_subquery_table_name [ ( column_name [, ...] ) ] AS ( query ) 
 
 ## Parameters
@@ -27,7 +29,7 @@ An optional list of output column names for the WITH clause subquery,
 separated by commas. The number of column names specified must be equal to or
 less than the number of columns defined by the subquery.
 
-query  
+*query*  
 Any SELECT query that Drill supports. See
 [SELECT]({{ site.baseurl }}/docs/SELECT+Statements).
 

@@ -8,7 +8,7 @@ storage plugin instance for a Hive data source, provide a unique name for the
 instance, and identify the type as “`hive`”. You must also provide the
 metastore connection information.
 
-Drill supports Hive 0.13. To access Hive tables
+Drill 1.0 supports Hive 0.13. Drill 1.1 supports Hive 1.0. To access Hive tables
 using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits
 must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
 `<drill_installation_directory>/jars/3rdparty` folder.
@@ -50,13 +50,13 @@ can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).
 
 ## Hive Embedded Metastore
 
-In this configuration, the Hive metastore is embedded within the Drill process. Provide the metastore database configuration settings in the Drill Web UI. Before you register Hive, verify that the driver you use to connect to the Hive metastore is in the Drill classpath located in `/<drill installation dirctory>/lib/.` If the driver is not there, copy the driver to `/<drill
+In this configuration, the Hive metastore is embedded within the Drill process. Provide the metastore database configuration settings in the Drill Web UI. Before you register Hive, verify that the driver you use to connect to the Hive metastore is in the Drill classpath located in `/<drill installation directory>/lib/.` If the driver is not there, copy the driver to `/<drill
 installation directory>/lib` on the Drill node. For more information about storage types and configurations, refer to ["Hive Metastore Administration"](https://cwiki.apache.org/confluence/display/Hive/AdminManual+MetastoreAdmin).
 
 To register an embedded Hive metastore with Drill, complete the following
 steps:
 
-  1. Navigate to `[http://localhost:8047](http://localhost:8047/)`, and select the **Storage** tab
+  1. Navigate to [http://localhost:8047](http://localhost:8047/), and select the **Storage** tab
   2. In the disabled storage plugins section, click **Update** next to `hive` instance.
   3. In the configuration window, add the database configuration settings.
 
