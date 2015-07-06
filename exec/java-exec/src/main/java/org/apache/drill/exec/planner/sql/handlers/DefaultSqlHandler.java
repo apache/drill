@@ -32,6 +32,7 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
@@ -490,7 +491,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     DrillProjectRel topProj = DrillProjectRel.create(rel.getCluster(), rel.getTraitSet(), rel, projections, newRowType);
 
-    if (ProjectRemoveRule.isTrivial(topProj, true)) {
+    // Add a final non-trivial Project to get the validatedRowType, if child is not project.
+    if (rel instanceof Project && ProjectRemoveRule.isTrivial(topProj, true)) {
       return rel;
     } else{
       return topProj;

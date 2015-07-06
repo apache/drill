@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
@@ -456,4 +457,23 @@ public class TestStarQueries extends BaseTestQuery{
             "            where n2.n_regionkey = r2.r_regionkey)")
         .build().run();
   }
+
+
+  @Test //DRILL-2802
+  public void testSelectPartitionColumnOnly() throws Exception {
+    final String table = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    final String query1 = String.format("select dir0 from dfs_test.`%s` limit 1 ", table);
+
+    final String[] expectedPlan1 = {".*Project.*dir0=\\[\\$0\\]"};
+    final String[] excludedPlan1 = {};
+    PlanTestBase.testPlanMatchingPatterns(query1, expectedPlan1, excludedPlan1);
+
+    final String query2 = String.format("select dir0, dir1 from dfs_test.`%s` limit 1 ", table);
+
+    final String[] expectedPlan2 = {".*Project.*dir0=\\[\\$0\\], dir1=\\[\\$1\\]"};
+    final String[] excludedPlan2 = {};
+    PlanTestBase.testPlanMatchingPatterns(query2, expectedPlan2, excludedPlan2);
+
+  }
+
 }
