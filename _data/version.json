@@ -1,5 +1,7 @@
 {
   "display_version": "1.1",
   "full_version": "1.1.0",
-  "release_date": "July 5, 2015"
+  "release_date": "July 5, 2015",
+  "blog_post": "/blog/2015/07/05/drill-1.1-released/",
+  "release_notes": "https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12313820&version=12329689"
 }
