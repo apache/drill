@@ -642,10 +642,10 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n" +
         ".*Project.*\n" +
-            ".*Scan.*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`, `n_name`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan"};
-    final String[] excludedPlan = {"Project.*\n.*UnionAll"};
+            ".*Scan.*columns=\\[`r_regionkey`, `r_name`\\]"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     testBuilder()
@@ -666,9 +666,9 @@ public class TestUnionAll extends BaseTestQuery{
 
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*Scan.*\n" +
-        ".*Scan"};
-    final String[] excludedPlan = {"Project"};
+        ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
+        ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -691,10 +691,10 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n" +
         ".*Project.*\n" +
-            ".*Scan.*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan"};
-    final String[] excludedPlan = {"Project.*\n.*UnionAll"};
+            ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -719,10 +719,10 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n." +
         ".*Project.*\n" +
-            ".*Scan.*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan"};
-    final String[] excludedPlan = {"Project.*\\*.*\n.*UnionAll"};
+            ".*Scan.*columns=\\[`columns`\\[0\\]\\]"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -745,10 +745,10 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n." +
         "*Project.*\n" +
-            ".*Scan.*\n" +
+            ".*Scan.*columns=\\[`n_comment`, `n_nationkey`, `n_name`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan"};
-    final String[] excludedPlan = {"Project.*\n.*UnionAll"};
+            ".*Scan.*columns=\\[`r_comment`, `r_regionkey`, `r_name`\\]"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -773,11 +773,11 @@ public class TestUnionAll extends BaseTestQuery{
     final String[] expectedPlan = {"UnionAll.*\n" +
         ".*SelectionVectorRemover.*\n" +
             ".*Filter.*\n" +
-                ".*Scan.*\n" +
+                ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
         ".*SelectionVectorRemover.*\n" +
             ".*Filter.*\n" +
-                ".*Scan"};
-    final String[] excludedPlan = {"Project", "Filter.*\n.*UnionAll"};
+                ".*Scan.*columns=\\[`r_regionkey`\\]"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
