@@ -37,14 +37,10 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
 To install the driver, you need Administrator privileges on the computer.
 
 ## Step 1: Download the MapR Drill ODBC Driver
-Download either the 32- or 64-bit driver from the following sites:
+Download either the 32- or 64-bit driver:
 
-  * [MapR Drill ODBC Driver (32-bit)]
-
-    http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-32bit-1.0.0.i686.rpm
-  * [MapR Drill ODBC Driver (64-bit)]
-
-    http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.0.0.1001/MapRDrillODBC-1.0.0.x86_64.rpm
+  * [MapR Drill ODBC Driver (32-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.1.0.1000/MapRDrillODBC-32bit-1.1.0.i686.rpm)
+  * [MapR Drill ODBC Driver (64-bit)](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.1.0.1000/MapRDrillODBC-1.1.0.x86_64.rpm)
 
 ## Step 2: Install the MapR Drill ODBC Driver
 

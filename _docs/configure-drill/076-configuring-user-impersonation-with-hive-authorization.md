@@ -54,7 +54,7 @@ Complete the following steps on each Drillbit node to enable user impersonation,
    * If the underlying file system has MapR security enabled, add the following line:
     `export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket`  
    * If you are implementing Hive SQL standard based authorization, and you are running Drill     and Hive in a secure MapR cluster, add the following lines:  
-        `export DRILLBIT_JAVA_OPTS="$DRILLBIT_JAVA_OPTS -Dmapr_sec_enabled=true -Dhadoop.login=maprsasl -Dzookeeper.saslprovider=com.mapr.security.maprsasl.MaprSaslProvider -Dmapr.library.flatclass"`  
+        `export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dmapr_sec_enabled=true -Dhadoop.login=maprsasl -Dzookeeper.saslprovider=com.mapr.security.maprsasl.MaprSaslProvider -Dmapr.library.flatclass"`  
        `export MAPR_IMPERSONATION_ENABLED=true`  
        `export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket`
 
@@ -194,14 +194,16 @@ Add the following required authorization parameters in hive-site.xml to configur
 
 Modify the Hive storage plugin instance in the Drill Web UI to include specific authorization settings. The Drillbit that you use to access the Web UI must be running. 
 
-Note: The metastore host port for MapR is typically 9083.  
+{% include startnote.html %}The metastore host port for MapR is typically 9083.{% include endnote.html %}  
 
 Complete the following steps to modify the Hive storage plugin:  
 
 1.  Navigate to `http://<drillbit_hostname>:8047`, and select the **Storage tab**.  
 2.  Click **Update** next to the hive instance.  
-3.  In the configuration window, add the configuration settings for the authorization type.  
-    * For storage based authorization, add the following settings:  
+3.  In the configuration window, add the configuration settings for the authorization type. If you are running Drill and Hive in a secure MapR cluster, do not include the line `"hive.metastore.sasl.enabled" : "false"`.  
+
+  
+   * For storage based authorization, add the following settings:  
 
               {
                type:"hive",

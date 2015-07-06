@@ -4,7 +4,7 @@ parent: "Connect a Data Source"
 ---
 ## Overview
 
-Drill provides a mongodb format plugin to connect to MongoDB, and run queries
+Drill supports MongoDB 3.0, providing a mongodb format plugin to connect to MongoDB using MongoDB's latest Java driver. You can run queries
 to read, but not write, the Mongo data using Drill. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
 
 {% include startnote.html %}A local instance of Drill is used in this tutorial for simplicity. {% include endnote.html %}

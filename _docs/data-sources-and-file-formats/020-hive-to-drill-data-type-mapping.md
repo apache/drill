@@ -10,6 +10,7 @@ Using Drill you can read tables created in Hive that use data types compatible w
 |--------------------|-----------|------------------------------------------------------------|
 | BIGINT             | BIGINT    | 8-byte signed integer                                      |
 | BOOLEAN            | BOOLEAN   | TRUE (1) or FALSE (0)                                      |
+| BYTE               | TINYINT   | 1-byte integer                                             |
 | CHAR               | CHAR      | Character string, fixed-length max 255                     |
 | DATE               | DATE      | Years months and days in the form in the form YYYY-­MM-­DD   |
 | DECIMAL*           | DECIMAL   | 38-digit precision                                         |
@@ -24,6 +25,7 @@ Using Drill you can read tables created in Hive that use data types compatible w
 | TIMESTAMP          | TIMESTAMP | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
 | None               | STRING    | Binary string (16)                                         |
 | VARCHAR            | VARCHAR   | Character string variable length                           |
+| VARBINARY          | BINARY    | Binary string                                              |
 
 \* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
 

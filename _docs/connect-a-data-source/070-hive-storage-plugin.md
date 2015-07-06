@@ -21,7 +21,7 @@ metastore service communicates with the Hive database over JDBC. Point Drill
 to the Hive metastore service address, and provide the connection parameters
 in the Drill Web UI to configure a connection to Drill.
 
-{% include startnote.html %}Verify that the Hive metastore service is running before you register the Hive metastore.{% include endnote.html %}
+{% include startnote.html %}Verify that the Hive metastore service is running before you register the Hive metastore.{% include endnote.html %}  
 
 To register a remote Hive metastore with Drill, complete the following steps:
 
@@ -30,7 +30,7 @@ To register a remote Hive metastore with Drill, complete the following steps:
         hive --service metastore
   2. Navigate to [http://localhost:8047](http://localhost:8047/), and select the **Storage** tab.
   3. In the disabled storage plugins section, click **Update** next to the `hive` instance.
-  4. In the configuration window, add the `Thrift URI` and port to `hive.metastore.uris`.
+  4. In the configuration window, add the `Thrift URI` and port to `hive.metastore.uris`. 
 
      **Example**
      
@@ -41,8 +41,13 @@ To register a remote Hive metastore with Drill, complete the following steps:
             "hive.metastore.uris": "thrift://<localhost>:<port>",  
             "hive.metastore.sasl.enabled": "false"
           }
-        }       
-  5. Click **Enable**.
+        }  
+       
+  5. If you are running Drill and Hive in a secure MapR cluster, remove the following line from the configuration:  
+  `"hive.metastore.sasl.enabled" : "false"`
+  6. Click **Enable**.  
+  7. If you are running Drill and Hive in a secure MapR cluster, add the following line to `<DRILL_HOME>/conf/drill-env.sh` on each Drill node and then [restart the Drillbit service]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/):  
+ ` export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dmapr_sec_enabled=true -Dhadoop.login=maprsasl -Dzookeeper.saslprovider=com.mapr.security.maprsasl.MaprSaslProvider -Dmapr.library.flatclass"`
 
 
 Once you have configured a storage plugin instance for a Hive data source, you

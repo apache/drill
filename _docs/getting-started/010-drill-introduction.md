@@ -15,7 +15,8 @@ Many enhancements in Apache Drill 1.1 include the following key features:
 
 * [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)
 * [Automatic partitioning]({{site.baseurl}}) using the new [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in the CTAS command
-* [User impersonation with Hive authorization](({{site.baseurl}})
+* [Delegated Hive impersonation](({{site.baseurl}}/docs/configuring-user-impersonation-with-hive-authorization/)
+* Support for UNION ALL and better optimized plans that include UNION.
 
 ## What's New in Apache Drill 1.0
 
@@ -28,7 +29,7 @@ Apache Drill 1.0 offers the following new features:
 * New Errors tab in the Query Profiles UI that facilitates troubleshooting and distributed storing of profiles.
 * Support for a new storage plugin input format: [Avro](http://avro.apache.org/docs/current/spec.html)
 
-In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommented.
+In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
 
 ## Apache Drill Key Features
 

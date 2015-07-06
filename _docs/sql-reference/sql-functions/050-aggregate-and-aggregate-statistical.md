@@ -17,9 +17,51 @@ MAX(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as arg
 MIN(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
 SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY, or INTERVALYEAR| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
 
-\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommented.
+\* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
 
 MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is ALL.
+
+## AVG 
+
+Returns the average of all records of a column or the average of groups of records.
+
+### Syntax
+
+    SELECT AVG(aggregate_expression)
+    FROM tables
+    WHERE conditions;
+
+    SELECT expression1, expression2, ... expression_n,
+           AVG(aggregate_expression)
+    FROM tables
+    WHERE conditions
+    GROUP BY expression1, expression2, ... expression_n;
+
+Expressions listed within the AVG function and must be included in the GROUP BY clause.
+
+### Examples
+
+    SELECT AVG(salary) FROM cp.`employee.json`;
+    +---------------------+
+    |       EXPR$0        |
+    +---------------------+
+    | 4019.6017316017314  |
+    +---------------------+
+    1 row selected (0.221 seconds)
+
+    SELECT education_level, AVG(salary) FROM cp.`employee.json` GROUP BY education_level;
+    +----------------------+---------------------+
+    |   education_level    |       EXPR$1        |
+    +----------------------+---------------------+
+    | Graduate Degree      | 4392.823529411765   |
+    | Bachelors Degree     | 4492.404181184669   |
+    | Partial College      | 4047.1180555555557  |
+    | High School Degree   | 3516.1565836298932  |
+    | Partial High School  | 3511.0852713178297  |
+    +----------------------+---------------------+
+    5 rows selected (0.495 seconds)
+
+## MIN, MAX, COUNT, and SUM
 
 ### Examples
 
