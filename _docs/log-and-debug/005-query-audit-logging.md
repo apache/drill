@@ -11,7 +11,7 @@ The query log provides audit log functionality for the queries executed by vario
 
 For example, to check the most recent queries, query the log using this command:
 
-    SELECT * FROM dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json` t ORDER BY `start` LIMIT 5;
+    SELECT * FROM dfs.`default`.`/Users/drill-user/apache-drill-1.1.0/log/sqlline_queries.json` t ORDER BY `start` LIMIT 5;
 
     +----------------+------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+----------------+------------+
     |     finish     |  outcome   |                queryId                |                                                            queryText                                                                                                                                         | schema  |     start      |  username  |
@@ -30,7 +30,7 @@ For example, to check the most recent queries, query the log using this command:
 
 To check the total number of queries executed since the session started on the Drillbit, use the following command:
 
-    SELECT COUNT(*) FROM dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json`;
+    SELECT COUNT(*) FROM dfs.`default`.`/Users/drill-user/apache-drill-1.1.0/log/sqlline_queries.json`;
 
     +---------+
     | EXPR$0  |
@@ -43,7 +43,7 @@ To check the total number of queries executed since the session started on the D
 
 To get the total number of successful and failed executions, run the following command:
 
-    SELECT outcome, COUNT(*) FROM dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json` GROUP BY outcome;
+    SELECT outcome, COUNT(*) FROM dfs.`default`.`/Users/drill-user/apache-drill-1.1.0/log/sqlline_queries.json` GROUP BY outcome;
 
     +------------+---------+
     |  outcome   | EXPR$1  |

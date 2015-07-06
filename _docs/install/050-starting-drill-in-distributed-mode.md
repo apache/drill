@@ -21,7 +21,7 @@ For example, to restart a Drillbit, navigate to the Drill installation directory
 Using the Drill shell, you can connect to relational databases and execute SQL commands. To start the Drill shell, run one of the following scripts, which are located in the bin directory of the Drill installation:
 
 * `drill-conf`  
-  Opens the shell using the connection string to ZooKeeper nodes specified in `drill-override.conf` in `/opt/mapr/drill/drill-1.0.0/conf`.  
+  Opens the shell using the connection string to ZooKeeper nodes specified in `drill-override.conf` in `/opt/mapr/drill/drill-1.1.0/conf`.  
 * `drill-localhost`  
   Opens the Drill shell using a connection to the ZooKeeper running on the local host.
 

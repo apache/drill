@@ -6,7 +6,7 @@ Start the Drill shell using the `drill-embedded` command. The command uses a jdb
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-1.0.0  
+        cd apache-drill-1.1.0  
 
 2. Issue the following command to start the Drill shell:
 

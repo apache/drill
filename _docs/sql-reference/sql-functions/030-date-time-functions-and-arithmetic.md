@@ -537,7 +537,7 @@ These functions perform the following operations, respectively:
 * Converts the time string in format yyyy-MM-dd HH:mm:ss to a Unix timestamp in seconds using the default timezone and locale.
 * Converts the time string with the given pattern to a Unix time stamp in seconds.
 
-SELECT UNIX_TIMESTAMP() FROM sys.version;
+SELECT UNIX_TIMESTAMP FROM sys.version;
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -545,7 +545,7 @@ SELECT UNIX_TIMESTAMP() FROM sys.version;
 +-------------+
 1 row selected (0.749 seconds)
 
-SELECT UNIX_TIMESTAMP()('2009-03-20 11:15:55') from sys.version;
+SELECT UNIX_TIMESTAMP('2009-03-20 11:15:55') FROM sys.version;
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -553,7 +553,7 @@ SELECT UNIX_TIMESTAMP()('2009-03-20 11:15:55') from sys.version;
 +-------------+
 1 row selected (1.848 seconds)
 
-SELECT UNIX_TIMESTAMP()('2009-03-20', 'yyyy-MM-dd') from sys.version;
+SELECT UNIX_TIMESTAMP('2009-03-20', 'yyyy-MM-dd') FROM sys.version;
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -561,11 +561,10 @@ SELECT UNIX_TIMESTAMP()('2009-03-20', 'yyyy-MM-dd') from sys.version;
 +-------------+
 1 row selected (0.181 seconds)
 
-SELECT UNIX_TIMESTAMP()('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') from sys.version;
+SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM sys.version;
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1432912733  |
 +-------------+
-
-
+1 row selected (0.171 seconds)

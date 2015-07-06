@@ -9,7 +9,7 @@ The query specifies the data source location and include data casting.
 ## Specifying the Data Source Location
 The optional [USE statement]({{site.baseurl}}/docs/use) runs subsequent queries against a particular [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction/). The USE statement typically saves typing some of the storage plugin information in the FROM statement. If you omit the USE statement, specify a storage plugin, such as dfs, and optionally a workspace, such as default, and a path to the data source using dot notation and back ticks. For example:
 
-``dfs.`default`.`/Users/drill-user/apache-drill-1.0.0/log/sqlline_queries.json```;
+``dfs.`default`.`/Users/drill-user/apache-drill-1.1.0/log/sqlline_queries.json```;
 
 ## Casting Data
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to [cast the data]({{site.baseurl}}/docs/supported-data-types/#casting-and-converting-data-types) to another type. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. 
@@ -38,5 +38,5 @@ Remember the following tips when querying data with Drill:
   * Include a semicolon at the end of SQL statements, except when you issue a [Drill shell command]({{site.baseurl}}/docs/configuring-the-drill-shell/).   
     `Example: `!set maxwidth 10000`
   * Use backticks around [keywords]({{site.baseurl}}/docs/reserved-keywords), special characters, and [identifiers]({{site.baseurl}}/docs/lexical-structure/#identifier) that SQL cannot parse, such as the keyword default and a path that contains a forward slash character:
-    Example: ``SELECT * FROM dfs.`default`.`/Users/drilluser/apache-drill-1.1.0-SNAPSHOT/sample-data/nation.parquet`;``
+    Example: ``SELECT * FROM dfs.`default`.`/Users/drilluser/apache-drill-1.1.0/sample-data/nation.parquet`;``
   * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.

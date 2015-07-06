@@ -178,9 +178,3 @@ The following delimiters define the frame:
 * Drill processes window functions after the WHERE, GROUP BY, and HAVING clauses.  
 * Including the OVER() clause after an aggregate set function turns the function into an aggregate window function. 
 * You can use window functions to aggregate over any number of rows in the window frame. 
-
-
-
-
-
-                                                                                                                                                                                                                          

@@ -38,7 +38,7 @@ systems.
 To view the data in the `nation.parquet` file, issue the query appropriate for
 your operating system:
 
-        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/apache-drill-1.0.0/sample-data/nation.parquet`;
+        SELECT * FROM dfs.`<path-to-installation>/sample-data/nation.parquet`;
 
 The query returns the following results:
 
