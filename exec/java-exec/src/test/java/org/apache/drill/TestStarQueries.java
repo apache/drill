@@ -23,6 +23,8 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestStarQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
   static final String WORKING_PATH = TestTools.getWorkingPath();
@@ -474,6 +476,23 @@ public class TestStarQueries extends BaseTestQuery{
     final String[] excludedPlan2 = {};
     PlanTestBase.testPlanMatchingPatterns(query2, expectedPlan2, excludedPlan2);
 
+  }
+
+  @Test   // DRILL-2053 : column name is case-insensitive when join a CTE with a regluar table.
+  public void testCaseSenJoinCTEWithRegTab() throws Exception {
+    final String query1 = "with a as ( select * from cp.`tpch/nation.parquet` ) select * from a, cp.`tpch/region.parquet` b where a.N_REGIONKEY = b.R_REGIONKEY";
+
+    int actualRecordCount = testSql(query1);
+    int expectedRecordCount = 25;
+    assertEquals(String.format("Received unexpected number of rows in output for query:\n%s\n expected=%d, received=%s",
+        query1, expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+
+    final String query2 = "with a as ( select * from cp.`tpch/nation.parquet` ) select * from a, cp.`tpch/region.parquet` b where a.n_regionkey = b.r_regionkey";
+
+    actualRecordCount = testSql(query2);
+    expectedRecordCount = 25;
+    assertEquals(String.format("Received unexpected number of rows in output for query:\n%s\n expected=%d, received=%s",
+        query2, expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
 
 }

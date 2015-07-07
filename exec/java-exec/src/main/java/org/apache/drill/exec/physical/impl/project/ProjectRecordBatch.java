@@ -597,7 +597,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
     // input and output are the same
-    else if (expr.getPath().equals(ref.getPath()) && (!exprContainsStar || exprIsFirstWildcard)) {
+    else if (expr.getPath().equalsIgnoreCase(ref.getPath()) && (!exprContainsStar || exprIsFirstWildcard)) {
       if (exprContainsStar && exprHasPrefix) {
         assert exprPrefix != null;
 
@@ -618,7 +618,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
             continue;
           }
           final String namePrefix = nameComponents[0];
-          if (exprPrefix.equals(namePrefix)) {
+          if (exprPrefix.equalsIgnoreCase(namePrefix)) {
             final String newName = incomingName;
             if (!result.outputMap.containsKey(newName)) {
               result.outputNames.set(k, newName);
@@ -684,12 +684,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
         final String namePrefix = components[0];
         final String nameSuffix = components[1];
-        if (exprPrefix.equals(namePrefix)) {
+        if (exprPrefix.equalsIgnoreCase(namePrefix)) {  // // case insensitive matching of prefix.
           if (refContainsStar) {
             // remove the prefix from the incoming column names
             final String newName = getUniqueName(nameSuffix, result);  // for top level we need to make names unique
             result.outputNames.set(k, newName);
-          } else if (exprSuffix.equals(nameSuffix)) {
+          } else if (exprSuffix.equalsIgnoreCase(nameSuffix)) { // case insensitive matching of field name.
             // example: ref: $f1, expr: T0<PREFIX><column_name>
             final String newName = ref.getPath();
             result.outputNames.set(k, newName);
@@ -714,7 +714,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       for (final VectorWrapper<?> wrapper : incoming) {
         final ValueVector vvIn = wrapper.getValueVector();
         final String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
-        if (expr.getPath().equals(incomingName)) {
+        if (expr.getPath().equalsIgnoreCase(incomingName)) {  // case insensitive matching of field name.
           final String newName = ref.getPath();
           addToResultMaps(newName, result, true);
         }
