@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import java.math.BigDecimal;
 import java.util.GregorianCalendar;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -293,9 +294,12 @@ public class DrillOptiq {
 
     private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {
       List<LogicalExpression> args = Lists.newArrayList();
+
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
       }
+
+      int argsSize = args.size();
       String functionName = call.getOperator().getName().toLowerCase();
 
       // TODO: once we have more function rewrites and a patter emerges from different rewrites, factor this out in a better fashion
@@ -347,14 +351,14 @@ public class DrillOptiq {
 
         return FunctionCallFactory.createExpression(trimFunc, trimArgs);
       } else if (functionName.equals("ltrim") || functionName.equals("rtrim") || functionName.equals("btrim")) {
-        if (args.size() == 1) {
+        if (argsSize == 1) {
           args.add(ValueExpressions.getChar(" "));
         }
         return FunctionCallFactory.createExpression(functionName, args);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
-        assert args.size() == 2;
+        assert argsSize == 2;
 
         /* Based on the first input to the date_part function we rewrite the function as the
          * appropriate extract function. For example
@@ -367,24 +371,40 @@ public class DrillOptiq {
         return FunctionCallFactory.createExpression("extract" + functionPostfix, args.subList(1, 2));
       } else if (functionName.equals("concat")) {
 
-        // Cast arguments to VARCHAR
-        List<LogicalExpression> concatArgs = Lists.newArrayList();
-        concatArgs.add(args.get(0));
-        concatArgs.add(args.get(1));
+        if (argsSize == 1) {
+          /*
+           * We treat concat with one argument as a special case. Since we don't have a function
+           * implementation of concat that accepts one argument. We simply add another dummy argument
+           * (empty string literal) to the list of arguments.
+           */
+          List<LogicalExpression> concatArgs = new LinkedList<>(args);
+          concatArgs.add(new QuotedString("", ExpressionPosition.UNKNOWN));
 
-        LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
+          return FunctionCallFactory.createExpression(functionName, concatArgs);
 
-        for (int i = 2; i < args.size(); i++) {
-          concatArgs = Lists.newArrayList();
-          concatArgs.add(first);
-          concatArgs.add(args.get(i));
-          first = FunctionCallFactory.createExpression(functionName, concatArgs);
+        } else if (argsSize > 2) {
+          List<LogicalExpression> concatArgs = Lists.newArrayList();
+
+          /* stack concat functions on top of each other if we have more than two arguments
+           * Eg: concat(col1, col2, col3) => concat(concat(col1, col2), col3)
+           */
+          concatArgs.add(args.get(0));
+          concatArgs.add(args.get(1));
+
+          LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
+
+          for (int i = 2; i < argsSize; i++) {
+            concatArgs = Lists.newArrayList();
+            concatArgs.add(first);
+            concatArgs.add(args.get(i));
+            first = FunctionCallFactory.createExpression(functionName, concatArgs);
+          }
+
+          return first;
         }
-
-        return first;
       } else if (functionName.equals("length")) {
 
-          if (args.size() == 2) {
+          if (argsSize == 2) {
 
               // Second argument should always be a literal specifying the encoding format
               assert args.get(1) instanceof ValueExpressions.QuotedString;
@@ -399,7 +419,7 @@ public class DrillOptiq {
         return FunctionCallFactory.createConvert(functionName, ((QuotedString)args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
       } else if ((functionName.equalsIgnoreCase("rpad")) || functionName.equalsIgnoreCase("lpad")) {
         // If we have only two arguments for rpad/lpad append a default QuotedExpression as an argument which will be used to pad the string
-        if (args.size() == 2) {
+        if (argsSize == 2) {
           String spaceFill = " ";
           LogicalExpression fill = ValueExpressions.getChar(spaceFill);
           args.add(fill);

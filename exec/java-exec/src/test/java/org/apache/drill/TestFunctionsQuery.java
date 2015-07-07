@@ -853,4 +853,34 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .baselineValues(2001l, 1.2d)
         .go();
   }
+
+  @Test
+  public void testConcatSingleInput() throws Exception {
+    String query = "select concat(employee_id) as col1 from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues("1")
+        .go();
+
+    query = "select concat(null_column) as col1 from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues("")
+        .go();
+
+    query = "select concat('foo') as col1 from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues("foo")
+        .go();
+  }
 }
