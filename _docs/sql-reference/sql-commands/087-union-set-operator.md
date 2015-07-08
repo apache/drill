@@ -24,7 +24,7 @@ Any SELECT query that Drill supports. See [SELECT]({{site.baseurl}}/docs/select/
    * You can only use * on either side of UNION when the data source has a defined schema, such as data in Hive or views.
    * You must explicitly specify columns.
 
-## Examples
+## Example
 The following example uses the UNION ALL set operator to combine click activity data before and after a marketing campaign. The data in the example exists in the `dfs.clicks workspace`.
  
        0: jdbc:drill:> SELECT t.trans_id transaction, t.user_info.cust_id customer 

@@ -46,7 +46,7 @@ steps:
         {
           "type": "file",
           "enabled": true,
-          "connection": "hdfs:///",
+          "connection": "hdfs://",
           "workspaces": {
             "root": {
               "location": "/drill/testdata",

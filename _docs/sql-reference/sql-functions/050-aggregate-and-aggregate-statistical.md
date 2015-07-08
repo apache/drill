@@ -19,11 +19,11 @@ SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY,
 
 \* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
 
-MIN, MAX, COUNT, AVG, and SUM accept ALL and DISTINCT keywords. The default is ALL.
+AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
 ## AVG 
 
-Returns the average of all records of a column or the average of groups of records.
+Averages a column of all records in a data source. Averages a column of one or more groups of records. Which records to include in the calculation can be based on a condition.
 
 ### Syntax
 
@@ -61,7 +61,7 @@ Expressions listed within the AVG function and must be included in the GROUP BY 
     +----------------------+---------------------+
     5 rows selected (0.495 seconds)
 
-## MIN, MAX, COUNT, and SUM
+## COUNT, MIN, MAX, and SUM
 
 ### Examples
 
