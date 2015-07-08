@@ -44,56 +44,14 @@ In the storage plugin configuration, you can set the following attributes that a
 * boolean skipFirstLine = false;  
   Set to true to avoid reading headers as data. 
 
-For more information about storage plugin configuration, see ["List of Attributes and Definitions"]({{site.baseurl}}/docs/plugin-configuration-basics/#list-of-attributes-and-definitions).
+Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes:
 
-You can deal with a mix of text files with and without headers either by creating two separate format plugins or by creating two format plugins within the same storage plugin. The former approach is typically easier than the latter.
+* comment  
+* escape  
+* fieldDeliimiter  
+* quote  
+* skipFirstLine
 
-### Creating Two Separate Format Plugins
-Format plugins are associated with a particular storage plugin. Storage plugins define a root directory that Drill targets when using the storage plugin. You can define separate storage plugins for different root directories, and define each of the format attributes to match the files stored below that directory. All files can use the .csv extension, as shown in the following example:
-
-Storage Plugin A
-
-    "csv": {
-      "type": "text",
-      "extensions": [
-        "csv"
-      ],
-      "delimiter": ","
-    },
-    . . .
-
-
-Storage Plugin B
-
-    "csv": {
-      "type": "text",
-      "extensions": [
-        "csv"
-      ],
-      "comment": "&",
-      "skipFirstLine": true,
-      "delimiter": ","
-    },
-
-### Creating Two Format Plugins within the Same Storage Plugin
-Give a different extension to files with a header and to files without a header, and use a storage plugin that looks something like the following example. This method requires renaming some files to use the csv2 extension, as shown in the following example:
-
-    "csv": {
-      "type": "text",
-      "extensions": [
-        "csv"
-      ],
-      "delimiter": ","
-    },
-    "csv_with_header": {
-      "type": "text",
-      "extensions": [
-        "csv2"
-      ],
-      "comment": "&",
-      "skipFirstLine": true,
-      "delimiter": ","
-    },
 
 ## Examples of Querying Text Files
 The examples in this section show the results of querying CSV files that use and do not use a header, include comments, and use an escape character:
@@ -168,3 +126,57 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]  |
     +------------------------+
     7 rows selected (0.111 seconds)
+
+## Strategies for Using Attributes
+The attributes, such as skipFirstLine, apply to all workspaces defined in a storage plugin. A typical use case defines separate storage plugins for different root directories to query the files stored below the directory. An alternative use case defines multiple formats within the same storage plugin and names target files using different extensions to match the formats.
+
+You can deal with a mix of text files with and without headers either by creating two separate format plugins or by creating two format plugins within the same storage plugin. The former approach is typically easier than the latter.
+
+### Creating Two Separate Storage Plugin Configurations
+A storage plugin configuration defines a root directory that Drill targets. You can use a different configuration for each root directory that sets attributes to match the files stored below that directory. All files can use the same extension, such as .csv, as shown in the following example:
+
+Storage Plugin A
+
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv"
+      ],
+      "delimiter": ","
+    },
+    . . .
+
+
+Storage Plugin B
+
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv"
+      ],
+      "comment": "&",
+      "skipFirstLine": true,
+      "delimiter": ","
+    },
+
+### Creating One Storage Plugin Configuration to Handle Multiple Formats
+You can use a different extension for files with and without a header, and use a storage plugin that looks something like the following example. This method requires renaming some files to use the csv2 extension.
+
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv"
+      ],
+      "delimiter": ","
+    },
+    "csv_with_header": {
+      "type": "text",
+      "extensions": [
+        "csv2"
+      ],
+      "comment": "&",
+      "skipFirstLine": true,
+      "delimiter": ","
+    },
+
+

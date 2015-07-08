@@ -9,69 +9,57 @@ system on your machine by default.
 
 ## Connecting Drill to a File System
 
-In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. You configure the connection property of the storage plugin workspace to connect Drill to a distributed file system. For example, the following connection properties connect Drill to an HDFS or MapR-FS cluster from a client:
+In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. You configure the connection property of the storage plugin workspace to connect Drill to a distributed file system. For example, the following connection properties connect Drill to an HDFS cluster from a client:
 
-* HDFS  
-  `"connection": "hdfs://<IP Address>:<Port>/"`  
-* MapR-FS Remote Cluster  
-  `"connection": "maprfs://<IP Address>/"`  
+`"connection": "hdfs://<IP Address>:<Port>/"`   
 
-To query a file on HDFS from a node on the cluster, you can simply change the connection to from `file:///` to `hdfs:///` in the `dfs` storage plugin.
+To query a file on HDFS from a node on the cluster, you can simply change the connection to from `file:///` to `hdfs://` in the `dfs` storage plugin.
 
-To register a local or a distributed file system with Apache Drill, complete
-the following steps:
+To change the `dfs` storage plugin configuration to point to a local or a distributed file system, use `connection` attributes as shown in the following example.
+* Local file system example:
 
-  1. Navigate to http://localhost:8047, and select the **Storage** tab.
-  2. In the New Storage Plugin window, enter a unique name and then click **Create**.
-  3. In the Configuration window, provide the following configuration information for the type of file system that you are configuring as a data source.
-     * Local file system example:
-
-            {
-              "type": "file",
-              "enabled": true,
-              "connection": "file:///",
-              "workspaces": {
-                "root": {
-                  "location": "/user/max/donuts",
-                  "writable": false,
-                  "defaultInputFormat": null
-                 }
-              },
-                 "formats" : {
-                   "json" : {
-                     "type" : "json"
-                   }
-                 }
-              }
-     * Distributed file system example:
+    {
+      "type": "file",
+      "enabled": true,
+      "connection": "file:///",
+      "workspaces": {
+        "root": {
+          "location": "/user/max/donuts",
+          "writable": false,
+          "defaultInputFormat": null
+         }
+      },
+         "formats" : {
+           "json" : {
+             "type" : "json"
+           }
+         }
+      }
+* Distributed file system example:
     
-            {
-              "type" : "file",
-              "enabled" : true,
-              "connection" : "hdfs://10.10.30.156:8020/",
-              "workspaces" : {
-                "root" : {
-                  "location" : "/user/root/drill",
-                  "writable" : true,
-                  "defaultInputFormat" : null
-                }
-              },
-              "formats" : {
-                "json" : {
-                  "type" : "json"
-                }
-              }
-            }
+    {
+      "type" : "file",
+      "enabled" : true,
+      "connection" : "hdfs://10.10.30.156:8020/",
+      "workspaces" : {
+        "root" : {
+          "location" : "/user/root/drill",
+          "writable" : true,
+          "defaultInputFormat" : null
+        }
+      },
+      "formats" : {
+        "json" : {
+          "type" : "json"
+        }
+      }
+    }
 
-      To connect to a Hadoop file system, you include the IP address of the
+To connect to a Hadoop file system, you include the IP address of the
 name node and the port number.
-  4. Click **Enable**.
 
-After you have configured a storage plugin instance for the file system, you
-can issue Drill queries against it.
-
-The following example shows an instance of a file type storage plugin with a
-workspace named `json_files` configured to point Drill to the
+The following example shows an file type storage plugin configuration with a
+workspace named `json_files`. The configuration points Drill to the
 `/users/max/drill/json/` directory in the local file system `(dfs)`:
 
     {
@@ -86,7 +74,7 @@ workspace named `json_files` configured to point Drill to the
        } 
     },
 
-{% include startnote.html %}The `connection` parameter in the configuration above is "`file:///`", connecting Drill to the local file system (`dfs`).{% include endnote.html %}
+The `connection` parameter in this configuration is "`file:///`", connecting Drill to the local file system (`dfs`).
 
 To query a file in the example `json_files` workspace, you can issue the `USE`
 command to tell Drill to use the `json_files` workspace configured in the `dfs`

@@ -38,8 +38,8 @@ steps:
 
   1. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047`. The Drillbit process must be running on the node before you connect to the Drill Web UI.
   2. Select **Storage** in the toolbar.
-  3. Click **Update** next to the file system for which you want to define a default input format for a workspace.
-  4. In the Configuration area, locate the workspace for which you would like to define the default input format, and change the `defaultInputFormat` attribute to any of the supported file types.
+  3. Click **Update** next to the storage plugin for which you want to define a default input format for a workspace.
+  4. In the Configuration area, locate the workspace, and change the `defaultInputFormat` attribute to any of the supported file types.
 
      **Example**
      
@@ -61,4 +61,4 @@ steps:
 
 ## Querying Compressed Files
 
-You can query compressed GZ files, such as JSON and CSV, as well as uncompressed files. The file extension specified in the `formats . . . extensions` property of the storage plugin must precede the gz extension in the file name. For example, `proddata.json.gz` or `mydata.csv.gz` are valid file names to use in a query, as shown in the example in ["Querying the GZ File Directly"]({{site.baseurl"}}/docs/querying-plain-text-files/#query-the-gz-file-directly).
+You can query compressed GZ files, such as JSON and CSV, as well as uncompressed files. The file extension specified in the `formats . . . extensions` property of the storage plugin configuration must precede the gz extension in the file name. For example, `proddata.json.gz` or `mydata.csv.gz` are valid file names to use in a query, as shown in the example in ["Querying the GZ File Directly"]({{site.baseurl"}}/docs/querying-plain-text-files/#query-the-gz-file-directly).

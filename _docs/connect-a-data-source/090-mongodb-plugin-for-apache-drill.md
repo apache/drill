@@ -23,7 +23,7 @@ provided by MongoDB that you download in the following steps:
 
 ## Configuring MongoDB
 
-Start Drill and configure the MongoDB storage plugin instance in the Drill Web
+Start Drill and configure the MongoDB storage plugin in the Drill Web
 UI to connect to Drill. Drill must be running in order to access the Web UI.
 
 Complete the following steps to configure MongoDB as a data source for Drill:
@@ -41,7 +41,7 @@ Complete the following steps to configure MongoDB as a data source for Drill:
         {
           "type": "mongo",
           "connection": "mongodb://localhost:27017/",
-          "enabled": true
+          "enabled": false
         }
 
      {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
