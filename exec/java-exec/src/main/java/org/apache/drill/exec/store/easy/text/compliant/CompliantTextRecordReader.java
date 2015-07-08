@@ -70,16 +70,15 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   // checks to see if we are querying all columns(star) or individual columns
   @Override
   public boolean isStarQuery() {
-    if(settings.isUseRepeatedVarChar()){
+    if(settings.isUseRepeatedVarChar()) {
       return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
         @Override
         public boolean apply(@Nullable SchemaPath path) {
           return path.equals(RepeatedVarCharOutput.COLUMNS);
         }
       }).isPresent();
-    }else{
-      return isStarQuery();
     }
+    return super.isStarQuery();
   }
 
   /**
