@@ -111,6 +111,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
     String funcName = functionCall.getName();
     if (optionManager != null
         && optionManager.getOption(ExecConstants.CAST_TO_NULLABLE_NUMERIC).bool_val
+        && functionCall.args.size() > 0
         && CastFunctions.isReplacementNeeded(functionCall.args.get(0).getMajorType().getMinorType(),
                                              funcName)) {
       org.apache.drill.common.types.TypeProtos.DataMode dataMode =

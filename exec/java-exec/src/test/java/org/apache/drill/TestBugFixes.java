@@ -78,6 +78,21 @@ public class TestBugFixes extends BaseTestQuery {
     }
   }
 
+  /**
+   * This test is not checking results because the bug fixed only appears with functions taking no arguments.
+   * I could alternatively use something like the now() function, but this still would be hard to write
+   * result verification for. The important aspect of the test is that it verifies that the previous IOOB
+   * does not occur. The various no-argument functions should be verified in other ways.
+   */
+  @Test
+  public void Drill3484() throws Exception {
+    try {
+      test("alter SYSTEM set `drill.exec.functions.cast_empty_string_to_null` = true;");
+      test("select random() from sys.drillbits");
+    } finally {
+      test("alter SYSTEM set `drill.exec.functions.cast_empty_string_to_null` = false;");
+    }
+  }
 
   @Test (expected = UserException.class)
   // Should be "Failure while parsing sql. Node [rel#26:Subset#6.LOGICAL.ANY([]).[]] could not be implemented;".
