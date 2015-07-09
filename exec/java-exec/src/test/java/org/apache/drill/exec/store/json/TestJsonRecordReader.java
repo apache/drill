@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.json;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Test;
@@ -152,6 +153,24 @@ public class TestJsonRecordReader extends BaseTestQuery{
         .build().run();
     } finally {
       testNoResult("alter session set `store.json.read_numbers_as_double`= false");
+    }
+  }
+
+  @Test
+  public void drill_3353() throws Exception {
+    try {
+      testNoResult("alter session set `store.json.all_text_mode` = true");
+      test("create table dfs_test.tmp.drill_3353 as select a from dfs.`${WORKING_PATH}/src/test/resources/jsoninput/drill_3353` where e = true");
+      String query = "select t.a.d cnt from dfs_test.tmp.drill_3353 t where t.a.d is not null";
+      test(query);
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("cnt")
+          .baselineValues("1")
+          .go();
+    } finally {
+      testNoResult("alter session set `store.json.all_text_mode` = false");
     }
   }
 }

@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
@@ -90,6 +91,11 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   @Override
   public DrillBuf getManagedBuffer() {
     return allocator.buffer(255);
+  }
+
+  @Override
+  public CallBack getCallBack() {
+    return null;
   }
 
 }

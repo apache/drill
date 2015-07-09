@@ -51,6 +51,7 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -210,6 +211,11 @@ public class ScanBatch implements CloseableRecordBatch {
 
       populatePartitionVectors();
 
+      for (VectorWrapper w : container) {
+        w.getValueVector().getMutator().setValueCount(recordCount);
+      }
+
+
       // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.
       final boolean isNewSchema = mutator.isNewSchema();
       oContext.getStats().batchReceived(0, getRecordCount(), isNewSchema);
@@ -343,6 +349,11 @@ public class ScanBatch implements CloseableRecordBatch {
     @Override
     public DrillBuf getManagedBuffer() {
       return oContext.getManagedBuffer();
+    }
+
+    @Override
+    public CallBack getCallBack() {
+      return callBack;
     }
   }
 

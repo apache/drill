@@ -143,9 +143,22 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
   }
 
+  private boolean containsComplexVectors(BatchSchema schema) {
+    for (MaterializedField field : schema) {
+      MinorType type = field.getType().getMinorType();
+      switch (type) {
+      case MAP:
+      case LIST:
+        return true;
+      default:
+      }
+    }
+    return false;
+  }
+
   @Override
   public void updateSchema(VectorAccessible batch) throws IOException {
-    if (this.batchSchema == null || !this.batchSchema.equals(batch.getSchema())) {
+    if (this.batchSchema == null || !this.batchSchema.equals(batch.getSchema()) || containsComplexVectors(this.batchSchema)) {
       if (this.batchSchema != null) {
         flush();
       }

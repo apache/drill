@@ -91,10 +91,10 @@ public class TypeHelper {
     throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
   }
   
-  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type){
+  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type, CallBack callback){
     SchemaPath child = parentPath.getChild(name);
     MaterializedField field = MaterializedField.create(child, type);
-    return getNewVector(field, allocator);
+    return getNewVector(field, allocator, callback);
   }
   
   
