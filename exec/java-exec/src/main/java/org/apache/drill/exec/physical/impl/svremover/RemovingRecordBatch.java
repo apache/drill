@@ -34,7 +34,9 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.CopyUtil;
+import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
@@ -194,7 +196,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     @Override
     public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing){
       for(VectorWrapper<?> vv : incoming){
-        TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField()));
+        TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField(), callBack));
         pairs.add(tp);
       }
     }
@@ -220,7 +222,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
 
     for(VectorWrapper<?> vv : incoming){
-      TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField()));
+      TransferPair tp = vv.getValueVector().makeTransferPair(container.addOrGet(vv.getField(), callBack));
     }
 
     try {
@@ -237,14 +239,14 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private Copier getGenerated4Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
-    return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this);
+    return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this, callBack);
   }
 
-  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
+  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing, SchemaChangeCallBack callBack) throws SchemaChangeException{
 
     for(VectorWrapper<?> vv : batch){
       ValueVector v = vv.getValueVectors()[0];
-      v.makeTransferPair(container.addOrGet(v.getField()));
+      v.makeTransferPair(container.addOrGet(v.getField(), callBack));
     }
 
     try {

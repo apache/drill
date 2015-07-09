@@ -325,7 +325,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
                 continue;
               }
               final FieldReference ref = new FieldReference(name);
-              final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vvIn.getField().getType()));
+              final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vvIn.getField().getType()), callBack);
               final TransferPair tp = vvIn.makeTransferPair(vvOut);
               transfers.add(tp);
             }
@@ -399,7 +399,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         Preconditions.checkNotNull(incoming);
 
         final FieldReference ref = getRef(namedExpression);
-        final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vectorRead.getMajorType()));
+        final ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vectorRead.getMajorType()), callBack);
         final TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);

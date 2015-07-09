@@ -193,7 +193,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     cg.addExpr(new ReturnValueExpression(expr));
 
     for (VectorWrapper<?> v : incoming) {
-      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField()));
+      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
     }
 
