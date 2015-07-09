@@ -46,12 +46,12 @@ public class TestLargeInClause extends BaseTestQuery {
 
   @Test
   public void queryWith300InConditions() throws Exception {
-    test("select * from cp.`employee.json` where id in (" + getInIntList(300) + ")");
+    test("select * from cp.`employee.json` where employee_id in (" + getInIntList(300) + ")");
   }
 
   @Test
   public void queryWith50000InConditions() throws Exception {
-    test("select * from cp.`employee.json` where id in (" + getInIntList(50000) + ")");
+    test("select * from cp.`employee.json` where employee_id in (" + getInIntList(50000) + ")");
   }
 
   @Test

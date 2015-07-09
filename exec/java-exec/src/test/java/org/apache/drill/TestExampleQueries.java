@@ -1091,4 +1091,12 @@ public class TestExampleQueries extends BaseTestQuery {
 
   }
 
+  @Test // See DRILL-3477
+  public void testFilterWithNullType() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`tpch/nation.parquet` where non_existent = 'hello'")
+        .unOrdered()
+        .sqlBaselineQuery("select * from cp.`tpch/nation.parquet` where non_existent is not null")
+        .go();
+  }
 }

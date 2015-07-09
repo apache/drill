@@ -108,7 +108,7 @@ public class ExpressionTreeMaterializer {
     }
 
     if (out instanceof NullExpression) {
-      return new TypedNullConstant(Types.optional(MinorType.INT));
+      return new TypedNullConstant(Types.optional(MinorType.VARBINARY));
     } else {
       return out;
     }
