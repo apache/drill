@@ -37,11 +37,11 @@ public class TempTypesMockStoragePlugin implements StoragePlugin {
   private static final Logger logger = getLogger( TempTypesMockStoragePlugin.class );
 
   private static int count;
-  
+
   private final TempTypesMockStoragePluginConfig config;
-  
-  public TempTypesMockStoragePlugin(TempTypesMockStoragePluginConfig config, 
-                                    DrillbitContext context, 
+
+  public TempTypesMockStoragePlugin(TempTypesMockStoragePluginConfig config,
+                                    DrillbitContext context,
                                     String whatKindOfName) {
     count++;
     logger.info( "??: TempTypesMockStoragePlugin(...) called (count := " + count + ")" );
