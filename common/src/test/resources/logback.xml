@@ -39,14 +39,14 @@
   </appender>
   -->
   <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
+    <level value="trace" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->
   </logger>
 
   <root>
-    <level value="error" />
+    <level value="trace" />
     <appender-ref ref="SOCKET" />
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->

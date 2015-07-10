@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.AutoCloseables;
@@ -49,6 +50,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
+import com.google.common.base.Stopwatch;
 import com.google.common.io.Closeables;
 
 /**
@@ -175,7 +177,7 @@ public class Drillbit implements AutoCloseable {
   private RegistrationHandle registrationHandle;
 
   public Drillbit(final DrillConfig config, final RemoteServiceSet serviceSet) throws Exception {
-    final long startTime = System.currentTimeMillis();
+    final Stopwatch w = new Stopwatch().start();
     logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
     final boolean enableHttp = config.getBoolean(ExecConstants.HTTP_ENABLE);
@@ -197,7 +199,7 @@ public class Drillbit implements AutoCloseable {
       coord = new ZKClusterCoordinator(config);
       storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
     }
-    logger.info("Construction completed ({} ms).", System.currentTimeMillis() - startTime);
+    logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private void startJetty() throws Exception {
@@ -234,7 +236,7 @@ public class Drillbit implements AutoCloseable {
   }
 
   public void run() throws Exception {
-    final long startTime = System.currentTimeMillis();
+    final Stopwatch w = new Stopwatch().start();
     logger.debug("Startup begun.");
     coord.start(10000);
     storeProvider.start();
@@ -248,7 +250,7 @@ public class Drillbit implements AutoCloseable {
     startJetty();
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
-    logger.info("Startup completed ({} ms).", System.currentTimeMillis() - startTime);
+    logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
 
   @Override
@@ -257,7 +259,7 @@ public class Drillbit implements AutoCloseable {
     if (isClosed) {
       return;
     }
-    final long startTime = System.currentTimeMillis();
+    final Stopwatch w = new Stopwatch().start();
     logger.debug("Shutdown begun.");
 
     // wait for anything that is running to complete
@@ -291,7 +293,7 @@ public class Drillbit implements AutoCloseable {
     AutoCloseables.close(manager, logger);
     Closeables.closeQuietly(context);
 
-    logger.info("Shutdown completed ({} ms).", System.currentTimeMillis() - startTime);
+    logger.info("Shutdown completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
     isClosed = true;
   }
 

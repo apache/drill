@@ -82,9 +82,85 @@ public class Types {
   }
 
   /***
+   * Gets SQL data type name for given Drill RPC-/protobuf-level data type.
+   * @return
+   *   canonical keyword sequence for SQL data type (leading keywords in
+   *   corresponding {@code <data type>}; what
+   *   {@code INFORMATION_SCHEMA.COLUMNS.TYPE_NAME} would list)
+   */
+  public static String getSqlTypeName(final MajorType type) {
+    if (type.getMode() == DataMode.REPEATED) {
+      return "ARRAY";
+    }
+
+    switch (type.getMinorType()) {
+
+      // Standard SQL atomic data types:
+
+      case BIT:             return "BOOLEAN";
+
+      case SMALLINT:        return "SMALLINT";
+      case INT:             return "INTEGER";
+      case BIGINT:          return "BIGINT";
+
+      case FLOAT4:          return "FLOAT";
+      case FLOAT8:          return "DOUBLE";
+
+      case DECIMAL9:
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE: return "DECIMAL";
+
+      case VARCHAR:         return "CHARACTER VARYING";
+      case FIXEDCHAR:       return "CHARACTER";
+
+      case VAR16CHAR:       return "NATIONAL CHARACTER VARYING";
+      case FIXED16CHAR:     return "NATIONAL CHARACTER";
+
+      case VARBINARY:       return "BINARY VARYING";
+      case FIXEDBINARY:     return "BINARY";
+
+      case DATE:            return "DATE";
+      case TIME:            return "TIME";
+      case TIMETZ:          return "TIME WITH TIME ZONE";
+      case TIMESTAMP:       return "TIMESTAMP";
+      case TIMESTAMPTZ:     return "TIMESTAMP WITH TIME ZONE";
+
+      case INTERVALYEAR:
+      case INTERVALDAY:     return "INTERVAL";
+
+      // Non-standard SQL atomic data types:
+
+      case INTERVAL:        return "INTERVAL";
+      case MONEY:           return "DECIMAL";
+      case TINYINT:         return "TINYINT";
+
+      // Composite types and other types that are not atomic types (SQL standard
+      // or not) except ARRAY types (handled above):
+
+      case MAP:             return "MAP";
+      case LATE:            return "ANY";
+      case NULL:            return "NULL";
+
+      // Internal types not actually used at level of SQL types(?):
+
+      case UINT1:          return "TINYINT";
+      case UINT2:          return "SMALLINT";
+      case UINT4:          return "INTEGER";
+      case UINT8:          return "BIGINT";
+
+      default:
+        throw new AssertionError(
+            "Unexpected/unhandled MinorType value " + type.getMinorType() );
+    }
+  }
+
+  /***
    * Gets JDBC type code for given Drill RPC-/protobuf-level type.
    */
-  public static int getJdbcType(final MajorType type) {
+  public static int getJdbcTypeCode(final MajorType type) {
     if (type.getMode() == DataMode.REPEATED) {
       return java.sql.Types.ARRAY;
     }
@@ -120,10 +196,13 @@ public class Types {
     case MONEY:
       return java.sql.Types.DECIMAL;
     case NULL:
+      return java.sql.Types.NULL;
     case INTERVAL:
     case INTERVALYEAR:
     case INTERVALDAY:
+      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
     case LATE:
+      return java.sql.Types.OTHER;
     case SMALLINT:
       return java.sql.Types.SMALLINT;
     case TIME:
@@ -132,7 +211,7 @@ public class Types {
     case TIMESTAMP:
       return java.sql.Types.TIMESTAMP;
     case TIMETZ:
-      return java.sql.Types.DATE;
+      return java.sql.Types.TIME;
     case TINYINT:
       return java.sql.Types.TINYINT;
     case UINT1:
@@ -154,22 +233,80 @@ public class Types {
       //   is an unexpected, code-out-of-sync-with-itself case, so use an
       //   exception intended for that.
       throw new UnsupportedOperationException(
-          "Unexpected/unhandled " + type.getMinorType() + " value " + type.getMinorType() );
+          "Unexpected/unhandled MinorType value " + type.getMinorType() );
     }
   }
 
-  public static boolean isUnSigned(final MajorType type) {
-    switch(type.getMinorType()) {
-    case UINT1:
-    case UINT2:
-    case UINT4:
-    case UINT8:
-      return true;
-    default:
-      return false;
+  /**
+   * Reports whether given RPC-level type is a signed type (per semantics of
+   * {@link ResultSetMetaData#isSigned(int)}).
+   */
+  public static boolean isJdbcSignedType( final MajorType type ) {
+    final boolean isSigned;
+    switch ( type.getMode() ) {
+      case REPEATED:
+        isSigned = false;   // SQL ARRAY
+        break;
+      case REQUIRED:
+      case OPTIONAL:
+        switch ( type.getMinorType() ) {
+          // Verified signed types:
+          case SMALLINT:
+          case INT:             // SQL INTEGER
+          case BIGINT:
+          case FLOAT4:          // SQL REAL / FLOAT(N)
+          case FLOAT8:          // SQL DOUBLE PRECISION / FLOAT(N)
+          case INTERVALYEAR:    // SQL INTERVAL w/YEAR and/or MONTH
+          case INTERVALDAY:     // SQL INTERVAL w/DAY, HOUR, MINUTE and/or SECOND
+          // Not-yet seen/verified signed types:
+          case DECIMAL9:        // SQL DECIMAL (if used)
+          case DECIMAL18:       // SQL DECIMAL (if used)
+          case DECIMAL28SPARSE: // SQL DECIMAL (if used)
+          case DECIMAL38SPARSE: // SQL DECIMAL (if used)
+          case DECIMAL28DENSE:  // SQL DECIMAL (if used)
+          case DECIMAL38DENSE:  // SQL DECIMAL (if used)
+          case TINYINT:         // (not standard SQL)
+          case MONEY:           // (not standard SQL)
+          case INTERVAL:        // unknown (given INTERVALYEAR and INTERVALDAY)
+            isSigned = true;
+            break;
+          // Verified unsigned types:
+          case BIT:            // SQL BOOLEAN
+          case VARCHAR:
+          case FIXEDCHAR:      // SQL CHARACTER
+          case VARBINARY:
+          case FIXEDBINARY:    // SQL BINARY
+          case DATE:
+          case TIME:           // SQL TIME WITHOUT TIME ZONE
+          case TIMESTAMP:      // SQL TIMESTAMP WITHOUT TIME ZONE
+          // Not-yet seen/verified unsigned types:
+          case UINT1:
+          case UINT2:
+          case UINT4:
+          case UINT8:
+          case FIXED16CHAR:
+          case VAR16CHAR:
+          case GENERIC_OBJECT:
+          case LATE:
+          case LIST:
+          case MAP:
+          case NULL:
+          case TIMETZ:      // SQL TIME WITH TIME ZONE
+          case TIMESTAMPTZ: // SQL TIMESTAMP WITH TIME ZONE
+            isSigned = false;
+            break;
+          default:
+            throw new UnsupportedOperationException(
+                "Unexpected/unhandled MinorType value " + type.getMinorType() );
+        }
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            "Unexpected/unhandled DataMode value " + type.getMode() );
     }
-
+    return isSigned;
   }
+
   public static boolean usesHolderForGet(final MajorType type) {
     if (type.getMode() == REPEATED) {
       return true;

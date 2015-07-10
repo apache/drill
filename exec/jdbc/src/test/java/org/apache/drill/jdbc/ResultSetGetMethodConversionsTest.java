@@ -78,12 +78,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
         +   "SELECT  "
         + "\n"
         + "\n  TRUE                             AS  C_BOOLEAN_TRUE, "
-        // Disabled until TINYINT/SMALLINT are implemented (DRILL-2470):
+        // TODO(DRILL-2470): Uncomment when TINYINT is implemented:
         //+ "\n  CAST(  1 AS TINYINT            ) AS  C_TINYINT_1, "
+        // TODO(DRILL-2470): Uncomment when SMALLINT is implemented:
         //+ "\n  CAST(  2 AS SMALLINT           ) AS  C_SMALLINT_2, "
         + "\n  CAST(  3 AS INTEGER            ) AS  C_INTEGER_3, "
         + "\n  CAST(  4 AS BIGINT             ) AS  C_BIGINT_4, "
-        // Disabled until REAL is implemented (DRILL-2683):
+        // TODO(DRILL-2683): Uncomment when REAL is implemented:
         //+ "\n  CAST(  5.5 AS REAL             ) AS `C_REAL_5.5`, "
         + "\n  CAST(  6.6 AS DOUBLE PRECISION ) AS `C_DOUBLE_PREC._6.6`, "
         + "\n  CAST(  7.7 AS FLOAT            ) AS `C_FLOAT_7.7`, "
@@ -114,13 +115,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - ROWID;
 
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getByte_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getByte( "C_TINYINT_1" ), equalTo( (byte) 1 ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getByte_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getByte( "C_SMALLINT_2" ), equalTo( (byte) 2 ) );
@@ -136,7 +137,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getByte( "C_BIGINT_4" ), equalTo( (byte) 4 ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getByte_handles_REAL() throws SQLException {
     assertThat( testDataRow.getByte( "C_REAL_5.5" ), equalTo( (byte) 5 ) );
@@ -165,13 +166,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getShort_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getShort( "C_TINYINT_1" ), equalTo( (short) 1 ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getShort_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getShort( "C_SMALLINT_2" ), equalTo( (short) 2 ) );
@@ -187,7 +188,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getShort( "C_BIGINT_4" ), equalTo( (short) 4 ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getShort_handles_REAL() throws SQLException {
     assertThat( testDataRow.getShort( "C_REAL_5.5" ), equalTo( (short) 5 ) );
@@ -217,13 +218,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getInt_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getInt( "C_TINYINT_1" ), equalTo( 1 ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getInt_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getInt( "C_SMALLINT_2" ), equalTo( 2 ) );
@@ -239,7 +240,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getInt( "C_BIGINT_4" ), equalTo( 4 ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getInt_handles_REAL() throws SQLException {
     assertThat( testDataRow.getInt( "C_REAL_5.5" ), equalTo( 5 ) );
@@ -268,13 +269,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getLong_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getLong( "C_TINYINT_1" ), equalTo( 1L ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getLong_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getLong( "C_SMALLINT_2" ), equalTo( 2L ) );
@@ -290,7 +291,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getLong( "C_BIGINT_4" ), equalTo( 4L ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getLong_handles_REAL() throws SQLException {
     assertThat( testDataRow.getLong( "C_REAL_5.5" ), equalTo( 5L ) );
@@ -319,13 +320,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getFloat_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getFloat( "C_TINYINT_1" ), equalTo( 1f ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getFloat_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getFloat( "C_SMALLINT_2" ), equalTo( 2f ) );
@@ -341,7 +342,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getFloat( "C_BIGINT_4" ), equalTo( 4f ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getFloat_handles_REAL() throws SQLException {
     assertThat( testDataRow.getFloat( "C_REAL_5.5" ), equalTo( 5.5f ) );
@@ -359,7 +360,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   @Test
   public void test_getFloat_handles_DECIMAL() throws SQLException {
-    assertThat( testDataRow.getFloat( "C_DECIMAL_10.10" ), equalTo( 10.10f ) ); //?????
+    assertThat( testDataRow.getFloat( "C_DECIMAL_10.10" ), equalTo( 10.10f ) );
   }
 
   ////////////////////////////////////////
@@ -369,13 +370,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getDouble_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getDouble( "C_TINYINT_1" ), equalTo( 1D ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getDouble_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getDouble( "C_SMALLINT_2" ), equalTo( 2D ) );
@@ -391,7 +392,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getDouble( "C_BIGINT_4" ), equalTo( 4D ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getDouble_handles_REAL() throws SQLException {
     assertThat( testDataRow.getDouble( "C_REAL_5.5" ), equalTo( (double) 5.5f ) );
@@ -409,7 +410,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   @Test
   public void test_getDouble_handles_DECIMAL() throws SQLException {
-    assertThat( testDataRow.getDouble( "C_DECIMAL_10.10" ), equalTo( 10.10d ) ); //???
+    assertThat( testDataRow.getDouble( "C_DECIMAL_10.10" ), equalTo( 10.10d ) );
   }
 
   ////////////////////////////////////////
@@ -419,13 +420,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - CHAR, VARCHAR, LONGVARCHAR;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getBigDecimal_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getBigDecimal( "C_TINYINT_1" ), equalTo( new BigDecimal( 1 ) ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getBigDecimal_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getBigDecimal( "C_SMALLINT_2" ), equalTo( new BigDecimal( 2 ) ) );
@@ -441,7 +442,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getBigDecimal( "C_BIGINT_4" ), equalTo( new BigDecimal( 4 ) ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getBigDecimal_handles_REAL() throws SQLException {
     assertThat( testDataRow.getBigDecimal( "C_REAL_5.5" ), equalTo( new BigDecimal( 5.5f ) ) );
@@ -462,10 +463,10 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getBigDecimal( "C_DECIMAL_10.5" ), equalTo( new BigDecimal( "10.5") ) );
   }
 
-  @Ignore( "until DECIMAL is supported (no longer maps to double) (DRILL-????)" )
+  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getBigDecimal_handles_DECIMAL_2() throws SQLException {
-    assertThat( testDataRow.getBigDecimal( "C_DECIMAL_10.10" ), equalTo( new BigDecimal( "10.10") ) );  //??????resolve
+    assertThat( testDataRow.getBigDecimal( "C_DECIMAL_10.10" ), equalTo( new BigDecimal( "10.10") ) );
   }
 
 
@@ -487,13 +488,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - DATALINK;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getString_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getString( "C_TINYINT_1" ), equalTo( "1" ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getString_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getString( "C_SMALLINT_2" ), equalTo( "2" ) );
@@ -509,7 +510,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getString( "C_BIGINT_4" ), equalTo( "4" ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getString_handles_REAL() throws SQLException {
     assertThat( testDataRow.getString( "C_REAL_5.5" ), equalTo( "5.5????" ) );
@@ -646,13 +647,13 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   //   - JAVA_OBJECT;
   //
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_getObject_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getObject( "C_TINYINT_1" ), equalTo( (Object) 1 ) );
   }
 
-  @Ignore( "until TINYINT/SMALLINT implemented (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getObject_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getObject( "C_SMALLINT_2" ), equalTo( (Object) 2 ) );
@@ -668,7 +669,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getObject( "C_BIGINT_4" ), equalTo( (Object) 4L ) );
   }
 
-  @Ignore( "until REAL is implemented (DRILL-2683)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getObject_handles_REAL() throws SQLException {
     assertThat( testDataRow.getObject( "C_REAL_5.5" ), equalTo( (Object) 5.5f ) );
@@ -684,14 +685,14 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
     assertThat( testDataRow.getObject( "C_FLOAT_7.7" ), equalTo( (Object) 7.7f ) );
   }
 
-  @Ignore( "until DECIMAL is supported (no longer maps to double) (DRILL-????)" )
+  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getObject_handles_DECIMAL_1() throws SQLException {
     assertThat( testDataRow.getObject( "C_DECIMAL_10.5" ),
                 equalTo( (Object) new BigDecimal( "10.5" ) ) );
   }
 
-  @Ignore( "until DECIMAL is supported (no longer maps to double) (DRILL-????)" )
+  @Ignore( "TODO(DRILL-3367): unignore when DECIMAL is no longer DOUBLE" )
   @Test
   public void test_getObject_handles_DECIMAL_2() throws SQLException {
     assertThat( testDataRow.getObject( "C_DECIMAL_10.10" ),

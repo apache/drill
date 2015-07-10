@@ -40,8 +40,12 @@ import com.google.common.collect.Maps;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
+
+
 public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaStoragePlugin.class);
+  private static final Logger logger = getLogger(InfoSchemaStoragePlugin.class);
 
   private final InfoSchemaConfig config;
   private final DrillbitContext context;

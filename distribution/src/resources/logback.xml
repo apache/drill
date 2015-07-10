@@ -27,7 +27,7 @@
    
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      <pattern>??1 %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
       </pattern>
     </encoder>
   </appender>
@@ -67,14 +67,42 @@
 
 
   <logger name="org.apache.drill" additivity="false">
+<!--    <level value="info" /> --><level value="trace" />
+    <appender-ref ref="FILE" />
+  </logger>
+
+  <logger name="io" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="FILE" />
+  </logger>
+  <logger name="org" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="FILE" />
+  </logger>
+  <logger name="org.apache.hadoop" additivity="false">
     <level value="info" />
     <appender-ref ref="FILE" />
   </logger>
+  <logger name="org.eclipse.jetty" additivity="false">
+    <level value="info" />
+    <appender-ref ref="FILE" />
+  </logger>
+
 
   <logger name="query.logger" additivity="false">
     <level value="info" />
     <appender-ref ref="QUERY" />
     <!--     <appender-ref ref="SOCKET" /> -->
+  </logger>
+
+  <logger name="org.apache.drill.exec.expr.fn" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="FILE" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.memory.Accountor" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="FILE" />
   </logger>
 
   <!-- 
@@ -85,8 +113,9 @@
    -->
 
   <root>
-    <level value="error" />
-    <appender-ref ref="STDOUT" />
+    <level value="trace" />
+    <!--<appender-ref ref="STDOUT" />-->
   </root>
 
 </configuration>
+

@@ -31,9 +31,260 @@
     </encoder>
   </appender>
 
+
+  <logger name="parquet" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="parquet.hadoop" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="parquet.hadoop.ColumnChunkPageWriteStore" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+
   <logger name="org.apache.drill" additivity="false">
+<!--
+    <level value="fatal" />
+-->
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.BaseTestQuery" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.TestReporter" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.common" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.common.config.NestedConfig" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.common.util.PathScanner" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.client" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.compile" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.coord" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.expr" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.expr.fn.FunctionImplementationRegistry" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.local" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.memory" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.ops" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.physical" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  
+  <logger name="org.apache.drill.exec.physical.impl.partitionsender" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.planner" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.planner.logical.DrillOptiq" additivity="false">
+    <level value="error" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.record" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.rpc" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.server" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.server.Drillbit" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+
+  <logger name="org.apache.drill.exec.store" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.StoragePluginRegistry" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.StorageFactory" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.dfs" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.ischema" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.parquet" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.schedule" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.store.test" additivity="false">
+    <level value="trac" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.test.generated" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.vector.BaseValueVector" additivity="false">
+    <level value="warning" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.util" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.vector" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.work" additivity="false">
+    <level value="trace" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.work.foreman" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.work.fragment" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.work.fragment.AbstractStatusReporter" additivity="false">
+    <level value="warn" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="org.apache.drill.exec.work.batch" additivity="false">
+    <level value="info" />
+    <appender-ref ref="SOCKET" />
+    <appender-ref ref="STDOUT" />
   </logger>
 
   <logger name="query.logger" additivity="false">

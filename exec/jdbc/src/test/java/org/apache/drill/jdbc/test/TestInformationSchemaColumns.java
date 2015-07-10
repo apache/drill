@@ -40,7 +40,7 @@ import static java.sql.ResultSetMetaData.columnNullable;
 import java.sql.SQLException;
 import java.sql.Types;
 
-// NOTE: TempInformationSchemaColumnsTest and DatabaseMetaDataGetColumnsTest
+// NOTE: TestInformationSchemaColumns and DatabaseMetaDataGetColumnsTest
 // have identical sections.  (Cross-maintain them for now; factor out later.)
 
 // TODO:  Review nullability (NULLABLE and IS_NULLABLE columns):
@@ -208,7 +208,9 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertTrue( util.next() );
     assertTrue( "Error setting schema for test: " + util.getString( 2 ), util.getBoolean( 1 ) );
 
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2470): Adjust when TINYINT is implemented:
+    // TODO(DRILL-2470): Adjust when SMALLINT is implemented:
+    // TODO(DRILL-2683): Adjust when REAL is implemented:
     util = stmt.executeQuery(
         ""
         +   "CREATE OR REPLACE VIEW " + VIEW_NAME + " AS SELECT "
@@ -265,13 +267,14 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
     mdrOptBOOLEAN        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBOOLEAN" );
 
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2470): Uncomment when TINYINT is implemented:
     //mdrReqTINYINT        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqTINYINT" );
+    // TODO(DRILL-2470): Uncomment when SMALLINT is implemented:
     //mdrOptSMALLINT       = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptSMALLINT" );
     mdrReqINTEGER        = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqINTEGER" );
     mdrOptBIGINT         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptBIGINT" );
 
-    // TODO(DRILL-2470): re-enable TINYINT, SMALLINT, and REAL.
+    // TODO(DRILL-2683): Uncomment when REAL is implemented:
     //mdrOptREAL           = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptREAL" );
     mdrOptFLOAT          = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrOptFLOAT" );
     mdrReqDOUBLE         = setUpRow( VIEW_SCHEMA, VIEW_NAME, "mdrReqDOUBLE" );
@@ -437,7 +440,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_TABLE_CATALOG_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 1 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 1 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -472,7 +476,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_TABLE_SCHEMA_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "TABLE_SCHEMA" ), equalTo( "hive_test.default" ) );
   }
@@ -486,7 +490,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_TABLE_SCHEMA_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 2 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 2 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -527,7 +532,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_TABLE_NAME_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 3 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 3 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -562,7 +568,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   // Not bothering with other _local_view_ test columns for TABLE_SCHEM.
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_NAME_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "COLUMN_NAME" ), equalTo( "listtype" ) );
   }
@@ -576,7 +582,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_NAME_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 4 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 4 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -608,13 +615,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getInt( "ORDINAL_POSITION" ), equalTo( 1 ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getInt( "ORDINAL_POSITION" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getInt( "ORDINAL_POSITION" ), equalTo( 3 ) );
@@ -630,7 +637,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getInt( "ORDINAL_POSITION" ), equalTo( 5 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_ORDINAL_POSITION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getInt( "ORDINAL_POSITION" ), equalTo( 6 ) );
@@ -647,7 +654,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_ORDINAL_POSITION_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getInt( "ORDINAL_POSITION" ), equalTo( 14 ) );
   }
@@ -693,7 +700,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   // Not bothering with other _local_view_ test columns for COLUMN_DEFAULT.
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_COLUMN_DEFAULT_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "COLUMN_DEFAULT" ), nullValue() );
   }
@@ -707,7 +714,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_DEFAULT_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 6 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 6 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -741,14 +749,14 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
                 mdrOptBOOLEAN.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 mdrReqTINYINT.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -767,7 +775,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
                 mdrOptBIGINT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -859,20 +867,20 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 mdrReqARRAY.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_IS_NULLABLE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
                 mdrReqMAP.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( mdrUnkSTRUCT.getString( "IS_NULLABLE" ), equalTo( "YES" ) );
@@ -880,7 +888,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrUnkSTRUCT.getString( "IS_NULLABLE" ), equalTo( "NO" ) );
   }
 
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   @Test
   public void test_IS_NULLABLE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( "ResultSetMetaData.column...Null... nullability code:",
@@ -897,7 +905,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_IS_NULLABLE_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 7 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 7 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -929,13 +938,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "DATA_TYPE" ), equalTo( "BOOLEAN" ) );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "DATA_TYPE" ), equalTo( "TINYINT" ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "DATA_TYPE" ), equalTo( "SMALLINT" ) );
@@ -951,7 +960,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "DATA_TYPE" ), equalTo( "BIGINT" ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "DATA_TYPE" ), equalTo( "REAL" ) );
@@ -992,7 +1001,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptVARBINARY_16.getString( "DATA_TYPE" ), equalTo( "BINARY VARYING" ) );
   }
 
-  @Ignore( "until BINARY is actually BINARY and not VARBINARY (DRILL-xxxx)" )
+  @Ignore( "TODO(DRILL-3368): unignore when BINARY is implemented enough" )
   @Test
   public void test_DATA_TYPE_hasRightValue_mdrOptBINARY_1048576() throws SQLException {
     assertThat( mdrOptBINARY_1048576.getString( "DATA_TYPE" ), equalTo( "BINARY VARYING" ) ); // ?? current
@@ -1032,25 +1041,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "DATA_TYPE" ), equalTo( "ARRAY" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( mdrReqMAP.getString( "DATA_TYPE" ), equalTo( "MAP" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( mdrUnkSTRUCT.getString( "DATA_TYPE" ), equalTo( "STRUCT" ) );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATA_TYPE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( mdrUnkUnion.getString( "DATA_TYPE" ), equalTo( "OTHER" ) );
     fail( "Expected value is not resolved yet." );
@@ -1063,7 +1072,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_DATA_TYPE_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 8 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 8 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -1095,13 +1105,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
@@ -1117,7 +1127,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
@@ -1194,25 +1204,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "CHARACTER_MAXIMUM_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "CHARACTER_MAXIMUM_LENGTH"), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_MAXIMUM_LENGTH_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "CHARACTER_MAXIMUM_LENGTH"), nullValue() );
   }
@@ -1255,19 +1265,19 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptBIGINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "CHARACTER_OCTET_LENGTH" ), nullValue() );
@@ -1278,7 +1288,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTEGER, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "CHARACTER_OCTET_LENGTH" ), nullValue() );
@@ -1361,25 +1371,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "CHARACTER_OCTET_LENGTH" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_CHARACTER_OCTET_LENGTH_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "CHARACTER_OCTET_LENGTH"), nullValue() );
   }
@@ -1422,13 +1432,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "NUMERIC_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "NUMERIC_PRECISION" ), equalTo( 8 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "NUMERIC_PRECISION" ), equalTo( 16 ) );
@@ -1444,7 +1454,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "NUMERIC_PRECISION" ), equalTo( 64 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "NUMERIC_PRECISION" ), equalTo( 24 ) );
@@ -1521,25 +1531,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "NUMERIC_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "NUMERIC_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NUMERIC_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "NUMERIC_PRECISION" ), nullValue() );
   }
@@ -1582,13 +1592,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "NUMERIC_PRECISION_RADIX" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "NUMERIC_PRECISION_RADIX" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "NUMERIC_PRECISION_RADIX" ), equalTo( 2 ) );
@@ -1604,7 +1614,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "NUMERIC_PRECISION_RADIX" ), equalTo( 2 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "NUMERIC_PRECISION_RADIX" ), equalTo( 2 ) );
@@ -1681,25 +1691,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "NUMERIC_PRECISION_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "NUMERIC_PRECISION_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NUMERIC_PRECISION_RADIX" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_PRECISION_RADIX_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "NUMERIC_PRECISION_RADIX" ), nullValue() );
   }
@@ -1742,13 +1752,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "NUMERIC_SCALE" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_NUMERIC_SCALE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "NUMERIC_SCALE" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_NUMERIC_SCALE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "NUMERIC_SCALE" ), equalTo( 0 ) );
@@ -1764,7 +1774,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "NUMERIC_SCALE" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_NUMERIC_SCALE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "NUMERIC_SCALE" ), nullValue() );
@@ -1841,25 +1851,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_SCALE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "NUMERIC_SCALE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_SCALE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "NUMERIC_SCALE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_SCALE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "NUMERIC_SCALE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_NUMERIC_SCALE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "NUMERIC_SCALE" ), nullValue() );
   }
@@ -1902,13 +1912,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "DATETIME_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "DATETIME_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "DATETIME_PRECISION" ), nullValue() );
@@ -1924,7 +1934,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "DATETIME_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "DATETIME_PRECISION" ), nullValue() );
@@ -1983,14 +1993,14 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqTIME, "DATETIME_PRECISION" ), equalTo( 0 ) );
   }
 
-  @Ignore( "until datetime precision is implemented" )
+  @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrOptTIME_7() throws SQLException {
     assertThat( getIntOrNull( mdrOptTIME_7, "DATETIME_PRECISION" ), equalTo( 7 ) );
   }
 
   @Test
-  @Ignore( "until datetime precision is implemented" )
+  @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
   public void test_DATETIME_PRECISION_hasRightValue_mdrOptTIMESTAMP() throws SQLException {
     // 6 is default datetime precision for TIMESTAMP.
     assertThat( getIntOrNull( mdrOptTIMESTAMP, "DATETIME_PRECISION" ), equalTo( 6 ) );
@@ -2038,7 +2048,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_3D_Mi, "DATETIME_PRECISION" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets wrong value (DRILL-3244)" )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrReqINTERVAL_2D_S5() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_2D_S5, "DATETIME_PRECISION" ), equalTo( 5 ) );
@@ -2068,7 +2078,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_1H_Mi, "DATETIME_PRECISION" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets start unit prec. (DRILL-3244) " )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrReqINTERVAL_H_S3() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3H_S1, "DATETIME_PRECISION" ), equalTo( 1 ) );
@@ -2107,7 +2117,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S, "DATETIME_PRECISION" ), equalTo( 6 ) );
   }
 
-  @Ignore( "until fixed:  fractional secs. prec. gets start unit prec. (DRILL-3244) " )
+  @Ignore( "TODO(DRILL-3244): unignore when fractional secs. prec. is right" )
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrReqINTERVAL_3S1() throws SQLException {
     assertThat( getIntOrNull( mdrReqINTERVAL_3S1, "DATETIME_PRECISION" ), equalTo( 1 ) );
@@ -2120,25 +2130,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATETIME_PRECISION_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "DATETIME_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATETIME_PRECISION_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "DATETIME_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATETIME_PRECISION_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "DATETIME_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_DATETIME_PRECISION_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "DATETIME_PRECISION" ), nullValue() );
   }
@@ -2181,13 +2191,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBOOLEAN.getString( "INTERVAL_TYPE" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_INTERVAL_TYPE_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( mdrReqTINYINT.getString( "INTERVAL_TYPE" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_INTERVAL_TYPE_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( mdrOptSMALLINT.getString( "INTERVAL_TYPE" ), nullValue() );
@@ -2203,7 +2213,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( mdrOptBIGINT.getString( "INTERVAL_TYPE" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_INTERVAL_TYPE_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( mdrOptREAL.getString( "INTERVAL_TYPE" ), nullValue() );
@@ -2352,25 +2362,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_TYPE_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( mdrReqARRAY.getString( "INTERVAL_TYPE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_TYPE_hasRightValue_tbdMAP() throws SQLException {
     assertThat( mdrReqMAP.getString( "INTERVAL_TYPE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_TYPE_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "INTERVAL_TYPE" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_TYPE_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "INTERVAL_TYPE" ), nullValue() );
   }
@@ -2382,7 +2392,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_TYPE_hasRightTypeString() throws SQLException {
-    assertThat( rowsMetadata.getColumnTypeName( 15 ), equalTo( "VARCHAR" ) );
+    assertThat( rowsMetadata.getColumnTypeName( 15 ),
+                equalTo( "CHARACTER VARYING" ) );
   }
 
   @Test
@@ -2413,13 +2424,13 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBOOLEAN, "INTERVAL_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until TINYINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when TINYINT is implemented" )
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqTINYINT() throws SQLException {
     assertThat( getIntOrNull( mdrReqTINYINT, "INTERVAL_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until SMALLINT is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrOptSMALLINT() throws SQLException {
     assertThat( getIntOrNull( mdrOptSMALLINT, "INTERVAL_PRECISION" ), nullValue() );
@@ -2435,7 +2446,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
     assertThat( getIntOrNull( mdrOptBIGINT, "INTERVAL_PRECISION" ), nullValue() );
   }
 
-  @Ignore( "until REAL is implemented. (DRILL-2470)" )
+  @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrOptREAL() throws SQLException {
     assertThat( getIntOrNull( mdrOptREAL, "INTERVAL_PRECISION" ), nullValue() );
@@ -2582,25 +2593,25 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_PRECISION_hasRightValue_tdbARRAY() throws SQLException {
     assertThat( getIntOrNull( mdrReqARRAY, "INTERVAL_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_PRECISION_hasRightValue_tbdMAP() throws SQLException {
     assertThat( getIntOrNull( mdrReqMAP, "INTERVAL_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_PRECISION_hasRightValue_tbdSTRUCT() throws SQLException {
     assertThat( getIntOrNull( mdrUnkSTRUCT, "INTERVAL_PRECISION" ), nullValue() );
   }
 
   @Test
-  @Ignore( "until we have test plugin supporting all needed types (DRILL-3253)." )
+  @Ignore( "TODO(DRILL-3253): unignore when we have all-types test storage plugin" )
   public void test_INTERVAL_PRECISION_hasRightValue_tbdUnion() throws SQLException {
     assertThat( getIntOrNull( mdrUnkUnion, "INTERVAL_PRECISION" ), nullValue() );
   }

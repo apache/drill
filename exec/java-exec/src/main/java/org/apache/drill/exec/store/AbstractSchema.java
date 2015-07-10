@@ -53,6 +53,11 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   @Override
+  public String toString() {
+    return super.toString() + "[schemaPath = " + schemaPath + ", name = " + name + "]";
+  }
+
+  @Override
   public Iterable<String> getSubPartitions(String table,
                                            List<String> partitionColumns,
                                            List<String> partitionValues

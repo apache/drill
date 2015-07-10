@@ -64,6 +64,7 @@ public class FunctionConverter {
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
 
   private CompilationUnit get(Class<?> c) throws IOException{
+    logger.trace( "Getting compilation unit containing {}.", c /* includes "class" */ );
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
     path = path.replace(".", FileUtils.separator);
@@ -74,10 +75,12 @@ public class FunctionConverter {
     }
 
     URL u = Resources.getResource(c, path);
+    logger.trace( "Parsing {} for {}.", u, c );
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
     try (InputStream is = supplier.getInput()) {
       if (is == null) {
-        throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
+        throw new IOException(String.format(
+            "Failure locating source code for %s; tried to read from classpath resource %s", c, path));
       }
       String body = IO.toString(is);
 
@@ -88,7 +91,8 @@ public class FunctionConverter {
         functionUnits.put(path, cu);
         return cu;
       } catch (CompileException e) {
-        logger.warn("Failure while parsing function class:\n{}", body, e);
+        logger.warn("Failure parsing function class {} from {}: {} (stripped version):\n{}",
+                     c.getName(), u, e.getMessage(), body, e);
         return null;
       }
 

@@ -85,7 +85,9 @@ public class CodeGenerator<T> {
 
     this.generatedCode = w.getCode().toString();
     this.generifiedCode = generatedCode.replaceAll(this.className, "GenericGenerated");
-
+    //?????? Why using regular-expression replacement without encoding ("escaping")?
+    ///????? Why using regular-expression replacement instead of presumably
+    //  faster plain-string replacement?
   }
 
   public String generateAndGet() throws IOException {

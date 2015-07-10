@@ -1,0 +1,9 @@
+{
+  "storage":{
+    someStoragePluginConfigurationName: {
+      type: "TempTypesMockStoragePluginConfig",
+      enabled: true,
+      someStringParameterSimpleName: "Some string value."
+    }
+  }
+}

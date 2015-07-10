@@ -40,6 +40,11 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
+  public String toString() {
+    return super.toString() + "[innerSchema = " + innerSchema + "]";
+  }
+
+  @Override
   public boolean showInInformationSchema() {
     return false;
   }

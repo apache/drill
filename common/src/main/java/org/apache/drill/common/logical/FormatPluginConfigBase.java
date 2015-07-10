@@ -28,10 +28,14 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
 
 
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
-    List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
-    Class<?>[] sec = PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
-    logger.debug("Adding Format Plugin Configs including {}", (Object) sec );
-    return sec;
+    List<String> packages =
+        config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
+    Class<?>[] pluginClasses =
+        PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
+    for ( Class<?> pluginClass : pluginClasses ) {
+      logger.debug("Adding format plugin configuration {}", (Object) pluginClass );
+    }
+    return pluginClasses;
   }
 
   @Override

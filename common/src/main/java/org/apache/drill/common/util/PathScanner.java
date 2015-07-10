@@ -50,7 +50,8 @@ public class PathScanner {
   private static final Object SYNC = new Object();
   static volatile Reflections REFLECTIONS = null;
 
-  public static <A extends Annotation, T> Map<A, Class<? extends T>> scanForAnnotatedImplementations(Class<A> annotationClass, Class<T> baseClass, final List<String> scanPackages) {
+  public static <A extends Annotation, T> Map<A, Class<? extends T>> scanForAnnotatedImplementations(
+      Class<A> annotationClass, Class<T> baseClass, final List<String> scanPackages) {
     Collection<Class<? extends T>> providerClasses = scanForImplementations(baseClass, scanPackages);
 
     Map<A, Class<? extends T>> map = new HashMap<A, Class<? extends T>>();
@@ -68,7 +69,11 @@ public class PathScanner {
 
   private static Reflections getReflections() {
     if (REFLECTIONS == null) {
-      REFLECTIONS = new Reflections(new ConfigurationBuilder().setUrls(getMarkedPaths()).setScanners(subTypeScanner, annotationsScanner, resourcesScanner));
+      REFLECTIONS =
+          new Reflections(
+              new ConfigurationBuilder()
+                  .setUrls(getMarkedPaths())
+                  .setScanners(subTypeScanner, annotationsScanner, resourcesScanner));
     }
     return REFLECTIONS;
   }
@@ -95,46 +100,75 @@ public class PathScanner {
         return classes;
       }
     } finally{
-      logger.debug("Classpath scanning took {}ms", w.elapsed(TimeUnit.MILLISECONDS));
+      logger.debug("Implementations scanning took {} ms for {}.",
+                   w.elapsed(TimeUnit.MILLISECONDS), baseClass.getName());
     }
   }
 
   private static Collection<URL> getMarkedPaths() {
-    Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE, true);
+    Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, true);
     return urls;
   }
 
   public static Collection<URL> getConfigURLs() {
-    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE, false);
+    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, false);
   }
 
-  public static Set<URL> forResource(String name, boolean stripName, ClassLoader... classLoaders) {
-    final Set<URL> result = Sets.newHashSet();
+  /**
+   * Gets URLs of any classpath resources with given resource pathname.
+   *
+   * @param  resourcePathname  resource pathname of classpath resource instances
+   *           to scan for (in specified class loaders' classpath roots)
+   *           <br />TODO:  Doc.  Is it relative, absolute, or either?  If
+   *                 relative allowed, relative to what (root only or something
+   *                 else)?
+   * @param  returnRootPathname  whether to collect class path root portion of
+   *           URL for each resource instead of full URL of each resource
+   * @param  classLoaders  set of class loaders in which to look up resource;
+   *           none (empty array) to specify to use current thread's context
+   *           class loader and {@link Reflections}'s class loader
+   * @returns  ...; empty set if none
+   */
+  public static Set<URL> forResource(final String resourcePathname,
+                                     final boolean returnRootPathname,
+                                     final ClassLoader... classLoaders) {
+    logger.debug("Scanning classpath for resources with pathname \"{}\".",
+                 resourcePathname);
+    final Set<URL> resultUrlSet = Sets.newHashSet();
 
-    final ClassLoader[] loaders = ClasspathHelper.classLoaders(classLoaders);
-    final String resourceName = name;
+    final ClassLoader[] netLoaders = ClasspathHelper.classLoaders(classLoaders);
+    for (ClassLoader classLoader : netLoaders) {
+      try {
+        final Enumeration<URL> resourceUrls = classLoader.getResources(resourcePathname);
+        while (resourceUrls.hasMoreElements()) {
+          final URL resourceUrl = resourceUrls.nextElement();
+          logger.trace( "- found a(n) {} at {}.", resourcePathname, resourceUrl );
 
-    for (ClassLoader classLoader : loaders) {
-        try {
-            final Enumeration<URL> urls = classLoader.getResources(resourceName);
-            while (urls.hasMoreElements()) {
-                final URL url = urls.nextElement();
-
-                int index = url.toExternalForm().lastIndexOf(resourceName);
-                if (index != -1 && stripName) {
-                    result.add(new URL(url.toExternalForm().substring(0, index)));
-                } else {
-                    result.add(url);
-                }
-            }
-        } catch (IOException e) {
-            if (Reflections.log != null) {
-                Reflections.log.error("error getting resources for package " + name, e);
-            }
+          // NOTE:  This lastIndexOf won't match right if resourcePathname
+          // contains any character that has to be encoded when represented in
+          // a URI (e.g., ' ', '%', etc.).  (See DRILL-2696.)
+          int index = resourceUrl.toExternalForm().lastIndexOf(resourcePathname);
+          if (index != -1 && returnRootPathname) {
+            final URL classpathRootUrl =
+                new URL(resourceUrl.toExternalForm().substring(0, index));
+            resultUrlSet.add(classpathRootUrl);
+            logger.debug( "- collected resource's classpath root URL {}.",
+                          classpathRootUrl );
+          } else {
+            resultUrlSet.add(resourceUrl);
+            logger.debug( "- collected resource URL {}.", resourceUrl );
+          }
         }
+      } catch (IOException e) {
+        if (Reflections.log != null) {
+          Reflections.log.error("Error scanning for resources named "
+                                 + resourcePathname,
+                                 e);
+        }
+      }
     }
 
-    return result;
+    return resultUrlSet;
   }
 
 }

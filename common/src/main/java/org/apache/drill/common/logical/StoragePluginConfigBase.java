@@ -23,14 +23,21 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 
+import org.slf4j.Logger;
+import static org.slf4j.LoggerFactory.getLogger;
+
 public abstract class StoragePluginConfigBase extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginConfigBase.class);
+  private static final Logger logger = getLogger(StoragePluginConfigBase.class);
 
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
-    List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
-    Class<?>[] sec = PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
-    logger.debug("Adding Storage Engine Configs including {}", (Object) sec );
-    return sec;
+    List<String> packages =
+        config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
+    Class<?>[] pluginClasses =
+        PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
+    for (Class<?> pluginClass : pluginClasses) {
+      logger.debug("Adding storage plugin configuration {}", (Object) pluginClass );
+    }
+    return pluginClasses;
   }
 
   @Override
