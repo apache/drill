@@ -304,7 +304,7 @@ public class QueryManager {
   void writeFinalProfile(UserException ex) {
     try {
       // TODO(DRILL-2362) when do these ever get deleted?
-      profilePStore.put(stringQueryId, getQueryProfile(ex));
+      profilePStore.put(stringQueryId, getQueryProfile(ex, true));
     } catch (Exception e) {
       logger.error("Failure while storing Query Profile", e);
     }
@@ -321,10 +321,10 @@ public class QueryManager {
   }
 
   public QueryProfile getQueryProfile() {
-    return getQueryProfile(null);
+    return getQueryProfile(null, false);
   }
 
-  private QueryProfile getQueryProfile(UserException ex) {
+  private QueryProfile getQueryProfile(final UserException ex, final boolean addNames) {
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
         .setQuery(runQuery.getPlan())
         .setUser(foreman.getQueryContext().getQueryUserName())
@@ -360,7 +360,7 @@ public class QueryManager {
         for (int v = 0; v < minorMap.allocated.length; v++) {
           if (minorMap.allocated[v]) {
             final FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
-            fb.addMinorFragmentProfile(data.getProfile());
+            fb.addMinorFragmentProfile(data.getProfile(addNames));
           }
         }
         profileBuilder.addFragmentProfile(fb);

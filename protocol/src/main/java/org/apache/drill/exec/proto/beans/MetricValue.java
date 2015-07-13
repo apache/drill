@@ -50,6 +50,7 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
     private int metricId;
     private long longValue;
     private double doubleValue;
+    private String metricName;
 
     public MetricValue()
     {
@@ -94,6 +95,19 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
     public MetricValue setDoubleValue(double doubleValue)
     {
         this.doubleValue = doubleValue;
+        return this;
+    }
+
+    // metricName
+
+    public String getMetricName()
+    {
+        return metricName;
+    }
+
+    public MetricValue setMetricName(String metricName)
+    {
+        this.metricName = metricName;
         return this;
     }
 
@@ -160,6 +174,9 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
                 case 3:
                     message.doubleValue = input.readDouble();
                     break;
+                case 4:
+                    message.metricName = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -177,6 +194,9 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
 
         if(message.doubleValue != 0)
             output.writeDouble(3, message.doubleValue, false);
+
+        if(message.metricName != null)
+            output.writeString(4, message.metricName, false);
     }
 
     public String getFieldName(int number)
@@ -186,6 +206,7 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
             case 1: return "metricId";
             case 2: return "longValue";
             case 3: return "doubleValue";
+            case 4: return "metricName";
             default: return null;
         }
     }
@@ -202,6 +223,7 @@ public final class MetricValue implements Externalizable, Message<MetricValue>, 
         __fieldMap.put("metricId", 1);
         __fieldMap.put("longValue", 2);
         __fieldMap.put("doubleValue", 3);
+        __fieldMap.put("metricName", 4);
     }
     
 }
