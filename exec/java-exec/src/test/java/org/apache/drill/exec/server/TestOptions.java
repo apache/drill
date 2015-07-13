@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
 public class TestOptions extends BaseTestQuery{
@@ -37,5 +38,18 @@ public class TestOptions extends BaseTestQuery{
         "ALTER SESSION set `planner.disable_exchanges` = true;" +
         "select * from sys.options;"
         );
+  }
+
+  @Test // DRILL-3122
+  public void checkChangedColumn() throws Exception {
+    test(String.format("ALTER session SET `%s` = %d;", ExecConstants.SLICE_TARGET,
+      ExecConstants.SLICE_TARGET_DEFAULT));
+    testBuilder()
+        .sqlQuery(String.format("SELECT status FROM sys.options WHERE name = '%s' AND type = 'SESSION'", ExecConstants.SLICE_TARGET))
+        .unOrdered()
+        .baselineColumns("status")
+        .baselineValues("DEFAULT")
+        .build()
+        .run();
   }
 }
