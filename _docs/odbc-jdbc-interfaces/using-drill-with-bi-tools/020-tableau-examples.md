@@ -35,7 +35,7 @@ In this step, we will create a DSN that accesses a Hive table.
      The *MapR Drill ODBC Driver DSN Setup* window appears.
   4. Enter a name for the data source.
   5. Specify the connection type based on your requirements. The connection type provides the DSN access to Drill Data Sources.  
-In this example, we are connecting to a Zookeeper Quorum.
+In this example, we are connecting to a Zookeeper Quorum. Verify that the Cluster ID that you use matches the Cluster ID in `<DRILL_HOME>/conf/drill-override.conf`.
   6. In the **Schema** field, select the Hive schema.
      In this example, the Hive schema is named hive.default.
      ![]({{ site.baseurl }}/docs/img/Hive_DSN.png)
@@ -225,6 +225,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
      The *Generic ODBC Connection* dialog appears.
   3. In the *Connect Using* section, select the DSN that connects to the data source.  
      In this example, Files-DrillDataSources was selected.
+     If you do not see the DSN, close and re-open Tableau.
   4. In the *Schema* section, select the schema associated with the data source.  
      In this example, dfs.default was selected.
   5. In the *Table* section, select **Custom SQL**.
@@ -238,7 +239,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
      {% include startnote.html %}The path to the file depends on its location in your file system.{% include endnote.html %} 
 
   7. Click **OK** to complete the connection.  
-     ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)
+     ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)  
   8. In the *Data Connection dialog*, click **Connect Live**.
 
 #### Step 3. Visualize the Data in Tableau

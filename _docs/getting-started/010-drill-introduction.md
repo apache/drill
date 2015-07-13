@@ -14,7 +14,7 @@ with existing Apache Hive and Apache HBase deployments.
 Many enhancements in Apache Drill 1.1 include the following key features:
 
 * [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)
-* [Automatic partitioning]({{site.baseurl}}) using the new [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in the CTAS command
+* [Partitioning data]({{site.baseurl}}) using the new [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause) clause in the CTAS command
 * [Delegated Hive impersonation]({{site.baseurl}}/docs/configuring-user-impersonation-with-hive-authorization/)
 * Support for UNION and UNION ALL and better optimized plans that include UNION.
 

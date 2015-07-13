@@ -523,20 +523,21 @@ Is the time 2:00 PM?
 
 ## UNIX_TIMESTAMP
 
- Returns UNIX Epoch time, which is the number of seconds elapsed since January 1, 1970.
+Returns UNIX Epoch time, which is the number of seconds elapsed since January 1, 1970.
 
- ### UNIX_TIMESTAMP Syntax
+### UNIX_TIMESTAMP Syntax
 
-UNIX_TIMESTAMP()
-UNIX_TIMESTAMP(string date)
-UNIX_TIMESTAMP(string date, string pattern)
+    UNIX_TIMESTAMP()  
+    UNIX_TIMESTAMP(string date)  
+    UNIX_TIMESTAMP(string date, string pattern)  
 
 These functions perform the following operations, respectively:
 
-* Gets current Unix timestamp in seconds if given no arguments. 
-* Converts the time string in format yyyy-MM-dd HH:mm:ss to a Unix timestamp in seconds using the default timezone and locale.
-* Converts the time string with the given pattern to a Unix time stamp in seconds.
+* Gets current Unix timestamp in seconds if given no arguments.  
+* Converts the time string in format yyyy-MM-dd HH:mm:ss to a Unix timestamp in seconds using the default timezone and locale.  
+* Converts the time string with the given pattern to a Unix time stamp in seconds.  
 
+```
 SELECT UNIX_TIMESTAMP FROM sys.version;
 +-------------+
 |   EXPR$0    |
@@ -568,3 +569,4 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM s
 | 1432912733  |
 +-------------+
 1 row selected (0.171 seconds)
+```

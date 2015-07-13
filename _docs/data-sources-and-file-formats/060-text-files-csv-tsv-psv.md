@@ -29,29 +29,15 @@ You can also improve performance by casting the VARCHAR data to INT, FLOAT, DATE
 Using a distributed file system, such as HDFS, instead of a local file system to query the files also improves performance because currently Drill does not split files on block splits.
 
 ## Configuring Drill to Read Text Files
-In the storage plugin configuration, you can set the following attributes that affect how Drill reads CSV, TSV, PSV (comma-, tab-, pipe-separated) files.  
-
-* String lineDelimiter = "\n";  
-  One or more characters used to denote a new record. Allows reading files with windows line endings.  
-* char fieldDelimiter = ',';  
-  A single character used to separate each value.  
-* char quote = '"';  
-  A single character used to start/end a value enclosed in quotation marks.  
-* char escape = '"';  
-  A single character used to escape a quototation mark inside of a value.  
-* char comment = '#';  
-  A single character used to denote a comment line.  
-* boolean skipFirstLine = false;  
-  Set to true to avoid reading headers as data. 
-
-Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes:
+In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/docs/plugin-configuration-basics/#list-of-attributes-and-definitions) that affect how Drill reads CSV, TSV, PSV (comma-, tab-, pipe-separated) files:  
 
 * comment  
 * escape  
-* fieldDeliimiter  
+* deliimiter  
 * quote  
 * skipFirstLine
 
+Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes. 
 
 ## Examples of Querying Text Files
 The examples in this section show the results of querying CSV files that use and do not use a header, include comments, and use an escape character:

@@ -104,9 +104,12 @@ Drill performs the following actions, as shown in the complete [CTAS command exa
 
 ## Analyzing JSON
 
-Generally, you query JSON files using the following syntax, which includes a table alias. The alias is typically required for querying complex data:
+Generally, you query JSON files using the following syntax, which includes a table alias. The alias is sometimes required for querying complex data. Because of the ambiguity between y.z where y could be a column or a table,
+Drill currently explicitly requires a table prefix for referencing a field
+inside another field (t.y.z).  This isn't required in the case y, y[z] or
+y[z].x because these references are not ambiguous. Observe the following guidelines:
 
-* Dot notation to drill down into a JSON map.
+* Use dot notation to drill down into a JSON map.
 
         SELECT t.level1.level2. . . . leveln FROM <storage plugin location>`myfile.json` t
 
@@ -120,7 +123,7 @@ Generally, you query JSON files using the following syntax, which includes a tab
 
 Drill returns null when a document does not have the specified map or level.
 
-Using the following techniques, you can query complex, nested JSON:
+Use the following techniques to query complex, nested JSON:
 
 * Flatten nested data
 * Generate key/value pairs for loosely structured data

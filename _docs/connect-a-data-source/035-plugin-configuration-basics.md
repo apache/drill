@@ -94,13 +94,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"formats" . . . "delimiter"</td>
     <td>"\t"<br>","</td>
     <td>format-dependent</td>
-    <td>One or more characters that separate records in a delimited text file, such as CSV. Use a 4-digit hex ascii code syntax \uXXXX for a non-printable delimiter. </td>
-  </tr>
-  <tr>
-    <td>"formats" . . . "fieldDelimiter"</td>
-    <td>","</td>
-    <td>no</td>
-    <td>A single character that separates each value in a column of a delimited text file.</td>
+    <td>One or more characters that serve as a record seperator in a delimited text file, such as CSV. Use a 4-digit hex ascii code syntax \uXXXX for a non-printable delimiter. </td>
   </tr>
   <tr>
     <td>"formats" . . . "quote"</td>
@@ -112,7 +106,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"formats" . . . "escape"</td>
     <td>"`"</td>
     <td>no</td>
-    <td>A single character that escapes the quote character.</td>
+    <td>A single character that escapes a quotation mark inside a value.</td>
   </tr>
   <tr>
     <td>"formats" . . . "comment"</td>
@@ -124,7 +118,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"formats" . . . "skipFirstLine"</td>
     <td>true</td>
     <td>no</td>
-    <td>To include or omits the header when reading a delimited text file.
+    <td>To include or omit the header when reading a delimited text file. Set to true to avoid reading headers as data.
     </td>
   </tr>
 </table>
@@ -141,7 +135,7 @@ You can use the following attributes in the `formats` area of the storage plugin
 * quote  
 * skipFirstLine
 
-For more information and examples of using formats for text files, see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/)
+For more information and examples of using formats for text files, see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).
 
 ## Using Other Attributes
 
