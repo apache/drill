@@ -149,8 +149,7 @@ class TableBuilder {
     return "-";
   }
 
-  @Override
-  public String toString() {
+  public String build() {
     String rv;
     rv = sb.append("\n</table>").toString();
     sb = null;

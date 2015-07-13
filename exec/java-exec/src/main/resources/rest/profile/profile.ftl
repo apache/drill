@@ -71,7 +71,7 @@
         </div>
         <button type="submit" class="btn btn-default">Re-run query</button>
       </form>
-      <form action="/profiles/cancel/${model.id}" method="GET">
+      <form action="/profiles/cancel/${model.queryId}" method="GET">
         <button type="link" class="btn btn-default">Cancel query</button>
       </form>
     </div>
@@ -82,8 +82,8 @@
       ${model.getProfile().error?trim}
       </pre>
       </p>
-      <p>ErrorId: ${model.getProfile().errorNode}</p>
-      <p>Failure node:  ${model.getProfile().errorId}</p> 
+      <p>Failure node: ${model.getProfile().errorNode}</p>
+      <p>Error ID: ${model.getProfile().errorId}</p>
       
         <h3 class="panel-title">
           <a data-toggle="collapse" href="#error-verbose">
