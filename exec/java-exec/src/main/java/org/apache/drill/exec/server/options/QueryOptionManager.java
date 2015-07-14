@@ -22,12 +22,11 @@ import java.util.HashMap;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 public class QueryOptionManager extends InMemoryOptionManager {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
 
   public QueryOptionManager(OptionManager sessionOptions) {
     super(sessionOptions, new HashMap<String, OptionValue>());
   }
-
 
   @Override
   public OptionList getOptionList() {
@@ -36,11 +35,9 @@ public class QueryOptionManager extends InMemoryOptionManager {
     return list;
   }
 
-
   @Override
   boolean supportsOption(OptionValue value) {
     return value.type == OptionType.QUERY;
   }
-
 
 }

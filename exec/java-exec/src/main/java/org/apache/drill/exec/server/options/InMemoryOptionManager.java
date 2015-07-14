@@ -50,6 +50,12 @@ public abstract class InMemoryOptionManager extends FallbackOptionManager {
     return options.values();
   }
 
+  /**
+   * Check (e.g. option type) to see if implementations of this manager support this option.
+   *
+   * @param value the option value
+   * @return true iff the option value is supported
+   */
   abstract boolean supportsOption(OptionValue value);
 
 }

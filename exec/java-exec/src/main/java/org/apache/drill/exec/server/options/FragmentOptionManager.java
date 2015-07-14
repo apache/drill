@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class FragmentOptionManager extends InMemoryOptionManager {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentOptionManager.class);
 
   public FragmentOptionManager(OptionManager systemOptions, OptionList options) {
     super(systemOptions, getMapFromOptionList(options));

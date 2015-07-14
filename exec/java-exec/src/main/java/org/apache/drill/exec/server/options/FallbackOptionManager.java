@@ -48,13 +48,32 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
     }
   }
 
+  /**
+   * Gets the option values managed by this manager as an iterable.
+   *
+   * @return iterable of option values
+   */
   abstract Iterable<OptionValue> optionIterable();
+
+  /**
+   * Gets the option value from this manager without falling back.
+   *
+   * @param name the option name
+   * @return the option value, or null if the option does not exist locally
+   */
   abstract OptionValue getLocalOption(String name);
+
+  /**
+   * Sets the option value for this manager without falling back.
+   *
+   * @param value the option value
+   * @return true iff the value was successfully set
+   */
   abstract boolean setLocalOption(OptionValue value);
 
   @Override
   public void setOption(OptionValue value) {
-    fallback.getAdmin().validate(value);
+    getAdmin().validate(value);
     setValidatedOption(value);
   }
 
