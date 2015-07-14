@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -39,18 +39,20 @@ import org.codehaus.commons.compiler.CompileException;
 import com.google.common.collect.MapMaker;
 
 public class QueryClassLoader extends URLClassLoader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
 
   public static final String JAVA_COMPILER_OPTION = "exec.java_compiler";
   public static final StringValidator JAVA_COMPILER_VALIDATOR = new StringValidator(JAVA_COMPILER_OPTION, CompilerPolicy.DEFAULT.toString()) {
     @Override
-    public void validate(OptionValue v) throws ExpressionParsingException {
+    public void validate(OptionValue v) {
       super.validate(v);
       try {
         CompilerPolicy.valueOf(v.string_val.toUpperCase());
       } catch (IllegalArgumentException e) {
-        throw new ExpressionParsingException(String.format("Invalid value '%s' specified for option '%s'. Valid values are %s.",
-            v.string_val, getOptionName(), Arrays.toString(CompilerPolicy.values())));
+        throw UserException.validationError()
+            .message("Invalid value '%s' specified for option '%s'. Valid values are %s.",
+              v.string_val, getOptionName(), Arrays.toString(CompilerPolicy.values()))
+            .build(logger);
       }
     }
   };

@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
@@ -221,7 +222,14 @@ public class SystemOptionManager extends BaseOptionManager {
   public void setOption(final OptionValue value) {
     assert value.type == OptionType.SYSTEM;
     final String name = value.name.toLowerCase();
-    final OptionValidator validator = getValidator(name);
+    final OptionValidator validator;
+    try {
+      validator = getValidator(name);
+    } catch (final IllegalArgumentException e) {
+      throw UserException.validationError()
+        .message(e.getMessage())
+        .build(logger);
+    }
     validator.validate(value); // validate the option
 
     if (options.get(name) == null && value.equals(validator.getDefault())) {

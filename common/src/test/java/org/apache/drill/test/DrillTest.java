@@ -23,12 +23,12 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.RepeatTestRule;
 import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -59,6 +59,8 @@ public class DrillTest {
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
+
+  @Rule public final ExpectedException thrownException = ExpectedException.none();
 
   @Rule public TestName TEST_NAME = new TestName();
 

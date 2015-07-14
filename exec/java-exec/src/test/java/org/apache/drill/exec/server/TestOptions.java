@@ -19,10 +19,13 @@ package org.apache.drill.exec.server;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.Test;
 
+import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.VALIDATION;
+
 public class TestOptions extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptions.class);
+//  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptions.class);
 
   @Test
   public void testDrillbits() throws Exception{
@@ -37,7 +40,13 @@ public class TestOptions extends BaseTestQuery{
         "select * from sys.options;" +
         "ALTER SESSION set `planner.disable_exchanges` = true;" +
         "select * from sys.options;"
-        );
+    );
+  }
+
+  @Test
+  public void checkValidationException() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(VALIDATION));
+    test(String.format("ALTER session SET `%s` = '%s';", ExecConstants.SLICE_TARGET, "fail"));
   }
 
   @Test // DRILL-3122
