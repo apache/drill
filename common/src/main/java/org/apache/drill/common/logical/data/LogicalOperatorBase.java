@@ -85,8 +85,13 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   public synchronized static Class<?>[] getSubTypes(DrillConfig config) {
-    Class<?>[] ops = PathScanner.scanForImplementationsArr(LogicalOperator.class, config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES));
-    logger.debug("Adding Logical Operator sub types: {}", ((Object) ops) );
+    final List<String> packages =
+        config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES);
+    final Class<?>[] ops =
+        PathScanner.scanForImplementationsArr(LogicalOperator.class, packages);
+    for ( Class<?> op : ops ) {
+      logger.debug("Adding logical operator {}", (Object) op);
+    }
     return ops;
   }
 }
