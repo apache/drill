@@ -42,7 +42,6 @@ public interface CommonConstants {
 
   /** Configuration pathname to list of packages to scan for storage plugin
    *  configuration subclasses. */
-  String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES =
-      "drill.logical.storage.packages";
+  String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
 
 }
