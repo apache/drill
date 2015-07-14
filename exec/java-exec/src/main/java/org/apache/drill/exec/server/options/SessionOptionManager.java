@@ -52,7 +52,7 @@ public class SessionOptionManager extends InMemoryOptionManager {
       return false;
     }
     final String name = value.name;
-    final OptionValidator validator = SystemOptionManager.getValidator(name);
+    final OptionValidator validator = SystemOptionManager.getValidator(name); // if set, validator must exist.
     final boolean shortLived = validator.isShortLived();
     if (shortLived) {
       final int start = session.getQueryCount() + 1; // start from the next query

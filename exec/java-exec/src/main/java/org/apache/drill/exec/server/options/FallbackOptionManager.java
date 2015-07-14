@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.options;
 import java.util.Iterator;
 
 import com.google.common.collect.Iterables;
+import org.apache.drill.common.exceptions.UserException;
 
 /**
  * An {@link OptionManager} which allows for falling back onto another {@link OptionManager}. This way method calls can
@@ -31,7 +32,7 @@ import com.google.common.collect.Iterables;
  * manager. {@link QueryOptionManager} uses {@link SessionOptionManager} as the fall back manager.
  */
 public abstract class FallbackOptionManager extends BaseOptionManager {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
   protected final OptionManager fallback;
 
@@ -84,7 +85,15 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
 
   @Override
   public void setOption(OptionValue value) {
-    SystemOptionManager.getValidator(value.name).validate(value); // validate the option
+    final OptionValidator validator;
+    try {
+      validator = SystemOptionManager.getValidator(value.name);
+    } catch (final IllegalArgumentException e) {
+      throw UserException.validationError()
+        .message(e.getMessage())
+        .build(logger);
+    }
+    validator.validate(value); // validate the option
 
     // fallback if unable to set locally
     if (!setLocalOption(value)) {

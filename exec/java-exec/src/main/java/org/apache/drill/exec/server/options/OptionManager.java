@@ -26,7 +26,7 @@ public interface OptionManager extends Iterable<OptionValue> {
    * Sets an option value.
    *
    * @param value option value
-   * @throws IllegalArgumentException message to describe error with value
+   * @throws org.apache.drill.common.exceptions.UserException message to describe error with value
    */
   void setOption(OptionValue value);
 

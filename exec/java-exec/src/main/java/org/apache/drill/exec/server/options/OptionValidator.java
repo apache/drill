@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.exceptions.UserException;
 
 /**
  * Validates the values provided to Drill options.
@@ -79,7 +79,7 @@ public abstract class OptionValidator {
    * Validates the option value.
    *
    * @param value the value to validate
-   * @throws ExpressionParsingException message to describe error with value
+   * @throws UserException message to describe error with value, including range or list of expected values
    */
   public abstract void validate(OptionValue value);
 }
