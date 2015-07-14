@@ -22,7 +22,8 @@ import java.util.Map;
 public abstract class InMemoryOptionManager extends FallbackOptionManager {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryOptionManager.class);
 
-  final Map<String, OptionValue> options;
+  // NOTE: CRUD operations must use lowercase keys
+  protected final Map<String, OptionValue> options;
 
   InMemoryOptionManager(OptionManager fallback, Map<String, OptionValue> options) {
     super(fallback);
@@ -31,13 +32,13 @@ public abstract class InMemoryOptionManager extends FallbackOptionManager {
 
   @Override
   OptionValue getLocalOption(String name) {
-    return options.get(name);
+    return options.get(name.toLowerCase());
   }
 
   @Override
   boolean setLocalOption(OptionValue value) {
     if(supportsOption(value)){
-      options.put(value.name, value);
+      options.put(value.name.toLowerCase(), value);
       return true;
     }else{
       return false;

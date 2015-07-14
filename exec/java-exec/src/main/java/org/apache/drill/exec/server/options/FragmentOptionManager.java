@@ -32,7 +32,7 @@ public class FragmentOptionManager extends InMemoryOptionManager {
   private static Map<String, OptionValue> getMapFromOptionList(OptionList options){
     Map<String, OptionValue> tmp = Maps.newHashMap();
     for(OptionValue v : options){
-      tmp.put(v.name, v);
+      tmp.put(v.name.toLowerCase(), v);
     }
     return ImmutableMap.copyOf(tmp);
   }

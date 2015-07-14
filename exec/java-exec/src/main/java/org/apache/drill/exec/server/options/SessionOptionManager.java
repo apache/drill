@@ -32,6 +32,7 @@ public class SessionOptionManager extends InMemoryOptionManager {
 
   /**
    * Map of short lived options. Key: option name, Value: [ start, end )
+   * NOTE: CRUD operations must use lowercase keys
    */
   private final ConcurrentHashMap<String, ImmutablePair<Integer, Integer>> shortLivedOptions = new ConcurrentHashMap<>();
 
@@ -43,30 +44,34 @@ public class SessionOptionManager extends InMemoryOptionManager {
   @Override
   boolean setLocalOption(final OptionValue value) {
     final boolean set = super.setLocalOption(value);
-    final String name = value.name;
-    final OptionValidator validator = fallback.getAdmin().getValidator(name);
+    if (!set) {
+      return false;
+    }
+    final String name = value.name.toLowerCase();
+    final OptionValidator validator = getAdmin().getValidator(name);
     final boolean shortLived = validator.isShortLived();
-    if (set && shortLived) {
+    if (shortLived) {
       final int start = session.getQueryCount() + 1; // start from the next query
       final int ttl = validator.getTtl();
       final int end = start + ttl;
       shortLivedOptions.put(name, new ImmutablePair<>(start, end));
     }
-    return set;
+    return true;
   }
 
   @Override
-  OptionValue getLocalOption(final String name) {
-    final OptionValue value = options.get(name);
+  OptionValue getLocalOption(String name) {
+    name = name.toLowerCase();
+    final OptionValue value = super.getLocalOption(name);
     if (shortLivedOptions.containsKey(name)) {
-      if (withinRange(value)) {
+      if (withinRange(name)) {
         return value;
       }
       final int queryNumber = session.getQueryCount();
       final int start = shortLivedOptions.get(name).getLeft();
       // option is not in effect if queryNumber < start
       if (queryNumber < start) {
-        return fallback.getAdmin().getValidator(name).getDefault();
+        return getAdmin().getValidator(name).getDefault();
       // reset if queryNumber <= end
       } else {
         options.remove(name);
@@ -77,9 +82,9 @@ public class SessionOptionManager extends InMemoryOptionManager {
     return value;
   }
 
-  private boolean withinRange(final OptionValue value) {
+  private boolean withinRange(final String name) {
     final int queryNumber = session.getQueryCount();
-    final ImmutablePair<Integer, Integer> pair = shortLivedOptions.get(value.name);
+    final ImmutablePair<Integer, Integer> pair = shortLivedOptions.get(name);
     final int start = pair.getLeft();
     final int end = pair.getRight();
     return start <= queryNumber && queryNumber < end;
@@ -88,8 +93,8 @@ public class SessionOptionManager extends InMemoryOptionManager {
   private final Predicate<OptionValue> isLive = new Predicate<OptionValue>() {
     @Override
     public boolean apply(final OptionValue value) {
-      final String name = value.name;
-      return !shortLivedOptions.containsKey(name) || withinRange(value);
+      final String name = value.name.toLowerCase();
+      return !shortLivedOptions.containsKey(name) || withinRange(name);
     }
   };
 

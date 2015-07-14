@@ -24,6 +24,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -35,9 +37,6 @@ import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
-import org.apache.calcite.sql.SqlLiteral;
-
-import com.google.common.collect.Maps;
 
 public class SystemOptionManager extends BaseOptionManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
@@ -123,9 +122,17 @@ public class SystemOptionManager extends BaseOptionManager {
   }
 
   private final PStoreConfig<OptionValue> config;
+
+  // persistent store for options that have been changed from default
+  // NOTE: CRUD operations must use lowercase keys
   private PStore<OptionValue> options;
+
   private SystemOptionAdmin admin;
+
+  // all known options; also contains default values
+  // NOTE: CRUD operations must use lowercase keys
   private final ConcurrentMap<String, OptionValidator> knownOptions = Maps.newConcurrentMap();
+
   private final PStoreProvider provider;
 
   public SystemOptionManager(final DrillConfig config, final PStoreProvider provider) {
@@ -141,15 +148,41 @@ public class SystemOptionManager extends BaseOptionManager {
     return this;
   }
 
+  /**
+   * Get the {@link OptionValue} from the persistent store.
+   *
+   * @param name name of the option
+   * @return the option value of present; null otherwise
+   */
+  private OptionValue getFromOptions(final String name) {
+    return options.get(name.toLowerCase());
+  }
+
+  /**
+   * Gets the {@link OptionValidator} from the known validators.
+   *
+   * @param name name of the option
+   * @return the associated validator
+   * @throws SetOptionException - if the validator is not found
+   */
+  private OptionValidator getFromKnown(final String name) {
+    final OptionValidator validator = knownOptions.get(name.toLowerCase());
+    if (validator == null) {
+      throw new SetOptionException("Unknown option: " + name);
+    }
+    return validator;
+  }
+
   @Override
   public Iterator<OptionValue> iterator() {
     final Map<String, OptionValue> buildList = Maps.newHashMap();
-    for(OptionValidator v : knownOptions.values()){
-      buildList.put(v.getOptionName(), v.getDefault());
+    // populate the default options
+    for (final Map.Entry<String, OptionValidator> v : knownOptions.entrySet()) {
+      buildList.put(v.getKey(), v.getValue().getDefault());
     }
-    for(Map.Entry<String, OptionValue> v : options){
-      final OptionValue value = v.getValue();
-      buildList.put(value.name, value);
+    // override if changed
+    for (final Map.Entry<String, OptionValue> v : options) {
+      buildList.put(v.getKey(), v.getValue());
     }
     return buildList.values().iterator();
   }
@@ -157,28 +190,19 @@ public class SystemOptionManager extends BaseOptionManager {
   @Override
   public OptionValue getOption(final String name) {
     // check local space
-    final OptionValue v = options.get(name);
-    if(v != null){
-      return v;
+    final OptionValue value = getFromOptions(name);
+    if (value != null) {
+      return value;
     }
 
     // otherwise, return default.
-    OptionValidator validator = knownOptions.get(name);
-    if(validator == null) {
-      return null;
-    } else {
-      return validator.getDefault();
-    }
+    final OptionValidator validator = getFromKnown(name);
+    return validator.getDefault();
   }
 
   @Override
   public OptionValue getDefault(final String name) {
-    final OptionValidator validator = knownOptions.get(name);
-    if(validator == null) {
-      return null;
-    } else {
-      return validator.getDefault();
-    }
+    return getFromKnown(name).getDefault();
   }
 
   @Override
@@ -189,15 +213,16 @@ public class SystemOptionManager extends BaseOptionManager {
   }
 
   private void setOptionInternal(final OptionValue value) {
-    if (!value.equals(knownOptions.get(value.name))) {
-      options.put(value.name, value);
+    final String name = value.name;
+    if (getFromOptions(name) == null && value.equals(getFromKnown(name).getDefault())) {
+      return; // if the option is not overridden, ignore setting option to default
     }
+    options.put(name.toLowerCase(), value);
   }
-
 
   @Override
   public void setOption(final String name, final SqlLiteral literal, final OptionType type) {
-    assert type == OptionValue.OptionType.SYSTEM || type == OptionValue.OptionType.SESSION;
+    assert type == OptionValue.OptionType.SYSTEM;
     final OptionValue v = admin.validate(name, literal, type);
     setOptionInternal(v);
   }
@@ -218,51 +243,51 @@ public class SystemOptionManager extends BaseOptionManager {
   }
 
   private class SystemOptionAdmin implements OptionAdmin {
+
     public SystemOptionAdmin() {
-      for(OptionValidator v : VALIDATORS) {
-        knownOptions.put(v.getOptionName(), v);
+      // register all options with a lower case name
+      for (final OptionValidator v : VALIDATORS) {
+        final String name = v.getOptionName().toLowerCase();
+        if (!name.equals(v.getOptionName())) {
+          logger.warn("Registering option with a lower case name `{}`", name);
+        }
+        knownOptions.put(name, v);
       }
 
-      for(Entry<String, OptionValue> v : options) {
-        final OptionValue value = v.getValue();
-        final OptionValidator defaultValidator = knownOptions.get(v.getKey());
+      // if necessary, deprecate and replace options from persistent store
+      for (final Entry<String, OptionValue> v : options) {
+        final String name = v.getKey();
+        final OptionValidator defaultValidator = knownOptions.get(name.toLowerCase());
         if (defaultValidator == null) {
           // deprecated option, delete.
-          options.delete(value.name);
-          logger.warn("Deleting deprecated option `{}`.", value.name);
+          options.delete(name);
+          logger.warn("Deleting deprecated option `{}`", name);
+        } else {
+          if (!name.equals(defaultValidator.getOptionName().toLowerCase())) {
+            // for backwards compatibility <= 1.1, rename to lower case
+            final OptionValue value = v.getValue();
+            options.delete(name);
+            options.put(name.toLowerCase(), value);
+            logger.warn("Changing option name to lower case `{}`", name);
+          }
         }
       }
     }
 
     @Override
-    public void registerOptionType(final OptionValidator validator) {
-      if (null != knownOptions.putIfAbsent(validator.getOptionName(), validator)) {
-        throw new IllegalArgumentException("Only one option is allowed to be registered with name: "
-            + validator.getOptionName());
-      }
-    }
-
-    @Override
     public OptionValidator getValidator(final String name) {
-      return knownOptions.get(name);
+      return getFromKnown(name);
     }
 
     @Override
-    public void validate(final OptionValue v) throws SetOptionException {
-      final OptionValidator validator = knownOptions.get(v.name);
-      if (validator == null) {
-        throw new SetOptionException("Unknown option " + v.name);
-      }
+    public void validate(final OptionValue v) {
+      final OptionValidator validator = getFromKnown(v.name);
       validator.validate(v);
     }
 
     @Override
-    public OptionValue validate(final String name, final SqlLiteral value, final OptionType optionType)
-        throws SetOptionException {
-      final OptionValidator validator = knownOptions.get(name);
-      if (validator == null) {
-        throw new SetOptionException("Unknown option: " + name);
-      }
+    public OptionValue validate(final String name, final SqlLiteral value, final OptionType optionType) {
+      final OptionValidator validator = getFromKnown(name);
       return validator.validate(value, optionType);
     }
   }
