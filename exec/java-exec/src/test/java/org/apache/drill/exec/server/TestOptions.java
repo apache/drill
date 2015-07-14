@@ -18,6 +18,8 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
 public class TestOptions extends BaseTestQuery{
@@ -31,11 +33,16 @@ public class TestOptions extends BaseTestQuery{
   @Test
   public void testOptions() throws Exception{
     test(
-        "select * from sys.options;" +
+      "select * from sys.options;" +
         "ALTER SYSTEM set `planner.disable_exchanges` = true;" +
         "select * from sys.options;" +
         "ALTER SESSION set `planner.disable_exchanges` = true;" +
         "select * from sys.options;"
-        );
+    );
+  }
+
+  @Test(expected = UserException.class)
+  public void checkException() throws Exception {
+    test(String.format("ALTER session SET `%s` = '%s';", ExecConstants.SLICE_TARGET, "fail"));
   }
 }

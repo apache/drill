@@ -20,11 +20,10 @@ package org.apache.drill.exec.testing;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -81,7 +80,7 @@ public final class ExecutionControls {
      * @param ttl  the number of queries for which this option should be valid
      */
     public ControlsOptionValidator(final String name, final String def, final int ttl) {
-      super(name, OptionValue.Kind.DOUBLE, OptionValue.createString(OptionType.SESSION, name, def));
+      super(name, OptionValue.Kind.STRING, OptionValue.createString(OptionType.SESSION, name, def));
       assert ttl > 0;
       this.ttl = ttl;
     }
@@ -97,15 +96,19 @@ public final class ExecutionControls {
     }
 
     @Override
-    public void validate(final OptionValue v) throws ExpressionParsingException {
+    public void validate(final OptionValue v) {
       if (v.type != OptionType.SESSION) {
-        throw new ExpressionParsingException("Controls can be set only at SESSION level.");
+        throw UserException.validationError()
+            .message("Controls can be set only at SESSION level.")
+            .build(logger);
       }
       final String jsonString = v.string_val;
       try {
         validateControlsString(jsonString);
       } catch (final IOException e) {
-        throw new ExpressionParsingException("Invalid control options string (" + jsonString + ").", e);
+        throw UserException.validationError()
+            .message(String.format("Invalid controls option string (%s) due to %s.", jsonString, e.getMessage()))
+            .build(logger);
       }
     }
   }

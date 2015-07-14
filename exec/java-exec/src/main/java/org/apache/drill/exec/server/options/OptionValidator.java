@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.calcite.sql.SqlLiteral;
 
 /**
@@ -83,7 +83,7 @@ public abstract class OptionValidator {
    * system-internal representation.
    *
    * @param value the value to validate
-   * @throws ExpressionParsingException message to describe error with value, including range or list of expected values
+   * @throws UserException message to describe error with value, including range or list of expected values
    */
   public abstract void validate(OptionValue value);
 
@@ -98,7 +98,7 @@ public abstract class OptionValidator {
    * @return the value requested, in its standard format to be used for representing the value within Drill
    *         Example: all lower case values for strings, to avoid ambiguities in how values are stored
    *         while allowing some flexibility for users
-   * @throws ExpressionParsingException message to describe error with value, including range or list of expected values
+   * @throws UserException message to describe error with value, including range or list of expected values
    */
   public abstract OptionValue validate(SqlLiteral value, OptionValue.OptionType optionType);
 }

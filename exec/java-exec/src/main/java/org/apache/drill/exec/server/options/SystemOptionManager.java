@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
@@ -163,12 +164,14 @@ public class SystemOptionManager extends BaseOptionManager {
    *
    * @param name name of the option
    * @return the associated validator
-   * @throws SetOptionException - if the validator is not found
+   * @throws UserException - if the validator is not found
    */
   private OptionValidator getFromKnown(final String name) {
     final OptionValidator validator = knownOptions.get(name.toLowerCase());
     if (validator == null) {
-      throw new SetOptionException("Unknown option: " + name);
+      throw UserException.validationError()
+        .message("Unknown option %s", name)
+        .build(logger);
     }
     return validator;
   }

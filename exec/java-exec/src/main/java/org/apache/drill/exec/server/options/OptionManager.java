@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.calcite.sql.SqlLiteral;
 
 /**
@@ -37,7 +38,7 @@ public interface OptionManager extends Iterable<OptionValue> {
    * Sets an option value.
    *
    * @param value option value
-   * @throws SetOptionException message to describe error with value
+   * @throws UserException message to describe error with value
    */
   void setOption(OptionValue value);
 
@@ -47,7 +48,7 @@ public interface OptionManager extends Iterable<OptionValue> {
    * @param name    option name
    * @param literal sql literal
    * @param type    option type
-   * @throws SetOptionException message to describe error with value
+   * @throws UserException message to describe error with value
    */
   void setOption(String name, SqlLiteral literal, OptionValue.OptionType type);
 
@@ -122,7 +123,7 @@ public interface OptionManager extends Iterable<OptionValue> {
      *
      * @param name option name
      * @return the option validator, or null if the validator does not exist
-     * @throws SetOptionException message to describe error with value
+     * @throws UserException message to describe error with value
      */
     OptionValidator getValidator(String name);
 
@@ -130,7 +131,7 @@ public interface OptionManager extends Iterable<OptionValue> {
      * Validates the option value.
      *
      * @param value option value
-     * @throws SetOptionException message to describe error with value
+     * @throws UserException message to describe error with value
      */
     void validate(OptionValue value);
 
@@ -145,7 +146,7 @@ public interface OptionManager extends Iterable<OptionValue> {
      * @return the value requested, in its standard format to be used for representing the value within Drill
      * Example: all lower case values for strings, to avoid ambiguities in how values are stored
      * while allowing some flexibility for users
-     * @throws SetOptionException message to describe error with value
+     * @throws UserException message to describe error with value
      */
     OptionValue validate(String name, SqlLiteral value, OptionValue.OptionType optionType);
   }
