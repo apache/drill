@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -42,6 +43,8 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.joda.time.format.ISOPeriodFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -49,6 +52,7 @@ import com.fasterxml.jackson.core.JsonToken;
 
 abstract class VectorOutput {
 
+  private static final Logger LOG = LoggerFactory.getLogger(VectorOutput.class);
   final VarBinaryHolder binary = new VarBinaryHolder();
   final TimeHolder time = new TimeHolder();
   final DateHolder date = new DateHolder();
@@ -80,6 +84,15 @@ abstract class VectorOutput {
     if(!possibleTypeName.isEmpty() && possibleTypeName.charAt(0) == '$'){
       switch(possibleTypeName){
       case ExtendedTypeName.BINARY:
+        writeBinary(checkNextToken(JsonToken.VALUE_STRING));
+        checkCurrentToken(JsonToken.END_OBJECT);
+        return true;
+      case ExtendedTypeName.TYPE:
+        if(checkNextToken(JsonToken.VALUE_NUMBER_INT) || !hasBinary()) {
+          throw UserException.parseError()
+          .message("Either $type is not an integer or has no $binary")
+          .build(LOG);
+        }
         writeBinary(checkNextToken(JsonToken.VALUE_STRING));
         checkCurrentToken(JsonToken.END_OBJECT);
         return true;
@@ -133,6 +146,11 @@ abstract class VectorOutput {
     return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.TYPE);
   }
 
+  boolean hasBinary() throws JsonParseException, IOException {
+    JsonToken token = parser.nextToken();
+    return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.BINARY);
+  }
+
   long getType() throws JsonParseException, IOException {
     if (!checkNextToken(JsonToken.VALUE_NUMBER_INT, JsonToken.VALUE_STRING)) {
       long type = parser.getValueAsLong();
@@ -184,7 +202,12 @@ abstract class VectorOutput {
         byte[] binaryData = parser.getBinaryValue();
         if (hasType()) {
           //Ignoring type info as of now.
-          getType();
+          long type = getType();
+          if (type < 0 || type > 255) {
+            throw UserException.validationError()
+            .message("$type should be between 0 to 255")
+            .build(LOG);
+          }
         }
         work.prepareBinary(binaryData, binary);
         bin.write(binary);
@@ -223,7 +246,9 @@ abstract class VectorOutput {
           ts.writeTimeStamp(DateTime.parse(parser.getValueAsString(), f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
           break;
         default:
-          break;
+          throw UserException.unsupportedError()
+              .message(parser.getCurrentToken().toString())
+              .build(LOG);
         }
       }
     }
@@ -277,7 +302,12 @@ abstract class VectorOutput {
         byte[] binaryData = parser.getBinaryValue();
         if (hasType()) {
           //Ignoring type info as of now.
-          getType();
+          long type = getType();
+          if (type < 0 || type > 255) {
+            throw UserException.validationError()
+            .message("$type should be between 0 to 255")
+            .build(LOG);
+          }
         }
         work.prepareBinary(binaryData, binary);
         bin.write(binary);
@@ -317,7 +347,9 @@ abstract class VectorOutput {
           ts.writeTimeStamp(DateTime.parse(parser.getValueAsString(), f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
           break;
         default:
-          break;
+          throw UserException.unsupportedError()
+          .message(parser.getCurrentToken().toString())
+          .build(LOG);
         }
       }
     }

@@ -4,5 +4,8 @@
   },
   "bin" : {
       "$binary" : "ZHJpbGw=", "$type" : 1
+  },
+  "bin1" : {
+      "$type" : 1, "$binary" : "ZHJpbGw="
   }
 }

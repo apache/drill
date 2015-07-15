@@ -27,6 +27,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 public class VectorUtil {
 
@@ -96,6 +98,10 @@ public class VectorUtil {
           rowValues.add("null");
         } else if (o instanceof byte[]) {
           rowValues.add(new String((byte[]) o));
+        } else if (o instanceof DateTime) {
+          // TODO(DRILL-3882) - remove this once the datetime is not returned in an
+          // object needlessly holding a timezone
+          rowValues.add(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").print((DateTime) o));
         } else {
           rowValues.add(o.toString());
         }
