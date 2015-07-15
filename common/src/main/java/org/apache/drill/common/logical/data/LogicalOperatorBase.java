@@ -89,8 +89,13 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
         config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES);
     final Class<?>[] ops =
         PathScanner.scanForImplementationsArr(LogicalOperator.class, packages);
-    for ( Class<?> op : ops ) {
-      logger.debug("Adding logical operator {}", (Object) op);
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (Class<?> op : ops) {
+        sb.append( "\n\t- " );
+        sb.append( op );
+      }
+      logger.debug("Found {} logical operator classes: {}.", ops.length, sb);
     }
     return ops;
   }

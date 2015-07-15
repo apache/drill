@@ -106,10 +106,19 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   @SuppressWarnings("unchecked")
   public void init() throws DrillbitStartupException {
     DrillConfig config = context.getConfig();
-    Collection<Class<? extends StoragePlugin>> plugins =
+    Collection<Class<? extends StoragePlugin>> pluginClasses =
         PathScanner.scanForImplementations(StoragePlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
-    logger.debug("Loading storage plugins {}", plugins);
-    for (Class<? extends StoragePlugin> plugin : plugins) {
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (Class<?> pluginClass : pluginClasses) {
+        sb.append( "\n\t- " );
+        sb.append( pluginClass );
+      }
+      logger.debug("Found {} storage plugin configuration classes: {}.",
+                   pluginClasses.size(), sb);
+   }
+   logger.debug("Loading storage plugins {}", pluginClasses);
+    for (Class<? extends StoragePlugin> plugin : pluginClasses) {
       int i = 0;
       for (Constructor<?> c : plugin.getConstructors()) {
         Class<?>[] params = c.getParameterTypes();

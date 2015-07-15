@@ -35,8 +35,8 @@ public class OperatorCreatorRegistry {
   private volatile Map<Class<?>, Object> instanceRegistry = new HashMap<Class<?>, Object>();
 
   public OperatorCreatorRegistry(DrillConfig config) {
-    addImplemntorsToMap(config, BatchCreator.class);
-    addImplemntorsToMap(config, RootCreator.class);
+    addImplementorsToMap(config, BatchCreator.class);
+    addImplementorsToMap(config, RootCreator.class);
     logger.debug("Adding Operator Creator map: {}", constructorRegistry);
   }
 
@@ -61,7 +61,7 @@ public class OperatorCreatorRegistry {
     }
   }
 
-  private <T> void addImplemntorsToMap(DrillConfig config, Class<T> baseInterface) {
+  private <T> void addImplementorsToMap(DrillConfig config, Class<T> baseInterface) {
     Class<?>[] providerClasses = PathScanner.scanForImplementationsArr(baseInterface,
         config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
     for (Class<?> c : providerClasses) {

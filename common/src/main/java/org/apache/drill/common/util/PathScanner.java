@@ -81,6 +81,10 @@ public class PathScanner {
     return REFLECTIONS;
   }
 
+  /**
+   * ...
+   * @param  scanPackages  note:  not currently used
+   */
   public static <T> Class<?>[] scanForImplementationsArr(final Class<T> baseClass,
                                                          final List<String> scanPackages) {
     Collection<Class<? extends T>> imps = scanForImplementations(baseClass, scanPackages);
@@ -88,6 +92,10 @@ public class PathScanner {
     return arr;
   }
 
+  /**
+   * ...
+   * @param  scanPackages  note:  not currently used
+   */
   public static <T> Set<Class<? extends T>> scanForImplementations(final Class<T> baseClass,
                                                                    final List<String> scanPackages) {
     final Stopwatch w = new Stopwatch().start();

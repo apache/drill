@@ -77,7 +77,6 @@ public final class DrillConfig extends NestedConfig{
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this))
         .addDeserializer(SchemaPath.class, new SchemaPath.De(this));
 
-
       mapper.registerModule(deserModule);
       mapper.enable(SerializationFeature.INDENT_OUTPUT);
       mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
@@ -190,7 +189,7 @@ public final class DrillConfig extends NestedConfig{
       final URL url =
           classLoader.getResource(CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
       if (null != url) {
-        logger.debug("Loading base config. file at {}.", url);
+        logger.debug("Loading base configuration file at {}.", url);
         fallback =
             ConfigFactory.load(classLoader,
                                CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
@@ -200,9 +199,8 @@ public final class DrillConfig extends NestedConfig{
 
     // 2. Load per-module configuration files.
     Collection<URL> urls = PathScanner.getConfigURLs();
-    logger.debug("Loading configs at the following URLs {}", urls);
     for (URL url : urls) {
-      logger.debug("Loading module config. file at {}.", url);
+      logger.debug("Loading module configuration file at {}.", url);
       fallback = ConfigFactory.parseURL(url).withFallback(fallback);
     }
 

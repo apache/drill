@@ -34,8 +34,14 @@ public abstract class StoragePluginConfigBase extends StoragePluginConfig {
         config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
     Class<?>[] pluginClasses =
         PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
-    for (Class<?> pluginClass : pluginClasses) {
-      logger.debug("Adding storage plugin configuration {}", (Object) pluginClass );
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (Class<?> pluginClass : pluginClasses) {
+        sb.append( "\n\t- " );
+        sb.append( pluginClass );
+      }
+      logger.debug("Found {} storage plugin configuration classes: {}.",
+                   pluginClasses.length, sb);
     }
     return pluginClasses;
   }

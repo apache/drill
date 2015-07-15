@@ -38,8 +38,14 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
         config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
     Class<?>[] pluginClasses =
         PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
-    for ( Class<?> pluginClass : pluginClasses ) {
-      logger.debug("Adding format plugin configuration {}", (Object) pluginClass );
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (Class<?> pluginClass : pluginClasses) {
+        sb.append( "\n\t- " );
+        sb.append( pluginClass );
+      }
+      logger.debug("Found {} format plugin configuration classes: {}.",
+                   pluginClasses.length, sb);
     }
     return pluginClasses;
   }

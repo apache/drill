@@ -35,8 +35,13 @@ public class PhysicalOperatorUtil {
     Class<?>[] ops =
         PathScanner.scanForImplementationsArr(PhysicalOperator.class,
             config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
-    for (Class<?> op : ops) {
-      logger.debug("Adding physical operator {}", (Object) op );
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (Class<?> op : ops) {
+        sb.append( "\n\t- " );
+        sb.append( op );
+      }
+      logger.debug("Found {} physical operator classes: {}.", ops.length, sb);
     }
     return ops;
   }
