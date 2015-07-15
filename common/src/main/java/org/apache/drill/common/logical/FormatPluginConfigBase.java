@@ -41,8 +41,7 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
     if (logger.isDebugEnabled()) {
       final StringBuilder sb = new StringBuilder();
       for (Class<?> pluginClass : pluginClasses) {
-        sb.append( "\n\t- " );
-        sb.append( pluginClass );
+        sb.append( "\n\t- " ).append( pluginClass );
       }
       logger.debug("Found {} format plugin configuration classes: {}.",
                    pluginClasses.length, sb);

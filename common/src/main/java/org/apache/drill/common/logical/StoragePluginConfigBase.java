@@ -37,8 +37,7 @@ public abstract class StoragePluginConfigBase extends StoragePluginConfig {
     if (logger.isDebugEnabled()) {
       final StringBuilder sb = new StringBuilder();
       for (Class<?> pluginClass : pluginClasses) {
-        sb.append( "\n\t- " );
-        sb.append( pluginClass );
+        sb.append( "\n\t- " ).append( pluginClass );
       }
       logger.debug("Found {} storage plugin configuration classes: {}.",
                    pluginClasses.length, sb);

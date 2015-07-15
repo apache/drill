@@ -189,7 +189,7 @@ public final class DrillConfig extends NestedConfig{
       final URL url =
           classLoader.getResource(CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
       if (null != url) {
-        logger.debug("Loading base configuration file at {}.", url);
+        logger.info("Loading base configuration file at {}.", url);
         fallback =
             ConfigFactory.load(classLoader,
                                CommonConstants.CONFIG_DEFAULT_RESOURCE_PATHNAME);
@@ -198,9 +198,16 @@ public final class DrillConfig extends NestedConfig{
     }
 
     // 2. Load per-module configuration files.
-    Collection<URL> urls = PathScanner.getConfigURLs();
+    final Collection<URL> urls = PathScanner.getConfigURLs();
+    if (logger.isInfoEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      for (URL url : urls) {
+        sb.append( "\n\t- " ).append( url );
+      }
+      logger.info("Loading {} module configuration files at: {}.",
+                  urls.size(), sb);
+    }
     for (URL url : urls) {
-      logger.debug("Loading module configuration file at {}.", url);
       fallback = ConfigFactory.parseURL(url).withFallback(fallback);
     }
 
@@ -211,14 +218,14 @@ public final class DrillConfig extends NestedConfig{
     final URL overrideFileUrl =
         Thread.currentThread().getContextClassLoader().getResource(overrideFileResourcePathname);
     if (null != overrideFileUrl ) {
-      logger.debug("Loading override config. file at {}.", overrideFileUrl);
+      logger.info("Loading override config. file at {}.", overrideFileUrl);
     }
     Config effectiveConfig =
         ConfigFactory.load(overrideFileResourcePathname).withFallback(fallback);
 
     // 4. Apply any overriding properties.
     if (overriderProps != null) {
-      logger.debug("Loading override Properties parameter {}.", overriderProps);
+      logger.info("Loading override Properties parameter {}.", overriderProps);
       effectiveConfig =
           ConfigFactory.parseProperties(overriderProps).withFallback(effectiveConfig);
     }
