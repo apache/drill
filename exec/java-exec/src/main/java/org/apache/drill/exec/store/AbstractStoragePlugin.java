@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +45,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of();
   }
 

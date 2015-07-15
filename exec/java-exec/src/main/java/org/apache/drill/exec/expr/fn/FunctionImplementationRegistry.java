@@ -37,7 +37,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.options.OptionManager;
 
-public class FunctionImplementationRegistry {
+public class FunctionImplementationRegistry implements FunctionLookupContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private DrillFunctionRegistry drillFuncRegistry;
@@ -101,6 +101,7 @@ public class FunctionImplementationRegistry {
    * @param functionCall
    * @return
    */
+  @Override
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
     return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionReplacement(functionCall)), functionCall);
   }
@@ -147,6 +148,7 @@ public class FunctionImplementationRegistry {
    * @param functionCall
    * @return
    */
+  @Override
   public AbstractFuncHolder findNonDrillFunction(FunctionCall functionCall) {
     for(PluggableFunctionRegistry registry : pluggableFuncRegistries) {
       AbstractFuncHolder h = registry.getFunction(functionCall);
