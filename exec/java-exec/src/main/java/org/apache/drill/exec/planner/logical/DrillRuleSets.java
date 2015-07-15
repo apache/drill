@@ -32,7 +32,7 @@ import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
 
 import org.apache.calcite.rel.rules.FilterMergeRule;
-import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
 import org.apache.drill.exec.planner.physical.FilterPrule;
@@ -71,15 +71,15 @@ public class DrillRuleSets {
    * If a rule is intended to always be included with the logical set, it should be added
    * to the immutable list created in the getDrillBasicRules() method below.
    *
-   * @param queryContext - used to get the list of planner settings, other rules may
-   *                     also in the future need to get other query state from this,
-   *                     such as the available list of UDFs (as is used by the
-   *                     DrillMergeProjectRule created in getDrillBasicRules())
+   * @param optimizerRulesContext - used to get the list of planner settings, other rules may
+   *                                also in the future need to get other query state from this,
+   *                                such as the available list of UDFs (as is used by the
+   *                                DrillMergeProjectRule created in getDrillBasicRules())
    * @return - a list of rules that have been filtered to leave out
    *         rules that have been turned off by system or session settings
    */
-  public static RuleSet getDrillUserConfigurableLogicalRules(QueryContext queryContext) {
-    PlannerSettings ps = queryContext.getPlannerSettings();
+  public static RuleSet getDrillUserConfigurableLogicalRules(OptimizerRulesContext optimizerRulesContext) {
+    PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     // This list is used to store rules that can be turned on an off
     // by user facing planning options
@@ -110,15 +110,15 @@ public class DrillRuleSets {
    * it on and off with a system/session option, add it in the
    * getDrillUserConfigurableLogicalRules() method instead of here.
    *
-   * @param context - shared state used during planning, currently used here
-   *                to gain access to the fucntion registry described above.
+   * @param optimizerRulesContext - shared state used during planning, currently used here
+   *                                to gain access to the function registry described above.
    * @return - a RuleSet containing the logical rules that will always
    *           be used, either by VolcanoPlanner directly, or
    *           used VolcanoPlanner as pre-processing for LOPTPlanner.
    *
    * Note : Join permutation rule is excluded here.
    */
-  public static RuleSet getDrillBasicRules(QueryContext context) {
+  public static RuleSet getDrillBasicRules(OptimizerRulesContext optimizerRulesContext) {
     if (DRILL_BASIC_RULES == null) {
 
       DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
@@ -141,7 +141,8 @@ public class DrillRuleSets {
       ProjectRemoveRule.NAME_CALC_INSTANCE,
       SortRemoveRule.INSTANCE,
 
-      DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
+      DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
+          optimizerRulesContext.getFunctionRegistry()),
       AggregateExpandDistinctAggregatesRule.INSTANCE,
       DrillReduceAggregatesRule.INSTANCE,
 
@@ -153,10 +154,10 @@ public class DrillRuleSets {
       DrillPushProjIntoScan.INSTANCE,
       DrillProjectSetOpTransposeRule.INSTANCE,
 
-      PruneScanRule.getFilterOnProject(context),
-      PruneScanRule.getFilterOnScan(context),
-      PruneScanRule.getFilterOnProjectParquet(context),
-      PruneScanRule.getFilterOnScanParquet(context),
+      PruneScanRule.getFilterOnProject(optimizerRulesContext),
+      PruneScanRule.getFilterOnScan(optimizerRulesContext),
+      PruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
+      PruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.
@@ -181,7 +182,7 @@ public class DrillRuleSets {
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.
-  public static RuleSet getJoinPermRules(QueryContext context) {
+  public static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
     return new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
         JoinPushThroughJoinRule.RIGHT,
         JoinPushThroughJoinRule.LEFT
@@ -193,10 +194,10 @@ public class DrillRuleSets {
 
     ));
 
-  public static final RuleSet getPhysicalRules(QueryContext qcontext) {
+  public static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
     List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
 
-    PlannerSettings ps = qcontext.getPlannerSettings();
+    PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
     ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
