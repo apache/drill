@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.io.SerializedString;
 public enum ExtendedType {
 
   BINARY(ExtendedTypeName.BINARY),
+  TYPE(ExtendedTypeName.TYPE),
   DATE(ExtendedTypeName.DATE),
   TIME(ExtendedTypeName.TIME),
   TIMESTAMP(ExtendedTypeName.TIMESTAMP),

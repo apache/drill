@@ -64,4 +64,30 @@ public class TestExtendedTypes extends BaseTestQuery {
           ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
     }
   }
+
+  @Test
+  public void testMongoExtendedTypes() throws Exception {
+
+    final String originalFile = "${WORKING_PATH}/src/test/resources/vector/complex/mongo_extended.json".replaceAll(
+        Pattern.quote("${WORKING_PATH}"),
+        Matcher.quoteReplacement(TestTools.getWorkingPath()));
+
+    try {
+      testNoResult(String.format("ALTER SESSION SET `%s` = 'json'", ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName()));
+      testNoResult(String.format("ALTER SESSION SET `%s` = true", ExecConstants.JSON_EXTENDED_TYPES.getOptionName()));
+
+      int actualRecordCount = testSql(String.format("select * from dfs.`%s`", originalFile));
+      assertEquals(
+          String.format(
+              "Received unexpected number of rows in output: expected=%d, received=%s",
+              1, actualRecordCount), 1, actualRecordCount);
+    } finally {
+      testNoResult(String.format("ALTER SESSION SET `%s` = '%s'",
+          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getOptionName(),
+          ExecConstants.OUTPUT_FORMAT_VALIDATOR.getDefault().getValue()));
+      testNoResult(String.format("ALTER SESSION SET `%s` = %s",
+          ExecConstants.JSON_EXTENDED_TYPES.getOptionName(),
+          ExecConstants.JSON_EXTENDED_TYPES.getDefault().getValue()));
+    }
+  }
 }

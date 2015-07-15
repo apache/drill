@@ -1,0 +1,8 @@
+{
+  "drill_timestamp_millies" : {
+    "$date" : 1436241583488
+  },
+  "bin" : {
+      "$binary" : "ZHJpbGw=", "$type" : 1
+  }
+}

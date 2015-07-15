@@ -155,8 +155,11 @@ public class JSONRecordReader extends AbstractRecordReader {
     if (columnNr > 0) {
       exceptionBuilder.pushContext("Column ", columnNr);
     }
-    exceptionBuilder.pushContext("Record ", currentRecordNumberInFile())
-            .pushContext("File ", hadoopPath.toUri().getPath());
+
+    if (hadoopPath != null) {
+      exceptionBuilder.pushContext("Record ", currentRecordNumberInFile())
+          .pushContext("File ", hadoopPath.toUri().getPath());
+    }
 
     throw exceptionBuilder.build(logger);
   }

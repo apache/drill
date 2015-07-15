@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import org.apache.drill.exec.ExecConstants;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.IOException;
-
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 
+import org.apache.drill.exec.ExecConstants;
+import org.junit.Ignore;
+import org.junit.Test;
+
+@Ignore("DRILL-3775")
 public class TestMongoProjectPushDown extends MongoTestBase {
 
   /**
