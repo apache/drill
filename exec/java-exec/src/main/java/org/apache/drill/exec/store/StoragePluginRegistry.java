@@ -60,6 +60,7 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.apache.calcite.plan.RelOptRule;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
@@ -106,11 +107,17 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   @SuppressWarnings("unchecked")
   public void init() throws DrillbitStartupException {
-    DrillConfig config = context.getConfig();
-    Collection<Class<? extends StoragePlugin>> plugins =
-        PathScanner.scanForImplementations(StoragePlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
-    logger.debug("Loading storage plugins {}", plugins);
-    for (Class<? extends StoragePlugin> plugin : plugins) {
+    final DrillConfig config = context.getConfig();
+    final Collection<Class<? extends StoragePlugin>> pluginClasses =
+        PathScanner.scanForImplementations(
+            StoragePlugin.class,
+            config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
+    final String lineBrokenList =
+        pluginClasses.size() == 0
+        ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
+    logger.debug("Found {} storage plugin configuration classes: {}.",
+                 pluginClasses.size(), lineBrokenList);
+    for (Class<? extends StoragePlugin> plugin : pluginClasses) {
       int i = 0;
       for (Constructor<?> c : plugin.getConstructors()) {
         Class<?>[] params = c.getParameterTypes();
