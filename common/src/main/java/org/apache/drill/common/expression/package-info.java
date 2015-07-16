@@ -22,7 +22,7 @@
  * This includes scalar expressions in select, filter and join conditions, as
  * well as aggregate and window functions. These expressions are represented
  * logically as ASTs during planning. The classes defined here provide the
- * different nodes in the expression tree, as well as utilities for building 
+ * different nodes in the expression tree, as well as utilities for building
  * and manipulating expressions during parsing and planning.
  *
  */
