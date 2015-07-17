@@ -30,6 +30,7 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -107,7 +108,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of(
         InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_PROJECT,
         InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_SCAN);

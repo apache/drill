@@ -54,7 +54,7 @@ import org.apache.drill.exec.util.Utilities;
 // TODO the many methods that just return drillbitContext.getXxx() should be replaced with getDrillbitContext()
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
-public class QueryContext implements AutoCloseable, UdfUtilities {
+public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private static final int INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES = 1024 * 1024;
@@ -105,6 +105,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     schemaTreesToClose = Lists.newArrayList();
   }
 
+  @Override
   public PlannerSettings getPlannerSettings() {
     return plannerSettings;
   }
@@ -113,6 +114,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     return session;
   }
 
+  @Override
   public BufferAllocator getAllocator() {
     return allocator;
   }
@@ -205,6 +207,7 @@ public class QueryContext implements AutoCloseable, UdfUtilities {
     return drillbitContext.getConfig();
   }
 
+  @Override
   public FunctionImplementationRegistry getFunctionRegistry() {
     return drillbitContext.getFunctionImplementationRegistry();
   }

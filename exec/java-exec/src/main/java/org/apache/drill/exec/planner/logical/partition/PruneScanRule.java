@@ -37,8 +37,8 @@ import java.util.BitSet;
  import org.apache.drill.exec.expr.TypeHelper;
  import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
  import org.apache.drill.exec.memory.BufferAllocator;
- import org.apache.drill.exec.ops.QueryContext;
- import org.apache.drill.exec.physical.base.FileGroupScan;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.physical.base.FileGroupScan;
  import org.apache.drill.exec.physical.base.GroupScan;
  import org.apache.drill.exec.planner.FileSystemPartitionDescriptor;
 import org.apache.drill.exec.planner.ParquetPartitionDescriptor;
@@ -74,11 +74,11 @@ import org.apache.drill.exec.vector.NullableBitVector;
 public abstract class PruneScanRule extends RelOptRule {
    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
 
-   public static final RelOptRule getFilterOnProject(QueryContext context){
+   public static final RelOptRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext){
        return new PruneScanRule(
            RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
            "PruneScanRule:Filter_On_Project",
-           context) {
+           optimizerRulesContext) {
 
        @Override
          public boolean matches(RelOptRuleCall call) {
@@ -136,10 +136,10 @@ public abstract class PruneScanRule extends RelOptRule {
        };
    }
 
-   public static final RelOptRule getFilterOnScan(QueryContext context){
+   public static final RelOptRule getFilterOnScan(OptimizerRulesContext optimizerRulesContext){
      return new PruneScanRule(
            RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
-           "PruneScanRule:Filter_On_Scan", context) {
+           "PruneScanRule:Filter_On_Scan", optimizerRulesContext) {
 
        @Override
          public boolean matches(RelOptRuleCall call) {
@@ -196,11 +196,11 @@ public abstract class PruneScanRule extends RelOptRule {
      };
    }
 
-  public static final RelOptRule getFilterOnProjectParquet(QueryContext context){
+  public static final RelOptRule getFilterOnProjectParquet(OptimizerRulesContext optimizerRulesContext){
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
         "PruneScanRule:Filter_On_Project_Parquet",
-        context) {
+        optimizerRulesContext) {
 
       @Override
       public boolean matches(RelOptRuleCall call) {
@@ -258,10 +258,10 @@ public abstract class PruneScanRule extends RelOptRule {
   // Using separate rules for Parquet column based partition pruning. In the future, we may want to see if we can combine these into
   // a single rule which handles both types of pruning
 
-  public static final RelOptRule getFilterOnScanParquet(QueryContext context){
+  public static final RelOptRule getFilterOnScanParquet(OptimizerRulesContext optimizerRulesContext){
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
-        "PruneScanRule:Filter_On_Scan_Parquet", context) {
+        "PruneScanRule:Filter_On_Scan_Parquet", optimizerRulesContext) {
 
       @Override
       public boolean matches(RelOptRuleCall call) {
@@ -315,11 +315,11 @@ public abstract class PruneScanRule extends RelOptRule {
     };
   }
 
-   final QueryContext context;
+   final OptimizerRulesContext optimizerContext;
 
-   private PruneScanRule(RelOptRuleOperand operand, String id, QueryContext context) {
+   private PruneScanRule(RelOptRuleOperand operand, String id, OptimizerRulesContext optimizerContext) {
      super(operand, id);
-     this.context = context;
+     this.optimizerContext = optimizerContext;
    }
 
    protected abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel);
@@ -327,7 +327,7 @@ public abstract class PruneScanRule extends RelOptRule {
    protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
      final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
      PartitionDescriptor descriptor = getPartitionDescriptor(settings, scanRel);
-     final BufferAllocator allocator = context.getAllocator();
+     final BufferAllocator allocator = optimizerContext.getAllocator();
 
 
      RexNode condition = null;
@@ -411,13 +411,13 @@ public abstract class PruneScanRule extends RelOptRule {
        logger.debug("Attempting to prune {}", pruneCondition);
        LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
        ErrorCollectorImpl errors = new ErrorCollectorImpl();
-       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, context.getFunctionRegistry());
+       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, optimizerContext.getFunctionRegistry());
        if (errors.getErrorCount() != 0) {
          logger.warn("Failure while materializing expression [{}].  Errors: {}", expr, errors);
        }
 
        output.allocateNew(partitions.size());
-       InterpreterEvaluator.evaluate(partitions.size(), context, container, output, materializedExpr);
+       InterpreterEvaluator.evaluate(partitions.size(), optimizerContext, container, output, materializedExpr);
        int record = 0;
 
        List<String> newFiles = Lists.newArrayList();

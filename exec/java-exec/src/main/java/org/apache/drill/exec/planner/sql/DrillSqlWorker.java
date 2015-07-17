@@ -121,7 +121,7 @@ public class DrillSqlWorker {
         DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
     RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
         DrillRuleSets.getPhysicalRules(context),
-        storagePluginRegistry.getStoragePluginRuleSet());
+        storagePluginRegistry.getStoragePluginRuleSet(context));
 
     // Following is used in LOPT join OPT.
     RuleSet logicalConvertRules = DrillRuleSets.mergedRuleSets(
