@@ -125,17 +125,9 @@ The following table describes the attributes you configure for storage plugins i
 
 \* Pertains only to distributed drill installations using the mapr-drill package.  
 
-## Using the Formats
+## Using the Formats Attributes
 
-You can use the following attributes in the `formats` area of the storage plugin configuration. When setting these attributes, you also need to set the `sys.options` property `exec.storage.enable_new_text_reader` to true (the default):
-
-* comment  
-* escape  
-* fieldDeliimiter  
-* quote  
-* skipFirstLine
-
-For more information and examples of using formats for text files, see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).
+You set the formats attributes, such as skipFirstLine, in the `formats` area of the storage plugin configuration. When setting attributes for text files, such as CSV, you also need to set the `sys.options` property `exec.storage.enable_new_text_reader` to true (the default). For more information and examples of using formats for text files, see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).
 
 ## Using Other Attributes
 

@@ -44,10 +44,10 @@ VMware Player or VMware Fusion:
     If you are running VMware Fusion, select **Import**.  
 
     ![drill query flow]({{ site.baseurl }}/docs/img/vmWelcome.png)
-3. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill file, and select `MapR-Sandbox-For-Apache-Drill-1.0.0-4.1.0-vmware.ova`.  
+3. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill file, and select `MapR-Sandbox-For-Apache-Drill-<version>-<version>-vmware.ova`.  
     The Import Virtual Machine dialog appears.
 4. Click **Import**. The virtual machine player imports the sandbox.  
-5. Select `MapR-Sandbox-For-Apache-Drill-4.1.0_VM`, and click **Play virtual machine**. It takes a few minutes for the MapR services to start.  
+5. Select `MapR-Sandbox-For-Apache-Drill-<version>_VM`, and click **Play virtual machine**. It takes a few minutes for the MapR services to start.  
 
      After the MapR services start and installation completes, the following screen
 appears:
@@ -84,7 +84,7 @@ VirtualBox:
 3. Select **File > Import Appliance**. The Import Virtual Appliance dialog appears.
 
      ![drill query flow]({{ site.baseurl }}/docs/img/vbImport.png)
-4. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill, select MapR-Sandbox-For-Apache-Drill-1.0.0-4.1.0.ova, and click **Next**. The Appliance Settings window appears.
+4. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill, select MapR-Sandbox-For-Apache-Drill-<version>-<version>.ova, and click **Next**. The Appliance Settings window appears.
 
      ![drill query flow]({{ site.baseurl }}/docs/img/vbApplSettings.png)
 5. Select the check box at the bottom of the screen: **Reinitialize the MAC address of all network cards**, then click **Import**. The Import Appliance imports the sandbox.

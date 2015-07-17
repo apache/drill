@@ -15,8 +15,8 @@ Using the secure shell instead of the VM interface has some advantages. You can 
 Drill includes a shell for connecting to relational databases and executing SQL commands. On the sandbox, the Drill shell runs in embedded mode. After logging into the sandbox,  use the `SQLLine` command. The Drill shell appears, and you can run Drill queries.  
 
     [mapr@maprdemo ~]$ sqlline
-    apache drill 1.0.0 
-    "the only truly happy people are children, the creative minority and drill users"
+    apache drill 1.1.0 
+    "Does your data know the Drill?"
     0: jdbc:drill:>
 
 In this tutorial you query a number of data sets, including Hive and HBase, and files on the file system, such as CSV, JSON, and Parquet files. To access these diverse data sources, you connect Drill to storage plugins. 

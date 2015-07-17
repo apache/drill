@@ -237,11 +237,17 @@ SELECT SUM(salary) FROM cp.`employee.json` WHERE employee_id IN (1139, 1140, 114
 
 Drill provides following aggregate statistics functions:
 
-* stddev(expression) 
+* stddev(expression)  
+  An alias for stddev_samp
 * stddev_pop(expression)
+  Population standard deviate of input values
 * stddev_samp(expression)
+  Sample standard deviate of input values
 * variance(expression)
+  An alias for var_samp
 * var_pop(expression)
+  Population variance of input values (the population standard deviated squared)
 * var_samp(expression)
+  Sample variance of input values (sample standard deviation squared)
   
 These functions take a SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, or DECIMAL expression as the argument. If the expression is FLOAT, the function returns  DOUBLE; otherwise, the function returns DECIMAL.

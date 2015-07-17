@@ -45,18 +45,18 @@ Complete the following steps to install Drill:
 
 1. In a terminal windows, change to the directory where you want to install Drill.
 
-2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz) or run one of the following commands, depending on which you have installed on your system:
+2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz) or run one of the following commands, depending on which you have installed on your system:
 
-   * `wget http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
-   *  `curl -o apache-drill-1.0.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz`  
+   * `wget http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz`  
+   *  `curl -o apache-drill-1.1.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz`  
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
 4. Extract the contents of the Drill tar.gz file. Use sudo only if necessary:  
 
-        tar -xvzf apache-drill-1.0.0.tar.gz  
+        tar -xvzf apache-drill-1.1.0.tar.gz  
 
-The extraction process creates the installation directory named apache-drill-1.0.0 containing the Drill software.
+The extraction process creates the installation directory named apache-drill-1.1.0 containing the Drill software.
 
 At this point, you can start Drill.
 
@@ -65,7 +65,7 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-1.0.0  
+        cd apache-drill-1.1.0  
 
 2. Issue the following command to launch Drill in embedded mode:
 
@@ -79,9 +79,9 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
 You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
-1. Click the following link to download the latest version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz](http://getdrill.org/drill/download/apache-drill-1.0.0.tar.gz)  
-2. Move the `apache-drill-1.0.0.tar.gz` file to a directory where you want to install Drill.  
-3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-1.0.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-1.0.0 containing the Drill software. For example:  
+1. Click the following link to download the latest version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz](http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz)  
+2. Move the `apache-drill-1.1.0.tar.gz` file to a directory where you want to install Drill.  
+3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-1.1.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-1.1.0 containing the Drill software. For example:  
    ![drill install dir]({{ site.baseurl }}/docs/img/drill-directory.png)
 
 At this point, you can start Drill.  
@@ -92,8 +92,8 @@ Start Drill by running the sqlline.bat file and typing a connection string, as s
 Start the Drill shell using the **sqlline command**. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch the Drill shell:
 
 1. Open Command Prompt.  
-2. Open the apache-drill-1.0.0 folder. For example:  
-   ``cd apache-drill-1.0.0``
+2. Open the apache-drill-1.1.0 folder. For example:  
+   ``cd apache-drill-1.1.0``
 3. Go to the bin directory. For example:  
    ``cd bin``
 4. Type the following command on the command line:
@@ -184,7 +184,7 @@ your operating system:
 
 The query returns the following results:
 
-    SELECT * FROM dfs.`Users/khahn/drill/apache-drill-1.0.0-SNAPSHOT/sample-data/nation.parquet`;
+    SELECT * FROM dfs.`Users/khahn/drill/apache-drill-1.1.0-SNAPSHOT/sample-data/nation.parquet`;
     +--------------+-----------------+--------------+-----------------------+
     | N_NATIONKEY  |     N_NAME      | N_REGIONKEY  |       N_COMMENT       |
     +--------------+-----------------+--------------+-----------------------+

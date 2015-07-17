@@ -33,7 +33,7 @@ In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/d
 
 * comment  
 * escape  
-* deliimiter  
+* delimiter  
 * quote  
 * skipFirstLine
 
