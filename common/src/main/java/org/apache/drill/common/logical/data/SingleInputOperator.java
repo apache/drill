@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Iterators;
 
 /**
- * SimpleOperator is an operator that has one inputs at most.
+ * SimpleOperator is an operator that has one input at most.
  */
 public abstract class SingleInputOperator extends LogicalOperatorBase {
 
@@ -39,7 +39,11 @@ public abstract class SingleInputOperator extends LogicalOperatorBase {
   @JsonProperty(value="input", required=true)
   public void setInput(LogicalOperator input) {
     if (input instanceof SinkOperator) {
-      throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
+      throw new UnexpectedOperatorType(
+          "You have set the input of a sink node of type ["
+          + input.getClass().getSimpleName() + "] (which is not a SinkOperator)"
+          + " as the input for another node of type ["
+          + this.getClass().getSimpleName() + "].  This is invalid.");
     }
     this.input = input;
     input.registerAsSubscriber(this);

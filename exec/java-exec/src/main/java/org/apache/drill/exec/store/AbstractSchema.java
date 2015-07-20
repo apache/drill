@@ -39,10 +39,17 @@ import com.google.common.collect.Lists;
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
+  /** Full schema pathname of this schema. */
   protected final List<String> schemaPath;
+  /** Simple name of this schema. */
   protected final String name;
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
+  /**
+   * @param  parentSchemaPath  schema path of any parent schema; empty list if
+   *                           none
+   * @param name  simple name of schema to construct
+   */
   public AbstractSchema(List<String> parentSchemaPath, String name) {
     schemaPath = Lists.newArrayList();
     schemaPath.addAll(parentSchemaPath);
@@ -61,6 +68,9 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
                       this.getClass().getSimpleName()));
   }
 
+  /**
+   * Gets the simple name of this schema.
+   */
   public String getName() {
     return name;
   }
@@ -73,18 +83,22 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     return Joiner.on(".").join(schemaPath);
   }
 
+  /**
+   * Gets the storage plug-in type of this schema (e.g., "file", "ischema").
+   */
   public abstract String getTypeName();
 
   /**
-   * The schema can be a top level schema which doesn't have its own tables, but refers
-   * to one of the default sub schemas for table look up.
+   * The schema can be a top-level schema which doesn't have its own tables,
+   * but refers to one of the default subschemas for table lookup.
    *
    * Default implementation returns itself.
    *
-   * Ex. "dfs" schema refers to the tables in "default" workspace when querying for
-   * tables in "dfs" schema.
+   * For example, the "{@code dfs}" schema refers to the tables in the
+   * "{@code default}" workspace when querying for tables in "{@code dfs}"
+   * schema.
    *
-   * @return Return the default schema where tables are created or retrieved from.
+   * @return  the default schema where tables are created or retrieved from.
    */
   public Schema getDefaultSchema() {
     return this;
@@ -116,8 +130,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
 
   /**
    *
-   * @param tableName : new table name.
-   * @param partitionColumns : list of partition columns. Empty list if there is no partition columns.
+   * @param  tableName  new table name.
+   * @param  partitionColumns  list of partition columns. Empty list if there is no partition columns.
    * @return
    */
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns) {

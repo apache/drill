@@ -36,8 +36,8 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalClusterCoordinator.class);
 
   /*
-   * Since we hand out the endpoints list in {@see #getAvailableEndpoints()}, we use a
-   * {@see java.util.concurrent.ConcurrentHashMap} because those guarantee not to throw
+   * Since we hand out the endpoints list in {@link #getAvailableEndpoints()}, we use a
+   * {@link java.util.concurrent.ConcurrentHashMap} because those guarantee not to throw
    * ConcurrentModificationException.
    */
   private final Map<RegistrationHandle, DrillbitEndpoint> endpoints = new ConcurrentHashMap<>();

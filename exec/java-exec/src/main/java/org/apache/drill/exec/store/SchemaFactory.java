@@ -23,17 +23,24 @@ import org.apache.drill.exec.ops.QueryContext;
 
 import java.io.IOException;
 
+
 /**
- * StoragePlugins implements this interface to register the schemas they provide.
+ * Item that has schema or schema to be registered.
+ * <p>
+ *   Storage plug-in implementation classes implement this interface to register
+ *   the schemas they provide.
+ * </p>
  */
 public interface SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaFactory.class);
 
   /**
-   * Register the schemas provided by this SchemaFactory implementation under the given parent schema.
+   * Registers the schemas provided by this SchemaFactory implementation under
+   * the given parent schema.
    *
-   * @param schemaConfig Configuration for schema objects.
-   * @param parent Reference to parent schema.
+   * @param  schemaConfig  configuration for schema objects.
+   * @param  parent  the parent schema (under which to register this
+   *           implementation's schema).
    * @throws IOException
    */
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException;

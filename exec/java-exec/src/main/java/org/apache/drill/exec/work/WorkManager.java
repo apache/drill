@@ -67,9 +67,9 @@ public class WorkManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
 
   /*
-   * We use a {@see java.util.concurrent.ConcurrentHashMap} because it promises never to throw a
-   * {@see java.util.ConcurrentModificationException}; we need that because the statusThread may
-   * iterate over the map while other threads add FragmentExecutors via the {@see #WorkerBee}.
+   * We use a {@link java.util.concurrent.ConcurrentHashMap} because it promises never to throw a
+   * {@link java.util.ConcurrentModificationException}; we need that because the statusThread may
+   * iterate over the map while other threads add FragmentExecutors via the {@link #WorkerBee}.
    */
   private final Map<FragmentHandle, FragmentExecutor> runningFragments = new ConcurrentHashMap<>();
 

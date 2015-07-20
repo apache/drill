@@ -39,6 +39,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+
 /**
  * Generates records for POJO RecordReader by scanning the given schema.
  */
@@ -49,18 +50,55 @@ public abstract class RecordGenerator {
     this.filter = filter;
   }
 
+  /**
+   * Visits the given schema (container-level aspect--not including
+   * tables/views).
+   * <p>This implementation returns true.</p>
+   *
+   * @param  schemaName  the qualified name of the given schema;
+   *           CURRENTLY, either "" or null is allowed for root schema
+   * @param  schema   the given schema
+   * @return  whether visitor should process (any) tables or views of the schema
+   */
   public boolean visitSchema(String schemaName, SchemaPlus schema) {
     return true;
   }
 
+  /**
+   * Visits the given table (including view) (container-level aspect--not
+   * including fields).
+   * <p>This implementation returns true.</p>
+   *
+   * @param  schemaName  the given table's schema's qualified name
+   * @param  tableName  the given table's simple name
+   * @param  table  the given table
+   * @return  whether visitor should process (any) fields of the table
+   */
   public boolean visitTable(String schemaName, String tableName, Table table) {
     return true;
   }
 
-  public boolean visitField(String schemaName, String tableName, RelDataTypeField field) {
+  /**
+   * Visits the given field.
+   * <p>This implementation returns true.</p>
+   *
+   * @param  schemaName  the given view's schema's qualified name
+   * @param  tableName  the given view's simple name
+   * @param  field  the given view
+   * @return  true
+   */
+  public boolean visitField(String schemaName, String tableName,
+                            RelDataTypeField field) {
     return true;
   }
 
+  /**
+   * Indicates whether to visit the given schema (for this record generator).
+   *
+   * @param  schemaName  the qualified name of the given schema
+   * @param  schema  the given schema
+   * @return whether to visit the given schema (for this record generator)
+   */
   protected boolean shouldVisitSchema(String schemaName, SchemaPlus schema) {
     try {
       // if the schema path is null or empty (try for root schema)
@@ -73,6 +111,8 @@ public abstract class RecordGenerator {
         return false;
       }
 
+      // Note:  Schema name is in TABLE_SCHEMA for TABLES / VIEWS / COLUMNS,
+      //                    is in SCHEMA_NAME for SCHEMATA.
       Map<String, String> recordValues =
           ImmutableMap.of(SHRD_COL_TABLE_SCHEMA, schemaName,
                           SCHS_COL_SCHEMA_NAME, schemaName);
@@ -81,7 +121,7 @@ public abstract class RecordGenerator {
         // For other two results (TRUE, INCONCLUSIVE) continue to visit the schema.
         return false;
       }
-    } catch(ClassCastException e) {
+    } catch (ClassCastException e) {
       // ignore and return true as this is not a Drill schema
     }
     return true;
@@ -106,22 +146,24 @@ public abstract class RecordGenerator {
   }
 
   /**
-   * Recursively scans the given schema, invoking the visitor as appropriate.
-   * @param  schemaPath  the path to the given schema, so far
+   * Recursively scans the given schema, invoking the visitor (this) on schema
+   * subcomponents as requested.
+   * @param  schemaPath  the qualified name of the given schema
    * @param  schema  the given schema
    */
   private void scanSchema(String schemaPath, SchemaPlus schema) {
 
     // Recursively scan any subschema.
     for (String name: schema.getSubSchemaNames()) {
-      scanSchema(schemaPath +
-          (schemaPath == "" ? "" : ".") + // If we have an empty schema path, then don't insert a leading dot.
-          name, schema.getSubSchema(name));
+      scanSchema(
+          // If we have an empty schema path, then don't insert a leading dot.
+          schemaPath + (schemaPath == "" ? "" : ".") + name,
+          schema.getSubSchema(name));
     }
 
     // Visit this schema and if requested ...
     if (shouldVisitSchema(schemaPath, schema) && visitSchema(schemaPath, schema)) {
-      // ... do for each of the schema's tables.
+      // ... visit each of the schema's tables/views.
       for (String tableName: schema.getTableNames()) {
         Table table = schema.getTable(tableName);
 
@@ -133,7 +175,7 @@ public abstract class RecordGenerator {
 
         // Visit the table, and if requested ...
         if (shouldVisitTable(schemaPath, tableName) && visitTable(schemaPath,  tableName, table)) {
-          // ... do for each of the table's fields.
+          // ... visit each of the table's fields.
           RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl());
           for (RelDataTypeField field: tableRow.getFieldList()) {
             visitField(schemaPath,  tableName, field);
@@ -166,7 +208,7 @@ public abstract class RecordGenerator {
       AbstractSchema as = schema.unwrap(AbstractSchema.class);
       records.add(new Records.Schema(IS_CATALOG_NAME, schemaName, "<owner>",
                                      as.getTypeName(), as.isMutable()));
-      return false;
+      return false;  // Skip tables (this is for SCHEMATA).
     }
   }
 
@@ -182,7 +224,7 @@ public abstract class RecordGenerator {
     public boolean visitTable(String schemaName, String tableName, Table table) {
       records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName,
                                     table.getJdbcTableType().toString()));
-      return false;
+      return false; // Skip fields (this is for TABLES).
     }
   }
 
@@ -200,7 +242,7 @@ public abstract class RecordGenerator {
         records.add(new Records.View(IS_CATALOG_NAME, schemaName, tableName,
                     ((DrillViewInfoProvider) table).getViewSql()));
       }
-      return false;
+      return false; // Skip fields (this is for VIEWS).
     }
   }
 

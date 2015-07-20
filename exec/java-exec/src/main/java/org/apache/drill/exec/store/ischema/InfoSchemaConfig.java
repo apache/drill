@@ -19,9 +19,11 @@ package org.apache.drill.exec.store.ischema;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
 
-public class InfoSchemaConfig extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaConfig.class);
 
+public class InfoSchemaConfig extends StoragePluginConfig {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaConfig.class);
+
+  /** Name of plug-in type. */
   public static final String NAME = "ischema";
 
   @Override

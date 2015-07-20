@@ -134,7 +134,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   }
 
   /**
-   * Get root schema with schema owner as the user who issued the query that is managed by this QueryContext.
+   * Creates a root schema with schema owner being the user who issued the query
+   * that is managed by this QueryContext.
    * @return Root of the schema tree.
    */
   public SchemaPlus getRootSchema() {
@@ -142,7 +143,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   }
 
   /**
-   * Return root schema with schema owner as the given user.
+   * Creates a root schema with schema owner being given user.
    *
    * @param userName User who owns the schema tree.
    * @return Root of the schema tree.
@@ -154,7 +155,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   }
 
   /**
-   *  Create and return a SchemaTree with given <i>schemaConfig</i>.
+   * Creates a root schema with a given SchemaConfig.
    * @param schemaConfig
    * @return
    */
@@ -165,7 +166,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
     } catch(IOException e) {
-      // We can't proceed further without a schema, throw a runtime exception.
+      // We can't proceed further without a schema; throw a runtime exception.
       final String errMsg = String.format("Failed to create schema tree: %s", e.getMessage());
       logger.error(errMsg, e);
       throw new DrillRuntimeException(errMsg, e);

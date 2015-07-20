@@ -26,6 +26,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import com.google.protobuf.TextFormat;
 
+import java.sql.ResultSetMetaData;
+
+
 public class Types {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 

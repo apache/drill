@@ -21,6 +21,8 @@ public class AssertionUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AssertionUtil.class);
 
 
+  /** Indicates whether assertions were enabled (for package
+   *  {@link org.apache.drill.exec.util}). */
   public static final boolean ASSERT_ENABLED;
   public static final boolean BOUNDS_CHECKING_ENABLED;
 
@@ -31,6 +33,10 @@ public class AssertionUtil {
     BOUNDS_CHECKING_ENABLED = ASSERT_ENABLED || !"true".equals(System.getProperty("drill.enable_unsafe_memory_access"));
   }
 
+  /**
+   * Reports whether assertions were enabled (for package
+   * {@link org.apache.drill.exec.util}).
+   */
   public static boolean isAssertionsEnabled(){
     return ASSERT_ENABLED;
   }

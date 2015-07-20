@@ -45,6 +45,41 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+
+/**
+ * Configuration for Drillbit or client.
+ *
+ * <p>
+ *   DrillConfig loads Drill configuration information, primarily from
+ *   configuration files.  It does this using a combination of classpath
+ *   scanning and configuration fallbacks provided by the TypeSafe configuration
+ *   library.
+ *   The order of precedence is defined by the following loading order:
+ * </p>
+ * <ul>
+ *   <li>
+ *     Load the default configuration file:  Load a single classpath resource
+ *     named "{@code drill-default.conf}".  If multiple such resources are on
+ *     the classpath, which one is read is unspecified.
+ *   </li>
+ *   <li>
+ *     Load each module's per-module configuration file:  Load all classpath
+ *     resources named "{@code drill-module.conf}".  Loading order is
+ *     unspecified.
+ *   </li>
+ *   <li>
+ *     Load an optional overrides configuration file:  By default, try to load
+ *     a single classpath resource named "{@code drill-override.conf}".  If a
+ *     non-null value for an {@code overrideFileResourcePathname} parameter is
+ *     provided, that value is used instead of the default resource pathname of
+ *     "{@code drill-override.conf}".  If multiple resources are on the
+ *     classpath, which copy is read is unspecified.
+ *   </li>
+ *   <li>
+ *     Load any additional configuration overrides from JVM system properties.
+ *   </li>
+ * </ul>
+ */
 public final class DrillConfig extends NestedConfig{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
@@ -89,58 +124,85 @@ public final class DrillConfig extends NestedConfig{
   }
 
   /**
-   * Creates a DrillConfig object using the default config file name
-   * and with server-specific configuration options enabled.
-   * @return The new DrillConfig object.
+   * Creates a {@link DrillConfig Drill configuration} using the default
+   * resource pathname for the overrides configuration file and with
+   * server-specific configuration options enabled.
+   *
+   * @return the new configuration object
+   *
+   * @see DrillConfig class description
    */
   public static DrillConfig create() {
     return create(null, true);
   }
 
   /**
-   * Creates a {@link DrillConfig configuration} using the default config file
-   * name and with server-specific configuration options disabled.
+   * Creates a {@link DrillConfig Drill configuration} with server-specific
+   * configuration options disabled.  Uses the default resource pathname for the
+   * overrides configuration file.
    *
-   * @return {@link DrillConfig} instance
+   * @return the new configuration object
+   *
+   * @see DrillConfig class description
    */
   public static DrillConfig forClient() {
     return create(null, false);
   }
 
   /**
-   * <p>
-   * DrillConfig loads up Drill configuration information. It does this utilizing a combination of classpath scanning
-   * and Configuration fallbacks provided by the TypeSafe configuration library. The order of precedence is as
-   * follows:
-   * </p>
-   * <p>
-   * Configuration values are retrieved as follows:
-   * <ul>
-   * <li>Check a single copy of "drill-override.conf".  If multiple copies are
-   *     on the classpath, which copy is read is indeterminate.
-   *     If a non-null value for overrideFileResourcePathname is provided, this
-   *     is used instead of "{@code drill-override.conf}".</li>
-   * <li>Check all copies of "{@code drill-module.conf}".  Loading order is
-   *     indeterminate.</li>
-   * <li>Check a single copy of "{@code drill-default.conf}".  If multiple
-   *     copies are on the classpath, which copy is read is indeterminate.</li>
-   * </ul>
+   * Creates a {@link DrillConfig Drill configuration}, allowing overriding
+   * of the resource pathname of overrides configuration file.  Creates it with
+   * server-specific configuration options enabled.
    *
-   * </p>
    * @param overrideFileResourcePathname
-   *          the classpath resource pathname of the file to use for
-   *          configuration override purposes; {@code null} specifies to use the
-   *          default pathname ({@link CommonConstants.CONFIG_OVERRIDE}) (does
-   *          <strong>not</strong> specify to suppress trying to load an
+   *          the classpath resource pathname to use for the overrides
+   *          configuration file; {@code null} specifies to use the
+   *          default pathname
+   *          ({@link CommonConstants#CONFIG_OVERRIDE_RESOURCE_PATHNAME}) (null
+   *          does <strong>not</strong> specify to suppress trying to load an
    *          overrides file)
-   *  @return A merged Config object.
+   *
+   * @return the new configuration object
+   *
+   * @see DrillConfig class description
    */
   public static DrillConfig create(String overrideFileResourcePathname) {
     return create(overrideFileResourcePathname, true);
   }
 
   /**
+   * Creates a {@link DrillConfig Drill configuration}, allowing overriding
+   * of the resource pathname of overrides configuration file and specifying
+   * whether to enable or disable server-specific configuration options.
+   *
+   * @param  overrideFileResourcePathname
+   *           see {@link #create(String)}
+   * @param  enableServerConfigs
+   *           whether to enable server-specific configuration options
+   *
+   *
+   * @return the new configuration object
+   *
+   * @see #create(String)
+   * @see DrillConfig class description
+   */
+  public static DrillConfig create(String overrideFileResourcePathname, boolean enableServerConfigs) {
+    return create(overrideFileResourcePathname, null, enableServerConfigs);
+  }
+
+  /**
    * <b><u>Do not use this method outside of test code.</u></b>
+   * <p>
+   *   NOTE:  This is currently used outside of test code.
+   * </p>
+   *
+   * @param  testConfigurations
+   *           optional property map for further overriding (after any overrides
+   *           configuration file's overrides are merged in)
+   *
+   * @return the new configuration object
+   *
+   * @see DrillConfig class description
    */
   @VisibleForTesting
   public static DrillConfig create(Properties testConfigurations) {
@@ -148,22 +210,12 @@ public final class DrillConfig extends NestedConfig{
   }
 
   /**
-   * @param overrideFileResourcePathname
-   *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
-   */
-  public static DrillConfig create(String overrideFileResourcePathname, boolean enableServerConfigs) {
-    return create(overrideFileResourcePathname, null, enableServerConfigs);
-  }
-
-  /**
-   * @param overrideFileResourcePathname
-   *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
-   * @param overriderProps
-   *          optional property map for further overriding (after override file
-   *          is assimilated
-   * @param enableServerConfigs
-   *          whether to enable server-specific configuration options
-   * @return
+   * Creates a {@link DrillConfig Drill configuration}.
+   * @param  overrideFileResourcePathname  see {@link #create(String, boolean)}
+   * @param  overriderProps  see {@link #create(Properties)}
+   * @param  enableServerConfigs  see {@link #create(String, boolean)}
+   *
+   * @return the new configuration object
    */
   private static DrillConfig create(String overrideFileResourcePathname,
                                     final Properties overriderProps,

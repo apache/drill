@@ -44,10 +44,10 @@ public abstract class DrillTable implements Table {
 
   /**
    * Creates a DrillTable instance.
-   * @param storageEngineName StorageEngine name.
-   * @param plugin Reference to StoragePlugin.
-   * @param userName Whom to impersonate while reading the contents of the table.
-   * @param selection Table contents (type and contents depend on type of StoragePlugin).
+   * @param  storageEngineName  storage plug-in configuration name.
+   * @param  plugin  Reference to StoragePlugin.
+   * @param  userName  Whom to impersonate while reading the contents of the table.
+   * @param  selection  Table contents (type and contents depend on type of StoragePlugin).
    */
   public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, Object selection) {
     this.selection = selection;

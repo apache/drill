@@ -23,10 +23,13 @@ import com.google.common.collect.Iterators;
 
 
 /**
- * An operator that produces data without any parents.  (zero input operator)
+ * An operator that produces data without any parents.  (Zero-input operator.)
  */
-public abstract class SourceOperator extends LogicalOperatorBase{
+public abstract class SourceOperator extends LogicalOperatorBase {
 
+  /**
+   * This implementation returns the empty iterator.
+   */
   @Override
   public Iterator<LogicalOperator> iterator() {
       return Iterators.emptyIterator();

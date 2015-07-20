@@ -17,11 +17,24 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
-
+/**
+ * A unit of work for reading a contiguous portion of a file.
+ */
 public interface FileWork {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileWork.class);
 
+  /**
+   * Gets the pathname of the file (in Hadoop-FS Path string format).
+   */
   public String getPath();
+
+  /**
+   * Gets the starting offset of the portion in bytes.
+   */
   public long getStart();
+
+  /**
+   * Gets the length of the portion in bytes.
+   */
   public long getLength();
 }

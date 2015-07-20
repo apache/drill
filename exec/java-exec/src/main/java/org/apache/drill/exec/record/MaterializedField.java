@@ -30,6 +30,14 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 
+/**
+ * A field with a known pathname (within a row type) and a known data type.
+ * <p>
+ *  (What is materialized is primarily the data type.  This class does
+ *  represent a field that is materialized in the sense of having data values
+ *  (as materialized view does).)
+ * </p>
+ */
 public class MaterializedField {
   private final Key key;
   // use an ordered set as existing code relies on order (e,g. parquet writer)
@@ -274,7 +282,7 @@ public class MaterializedField {
   }
 
   /**
-   * Since the {@code MaterializedField) itself is mutable, in certain cases, it is not suitable
+   * Since the {@code MaterializedField} itself is mutable, in certain cases, it is not suitable
    * as a key of a {@link Map}. This inner class allows the {@link MaterializedField} object to be
    * used for this purpose.
    */

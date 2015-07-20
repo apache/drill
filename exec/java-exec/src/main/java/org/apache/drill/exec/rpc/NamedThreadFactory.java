@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>An instance creates names with an instance-specific prefix suffixed with sequential
  * integers.</p>
  *
- * <p>Concurrency: See {@link newThread}.</p>
+ * <p>Concurrency: See {@link #newThread}.</p>
  */
 public class NamedThreadFactory implements ThreadFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NamedThreadFactory.class);

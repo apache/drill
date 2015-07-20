@@ -45,10 +45,15 @@ import org.apache.drill.exec.physical.config.Values;
 import org.apache.drill.exec.physical.config.WindowPOP;
 
 /**
- * Visitor class designed to traversal of a operator tree.  Basis for a number of operator manipulations including fragmentation and materialization.
+ * Visitor class designed for traversal of an operator tree.  Basis for a number
+ * of operator manipulations including fragmentation and materialization.
  * @param <RETURN> The class associated with the return of each visit method.
- * @param <EXTRA> The class object associated with additional data required for a particular operator modification.
- * @param <EXCEP> An optional exception class that can be thrown when a portion of a modification or traversal fails.  Must extend Throwable.  In the case where the visitor does not throw any caught exception, this can be set as RuntimeException.
+ * @param <EXTRA> The class object associated with additional data required for
+ *   a particular operator modification.
+ * @param <EXCEP> An optional exception class that can be thrown when a portion
+ *   of a modification or traversal fails.  Must extend Throwable.  In the case
+ *   where the visitor does not throw any caught exception, this can be set as
+ *   RuntimeException.
  */
 public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalVisitor.class);

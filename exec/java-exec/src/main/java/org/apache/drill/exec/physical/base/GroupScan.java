@@ -39,6 +39,10 @@ public interface GroupScan extends Scan, HasAffinity{
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 
+  /**
+   * Gets this group scan's subscan that is assigned to the given minor fragment
+   * ID.
+   */
   public abstract SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException;
 
   @JsonIgnore
@@ -81,8 +85,8 @@ public interface GroupScan extends Scan, HasAffinity{
   public boolean canPushdownProjects(List<SchemaPath> columns);
 
   /**
-   * Return the number of non-null value in the specified column. Raise exception, if groupscan does not
-   * have exact column row count.
+   * Reports the number of non-null values in the specified column.  Raises
+   * exception if group scan does not have exact column row count.
    */
   public long getColumnValueCount(SchemaPath column);
 

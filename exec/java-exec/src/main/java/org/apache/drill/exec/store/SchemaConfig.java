@@ -68,16 +68,18 @@ public class SchemaConfig {
   }
 
   /**
-   * @return User whom to impersonate as while {@link net.hydromatic.optiq.SchemaPlus} instances
-   * interact with the underlying storage.
+   * @return User whom to impersonate while
+   * {@link org.apache.calcite.schema.SchemaPlus} instances interact with the
+   * underlying storage.
    */
   public String getUserName() {
     return userName;
   }
 
   /**
-   * @return Should ignore if authorization errors are reported while {@link net.hydromatic.optiq.SchemaPlus}
-   * instances interact with the underlying storage.
+   * @return Should ignore if authorization errors are reported while
+   * {@link org.apache.calcite.schema.SchemaPlus} instances interact with the
+   * underlying storage.
    */
   public boolean getIgnoreAuthErrors() {
     return ignoreAuthErrors;

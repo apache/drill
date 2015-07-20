@@ -445,7 +445,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
      * Set the variable length element at the specified index to the supplied byte array.
      *
      * @param index   position of the bit to set
-     * @param bytes   array of bytes to write
+     * @param value   array of bytes to write
      */
     public void set(int index, <#if type.major == "VarLen">byte[]<#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value) {
       setCount++;

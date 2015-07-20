@@ -31,10 +31,10 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
 
 
   /**
-   * Use reflection to scan for implementations of {@see FormatPlugin}.
+   * Uses reflection to scan for implementations of {@link FormatPluginConfig}.
    *
-   * @param config - Drill configuration object, used to find the packages to scan
-   * @return - list of classes that implement the interface.
+   * @param  config  Drill configuration object, used to find the packages to scan
+   * @return  list of classes that implement the interface.
    */
   public synchronized static Class<?>[] getSubTypes(final DrillConfig config) {
     final List<String> packages =

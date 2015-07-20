@@ -323,9 +323,10 @@ public class ScanBatch implements CloseableRecordBatch {
         // Field does not exist add it to the map and the output container
         v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
-          throw new SchemaChangeException(String.format(
-              "The class that was provided %s does not correspond to the expected vector type of %s.",
-              clazz.getSimpleName(), v.getClass().getSimpleName()));
+          throw new SchemaChangeException(
+              String.format("The class that was provided, %s, does not"
+                            + " correspond to the expected vector type of %s.",
+                            clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
 
         final ValueVector old = fieldVectorMap.put(field.key(), v);

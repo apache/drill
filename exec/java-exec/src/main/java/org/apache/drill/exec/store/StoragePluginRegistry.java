@@ -68,15 +68,22 @@ import com.google.common.io.Resources;
 public class StoragePluginRegistry implements Iterable<Map.Entry<String, StoragePlugin>> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginRegistry.class);
 
+  /** Configuration name for the one configuration of the system tables plug-in. */
   public static final String SYS_PLUGIN = "sys";
 
+  /** Configuration name for the one configuration of the INFORMATION_SCHEMA
+   *  plug-in. */
   public static final String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
 
+  /** Map of storage plug-in configuration classes to storage plug-in
+   *  implementation classes' constructors. */
   private Map<Object, Constructor<? extends StoragePlugin>> availablePlugins = new HashMap<Object, Constructor<? extends StoragePlugin>>();
+  /** Map of plug-in configuration names to corresponding plug-in instances. */
   private ConcurrentMap<String, StoragePlugin> plugins;
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
+  /** Store of plug-in configurations accessible by configuration name. */
   private final PStore<StoragePluginConfig> pluginSystemTable;
   private final Object updateLock = new Object();
   private volatile long lastUpdate = 0;
@@ -85,11 +92,11 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public StoragePluginRegistry(DrillbitContext context) {
     try {
       this.context = context;
-      this.pluginSystemTable = context //
-          .getPersistentStoreProvider() //
-          .getStore(PStoreConfig //
-              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
-              .name("sys.storage_plugins") //
+      this.pluginSystemTable = context
+          .getPersistentStoreProvider()
+          .getStore(PStoreConfig
+              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class)
+              .name("sys.storage_plugins")
               .build());
     } catch (IOException | RuntimeException e) {
       logger.error("Failure while loading storage plugin registry.", e);
@@ -141,11 +148,12 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     try {
       /*
-       * Check if the storage plugins system table has any entries.  If not, load the boostrap-storage-plugin file into the system table.
+       * Check if the storage plugins system table has any entries.  If not,
+       * load the bootstrap-storage-plugin.json file into the system table.
        */
       if (!pluginSystemTable.iterator().hasNext()) {
-        // bootstrap load the config since no plugins are stored.
-        logger.info("No storage plugin instances configured in persistent store, loading bootstrap configuration.");
+        // Load the bootstrap configuration since no plug-in configurations are stored.
+        logger.info("No storage plugin instances configured in persistent store; loading bootstrap configuration.");
         Collection<URL> urls = PathScanner.forResource(ExecConstants.BOOTSTRAP_STORAGE_PLUGINS_FILE, false, Resources.class.getClassLoader());
         if (urls != null && ! urls.isEmpty()) {
           logger.info("Loading the storage plugin configs from URLs {}.", urls);
@@ -176,8 +184,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
             StoragePlugin plugin = create(name, config);
             activePlugins.put(name, plugin);
           } catch (ExecutionSetupException e) {
-            logger.error("Failure while setting up StoragePlugin with name: '{}', disabling.", name, e);
+            logger.error("Failure while setting up storage plugin configuration named '{}'; disabling.", name, e);
             config.setEnabled(false);
+            // Write back the modified configuration.
             pluginSystemTable.put(name, config);
           }
         }

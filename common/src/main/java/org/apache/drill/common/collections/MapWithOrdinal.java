@@ -192,7 +192,7 @@ public class MapWithOrdinal<K, V> implements Map<K, V> {
    * assignment. A new ordinal is assigned if key does not exists. Otherwise the same ordinal is re-used but the value
    * is replaced.
    *
-   * {@see java.util.Map#put}
+   * @see java.util.Map#put
    */
   @Override
   public V put(K key, V value) {
@@ -219,7 +219,7 @@ public class MapWithOrdinal<K, V> implements Map<K, V> {
    * re-cycling. The ordinal corresponding to the given key may be re-assigned to another tuple. It is important that
    * consumer checks the ordinal value via {@link #getOrdinal(Object)} before attempting to look-up by ordinal.
    *
-   * {@see java.util.Map#remove}
+   * @see java.util.Map#remove
    */
   @Override
   public V remove(Object key) {

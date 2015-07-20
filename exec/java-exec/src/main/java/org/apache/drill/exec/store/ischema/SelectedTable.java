@@ -32,7 +32,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
  * The set of tables/views in INFORMATION_SCHEMA.
  */
 public enum SelectedTable{
-  // TODO:  Resolve how to not have two different place defining table names:
+  // TODO:  Resolve how to not have two different places defining table names:
   // NOTE: These identifiers have to match the string values in
   // InfoSchemaConstants.
   CATALOGS(new Catalogs()),

@@ -173,7 +173,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   /**
    * Returns 1 if inner vector is explicitly set via #addOrGetVector else 0
    *
-   * @see {@link ContainerVectorLike#size}
+   * @see ContainerVectorLike#size
    */
   @Override
   public int size() {

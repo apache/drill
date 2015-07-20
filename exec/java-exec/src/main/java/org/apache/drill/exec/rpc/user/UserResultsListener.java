@@ -25,7 +25,7 @@ public interface UserResultsListener {
 
   /**
    * QueryId is available. Called when a query is successfully submitted to the server.
-   * @param queryId sent by the server along {@link org.apache.drill.exec.rpc.Acks.OK Acks.OK}
+   * @param queryId sent by the server along {@link org.apache.drill.exec.rpc.Acks#OK Acks.OK}
    */
   void queryIdArrived(QueryId queryId);
 

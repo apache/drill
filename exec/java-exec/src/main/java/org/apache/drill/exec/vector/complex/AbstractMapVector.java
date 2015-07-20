@@ -169,9 +169,13 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   }
 
   /**
-   * Inserts the vector with the given name if it does not exist else replaces it with the new value.
+   * Inserts the given vector with the given name if it does not exist;
+   * otherwise, replaces it with the new value.
    *
-   * Note that this method does not enforce any vector type check nor throws a schema change exception.
+   * <p>
+   *   Note that this method does not enforce any vector type check nor throw a
+   *   schema change exception.
+   * </p>
    */
   protected void putChild(String name, ValueVector vector) {
     putVector(name, vector);
@@ -179,7 +183,8 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   }
 
   /**
-   * Inserts the input vector into the map if it does not exist, replaces if it exists already
+   * Inserts the given vector into the map if it does not exist; replaces if it
+   * exists already.
    * @param name  field name
    * @param vector  vector to be inserted
    */

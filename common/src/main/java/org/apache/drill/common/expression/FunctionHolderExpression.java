@@ -73,7 +73,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public abstract boolean isRandom();
 
   /**
-   * @ return a copy of FunctionHolderExpression, with passed in argument list.
+   * @return a copy of FunctionHolderExpression, with passed-in argument list.
    */
   public abstract FunctionHolderExpression copy(List<LogicalExpression> args);
 

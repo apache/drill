@@ -38,11 +38,21 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   protected AbstractStoragePlugin(){
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * This base implementation returns false.
+   */
   @Override
   public boolean supportsRead() {
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * This base implementation returns false.
+   */
   @Override
   public boolean supportsWrite() {
     return false;
