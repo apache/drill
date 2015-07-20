@@ -17,9 +17,16 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PartitionDescriptor;
+import org.apache.drill.exec.planner.PartitionLocation;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.hive.HiveTable;
+import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,4 +66,32 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
     return partitionMap.get(name);
   }
 
+  /*
+   * Following method stubs are just added to satisfy the interface implementation.
+   * Actual implementation will be added when hive partition pruning is plugged in
+   * as part of DRILL-3121
+   */
+  private String getBaseTableLocation() {
+    return null;
+  }
+
+  @Override
+  public GroupScan createNewGroupScan(List<String> newFiles) throws Exception {
+    return null;
+  }
+
+  @Override
+  public List<PartitionLocation> getPartitions() {
+    return null;
+  }
+
+  @Override
+  public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions, BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
+
+  }
+
+  @Override
+  public TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings) {
+    return null;
+  }
 }

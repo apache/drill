@@ -33,6 +33,7 @@ import org.apache.calcite.tools.RuleSet;
 
 import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
 import org.apache.drill.exec.planner.physical.FilterPrule;
@@ -156,8 +157,8 @@ public class DrillRuleSets {
 
       PruneScanRule.getFilterOnProject(optimizerRulesContext),
       PruneScanRule.getFilterOnScan(optimizerRulesContext),
-      PruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
-      PruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
+      ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
+      ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.

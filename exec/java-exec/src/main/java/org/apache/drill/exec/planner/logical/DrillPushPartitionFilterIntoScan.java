@@ -120,7 +120,7 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
     DrillRel inputRel = projectRel != null ? projectRel : scanRel;
 
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), new FileSystemPartitionDescriptor(settings.getFsPartitionColumnLabel()));
+    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), new FileSystemPartitionDescriptor(settings, scanRel));
 
     FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
     FormatSelection newSelection = splitFilter(origSelection, builder);
