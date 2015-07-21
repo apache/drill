@@ -37,14 +37,12 @@ import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
-import org.slf4j.Logger;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 public class PathScanner {
-  private static final Logger logger = getLogger(PathScanner.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PathScanner.class);
 
   private static final SubTypesScanner subTypeScanner = new SubTypesScanner();
   private static final TypeAnnotationsScanner annotationsScanner = new TypeAnnotationsScanner();
@@ -82,7 +80,6 @@ public class PathScanner {
   }
 
   /**
-   * ...
    * @param  scanPackages  note:  not currently used
    */
   public static <T> Class<?>[] scanForImplementationsArr(final Class<T> baseClass,
@@ -93,7 +90,6 @@ public class PathScanner {
   }
 
   /**
-   * ...
    * @param  scanPackages  note:  not currently used
    */
   public static <T> Set<Class<? extends T>> scanForImplementations(final Class<T> baseClass,

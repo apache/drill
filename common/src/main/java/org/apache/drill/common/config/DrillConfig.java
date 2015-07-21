@@ -34,8 +34,6 @@ import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.drill.common.logical.data.LogicalOperatorBase;
 import org.apache.drill.common.util.PathScanner;
 import org.reflections.util.ClasspathHelper;
-import org.slf4j.Logger;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -43,13 +41,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
 public final class DrillConfig extends NestedConfig{
-  private static final Logger logger = getLogger(DrillConfig.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
@@ -66,10 +65,8 @@ public final class DrillConfig extends NestedConfig{
   public DrillConfig(Config config, boolean enableServerConfigs) {
     super(config);
     logger.debug("Setting up DrillConfig object.");
-    if (logger.isTraceEnabled()) {
-      logger.trace("Given Config object is:\n{}",
-                   config.root().render(ConfigRenderOptions.defaults()));
-    }
+    logger.trace("Given Config object is:\n{}",
+                 config.root().render(ConfigRenderOptions.defaults()));
     mapper = new ObjectMapper();
 
     if (enableServerConfigs) {
@@ -98,7 +95,7 @@ public final class DrillConfig extends NestedConfig{
 
   /**
    * Creates a DrillConfig object using the default config file name
-   * and with server-specific configuration options disabled.
+   * and with server-specific configuration options enabled.
    * @return The new DrillConfig object.
    */
   public static DrillConfig create() {
@@ -138,8 +135,9 @@ public final class DrillConfig extends NestedConfig{
    * @param overrideFileResourcePathname
    *          the classpath resource pathname of the file to use for
    *          configuration override purposes; {@code null} specifies to use the
-   *          default pathname ({@link CommonConstants.CONFIG_OVERRIDE})
-   *          (<strong>not</strong> to not look for an override file at all)
+   *          default pathname ({@link CommonConstants.CONFIG_OVERRIDE}) (does
+   *          <strong>not</strong> specify to suppress trying to load an
+   *          overrides file)
    *  @return A merged Config object.
    */
   public static DrillConfig create(String overrideFileResourcePathname) {
@@ -155,7 +153,6 @@ public final class DrillConfig extends NestedConfig{
   }
 
   /**
-   * ...
    * @param overrideFileResourcePathname
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
    */
@@ -164,7 +161,6 @@ public final class DrillConfig extends NestedConfig{
   }
 
   /**
-   * ...
    * @param overrideFileResourcePathname
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
    * @param overriderProps
@@ -199,20 +195,16 @@ public final class DrillConfig extends NestedConfig{
 
     // 2. Load per-module configuration files.
     final Collection<URL> urls = PathScanner.getConfigURLs();
-    if (logger.isInfoEnabled()) {
-      final StringBuilder sb = new StringBuilder();
-      for (URL url : urls) {
-        sb.append( "\n\t- " ).append( url );
-      }
-      logger.info("Loading {} module configuration files at: {}.",
-                  urls.size(), sb);
-    }
+    final String lineBrokenList =
+        urls.size() == 0 ? "" : "\n\t- " + Joiner.on("\n\t- ").join(urls);
+    logger.info("Loading {} module configuration files at: {}.",
+                urls.size(), lineBrokenList);
     for (URL url : urls) {
       fallback = ConfigFactory.parseURL(url).withFallback(fallback);
     }
 
-    // 3. Load any overrides configuration file and overrides from JVM
-    // system properties (e.g., {-Dname=value").
+    // 3. Load any specified overrides configuration file along with any
+    //    overrides from JVM system properties (e.g., {-Dname=value").
 
     // (Per ConfigFactory.load(...)'s mention of using Thread.getContextClassLoader():)
     final URL overrideFileUrl =

@@ -23,8 +23,11 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 
+import com.google.common.base.Joiner;
+
+
 public abstract class FormatPluginConfigBase implements FormatPluginConfig{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
 
 
   /**
@@ -33,19 +36,16 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
    * @param config - Drill configuration object, used to find the packages to scan
    * @return - list of classes that implement the interface.
    */
-  public synchronized static Class<?>[] getSubTypes(DrillConfig config) {
-    List<String> packages =
+  public synchronized static Class<?>[] getSubTypes(final DrillConfig config) {
+    final List<String> packages =
         config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
-    Class<?>[] pluginClasses =
+    final Class<?>[] pluginClasses =
         PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
-    if (logger.isDebugEnabled()) {
-      final StringBuilder sb = new StringBuilder();
-      for (Class<?> pluginClass : pluginClasses) {
-        sb.append( "\n\t- " ).append( pluginClass );
-      }
-      logger.debug("Found {} format plugin configuration classes: {}.",
-                   pluginClasses.length, sb);
-    }
+    final String lineBrokenList =
+        pluginClasses.length == 0
+        ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
+    logger.debug("Found {} format plugin configuration classes: {}.",
+                 pluginClasses.length, lineBrokenList);
     return pluginClasses;
   }
 
