@@ -18,12 +18,9 @@
 package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
-import org.apache.calcite.sql.SqlLiteral;
 
 /**
  * Validates the values provided to Drill options.
- *
- * @param <E>
  */
 public abstract class OptionValidator {
   // Stored here as well as in the option static class to allow insertion of option optionName into
@@ -35,31 +32,23 @@ public abstract class OptionValidator {
   }
 
   /**
-   * This method determines if a given value is a valid setting for an option. For options that support some
-   * ambiguity in their settings, such as case-insensitivity for string options, this method returns a modified
-   * version of the passed value that is considered the standard format of the option that should be used for
-   * system-internal representation.
+   * Gets the name of the option for this validator.
    *
-   * @param value - the value to validate
-   * @return - the value requested, in its standard format to be used for representing the value within Drill
-   *            Example: all lower case values for strings, to avoid ambiguities in how values are stored
-   *            while allowing some flexibility for users
-   * @throws ExpressionParsingException - message to describe error with value, including range or list of expected values
+   * @return the option name
    */
-  public abstract OptionValue validate(SqlLiteral value, OptionValue.OptionType optionType) throws ExpressionParsingException;
-
   public String getOptionName() {
     return optionName;
   }
 
   /**
-   * This function returns true if and only if the validator is meant for a short-lived option.
+   * This function returns true if and only if this validator is meant for a short-lived option.
    *
    * NOTE: By default, options are not short-lived. So, if a derived class is meant for a short-lived option,
    * that class must do two things:
    * (1) override this method to return true, and
    * (2) return the number of queries for which the option is valid through {@link #getTtl}.
    * E.g. {@link org.apache.drill.exec.testing.ExecutionControls.ControlsOptionValidator}
+   *
    * @return if this validator is for a short-lived option
    */
   public boolean isShortLived() {
@@ -67,8 +56,9 @@ public abstract class OptionValidator {
   }
 
   /**
-   * If an option is short-lived, this returns the number of queries for which the option is valid.
+   * If an option is short-lived, this method returns the number of queries for which the option is valid.
    * Please read the note at {@link #isShortLived}
+   *
    * @return number of queries for which the option should be valid
    */
   public int getTtl() {
@@ -78,11 +68,18 @@ public abstract class OptionValidator {
     return 0;
   }
 
-  public String getDefaultString() {
-    return null;
-  }
-
+  /**
+   * Gets the default option value for this validator.
+   *
+   * @return default option value
+   */
   public abstract OptionValue getDefault();
 
-  public abstract void validate(OptionValue v) throws ExpressionParsingException;
+  /**
+   * Validates the option value.
+   *
+   * @param value the value to validate
+   * @throws ExpressionParsingException message to describe error with value
+   */
+  public abstract void validate(OptionValue value);
 }

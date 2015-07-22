@@ -26,6 +26,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 
 import java.util.List;
 
@@ -74,7 +75,7 @@ public class ControlsInjectionUtil {
 
     final OptionManager options = session.getOptions();
     try {
-      options.getAdmin().validate(opValue);
+      SystemOptionManager.getValidator(DRILLBIT_CONTROL_INJECTIONS).validate(opValue);
       options.setOption(opValue);
     } catch (final Exception e) {
       fail("Could not set controls options: " + e.getMessage());

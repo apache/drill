@@ -18,7 +18,6 @@
 package org.apache.drill.exec.server.options;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,10 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.util.NlsString;
 
 public class TypeValidators {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
@@ -203,57 +198,12 @@ public class TypeValidators {
     }
 
     @Override
-    public OptionValue validate(final SqlLiteral value, final OptionType optionType)
-        throws ExpressionParsingException {
-      final OptionValue op = getPartialValue(getOptionName(), optionType, value);
-      validate(op);
-      return op;
-    }
-
-    @Override
     public void validate(final OptionValue v) throws ExpressionParsingException {
       if (v.kind != kind) {
         throw new ExpressionParsingException(String.format(
             "Option %s must be of type %s but you tried to set to %s.",
             getOptionName(), kind.name(), v.kind.name()));
       }
-    }
-  }
-
-  private static OptionValue getPartialValue(final String name, final OptionType type, final SqlLiteral literal) {
-    final Object object = literal.getValue();
-    final SqlTypeName typeName = literal.getTypeName();
-    switch (typeName) {
-    case DECIMAL: {
-      final BigDecimal bigDecimal = (BigDecimal) object;
-      if (bigDecimal.scale() == 0) {
-        return OptionValue.createLong(type, name, bigDecimal.longValue());
-      } else {
-        return OptionValue.createDouble(type, name, bigDecimal.doubleValue());
-      }
-    }
-
-    case DOUBLE:
-    case FLOAT:
-      return OptionValue.createDouble(type, name, ((BigDecimal) object).doubleValue());
-
-    case SMALLINT:
-    case TINYINT:
-    case BIGINT:
-    case INTEGER:
-      return OptionValue.createLong(type, name, ((BigDecimal) object).longValue());
-
-    case VARBINARY:
-    case VARCHAR:
-    case CHAR:
-      return OptionValue.createString(type, name, ((NlsString) object).getValue());
-
-    case BOOLEAN:
-      return OptionValue.createBoolean(type, name, (Boolean) object);
-
-    default:
-      throw new ExpressionParsingException(String.format(
-          "Drill doesn't support set option expressions with literals of type %s.", typeName));
     }
   }
 }
