@@ -30,9 +30,10 @@ import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 
 public class OptionIterator implements Iterator<Object> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OptionIterator.class);
 
   enum Mode {
     BOOT, SYS_SESS, BOTH
@@ -74,7 +75,7 @@ public class OptionIterator implements Iterator<Object> {
     if (value.type == OptionType.BOOT) {
       status = Status.BOOT;
     } else {
-      final OptionValue def = fragmentOptions.getSystemManager().getDefault(value.name);
+      final OptionValue def = SystemOptionManager.getValidator(value.name).getDefault();
       if (value.equalsIgnoreType(def)) {
         status = Status.DEFAULT;
         } else {

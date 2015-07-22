@@ -29,6 +29,7 @@ import org.apache.drill.exec.server.options.OptionValue;
 
 import java.util.List;
 
+import static org.apache.drill.exec.ExecConstants.DRILLBIT_CONTROLS_VALIDATOR;
 import static org.apache.drill.exec.ExecConstants.DRILLBIT_CONTROL_INJECTIONS;
 import static org.junit.Assert.fail;
 
@@ -74,7 +75,7 @@ public class ControlsInjectionUtil {
 
     final OptionManager options = session.getOptions();
     try {
-      options.getAdmin().validate(opValue);
+      DRILLBIT_CONTROLS_VALIDATOR.validate(opValue);
       options.setOption(opValue);
     } catch (final Exception e) {
       fail("Could not set controls options: " + e.getMessage());
