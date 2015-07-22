@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
@@ -259,7 +260,9 @@ public class DrillParquetReader extends AbstractRecordReader {
 
       if(!noColumnsFound) {
         writer = new VectorContainerWriter(output);
-        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, getColumns(),
+        // Discard the columns not found in the schema when create DrillParquetRecordMaterializer, since they have been added to output already.
+        final Collection<SchemaPath> columns = columnsNotFound == null || columnsNotFound.size() == 0 ? getColumns(): CollectionUtils.subtract(getColumns(), columnsNotFound);
+        recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection, columns,
             fragmentContext.getOptions());
         primitiveVectors = writer.getMapVector().getPrimitiveVectors();
         recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);

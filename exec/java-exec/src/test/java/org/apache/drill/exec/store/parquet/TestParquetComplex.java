@@ -177,4 +177,18 @@ public class TestParquetComplex extends BaseTestQuery {
             .build()
             .run();
   }
+
+  @Test //DRILL-3533
+  public void notxistsField() throws Exception {
+    String query = String.format("select t.`marketing_info`.notexists as notexists, t.`marketing_info`.camp_id as id from %s t", DATAFILE);
+    String[] columns = {"notexists", "id"};
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .jsonBaselineFile("store/parquet/complex/baseline8.json")
+        .baselineColumns(columns)
+        .build()
+        .run();
+  }
+
 }
