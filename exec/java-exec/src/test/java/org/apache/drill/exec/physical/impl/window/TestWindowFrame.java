@@ -24,6 +24,7 @@ import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -146,4 +147,165 @@ public class TestWindowFrame extends BaseTestQuery {
     test(getFile("window/q3220.sql"), TEST_RES_PATH);
   }
 
+  @Test // DRILL-3604
+  public void testFix3604() throws Exception {
+    // make sure the query doesn't fail
+    test(getFile("window/3604.sql"), TEST_RES_PATH);
+  }
+
+  @Test // DRILL-3605
+  public void testFix3605() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3605.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/3605.tsv")
+      .baselineColumns("col2", "lead_col2")
+      .build()
+      .run();
+  }
+
+  @Test // DRILL-3606
+  public void testFix3606() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3606.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/3606.tsv")
+      .baselineColumns("col2", "lead_col2")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLead() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lead.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lead.oby.tsv")
+      .baselineColumns("lead")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLagWithPby() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lag.pby.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lag.pby.oby.tsv")
+      .baselineColumns("lag")
+      .build()
+      .run();
+  }
+
+
+  @Test
+  public void testLag() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lag.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lag.oby.tsv")
+      .baselineColumns("lag")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLeadWithPby() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lead.pby.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lead.pby.oby.tsv")
+      .baselineColumns("lead")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValue() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/fval.pby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.fval.pby.tsv")
+      .baselineColumns("first_value")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLastValue() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lval.pby.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lval.pby.oby.tsv")
+      .baselineColumns("last_value")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValueAllTypes() throws Exception {
+    // make sure all types are handled properly
+    test(getFile("window/fval.alltypes.sql"), TEST_RES_PATH);
+  }
+
+  @Test
+  public void testLastValueAllTypes() throws Exception {
+    // make sure all types are handled properly
+    test(getFile("window/fval.alltypes.sql"), TEST_RES_PATH);
+  }
+
+  @Test
+  public void testNtile() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/ntile.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b2.p4.ntile.tsv")
+      .baselineColumns("ntile")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void test3648Fix() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3648.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/3648.tsv")
+      .baselineColumns("ntile")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testPartitionNtile() {
+    Partition partition = new Partition(12);
+
+    Assert.assertEquals(1, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(1, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(1, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(3, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(3, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(4, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(4, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(5, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(5, partition.ntile(5));
+  }
 }

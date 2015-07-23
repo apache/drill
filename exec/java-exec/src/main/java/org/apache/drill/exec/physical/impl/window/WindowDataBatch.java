@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.window;
 
 import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -33,12 +33,12 @@ import java.util.List;
 
 public class WindowDataBatch implements VectorAccessible {
 
-  private final FragmentContext context;
+  private final OperatorContext oContext;
   private final VectorContainer container;
   private final int recordCount;
 
-  public WindowDataBatch(final VectorAccessible batch, final FragmentContext context) {
-    this.context = context;
+  public WindowDataBatch(final VectorAccessible batch, final OperatorContext oContext) {
+    this.oContext = oContext;
     recordCount = batch.getRecordCount();
 
     List<ValueVector> vectors = Lists.newArrayList();
@@ -52,14 +52,18 @@ public class WindowDataBatch implements VectorAccessible {
       vectors.add(tp.getTo());
     }
 
-    container = new VectorContainer();
+    container = new VectorContainer(oContext);
     container.addCollection(vectors);
     container.setRecordCount(recordCount);
     container.buildSchema(batch.getSchema().getSelectionVectorMode());
   }
 
-  public FragmentContext getContext() {
-    return context;
+  public OperatorContext getContext() {
+    return oContext;
+  }
+
+  public VectorContainer getContainer() {
+    return container;
   }
 
   @Override

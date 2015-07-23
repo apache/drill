@@ -109,25 +109,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
           if(over.getOperandList().get(0) instanceof SqlCall) {
             SqlCall function = (SqlCall) over.getOperandList().get(0);
 
-            // DRILL-3195:
-            // The following window functions are temporarily disabled
-            // NTILE(), LAG(), LEAD(), FIRST_VALUE(), LAST_VALUE()
-            String functionName = function.getOperator().getName().toUpperCase();
-            switch(functionName) {
-              case "NTILE":
-              case "LAG":
-              case "LEAD":
-              case "FIRST_VALUE":
-              case "LAST_VALUE":
-                unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-                    "The window function " + functionName + " is not supported\n" +
-                    "See Apache Drill JIRA: DRILL-3195");
-                throw new UnsupportedOperationException();
-
-              default:
-                break;
-            }
-
             // DRILL-3182
             // Window function with DISTINCT qualifier is temporarily disabled
             if(function.getFunctionQuantifier() != null
