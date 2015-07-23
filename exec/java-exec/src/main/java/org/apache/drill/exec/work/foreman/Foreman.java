@@ -116,6 +116,7 @@ public class Foreman implements Runnable {
   private static final long RPC_WAIT_IN_MSECS_PER_FRAGMENT = 5000;
 
   private final QueryId queryId;
+  private final String queryIdString;
   private final RunQuery queryRequest;
   private final QueryContext queryContext;
   private final QueryManager queryManager; // handles lower-level details of query execution
@@ -150,6 +151,7 @@ public class Foreman implements Runnable {
       final UserClientConnection connection, final QueryId queryId, final RunQuery queryRequest) {
     this.bee = bee;
     this.queryId = queryId;
+    queryIdString = QueryIdHelper.getQueryId(queryId);
     this.queryRequest = queryRequest;
     this.drillbitContext = drillbitContext;
 
@@ -221,7 +223,7 @@ public class Foreman implements Runnable {
     // rename the thread we're using for debugging purposes
     final Thread currentThread = Thread.currentThread();
     final String originalName = currentThread.getName();
-    currentThread.setName(QueryIdHelper.getQueryId(queryId) + ":foreman");
+    currentThread.setName(queryIdString + ":foreman");
 
     // track how long the query takes
     queryManager.markStartTime();
@@ -677,7 +679,7 @@ public class Foreman implements Runnable {
     private void logQuerySummary() {
       try {
         LoggedQuery q = new LoggedQuery(
-            QueryIdHelper.getQueryId(queryId),
+            queryIdString,
             queryContext.getQueryContextInfo().getDefaultSchemaName(),
             queryText,
             new Date(queryContext.getQueryContextInfo().getQueryStartTime()),
@@ -695,7 +697,10 @@ public class Foreman implements Runnable {
       Preconditions.checkState(!isClosed);
       Preconditions.checkState(resultState != null);
 
-      logger.info("foreman cleaning up.");
+      // to track how long the query takes
+      queryManager.markEndTime();
+
+      logger.debug(queryIdString + ": cleaning up.");
       injector.injectPause(queryContext.getExecutionControls(), "foreman-cleanup", logger);
 
       // remove the channel disconnected listener (doesn't throw)
@@ -789,7 +794,7 @@ public class Foreman implements Runnable {
       final Exception exception = event.exception;
 
       // TODO Auto-generated method stub
-      logger.info("State change requested.  {} --> {}", state, newState,
+      logger.debug(queryIdString + ": State change requested {} --> {}", state, newState,
           exception);
       switch (state) {
       case PENDING:
@@ -809,7 +814,6 @@ public class Foreman implements Runnable {
         switch (newState) {
         case CANCELLATION_REQUESTED: {
           assert exception == null;
-          queryManager.markEndTime();
           recordNewState(QueryState.CANCELLATION_REQUESTED);
           queryManager.cancelExecutingFragments(drillbitContext);
           foremanResult.setCompleted(QueryState.CANCELED);
@@ -823,7 +827,6 @@ public class Foreman implements Runnable {
 
         case COMPLETED: {
           assert exception == null;
-          queryManager.markEndTime();
           recordNewState(QueryState.COMPLETED);
           foremanResult.setCompleted(QueryState.COMPLETED);
           foremanResult.close();
@@ -832,7 +835,6 @@ public class Foreman implements Runnable {
 
         case FAILED: {
           assert exception != null;
-          queryManager.markEndTime();
           recordNewState(QueryState.FAILED);
           queryManager.cancelExecutingFragments(drillbitContext);
           foremanResult.setFailed(exception);
