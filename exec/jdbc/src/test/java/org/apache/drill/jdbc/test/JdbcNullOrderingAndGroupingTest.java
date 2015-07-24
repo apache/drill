@@ -53,26 +53,6 @@ public class JdbcNullOrderingAndGroupingTest extends JdbcTestQueryBase {
   }
 
 
-  @Test
-  public void testNullsOrderInJdbcMetaData() throws SQLException {
-    try (Connection conn =
-             DriverManager.getConnection( "jdbc:drill:zk=local", null ) ) {
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-
-      assertThat( "DatabaseMetadata.nullsAreSortedHigh()",
-                  dbMetaData.nullsAreSortedHigh(), equalTo( true ) );
-
-      assertThat( "DatabaseMetadata.nullsAreSortedLow()",
-                  dbMetaData.nullsAreSortedLow(), equalTo( false ) );
-      assertThat( "DatabaseMetadata.nullsAreSortedAtEnd()",
-                  dbMetaData.nullsAreSortedAtEnd(), equalTo( false ) );
-      assertThat( "DatabaseMetadata.nullsAreSortedAtStart()",
-                  dbMetaData.nullsAreSortedAtStart(), equalTo( false ) );
-    }
-  }
-
-
-
   ////////////////////
   // DonutsTopping3:
 

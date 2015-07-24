@@ -78,6 +78,13 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     return false;
   }
 
+  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  @Override
+  public String getIdentifierQuoteString() throws SQLException {
+    checkNotClosed();
+    return "`";
+  }
+
 
   // For now, check whether connection is closed for most important methods
   // (DRILL-2565 (partial fix for DRILL-2489)):

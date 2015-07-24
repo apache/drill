@@ -53,7 +53,20 @@ public interface DrillDatabaseMetaData extends DatabaseMetaData {
   //  storesUpperCaseQuotedIdentifiers()
   //  storesLowerCaseQuotedIdentifiers()
   //  storesMixedCaseQuotedIdentifiers()
-  //  getIdentifierQuoteString()
+
+
+  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  /**
+   * <strong>Drill</strong>:
+   * Reports that the SQL identifier quoting character is the back-quote
+   * character ("{@code `}"; Unicode U+0060; "GRAVE ACCENT").
+   * @return "{@code `}"
+   */
+  @Override
+  String getIdentifierQuoteString() throws SQLException;
+
+
+  // For matching order of java.sql.DatabaseMetaData:
   //  getSQLKeywords()
   //  getNumericFunctions()
   //  getStringFunctions()
