@@ -154,4 +154,15 @@ public class TestJsonRecordReader extends BaseTestQuery{
       testNoResult("alter session set `store.json.read_numbers_as_double`= false");
     }
   }
+
+  @Test // See DRILL-3476
+  public void testNestedFilter() throws Exception {
+    String query = "select a from cp.`jsoninput/nestedFilter.json` t where t.a.b = 1";
+    String baselineQuery = "select * from cp.`jsoninput/nestedFilter.json` t where t.a.b = 1";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .sqlBaselineQuery(baselineQuery)
+        .go();
+  }
 }

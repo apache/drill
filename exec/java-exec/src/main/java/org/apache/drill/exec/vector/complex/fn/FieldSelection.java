@@ -42,7 +42,7 @@ class FieldSelection {
 
   private final Map<String, FieldSelection> children;
   private final Map<String, FieldSelection> childrenInsensitive;
-  private final ValidityMode mode;
+  private ValidityMode mode;
 
   private FieldSelection(){
     this(new HashMap<String, FieldSelection>(), ValidityMode.CHECK_CHILDREN);
@@ -87,8 +87,12 @@ class FieldSelection {
 
   private void add(PathSegment segment){
     if(segment.isNamed()){
+      boolean lastPath = segment.isLastPath();
       FieldSelection child = addChild(segment.getNameSegment().getPath());
-      if(!segment.isLastPath()){
+      if (lastPath) {
+        child.setAlwaysValid();
+      }
+      if (!lastPath && !child.isAlwaysValid()) {
         child.add(segment.getChild());
       }
     }
@@ -96,6 +100,14 @@ class FieldSelection {
 
   public boolean isNeverValid(){
     return mode == ValidityMode.NEVER_VALID;
+  }
+
+  private void setAlwaysValid() {
+    mode = ValidityMode.ALWAYS_VALID;
+  }
+
+  public boolean isAlwaysValid() {
+    return mode == ValidityMode.ALWAYS_VALID;
   }
 
   public FieldSelection getChild(String name){
