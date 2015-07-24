@@ -68,10 +68,19 @@ public class DatabaseMetaDataTest {
   //  getURL()
   //  getUserName()
   //  isReadOnly()
-  //  nullsAreSortedHigh()
-  //  nullsAreSortedLow()
-  //  nullsAreSortedAtStart()
-  //  nullsAreSortedAtEnd()
+
+  @Test
+  public void testNullsAreSortedMethodsSaySortedHigh() throws SQLException {
+    assertThat( "DatabaseMetadata.nullsAreSortedHigh()",
+                dbmd.nullsAreSortedHigh(), equalTo( true ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedLow()",
+                dbmd.nullsAreSortedLow(), equalTo( false ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedAtEnd()",
+                dbmd.nullsAreSortedAtEnd(), equalTo( false ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedAtStart()",
+                dbmd.nullsAreSortedAtStart(), equalTo( false ) );
+  }
+
   //  getDatabaseProductName()
   //  getDatabaseProductVersion()
   //  getDriverName()
@@ -88,7 +97,15 @@ public class DatabaseMetaDataTest {
   //  storesUpperCaseQuotedIdentifiers()
   //  storesLowerCaseQuotedIdentifiers()
   //  storesMixedCaseQuotedIdentifiers()
-  //  getIdentifierQuoteString()
+
+  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  @Test
+  public void testGetIdentifierQuoteStringSaysBackquote() throws SQLException {
+    assertThat( dbmd.getIdentifierQuoteString(), equalTo( "`" ) );
+  }
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
   //  getSQLKeywords()
   //  getNumericFunctions()
   //  getStringFunctions()
