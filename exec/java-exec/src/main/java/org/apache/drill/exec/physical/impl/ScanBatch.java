@@ -83,7 +83,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private String partitionColumnDesignator;
   private boolean done = false;
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
-
+  private boolean hasReadNonEmptyFile = false;
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, OperatorContext oContext,
                    Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
@@ -186,6 +186,15 @@ public class ScanBatch implements CloseableRecordBatch {
             return IterOutcome.NONE;
           }
 
+          // If all the files we have read so far are just empty, the schema is not useful
+          if(!hasReadNonEmptyFile) {
+            container.clear();
+            for (ValueVector v : fieldVectorMap.values()) {
+              v.clear();
+            }
+            fieldVectorMap.clear();
+          }
+
           currentReader.cleanup();
           currentReader = readers.next();
           partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
@@ -208,6 +217,7 @@ public class ScanBatch implements CloseableRecordBatch {
         }
       }
 
+      hasReadNonEmptyFile = true;
       populatePartitionVectors();
 
       // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.

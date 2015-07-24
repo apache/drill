@@ -296,6 +296,22 @@ public class TestJsonReader extends BaseTestQuery {
     batchLoader.clear();
   }
 
+  @Test
+  public void testJsonDirectoryWithEmptyFile() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/json/jsonDirectoryWithEmpyFile").toURI().toString();
+
+    String queryRightEmpty = String.format(
+        "select * from dfs_test.`%s`", root);
+
+    testBuilder()
+        .sqlQuery(queryRightEmpty)
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(1l)
+        .build()
+        .run();
+  }
+
   private void testExistentColumns(RecordBatchLoader batchLoader) throws SchemaChangeException {
     VectorWrapper<?> vw = batchLoader.getValueAccessorById(
         RepeatedBigIntVector.class, //
