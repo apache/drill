@@ -126,7 +126,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   protected static final int FIELD_SIZE = 50;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-      FragmentContext context, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+                          FragmentContext context, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
@@ -353,53 +353,11 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
-  private MinorType getMinorTypeFromHivePrimitiveTypeInfo(PrimitiveTypeInfo primitiveTypeInfo) {
-    switch(primitiveTypeInfo.getPrimitiveCategory()) {
-      case BINARY:
-        return TypeProtos.MinorType.VARBINARY;
-      case BOOLEAN:
-        return MinorType.BIT;
-      case DECIMAL: {
-
-        if (context.getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false) {
-          throw UserException.unsupportedError()
-              .message(ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG)
-              .build(logger);
-        }
-        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-        return DecimalUtility.getDecimalDataType(decimalTypeInfo.precision());
-      }
-      case DOUBLE:
-        return MinorType.FLOAT8;
-      case FLOAT:
-        return MinorType.FLOAT4;
-      // TODO (DRILL-2470)
-      // Byte and short (tinyint and smallint in SQL types) are currently read as integers
-      // as these smaller integer types are not fully supported in Drill today.
-      case SHORT:
-      case BYTE:
-      case INT:
-        return MinorType.INT;
-      case LONG:
-        return MinorType.BIGINT;
-      case STRING:
-      case VARCHAR:
-        return MinorType.VARCHAR;
-      case TIMESTAMP:
-        return MinorType.TIMESTAMP;
-      case DATE:
-        return MinorType.DATE;
-    }
-
-    throwUnsupportedHiveDataTypeError(primitiveTypeInfo.getPrimitiveCategory().toString());
-    return null;
-  }
-
   public MajorType getMajorTypeFromHiveTypeInfo(TypeInfo typeInfo, boolean nullable) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE: {
         PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
-        MinorType minorType = getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo);
+        MinorType minorType = HiveDataTypeUtility.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo, context.getOptions());
         MajorType.Builder typeBuilder = MajorType.newBuilder().setMinorType(minorType)
             .setMode((nullable ? DataMode.OPTIONAL : DataMode.REQUIRED));
 
@@ -526,7 +484,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   private void populateDecimalPartitionVector(DecimalTypeInfo typeInfo, ValueVector vector, BigDecimal bigDecimal,
-      int recordCount) {
+                                              int recordCount) {
     int precision = typeInfo.precision();
     int scale = typeInfo.scale();
     if (precision <= 9) {

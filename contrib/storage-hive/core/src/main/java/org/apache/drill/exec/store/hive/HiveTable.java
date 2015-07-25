@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,12 +65,15 @@ public class HiveTable {
   @JsonProperty
   public String tableType;
 
+  @JsonIgnore
+  public final Map<String, String> partitionNameTypeMap = new HashMap();
+
   @JsonCreator
   public HiveTable(@JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("owner") String owner, @JsonProperty("createTime") int createTime,
                    @JsonProperty("lastAccessTime") int lastAccessTime, @JsonProperty("retention") int retention, @JsonProperty("sd") StorageDescriptorWrapper sd,
                    @JsonProperty("partitionKeys") List<FieldSchemaWrapper> partitionKeys, @JsonProperty("parameters") Map<String, String> parameters,
                    @JsonProperty("viewOriginalText") String viewOriginalText, @JsonProperty("viewExpandedText") String viewExpandedText, @JsonProperty("tableType") String tableType
-                   ) {
+  ) {
     this.tableName = tableName;
     this.dbName = dbName;
     this.owner = owner;
@@ -86,10 +90,11 @@ public class HiveTable {
     List<FieldSchema> partitionKeysUnwrapped = Lists.newArrayList();
     for (FieldSchemaWrapper w : partitionKeys) {
       partitionKeysUnwrapped.add(w.getFieldSchema());
+      partitionNameTypeMap.put(w.name, w.type);
     }
     StorageDescriptor sdUnwrapped = sd.getSd();
     this.table = new Table(tableName, dbName, owner, createTime, lastAccessTime, retention, sdUnwrapped, partitionKeysUnwrapped,
-            parameters, viewOriginalText, viewExpandedText, tableType);
+        parameters, viewOriginalText, viewExpandedText, tableType);
   }
 
   public HiveTable(Table table) {
@@ -107,6 +112,7 @@ public class HiveTable {
     this.partitionKeys = Lists.newArrayList();
     for (FieldSchema f : table.getPartitionKeys()) {
       this.partitionKeys.add(new FieldSchemaWrapper(f));
+      partitionNameTypeMap.put(f.getName(), f.getType());
     }
     this.parameters = table.getParameters();
     this.viewOriginalText = table.getViewOriginalText();
@@ -156,8 +162,8 @@ public class HiveTable {
 
     @JsonCreator
     public HivePartition(@JsonProperty("values") List<String> values, @JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("createTime") int createTime,
-                     @JsonProperty("lastAccessTime") int lastAccessTime,  @JsonProperty("sd") StorageDescriptorWrapper sd,
-                     @JsonProperty("parameters") Map<String, String> parameters
+                         @JsonProperty("lastAccessTime") int lastAccessTime,  @JsonProperty("sd") StorageDescriptorWrapper sd,
+                         @JsonProperty("parameters") Map<String, String> parameters
     ) {
       this.values = values;
       this.tableName = tableName;
@@ -217,7 +223,7 @@ public class HiveTable {
     public int numBuckets;
     @JsonProperty
     public SerDeInfoWrapper serDeInfo;
-//    @JsonProperty
+    //    @JsonProperty
 //    public List<String> bucketCols;
     @JsonProperty
     public List<OrderWrapper> sortCols;
@@ -251,7 +257,7 @@ public class HiveTable {
 //      this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
 //              bucketCols, sortColsUnwrapped, parameters);
       this.sd = new StorageDescriptor(colsUnwrapped, location, inputFormat, outputFormat, compressed, numBuckets, serDeInfoUnwrapped,
-              null, sortColsUnwrapped, parameters);
+          null, sortColsUnwrapped, parameters);
     }
 
     public StorageDescriptorWrapper(StorageDescriptor sd) {
@@ -367,6 +373,10 @@ public class HiveTable {
     public Order getOrder() {
       return ord;
     }
+  }
+
+  public Map<String, String> getPartitionNameTypeMap() {
+    return partitionNameTypeMap;
   }
 
 }

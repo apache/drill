@@ -37,7 +37,7 @@ public class TestHivePartitionPruning extends HiveTestBase {
   /* Partition pruning is not supported for disjuncts that do not meet pruning criteria.
    * Will be enabled when we can do wild card comparison for partition pruning
    */
-  @Ignore
+  @Test
   public void testDisjunctsPartitionFilter() throws Exception {
     final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1) or (d = 1)";
     final String plan = getPlanInString(query, OPTIQ_FORMAT);
@@ -55,9 +55,33 @@ public class TestHivePartitionPruning extends HiveTestBase {
     assertFalse(plan.contains("Filter"));
   }
 
-  @Ignore("DRILL-1571")
+  @Test
   public void testComplexFilter() throws Exception {
     final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1 and d = 1) or (c = 2 and d = 3)";
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+  }
+
+  @Test
+  public void testRangeFilter() throws Exception {
+    final String query = "explain plan for " +
+        "select * from hive.`default`.partition_pruning_test where " +
+        "c > 1 and d > 1";
+
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+  }
+
+  @Test
+  public void testRangeFilterWithDisjunct() throws Exception {
+    final String query = "explain plan for " +
+        "select * from hive.`default`.partition_pruning_test where " +
+        "(c > 1 and d > 1) or (c < 2 and d < 2)";
+
     final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan

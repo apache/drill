@@ -89,7 +89,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of(HivePushPartitionFilterIntoScan.HIVE_FILTER_ON_PROJECT, HivePushPartitionFilterIntoScan.HIVE_FILTER_ON_SCAN);
+    return ImmutableSet.of(HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerRulesContext), HivePushPartitionFilterIntoScan.getFilterOnScan(optimizerRulesContext));
   }
 
 }
