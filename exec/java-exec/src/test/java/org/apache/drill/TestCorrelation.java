@@ -37,4 +37,21 @@ public class TestCorrelation extends PlanTestBase {
       .run();
   }
 
+  @Test  // DRILL-2949
+  public void testScalarAggAndFilterCorrelatedSubquery() throws Exception {
+    String query = "select count(*) as cnt from cp.`tpch/nation.parquet` n1, "
+      + " cp.`tpch/region.parquet` r1 where n1.n_regionkey = r1.r_regionkey and "
+      + " r1.r_regionkey < 3 and "
+      + " n1.n_nationkey  > (select avg(n2.n_regionkey) * 4 from cp.`tpch/nation.parquet` n2 "
+      + " where n1.n_regionkey = n2.n_nationkey)";
+
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("cnt")
+      .baselineValues((long) 11)
+      .build()
+      .run();
+  }
+
 }
