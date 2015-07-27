@@ -276,7 +276,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
     SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
     if (copier == null) {
-      copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch);
+      copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch, null);
     } else {
       for (VectorWrapper<?> i : batch) {
 

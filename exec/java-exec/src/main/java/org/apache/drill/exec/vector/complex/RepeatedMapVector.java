@@ -326,6 +326,7 @@ public class RepeatedMapVector extends AbstractMapVector implements RepeatedValu
       this.from = from;
       this.to = to;
       this.pairs = new TransferPair[from.size()];
+      this.to.ephPair = null;
 
       int i = 0;
       ValueVector vector;

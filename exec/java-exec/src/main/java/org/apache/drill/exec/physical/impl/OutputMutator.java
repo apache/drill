@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 /**
@@ -61,4 +62,10 @@ public interface OutputMutator {
    * @return A DrillBuf that will be released at the end of the current query (and can be resized as desired during use).
    */
   public DrillBuf getManagedBuffer();
+
+  /**
+   *
+   * @return the CallBack object for this mutator
+   */
+  public CallBack getCallBack();
 }

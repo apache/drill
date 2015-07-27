@@ -161,6 +161,8 @@ public class MapVector extends AbstractMapVector {
       this.from = from;
       this.to = to;
       this.pairs = new TransferPair[from.size()];
+      this.to.ephPair = null;
+      this.to.ephPair2 = null;
 
       int i = 0;
       ValueVector vector;
@@ -294,9 +296,12 @@ public class MapVector extends AbstractMapVector {
     public Object getObject(int index) {
       Map<String, Object> vv = new JsonStringHashMap();
       for (String child:getChildFieldNames()) {
-        Object value = getChild(child).getAccessor().getObject(index);
-        if (value != null) {
-          vv.put(child, value);
+        ValueVector v = getChild(child);
+        if (v != null) {
+          Object value = v.getAccessor().getObject(index);
+          if (value != null) {
+            vv.put(child, value);
+          }
         }
       }
       return vv;

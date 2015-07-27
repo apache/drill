@@ -41,9 +41,10 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   private final MapWithOrdinal<String, ValueVector> vectors =  new MapWithOrdinal<>();
 
   protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    super(field, allocator, callBack);
+    super(field.clone(), allocator, callBack);
+    MaterializedField clonedField = field.clone();
     // create the hierarchy of the child vectors based on the materialized field
-    for (MaterializedField child : field.getChildren()) {
+    for (MaterializedField child : clonedField.getChildren()) {
       if (!child.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
         String fieldName = child.getLastName();
         ValueVector v = TypeHelper.getNewVector(child, allocator, callBack);
@@ -116,7 +117,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       create = true;
     }
     if (create) {
-      final T vector = (T) TypeHelper.getNewVector(field.getPath(), name, allocator, type);
+      final T vector = (T) TypeHelper.getNewVector(field.getPath(), name, allocator, type, callBack);
       putChild(name, vector);
       if (callBack!=null) {
         callBack.doWork();

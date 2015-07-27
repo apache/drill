@@ -63,7 +63,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
 
     for(VectorWrapper<?> v : incoming){
-      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField()));
+      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
     }
 
