@@ -2,12 +2,14 @@
 title: "Plugin Configuration Basics"
 parent: "Storage Plugin Configuration"
 ---
-When you add or update storage plugin instances on one Drill node in a 
+When you add or update storage plugin configurations on one Drill node in a 
 cluster having multiple installations of Drill, Drill broadcasts the information to other Drill nodes 
 to synchronize the storage plugin configurations. You do not need to
-restart any of the Drillbits when you add or update a storage plugin instance.
+restart any of the Drillbits when you add or update a storage plugin configuration.
 
-Use the Drill Web UI to update or add a new storage plugin configuration. Launch a web browser, go to: `http://<IP address or host name>:8047`, and then go to the Storage tab. 
+## Using the Drill Web UI
+
+Use the Drill Web UI to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web UI. To open the Drill Web UI, launch a web browser, and go to: `http://<IP address or host name>:8047` of any Drillbit in the cluster. Select the Storage tab to view, update, or add a new storage plugin configuration. 
 
 To create a name and new configuration:
 
@@ -46,7 +48,7 @@ The following table describes the attributes you configure for storage plugins i
     <td>"connection"</td>
     <td>"classpath:///"<br>"file:///"<br>"mongodb://localhost:27017/"<br>"hdfs://"</td>
     <td>implementation-dependent</td>
-    <td>Type of distributed file system, such as HDFS, Amazon S3, or files in your file system.</td>
+    <td>The type of distributed file system, such as HDFS, Amazon S3, or files in your file system, and an address/path name.</td>
   </tr>
   <tr>
     <td>"workspaces"</td>
@@ -70,13 +72,13 @@ The following table describes the attributes you configure for storage plugins i
     <td>"workspaces". . . "defaultInputFormat"</td>
     <td>null<br>"parquet"<br>"csv"<br>"json"</td>
     <td>no</td>
-    <td>Format for reading data, regardless of extension. Default = Parquet.</td>
+    <td>Format for reading data, regardless of extension. Default = "parquet"</td>
   </tr>
   <tr>
     <td>"formats"</td>
     <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb" *</td>
     <td>yes</td>
-    <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file, others require configuration.</td>
+    <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
@@ -88,13 +90,13 @@ The following table describes the attributes you configure for storage plugins i
     <td>formats . . . "extensions"</td>
     <td>["csv"]</td>
     <td>format-dependent</td>
-    <td>Extensions of the files that Drill can read.</td>
+    <td>File name extensions that Drill can read.</td>
   </tr>
   <tr>
     <td>"formats" . . . "delimiter"</td>
     <td>"\t"<br>","</td>
     <td>format-dependent</td>
-    <td>One or more characters that serve as a record seperator in a delimited text file, such as CSV. Use a 4-digit hex ascii code syntax \uXXXX for a non-printable delimiter. </td>
+    <td>Sequence of one or more characters that serve as a record separator in a delimited text file, such as CSV. Use a 4-digit hex code syntax \uXXXX for a non-printable delimiter. </td>
   </tr>
   <tr>
     <td>"formats" . . . "quote"</td>
@@ -148,7 +150,7 @@ Drill provides a REST API that you can use to create a storage plugin configurat
   The storage plugin configuration name. 
 
 * config  
-  The attribute settings as you would enter it in the Web UI.
+  The attribute settings as entered in the Web UI.
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
@@ -156,13 +158,13 @@ For example, this command creates a storage plugin named myplugin for reading fi
 
 ## Bootstrapping a Storage Plugin
 
-If you need to add a storage plugin to Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin loads when Drill starts up.
+If you need to add a storage plugin configurationto Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin configuration loads when Drill starts up.
 
-Bootstrapping a storage plugin works only when the first drillbit in the cluster first starts up. The configuration is
-stored in zookeeper, preventing Drill from picking up the boostrap-storage-plugins.json again.
+Bootstrapping a storage plugin configuration works only when the first Drillbit in the cluster first starts up. The configuration is
+stored in ZooKeeper, preventing Drill from picking up the bootstrap-storage-plugins.json again.
 
 After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin configuration. Alternatively, you
-can modify the entry in zookeeper by uploading the json file for
+can modify the entry in ZooKeeper by uploading the json file for
 that plugin to the /drill directory of the zookeeper installation, or by just deleting the /drill directory if you do not have configuration properties to preserve.
 
-If you configure an HBase storage plugin using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of HBase plugin instance configuration.
+If you load an HBase storage plugin configuration using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of the HBase plugin configuration.

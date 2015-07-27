@@ -12,7 +12,7 @@ Semi-structured JSON data often consists of complex, nested elements having sche
 
 Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table.
 
-You can also [query compressed .gz files]({{ site.baseurl }}/docs/drill-default-input-format#querying-compressed-json) having JSON as well as uncompressed .json files.
+You can also [query compressed .gz files]({{ site.baseurl }}/docs/querying-plain-text-files/#querying-compressed-files) having JSON as well as uncompressed .json files.
 
 In addition to the examples presented later in this section, see ["How to Analyze Highly Dynamic Datasets with Apache Drill"](https://www.mapr.com/blog/how-analyze-highly-dynamic-datasets-apache-drill) for information about how to analyze a JSON data set.
 

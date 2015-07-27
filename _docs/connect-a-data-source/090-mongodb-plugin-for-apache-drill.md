@@ -4,18 +4,16 @@ parent: "Connect a Data Source"
 ---
 ## Overview
 
-Drill supports MongoDB 3.0, providing a mongodb format plugin to connect to MongoDB using MongoDB's latest Java driver. You can run queries
-to read, but not write, the Mongo data using Drill. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
+Drill supports MongoDB 3.0, providing a mongodb storage plugin to connect to MongoDB using MongoDB's latest Java driver. You can run queries
+to read, but not write, Mongo data using Drill. Attempting to write data back to Mongo results in an error. You do not need any upfront schema definitions. 
 
-{% include startnote.html %}A local instance of Drill is used in this tutorial for simplicity. {% include endnote.html %}
+{% include startnote.html %}In the following examples, you use a local instance of Drill for simplicity. {% include endnote.html %}
 
 You can also run Drill and MongoDB together in distributed mode.
 
 ### Before You Begin
 
-Before you can query MongoDB with Drill, you must have Drill and MongoDB
-installed on your machine. Examples in this tutorial use zip code aggregation data
-provided by MongoDB that you download in the following steps:
+To query MongoDB with Drill, you install Drill and MongoDB, and then you import zip code aggregation data into MongoDB. 
 
   1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
   2. [Install MongoDB](http://docs.mongodb.org/manual/installation), if you do not already have it installed.
@@ -23,20 +21,14 @@ provided by MongoDB that you download in the following steps:
 
 ## Configuring MongoDB
 
-Start Drill and configure the MongoDB storage plugin in the Drill Web
-UI to connect to Drill. Drill must be running in order to access the Web UI.
-
-Complete the following steps to configure MongoDB as a data source for Drill:
+Drill must be running in order to access the Web UI to configure a storage plugin configuration. Start Drill and view and enable the MongoDB storage plugin configuration as described in the following procedure: 
 
   1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
 
      The Drill shell needs to be running to access the Drill Web UI.
-  2. Open a browser window, and navigate to the Drill Web UI at `http://localhost:8047`.
-  3. In the navigation bar, click **Storage**.
-  4. Under Disabled Storage Plugins, select **Update** next to the `mongo` storage plugin.
-  5. In the Configuration window, verify that `"enabled"` is set to ``"true."``
-
-     **Example**
+  2. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), select the **Storage** tab.
+  4. Under Disabled Storage Plugins, select **Update** to choose the `mongo` storage plugin configuration.
+  5. In the Configuration window, take a look at the default configuration:
      
         {
           "type": "mongo",
@@ -49,7 +41,7 @@ Complete the following steps to configure MongoDB as a data source for Drill:
 
 ## Querying MongoDB
 
-In the Drill shell, you can issue the `SHOW DATABASES `command to see a list of databases from all
+In the [Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), you can issue the `SHOW DATABASES` command to see a list of schemas from all
 Drill data sources, including MongoDB. If you downloaded the zip codes file,
 you should see `mongo.zipdb` in the results.
 
@@ -66,15 +58,10 @@ you should see `mongo.zipdb` in the results.
     | INFORMATION_SCHEMA |
     +--------------------+
 
-If you want all queries that you submit to run on `mongo.zipdb`, you can issue
+If you want all queries that you submit to default to `mongo.zipdb`, you can issue
 the `USE` command to change schema.
 
 ### Example Queries
-
-The following example queries are included for reference. However, you can use
-the SQL power of Apache Drill directly on MongoDB. For more information about,
-refer to the [SQL
-Reference]({{ site.baseurl }}/docs/sql-reference).
 
 **Example 1: View mongo.zipdb Dataset**
 
@@ -147,7 +134,5 @@ Reference]({{ site.baseurl }}/docs/sql-reference).
 
 ## Using ODBC/JDBC Drivers
 
-You can leverage the power of Apache Drill to query MongoDB through standard
-BI tools, such as Tableau and SQuirreL.
-
-For information about Drill ODBC and JDBC drivers, refer to [Drill Interfaces]({{ site.baseurl }}/docs/odbc-jdbc-interfaces).
+You can query MongoDB through standard
+BI tools, such as Tableau and SQuirreL. For information about Drill ODBC and JDBC drivers, refer to [Drill Interfaces]({{ site.baseurl }}/docs/odbc-jdbc-interfaces).
