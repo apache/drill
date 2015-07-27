@@ -426,7 +426,6 @@ public class TypeCastRules {
     rule.add(MinorType.UINT4);
     rule.add(MinorType.UINT8);
     rule.add(MinorType.DATE);
-    rule.add(MinorType.TIME);
     rule.add(MinorType.TIMESTAMPTZ);
     rules.put(MinorType.TIMESTAMP, rule);
 
@@ -786,7 +785,7 @@ public class TypeCastRules {
     }
   }
 
-    /*
+  /*
    * Function checks if casting is allowed from the 'from' -> 'to' minor type. If its allowed
    * we also check if the precedence map allows such a cast and return true if both cases are satisfied
    */

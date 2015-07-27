@@ -69,11 +69,11 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
     precedenceMap.put(MinorType.FLOAT8, i += 2);
-    precedenceMap.put(MinorType.TIME, i += 2);
     precedenceMap.put(MinorType.DATE, i += 2);
     precedenceMap.put(MinorType.TIMESTAMP, i += 2);
     precedenceMap.put(MinorType.TIMETZ, i += 2);
     precedenceMap.put(MinorType.TIMESTAMPTZ, i += 2);
+    precedenceMap.put(MinorType.TIME, i += 2);
     precedenceMap.put(MinorType.INTERVALDAY, i+= 2);
     precedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
     precedenceMap.put(MinorType.INTERVAL, i+= 2);
