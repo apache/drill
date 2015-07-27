@@ -58,6 +58,173 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
   }
 
+
+  @Test
+  public void testFilterPushDownCompositeDateRowKey1() throws Exception {
+    setColumnWidths(new int[] {11, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') < DATE '2015-06-18' AND\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'"
+        , 12);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeDateRowKey2() throws Exception {
+    setColumnWidths(new int[] {11, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') = DATE '2015-08-22'"
+        , 3);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeDateRowKey3() throws Exception {
+    setColumnWidths(new int[] {11, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') < DATE '2015-06-18' AND\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') > DATE '2015-06-13'"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeDateRowKey4() throws Exception {
+    setColumnWidths(new int[] {30, 22, 30, 10});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') t\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') >= TIMESTAMP '2015-06-18 08:00:00.000' AND\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'timestamp_epoch_be') < TIMESTAMP '2015-06-20 16:00:00.000'"
+        , 7);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeTimeRowKey1() throws Exception {
+    setColumnWidths(new int[] {50, 40, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeTime` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:57:15.275'"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeTimeRowKey2() throws Exception {
+    setColumnWidths(new int[] {30, 2002, 32});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeTime` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') = TIME '23:55:51.250'"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeTimeRowKey3() throws Exception {
+    setColumnWidths(new int[] {30, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeTime` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') > TIME '23:57:06' AND"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') < TIME '23:59:59'"
+        , 8);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeBigIntRowKey1() throws Exception {
+    setColumnWidths(new int[] {15, 40, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'bigint_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'bigint_be') = cast(1409040000000 as bigint)"//convert_from(binary_string('\\x00\\x00\\x00\\x00\\x55\\x4D\\xBE\\x80'), 'BIGINT_BE') \n"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeBigIntRowKey2() throws Exception {
+    setColumnWidths(new int[] {16, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'bigint_be') i\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'date_epoch_be') d\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'time_epoch_be') t\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 9, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeDate` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'uint8_be') > cast(1438300800000 as bigint) AND\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8), 'uint8_be') < cast(1438617600000 as bigint)"
+        , 10);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeIntRowKey1() throws Exception {
+    setColumnWidths(new int[] {16, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') i\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 5, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeInt` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') >= cast(423 as int) AND"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(940 as int)"
+        , 11);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeIntRowKey2() throws Exception {
+    setColumnWidths(new int[] {16, 2002, 32});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') i\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 5, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeInt` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') >= cast(300 as int) AND"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') < cast(900 as int)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownCompositeIntRowKey3() throws Exception {
+    setColumnWidths(new int[] {16, 22, 32});
+    runHBaseSQLVerifyCount("SELECT \n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') i\n"
+        + ", CONVERT_FROM(BYTE_SUBSTR(row_key, 5, 8), 'bigint_be') id\n"
+        + ", CONVERT_FROM(tableName.f.c, 'UTF8') \n"
+        + " FROM hbase.`TestTableCompositeInt` tableName\n"
+        + " WHERE\n"
+        + " CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 4), 'uint4_be') = cast(658 as int)"
+        , 1);
+  }
+
   @Test
   public void testFilterPushDownRowKeyLike() throws Exception {
     setColumnWidths(new int[] {8, 22});

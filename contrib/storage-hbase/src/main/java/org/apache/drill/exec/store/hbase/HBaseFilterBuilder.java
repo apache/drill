@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.NullComparator;
+import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
@@ -167,6 +168,10 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
       return null;
     }
 
+    if (processor.isRowKeyPrefixComparison()) {
+      return createRowKeyPrefixScanSpec(call, processor);
+    }
+
     CompareOp compareOp = null;
     boolean isNullTest = false;
     ByteArrayComparable comparator = new BinaryComparator(fieldValue);
@@ -295,5 +300,21 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     // else
     return null;
   }
+
+private HBaseScanSpec createRowKeyPrefixScanSpec(FunctionCall call,
+    CompareFunctionsProcessor processor) {
+    byte[] startRow = processor.getRowKeyPrefixStartRow();
+    byte[] stopRow  = processor.getRowKeyPrefixStopRow();
+    Filter filter   = processor.getRowKeyPrefixFilter();
+
+    if (startRow != HConstants.EMPTY_START_ROW ||
+      stopRow != HConstants.EMPTY_END_ROW ||
+      filter != null) {
+      return new HBaseScanSpec(groupScan.getTableName(), startRow, stopRow, filter);
+    }
+
+    // else
+    return null;
+}
 
 }

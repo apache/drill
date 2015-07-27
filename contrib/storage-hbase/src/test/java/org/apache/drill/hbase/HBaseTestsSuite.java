@@ -50,6 +50,9 @@ public class HBaseTestsSuite {
 
   protected static final String TEST_TABLE_1 = "TestTable1";
   protected static final String TEST_TABLE_3 = "TestTable3";
+  protected static final String TEST_TABLE_COMPOSITE_DATE = "TestTableCompositeDate";
+  protected static final String TEST_TABLE_COMPOSITE_TIME = "TestTableCompositeTime";
+  protected static final String TEST_TABLE_COMPOSITE_INT = "TestTableCompositeInt";
 
   private static Configuration conf;
 
@@ -135,7 +138,10 @@ public class HBaseTestsSuite {
   }
 
   private static boolean tablesExist() throws IOException {
-    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3);
+    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3) &&
+           admin.tableExists(TEST_TABLE_COMPOSITE_DATE) &&
+           admin.tableExists(TEST_TABLE_COMPOSITE_TIME) &&
+           admin.tableExists(TEST_TABLE_COMPOSITE_INT);
   }
 
   private static void createTestTables() throws Exception {
@@ -146,6 +152,9 @@ public class HBaseTestsSuite {
      */
     TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 1);
     TestTableGenerator.generateHBaseDataset3(admin, TEST_TABLE_3, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyDate(admin, TEST_TABLE_COMPOSITE_DATE, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyTime(admin, TEST_TABLE_COMPOSITE_TIME, 1);
+    TestTableGenerator.generateHBaseDatasetCompositeKeyInt(admin, TEST_TABLE_COMPOSITE_INT, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
@@ -153,6 +162,12 @@ public class HBaseTestsSuite {
     admin.deleteTable(TEST_TABLE_1);
     admin.disableTable(TEST_TABLE_3);
     admin.deleteTable(TEST_TABLE_3);
+    admin.disableTable(TEST_TABLE_COMPOSITE_DATE);
+    admin.deleteTable(TEST_TABLE_COMPOSITE_DATE);
+    admin.disableTable(TEST_TABLE_COMPOSITE_TIME);
+    admin.deleteTable(TEST_TABLE_COMPOSITE_TIME);
+    admin.disableTable(TEST_TABLE_COMPOSITE_INT);
+    admin.deleteTable(TEST_TABLE_COMPOSITE_INT);
   }
 
   public static int getZookeeperPort() {
