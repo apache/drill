@@ -43,7 +43,8 @@ import org.junit.runner.Description;
 //   (e.g., the reusing of connections, the automatic interception of test
 //   failures and resetting of connections, etc.).
 public class JdbcTestBase extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);
+  @SuppressWarnings("unused")
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);
 
   @Rule
   public final TestRule watcher = new TestWatcher() {
