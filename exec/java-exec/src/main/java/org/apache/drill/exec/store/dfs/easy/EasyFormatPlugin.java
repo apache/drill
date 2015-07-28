@@ -52,11 +52,14 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
+
+  @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
 
   private final BasicFormatMatcher matcher;
@@ -66,7 +69,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final boolean blockSplittable;
   private final Configuration fsConf;
   private final StoragePluginConfig storageConfig;
-  protected final FormatPluginConfig formatConfig;
+  protected final T formatConfig;
   private final String name;
   private final boolean compressible;
 
@@ -129,7 +132,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
           columnExplorer.getTableColumns(), scan.getSelectionRoot());
       scan.setOperatorId(scan.getOperatorId());
-    }
+        }
 
     OperatorContext oContext = context.newOperatorContext(scan);
     final DrillFileSystem dfs;
@@ -142,21 +145,21 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     List<RecordReader> readers = Lists.newArrayList();
     List<Map<String, String>> implicitColumns = Lists.newArrayList();
     Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
-    for(FileWork work : scan.getWorkUnits()) {
+    for(FileWork work : scan.getWorkUnits()){
       RecordReader recordReader = getRecordReader(context, dfs, work, scan.getColumns(), scan.getUserName());
       readers.add(recordReader);
       Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(work, scan.getSelectionRoot());
       implicitColumns.add(implicitValues);
       if (implicitValues.size() > mapWithMaxColumns.size()) {
         mapWithMaxColumns = implicitValues;
+        }
       }
-    }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
     Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
     for (Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
-    }
+      }
 
     return new ScanBatch(scan, context, oContext, readers.iterator(), implicitColumns);
   }
@@ -194,7 +197,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public FormatPluginConfig getConfig() {
+  public T getConfig() {
     return formatConfig;
   }
 

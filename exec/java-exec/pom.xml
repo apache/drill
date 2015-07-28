@@ -453,6 +453,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>nl.basjes.parse.httpdlog</groupId>
+      <artifactId>httpdlog-parser</artifactId>
+      <version>2.1.1</version>
+    </dependency>
+        
   </dependencies>
 
   <profiles>
