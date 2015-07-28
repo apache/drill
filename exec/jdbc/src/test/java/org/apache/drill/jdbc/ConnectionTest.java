@@ -21,15 +21,20 @@ import org.apache.drill.jdbc.Driver;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,6 +48,7 @@ public class ConnectionTest extends JdbcTestBase {
   private static Connection connection;
 
   private static ExecutorService executor;
+
 
   @BeforeClass
   public static void setUpConnection() throws SQLException {
@@ -58,6 +64,201 @@ public class ConnectionTest extends JdbcTestBase {
   public static void tearDownConnection() throws SQLException {
     connection.close();
     executor.shutdown();
+  }
+
+  private static void emitSupportExceptionWarning() {
+    System.err.println(
+        "Note:  Still throwing older-Avatica UnsupportedOperationException"
+        + " instead of less-noncompliant SQLFeatureNotSupportedException" );
+  }
+
+
+  ////////////////////////////////////////
+  // Basic tests of statement creation methods (not necessarily executing
+  // statements):
+
+  //////////
+  // Simplest cases of createStatement, prepareStatement, prepareCall:
+
+  @Test
+  public void testCreateStatementBasicCaseWorks() throws SQLException {
+    Statement stmt = connection.createStatement();
+    ResultSet rs = stmt.executeQuery( "VALUES 1" );
+    assertTrue( rs.next() );
+  }
+
+  @Test
+  public void testPrepareStatementBasicCaseWorks() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement( "VALUES 1" );
+    ResultSet rs = stmt.executeQuery();
+    assertTrue( rs.next() );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  public void testPrepareCallThrows() throws SQLException {
+    try {
+      connection.prepareCall( "VALUES 1" );
+    }
+    catch ( UnsupportedOperationException e) {
+      // TODO(DRILL-2769):  Purge this mapping when right exception is thrown.
+      emitSupportExceptionWarning();
+      throw new SQLFeatureNotSupportedException(
+          "Note: Still throwing UnsupportedOperationException ", e );
+    }
+  }
+
+  //////////
+  // createStatement(int, int):
+
+  @Test
+  public void testCreateStatement_overload2_supportedCase_returns() throws SQLException {
+      connection.createStatement( ResultSet.TYPE_FORWARD_ONLY,
+                                  ResultSet.CONCUR_READ_ONLY );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testCreateStatement_overload2_unsupportedType1_throws() throws SQLException {
+    connection.createStatement( ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                ResultSet.CONCUR_READ_ONLY );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testCreateStatement_overload2_unsupportedType2_throws() throws SQLException {
+    connection.createStatement( ResultSet.TYPE_SCROLL_SENSITIVE,
+                                ResultSet.CONCUR_READ_ONLY);
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testCreateStatement_overload2_unsupportedConcurrency_throws() throws SQLException {
+    connection.createStatement( ResultSet.TYPE_FORWARD_ONLY,
+                                ResultSet.CONCUR_UPDATABLE );
+  }
+
+
+  //////////
+  // prepareStatement(String, int, int, int):
+
+  @Test
+  public void testPrepareStatement_overload2_supportedCase_returns() throws SQLException {
+    connection.prepareStatement( "VALUES 1",
+                                 ResultSet.TYPE_FORWARD_ONLY,
+                                 ResultSet.CONCUR_READ_ONLY );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testPrepareStatement_overload2_unsupportedType1_throws() throws SQLException {
+    connection.prepareStatement( "VALUES 1",
+                                 ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                 ResultSet.CONCUR_READ_ONLY );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testPrepareStatement_overload2_unsupportedType2_throws() throws SQLException {
+    connection.prepareStatement( "VALUES 1",
+                                 ResultSet.TYPE_SCROLL_SENSITIVE,
+                                 ResultSet.CONCUR_READ_ONLY );
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testPrepareStatement_overload2_unsupportedConcurrency_throws() throws SQLException {
+    connection.prepareStatement( "VALUES 1",
+                                 ResultSet.TYPE_FORWARD_ONLY,
+                                 ResultSet.CONCUR_UPDATABLE );
+  }
+
+
+  //////////
+  // createStatement(int, int, int) (case not covered with
+  // createStatement(int, int)):
+
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testCreateStatement_overload3_unsupportedHoldability_throws() throws SQLException {
+    connection.createStatement( ResultSet.TYPE_FORWARD_ONLY,
+                                ResultSet.CONCUR_READ_ONLY,
+                                ResultSet.CLOSE_CURSORS_AT_COMMIT);
+  }
+
+
+  //////////
+  // prepareStatement(int, int, int) (case not covered with
+  // prepareStatement(int, int)):
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  @Ignore( "until unsupported characteristics are rejected" )
+  public void testPrepareStatement_overload3_unsupportedHoldability_throws() throws SQLException {
+    connection.prepareStatement( "VALUES 1",
+                                 ResultSet.TYPE_FORWARD_ONLY,
+                                 ResultSet.CONCUR_READ_ONLY,
+                                 ResultSet.CLOSE_CURSORS_AT_COMMIT );
+  }
+
+  //////////
+  // prepareCall(String, int, int, int):
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  public void testCreateCall_overload3_throws() throws SQLException {
+    try {
+      connection.prepareCall( "VALUES 1",
+                              ResultSet.TYPE_FORWARD_ONLY,
+                              ResultSet.CONCUR_READ_ONLY,
+                              ResultSet.HOLD_CURSORS_OVER_COMMIT );
+    }
+    catch ( UnsupportedOperationException e) {
+      // TODO(DRILL-2769):  Purge this mapping when right exception is thrown.
+      emitSupportExceptionWarning();
+      throw new SQLFeatureNotSupportedException(
+          "Note: Still throwing UnsupportedOperationException ", e );
+    }
+  }
+
+  //////////
+  // remaining prepareStatement(...):
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  public void testPrepareStatement_overload4_throws() throws SQLException {
+    try {
+      connection.prepareStatement( "VALUES 1", Statement.RETURN_GENERATED_KEYS );
+    }
+    catch ( UnsupportedOperationException e) {
+      // TODO(DRILL-2769):  Purge this mapping when right exception is thrown.
+      emitSupportExceptionWarning();
+      throw new SQLFeatureNotSupportedException(
+          "Note: Still throwing UnsupportedOperationException ", e );
+    }
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  public void testPrepareStatement_overload5_throws() throws SQLException {
+    try {
+      connection.prepareStatement( "VALUES 1", new int[] { 1 } );
+    }
+    catch ( UnsupportedOperationException e) {
+      // TODO(DRILL-2769):  Purge this mapping when right exception is thrown.
+      emitSupportExceptionWarning();
+      throw new SQLFeatureNotSupportedException(
+          "Note: Still throwing UnsupportedOperationException ", e );
+    }
+  }
+
+  @Test( expected = SQLFeatureNotSupportedException.class )
+  public void testPrepareStatement_overload6_throws() throws SQLException {
+    try {
+       connection.prepareStatement( "VALUES 1 AS colA", new String[] { "colA" } );
+    }
+    catch ( UnsupportedOperationException e) {
+      // TODO(DRILL-2769):  Purge this mapping when right exception is thrown.
+      emitSupportExceptionWarning();
+      throw new SQLFeatureNotSupportedException(
+          "Note: Still throwing UnsupportedOperationException ", e );
+    }
   }
 
 

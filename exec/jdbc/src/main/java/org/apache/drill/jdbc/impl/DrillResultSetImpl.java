@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.hydromatic.avatica.AvaticaPrepareResult;
 import net.hydromatic.avatica.AvaticaResultSet;
+import net.hydromatic.avatica.AvaticaStatement;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -75,7 +76,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(DrillResultSetImpl.class);
 
-  private final DrillStatementImpl statement;
+  private final DrillConnectionImpl connection;
 
   SchemaChangeListener changeListener;
   final ResultsListener resultsListener;
@@ -87,18 +88,16 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   boolean hasPendingCancelationNotification;
 
 
-  DrillResultSetImpl(DrillStatementImpl statement, AvaticaPrepareResult prepareResult,
+  DrillResultSetImpl(AvaticaStatement statement, AvaticaPrepareResult prepareResult,
                      ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
     super(statement, prepareResult, resultSetMetaData, timeZone);
-    this.statement = statement;
+    connection = (DrillConnectionImpl) statement.getConnection();
+    client = connection.getClient();
     final int batchQueueThrottlingThreshold =
-        this.getStatement().getConnection().getClient().getConfig().getInt(
+        client.getConfig().getInt(
             ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
-    resultsListener = new ResultsListener( batchQueueThrottlingThreshold );
-    DrillConnection c = (DrillConnection) statement.getConnection();
-    DrillClient client = c.getClient();
+    resultsListener = new ResultsListener(batchQueueThrottlingThreshold);
     batchLoader = new RecordBatchLoader(client.getAllocator());
-    this.client = client;
     cursor = new DrillCursor(this);
   }
 
@@ -107,7 +106,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
    * ResultSet is closed.
    *
    * @throws  ExecutionCanceledSqlException  if ResultSet is closed because of
-   *          cancelation and no QueryCanceledSqlException had been thrown yet
+   *          cancelation and no QueryCanceledSqlException has been thrown yet
    *          for this ResultSet
    * @throws  AlreadyClosedSqlException  if ResultSet is closed
    * @throws  SQLException  if error in calling {@link #isClosed()}
@@ -850,9 +849,9 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   }
 
   @Override
-  public DrillStatementImpl getStatement() {
-    // Note:  No already-closed exception for close().
-    return statement;
+  public AvaticaStatement getStatement() {
+    // Note:  No already-closed exception for getStatement().
+    return super.getStatement();
   }
 
   @Override
@@ -1334,10 +1333,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   protected DrillResultSetImpl execute() throws SQLException{
-    DrillConnectionImpl connection = (DrillConnectionImpl) statement.getConnection();
-
-    connection.getClient().runQuery(QueryType.SQL, this.prepareResult.getSql(),
-                                    resultsListener);
+    client.runQuery(QueryType.SQL, this.prepareResult.getSql(), resultsListener);
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     super.execute();
