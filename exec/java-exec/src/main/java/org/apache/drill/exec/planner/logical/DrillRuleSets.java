@@ -116,7 +116,7 @@ public class DrillRuleSets {
 
       FilterMergeRule.INSTANCE,
       AggregateRemoveRule.INSTANCE,
-      ProjectRemoveRule.NAME_CALC_INSTANCE,
+      ProjectRemoveRule.INSTANCE,
       SortRemoveRule.INSTANCE,
 
       AggregateExpandDistinctAggregatesRule.INSTANCE,

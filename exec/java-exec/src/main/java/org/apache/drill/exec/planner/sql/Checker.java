@@ -44,4 +44,9 @@ class Checker implements SqlOperandTypeChecker {
     return opName + "(Drill - Opaque)";
   }
 
+  @Override
+  public Consistency getConsistency() {
+    return Consistency.NONE;
+  }
+
 }

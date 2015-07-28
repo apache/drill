@@ -504,7 +504,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     DrillProjectRel topProj = DrillProjectRel.create(rel.getCluster(), rel.getTraitSet(), rel, projections, newRowType);
 
     // Add a final non-trivial Project to get the validatedRowType, if child is not project.
-    if (rel instanceof Project && ProjectRemoveRule.isTrivial(topProj, true)) {
+    if (rel instanceof Project && ProjectRemoveRule.isTrivial(topProj)) {
       return rel;
     } else{
       return topProj;
