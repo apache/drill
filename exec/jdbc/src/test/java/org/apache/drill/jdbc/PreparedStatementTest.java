@@ -17,7 +17,9 @@
  */
 package org.apache.drill.jdbc;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.*;
 
 import org.hamcrest.Matcher;
@@ -30,10 +32,14 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
 
+/**
+ * Test for Drill's implementation of PreparedStatement's methods.
+ */
 public class PreparedStatementTest extends JdbcTestBase {
 
   /** Fuzzy matcher for parameters-not-supported message assertions.  (Based on
@@ -57,12 +63,30 @@ public class PreparedStatementTest extends JdbcTestBase {
     connection.close();
   }
 
+
+  //////////
+  // Basic querying-works test:
+
+  /** Tests that basic executeQuery() (with query statement) works. */
+  @Test
+  public void testExecuteQueryBasicCaseWorks() throws SQLException {
+    PreparedStatement stmt = connection.prepareStatement( "VALUES 11" );
+    ResultSet rs = stmt.executeQuery();
+    assertThat( "Unexpected column count",
+                rs.getMetaData().getColumnCount(), equalTo( 1 ) );
+    assertTrue( "No expected first row", rs.next() );
+    assertThat( rs.getInt( 1 ), equalTo( 11 ) );
+    assertFalse( "Unexpected second row", rs.next() );
+  }
+
+
+  //////////
   // Parameters-not-implemented tests:
 
   /** Tests that basic case of trying to set parameter says not supported. */
   @Test( expected = SQLFeatureNotSupportedException.class )
   public void testParamSettingSaysUnsupported() throws SQLException {
-    PreparedStatement prepStmt = connection.prepareStatement( "SELECT ?, ?" );
+    PreparedStatement prepStmt = connection.prepareStatement( "VALUES ?, ?" );
     try {
       prepStmt.setInt( 0, 123456789 );
     }
@@ -77,7 +101,7 @@ public class PreparedStatementTest extends JdbcTestBase {
   /** Tests that "not supported" has priority over "bad index" check. */
   @Test( expected = SQLFeatureNotSupportedException.class )
   public void testParamSettingWithImpossibleIndexSaysUnsupported() throws SQLException {
-    PreparedStatement prepStmt = connection.prepareStatement( "SELECT ?, ?" );
+    PreparedStatement prepStmt = connection.prepareStatement( "VALUES ?, ?" );
     try {
       prepStmt.setString( -1, "some value" );
     }
@@ -92,7 +116,7 @@ public class PreparedStatementTest extends JdbcTestBase {
   /** Tests that "not supported" has priority over "bad index" check. */
   @Test( expected = SQLFeatureNotSupportedException.class )
   public void testParamSettingWithInconsistentIndexSaysUnsupported() throws SQLException {
-    PreparedStatement prepStmt = connection.prepareStatement( "SELECT ?, ?" );
+    PreparedStatement prepStmt = connection.prepareStatement( "VALUES ?, ?" );
     try {
       prepStmt.setBytes( 4, null );
     }
@@ -108,7 +132,7 @@ public class PreparedStatementTest extends JdbcTestBase {
    *  check. */
   @Test( expected = SQLFeatureNotSupportedException.class )
   public void testParamSettingWhenNoParametersIndexSaysUnsupported() throws SQLException {
-    PreparedStatement prepStmt = connection.prepareStatement( "SELECT 1" );
+    PreparedStatement prepStmt = connection.prepareStatement( "VALUES 1" );
     try {
       prepStmt.setBytes( 4, null );
     }
@@ -124,7 +148,7 @@ public class PreparedStatementTest extends JdbcTestBase {
    *  check. */
   @Test( expected = SQLFeatureNotSupportedException.class )
   public void testParamSettingWhenUnsupportedTypeSaysUnsupported() throws SQLException {
-    PreparedStatement prepStmt = connection.prepareStatement( "SELECT 1" );
+    PreparedStatement prepStmt = connection.prepareStatement( "VALUES 1" );
     try {
       prepStmt.setClob( 2, (Clob) null );
     }
