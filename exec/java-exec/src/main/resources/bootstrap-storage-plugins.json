@@ -29,6 +29,10 @@
           extensions: [ "tsv" ],
           delimiter: "\t"
         },
+        "httpd" :{
+          type: "httpd",
+          format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%{Cookie}i\""
+        },
         "parquet" : {
           type: "parquet"
         },
