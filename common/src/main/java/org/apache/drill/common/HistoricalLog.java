@@ -41,6 +41,9 @@ public class HistoricalLog {
   private final String idString; // the formatted id string
   private Event firstEvent; // the first stack trace recorded
   private final int limit; // the limit on the number of events kept
+  private final Logger logger; // the logger to use when direct logging
+
+  private final static boolean DIRECT_LOGGING = false;
 
   /**
    * Constructor. The format string will be formatted and have its arguments
@@ -51,8 +54,8 @@ public class HistoricalLog {
    *     that can be associated with the object instance is best.
    * @param args for the format string, or nothing if none are required
    */
-  public HistoricalLog(final String idStringFormat, Object... args) {
-    this(Integer.MAX_VALUE, idStringFormat, args);
+  public HistoricalLog(final Logger logger, final String idStringFormat, Object... args) {
+    this(logger, Integer.MAX_VALUE, idStringFormat, args);
   }
 
   /**
@@ -74,9 +77,11 @@ public class HistoricalLog {
    *     that can be associated with the object instance is best.
    * @param args for the format string, or nothing if none are required
    */
-  public HistoricalLog(final int limit, final String idStringFormat, Object... args) {
+  public HistoricalLog(final Logger logger, final int limit,
+      final String idStringFormat, Object... args) {
     this.limit = limit;
     this.idString = String.format(idStringFormat, args);
+    this.logger = logger;
   }
 
   /**
@@ -89,7 +94,21 @@ public class HistoricalLog {
    */
   public synchronized void recordEvent(final String noteFormat, Object... args) {
     final String note = String.format(noteFormat, args);
-    final Event event = new Event(note);
+    addEvent(new Event(note));
+  }
+
+  private void addEvent(final Event event) {
+    if (DIRECT_LOGGING) {
+      final StringBuilder sb = new StringBuilder();
+      sb.append(idString);
+      sb.append(": ");
+      sb.append(event.note);
+      sb.append('\n');
+      event.stackTrace.writeToBuilder(sb, 4, 12);
+      logger.debug(sb.toString());
+      return;
+    }
+
     if (firstEvent == null) {
       firstEvent = event;
     }
@@ -97,6 +116,14 @@ public class HistoricalLog {
       history.removeFirst();
     }
     history.add(event);
+  }
+
+  public synchronized void append(final HistoricalLog otherLog) {
+    synchronized(otherLog) {
+      for(Event event : otherLog.history) {
+        addEvent(event);
+      }
+    }
   }
 
   /**

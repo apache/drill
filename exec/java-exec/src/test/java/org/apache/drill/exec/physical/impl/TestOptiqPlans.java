@@ -30,7 +30,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -99,7 +99,7 @@ public class TestOptiqPlans extends ExecTest {
         context.getConfig();
         result = c;
         context.getAllocator();
-        result = new RootAllocator(c);
+        result = RootAllocatorFactory.newRoot(c);
       }
     };
 
@@ -302,7 +302,7 @@ public class TestOptiqPlans extends ExecTest {
         bitContext.getMetrics();
         result = new MetricRegistry();
         bitContext.getAllocator();
-        result = new RootAllocator(c);
+        result = RootAllocatorFactory.newRoot(c);
         bitContext.getConfig();
         result = c;
       }

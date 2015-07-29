@@ -26,7 +26,7 @@ import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.ByteBufBytesInput;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.DirectBytesDecompressor;
@@ -49,7 +49,7 @@ public class TestDirectCodecFactory extends ExecTest {
     DrillBuf rawBuf = null;
     DrillBuf outBuf = null;
     final DrillConfig drillConfig = DrillConfig.create();
-    try (BufferAllocator allocator = new RootAllocator(drillConfig);
+    try (BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
         DirectCodecFactory codecFactory = new DirectCodecFactory(new Configuration(), allocator)) {
       try {
         rawBuf = allocator.buffer(size);

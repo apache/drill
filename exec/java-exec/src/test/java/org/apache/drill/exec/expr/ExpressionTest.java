@@ -42,7 +42,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -86,7 +86,7 @@ public class ExpressionTest extends ExecTest {
         batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
         result = wrapper;
         wrapper.getValueVector();
-        result = new IntVector(MaterializedField.create("result", type), new RootAllocator(DrillConfig.create()));
+        result = new IntVector(MaterializedField.create("result", type), RootAllocatorFactory.newRoot(DrillConfig.create()));
       }
 
     };

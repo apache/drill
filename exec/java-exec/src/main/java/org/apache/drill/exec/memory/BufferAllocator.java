@@ -23,6 +23,8 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.util.Pointer;
 
+import com.google.common.annotations.VisibleForTesting;
+
 // TODO(cwestin) remove deprecated items
 /**
  * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods.
@@ -179,9 +181,17 @@ public interface BufferAllocator extends AutoCloseable {
   /**
    * Create an allocation reservation. A reservation is a way of building up
    * a request for a buffer whose size is not known in advance. See
-   * {@see AllocationReservation}.
+   * {@link AllocationReservation}.
    *
    * @return the newly created reservation
    */
   public AllocationReservation newReservation();
+
+  /**
+   * Verify the state of the allocator.
+   *
+   * <p>Only valid for allocator DEBUG mode.</p>
+   */
+  @VisibleForTesting
+  public void verifyAllocator();
 }

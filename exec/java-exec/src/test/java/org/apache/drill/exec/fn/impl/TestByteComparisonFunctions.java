@@ -24,7 +24,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -33,7 +34,7 @@ import org.junit.Test;
 public class TestByteComparisonFunctions extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
 
-  static RootAllocator allocator;
+  static BufferAllocator allocator;
   static VarCharHolder hello;
   static VarCharHolder goodbye;
   static VarCharHolder helloLong;
@@ -42,7 +43,7 @@ public class TestByteComparisonFunctions extends ExecTest{
   @BeforeClass
   public static void setup() throws Exception {
     final DrillConfig c = DrillConfig.create();
-    allocator = new RootAllocator(c);
+    allocator = RootAllocatorFactory.newRoot(c);
     hello = ValueHolderHelper.getVarCharHolder(allocator, "hello");
     goodbye = ValueHolderHelper.getVarCharHolder(allocator, "goodbye");
     helloLong = ValueHolderHelper.getVarCharHolder(allocator, "hellomyfriend");

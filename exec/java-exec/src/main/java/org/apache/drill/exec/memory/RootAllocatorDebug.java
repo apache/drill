@@ -24,15 +24,15 @@ import org.apache.drill.exec.ExecConstants;
  * The root allocator for using direct memory inside a Drillbit. Supports creating a
  * tree of descendant child allocators.
  */
-class RootAllocator extends BaseAllocator {
+class RootAllocatorDebug extends BaseAllocatorDebug {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootAllocator.class);
 
-  RootAllocator(final DrillConfig drillConfig) {
+  RootAllocatorDebug(final DrillConfig drillConfig) {
     this(BaseAllocator.getAllocationPolicy(), 0, Math.min(
         DrillConfig.getMaxDirectMemory(), drillConfig.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)), 0);
   }
 
-  RootAllocator(final AllocationPolicy allocationPolicy,
+  RootAllocatorDebug(final AllocationPolicy allocationPolicy,
       final long initAllocation, final long maxReservation, final int flags) {
     super(null, new RootAllocatorOwner(), allocationPolicy, initAllocation,
         BaseAllocator.maxDirect = maxReservation, flags);

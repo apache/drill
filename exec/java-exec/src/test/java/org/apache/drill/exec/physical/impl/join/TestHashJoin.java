@@ -32,7 +32,7 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -75,7 +75,7 @@ public class TestHashJoin extends PopUnitTestBase {
     opt.init();
     new NonStrictExpectations() {{
         bitContext.getMetrics(); result = new MetricRegistry();
-        bitContext.getAllocator(); result = new RootAllocator(c);
+        bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
         bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
         bitContext.getConfig(); result = c;
         bitContext.getOptionManager(); result = opt;

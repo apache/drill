@@ -40,7 +40,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -76,7 +76,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -122,7 +122,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -167,7 +167,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   @Test
   public void testCastFloat4(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -213,7 +213,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastFloat8(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -259,7 +259,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastVarChar(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -305,7 +305,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastVarBinary(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
@@ -351,7 +351,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   //nested: cast is nested in another cast, or another function.
   public void testCastNested(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = allocator;
@@ -398,7 +398,7 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
 
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();

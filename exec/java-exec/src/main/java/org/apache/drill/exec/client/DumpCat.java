@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -44,7 +44,7 @@ public class DumpCat {
   private final BufferAllocator allocator;
 
   public DumpCat() throws Exception {
-    allocator = new RootAllocator(drillConfig);
+    allocator = RootAllocatorFactory.newRoot(drillConfig);
   }
 
   public static void main(String args[]) throws Exception {

@@ -91,8 +91,8 @@ public class TestBaseAllocator {
   @Test
   public void test_privateMax() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("noLimits");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_LOCAL_MAX, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_LOCAL_MAX, 0, MAX_ALLOCATION, 0)) {
       final DrillBuf drillBuf1 = rootAllocator.buffer(MAX_ALLOCATION / 2);
       assertNotNull("allocation failed", drillBuf1);
 
@@ -110,8 +110,8 @@ public class TestBaseAllocator {
   @Test(expected=IllegalStateException.class)
   public void testRootAllocator_closeWithOutstanding() throws Exception {
     try {
-      try(final RootAllocator rootAllocator =
-          new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+      try(final BufferAllocator rootAllocator =
+          RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
         final DrillBuf drillBuf = rootAllocator.buffer(512);
         assertNotNull("allocation failed", drillBuf);
       }
@@ -132,8 +132,8 @@ public class TestBaseAllocator {
 
   @Test
   public void testRootAllocator_getEmpty() throws Exception {
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final DrillBuf drillBuf = rootAllocator.buffer(0);
       assertNotNull("allocation failed", drillBuf);
       assertEquals("capacity was non-zero", 0, drillBuf.capacity());
@@ -144,8 +144,8 @@ public class TestBaseAllocator {
   @Ignore // TODO(DRILL-2740)
   @Test(expected = IllegalStateException.class)
   public void testAllocator_unreleasedEmpty() throws Exception {
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       @SuppressWarnings("unused")
       final DrillBuf drillBuf = rootAllocator.buffer(0);
     }
@@ -154,21 +154,21 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_transferOwnership() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("changeOwnership");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final BufferAllocator childAllocator1 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final BufferAllocator childAllocator2 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
 
       final DrillBuf drillBuf1 = childAllocator1.buffer(MAX_ALLOCATION / 4);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       final boolean allocationFit = childAllocator2.takeOwnership(drillBuf1);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       assertTrue(allocationFit);
 
       childAllocator1.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf1.release();
       childAllocator2.close();
@@ -178,28 +178,28 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_shareOwnership() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("shareOwnership");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final BufferAllocator childAllocator1 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final BufferAllocator childAllocator2 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final DrillBuf drillBuf1 = childAllocator1.buffer(MAX_ALLOCATION / 4);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       final Pointer<DrillBuf> pDrillBuf = new Pointer<>();
       boolean allocationFit;
 
       allocationFit = childAllocator2.shareOwnership(drillBuf1, pDrillBuf);
       assertTrue(allocationFit);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       final DrillBuf drillBuf2 = pDrillBuf.value;
       assertNotNull(drillBuf2);
       assertNotEquals(drillBuf2, drillBuf1);
 
       drillBuf1.release();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       childAllocator1.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       final BufferAllocator childAllocator3 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
@@ -209,15 +209,15 @@ public class TestBaseAllocator {
       assertNotNull(drillBuf3);
       assertNotEquals(drillBuf3, drillBuf1);
       assertNotEquals(drillBuf3, drillBuf2);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf2.release();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       childAllocator2.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf3.release();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       childAllocator3.close();
     }
   }
@@ -225,8 +225,8 @@ public class TestBaseAllocator {
   @Test
   public void testRootAllocator_createChildAndUse() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("createChildAndUse");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         final DrillBuf drillBuf = childAllocator.buffer(512);
@@ -240,8 +240,8 @@ public class TestBaseAllocator {
   public void testRootAllocator_createChildDontClose() throws Exception {
     try {
       final AllocatorOwner allocatorOwner = new NamedOwner("createChildDontClose");
-      try(final RootAllocator rootAllocator =
-          new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+      try(final BufferAllocator rootAllocator =
+          RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
         final BufferAllocator childAllocator =
             rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
         final DrillBuf drillBuf = childAllocator.buffer(512);
@@ -286,8 +286,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_manyAllocations() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("manyAllocations");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         allocateAndFree(childAllocator);
@@ -298,8 +298,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_overAllocate() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("overAllocate");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         allocateAndFree(childAllocator);
@@ -317,8 +317,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_overAllocateParent() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("overAllocateParent");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         final DrillBuf drillBuf1 = rootAllocator.buffer(MAX_ALLOCATION / 2);
@@ -340,34 +340,34 @@ public class TestBaseAllocator {
   }
 
   private static void testAllocator_sliceUpBufferAndRelease(
-      final RootAllocator rootAllocator, final BufferAllocator bufferAllocator) {
+      final BufferAllocator rootAllocator, final BufferAllocator bufferAllocator) {
     final DrillBuf drillBuf1 = bufferAllocator.buffer(MAX_ALLOCATION / 2);
-    rootAllocator.verify();
+    rootAllocator.verifyAllocator();
 
     final DrillBuf drillBuf2 = drillBuf1.slice(16, drillBuf1.capacity() - 32);
-    rootAllocator.verify();
+    rootAllocator.verifyAllocator();
     final DrillBuf drillBuf3 = drillBuf2.slice(16, drillBuf2.capacity() - 32);
-    rootAllocator.verify();
+    rootAllocator.verifyAllocator();
     @SuppressWarnings("unused")
     final DrillBuf drillBuf4 = drillBuf3.slice(16, drillBuf3.capacity() - 32);
-    rootAllocator.verify();
+    rootAllocator.verifyAllocator();
 
     drillBuf3.release(); // since they share refcounts, one is enough to release them all
-    rootAllocator.verify();
+    rootAllocator.verifyAllocator();
   }
 
   @Test
   public void testAllocator_createSlices() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("createSlices");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       testAllocator_sliceUpBufferAndRelease(rootAllocator, rootAllocator);
 
       try(final BufferAllocator childAllocator =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         testAllocator_sliceUpBufferAndRelease(rootAllocator, childAllocator);
       }
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       testAllocator_sliceUpBufferAndRelease(rootAllocator, rootAllocator);
 
@@ -380,21 +380,21 @@ public class TestBaseAllocator {
           final DrillBuf drillBuf2 = drillBuf1.slice(MAX_ALLOCATION / 16, MAX_ALLOCATION / 16);
           testAllocator_sliceUpBufferAndRelease(rootAllocator, childAllocator);
           drillBuf1.release();
-          rootAllocator.verify();
+          rootAllocator.verifyAllocator();
         }
-        rootAllocator.verify();
+        rootAllocator.verifyAllocator();
 
         testAllocator_sliceUpBufferAndRelease(rootAllocator, childAllocator);
       }
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
     }
   }
 
   @Test
   public void testAllocator_sliceRanges() throws Exception {
 //    final AllocatorOwner allocatorOwner = new NamedOwner("sliceRanges");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       // Populate a buffer with byte values corresponding to their indices.
       final DrillBuf drillBuf = rootAllocator.buffer(256, 256 + 256);
       assertEquals(256, drillBuf.capacity());
@@ -453,8 +453,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_slicesOfSlices() throws Exception {
 //    final AllocatorOwner allocatorOwner = new NamedOwner("slicesOfSlices");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       // Populate a buffer with byte values corresponding to their indices.
       final DrillBuf drillBuf = rootAllocator.buffer(256, 256 + 256);
       for(int i = 0; i < 256; ++i) {
@@ -489,8 +489,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_transferSliced() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("transferSliced");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final BufferAllocator childAllocator1 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final BufferAllocator childAllocator2 =
@@ -502,12 +502,12 @@ public class TestBaseAllocator {
       final DrillBuf drillBuf1s = drillBuf1.slice(0, drillBuf1.capacity() / 2);
       final DrillBuf drillBuf2s = drillBuf2.slice(0, drillBuf2.capacity() / 2);
 
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       childAllocator1.takeOwnership(drillBuf2s);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       childAllocator2.takeOwnership(drillBuf1s);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf1s.release(); // releases drillBuf1
       drillBuf2s.release(); // releases drillBuf2
@@ -520,8 +520,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_shareSliced() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("transferSliced");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final BufferAllocator childAllocator1 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final BufferAllocator childAllocator2 =
@@ -533,18 +533,18 @@ public class TestBaseAllocator {
       final DrillBuf drillBuf1s = drillBuf1.slice(0, drillBuf1.capacity() / 2);
       final DrillBuf drillBuf2s = drillBuf2.slice(0, drillBuf2.capacity() / 2);
 
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       final Pointer<DrillBuf> pDrillBuf = new Pointer<>();
       childAllocator1.shareOwnership(drillBuf2s, pDrillBuf);
       final DrillBuf drillBuf2s1 = pDrillBuf.value;
       childAllocator2.shareOwnership(drillBuf1s, pDrillBuf);
       final DrillBuf drillBuf1s2 = pDrillBuf.value;
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf1s.release(); // releases drillBuf1
       drillBuf2s.release(); // releases drillBuf2
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf2s1.release(); // releases the shared drillBuf2 slice
       drillBuf1s2.release(); // releases the shared drillBuf1 slice
@@ -557,8 +557,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_transferShared() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("transferShared");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       final BufferAllocator childAllocator1 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       final BufferAllocator childAllocator2 =
@@ -573,49 +573,49 @@ public class TestBaseAllocator {
 
       allocationFit = childAllocator2.shareOwnership(drillBuf1, pDrillBuf);
       assertTrue(allocationFit);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
       final DrillBuf drillBuf2 = pDrillBuf.value;
       assertNotNull(drillBuf2);
       assertNotEquals(drillBuf2, drillBuf1);
 
       allocationFit = childAllocator3.takeOwnership(drillBuf1);
       assertTrue(allocationFit);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       // Since childAllocator3 now has childAllocator1's buffer, 1, can close
       childAllocator1.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf2.release();
       childAllocator2.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       final BufferAllocator childAllocator4 =
           rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0);
       allocationFit = childAllocator4.takeOwnership(drillBuf1);
       assertTrue(allocationFit);
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       childAllocator3.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
 
       drillBuf1.release();
       childAllocator4.close();
-      rootAllocator.verify();
+      rootAllocator.verifyAllocator();
     }
   }
 
   @Test
   public void testAllocator_unclaimedReservation() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("unclaimedReservation");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator1 =
             rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         try(final AllocationReservation reservation = childAllocator1.newReservation()) {
           assertTrue(reservation.add(64));
         }
-        rootAllocator.verify();
+        rootAllocator.verifyAllocator();
       }
     }
   }
@@ -623,8 +623,8 @@ public class TestBaseAllocator {
   @Test
   public void testAllocator_claimedReservation() throws Exception {
     final AllocatorOwner allocatorOwner = new NamedOwner("claimedReservation");
-    try(final RootAllocator rootAllocator =
-        new RootAllocator(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
+    try(final BufferAllocator rootAllocator =
+        RootAllocatorFactory.newRoot(RootAllocator.POLICY_PER_FRAGMENT, 0, MAX_ALLOCATION, 0)) {
       try(final BufferAllocator childAllocator1 =
             rootAllocator.newChildAllocator(allocatorOwner, 0, MAX_ALLOCATION, 0)) {
         try(final AllocationReservation reservation = childAllocator1.newReservation()) {
@@ -633,12 +633,12 @@ public class TestBaseAllocator {
 
           final DrillBuf drillBuf = reservation.buffer();
           assertEquals(64, drillBuf.capacity());
-          rootAllocator.verify();
+          rootAllocator.verifyAllocator();
 
           drillBuf.release();
-          rootAllocator.verify();
+          rootAllocator.verifyAllocator();
         }
-        rootAllocator.verify();
+        rootAllocator.verifyAllocator();
       }
     }
   }

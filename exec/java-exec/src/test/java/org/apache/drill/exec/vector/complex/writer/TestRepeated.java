@@ -24,7 +24,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
@@ -48,7 +48,7 @@ public class TestRepeated {
   @BeforeClass
   public static void setupAllocator() {
     drillConfig = DrillConfig.create();
-    allocator = new RootAllocator(drillConfig);
+    allocator = RootAllocatorFactory.newRoot(drillConfig);
   }
 
   @AfterClass

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -42,31 +43,51 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.exec.util.Pointer;
 import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 
-public abstract class BaseAllocator implements BufferAllocator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseAllocator.class);
+public class BaseAllocator implements BufferAllocator {
+  protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseAllocator.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(BaseAllocator.class);
 
   private static final AtomicInteger idGenerator = new AtomicInteger(0);
-  private static final Object ALLOCATOR_LOCK = new Object();
+  protected static final Object DEBUG_LOCK = new Object();
 
   public static final String CHILD_BUFFER_INJECTION_SITE = "child.buffer";
 
-  private static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
+  static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
       || Boolean.getBoolean(ExecConstants.DEBUG_ALLOCATOR);
+  private static final boolean LOGGING = DEBUG;
+  // DEBUG implies LOGGING. (However, LOGGING can be turned on without DEBUG.)
+  static {
+    if (DEBUG && !LOGGING) {
+      throw new IllegalStateException("if DEBUG, then LOGGING must be on");
+    }
+  }
+
   private static final PooledByteBufAllocatorL INNER_ALLOCATOR = PooledByteBufAllocatorL.DEFAULT;
 
-  private long allocated; // the amount of memory this allocator has given out to its clients (including children)
-  private long owned; // the amount of memory this allocator has obtained from its parent
-  private long peakAllocated; // the most memory this allocator has given out during its lifetime
-  private long bufferAllocation; // the amount of memory used just for directly allocated buffers, not children
+  private class Transacted implements Cloneable {
+    private Transacted makeClone() {
+      try {
+        return (Transacted) super.clone();
+      } catch (CloneNotSupportedException e) {
+        throw new RuntimeException("Cloning error", e); // Shouldn't ever happen
+      }
+    }
 
-  private boolean isClosed = false; // the allocator has been closed
+    private long allocated; // the amount of memory this allocator has given out to its clients (including children)
+    private long owned; // the amount of memory this allocator has obtained from its parent
+    private long peakAllocated; // the most memory this allocator has given out during its lifetime
+    private long bufferAllocation; // the amount of memory used just for directly allocated buffers, not children
+    private boolean isClosed = false; // the allocator has been closed
+  }
+
+  private final AtomicReference<Transacted> ar = new AtomicReference<>(new Transacted()); // transacted variables
 
   private final long maxAllocation; // the maximum amount of memory this allocator will give out
   private final AllocationPolicyAgent policyAgent;
@@ -75,37 +96,56 @@ public abstract class BaseAllocator implements BufferAllocator {
   protected final int id = idGenerator.incrementAndGet(); // unique ID assigned to each allocator
   private final DrillBuf empty;
   private final AllocationPolicy allocationPolicy;
-  private final InnerBufferLedger bufferLedger = new InnerBufferLedger();
+  private final InnerBufferLedger bufferLedger = DEBUG ? new InnerBufferLedgerDebug() : new InnerBufferLedger();
 
   // members used purely for debugging
   private final IdentityHashMap<UnsafeDirectLittleEndian, BufferLedger> allocatedBuffers;
-  private final IdentityHashMap<BaseAllocator, Object> childAllocators;
-  private final IdentityHashMap<Reservation, Object> reservations;
-  private long preallocSpace;
+  protected final IdentityHashMap<BaseAllocator, Object> childAllocators;
+  private final IdentityHashMap<ReservationDebug, Object> reservations;
+  private volatile long preallocSpace;
+  private final static int MAX_LOG_RECORDS = 4;
 
-  private final HistoricalLog historicalLog;
+  protected final HistoricalLog historicalLog;
 
   /**
-   * Provide statistics via JMX for limiting root allocators.
+   * Return the allocation policy (chosen via System property).
+   * @return the currentp policy setting
    */
-  private class RootAllocatorStats implements RootAllocatorStatsMXBean {
-    @Override
-    public long getOwnedMemory() {
-      return owned;
+  public static AllocationPolicy getAllocationPolicy() {
+    final String policyName = System.getProperty(ExecConstants.ALLOCATION_POLICY,
+        BaseAllocator.POLICY_LOCAL_MAX_NAME); // TODO try with PER_FRAGMENT_NAME
+
+    switch(policyName) {
+    case POLICY_PER_FRAGMENT_NAME:
+      return POLICY_PER_FRAGMENT;
+    case POLICY_LOCAL_MAX_NAME:
+      return POLICY_LOCAL_MAX;
+    default:
+      throw new IllegalArgumentException("Unrecognized allocation policy name \"" + policyName + "\"");
     }
+  }
 
+  /**
+   * The maximum amount of direct memory the allocator tree can allocate.
+   */
+  protected static long maxDirect;
+
+  /**
+   * Get the maximum amount of direct memory the allocator tree can allocate.
+   * @return maximum amount of direct memory
+   */
+  public static long getMaxDirect() {
+    return maxDirect;
+  }
+
+  /**
+   * AllocatorOwner for the RootAllocator[Debug] classes. This returns
+   * null for the ExecutionControls.
+   */
+  protected static class RootAllocatorOwner implements AllocatorOwner {
     @Override
-    public long getAllocatedMemory() {
-      return allocated;
-    }
-
-    @Override
-    public long getChildCount() {
-      if (childAllocators != null) {
-        return childAllocators.size();
-      }
-
-      return -1; // unknown
+    public ExecutionControls getExecutionControls() {
+      return null;
     }
   }
 
@@ -221,29 +261,18 @@ public abstract class BaseAllocator implements BufferAllocator {
 
     @Override
     public void initializeAllocator(final BufferAllocator bufferAllocator) {
-      final BaseAllocator baseAllocator = getBaseAllocator(bufferAllocator);
-
       if (!limitingRoot) {
         objectName = null;
       } else {
         globals.limitingRoots.incrementAndGet();
-
-        // publish management information for this allocator
-        try {
-          final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-          final RootAllocatorStatsMXBean mbean = baseAllocator.new RootAllocatorStats();
-          objectName = new ObjectName("org.apache.drill.exec.memory:RootAllocator=" + baseAllocator.id);
-          mbs.registerMBean(mbean, objectName);
-        } catch(Exception e) {
-          logger.warn("Exception setting up RootAllocatorStatsMXBean:\n" + e);
-        }
       }
     }
 
     @Override
     public boolean shouldReleaseToParent(final BufferAllocator bufferAllocator) {
       final BaseAllocator baseAllocator = getBaseAllocator(bufferAllocator);
-      return (baseAllocator.bufferAllocation > globals.maxBufferAllocation);
+      final Transacted tv = baseAllocator.ar.get();
+      return (tv.bufferAllocation > globals.maxBufferAllocation);
     }
   }
 
@@ -311,7 +340,7 @@ public abstract class BaseAllocator implements BufferAllocator {
     Preconditions.checkArgument(initReservation >= 0,
         "the initial reservation size must be non-negative");
     Preconditions.checkArgument(maxAllocation >= 0,
-        "the maximum allocation limit mjst be non-negative");
+        "the maximum allocation limit must be non-negative");
     Preconditions.checkArgument(initReservation <= maxAllocation,
         "the initial reservation size must be <= the maximum allocation");
 
@@ -326,7 +355,7 @@ public abstract class BaseAllocator implements BufferAllocator {
     final AllocationPolicyAgent policyAgent = allocationPolicy.newAgent();
     policyAgent.checkNewAllocator(parentAllocator, initReservation, maxAllocation, flags);
 
-    if ((initReservation > 0) && !parentAllocator.reserve(this, initReservation, 0)) {
+    if ((initReservation > 0) && !parentAllocator.reserveXact(this, initReservation, 0)) {
       throw new OutOfMemoryRuntimeException(
           "can't fulfill initial reservation of size (unavailable from parent)" + initReservation);
     }
@@ -338,16 +367,17 @@ public abstract class BaseAllocator implements BufferAllocator {
     this.maxAllocation = maxAllocation;
 
     // the root allocator owns all of its memory; anything else just owns it's initial reservation
-    owned = parentAllocator == null ? maxAllocation : initReservation;
+    final Transacted tv = ar.get();
+    tv.owned = parentAllocator == null ? maxAllocation : initReservation;
     empty = DrillBuf.getEmpty(new EmptyLedger(), this);
 
-    if (DEBUG) {
+    if (LOGGING) {
       allocatedBuffers = new IdentityHashMap<>();
       childAllocators = new IdentityHashMap<>();
       reservations = new IdentityHashMap<>();
-      historicalLog = new HistoricalLog(4, "allocator[%d]", id);
+      historicalLog = new HistoricalLog(logger, MAX_LOG_RECORDS, "allocator[%d]", id);
 
-      historicalLog.recordEvent("created by \"%s\", owned = %d", allocatorOwner.toString(), owned);
+      historicalLog.recordEvent("created by \"%s\", owned = %d", allocatorOwner.toString(), tv.owned);
     } else {
       allocatedBuffers = null;
       childAllocators = null;
@@ -368,8 +398,7 @@ public abstract class BaseAllocator implements BufferAllocator {
    * the maxAllocation for this allocator.</p>
    *
    * @param nBytes the amount of space to reserve
-   * @param ignoreMax ignore the maximum allocation limit;
-   *   see {@link ChildLedger#reserve(long, boolean)}.
+   * @param flags one or more of RESERVE_F_*
    * @return true if the request can be met, false otherwise
    */
   protected boolean canIncreaseOwned(final long nBytes, final int flags) {
@@ -377,7 +406,102 @@ public abstract class BaseAllocator implements BufferAllocator {
       return false;
     }
 
-    return parentAllocator.reserve(this, nBytes, flags);
+    return parentAllocator.reserveXact(this, nBytes, flags);
+  }
+
+  /**
+   * Used to maintain state in transaction loops.
+   */
+  private static class MutableLong {
+    long value;
+  }
+
+  /**
+   * Flag for {@link #reserve(BaseAllocator, long, int)}; ignores the
+   * maximum allocation limit when trying to fulfill the reservation request.
+   * Note that this can still fail if the request percolates all the way up to
+   * the root allocator and there isn't any memory left.
+   */
+  private static final int RESERVE_F_IGNORE_MAX = 0x0001;
+
+  /**
+   * Reserve space for the child allocator from this allocator.
+   *
+   * @param childAllocator child allocator making the request, or null
+   *  if this is not for a child
+   * @param nBytes how much to reserve
+   * @param flags one or more of RESERVE_F_* flags or'ed together
+   * @return true if the reservation can be satisfied, false otherwise
+   */
+  private boolean reserve(final Transacted nv, final HistoricalLog bufferedLog,
+      final MutableLong obtainedFromParent,
+      final BaseAllocator childAllocator, final long nBytes, final int flags) {
+    Preconditions.checkArgument(nBytes >= 0,
+        "the number of bytes to reserve must be non-negative");
+
+    // we can always fulfill an empty request
+    if (nBytes == 0) {
+      return true;
+    }
+
+    final boolean ignoreMax = (flags & RESERVE_F_IGNORE_MAX) != 0;
+
+    // We might have obtained space from our parent on a previous attempt.
+    nv.owned += obtainedFromParent.value;
+
+    if (nv.isClosed) {
+      parentAllocator.releaseBytesXact(obtainedFromParent.value);
+      throw new AllocatorClosedException(String.format("Attempt to use closed allocator[%d]", id));
+    }
+
+    final long ownAtLeast = nv.allocated + nBytes;
+    // Are we allowed to hand out this much?
+    if (!ignoreMax && (ownAtLeast > maxAllocation)) {
+      if (parentAllocator != null) {
+        parentAllocator.releaseBytesXact(obtainedFromParent.value);
+        obtainedFromParent.value = 0L;
+      }
+      return false;
+    }
+
+    // Do we need more from our parent first?
+    if (ownAtLeast > nv.owned) {
+      final long needAdditional = ownAtLeast - nv.owned;
+      if (!canIncreaseOwned(needAdditional, flags)) {
+        parentAllocator.releaseBytesXact(obtainedFromParent.value);
+        obtainedFromParent.value = 0L;
+        return false;
+      }
+      obtainedFromParent.value += needAdditional;
+      nv.owned += needAdditional;
+
+      if (LOGGING) {
+        bufferedLog.recordEvent("increased owned by %d, now owned == %d", needAdditional, nv.owned);
+      }
+    }
+
+    if (DEBUG) {
+      if (nv.owned < ownAtLeast) {
+        throw new IllegalStateException("don't own enough memory to satisfy request");
+      }
+      if (nv.allocated > nv.owned) {
+        throw new IllegalStateException(
+            String.format("more memory allocated (%d) than owned (%d)", nv.allocated, nv.owned));
+      }
+    }
+
+    nv.allocated += nBytes;
+
+    if (nv.allocated > nv.peakAllocated) {
+      nv.peakAllocated = nv.allocated;
+    }
+
+    if (LOGGING) {
+      bufferedLog.recordEvent("allocator[%d] allocated increased by nBytes == %d to %d",
+              id, nBytes, nv.allocated + nBytes);
+    }
+
+    return true;
   }
 
   /**
@@ -389,8 +513,7 @@ public abstract class BaseAllocator implements BufferAllocator {
    * @param flags one or more of RESERVE_F_* flags or'ed together
    * @return true if the reservation can be satisfied, false otherwise
    */
-  private static final int RESERVE_F_IGNORE_MAX = 0x0001;
-  private boolean reserve(final BaseAllocator childAllocator,
+  private boolean reserveXact(final BaseAllocator childAllocator,
       final long nBytes, final int flags) {
     Preconditions.checkArgument(nBytes >= 0,
         "the number of bytes to reserve must be non-negative");
@@ -400,134 +523,139 @@ public abstract class BaseAllocator implements BufferAllocator {
       return true;
     }
 
-    final boolean ignoreMax = (flags & RESERVE_F_IGNORE_MAX) != 0;
+    // Keep track of how much memory we've gotten from our parent.
+    final MutableLong obtainedFromParent = new MutableLong();
+    while(true) {
+      final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+      final Transacted cv = ar.get(); // current values, not to be modified
+      final Transacted nv = cv.makeClone(); // new values that will replace current values
 
-    synchronized(ALLOCATOR_LOCK) {
-      if (isClosed) {
-        throw new AllocatorClosedException(String.format("Attempt to use closed allocator[%d]", id));
-      }
+      final boolean rv = reserve(
+          nv, bufferedLog, obtainedFromParent, childAllocator, nBytes, flags);
 
-      final long ownAtLeast = allocated + nBytes;
-      // Are we allowed to hand out this much?
-      if (!ignoreMax && (ownAtLeast > maxAllocation)) {
-        return false;
-      }
-
-      // do we need more from our parent first?
-      if (ownAtLeast > owned) {
-        final long needAdditional = ownAtLeast - owned;
-        if (!canIncreaseOwned(needAdditional, flags)) {
-          return false;
+      /*
+       * Try to replace the transacted variables atomically. If we fail,
+       * we try the whole thing again, carrying forward any memory we
+       * have already obtainedFromParent in our next attempt.
+       */
+      if (ar.compareAndSet(cv,  nv)) {
+        if (bufferedLog != null) {
+          historicalLog.append(bufferedLog);
         }
-        owned += needAdditional;
-
-        if (DEBUG) {
-          historicalLog.recordEvent("increased owned by %d, now owned == %d", needAdditional, owned);
-        }
+        return rv;
       }
-
-      if (DEBUG) {
-        if (owned < ownAtLeast) {
-          throw new IllegalStateException("don't own enough memory to satisfy request");
-        }
-        if (allocated > owned) {
-          throw new IllegalStateException(
-              String.format("more memory allocated (%d) than owned (%d)", allocated, owned));
-        }
-
-        historicalLog.recordEvent("allocator[%d] allocated increased by nBytes == %d to %d",
-            id, nBytes, allocated + nBytes);
-      }
-
-      allocated += nBytes;
-
-      if (allocated > peakAllocated) {
-        peakAllocated = allocated;
-      }
-
-      return true;
     }
   }
 
-  private void releaseBytes(final long nBytes) {
+  private void releaseBytes(final Transacted nv,
+      final HistoricalLog bufferedLog, final MutableLong returnedToParent, final long nBytes) {
+    Preconditions.checkState(!nv.isClosed, "attempt to release %d bytes to closed allocator[%d]", nBytes, id);
+    if (nBytes > nv.allocated) { // TODO(cwestin) remove
+      if (historicalLog != null) {
+        historicalLog.logHistory(logger);
+      }
+    }
+    Preconditions.checkState(nBytes <= nv.allocated,
+        "allocator[%d] attempt to release (%d) more than allocated (%d)",
+        id, nBytes, nv.allocated);
+
+    nv.allocated -= nBytes;
+
+    /*
+     * Return space to our parent if our allocation is over the currently allowed amount.
+     */
+    final boolean releaseToParent = (parentAllocator != null)
+        && policyAgent.shouldReleaseToParent(this);
+    if (releaseToParent) {
+      if (returnedToParent.value == 0) {
+        parentAllocator.releaseBytesXact(nBytes);
+        returnedToParent.value = nBytes;
+      }
+
+      nv.owned -= returnedToParent.value;
+      if (nv.owned < 0) {
+        throw new IllegalStateException(); // TODO(cwestin) remove
+      }
+      if (nv.owned < nv.allocated) {
+        throw new IllegalStateException(); // TODO(cwestin) remove
+      }
+
+      if (bufferedLog != null) {
+        bufferedLog.recordEvent("returned %d to parent, now owned == %d",
+            returnedToParent.value, nv.owned);
+      }
+    }
+
+    if (bufferedLog != null) {
+      bufferedLog.recordEvent(
+          "allocator[%d] released nBytes == %d, allocated now %d", id,
+          nBytes, nv.allocated);
+    }
+  }
+
+  private void releaseBytesXact(final long nBytes) {
     Preconditions.checkArgument(nBytes >= 0,
         "the number of bytes being released must be non-negative");
 
-    synchronized(ALLOCATOR_LOCK) {
-      allocated -= nBytes;
+    if (nBytes == 0) {
+      return;
+    }
 
-      if (DEBUG) {
-        historicalLog.recordEvent("allocator[%d] released nBytes == %d, allocated now %d",
-            id, nBytes, allocated);
+    final MutableLong returnedToParent = new MutableLong();
+    while (true) {
+      final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+      final Transacted cv = ar.get();
+      final Transacted nv = cv.makeClone();
+
+      releaseBytes(nv, bufferedLog, returnedToParent, nBytes);
+
+      if (ar.compareAndSet(cv, nv)) {
+        if (bufferedLog != null) {
+          historicalLog.append(bufferedLog);
+        }
+
+        return;
       }
     }
   }
 
-  private void releaseBuffer(final DrillBuf drillBuf) {
+  private void releaseBufferXact(final DrillBuf drillBuf) {
     Preconditions.checkArgument(drillBuf != null,
         "the DrillBuf being released can't be null");
 
     final ByteBuf byteBuf = drillBuf.unwrap();
     final int udleMaxCapacity = byteBuf.maxCapacity();
 
-    synchronized(ALLOCATOR_LOCK) {
-      final boolean releaseToParent = (parentAllocator != null)
-          && policyAgent.shouldReleaseToParent(this);
-      bufferAllocation -= udleMaxCapacity;
-      releaseBytes(udleMaxCapacity);
+    final MutableLong returnedToParent = new MutableLong();
+    while(true) {
+      final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+      final Transacted cv = ar.get();
+      final Transacted nv = cv.makeClone();
 
-      /*
-       * Return space to our parent if our allocation is over the currently allowed amount.
-       */
-      if (releaseToParent) {
-        final long canFree = owned - allocated;
-        parentAllocator.releaseBytes(canFree);
-        owned -= canFree;
+      nv.bufferAllocation -= udleMaxCapacity;
+      releaseBytes(nv, bufferedLog, returnedToParent, udleMaxCapacity);
 
-        if (DEBUG) {
-          historicalLog.recordEvent("returned %d to parent, now owned == %d", canFree, owned);
+      if (ar.compareAndSet(cv,  nv)) {
+        if (LOGGING) {
+          historicalLog.append(bufferedLog);
+
+          if (DEBUG) {
+            // Make sure the buffer came from this allocator.
+            final Object object = allocatedBuffers.remove(byteBuf);
+            if (object == null) {
+              historicalLog.logHistory(logger);
+              drillBuf.logHistory(logger);
+              throw new IllegalStateException("Released buffer did not belong to this allocator");
+            }
+          }
         }
-      }
 
-      if (DEBUG) {
-        // make sure the buffer came from this allocator
-        final Object object = allocatedBuffers.remove(byteBuf);
-        if (object == null) {
-          historicalLog.logHistory(logger);
-          drillBuf.logHistory(logger);
-          throw new IllegalStateException("Released buffer did not belong to this allocator");
-        }
+        return;
       }
     }
   }
 
-  private void childClosed(final BaseAllocator childAllocator) {
-    Preconditions.checkArgument(childAllocator != null, "child allocator can't be null");
-
-    if (DEBUG) {
-      synchronized(ALLOCATOR_LOCK) {
-        final Object object = childAllocators.remove(childAllocator);
-        if (object == null) {
-          childAllocator.historicalLog.logHistory(logger);
-          throw new IllegalStateException("Child allocator[" + childAllocator.id
-              + "] not found in parent allocator[" + id + "]'s childAllocators");
-        }
-
-        try {
-          verifyAllocator();
-        } catch(Exception e) {
-          /*
-           * If there was a problem with verification, the history of the closed
-           * child may also be useful.
-           */
-          logger.debug("allocator[" + id + "]: exception while closing the following child");
-          childAllocator.historicalLog.logHistory(logger);
-
-          // Continue with the verification exception throwing.
-          throw e;
-        }
-      }
-    }
+  protected void onChildClosed(final BaseAllocator childAllocator) {
   }
 
   /**
@@ -572,7 +700,7 @@ public abstract class BaseAllocator implements BufferAllocator {
 
     @Override
     public void release(final DrillBuf drillBuf) {
-      releaseBuffer(drillBuf);
+      releaseBufferXact(drillBuf);
     }
 
     @Override
@@ -580,30 +708,33 @@ public abstract class BaseAllocator implements BufferAllocator {
         final BufferLedger otherLedger, final BufferAllocator otherAllocator,
         final DrillBuf drillBuf, final int index, final int length, final int drillBufFlags) {
       final BaseAllocator baseAllocator = (BaseAllocator) otherAllocator;
-      synchronized(ALLOCATOR_LOCK) {
-        if (baseAllocator.isClosed) {
-          throw new AllocatorClosedException(
-              String.format("Attempt to use closed allocator[%d]", baseAllocator.id));
-        }
+      if (baseAllocator.ar.get().isClosed) {
+        throw new AllocatorClosedException(
+            String.format("Attempt to share DrillBuf[%d] with closed allocator[%d]",
+                drillBuf.getId(), baseAllocator.id));
+      }
 
-        /*
-         * If this is called, then the buffer isn't yet shared, and should
-         * become so.
-         */
-        final SharedBufferLedger sharedLedger = new SharedBufferLedger(drillBuf, BaseAllocator.this);
+      /*
+       * If this is called, then the buffer isn't yet shared, and should
+       * become so.
+       */
+      final SharedBufferLedger sharedLedger =
+          DEBUG ? new SharedBufferLedgerDebug(drillBuf, BaseAllocator.this)
+              : new SharedBufferLedger(drillBuf, BaseAllocator.this);
 
-        // Create the new wrapping DrillBuf.
-        final DrillBuf newBuf =
-            new DrillBuf(sharedLedger, otherAllocator, drillBuf, index, length, drillBufFlags);
-        sharedLedger.addMapping(newBuf, baseAllocator);
+      // Create the new wrapping DrillBuf.
+      final DrillBuf newBuf =
+          new DrillBuf(sharedLedger, otherAllocator, drillBuf, index, length, drillBufFlags);
+      sharedLedger.addMapping(newBuf, baseAllocator);
+
+      if (LOGGING) {
+        final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
+        historicalLog.recordEvent("InnerBufferLedger(allocator[%d]).shareWith(..., "
+            + "otherAllocator[%d], drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}, ...)",
+            BaseAllocator.this.id, baseAllocator.id, drillBuf.getId(),
+            System.identityHashCode(udle));
 
         if (DEBUG) {
-          final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
-          historicalLog.recordEvent("InnerBufferLedger(allocator[%d]).shareWith(..., "
-              + "otherAllocator[%d], drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}, ...)",
-              BaseAllocator.this.id, baseAllocator.id, drillBuf.getId(),
-              System.identityHashCode(udle));
-
           final BaseAllocator drillBufAllocator = (BaseAllocator) drillBuf.getAllocator();
           if (BaseAllocator.this != drillBufAllocator) {
             historicalLog.logHistory(logger);
@@ -630,9 +761,60 @@ public abstract class BaseAllocator implements BufferAllocator {
             throw new IllegalStateException("Buffer's ledger was not the one it should be");
           }
         }
+      }
 
-        pDrillBuf.value = newBuf;
-        return sharedLedger;
+      pDrillBuf.value = newBuf;
+
+      // Check again that this is legal.
+      if (baseAllocator.ar.get().isClosed) {
+        throw new AllocatorClosedException(
+            String.format("Attempt to share DrillBuf[%d] with closed allocator[%d]",
+                drillBuf.getId(), baseAllocator.id));
+      }
+
+      return sharedLedger;
+    }
+
+    @Override
+    public boolean transferTo(final BufferAllocator newAlloc,
+        final Pointer<BufferLedger> pNewLedger, final DrillBuf drillBuf) {
+      final BaseAllocator newAllocator = (BaseAllocator) newAlloc;
+      if (newAllocator.ar.get().isClosed) {
+        throw new AllocatorClosedException(
+            String.format("Attempt to transfer DrillBuf[%d] to closed allocator[%d]",
+                drillBuf.getId(), newAllocator.id));
+      }
+
+      final boolean fits = BaseAllocator.this.transferTo(newAllocator, pNewLedger.value, drillBuf);
+
+      // Check again that this is legal.
+      if (newAllocator.ar.get().isClosed) {
+        throw new AllocatorClosedException(
+            String.format("Attempt to transfer DrillBuf[%d] to closed allocator[%d]",
+                drillBuf.getId(), newAllocator.id));
+      }
+
+      return fits;
+    }
+  }
+
+  private class InnerBufferLedgerDebug extends InnerBufferLedger {
+    @Override
+    public void release(final DrillBuf drillBuf) {
+      synchronized(DEBUG_LOCK) {
+        verifyParentOrThis(); // TODO(cwestin) remove
+        super.release(drillBuf);
+        verifyParentOrThis();  // TODO(cwestin) remove
+      }
+    }
+
+    @Override
+    public BufferLedger shareWith(final Pointer<DrillBuf> pDrillBuf,
+        final BufferLedger otherLedger, final BufferAllocator otherAllocator,
+        final DrillBuf drillBuf, final int index, final int length, final int drillBufFlags) {
+      synchronized(DEBUG_LOCK) {
+        return super.shareWith(pDrillBuf, otherLedger, otherAllocator,
+            drillBuf, index, length, drillBufFlags);
       }
     }
 
@@ -647,14 +829,8 @@ public abstract class BaseAllocator implements BufferAllocator {
       Preconditions.checkArgument(pNewLedger.value != null, "Candidate new ledger can't be null");
       Preconditions.checkArgument(drillBuf != null, "DrillBuf can't be null");
 
-      final BaseAllocator newAllocator = (BaseAllocator) newAlloc;
-      synchronized(ALLOCATOR_LOCK) {
-        if (newAllocator.isClosed) {
-          throw new AllocatorClosedException(
-              String.format("Attempt to use closed allocator[%d]", newAllocator.id));
-        }
-
-        return BaseAllocator.transferTo(newAllocator, pNewLedger.value, drillBuf);
+      synchronized(DEBUG_LOCK) {
+        return super.transferTo(newAlloc, pNewLedger, drillBuf);
       }
     }
   }
@@ -670,28 +846,50 @@ public abstract class BaseAllocator implements BufferAllocator {
    * @return true if the buffer's transfer didn't exceed the new owner's maximum
    *   allocation limit
    */
-  private static boolean transferTo(final BaseAllocator newAllocator,
+  protected boolean transferTo(final BaseAllocator newAllocator,
       final BufferLedger newLedger, final DrillBuf drillBuf) {
     final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
     final int udleMaxCapacity = udle.maxCapacity();
 
-    synchronized(ALLOCATOR_LOCK) {
-      // Account for the space and track the buffer.
-      newAllocator.reserveForBuf(udleMaxCapacity);
+    // Account for the space and track the buffer.
+    final MutableLong obtainedFromParent = new MutableLong();
+    boolean reserved;
+    Transacted newNv;
+    while(true) {
+      final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+      final Transacted newCv = newAllocator.ar.get();
+      newNv = newCv.makeClone();
 
-      if (DEBUG) {
-        final Object object = newAllocator.allocatedBuffers.put(udle, newLedger);
-        if (object != null) {
-          newAllocator.historicalLog.logHistory(logger);
-          drillBuf.logHistory(logger);
-          throw new IllegalStateException("Buffer unexpectedly found in new allocator");
+      reserved = newAllocator.reserve(newNv, bufferedLog, obtainedFromParent,
+          null, udleMaxCapacity, RESERVE_F_IGNORE_MAX);
+
+      if (newAllocator.ar.compareAndSet(newCv,  newNv)) {
+        if (bufferedLog != null) {
+          newAllocator.historicalLog.append(bufferedLog);
         }
+        break;
+      }
+    }
+
+    if (DEBUG) {
+      if (!reserved) {
+        throw new IllegalStateException(String.format(
+            "Failed to reserve %d from allocator[%d]", udleMaxCapacity, newAllocator.id));
       }
 
-      // Remove from the old allocator.
-      final BaseAllocator oldAllocator = (BaseAllocator) drillBuf.getAllocator();
-      oldAllocator.releaseBuffer(drillBuf);
+      final Object object = newAllocator.allocatedBuffers.put(udle, newLedger);
+      if (object != null) {
+        newAllocator.historicalLog.logHistory(logger);
+        drillBuf.logHistory(logger);
+        throw new IllegalStateException("Buffer unexpectedly found in new allocator");
+      }
+    }
 
+    // Remove from the old allocator.
+    final BaseAllocator oldAllocator = (BaseAllocator) drillBuf.getAllocator();
+    oldAllocator.releaseBufferXact(drillBuf);
+
+    if (LOGGING) {
       if (DEBUG) {
         final Object object = oldAllocator.allocatedBuffers.get(udle);
         if (object != null) {
@@ -699,19 +897,19 @@ public abstract class BaseAllocator implements BufferAllocator {
           drillBuf.logHistory(logger);
           throw new IllegalStateException("Buffer was not removed from old allocator");
         }
-
-        oldAllocator.historicalLog.recordEvent("BaseAllocator.transferTo(otherAllocator[%d], ..., "
-            + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}) oldAllocator[%d]",
-            newAllocator.id, drillBuf.getId(), System.identityHashCode(drillBuf.unwrap()),
-            oldAllocator.id);
-        newAllocator.historicalLog.recordEvent("BaseAllocator.transferTo(otherAllocator[%d], ..., "
-            + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}) oldAllocator[%d]",
-            newAllocator.id, drillBuf.getId(), System.identityHashCode(drillBuf.unwrap()),
-            oldAllocator.id);
       }
 
-      return newAllocator.allocated < newAllocator.maxAllocation;
+      oldAllocator.historicalLog.recordEvent("BaseAllocator.transferTo(otherAllocator[%d], ..., "
+          + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}) oldAllocator[%d]",
+          newAllocator.id, drillBuf.getId(), System.identityHashCode(drillBuf.unwrap()),
+          oldAllocator.id);
+      newAllocator.historicalLog.recordEvent("BaseAllocator.transferTo(otherAllocator[%d], ..., "
+          + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}) oldAllocator[%d]",
+          newAllocator.id, drillBuf.getId(), System.identityHashCode(drillBuf.unwrap()),
+          oldAllocator.id);
     }
+
+    return newNv.allocated < newAllocator.maxAllocation;
   }
 
   private static class SharedBufferLedger implements BufferLedger {
@@ -721,8 +919,8 @@ public abstract class BaseAllocator implements BufferAllocator {
     private final HistoricalLog historicalLog;
 
     public SharedBufferLedger(final DrillBuf drillBuf, final BaseAllocator baseAllocator) {
-      if (DEBUG) {
-        historicalLog = new HistoricalLog(4,
+      if (LOGGING) {
+        historicalLog = new HistoricalLog(logger, MAX_LOG_RECORDS,
             "SharedBufferLedger for DrillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}",
             drillBuf.getId(), System.identityHashCode(drillBuf.unwrap()));
       } else {
@@ -739,7 +937,7 @@ public abstract class BaseAllocator implements BufferAllocator {
     private synchronized void addMapping(final DrillBuf drillBuf, final BaseAllocator baseAllocator) {
       bufferMap.put(drillBuf, baseAllocator);
 
-      if (DEBUG) {
+      if (LOGGING) {
         historicalLog.recordEvent("addMapping(DrillBuf[%d], allocator[%d])", drillBuf.getId(), baseAllocator.id);
       }
     }
@@ -796,9 +994,7 @@ public abstract class BaseAllocator implements BufferAllocator {
     }
 
     @Override
-    public void release(final DrillBuf drillBuf) {
-      Preconditions.checkArgument(drillBuf != null, "drillBuf can't be null");
-
+    public synchronized void release(final DrillBuf drillBuf) {
       /*
        * This is the only method on the shared ledger that can be entered without
        * having first come through an outside method on BaseAllocator (such
@@ -808,122 +1004,115 @@ public abstract class BaseAllocator implements BufferAllocator {
        * methods, we have to get the allocatorLock first, as will be done in all the
        * other cases.
        */
-      synchronized(ALLOCATOR_LOCK) {
-        synchronized(this) {
-          final Object bufferObject = bufferMap.remove(drillBuf);
-          if (DEBUG) {
-            if (bufferObject == null) {
-              historicalLog.logHistory(logger, String.format("release(DrillBuf[%d])", drillBuf.getId()));
-              drillBuf.logHistory(logger);
-              throw new IllegalStateException("Buffer not found in SharedBufferLedger's buffer map");
+      final Object bufferObject = bufferMap.remove(drillBuf);
+      if (DEBUG) {
+        if (bufferObject == null) {
+          historicalLog.logHistory(logger, String.format("release(DrillBuf[%d])", drillBuf.getId()));
+          drillBuf.logHistory(logger);
+          throw new IllegalStateException("Buffer not found in SharedBufferLedger's buffer map");
+        }
+      }
+
+      /*
+       * If there are other buffers in the bufferMap that share this buffer's fate,
+       * remove them, since they are also now invalid. As we examine buffers, take note
+       * of any others that don't share this one's fate, but which belong to the same
+       * allocator; if we find any such, then we can avoid transferring ownership at this
+       * time.
+       */
+      final BaseAllocator bufferAllocator = (BaseAllocator) drillBuf.getAllocator();
+      final List<DrillBuf> sameAllocatorSurvivors = new LinkedList<>();
+      if (!bufferMap.isEmpty()) {
+        /*
+         * We're going to be modifying bufferMap (if we find any other related buffers);
+         * in order to avoid getting a ConcurrentModificationException, we can't do it
+         * on the same iteration we use to examine the buffers, so we use an intermediate
+         * list to figure out which ones we have to remove.
+         */
+        final Set<Map.Entry<DrillBuf, BaseAllocator>> bufsToCheck = bufferMap.entrySet();
+        final List<DrillBuf> sharedFateBuffers = new LinkedList<>();
+        for(final Map.Entry<DrillBuf, BaseAllocator> mapEntry : bufsToCheck) {
+          final DrillBuf otherBuf = mapEntry.getKey();
+          if (otherBuf.hasSharedFate(drillBuf)) {
+            sharedFateBuffers.add(otherBuf);
+          } else {
+            final BaseAllocator otherAllocator = mapEntry.getValue();
+            if (otherAllocator == bufferAllocator) {
+              sameAllocatorSurvivors.add(otherBuf);
             }
           }
+        }
 
-          /*
-           * If there are other buffers in the bufferMap that share this buffer's fate,
-           * remove them, since they are also now invalid. As we examine buffers, take note
-           * of any others that don't share this one's fate, but which belong to the same
-           * allocator; if we find any such, then we can avoid transferring ownership at this
-           * time.
-           */
-          final BaseAllocator bufferAllocator = (BaseAllocator) drillBuf.getAllocator();
-          final List<DrillBuf> sameAllocatorSurvivors = new LinkedList<>();
-          if (!bufferMap.isEmpty()) {
-            /*
-             * We're going to be modifying bufferMap (if we find any other related buffers);
-             * in order to avoid getting a ConcurrentModificationException, we can't do it
-             * on the same iteration we use to examine the buffers, so we use an intermediate
-             * list to figure out which ones we have to remove.
-             */
-            final Set<Map.Entry<DrillBuf, BaseAllocator>> bufsToCheck = bufferMap.entrySet();
-            final List<DrillBuf> sharedFateBuffers = new LinkedList<>();
-            for(final Map.Entry<DrillBuf, BaseAllocator> mapEntry : bufsToCheck) {
-              final DrillBuf otherBuf = mapEntry.getKey();
-              if (otherBuf.hasSharedFate(drillBuf)) {
-                sharedFateBuffers.add(otherBuf);
-              } else {
-                final BaseAllocator otherAllocator = mapEntry.getValue();
-                if (otherAllocator == bufferAllocator) {
-                  sameAllocatorSurvivors.add(otherBuf);
-                }
-              }
-            }
-
-            final int nSharedFate = sharedFateBuffers.size();
-            if (nSharedFate > 0) {
-              final int[] sharedIds = new int[nSharedFate];
-              int index = 0;
-              for(final DrillBuf bufToRemove : sharedFateBuffers) {
-                sharedIds[index++] = bufToRemove.getId();
-                bufferMap.remove(bufToRemove);
-              }
-
-              if (DEBUG) {
-                final StringBuilder sb = new StringBuilder();
-                for(final DrillBuf bufToRemove : sharedFateBuffers) {
-                  sb.append(String.format("DrillBuf[%d], ", bufToRemove.getId()));
-                }
-                sb.setLength(sb.length() - 2); // Chop off the trailing comma and space.
-                historicalLog.recordEvent("removed shared fate buffers " + sb.toString());
-              }
-            }
+        final int nSharedFate = sharedFateBuffers.size();
+        if (nSharedFate > 0) {
+          for(final DrillBuf bufToRemove : sharedFateBuffers) {
+            bufferMap.remove(bufToRemove);
           }
 
-          if (sameAllocatorSurvivors.isEmpty()) {
+          if (LOGGING) {
+            final StringBuilder sb = new StringBuilder();
+            for(final DrillBuf bufToRemove : sharedFateBuffers) {
+              sb.append(String.format("DrillBuf[%d], ", bufToRemove.getId()));
+            }
+            sb.setLength(sb.length() - 2); // Chop off the trailing comma and space.
+            historicalLog.recordEvent("removed shared fate buffers " + sb.toString());
+          }
+        }
+      }
+
+      if (sameAllocatorSurvivors.isEmpty()) {
+        /*
+         * If that was the owning allocator, then we need to transfer ownership to
+         * another allocator (any one) that is part of the sharing set.
+         *
+         * When we release the buffer back to the allocator, release the root buffer,
+         */
+        if (bufferAllocator == owningAllocator) {
+          if (bufferMap.isEmpty()) {
             /*
-             * If that was the owning allocator, then we need to transfer ownership to
-             * another allocator (any one) that is part of the sharing set.
-             *
-             * When we release the buffer back to the allocator, release the root buffer,
+             * There are no other allocators available to transfer to, so
+             * release the space to the owner.
              */
-            if (bufferAllocator == owningAllocator) {
-              if (bufferMap.isEmpty()) {
-                /*
-                 * There are no other allocators available to transfer to, so
-                 * release the space to the owner.
-                 */
-                bufferAllocator.releaseBuffer(drillBuf);
-              } else {
-                // Pick another allocator, and transfer ownership to that.
-                final Collection<BaseAllocator> allocators = bufferMap.values();
-                final Iterator<BaseAllocator> allocatorIter = allocators.iterator();
-                if (!allocatorIter.hasNext()) {
-                  historicalLog.logHistory(logger);
-                  throw new IllegalStateException("Shared ledger buffer map is non-empty, but not iterable");
-                }
-                final BaseAllocator nextAllocator = allocatorIter.next();
-                BaseAllocator.transferTo(nextAllocator, this, drillBuf);
-                owningAllocator = nextAllocator;
+            bufferAllocator.releaseBufferXact(drillBuf);
+          } else {
+            // Pick another allocator, and transfer ownership to that.
+            final Collection<BaseAllocator> allocators = bufferMap.values();
+            final Iterator<BaseAllocator> allocatorIter = allocators.iterator();
+            if (!allocatorIter.hasNext()) {
+              historicalLog.logHistory(logger);
+              throw new IllegalStateException("Shared ledger buffer map is non-empty, but not iterable");
+            }
+            final BaseAllocator nextAllocator = allocatorIter.next();
+            bufferAllocator.transferTo(nextAllocator, this, drillBuf);
+            owningAllocator = nextAllocator;
 
-                if (DEBUG) {
-                  if (owningAllocator == bufferAllocator) {
-                    historicalLog.logHistory(logger);
-                    owningAllocator.historicalLog.logHistory(logger);
-                    drillBuf.logHistory(logger);
-                    throw new IllegalStateException("Shared buffer release transfer to same owner");
-                  }
+            if (DEBUG) {
+              if (owningAllocator == bufferAllocator) {
+                historicalLog.logHistory(logger);
+                owningAllocator.historicalLog.logHistory(logger);
+                drillBuf.logHistory(logger);
+                throw new IllegalStateException("Shared buffer release transfer to same owner");
+              }
 
-                  final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
-                  final Object oldObject = bufferAllocator.allocatedBuffers.get(udle);
-                  if (oldObject != null) {
-                    historicalLog.logHistory(logger);
-                    bufferAllocator.historicalLog.logHistory(logger);
-                    owningAllocator.historicalLog.logHistory(logger);
-                    drillBuf.logHistory(logger);
+              final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
+              final Object oldObject = bufferAllocator.allocatedBuffers.get(udle);
+              if (oldObject != null) {
+                historicalLog.logHistory(logger);
+                bufferAllocator.historicalLog.logHistory(logger);
+                owningAllocator.historicalLog.logHistory(logger);
+                drillBuf.logHistory(logger);
 
-                    throw new IllegalStateException("Inconsistent shared buffer release state (old owner)");
-                  }
+                throw new IllegalStateException("Inconsistent shared buffer release state (old owner)");
+              }
 
-                  final Object newObject = owningAllocator.allocatedBuffers.get(udle);
-                  if (newObject == null) {
-                    historicalLog.logHistory(logger);
-                    bufferAllocator.historicalLog.logHistory(logger);
-                    owningAllocator.historicalLog.logHistory(logger);
-                    drillBuf.logHistory(logger);
+              final Object newObject = owningAllocator.allocatedBuffers.get(udle);
+              if (newObject == null) {
+                historicalLog.logHistory(logger);
+                bufferAllocator.historicalLog.logHistory(logger);
+                owningAllocator.historicalLog.logHistory(logger);
+                drillBuf.logHistory(logger);
 
-                    throw new IllegalStateException("Inconsistent shared buffer release state (new owner)");
-                  }
-                }
+                throw new IllegalStateException("Inconsistent shared buffer release state (new owner)");
               }
             }
           }
@@ -940,26 +1129,27 @@ public abstract class BaseAllocator implements BufferAllocator {
         final BufferLedger otherLedger, final BufferAllocator otherAllocator,
         final DrillBuf drillBuf, final int index, final int length, final int drillBufFlags) {
       final BaseAllocator baseAllocator = (BaseAllocator) otherAllocator;
-      if (baseAllocator.isClosed) {
+      if (baseAllocator.ar.get().isClosed) {
         throw new AllocatorClosedException(
-            String.format("Attempt to use closed allocator[%d]", baseAllocator.id));
+            String.format("Attempt to share DrillBuf[%d] with closed allocator[%d]",
+                drillBuf.getId(), baseAllocator.id));
       }
 
-      synchronized(ALLOCATOR_LOCK) {
-        /*
-         * This buffer is already shared, but we want to add more sharers.
-         *
-         * Create the new wrapper.
-         */
-        final DrillBuf newBuf = new DrillBuf(this, otherAllocator, drillBuf, index, length, drillBufFlags);
-        if (DEBUG) {
-          final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
-          baseAllocator.historicalLog.recordEvent("SharedBufferLedger.shareWith(..., otherAllocator[%d], "
-              + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}, ...)",
-              baseAllocator.id, drillBuf.getId(), System.identityHashCode(udle));
+      /*
+       * This buffer is already shared, but we want to add more sharers.
+       *
+       * Create the new wrapper.
+       */
+      final DrillBuf newBuf = new DrillBuf(this, otherAllocator, drillBuf, index, length, drillBufFlags);
+      if (LOGGING) {
+        final UnsafeDirectLittleEndian udle = (UnsafeDirectLittleEndian) drillBuf.unwrap();
+        baseAllocator.historicalLog.recordEvent("SharedBufferLedger.shareWith(..., otherAllocator[%d], "
+            + "drillBuf[%d]{UnsafeDirectLittleEndian[identityHashCode == %d]}, ...)",
+            baseAllocator.id, drillBuf.getId(), System.identityHashCode(udle));
 
+        if (DEBUG) {
           // Make sure the current ownership is still correct.
-          final Object object = owningAllocator.allocatedBuffers.get(udle); // This may not be protectable w/o ALLOCATOR_LOCK.
+          final Object object = owningAllocator.allocatedBuffers.get(udle); // This may not be protectable w/o DEBUG_LOCK.
           if (object == null) {
             newBuf.release();
             historicalLog.logHistory(logger);
@@ -968,16 +1158,23 @@ public abstract class BaseAllocator implements BufferAllocator {
             throw new IllegalStateException("Buffer not found in owning allocator");
           }
         }
-
-        addMapping(newBuf, baseAllocator);
-        pDrillBuf.value = newBuf;
-
-        if (DEBUG) {
-          checkBufferMap();
-        }
-
-        return this;
       }
+
+      addMapping(newBuf, baseAllocator);
+      pDrillBuf.value = newBuf;
+
+      if (DEBUG) {
+        checkBufferMap();
+      }
+
+     // Check again that this is still legal.
+     if (baseAllocator.ar.get().isClosed) {
+       throw new AllocatorClosedException(
+           String.format("Attempt to share DrillBuf[%d] with closed allocator[%d]",
+               drillBuf.getId(), baseAllocator.id));
+     }
+
+      return this;
     }
 
     @Override
@@ -990,12 +1187,14 @@ public abstract class BaseAllocator implements BufferAllocator {
       Preconditions.checkArgument(drillBuf != null, "DrillBuf can't be null");
 
       final BaseAllocator newAllocator = (BaseAllocator) newAlloc;
-      if (newAllocator.isClosed) {
-        throw new AllocatorClosedException(String.format(
-            "Attempt to use closed allocator[%d]", newAllocator.id));
+      final Transacted newCv = newAllocator.ar.get();
+      if (newCv.isClosed) {
+        throw new AllocatorClosedException(
+            String.format("Attempt to transfer DrillBuf[%d] to closed allocator[%d]",
+                drillBuf.getId(), newAllocator.id));
       }
 
-      // This doesn't need the ALLOCATOR_LOCK, because it will already be held.
+      // This doesn't need the DEBUG_LOCK, because it will already be held.
       synchronized(this) {
         try {
           // Modify the buffer mapping to reflect the virtual transfer.
@@ -1016,19 +1215,99 @@ public abstract class BaseAllocator implements BufferAllocator {
            */
           if (oldAllocator == owningAllocator) {
             owningAllocator = newAllocator;
-            return BaseAllocator.transferTo(newAllocator, this, drillBuf);
+            return oldAllocator.transferTo(newAllocator, this, drillBuf);
           }
 
           // Even though we didn't do a real transfer, tell if it would have fit the limit.
           final int udleMaxCapacity = drillBuf.unwrap().maxCapacity();
-          return newAllocator.allocated + udleMaxCapacity < newAllocator.maxAllocation;
+          return newCv.allocated + udleMaxCapacity < newAllocator.maxAllocation;
         } finally {
           if (DEBUG) {
             checkBufferMap();
           }
+
+          // Check that this is still legal.
+          if (newAllocator.ar.get().isClosed) {
+            throw new AllocatorClosedException(
+                String.format("Attempt to transfer DrillBuf[%d] to closed allocator[%d]",
+                    drillBuf.getId(), newAllocator.id));
+          }
         }
       }
     }
+  }
+
+  private static class SharedBufferLedgerDebug extends SharedBufferLedger {
+    public SharedBufferLedgerDebug(
+        final DrillBuf drillBuf, final BaseAllocator baseAllocator) {
+      super(drillBuf, baseAllocator);
+    }
+
+    @Override
+    public void release(final DrillBuf drillBuf) {
+      Preconditions.checkArgument(drillBuf != null, "drillBuf can't be null");
+      final BaseAllocator baseAllocator = (BaseAllocator) drillBuf.getAllocator();
+      synchronized(DEBUG_LOCK) {
+        baseAllocator.verifyParentOrThis(); // TODO(cwestin) remove
+        super.release(drillBuf);
+        baseAllocator.verifyParentOrThis(); // TODO(cwestin) remove
+      }
+    }
+
+    @Override
+    public BufferLedger shareWith(final Pointer<DrillBuf> pDrillBuf,
+        final BufferLedger otherLedger, final BufferAllocator otherAllocator,
+        final DrillBuf drillBuf, final int index, final int length, final int drillBufFlags) {
+      synchronized(DEBUG_LOCK) {
+        return super.shareWith(pDrillBuf, otherLedger, otherAllocator, drillBuf, index, length, drillBufFlags);
+      }
+    }
+  }
+
+  private DrillBuf buffer(final Transacted nv, final HistoricalLog bufferedLog,
+      final MutableLong obtainedFromParent, final Pointer<DrillBuf> wrapped,
+      final int minSize, final int maxSize) {
+
+    // Don't allow the allocation if it will take us over the limit.
+    final long allocatedWas = nv.allocated;
+    if (!reserve(nv, bufferedLog, obtainedFromParent, null, maxSize, 0)) {
+      if (wrapped.value != null) {
+        wrapped.value.release(1);
+        wrapped.value = null;
+      }
+
+      throw new OutOfMemoryRuntimeException(createErrorMsg(this, minSize));
+    }
+
+    final long reserved = nv.allocated - allocatedWas;
+    assert reserved == maxSize;
+
+    // Allocate the buffer, but only once.
+    if (wrapped.value == null) {
+      final UnsafeDirectLittleEndian buffer = INNER_ALLOCATOR.directBuffer(minSize, maxSize);
+      wrapped.value = new DrillBuf(bufferLedger, this, buffer);
+      buffer.release(); // Should have been retained by the DrillBuf constructor.
+      assert buffer.refCnt() == 1 : "buffer was not retained by DrillBuf";
+
+      if (DEBUG) {
+        allocatedBuffers.put(buffer, bufferLedger);
+      }
+    }
+
+    final int actualSize = wrapped.value.unwrap().maxCapacity();
+    if (actualSize > maxSize) {
+      final int extraSize = actualSize - maxSize;
+      reserve(nv, bufferedLog, obtainedFromParent, null, extraSize, RESERVE_F_IGNORE_MAX);
+    }
+
+    assert nv.allocated <= nv.owned : "allocated more memory than owned";
+
+    nv.bufferAllocation += maxSize;
+    if (nv.allocated > nv.peakAllocated) {
+      nv.peakAllocated = nv.allocated;
+    }
+
+    return wrapped.value;
   }
 
   @Override
@@ -1059,38 +1338,22 @@ public abstract class BaseAllocator implements BufferAllocator {
       return getEmpty();
     }
 
-    synchronized(ALLOCATOR_LOCK) {
-      // Don't allow the allocation if it will take us over the limit.
-      final long allocatedWas = allocated;
-      if (!reserve(null, maxSize, 0)) {
-        throw new OutOfMemoryRuntimeException(createErrorMsg(this, minSize));
+    final Pointer<DrillBuf> wrapped = new Pointer<>(null); // No DrillBuf allocated yet.
+    final MutableLong obtainedFromParent = new MutableLong();
+    while(true) {
+      final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+      final Transacted cv = ar.get();
+      final Transacted nv = cv.makeClone();
+
+      final DrillBuf drillBuf = buffer(nv, bufferedLog, obtainedFromParent, wrapped, minSize, maxSize);
+
+      if (ar.compareAndSet(cv, nv)) {
+        if (bufferedLog != null) {
+          historicalLog.append(bufferedLog);
+        }
+
+        return drillBuf;
       }
-
-      final long reserved = allocated - allocatedWas;
-      assert reserved == maxSize;
-
-      final UnsafeDirectLittleEndian buffer = INNER_ALLOCATOR.directBuffer(minSize, maxSize);
-      final int actualSize = buffer.maxCapacity();
-      if (actualSize > maxSize) {
-        final int extraSize = actualSize - maxSize;
-        reserve(null, extraSize, RESERVE_F_IGNORE_MAX);
-      }
-
-      final DrillBuf wrapped = new DrillBuf(bufferLedger, this, buffer);
-      buffer.release(); // Should have been retained by the DrillBuf constructor.
-      assert buffer.refCnt() == 1 : "buffer was not retained by DrillBuf";
-      assert allocated <= owned : "allocated more memory than owned";
-
-      bufferAllocation += maxSize;
-      if (allocated > peakAllocated) {
-        peakAllocated = allocated;
-      }
-
-      if (allocatedBuffers != null) {
-        allocatedBuffers.put(buffer, bufferLedger);
-      }
-
-      return wrapped;
     }
   }
 
@@ -1102,19 +1365,21 @@ public abstract class BaseAllocator implements BufferAllocator {
   @Override
   public BufferAllocator newChildAllocator(final AllocatorOwner allocatorOwner,
       final long initReservation, final long maxAllocation, final int flags) {
-    synchronized(ALLOCATOR_LOCK) {
-      final BaseAllocator childAllocator =
-          new ChildAllocator(this, allocatorOwner, allocationPolicy,
-              initReservation, maxAllocation, flags);
-
-      if (DEBUG) {
-        childAllocators.put(childAllocator, childAllocator);
-        historicalLog.recordEvent("allocator[%d] created new child allocator[%d]",
-            id, childAllocator.id);
-      }
-
-      return childAllocator;
+    final BaseAllocator childAllocator;
+    if (DEBUG) {
+      childAllocator = new ChildAllocatorDebug(
+          this, allocatorOwner, allocationPolicy, initReservation, maxAllocation, flags);
+    } else {
+      childAllocator = new ChildAllocator(
+          this, allocatorOwner, allocationPolicy, initReservation, maxAllocation, flags);
     }
+
+    if (LOGGING) {
+      historicalLog.recordEvent("allocator[%d] created new child allocator[%d]",
+          id, childAllocator.id);
+    }
+
+    return childAllocator;
   }
 
   @Override
@@ -1130,24 +1395,10 @@ public abstract class BaseAllocator implements BufferAllocator {
     if (!applyFragmentLimit) {
       throw new IllegalArgumentException("applyFragmentLimit is false");
     }
-    */
+*/
 
     return newChildAllocator(allocatorOwner, initialReservation, maximumAllocation,
         (applyFragmentLimit ? F_LIMITING_ROOT : 0));
-  }
-
-  /**
-   * Reserve space for a DrillBuf for an ownership transfer.
-   *
-   * @param drillBuf the buffer to reserve space for
-   */
-  private void reserveForBuf(final int maxCapacity) {
-    final boolean reserved = reserve(null, maxCapacity, RESERVE_F_IGNORE_MAX);
-    if (DEBUG) {
-      if (!reserved) {
-        throw new IllegalStateException("reserveForBuf() failed");
-      }
-    }
   }
 
   @Override
@@ -1157,17 +1408,13 @@ public abstract class BaseAllocator implements BufferAllocator {
       return true;
     }
 
-    synchronized(ALLOCATOR_LOCK) {
-      return drillBuf.transferTo(this, bufferLedger);
-    }
+    return drillBuf.transferTo(this, bufferLedger);
   }
 
   @Override
   public boolean shareOwnership(final DrillBuf drillBuf, final Pointer<DrillBuf> bufOut) {
-    synchronized(ALLOCATOR_LOCK) {
-      bufOut.value = drillBuf.shareWith(bufferLedger, this, 0, drillBuf.capacity());
-      return allocated < maxAllocation;
-    }
+    bufOut.value = drillBuf.shareWith(bufferLedger, this, 0, drillBuf.capacity());
+    return ar.get().allocated < maxAllocation;
   }
 
   /*
@@ -1205,24 +1452,35 @@ public abstract class BaseAllocator implements BufferAllocator {
     return policyAgent.getMemoryLimit(this);
   }
 
+  protected void verifyParentOrThis() {
+    if (parentAllocator != null) {
+      parentAllocator.verifyAllocator();
+    } else {
+      verifyAllocator();
+    }
+  }
+
   @Override
   public void close() throws Exception {
-    /*
-     * Some owners may close more than once because of complex cleanup and shutdown
-     * procedures.
-     */
-    if (isClosed) {
-      return;
-    }
+    while(true) {
+      final Transacted cv = ar.get();
+      /*
+       * Some owners may close more than once because of complex cleanup and shutdown
+       * procedures.
+       */
+      if (cv.isClosed) {
+        return;
+      }
 
-    synchronized(ALLOCATOR_LOCK) {
+      final Transacted nv = cv.makeClone();
+
       if (DEBUG) {
-        verifyAllocator();
+        verifyParentOrThis();
 
-        // are there outstanding child allocators?
+        // Are there outstanding child allocators?
         if (!childAllocators.isEmpty()) {
           for(final BaseAllocator childAllocator : childAllocators.keySet()) {
-            if (childAllocator.isClosed) {
+            if (childAllocator.ar.get().isClosed) {
               logger.debug(String.format(
                   "Closed child allocator[%d] on parent allocator[%d]'s child list",
                   childAllocator.id, id));
@@ -1236,7 +1494,7 @@ public abstract class BaseAllocator implements BufferAllocator {
               String.format("Allocator[%d] closed with outstanding child allocators", id));
         }
 
-        // are there outstanding buffers?
+        // Are there outstanding buffers?
         final int allocatedCount = allocatedBuffers.size();
         if (allocatedCount > 0) {
           historicalLog.logHistory(logger);
@@ -1271,21 +1529,22 @@ public abstract class BaseAllocator implements BufferAllocator {
       }
 
       // Is there unaccounted-for outstanding allocation?
-      if (allocated > 0) {
-        if (DEBUG) {
+      if (cv.allocated > 0) {
+        if (LOGGING) {
           historicalLog.logHistory(logger);
+          logBuffers();
         }
         throw new IllegalStateException(
-            String.format("Unaccounted for outstanding allocation (%d)", allocated));
+            String.format("Unaccounted for outstanding allocation (%d)", cv.allocated));
       }
 
       // Any unclaimed reservations?
-      if (preallocSpace > 0) {
-        if (DEBUG) {
+      if (DEBUG) {
+        if (preallocSpace > 0) {
           historicalLog.logHistory(logger);
+          throw new IllegalStateException(
+              String.format("Unclaimed preallocation space (%d)", preallocSpace));
         }
-        throw new IllegalStateException(
-            String.format("Unclaimed preallocation space (%d)", preallocSpace));
       }
 
       /*
@@ -1297,20 +1556,24 @@ public abstract class BaseAllocator implements BufferAllocator {
         empty.release(emptyCount);
       }
 
-      DrillAutoCloseables.closeNoChecked(policyAgent);
+      nv.isClosed = true;
 
-      // Inform our parent allocator that we've closed.
-      if (parentAllocator != null) {
-        parentAllocator.releaseBytes(owned);
-        owned = 0;
-        parentAllocator.childClosed(this);
+      if (ar.compareAndSet(cv, nv)) {
+        DrillAutoCloseables.closeNoChecked(policyAgent);
+
+        // Inform our parent allocator that we've closed.
+        if (parentAllocator != null) {
+          parentAllocator.releaseBytesXact(nv.owned);
+          nv.owned = 0; // With allocator now closed, no one else should be changing this.
+          parentAllocator.onChildClosed(this);
+        }
+
+        if (LOGGING) {
+          historicalLog.recordEvent(String.format("allocator[%d] closed", id));
+        }
+
+        break;
       }
-
-      if (DEBUG) {
-        historicalLog.recordEvent("closed");
-      }
-
-      isClosed = true;
     }
   }
 
@@ -1360,8 +1623,8 @@ public abstract class BaseAllocator implements BufferAllocator {
     final StringBuilder sb = new StringBuilder();
     sb.append(String.format("allocator[%d] reservations BEGIN", id));
 
-    final Set<Reservation> reservations = this.reservations.keySet();
-    for(final Reservation reservation : reservations) {
+    final Set<ReservationDebug> reservations = this.reservations.keySet();
+    for(final ReservationDebug reservation : reservations) {
       if ((reservationsLog == ReservationsLog.ALL)
           || ((reservationsLog == ReservationsLog.UNUSED) && (!reservation.isUsed()))) {
         reservation.writeHistoryToBuilder(sb);
@@ -1375,7 +1638,7 @@ public abstract class BaseAllocator implements BufferAllocator {
 
   @Override
   public long getAllocatedMemory() {
-    return allocated;
+    return ar.get().allocated;
   }
 
   @Override
@@ -1385,7 +1648,7 @@ public abstract class BaseAllocator implements BufferAllocator {
 
   @Override
   public long getPeakMemoryAllocation() {
-    return peakAllocated;
+    return ar.get().peakAllocated;
   }
 
   @Override
@@ -1395,56 +1658,96 @@ public abstract class BaseAllocator implements BufferAllocator {
     return empty;
   }
 
-  private class Reservation extends AllocationReservation {
-    private final HistoricalLog historicalLog;
+  protected class Reservation extends AllocationReservation {
+    protected final HistoricalLog historicalLog;
+    private final int id;
 
     public Reservation() {
-      if (DEBUG) {
-        historicalLog = new HistoricalLog("Reservation[allocator[%d], %d]", id, System.identityHashCode(this));
-        historicalLog.recordEvent("created");
-        synchronized(ALLOCATOR_LOCK) {
-          reservations.put(this, this);
+      historicalLog = null;
+      id = 0;
+    }
+
+    /**
+     * Constructor for ReservationDebug only.
+     *
+     * @param id the id assigned to the reservation
+     */
+    protected Reservation(final int id) {
+      historicalLog = new HistoricalLog(logger, "Reservation[allocator[%d], %d]", BaseAllocator.this.id, id);
+      this.id = id;
+    }
+
+    @Override
+    protected boolean reserve(int nBytes) {
+      return BaseAllocator.this.reserveXact(null, nBytes, 0);
+    }
+
+    @Override
+    protected DrillBuf allocate(int nBytes) {
+      final MutableLong obtainedFromParent = new MutableLong();
+      final Pointer<DrillBuf> wrapped = new Pointer<>(null);
+      while(true) {
+        final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
+        final Transacted cv = ar.get();
+        final Transacted nv = cv.makeClone();
+
+        /*
+         * The reservation already added the requested bytes to the
+         * allocators owned and allocated bytes via reserve(). This
+         * ensures that they can't go away. But when we ask for the buffer
+         * here, that will add to the allocated bytes as well, so we need to
+         * return the same number back to avoid double-counting them.
+         */
+        nv.allocated -= nBytes;
+        final DrillBuf drillBuf =
+            BaseAllocator.this.buffer(nv, bufferedLog, obtainedFromParent, wrapped, nBytes, nBytes);
+
+        if (ar.compareAndSet(cv, nv)) {
+          if (bufferedLog != null) {
+            preallocSpace -= nBytes;
+            historicalLog.append(bufferedLog);
+            historicalLog.recordEvent("allocate() => %s",
+                drillBuf == null ? "null" : String.format("DrillBuf[%d]", drillBuf.getId()));
+          }
+
+          return drillBuf;
         }
-      } else {
-        historicalLog = null;
       }
     }
 
     @Override
-    public void close() {
-      if (DEBUG) {
-        if (!isClosed()) {
-          final Object object;
-          synchronized(ALLOCATOR_LOCK) {
-            object = reservations.remove(this);
-          }
-          if (object == null) {
-            final StringBuilder sb = new StringBuilder();
-            writeHistoryToBuilder(sb);
+    protected void releaseReservation(int nBytes) {
+      releaseBytesXact(nBytes);
+    }
+  }
 
-            logger.debug(sb.toString());
-            throw new IllegalStateException(
-                String.format("Didn't find closing reservation[%d]", System.identityHashCode(this)));
-          }
-
-          historicalLog.recordEvent("closed");
-        }
+  protected class ReservationDebug extends Reservation {
+    protected ReservationDebug() {
+      super(idGenerator.incrementAndGet());
+      historicalLog.recordEvent("created");
+      synchronized(DEBUG_LOCK) {
+        reservations.put(this, this);
       }
+    }
 
-      super.close();
+    @Override
+    public boolean add(final int nBytes) {
+      synchronized(DEBUG_LOCK) {
+        return super.add(nBytes);
+      }
     }
 
     @Override
     protected boolean reserve(int nBytes) {
       final boolean reserved;
-      synchronized(ALLOCATOR_LOCK) {
-        reserved = BaseAllocator.this.reserve(null, nBytes, 0);
+      synchronized(DEBUG_LOCK) {
+        reserved = super.reserve(nBytes);
         if (reserved) {
-          preallocSpace += nBytes;
+          if (DEBUG) {
+            preallocSpace += nBytes;
+          }
         }
-      }
 
-      if (DEBUG) {
         historicalLog.recordEvent("reserve(%d) => %s", nBytes, Boolean.toString(reserved));
       }
 
@@ -1452,36 +1755,46 @@ public abstract class BaseAllocator implements BufferAllocator {
     }
 
     @Override
-    protected DrillBuf allocate(int nBytes) {
-      /*
-       * The reservation already added the requested bytes to the
-       * allocators owned and allocated bytes via reserve(). This
-       * ensures that they can't go away. But when we ask for the buffer
-       * here, that will add to the allocated bytes as well, so we need to
-       * return the same number back to avoid double-counting them.
-       */
-      synchronized(ALLOCATOR_LOCK) {
-        BaseAllocator.this.allocated -= nBytes;
-        final DrillBuf drillBuf = BaseAllocator.this.buffer(nBytes);
-        preallocSpace -= nBytes;
-
-        if (DEBUG) {
-          historicalLog.recordEvent("allocate() => %s",
-              drillBuf == null ? "null" : String.format("DrillBuf[%d]", drillBuf.getId()));
-        }
-
-        return drillBuf;
+    public DrillBuf buffer() {
+      synchronized(DEBUG_LOCK) {
+        return super.buffer();
       }
     }
 
     @Override
-    protected void releaseReservation(int nBytes) {
-      synchronized(ALLOCATOR_LOCK) {
-        releaseBytes(nBytes);
-        preallocSpace -= nBytes;
+    protected DrillBuf allocate(int nBytes) {
+      synchronized(DEBUG_LOCK) {
+        return super.allocate(nBytes);
       }
+    }
 
-      if (DEBUG) {
+    @Override
+    public void close() {
+      synchronized(DEBUG_LOCK) {
+        if (!isClosed()) {
+          final Object object = reservations.remove(this);
+
+          if (object == null) {
+            final StringBuilder sb = new StringBuilder();
+            writeHistoryToBuilder(sb);
+
+            logger.debug(sb.toString());
+            throw new IllegalStateException(
+                String.format("Didn't find closing reservation[%d]", id));
+          }
+
+          super.close();
+          historicalLog.recordEvent("closed");
+        }
+      }
+    }
+
+    @Override
+    protected void releaseReservation(final int nBytes) {
+      synchronized(DEBUG_LOCK) {
+        super.releaseReservation(nBytes);
+        preallocSpace -= nBytes;
+
         historicalLog.recordEvent("releaseReservation(%d)", nBytes);
       }
     }
@@ -1491,12 +1804,12 @@ public abstract class BaseAllocator implements BufferAllocator {
     }
 
     private void writeToBuilder(final StringBuilder sb) {
-      sb.append(String.format("reservation[%d]: ", System.identityHashCode(this)));
+      sb.append(String.format("reservation[%d]: ", id));
       sb.append(getState());
     }
 
     /**
-     * Only works for DEBUG
+     * Only works for LOGGING.
      *
      * @param sb builder to write to
      */
@@ -1511,11 +1824,12 @@ public abstract class BaseAllocator implements BufferAllocator {
   }
 
   /**
-   * Verifies the accounting state of the allocator. Only works for DEBUG.
+   * Verifies the accounting state of the allocator. Only works for LOGGING.
    *
    * @throws IllegalStateException when any problems are found
    */
-  protected void verifyAllocator() {
+  @Override
+  public void verifyAllocator() {
     final IdentityHashMap<UnsafeDirectLittleEndian, BaseAllocator> buffersSeen = new IdentityHashMap<>();
     verifyAllocator(buffersSeen);
   }
@@ -1531,14 +1845,30 @@ public abstract class BaseAllocator implements BufferAllocator {
    */
   protected void verifyAllocator(
       final IdentityHashMap<UnsafeDirectLittleEndian, BaseAllocator> buffersSeen) {
-    synchronized(ALLOCATOR_LOCK) {
-      // verify purely local accounting
-      if (allocated > owned) {
+    synchronized(DEBUG_LOCK) {
+      final Transacted cv = ar.get();
+
+      // Verify purely local accounting.
+      if (cv.owned < 0) {
         historicalLog.logHistory(logger);
-        throw new IllegalStateException("Allocator (id = " + id + ") has allocated more than it owns");
+        throw new IllegalStateException(String.format(
+            "Allocator[%d] has negative owned (%d)", id, cv.owned));
       }
 
-      // the empty buffer should still be empty
+      if (cv.allocated < 0) {
+        historicalLog.logHistory(logger);
+        throw new IllegalStateException(String.format(
+            "Allocator[%d] has negative allocated (%d)", id, cv.allocated));
+      }
+
+      if (cv.allocated > cv.owned) {
+        historicalLog.logHistory(logger);
+        throw new IllegalStateException(String.format(
+            "Allocator[%d] has allocated (%d) more than it owns (%d)",
+            id, cv.allocated, cv.owned));
+      }
+
+      // The empty buffer should still be empty.
       final long emptyCapacity = empty.maxCapacity();
       if (emptyCapacity != 0) {
         throw new IllegalStateException("empty buffer maxCapacity() == " + emptyCapacity + " (!= 0)");
@@ -1549,7 +1879,7 @@ public abstract class BaseAllocator implements BufferAllocator {
         return;
       }
 
-      // verify my direct descendants
+      // Verify my direct descendants.
       final Set<BaseAllocator> childSet = childAllocators.keySet();
       for(final BaseAllocator childAllocator : childSet) {
         childAllocator.verifyAllocator(buffersSeen);
@@ -1563,9 +1893,9 @@ public abstract class BaseAllocator implements BufferAllocator {
        */
       long childTotal = 0;
       for(final BaseAllocator childAllocator : childSet) {
-        childTotal += childAllocator.owned;
+        childTotal += childAllocator.ar.get().owned;
       }
-      if (childTotal > allocated) {
+      if (childTotal > cv.allocated) {
         historicalLog.logHistory(logger);
         logger.debug("allocator[" + id + "] child event logs BEGIN");
         for(final BaseAllocator childAllocator : childSet) {
@@ -1574,7 +1904,7 @@ public abstract class BaseAllocator implements BufferAllocator {
         logger.debug("allocator[" + id + "] child event logs END");
         throw new IllegalStateException(
             "Child allocators own more memory (" + childTotal + ") than their parent (id = "
-                + id + " ) has allocated (" + allocated + ')');
+                + id + " ) has allocated (" + cv.allocated + ')');
       }
 
       // Furthermore, the amount I've allocated should be that plus buffers I've allocated.
@@ -1595,13 +1925,14 @@ public abstract class BaseAllocator implements BufferAllocator {
       }
 
       // Preallocated space has to be accounted for
-      final Set<Reservation> reservationSet = reservations.keySet();
+      final Set<ReservationDebug> reservationSet = reservations.keySet();
       long reservedTotal = 0;
       for(final Reservation reservation : reservationSet) {
         if (!reservation.isUsed()) {
           reservedTotal += reservation.getSize();
         }
       }
+
       if (reservedTotal != preallocSpace) {
         logReservations(ReservationsLog.UNUSED);
 
@@ -1610,14 +1941,14 @@ public abstract class BaseAllocator implements BufferAllocator {
                 reservedTotal, preallocSpace));
       }
 
-      if (bufferTotal + reservedTotal + childTotal != allocated) {
+      if (bufferTotal + reservedTotal + childTotal != cv.allocated) {
         final StringBuilder sb = new StringBuilder();
         sb.append("allocator[");
         sb.append(Integer.toString(id));
         sb.append("]\nallocated: ");
-        sb.append(Long.toString(allocated));
+        sb.append(Long.toString(cv.allocated));
         sb.append(" allocated - (bufferTotal + reservedTotal + childTotal): ");
-        sb.append(Long.toString(allocated - (bufferTotal + reservedTotal + childTotal)));
+        sb.append(Long.toString(cv.allocated - (bufferTotal + reservedTotal + childTotal)));
         sb.append('\n');
 
         if (bufferTotal != 0) {
@@ -1636,23 +1967,24 @@ public abstract class BaseAllocator implements BufferAllocator {
             sb.append("child allocator[");
             sb.append(Integer.toString(childAllocator.id));
             sb.append("] owned ");
-            sb.append(Long.toString(childAllocator.owned));
+            sb.append(Long.toString(childAllocator.ar.get().owned));
             sb.append('\n');
           }
         }
 
         if (reservedTotal != 0) {
           sb.append(String.format("reserved total : ", reservedTotal));
-          for(final Reservation reservation : reservationSet) {
+          for(final ReservationDebug reservation : reservationSet) {
             reservation.writeToBuilder(sb);
             sb.append('\n');
           }
         }
 
         logger.debug(sb.toString());
+        historicalLog.logHistory(logger);
         throw new IllegalStateException(String.format(
             "allocator[%d]: buffer space (%d) + prealloc space (%d) + child space (%d) != allocated (%d)",
-            id, bufferTotal, reservedTotal, childTotal, allocated));
+            id, bufferTotal, reservedTotal, childTotal, cv.allocated));
       }
     }
   }

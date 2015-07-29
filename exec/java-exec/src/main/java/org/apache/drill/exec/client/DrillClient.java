@@ -39,7 +39,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -127,7 +127,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     // if isDirect is true, the client will connect directly to the drillbit instead of
     // going thru the zookeeper
     ownsAllocator = allocator == null;
-    this.allocator = ownsAllocator ? new RootAllocator(config) : allocator;
+    this.allocator = ownsAllocator ? RootAllocatorFactory.newRoot(config) : allocator;
     this.config = config;
 
     clusterCoordinator = coordinator;

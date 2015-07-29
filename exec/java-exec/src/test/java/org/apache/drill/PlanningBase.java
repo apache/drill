@@ -29,7 +29,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -63,10 +64,10 @@ public class PlanningBase extends ExecTest {
 
   @Mocked QueryContext context;
 
-  final RootAllocator allocator;
+  final BufferAllocator allocator;
 
   public PlanningBase() throws Exception {
-    allocator = new RootAllocator(config);
+    allocator = RootAllocatorFactory.newRoot(config);
   }
 
   protected void testSqlPlanFromFile(String file) throws Exception {
@@ -96,7 +97,7 @@ public class PlanningBase extends ExecTest {
         dbContext.getConfig();
         result = config;
         dbContext.getAllocator();
-        result = new RootAllocator(config);
+        result = RootAllocatorFactory.newRoot(config);
         dbContext.getOptionManager();
         result = systemOptions;
         dbContext.getPersistentStoreProvider();

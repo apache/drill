@@ -23,7 +23,7 @@ import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.rpc.TransportCheck;
 
@@ -45,7 +45,7 @@ public class BootStrapContext implements AutoCloseable {
     loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
     metrics = DrillMetrics.getInstance();
     try {
-      allocator = new RootAllocator(config);
+      allocator = RootAllocatorFactory.newRoot(config);
     } catch(final Exception e) {
       throw new RuntimeException("Couldn't create root allocator", e);
     }

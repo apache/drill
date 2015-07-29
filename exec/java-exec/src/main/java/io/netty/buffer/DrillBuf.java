@@ -51,7 +51,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
   private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
-  private static final boolean DEBUG = BaseAllocator.isDebug();
+  private static final boolean DEBUG = BaseAllocator.isDebug() || true; // TODO(cwestin)
   private static final AtomicInteger idGenerator = new AtomicInteger(0);
 
   private final ByteBuf byteBuf;
@@ -77,7 +77,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   // members used purely for debugging
   // TODO(cwestin) once we have a reduced number of constructors, move these to DEBUG clauses in them
   private final int id = idGenerator.incrementAndGet();
-  private final HistoricalLog historicalLog = DEBUG ? new HistoricalLog(4, "DrillBuf[%d]", id) : null;
+  private final int LOG_RECORDS = 4;
+  private final HistoricalLog historicalLog = DEBUG ? new HistoricalLog(logger, LOG_RECORDS, "DrillBuf[%d]", id) : null;
   private final static IdentityHashMap<UnsafeDirectLittleEndian, Collection<DrillBuf>> unwrappedMap =
       DEBUG ? new IdentityHashMap<UnsafeDirectLittleEndian, Collection<DrillBuf>>() : null;
 
@@ -370,7 +371,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
    * @param newAllocator the new allocator
    * @return whether or not the buffer fits the receiving allocator's allocation limit
    */
-  public boolean transferTo(final BufferAllocator newAllocator, final BufferLedger newLedger) {
+  public synchronized boolean transferTo(final BufferAllocator newAllocator, final BufferLedger newLedger) {
     final Pointer<BufferLedger> pNewLedger = new Pointer<>(newLedger);
     final boolean fitsAllocation = bufferLedger.transferTo(newAllocator, pNewLedger, this);
     allocator = newAllocator;
@@ -395,7 +396,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   // TODO(cwestin) javadoc
-  private DrillBuf shareWith(final BufferLedger otherLedger, final BufferAllocator otherAllocator,
+  private synchronized DrillBuf shareWith(final BufferLedger otherLedger, final BufferAllocator otherAllocator,
       final int index, final int length, final int flags) {
     final Pointer<DrillBuf> pDrillBuf = new Pointer<>();
     bufferLedger = bufferLedger.shareWith(pDrillBuf, otherLedger, otherAllocator, this, index, length, flags);

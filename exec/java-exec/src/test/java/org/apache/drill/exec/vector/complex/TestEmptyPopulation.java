@@ -23,7 +23,7 @@ import static org.apache.drill.TestBuilder.mapOf;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class TestEmptyPopulation extends BaseTestQuery {
   private UInt4Vector.Mutator mutator;
   private EmptyValuePopulator populator;
   private final DrillConfig drillConfig = DrillConfig.create();
-  private BufferAllocator allocator = new RootAllocator(drillConfig);
+  private BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
 
 
   @Before

@@ -43,7 +43,7 @@ import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.UInt4Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
@@ -72,7 +72,7 @@ public class TestValueVector extends ExecTest {
   private final static byte[] STR3 = new String("CCCC3").getBytes(utf8Charset);
 
   private final DrillConfig drillConfig = DrillConfig.create();
-  private final RootAllocator allocator = new RootAllocator(drillConfig);
+  private final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
 
   @After
   public void terminate() throws Exception {

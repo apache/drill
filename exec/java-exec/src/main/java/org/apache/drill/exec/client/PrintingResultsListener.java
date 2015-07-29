@@ -29,7 +29,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -54,7 +54,7 @@ public class PrintingResultsListener implements UserResultsListener {
   private final Stopwatch w = new Stopwatch();
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
-    allocator = new RootAllocator(config); // TODO(DRILL-3335) shouldn't this be a child of the DrillClient?
+    allocator = RootAllocatorFactory.newRoot(config); // TODO(DRILL-3335) shouldn't this be a child of the DrillClient?
     loader = new RecordBatchLoader(allocator);
     this.format = format;
     this.columnWidth = columnWidth;

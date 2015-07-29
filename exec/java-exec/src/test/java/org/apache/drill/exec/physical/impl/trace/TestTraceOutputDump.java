@@ -30,7 +30,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -78,7 +78,7 @@ public class TestTraceOutputDump extends ExecTest {
     {
         new NonStrictExpectations(){{
             bitContext.getMetrics(); result = new MetricRegistry();
-            bitContext.getAllocator(); result = new RootAllocator(c);
+            bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
             bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);

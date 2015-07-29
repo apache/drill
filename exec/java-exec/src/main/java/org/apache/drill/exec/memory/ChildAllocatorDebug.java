@@ -25,7 +25,7 @@ package org.apache.drill.exec.memory;
  * <p>Child allocators can only be created by the root, or other children, so
  * this class is package private.</p>
  */
-class ChildAllocator extends BaseAllocator {
+class ChildAllocatorDebug extends BaseAllocatorDebug {
   /**
    * Constructor.
    *
@@ -40,7 +40,7 @@ class ChildAllocator extends BaseAllocator {
    *   force, even less memory may be available
    * @param flags one or more of BaseAllocator.F_* flags
    */
-  ChildAllocator(BaseAllocator parentAllocator, AllocatorOwner allocatorOwner,
+  ChildAllocatorDebug(BaseAllocator parentAllocator, AllocatorOwner allocatorOwner,
       AllocationPolicy allocationPolicy, long initReservation, long maxAllocation, int flags) {
     super(parentAllocator, allocatorOwner, allocationPolicy, initReservation, maxAllocation, flags);
   }

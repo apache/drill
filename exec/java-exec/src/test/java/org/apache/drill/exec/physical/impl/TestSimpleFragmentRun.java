@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -119,7 +119,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       );
 
       // look at records
-      final BufferAllocator allocator = new RootAllocator(CONFIG);
+      final BufferAllocator allocator = RootAllocatorFactory.newRoot(CONFIG);
       RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
       int recordCount = 0;
 

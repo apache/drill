@@ -41,12 +41,28 @@ public class StackTrace {
    * @param indent how many spaces to indent each line
    */
   public void writeToBuilder(final StringBuilder sb, final int indent) {
+    writeToBuilder(sb, indent, Integer.MAX_VALUE);
+  }
+
+  /**
+   * Write the stack trace to a StringBuilder.
+   *
+   * @param sb where to write it
+   * @param indent how many spaces to indent each line
+   * @param depth how much stack to write
+   */
+  public void writeToBuilder(final StringBuilder sb, final int indent, final int depth) {
     // create the indentation string
     final char[] indentation = new char[indent];
     Arrays.fill(indentation, ' ');
 
     // write the stack trace in standard Java format
+    int nFrames = 0;
     for(StackTraceElement ste : stackTraceElements) {
+      if (nFrames >= depth) {
+        break;
+      }
+
       sb.append(indentation)
           .append("at ")
           .append(ste.getClassName())
@@ -57,6 +73,8 @@ public class StackTrace {
           .append(':')
           .append(Integer.toString(ste.getLineNumber()))
           .append(")\n");
+
+      ++nFrames;
     }
   }
 

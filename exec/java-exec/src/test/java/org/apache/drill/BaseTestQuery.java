@@ -36,7 +36,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -167,7 +167,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static void openClient() throws Exception {
-    allocator = new RootAllocator(config);
+    allocator = RootAllocatorFactory.newRoot(config);
     if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
       serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
     } else {
@@ -238,11 +238,7 @@ public class BaseTestQuery extends ExecTest {
         if (bit != null) {
           final DrillbitContext drillbitContext = bit.getContext();
           final BufferAllocator bufferAllocator = drillbitContext.getAllocator();
-          if (!(bufferAllocator instanceof RootAllocator)) {
-            throw new IllegalStateException("The DrillbitContext's allocator is not a RootAllocator");
-          }
-          final RootAllocator rootAllocator = (RootAllocator) bufferAllocator;
-          rootAllocator.verify();
+          bufferAllocator.verifyAllocator();
         }
       }
     }

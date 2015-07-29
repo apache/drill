@@ -47,7 +47,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator.SingleSenderRootExec;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
@@ -233,7 +233,7 @@ public class TestDrillbitResilience extends DrillTest {
    */
   private static void assertDrillbitsOk() {
       final SingleRowListener listener = new SingleRowListener() {
-          private final BufferAllocator bufferAllocator = new RootAllocator(zkHelper.getConfig());
+          private final BufferAllocator bufferAllocator = RootAllocatorFactory.newRoot(zkHelper.getConfig());
           private final RecordBatchLoader loader = new RecordBatchLoader(bufferAllocator);
 
           @Override

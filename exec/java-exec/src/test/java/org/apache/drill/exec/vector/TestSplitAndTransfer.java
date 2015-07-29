@@ -25,7 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.NullableVarCharVector.Accessor;
@@ -35,7 +35,7 @@ public class TestSplitAndTransfer {
   @Test
   public void test() throws Exception {
     final DrillConfig drillConfig = DrillConfig.create();
-    final BufferAllocator allocator = new RootAllocator(drillConfig);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
     final MaterializedField field = MaterializedField.create("field", Types.optional(MinorType.VARCHAR));
     final NullableVarCharVector varCharVector = new NullableVarCharVector(field, allocator);
     varCharVector.allocateNew(10000, 1000);

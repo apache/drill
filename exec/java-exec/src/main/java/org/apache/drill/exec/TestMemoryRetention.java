@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 
 import com.google.common.collect.Lists;
 
@@ -63,7 +63,7 @@ public class TestMemoryRetention {
 
   public static void main(String[] args) throws Exception {
     final DrillConfig config = DrillConfig.create();
-    final BufferAllocator a = new RootAllocator(config);
+    final BufferAllocator a = RootAllocatorFactory.newRoot(config);
     for (int i = 0; i < PARALLEL_THREADS; i++) {
       Alloc alloc = new Alloc(a);
       alloc.start();

@@ -41,7 +41,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
@@ -629,7 +629,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     int totalRowCount = 0;
 
     final FileSystem fs = new CachedSingleFileSystem(fileName);
-    final BufferAllocator allocator = new RootAllocator(c);
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     for(int i = 0; i < 25; i++) {
       final ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           new DirectCodecFactory(dfsConfig, allocator), f.getParquetMetadata(), columns);

@@ -31,7 +31,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -51,7 +51,7 @@ public class TestLoad extends ExecTest {
 
   @Test
   public void testLoadValueVector() throws Exception {
-    final BufferAllocator allocator = new RootAllocator(DrillConfig.create());
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(DrillConfig.create());
     final ValueVector fixedV = new IntVector(
         MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN),
         Types.required(MinorType.INT)), allocator);

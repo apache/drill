@@ -37,7 +37,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.test.DrillTest;
@@ -84,7 +84,7 @@ public class TestResourceLeak extends DrillTest {
   @BeforeClass
   public static void openClient() throws Exception {
     config = DrillConfig.create(TEST_CONFIGURATIONS);
-    allocator = new RootAllocator(config);
+    allocator = RootAllocatorFactory.newRoot(config);
     serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     bit = new Drillbit(config, serviceSet);
