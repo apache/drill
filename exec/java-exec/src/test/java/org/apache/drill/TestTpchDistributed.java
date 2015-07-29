@@ -110,7 +110,6 @@ public class TestTpchDistributed extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // non-equality join
   public void tpch17() throws Exception{
     testDistributed("queries/tpch/17.sql");
   }

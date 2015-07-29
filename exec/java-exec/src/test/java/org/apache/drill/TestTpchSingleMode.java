@@ -117,7 +117,6 @@ public class TestTpchSingleMode extends BaseTestQuery{
   }
 
   @Test
-  @Ignore //
   public void tpch17() throws Exception{
     testSingleMode("queries/tpch/17.sql");
   }
