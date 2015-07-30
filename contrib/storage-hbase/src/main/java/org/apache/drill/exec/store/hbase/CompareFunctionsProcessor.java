@@ -38,6 +38,10 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.hadoop.hbase.util.Order;
+import org.apache.hadoop.hbase.util.PositionedByteRange;
+import org.apache.hadoop.hbase.util.SimplePositionedByteRange;
+
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
@@ -52,6 +56,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
   private boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
+  private boolean sortOrderAscending;
 
   // Fields for row-key prefix comparison
   // If the query is on row-key prefix, we cannot use a standard template to identify startRow, stopRow and filter
@@ -93,6 +98,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     this.isEqualityFn = COMPARE_FUNCTIONS_TRANSPOSE_MAP.containsKey(functionName)
         && COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName).equals(functionName);
     this.isRowKeyPrefixComparison = false;
+    this.sortOrderAscending = true;
   }
 
   public byte[] getValue() {
@@ -125,6 +131,10 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
   public Filter getRowKeyPrefixFilter() {
   return rowKeyPrefixFilter;
+  }
+
+  public boolean isSortOrderAscending() {
+    return sortOrderAscending;
   }
 
   @Override
@@ -238,6 +248,66 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
           if (valueArg instanceof BooleanExpression) {
             bb = newByteBuf(1, false /* does not matter */);
             bb.writeByte(((BooleanExpression)valueArg).getBoolean() ? 1 : 0);
+          }
+          break;
+        case "DOUBLE_OB":
+        case "DOUBLE_OBD":
+          if (valueArg instanceof DoubleExpression) {
+            bb = newByteBuf(9, true);
+            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 9);
+            if (encodingType.endsWith("_OBD")) {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
+                  ((DoubleExpression)valueArg).getDouble(), Order.DESCENDING);
+              this.sortOrderAscending = false;
+            } else {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br,
+                  ((DoubleExpression)valueArg).getDouble(), Order.ASCENDING);
+            }
+          }
+          break;
+        case "FLOAT_OB":
+        case "FLOAT_OBD":
+          if (valueArg instanceof FloatExpression) {
+            bb = newByteBuf(5, true);
+            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 5);
+            if (encodingType.endsWith("_OBD")) {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
+                  ((FloatExpression)valueArg).getFloat(), Order.DESCENDING);
+              this.sortOrderAscending = false;
+            } else {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br,
+                        ((FloatExpression)valueArg).getFloat(), Order.ASCENDING);
+            }
+          }
+          break;
+        case "BIGINT_OB":
+        case "BIGINT_OBD":
+          if (valueArg instanceof LongExpression) {
+            bb = newByteBuf(9, true);
+            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 9);
+            if (encodingType.endsWith("_OBD")) {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
+                        ((LongExpression)valueArg).getLong(), Order.DESCENDING);
+              this.sortOrderAscending = false;
+            } else {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br,
+                  ((LongExpression)valueArg).getLong(), Order.ASCENDING);
+            }
+          }
+          break;
+        case "INT_OB":
+        case "INT_OBD":
+          if (valueArg instanceof IntExpression) {
+            bb = newByteBuf(5, true);
+            PositionedByteRange br = new SimplePositionedByteRange(bb.array(), 0, 5);
+            if (encodingType.endsWith("_OBD")) {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
+                  ((IntExpression)valueArg).getInt(), Order.DESCENDING);
+              this.sortOrderAscending = false;
+            } else {
+              org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br,
+                        ((IntExpression)valueArg).getInt(), Order.ASCENDING);
+            }
           }
           break;
         case "UTF8":
