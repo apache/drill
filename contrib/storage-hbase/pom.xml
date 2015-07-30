@@ -93,6 +93,37 @@
           </systemProperties>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-java-sources</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/expr/fn/impl</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/java/org/apache/drill/exec/expr/fn/impl</directory>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>src/test/java</directory>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>target/generated-sources</directory>
+                  <!-- <include>*/org</include> -->
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 

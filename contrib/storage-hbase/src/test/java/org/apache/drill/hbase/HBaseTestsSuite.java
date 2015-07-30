@@ -53,6 +53,16 @@ public class HBaseTestsSuite {
   protected static final String TEST_TABLE_COMPOSITE_DATE = "TestTableCompositeDate";
   protected static final String TEST_TABLE_COMPOSITE_TIME = "TestTableCompositeTime";
   protected static final String TEST_TABLE_COMPOSITE_INT = "TestTableCompositeInt";
+  protected static final String TEST_TABLE_DOUBLE_OB = "TestTableDoubleOB";
+  protected static final String TEST_TABLE_FLOAT_OB = "TestTableFloatOB";
+  protected static final String TEST_TABLE_BIGINT_OB = "TestTableBigIntOB";
+  protected static final String TEST_TABLE_INT_OB = "TestTableIntOB";
+  protected static final String TEST_TABLE_DOUBLE_OB_DESC = "TestTableDoubleOBDesc";
+  protected static final String TEST_TABLE_FLOAT_OB_DESC = "TestTableFloatOBDesc";
+  protected static final String TEST_TABLE_BIGINT_OB_DESC = "TestTableBigIntOBDesc";
+  protected static final String TEST_TABLE_INT_OB_DESC = "TestTableIntOBDesc";
+  protected static final String TEST_TABLE_UTF8_OB = "TestTableUTF8OB";
+  protected static final String TEST_TABLE_UTF8_OB_DESC = "TestTableUTF8OBDesc";
 
   private static Configuration conf;
 
@@ -138,10 +148,20 @@ public class HBaseTestsSuite {
   }
 
   private static boolean tablesExist() throws IOException {
-    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3) &&
-           admin.tableExists(TEST_TABLE_COMPOSITE_DATE) &&
-           admin.tableExists(TEST_TABLE_COMPOSITE_TIME) &&
-           admin.tableExists(TEST_TABLE_COMPOSITE_INT);
+    return admin.tableExists(TEST_TABLE_1) && admin.tableExists(TEST_TABLE_3)
+           && admin.tableExists(TEST_TABLE_COMPOSITE_DATE)
+           && admin.tableExists(TEST_TABLE_COMPOSITE_TIME)
+           && admin.tableExists(TEST_TABLE_COMPOSITE_INT)
+           && admin.tableExists(TEST_TABLE_DOUBLE_OB)
+           && admin.tableExists(TEST_TABLE_FLOAT_OB)
+           && admin.tableExists(TEST_TABLE_BIGINT_OB)
+           && admin.tableExists(TEST_TABLE_INT_OB)
+           && admin.tableExists(TEST_TABLE_DOUBLE_OB_DESC)
+           && admin.tableExists(TEST_TABLE_FLOAT_OB_DESC)
+           && admin.tableExists(TEST_TABLE_BIGINT_OB_DESC)
+           && admin.tableExists(TEST_TABLE_INT_OB_DESC)
+           && admin.tableExists(TEST_TABLE_UTF8_OB)
+           && admin.tableExists(TEST_TABLE_UTF8_OB_DESC);
   }
 
   private static void createTestTables() throws Exception {
@@ -155,6 +175,16 @@ public class HBaseTestsSuite {
     TestTableGenerator.generateHBaseDatasetCompositeKeyDate(admin, TEST_TABLE_COMPOSITE_DATE, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyTime(admin, TEST_TABLE_COMPOSITE_TIME, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyInt(admin, TEST_TABLE_COMPOSITE_INT, 1);
+    TestTableGenerator.generateHBaseDatasetDoubleOB(admin, TEST_TABLE_DOUBLE_OB, 1);
+    TestTableGenerator.generateHBaseDatasetFloatOB(admin, TEST_TABLE_FLOAT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetBigIntOB(admin, TEST_TABLE_BIGINT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetIntOB(admin, TEST_TABLE_INT_OB, 1);
+    TestTableGenerator.generateHBaseDatasetDoubleOBDesc(admin, TEST_TABLE_DOUBLE_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetFloatOBDesc(admin, TEST_TABLE_FLOAT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetBigIntOBDesc(admin, TEST_TABLE_BIGINT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetIntOBDesc(admin, TEST_TABLE_INT_OB_DESC, 1);
+    TestTableGenerator.generateHBaseDatasetUTF8OB(admin, TEST_TABLE_UTF8_OB, 1);
+    TestTableGenerator.generateHBaseDatasetUTF8OBDesc(admin, TEST_TABLE_UTF8_OB_DESC, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
@@ -168,6 +198,26 @@ public class HBaseTestsSuite {
     admin.deleteTable(TEST_TABLE_COMPOSITE_TIME);
     admin.disableTable(TEST_TABLE_COMPOSITE_INT);
     admin.deleteTable(TEST_TABLE_COMPOSITE_INT);
+    admin.disableTable(TEST_TABLE_DOUBLE_OB);
+    admin.deleteTable(TEST_TABLE_DOUBLE_OB);
+    admin.disableTable(TEST_TABLE_FLOAT_OB);
+    admin.deleteTable(TEST_TABLE_FLOAT_OB);
+    admin.disableTable(TEST_TABLE_BIGINT_OB);
+    admin.deleteTable(TEST_TABLE_BIGINT_OB);
+    admin.disableTable(TEST_TABLE_INT_OB);
+    admin.deleteTable(TEST_TABLE_INT_OB);
+    admin.disableTable(TEST_TABLE_DOUBLE_OB_DESC);
+    admin.deleteTable(TEST_TABLE_DOUBLE_OB_DESC);
+    admin.disableTable(TEST_TABLE_FLOAT_OB_DESC);
+    admin.deleteTable(TEST_TABLE_FLOAT_OB_DESC);
+    admin.disableTable(TEST_TABLE_BIGINT_OB_DESC);
+    admin.deleteTable(TEST_TABLE_BIGINT_OB_DESC);
+    admin.disableTable(TEST_TABLE_INT_OB_DESC);
+    admin.deleteTable(TEST_TABLE_INT_OB_DESC);
+    admin.disableTable(TEST_TABLE_UTF8_OB);
+    admin.deleteTable(TEST_TABLE_UTF8_OB);
+    admin.disableTable(TEST_TABLE_UTF8_OB_DESC);
+    admin.deleteTable(TEST_TABLE_UTF8_OB_DESC);
   }
 
   public static int getZookeeperPort() {

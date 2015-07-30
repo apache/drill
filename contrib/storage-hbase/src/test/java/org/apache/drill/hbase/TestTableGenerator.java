@@ -322,4 +322,365 @@ public class TestTableGenerator {
     table.flushCommits();
     table.close();
   }
+
+  public static void generateHBaseDatasetDoubleOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (double i = 0.5; i <= 100.00; i += 0.75) {
+        byte[] bytes = new byte[9];
+        org.apache.hadoop.hbase.util.PositionedByteRange br =
+                new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
+        org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br, i,
+                org.apache.hadoop.hbase.util.Order.ASCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetFloatOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (float i = (float)0.5; i <= 100.00; i += 0.75) {
+      byte[] bytes = new byte[5];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br, i,
+              org.apache.hadoop.hbase.util.Order.ASCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetBigIntOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+   HTableDescriptor desc = new HTableDescriptor(tableName);
+  desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+  if (numberRegions > 1) {
+    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+  } else {
+    admin.createTable(desc);
+  }
+
+  HTable table = new HTable(admin.getConfiguration(), tableName);
+  long startTime = (long)1438034423 * 1000;
+  for (long i = startTime; i <= startTime + 100; i ++) {
+    byte[] bytes = new byte[9];
+    org.apache.hadoop.hbase.util.PositionedByteRange br =
+            new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
+    org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br, i,
+            org.apache.hadoop.hbase.util.Order.ASCENDING);
+    Put p = new Put(bytes);
+    p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+    table.put(p);
+  }
+
+  table.flushCommits();
+  table.close();
+
+  admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetIntOB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (int i = -49; i <= 100; i ++) {
+      byte[] bytes = new byte[5];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br, i,
+              org.apache.hadoop.hbase.util.Order.ASCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetDoubleOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (double i = 0.5; i <= 100.00; i += 0.75) {
+        byte[] bytes = new byte[9];
+        org.apache.hadoop.hbase.util.PositionedByteRange br =
+                new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
+        org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat64(br, i,
+                org.apache.hadoop.hbase.util.Order.DESCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetFloatOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (float i = (float)0.5; i <= 100.00; i += 0.75) {
+      byte[] bytes = new byte[5];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br, i,
+              org.apache.hadoop.hbase.util.Order.DESCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03f", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetBigIntOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+   HTableDescriptor desc = new HTableDescriptor(tableName);
+  desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+  if (numberRegions > 1) {
+    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+  } else {
+    admin.createTable(desc);
+  }
+
+  HTable table = new HTable(admin.getConfiguration(), tableName);
+  long startTime = (long)1438034423 * 1000;
+  for (long i = startTime; i <= startTime + 100; i ++) {
+    byte[] bytes = new byte[9];
+    org.apache.hadoop.hbase.util.PositionedByteRange br =
+            new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 9);
+    org.apache.hadoop.hbase.util.OrderedBytes.encodeInt64(br, i,
+            org.apache.hadoop.hbase.util.Order.DESCENDING);
+    Put p = new Put(bytes);
+    p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+    table.put(p);
+  }
+
+  table.flushCommits();
+  table.close();
+
+  admin.flush(tableName);
+  }
+
+
+  public static void generateHBaseDatasetIntOBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+
+    for (int i = -49; i <= 100; i ++) {
+      byte[] bytes = new byte[5];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeInt32(br, i,
+              org.apache.hadoop.hbase.util.Order.DESCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %d", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetUTF8OB(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+    final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    final int maxKeyLen = 25;
+    Random rnd = new Random();
+    rnd.setSeed(47);
+
+    for (int i = 0; i < 100; ++i) {
+      int keyLen = rnd.nextInt(maxKeyLen) + 1;
+      StringBuilder sb = new StringBuilder(keyLen);
+      for (int j = 0; j < keyLen; ++j) {
+        sb.append(AB.charAt(rnd.nextInt(AB.length())));
+      }
+
+      byte[] bytes = new byte[keyLen + 2];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, keyLen + 2);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeString(br, sb.toString(),
+              org.apache.hadoop.hbase.util.Order.ASCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03d", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
+
+  public static void generateHBaseDatasetUTF8OBDesc(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    desc.addFamily(new HColumnDescriptor(FAMILY_F));
+
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
+
+    HTable table = new HTable(admin.getConfiguration(), tableName);
+    final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    final int maxKeyLen = 25;
+    Random rnd = new Random();
+    rnd.setSeed(47);
+
+    for (int i = 0; i < 100; ++i) {
+      int keyLen = rnd.nextInt(maxKeyLen) + 1;
+      StringBuilder sb = new StringBuilder(keyLen);
+      for (int j = 0; j < keyLen; ++j) {
+        sb.append(AB.charAt(rnd.nextInt(AB.length())));
+      }
+
+      byte[] bytes = new byte[keyLen + 2];
+      org.apache.hadoop.hbase.util.PositionedByteRange br =
+              new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, keyLen + 2);
+      org.apache.hadoop.hbase.util.OrderedBytes.encodeString(br, sb.toString(),
+              org.apache.hadoop.hbase.util.Order.DESCENDING);
+      Put p = new Put(bytes);
+      p.add(FAMILY_F, COLUMN_C, String.format("value %03d", i).getBytes());
+      table.put(p);
+    }
+
+    table.flushCommits();
+    table.close();
+
+    admin.flush(tableName);
+  }
 }

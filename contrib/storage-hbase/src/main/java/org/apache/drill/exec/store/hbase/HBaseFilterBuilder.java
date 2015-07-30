@@ -155,6 +155,7 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     String functionName = processor.getFunctionName();
     SchemaPath field = processor.getPath();
     byte[] fieldValue = processor.getValue();
+    boolean sortOrderAscending = processor.isSortOrderAscending();
     boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
     if (!(isRowKey
         || (!field.getRootSegment().isLastPath()
@@ -189,29 +190,59 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
       compareOp = CompareOp.NOT_EQUAL;
       break;
     case "greater_than_or_equal_to":
-      compareOp = CompareOp.GREATER_OR_EQUAL;
-      if (isRowKey) {
-        startRow = fieldValue;
+      if (sortOrderAscending) {
+        compareOp = CompareOp.GREATER_OR_EQUAL;
+        if (isRowKey) {
+          startRow = fieldValue;
+        }
+      } else {
+        compareOp = CompareOp.LESS_OR_EQUAL;
+        if (isRowKey) {
+          // stopRow should be just greater than 'value'
+          stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
       }
       break;
     case "greater_than":
-      compareOp = CompareOp.GREATER;
-      if (isRowKey) {
-        // startRow should be just greater than 'value'
-        startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+      if (sortOrderAscending) {
+        compareOp = CompareOp.GREATER;
+        if (isRowKey) {
+          // startRow should be just greater than 'value'
+          startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
+      } else {
+        compareOp = CompareOp.LESS;
+        if (isRowKey) {
+          stopRow = fieldValue;
+        }
       }
       break;
     case "less_than_or_equal_to":
-      compareOp = CompareOp.LESS_OR_EQUAL;
-      if (isRowKey) {
-        // stopRow should be just greater than 'value'
-        stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+      if (sortOrderAscending) {
+        compareOp = CompareOp.LESS_OR_EQUAL;
+        if (isRowKey) {
+          // stopRow should be just greater than 'value'
+          stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
+      } else {
+        compareOp = CompareOp.GREATER_OR_EQUAL;
+        if (isRowKey) {
+          startRow = fieldValue;
+        }
       }
       break;
     case "less_than":
-      compareOp = CompareOp.LESS;
-      if (isRowKey) {
-        stopRow = fieldValue;
+      if (sortOrderAscending) {
+        compareOp = CompareOp.LESS;
+        if (isRowKey) {
+          stopRow = fieldValue;
+        }
+      } else {
+        compareOp = CompareOp.GREATER;
+        if (isRowKey) {
+          // startRow should be just greater than 'value'
+          startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
       }
       break;
     case "isnull":
