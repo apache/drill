@@ -1,11 +1,12 @@
 ---
-title: "Develop a Simple Function"
+title: "Developing a Simple Function"
 parent: "Develop Custom Functions"
 ---
-Create a class within a Java package that implements Drill’s simple interface
+The section presents a brief overview of developing a simple function. The [tutorial]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/) in the next section covers how to create a simple function in more depth.
+
+To develop a simple function, you need to create a class within a Java package that implements Drill’s simple interface
 into the program, and include the required information for the function type.
-Your function must include data types that Drill supports, such as INTEGER or
-BIGINT. For a list of supported data types, refer to the [SQL Reference]({{ site.baseurl }}/docs/supported-data-types/).
+Your function must use [data types]({{ site.baseurl }}/docs/supported-data-types/) that Drill supports. 
 
 Complete the following steps to develop a simple function using Drill’s simple
 function interface:
@@ -33,7 +34,7 @@ function interface:
 		@Param IntHolder in2;
 		@Output IntHolder out;
 
-  4. Add the code that performs operations for the function in the `eval()` method.
+  4. Add the code that performs operations for the function in the eval() method.
 
 	**Example**
 	
@@ -43,7 +44,7 @@ function interface:
 		  out.value = in1.value + in2.value;
 		}
 
-  5. Use the maven-source-plugin to compile the sources and classes JAR files. Verify that an empty `drill-module.conf` is included in the resources folder of the JARs.   
+  5. Use the maven-source-plugin to compile the sources and classes JAR files. Verify that an empty `drill-module.conf` is included in the resources folder.   
 Drill searches this module during classpath scanning. If the file is not
 included in the resources folder, you can add it to the JAR file or add it to
 `etc/drill/conf`.

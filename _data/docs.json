@@ -2449,8 +2449,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop a Simple Function", 
-                    "next_url": "/docs/develop-a-simple-function/", 
+                    "next_title": "Developing a Simple Function", 
+                    "next_url": "/docs/developing-a-simple-function/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Develop Custom Functions", 
                     "previous_url": "/docs/develop-custom-functions/", 
@@ -2466,14 +2466,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Developing an Aggregate Function", 
-                    "next_url": "/docs/developing-an-aggregate-function/", 
+                    "next_title": "Tutorial: Develop a Simple Function", 
+                    "next_url": "/docs/tutorial-develop-a-simple-function/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Develop Custom Functions Introduction", 
                     "previous_url": "/docs/develop-custom-functions-introduction/", 
-                    "relative_path": "_docs/develop-custom-functions/020-develop-a-simple-function.md", 
-                    "title": "Develop a Simple Function", 
-                    "url": "/docs/develop-a-simple-function/"
+                    "relative_path": "_docs/develop-custom-functions/020-developing-a-simple-function.md", 
+                    "title": "Developing a Simple Function", 
+                    "url": "/docs/developing-a-simple-function/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Developing an Aggregate Function", 
+                    "next_url": "/docs/developing-an-aggregate-function/", 
+                    "parent": "Develop Custom Functions", 
+                    "previous_title": "Developing a Simple Function", 
+                    "previous_url": "/docs/developing-a-simple-function/", 
+                    "relative_path": "_docs/develop-custom-functions/025-tutorial-develop-a-simple-function.md", 
+                    "title": "Tutorial: Develop a Simple Function", 
+                    "url": "/docs/tutorial-develop-a-simple-function/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -2486,8 +2503,8 @@
                     "next_title": "Adding Custom Functions to Drill", 
                     "next_url": "/docs/adding-custom-functions-to-drill/", 
                     "parent": "Develop Custom Functions", 
-                    "previous_title": "Develop a Simple Function", 
-                    "previous_url": "/docs/develop-a-simple-function/", 
+                    "previous_title": "Tutorial: Develop a Simple Function", 
+                    "previous_url": "/docs/tutorial-develop-a-simple-function/", 
                     "relative_path": "_docs/develop-custom-functions/030-developing-an-aggregate-function.md", 
                     "title": "Developing an Aggregate Function", 
                     "url": "/docs/developing-an-aggregate-function/"
@@ -2561,8 +2578,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Develop a Simple Function", 
-            "next_url": "/docs/develop-a-simple-function/", 
+            "next_title": "Developing a Simple Function", 
+            "next_url": "/docs/developing-a-simple-function/", 
             "parent": "Develop Custom Functions", 
             "previous_title": "Develop Custom Functions", 
             "previous_url": "/docs/develop-custom-functions/", 
@@ -2629,23 +2646,6 @@
             "relative_path": "_docs/developer-information/010-develop-drill.md", 
             "title": "Develop Drill", 
             "url": "/docs/develop-drill/"
-        }, 
-        "Develop a Simple Function": {
-            "breadcrumbs": [
-                {
-                    "title": "Develop Custom Functions", 
-                    "url": "/docs/develop-custom-functions/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Developing an Aggregate Function", 
-            "next_url": "/docs/developing-an-aggregate-function/", 
-            "parent": "Develop Custom Functions", 
-            "previous_title": "Develop Custom Functions Introduction", 
-            "previous_url": "/docs/develop-custom-functions-introduction/", 
-            "relative_path": "_docs/develop-custom-functions/020-develop-a-simple-function.md", 
-            "title": "Develop a Simple Function", 
-            "url": "/docs/develop-a-simple-function/"
         }, 
         "Developer Information": {
             "breadcrumbs": [], 
@@ -2903,6 +2903,23 @@
             "title": "Developer Information", 
             "url": "/docs/developer-information/"
         }, 
+        "Developing a Simple Function": {
+            "breadcrumbs": [
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Tutorial: Develop a Simple Function", 
+            "next_url": "/docs/tutorial-develop-a-simple-function/", 
+            "parent": "Develop Custom Functions", 
+            "previous_title": "Develop Custom Functions Introduction", 
+            "previous_url": "/docs/develop-custom-functions-introduction/", 
+            "relative_path": "_docs/develop-custom-functions/020-developing-a-simple-function.md", 
+            "title": "Developing a Simple Function", 
+            "url": "/docs/developing-a-simple-function/"
+        }, 
         "Developing an Aggregate Function": {
             "breadcrumbs": [
                 {
@@ -2914,8 +2931,8 @@
             "next_title": "Adding Custom Functions to Drill", 
             "next_url": "/docs/adding-custom-functions-to-drill/", 
             "parent": "Develop Custom Functions", 
-            "previous_title": "Develop a Simple Function", 
-            "previous_url": "/docs/develop-a-simple-function/", 
+            "previous_title": "Tutorial: Develop a Simple Function", 
+            "previous_url": "/docs/tutorial-develop-a-simple-function/", 
             "relative_path": "_docs/develop-custom-functions/030-developing-an-aggregate-function.md", 
             "title": "Developing an Aggregate Function", 
             "url": "/docs/developing-an-aggregate-function/"
@@ -10448,6 +10465,23 @@
             "title": "Troubleshooting", 
             "url": "/docs/troubleshooting/"
         }, 
+        "Tutorial: Develop a Simple Function": {
+            "breadcrumbs": [
+                {
+                    "title": "Develop Custom Functions", 
+                    "url": "/docs/develop-custom-functions/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Developing an Aggregate Function", 
+            "next_url": "/docs/developing-an-aggregate-function/", 
+            "parent": "Develop Custom Functions", 
+            "previous_title": "Developing a Simple Function", 
+            "previous_url": "/docs/developing-a-simple-function/", 
+            "relative_path": "_docs/develop-custom-functions/025-tutorial-develop-a-simple-function.md", 
+            "title": "Tutorial: Develop a Simple Function", 
+            "url": "/docs/tutorial-develop-a-simple-function/"
+        }, 
         "Tutorials": {
             "breadcrumbs": [], 
             "children": [
@@ -15195,8 +15229,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop a Simple Function", 
-                    "next_url": "/docs/develop-a-simple-function/", 
+                    "next_title": "Developing a Simple Function", 
+                    "next_url": "/docs/developing-a-simple-function/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Develop Custom Functions", 
                     "previous_url": "/docs/develop-custom-functions/", 
@@ -15212,14 +15246,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Developing an Aggregate Function", 
-                    "next_url": "/docs/developing-an-aggregate-function/", 
+                    "next_title": "Tutorial: Develop a Simple Function", 
+                    "next_url": "/docs/tutorial-develop-a-simple-function/", 
                     "parent": "Develop Custom Functions", 
                     "previous_title": "Develop Custom Functions Introduction", 
                     "previous_url": "/docs/develop-custom-functions-introduction/", 
-                    "relative_path": "_docs/develop-custom-functions/020-develop-a-simple-function.md", 
-                    "title": "Develop a Simple Function", 
-                    "url": "/docs/develop-a-simple-function/"
+                    "relative_path": "_docs/develop-custom-functions/020-developing-a-simple-function.md", 
+                    "title": "Developing a Simple Function", 
+                    "url": "/docs/developing-a-simple-function/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Develop Custom Functions", 
+                            "url": "/docs/develop-custom-functions/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Developing an Aggregate Function", 
+                    "next_url": "/docs/developing-an-aggregate-function/", 
+                    "parent": "Develop Custom Functions", 
+                    "previous_title": "Developing a Simple Function", 
+                    "previous_url": "/docs/developing-a-simple-function/", 
+                    "relative_path": "_docs/develop-custom-functions/025-tutorial-develop-a-simple-function.md", 
+                    "title": "Tutorial: Develop a Simple Function", 
+                    "url": "/docs/tutorial-develop-a-simple-function/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -15232,8 +15283,8 @@
                     "next_title": "Adding Custom Functions to Drill", 
                     "next_url": "/docs/adding-custom-functions-to-drill/", 
                     "parent": "Develop Custom Functions", 
-                    "previous_title": "Develop a Simple Function", 
-                    "previous_url": "/docs/develop-a-simple-function/", 
+                    "previous_title": "Tutorial: Develop a Simple Function", 
+                    "previous_url": "/docs/tutorial-develop-a-simple-function/", 
                     "relative_path": "_docs/develop-custom-functions/030-developing-an-aggregate-function.md", 
                     "title": "Developing an Aggregate Function", 
                     "url": "/docs/developing-an-aggregate-function/"

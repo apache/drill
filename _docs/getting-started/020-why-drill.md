@@ -7,7 +7,7 @@ parent: "Getting Started"
 
 ### 1. Get started in minutes
 
-It takes a couple of minutes to start working with Drill. Untar the Drill software on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure or to define schemas. Just point to the data, such as data in a file, directory, HBase table, and drill.
+It takes just a few minutes to get started with Drill. Untar the Drill software on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure or to define schemas. Just point to the data, such as data in a file, directory, HBase table, and drill.
 
     $ tar -xvf apache-drill-<version>.tar.gz
     $ <install directory>/bin/drill-embedded
@@ -74,8 +74,8 @@ Drill is extensible. You can connect Drill out-of-the-box to file systems (local
     GROUP BY custview.membership
     ORDER BY 2;
 
-## 8. User-Defined Functions (UDFs)
-Drill exposes a simple and high-performance Java API to build custom functions (UDFs and UDAFs) so that you can add your own business logic. If you have already built UDFs in Hive, you can reuse them with Drill with no modifications. Refer to [Developing Custom Functions](({{ site.baseurl }}/docs/develop-custom-functions/) for more information.
+## 8. User-Defined Functions (UDFs) for Drill and Hive
+Drill exposes a simple, high-performance Java API to build [custom user-defined functions]({{ site.baseurl }}/docs/develop-custom-functions/) (UDFs) for adding your own business logic to Drill.  Drill also supports Hive UDFs. If you have already built UDFs in Hive, you can reuse them with Drill with no modifications. 
 
 
 ## 9. High performance
