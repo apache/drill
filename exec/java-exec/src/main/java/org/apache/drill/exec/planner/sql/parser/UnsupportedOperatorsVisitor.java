@@ -35,7 +35,6 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlSetOperator;
 
 import java.util.List;
 
@@ -88,9 +87,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     if(sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
 
-      // This is used to keep track of the window function which has been defined
-      SqlNode definedWindow = null;
       for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+        // If the window function is used with an alias,
+        // enter the first operand of AS operator
         if(nodeInSelectList.getKind() == SqlKind.AS
             && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
           nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
@@ -129,7 +128,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
                 break;
             }
 
-
             // DRILL-3182
             // Window function with DISTINCT qualifier is temporarily disabled
             if(function.getFunctionQuantifier() != null
@@ -137,36 +135,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
               unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
                   "DISTINCT for window aggregate functions is not currently supported\n" +
                   "See Apache Drill JIRA: DRILL-3182");
-              throw new UnsupportedOperationException();
-            }
-          }
-
-          // DRILL-3196
-          // Disable multiple partitions in a SELECT-CLAUSE
-          SqlNode window = ((SqlCall) nodeInSelectList).operand(1);
-
-          // Partition window is referenced as a SqlIdentifier,
-          // which is defined in the window list
-          if(window instanceof SqlIdentifier) {
-            // Expand the SqlIdentifier as the expression defined in the window list
-            for(SqlNode sqlNode : sqlSelect.getWindowList()) {
-              if(((SqlWindow) sqlNode).getDeclName().equalsDeep(window, false)) {
-                window = sqlNode;
-                break;
-              }
-            }
-
-            assert !(window instanceof SqlIdentifier) : "Identifier should have been expanded as a window defined in the window list";
-          }
-
-          // In a SELECT-SCOPE, only a partition can be defined
-          if(definedWindow == null) {
-            definedWindow = window;
-          } else {
-            if(!definedWindow.equalsDeep(window, false)) {
-              unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-                  "Multiple window definitions in a single SELECT list is not currently supported \n" +
-                  "See Apache Drill JIRA: DRILL-3196");
               throw new UnsupportedOperationException();
             }
           }
@@ -324,5 +292,56 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
   private boolean containsFlatten(SqlNode sqlNode) throws UnsupportedOperationException {
     return sqlNode instanceof SqlCall
         && ((SqlCall) sqlNode).getOperator().getName().toLowerCase().equals("flatten");
+  }
+
+  /**
+   * Disable multiple partitions in a SELECT-CLAUSE
+   * If multiple partitions are defined in the query,
+   * SqlUnsupportedException would be thrown to inform
+   * @param sqlSelect SELECT-CLAUSE in the query
+   */
+  private void detectMultiplePartitions(SqlSelect sqlSelect) {
+    for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
+      // If the window function is used with an alias,
+      // enter the first operand of AS operator
+      if(nodeInSelectList.getKind() == SqlKind.AS
+          && (((SqlCall) nodeInSelectList).getOperandList().get(0).getKind() == SqlKind.OVER)) {
+        nodeInSelectList = ((SqlCall) nodeInSelectList).getOperandList().get(0);
+      }
+
+      if(nodeInSelectList.getKind() != SqlKind.OVER) {
+        continue;
+      }
+
+      // This is used to keep track of the window function which has been defined
+      SqlNode definedWindow = null;
+      SqlNode window = ((SqlCall) nodeInSelectList).operand(1);
+
+      // Partition window is referenced as a SqlIdentifier,
+      // which is defined in the window list
+      if(window instanceof SqlIdentifier) {
+        // Expand the SqlIdentifier as the expression defined in the window list
+        for(SqlNode sqlNode : sqlSelect.getWindowList()) {
+          if(((SqlWindow) sqlNode).getDeclName().equalsDeep(window, false)) {
+            window = sqlNode;
+            break;
+          }
+        }
+
+        assert !(window instanceof SqlIdentifier) : "Identifier should have been expanded as a window defined in the window list";
+      }
+
+      // In a SELECT-SCOPE, only a partition can be defined
+      if(definedWindow == null) {
+        definedWindow = window;
+      } else {
+        if(!definedWindow.equalsDeep(window, false)) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+              "Multiple window definitions in a single SELECT list is not currently supported \n" +
+              "See Apache Drill JIRA: DRILL-3196");
+          throw new UnsupportedOperationException();
+        }
+      }
+    }
   }
 }
