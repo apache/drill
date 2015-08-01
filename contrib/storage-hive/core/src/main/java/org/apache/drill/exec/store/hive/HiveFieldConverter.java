@@ -65,6 +65,8 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Maps;
 
+import static org.apache.drill.exec.store.hive.HiveUtilities.throwUnsupportedHiveDataTypeError;
+
 public abstract class HiveFieldConverter {
 
   public abstract void setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex);
@@ -119,7 +121,7 @@ public abstract class HiveFieldConverter {
           }
         }
 
-        HiveRecordReader.throwUnsupportedHiveDataTypeError(pCat.toString());
+        throwUnsupportedHiveDataTypeError(pCat.toString());
         break;
 
       case LIST:
@@ -127,7 +129,7 @@ public abstract class HiveFieldConverter {
       case STRUCT:
       case UNION:
       default:
-        HiveRecordReader.throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
+        throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
     }
 
     return null;

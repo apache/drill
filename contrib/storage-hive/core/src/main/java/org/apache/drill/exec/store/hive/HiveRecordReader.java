@@ -18,54 +18,26 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.Decimal18Holder;
-import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.DateVector;
-import org.apache.drill.exec.vector.Decimal18Vector;
-import org.apache.drill.exec.vector.Decimal28SparseVector;
-import org.apache.drill.exec.vector.Decimal38SparseVector;
-import org.apache.drill.exec.vector.Decimal9Vector;
-import org.apache.drill.exec.vector.Float4Vector;
-import org.apache.drill.exec.vector.Float8Vector;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.SmallIntVector;
-import org.apache.drill.exec.vector.TimeStampVector;
-import org.apache.drill.exec.vector.TinyIntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.work.ExecErrorConstants;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -74,12 +46,7 @@ import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
-import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils;
-import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
@@ -88,19 +55,17 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Lists;
 
 public class HiveRecordReader extends AbstractRecordReader {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
+  private final DrillBuf managedBuffer;
 
   protected Table table;
   protected Partition partition;
   protected InputSplit inputSplit;
-  protected FragmentContext context;
   protected List<String> selectedColumnNames;
   protected List<TypeInfo> selectedColumnTypes = Lists.newArrayList();
   protected List<ObjectInspector> selectedColumnObjInspectors = Lists.newArrayList();
@@ -119,21 +84,19 @@ public class HiveRecordReader extends AbstractRecordReader {
   protected boolean empty;
   private Map<String, String> hiveConfigOverride;
   private FragmentContext fragmentContext;
-  private OperatorContext operatorContext;
-
+  private String defaultPartitionValue;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
-  protected static final int FIELD_SIZE = 50;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
                           FragmentContext context, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
-    this.context = context;
     this.empty = (inputSplit == null && partition == null);
     this.hiveConfigOverride = hiveConfigOverride;
-    this.fragmentContext=context;
+    this.fragmentContext = context;
+    this.managedBuffer = fragmentContext.getManagedBuffer().reallocIfNeeded(256);
     setColumns(projectedColumns);
     init();
   }
@@ -161,6 +124,10 @@ public class HiveRecordReader extends AbstractRecordReader {
     for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
       job.set(entry.getKey(), entry.getValue());
     }
+
+    // Get the configured default val
+    defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(hiveConfigOverride);
+
     InputFormat format;
     String sLib = (partition == null) ? table.getSd().getSerdeInfo().getSerializationLib() : partition.getSd().getSerdeInfo().getSerializationLib();
     String inputFormatName = (partition == null) ? table.getSd().getInputFormat() : partition.getSd().getInputFormat();
@@ -233,7 +200,8 @@ public class HiveRecordReader extends AbstractRecordReader {
           selectedPartitionTypes.add(pType);
 
           if (partition != null) {
-            selectedPartitionValues.add(convertPartitionType(pType, partition.getValues().get(i)));
+            selectedPartitionValues.add(
+                HiveUtilities.convertPartitionType(pType, partition.getValues().get(i), defaultPartitionValue));
           }
         }
       }
@@ -253,18 +221,19 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    this.operatorContext = context;
+  public void setup(@SuppressWarnings("unused") OperatorContext context, OutputMutator output)
+      throws ExecutionSetupException {
     try {
+      final OptionManager options = fragmentContext.getOptions();
       for (int i = 0; i < selectedColumnNames.size(); i++) {
-        MajorType type = getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), true);
+        MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), options);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedColumnNames.get(i)), type);
         Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
         vectors.add(output.addField(field, vvClass));
       }
 
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
-        MajorType type = getMajorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i), false);
+        MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i), options);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedPartitionNames.get(i)), type);
         Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         pVectors.add(output.addField(field, vvClass));
@@ -353,237 +322,18 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
-  public MajorType getMajorTypeFromHiveTypeInfo(TypeInfo typeInfo, boolean nullable) {
-    switch (typeInfo.getCategory()) {
-      case PRIMITIVE: {
-        PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) typeInfo;
-        MinorType minorType = HiveDataTypeUtility.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo, context.getOptions());
-        MajorType.Builder typeBuilder = MajorType.newBuilder().setMinorType(minorType)
-            .setMode((nullable ? DataMode.OPTIONAL : DataMode.REQUIRED));
-
-        if (primitiveTypeInfo.getPrimitiveCategory() == PrimitiveCategory.DECIMAL) {
-          DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) primitiveTypeInfo;
-          typeBuilder.setPrecision(decimalTypeInfo.precision())
-              .setScale(decimalTypeInfo.scale()).build();
-        }
-
-        return typeBuilder.build();
-      }
-
-      case LIST:
-      case MAP:
-      case STRUCT:
-      case UNION:
-      default:
-        throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
-    }
-
-    return null;
-  }
-
   protected void populatePartitionVectors(int recordCount) {
     for (int i = 0; i < pVectors.size(); i++) {
-      int size = 50;
-      ValueVector vector = pVectors.get(i);
-      Object val = selectedPartitionValues.get(i);
-      PrimitiveCategory pCat = ((PrimitiveTypeInfo)selectedPartitionTypes.get(i)).getPrimitiveCategory();
-      if (pCat == PrimitiveCategory.BINARY || pCat == PrimitiveCategory.STRING || pCat == PrimitiveCategory.VARCHAR) {
-        size = ((byte[]) selectedPartitionValues.get(i)).length;
-      }
+      final ValueVector vector = pVectors.get(i);
+      final Object val = selectedPartitionValues.get(i);
 
       AllocationHelper.allocateNew(vector, recordCount);
 
-      switch(pCat) {
-        case BINARY: {
-          VarBinaryVector v = (VarBinaryVector) vector;
-          byte[] value = (byte[]) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case BOOLEAN: {
-          BitVector v = (BitVector) vector;
-          Boolean value = (Boolean) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value ? 1 : 0);
-          }
-          break;
-        }
-        case DOUBLE: {
-          Float8Vector v = (Float8Vector) vector;
-          double value = (double) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case FLOAT: {
-          Float4Vector v = (Float4Vector) vector;
-          float value = (float) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case BYTE:
-        case SHORT:
-        case INT: {
-          IntVector v = (IntVector) vector;
-          int value = (int) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case LONG: {
-          BigIntVector v = (BigIntVector) vector;
-          long value = (long) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case VARCHAR:
-        case STRING: {
-          VarCharVector v = (VarCharVector) vector;
-          byte[] value = (byte[]) val;
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case TIMESTAMP: {
-          TimeStampVector v = (TimeStampVector) vector;
-          DateTime ts = new DateTime(((Timestamp) val).getTime()).withZoneRetainFields(DateTimeZone.UTC);
-          long value = ts.getMillis();
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case DATE: {
-          DateVector v = (DateVector) vector;
-          DateTime date = new DateTime(((Date)val).getTime()).withZoneRetainFields(DateTimeZone.UTC);
-          long value = date.getMillis();
-          for (int j = 0; j < recordCount; j++) {
-            v.getMutator().setSafe(j, value);
-          }
-          break;
-        }
-        case DECIMAL: {
-          populateDecimalPartitionVector((DecimalTypeInfo)selectedPartitionTypes.get(i), vector,
-              ((HiveDecimal)val).bigDecimalValue(), recordCount);
-          break;
-        }
-        default:
-          throwUnsupportedHiveDataTypeError(pCat.toString());
+      if (val != null) {
+        HiveUtilities.populateVector(vector, managedBuffer, val, 0, recordCount);
       }
+
       vector.getMutator().setValueCount(recordCount);
     }
-  }
-
-  private void populateDecimalPartitionVector(DecimalTypeInfo typeInfo, ValueVector vector, BigDecimal bigDecimal,
-                                              int recordCount) {
-    int precision = typeInfo.precision();
-    int scale = typeInfo.scale();
-    if (precision <= 9) {
-      Decimal9Holder holder = new Decimal9Holder();
-      holder.scale = scale;
-      holder.precision = precision;
-      holder.value = DecimalUtility.getDecimal9FromBigDecimal(bigDecimal, scale, precision);
-      Decimal9Vector v = (Decimal9Vector) vector;
-      for (int j = 0; j < recordCount; j++) {
-        v.getMutator().setSafe(j, holder);
-      }
-    } else if (precision <= 18) {
-      Decimal18Holder holder = new Decimal18Holder();
-      holder.scale = scale;
-      holder.precision = precision;
-      holder.value = DecimalUtility.getDecimal18FromBigDecimal(bigDecimal, scale, precision);
-      Decimal18Vector v = (Decimal18Vector) vector;
-      for (int j = 0; j < recordCount; j++) {
-        v.getMutator().setSafe(j, holder);
-      }
-    } else if (precision <= 28) {
-      Decimal28SparseHolder holder = new Decimal28SparseHolder();
-      holder.scale = scale;
-      holder.precision = precision;
-      holder.buffer = fragmentContext.getManagedBuffer(
-          Decimal28SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
-      holder.start = 0;
-      DecimalUtility.getSparseFromBigDecimal(bigDecimal, holder.buffer, 0, scale, precision,
-          Decimal28SparseHolder.nDecimalDigits);
-      Decimal28SparseVector v = (Decimal28SparseVector) vector;
-      for (int j = 0; j < recordCount; j++) {
-        v.getMutator().setSafe(j, holder);
-      }
-    } else {
-      Decimal38SparseHolder holder = new Decimal38SparseHolder();
-      holder.scale = scale;
-      holder.precision = precision;
-      holder.buffer = fragmentContext.getManagedBuffer(
-          Decimal38SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
-      holder.start = 0;
-      DecimalUtility.getSparseFromBigDecimal(bigDecimal, holder.buffer, 0, scale, precision,
-          Decimal38SparseHolder.nDecimalDigits);
-      Decimal38SparseVector v = (Decimal38SparseVector) vector;
-      for (int j = 0; j < recordCount; j++) {
-        v.getMutator().setSafe(j, holder);
-      }
-    }
-  }
-
-  /** Partition value is received in string format. Convert it into appropriate object based on the type. */
-  private Object convertPartitionType(TypeInfo typeInfo, String value) {
-    if (typeInfo.getCategory() != Category.PRIMITIVE) {
-      // In Hive only primitive types are allowed as partition column types.
-      throw new DrillRuntimeException("Non-Primitive types are not allowed as partition column type in Hive, " +
-          "but received one: " + typeInfo.getCategory());
-    }
-
-    PrimitiveCategory pCat = ((PrimitiveTypeInfo) typeInfo).getPrimitiveCategory();
-    switch (pCat) {
-      case BINARY:
-        return value.getBytes();
-      case BOOLEAN:
-        return Boolean.parseBoolean(value);
-      case DECIMAL: {
-        DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo) typeInfo;
-        return HiveDecimalUtils.enforcePrecisionScale(HiveDecimal.create(value),
-            decimalTypeInfo.precision(), decimalTypeInfo.scale());
-      }
-      case DOUBLE:
-        return Double.parseDouble(value);
-      case FLOAT:
-        return Float.parseFloat(value);
-      case BYTE:
-      case SHORT:
-      case INT:
-        return Integer.parseInt(value);
-      case LONG:
-        return Long.parseLong(value);
-      case STRING:
-      case VARCHAR:
-        return value.getBytes();
-      case TIMESTAMP:
-        return Timestamp.valueOf(value);
-      case DATE:
-        return Date.valueOf(value);
-    }
-
-    throwUnsupportedHiveDataTypeError(pCat.toString());
-    return null;
-  }
-
-  public static void throwUnsupportedHiveDataTypeError(String unsupportedType) {
-    StringBuilder errMsg = new StringBuilder();
-    errMsg.append(String.format("Unsupported Hive data type %s. ", unsupportedType));
-    errMsg.append(System.getProperty("line.separator"));
-    errMsg.append("Following Hive data types are supported in Drill for querying: ");
-    errMsg.append(
-        "BOOLEAN, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, and VARCHAR");
-
-    throw new RuntimeException(errMsg.toString());
   }
 }

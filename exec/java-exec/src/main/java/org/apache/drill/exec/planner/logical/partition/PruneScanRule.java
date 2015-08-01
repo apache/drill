@@ -281,5 +281,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
   }
 
+  protected OptimizerRulesContext getOptimizerRulesContext() {
+    return optimizerContext;
+  }
+
   public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel);
 }

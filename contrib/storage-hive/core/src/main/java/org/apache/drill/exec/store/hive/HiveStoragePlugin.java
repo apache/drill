@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hive;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.schema.Schema.TableType;
@@ -89,7 +90,11 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of(HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerRulesContext), HivePushPartitionFilterIntoScan.getFilterOnScan(optimizerRulesContext));
+    final String defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(config.getHiveConfigOverride());
+
+    return ImmutableSet.of(
+        HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerRulesContext, defaultPartitionValue),
+        HivePushPartitionFilterIntoScan.getFilterOnScan(optimizerRulesContext, defaultPartitionValue));
   }
 
 }

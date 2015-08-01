@@ -17,34 +17,23 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import io.netty.buffer.DrillBuf;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionLocation;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.store.hive.HiveDataTypeUtility;
+import org.apache.drill.exec.store.hive.HiveUtilities;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
 import org.apache.drill.exec.store.hive.HiveTable;
-import org.apache.drill.exec.vector.NullableBigIntVector;
-import org.apache.drill.exec.vector.NullableDateVector;
-import org.apache.drill.exec.vector.NullableFloat4Vector;
-import org.apache.drill.exec.vector.NullableFloat8Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableTimeStampVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.hive.metastore.api.Partition;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
 
-import java.sql.Timestamp;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -60,10 +49,15 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   private final Map<String, Integer> partitionMap = new HashMap<>();
   private final int MAX_NESTED_SUBDIRS;
   private final DrillScanRel scanRel;
+  private final String defaultPartitionValue;
+  private final DrillBuf managedBuffer;
 
-  public HivePartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+  public HivePartitionDescriptor(@SuppressWarnings("unused") final PlannerSettings settings, final DrillScanRel scanRel,
+      final DrillBuf managedBuffer, final String defaultPartitionValue) {
     int i = 0;
     this.scanRel = scanRel;
+    this.managedBuffer = managedBuffer.reallocIfNeeded(256);
+    this.defaultPartitionValue = defaultPartitionValue;
     for (HiveTable.FieldSchemaWrapper wrapper : ((HiveScan) scanRel.getGroupScan()).hiveReadEntry.table.partitionKeys) {
       partitionMap.put(wrapper.name, i);
       i++;
@@ -121,7 +115,7 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
       allFileLocations.add(partition.getSd().getLocation());
     }
     for (String file: allFileLocations) {
-      partitions.add(new HivePartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(),file));
+      partitions.add(new HivePartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
     }
     return partitions;
   }
@@ -130,10 +124,20 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions,
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
     int record = 0;
+    final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
+    final Map<String, String> partitionNameTypeMap = hiveScan.hiveReadEntry.table.getPartitionNameTypeMap();
     for(PartitionLocation partitionLocation: partitions) {
       for(int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)){
-        populateVector(vectors[partitionColumnIndex], partitionLocation.getPartitionValue(partitionColumnIndex),
-            record);
+        final String hiveType = partitionNameTypeMap.get(fieldNameMap.get(partitionColumnIndex));
+
+        final Object value = HiveUtilities.convertPartitionType(
+            TypeInfoUtils.getTypeInfoFromTypeString(hiveType),
+            partitionLocation.getPartitionValue(partitionColumnIndex),
+            defaultPartitionValue);
+
+        if (value != null) {
+          HiveUtilities.populateVector(vectors[partitionColumnIndex], managedBuffer, value, record, record + 1);
+        }
       }
       record++;
     }
@@ -154,7 +158,7 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
     String hiveType = partitionNameTypeMap.get(partitionName);
     PrimitiveTypeInfo primitiveTypeInfo = (PrimitiveTypeInfo) TypeInfoUtils.getTypeInfoFromTypeString(hiveType);
 
-    TypeProtos.MinorType partitionType = HiveDataTypeUtility.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo,
+    TypeProtos.MinorType partitionType = HiveUtilities.getMinorTypeFromHivePrimitiveTypeInfo(primitiveTypeInfo,
         plannerSettings.getOptions());
     return TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(partitionType).build();
   }
@@ -164,67 +168,4 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
     return partitionMap.get(name);
   }
 
-  public static void populateVector(ValueVector vector, String value, int record) {
-    TypeProtos.MinorType type = vector.getField().getType().getMinorType();
-
-    switch (type) {
-      case TINYINT:
-      case SMALLINT:
-      case INT:
-        if (value == null) {
-          ((NullableIntVector) vector).getMutator().setNull(record);
-        } else {
-          ((NullableIntVector) vector).getMutator().setSafe(record, Integer.parseInt(value));
-        }
-        break;
-
-      case BIGINT:
-        if (value == null) {
-          ((NullableBigIntVector) vector).getMutator().setNull(record);
-        } else {
-          ((NullableBigIntVector) vector).getMutator().setSafe(record, Long.parseLong(value));
-        }
-        break;
-      case FLOAT4:
-        if (value == null) {
-          ((NullableFloat4Vector) vector).getMutator().setNull(record);
-        } else {
-          ((NullableFloat4Vector) vector).getMutator().setSafe(record, Float.parseFloat(value));
-        }
-        break;
-      case FLOAT8:
-        if (value == null) {
-          ((NullableFloat8Vector) vector).getMutator().setNull(record);
-        } else {
-          ((NullableFloat8Vector) vector).getMutator().setSafe(record, Double.parseDouble(value));
-        }
-        break;
-      case TIMESTAMP:
-        if (value == null) {
-          ((NullableTimeStampVector) vector).getMutator().setNull(record);
-        } else {
-          DateTimeFormatter f = DateUtility.getDateTimeFormatter();
-          value = value.replace("%3A", ":");
-          long ts = DateTime.parse(value, f).withZoneRetainFields(DateTimeZone.UTC).getMillis();
-          ((NullableTimeStampVector) vector).getMutator().set(record, ts);
-        }
-        break;
-      case DATE:
-        if (value == null) {
-          ((NullableDateVector) vector).getMutator().setNull(record);
-        } else {
-          DateTimeFormatter f = DateUtility.formatDate;
-          long ts = DateTime.parse(value, f).withZoneRetainFields(DateTimeZone.UTC).getMillis();
-          ((NullableDateVector) vector).getMutator().set(record, ts);
-        }
-        break;
-      case VARCHAR:
-        if (value == null) {
-          ((NullableVarCharVector) vector).getMutator().setNull(record);
-        } else {
-          ((NullableVarCharVector) vector).getMutator().set(record, value.getBytes());
-        }
-        break;
-    }
-  }
 }

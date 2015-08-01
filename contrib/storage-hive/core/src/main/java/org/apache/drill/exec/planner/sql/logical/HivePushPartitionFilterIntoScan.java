@@ -34,7 +34,8 @@ import org.apache.calcite.plan.RelOptRuleCall;
 
 public abstract class HivePushPartitionFilterIntoScan {
 
-  public static final StoragePluginOptimizerRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
+  public static final StoragePluginOptimizerRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext,
+      final String defaultPartitionValue) {
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
         "HivePushPartitionFilterIntoScan:Filter_On_Project_Hive",
@@ -42,7 +43,8 @@ public abstract class HivePushPartitionFilterIntoScan {
 
       @Override
       public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel);
+        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+            defaultPartitionValue);
       }
 
       @Override
@@ -63,14 +65,16 @@ public abstract class HivePushPartitionFilterIntoScan {
     };
   }
 
-  public static final StoragePluginOptimizerRule getFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
+  public static final StoragePluginOptimizerRule getFilterOnScan(OptimizerRulesContext optimizerRulesContext,
+      final String defaultPartitionValue) {
     return new PruneScanRule(
         RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
         "HivePushPartitionFilterIntoScan:Filter_On_Scan_Hive", optimizerRulesContext) {
 
       @Override
       public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel);
+        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+            defaultPartitionValue);
       }
 
       @Override
