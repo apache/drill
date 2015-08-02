@@ -111,12 +111,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
 
             // DRILL-3195:
             // The following window functions are temporarily disabled
-            // NTILE(), LAG(), LEAD(), FIRST_VALUE(), LAST_VALUE()
+            // NTILE(), FIRST_VALUE(), LAST_VALUE()
             String functionName = function.getOperator().getName().toUpperCase();
             switch(functionName) {
               case "NTILE":
-              case "LAG":
-              case "LEAD":
               case "FIRST_VALUE":
               case "LAST_VALUE":
                 unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,

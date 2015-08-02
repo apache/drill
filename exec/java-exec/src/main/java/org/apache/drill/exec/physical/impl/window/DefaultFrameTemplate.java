@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.window;
 
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
@@ -34,6 +35,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFrameTemplate.class);
 
   private VectorContainer container;
+  private VectorContainer internal;
   private List<WindowDataBatch> batches;
   private int outputCount; // number of rows in currently/last processed batch
 
@@ -44,9 +46,14 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private Partition partition;
 
   @Override
-  public void setup(List<WindowDataBatch> batches, final VectorContainer container) throws SchemaChangeException {
+  public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext)
+      throws SchemaChangeException {
     this.container = container;
     this.batches = batches;
+
+    internal = new VectorContainer(oContext);
+    allocateInternal();
+    internal.setRecordCount(0);
 
     outputCount = 0;
     partition = null;
@@ -58,6 +65,13 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     }
   }
 
+  private void allocateInternal() {
+    for (VectorWrapper<?> w : container) {
+      internal.addOrGet(w.getField());
+      logger.debug("{} -> {}", container.getValueVectorId(w.getField().getPath()), internal.getValueVectorId(w.getField().getPath()));
+    }
+    container.zeroVectors();
+  }
   /**
    * processes all rows of current batch:
    * <ul>
@@ -74,6 +88,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       batches.size(), batches.get(0).getRecordCount());
 
     allocateOutgoing();
+//    allocateInternal(); // make sure we don't keep internal between partitions
 
     final WindowDataBatch current = batches.get(0);
 
@@ -89,13 +104,16 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       } else {
         final int length = computePartitionSize(currentRow);
         partition = new Partition(length);
-        setupWrite(current, container);
+        setupOutputRow(current, container);
       }
 
       currentRow = processPartition(currentRow);
       if (partition.isDone()) {
         partition = null;
         resetValues();
+        logger.trace("resetting internal");
+        internal.zeroVectors();
+        internal.setRecordCount(0);
       }
     }
 
@@ -126,21 +144,62 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private int processPartition(final int currentRow) throws DrillException {
     logger.trace("process partition {}, currentRow: {}, outputCount: {}", partition, currentRow, outputCount);
 
+    final VectorAccessible current = getCurrent();
+    setupCopyNext(current, container);
+
+    // copy prev row from internal
+    if (internal.getRecordCount() > 0) {
+      logger.trace("copying from internal");
+      setupCopyFromInternal(internal, container);
+      copyFromInternal(0, 0);
+    }
+
+    // copy remaining from current
+    setupCopyPrev(current, container);
+
     int row = currentRow;
+
+    // process all rows except the last one of the batch/partition
     while (row < outputCount && !partition.isDone()) {
-      if (partition.isFrameDone()) {
-        // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-        partition.newFrame(countPeers(row));
-        aggregatePeers(row);
+      if (row != currentRow) { // this is not the first row of the partition
+        copyPrev(row - 1, row);
       }
 
-      outputAggregatedValues(row, partition);
+      processRow(row);
 
-      partition.rowAggregated();
+      if (row < outputCount - 1 && !partition.isDone()) {
+        copyNext(row + 1, row);
+      }
+
       row++;
     }
 
+    // if we didn't reach the end of partition yet
+    if (!partition.isDone() && batches.size() > 1) {
+      // copy next value onto the current one
+      setupCopyNext(batches.get(1), container);
+      copyNext(0, row - 1);
+
+      // copy prev value onto internal container
+      logger.trace("copying {} into internal", row - 1);
+      setupCopyPrev(current, internal);
+      copyPrev(row - 1, 0);
+      internal.setRecordCount(1);
+    }
+
     return row;
+  }
+
+  private void processRow(final int row) throws DrillException {
+    if (partition.isFrameDone()) {
+      // because all peer rows share the same frame, we only need to compute and aggregate the frame once
+      partition.newFrame(countPeers(row));
+      aggregatePeers(row);
+    }
+
+    outputRow(row, partition);
+
+    partition.rowAggregated();
   }
 
   /**
@@ -213,18 +272,18 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     // start processing first batch and, if necessary, move to next batches
     Iterator<WindowDataBatch> iterator = batches.iterator();
     WindowDataBatch current = iterator.next();
-    setupRead(current, container);
+    setupEvaluatePeer(current, container);
 
     final int peers = partition.getPeers();
     for (int i = 0, row = currentRow; i < peers; i++, row++) {
       if (row >= current.getRecordCount()) {
         // we reached the end of the current batch, move to the next one
         current = iterator.next();
-        setupRead(current, container);
+        setupEvaluatePeer(current, container);
         row = 0;
       }
 
-      aggregateRecord(row);
+      evaluatePeer(row);
     }
   }
 
@@ -263,31 +322,50 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     return outputCount;
   }
 
+  // we need this abstract method for code generation
   @Override
   public void cleanup() {
+    logger.trace("clearing internal");
+    internal.clear();
   }
 
   /**
-   * setup incoming container for aggregateRecord()
-   */
-  public abstract void setupRead(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
-
-  /**
-   * setup outgoing container for outputAggregatedValues. This will also reset the aggregations in most cases.
-   */
-  public abstract void setupWrite(@Named("incoming") WindowDataBatch incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
-
-  /**
-   * aggregates a row from the incoming container
+   * called once for each peer row of the current frame.
    * @param index of row to aggregate
    */
-  public abstract void aggregateRecord(@Named("index") int index);
+  public abstract void evaluatePeer(@Named("index") int index);
+  public abstract void setupEvaluatePeer(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
   /**
-   * writes aggregated values to row of outgoing container
+   * called once for each row after we evaluate all peer rows. Used to write a value in the row
+   *
    * @param outIndex index of row
+   * @param partition object used by "computed" window functions
    */
-  public abstract void outputAggregatedValues(@Named("outIndex") int outIndex, @Named("partition") Partition partition);
+  public abstract void outputRow(@Named("outIndex") int outIndex, @Named("partition") Partition partition);
+  public abstract void setupOutputRow(@Named("incoming") WindowDataBatch incoming, @Named("outgoing") VectorAccessible outgoing)
+    throws SchemaChangeException;
+
+  /**
+   * copies value(s) from inIndex row to outIndex row. Mostly used by LEAD. inIndex always points to the row next to
+   * outIndex
+   * @param inIndex source row of the copy
+   * @param outIndex destination row of the copy.
+   */
+  public abstract void copyNext(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void setupCopyNext(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+
+  /**
+   * copies value(s) from inIndex row to outIndex row. Mostly used by LAG. inIndex always points to the previous row
+   *
+   * @param inIndex source row of the copy
+   * @param outIndex destination row of the copy.
+   */
+  public abstract void copyPrev(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void setupCopyPrev(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+
+  public abstract void copyFromInternal(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract void setupCopyFromInternal(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
 
   /**
    * reset all window functions

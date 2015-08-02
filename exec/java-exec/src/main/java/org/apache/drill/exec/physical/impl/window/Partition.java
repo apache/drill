@@ -71,6 +71,10 @@ public class Partition {
     return remaining == 0;
   }
 
+  public boolean isLastRow() {
+    return remaining == 1;
+  }
+
   public boolean isFrameDone() {
     return peers == 0;
   }

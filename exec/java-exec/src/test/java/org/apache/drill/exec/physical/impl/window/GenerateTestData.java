@@ -268,7 +268,8 @@ public class GenerateTestData {
     }
   }
 
-  private static void writeData(final String path, final Partition[] partitions) throws FileNotFoundException {
+  private static void writeData(final String path, final Partition[] partitions, final boolean addLineNo)
+      throws FileNotFoundException {
 
     // total number of rows
     int total = partitions[partitions.length - 1].cumulLength();
@@ -285,6 +286,7 @@ public class GenerateTestData {
     PrintStream dataStream = new PrintStream(path + "/" + fileId + ".data.json");
 
     int emp_idx = 0;
+    int lineNo = 0;
     for (int id : emp_ids) {
       int p = 0;
       while (!partitions[p].isPartOf(id)) { // emp x is @ row x-1
@@ -294,7 +296,12 @@ public class GenerateTestData {
       int sub = partitions[p].getSubId(id);
       int salary = 10 + sub;
 
-      dataStream.printf("{ \"employee_id\":%d, \"position_id\":%d, \"sub\":%d, \"salary\":%d }%n", id, p + 1, sub, salary);
+      if (addLineNo) {
+        dataStream.printf("{ \"employee_id\":%d, \"position_id\":%d, \"sub\":%d, \"salary\":%d, \"line_no\":%d }%n",
+          id, p + 1, sub, salary, lineNo);
+      } else {
+        dataStream.printf("{ \"employee_id\":%d, \"position_id\":%d, \"sub\":%d, \"salary\":%d }%n", id, p + 1, sub, salary);
+      }
       emp_idx++;
       if ((emp_idx % BATCH_SIZE)==0 && emp_idx < total) {
         System.out.printf("total: %d, emp_idx: %d, fileID: %d%n", total, emp_idx, fileId);
@@ -302,6 +309,8 @@ public class GenerateTestData {
         fileId++;
         dataStream = new PrintStream(path + "/" + fileId + ".data.json");
       }
+
+      lineNo++;
     }
 
     dataStream.close();
@@ -338,7 +347,13 @@ public class GenerateTestData {
     resultOrderStream.close();
   }
 
-  private static void generateData(final String tableName, final Partition[] pby_data, final Partition[] nopby_data) throws FileNotFoundException {
+  private static void generateData(final String tableName, final Partition[] pby_data, final Partition[] nopby_data)
+      throws FileNotFoundException {
+    generateData(tableName, pby_data, nopby_data, false);
+  }
+
+  private static void generateData(final String tableName, final Partition[] pby_data, final Partition[] nopby_data,
+      final boolean addLineNo) throws FileNotFoundException {
     final String WORKING_PATH = TestTools.getWorkingPath();
     final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
     final String path = TEST_RES_PATH+"/window/" + tableName;
@@ -350,7 +365,7 @@ public class GenerateTestData {
       }
     }
 
-    writeData(path, pby_data);
+    writeData(path, pby_data, addLineNo);
 
     writeResults(path, "", nopby_data);
     writeResults(path, ".pby", pby_data);
@@ -362,7 +377,7 @@ public class GenerateTestData {
     generateData("b2.p2", dataB2P2(true), dataB2P2(false));
     generateData("b2.p4", dataB2P4(true), dataB2P4(false));
     generateData("b3.p2", dataB3P2(true), dataB3P2(false));
-    generateData("b4.p4", dataB4P4(true), dataB4P4(false));
+    generateData("b4.p4", dataB4P4(true), dataB4P4(false), true);
   }
 
 }
