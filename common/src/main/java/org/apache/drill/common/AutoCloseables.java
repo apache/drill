@@ -36,10 +36,14 @@ public class AutoCloseables {
    * @param logger the logger to use to record the exception if there was one
    */
   public static void close(final AutoCloseable ac, final Logger logger) {
+    if (ac == null) {
+      return;
+    }
+
     try {
       ac.close();
     } catch(Exception e) {
-      logger.warn("Failure on close(): " + e);
+      logger.warn("Failure on close(): {}", e);
     }
   }
 

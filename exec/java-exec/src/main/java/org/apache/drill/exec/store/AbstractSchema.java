@@ -29,9 +29,7 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
@@ -88,7 +86,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    *
    * @return Return the default schema where tables are created or retrieved from.
    */
-  public AbstractSchema getDefaultSchema() {
+  public Schema getDefaultSchema() {
     return this;
   }
 
@@ -152,7 +150,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   @Override
-  public AbstractSchema getSubSchema(String name) {
+  public Schema getSubSchema(String name) {
     return null;
   }
 

@@ -25,11 +25,11 @@ import java.util.List;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.hep.HepMatchOrder;
+import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
@@ -39,7 +39,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
-import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
 import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
@@ -100,11 +99,11 @@ import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -260,7 +259,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     Prel phyRelNode;
     try {
-      phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+      final RelNode relNode = planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+      phyRelNode = (Prel) relNode.accept(PrelFinalizable.SHUTTLE);
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
 
@@ -282,7 +282,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       queryOptions.setOption(OptionValue.createBoolean(OptionValue.OptionType.QUERY, PlannerSettings.HASHAGG.getOptionName(), false));
 
       try {
-        phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+        final RelNode relNode = planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+        phyRelNode = (Prel) relNode.accept(PrelFinalizable.SHUTTLE);
       } catch (RelOptPlanner.CannotPlanException ex) {
         logger.error(ex.getMessage());
 

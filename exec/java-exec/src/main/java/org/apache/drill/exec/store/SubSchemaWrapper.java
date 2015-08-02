@@ -18,14 +18,13 @@
 package org.apache.drill.exec.store;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Table;
-
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
 import com.google.common.collect.ImmutableList;
@@ -49,11 +48,17 @@ public class SubSchemaWrapper extends AbstractSchema {
                                            List<String> partitionColumns,
                                            List<String> partitionValues
   ) throws PartitionNotFoundException {
-    return getDefaultSchema().getSubPartitions(table, partitionColumns, partitionValues);
+    Schema defaultSchema = getDefaultSchema();
+    if (defaultSchema instanceof AbstractSchema) {
+      return ((AbstractSchema) defaultSchema).getSubPartitions(table, partitionColumns, partitionValues);
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+
   }
 
   @Override
-  public AbstractSchema getDefaultSchema() {
+  public Schema getDefaultSchema() {
     return innerSchema.getDefaultSchema();
   }
 
@@ -73,7 +78,7 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
-  public AbstractSchema getSubSchema(String name) {
+  public Schema getSubSchema(String name) {
     return innerSchema.getSubSchema(name);
   }
 

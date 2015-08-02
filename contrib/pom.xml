@@ -35,6 +35,7 @@
     <module>storage-hbase</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
+    <module>storage-jdbc</module>
     <module>sqlline</module>
     <module>data</module>
   </modules>

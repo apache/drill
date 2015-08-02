@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.RuleSet;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -43,11 +43,8 @@ import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -57,7 +54,6 @@ import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
-import org.apache.calcite.plan.RelOptRule;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -296,7 +292,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.values()) {
-      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
+      Set<? extends RelOptRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
       if (rules != null && rules.size() > 0) {
         setBuilder.addAll(rules);
       }

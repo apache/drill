@@ -103,7 +103,7 @@ public class SchemaUtilites {
    */
   public static AbstractSchema unwrapAsDrillSchemaInstance(SchemaPlus schemaPlus)  {
     try {
-      return schemaPlus.unwrap(AbstractSchema.class).getDefaultSchema();
+      return (AbstractSchema) schemaPlus.unwrap(AbstractSchema.class).getDefaultSchema();
     } catch (ClassCastException e) {
       throw UserException.validationError(e)
           .message("Schema [%s] is not a Drill schema.", getSchemaPath(schemaPlus))

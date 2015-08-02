@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -32,7 +33,7 @@ public interface StoragePlugin extends SchemaFactory {
 
   public boolean supportsWrite();
 
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.

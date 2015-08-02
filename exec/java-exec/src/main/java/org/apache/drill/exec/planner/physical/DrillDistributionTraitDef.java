@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.calcite.rel.RelNode;
 
 public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrait>{
   public static final DrillDistributionTraitDef INSTANCE = new DrillDistributionTraitDef();
@@ -70,6 +70,11 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
     // Source trait should be concrete type: SINGLETON, HASH_DISTRIBUTED, etc.
     if (currentDist.equals(DrillDistributionTrait.DEFAULT) && !(rel instanceof RelSubset) ) {
         return null;
+    }
+
+    // It is only possible to apply a distribution trait to a DRILL_PHYSICAL convention.
+    if (rel.getConvention() != Prel.DRILL_PHYSICAL) {
+      return null;
     }
 
     switch(toDist.getType()){

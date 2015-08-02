@@ -24,16 +24,16 @@ import java.util.Map;
 
 import org.apache.calcite.avatica.util.Spacer;
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.runtime.FlatLists;
-import org.apache.drill.exec.planner.physical.HashJoinPrel;
-import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.Pair;
+import org.apache.drill.exec.planner.physical.HashJoinPrel;
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
 import com.google.common.collect.ImmutableList;
 
@@ -78,12 +78,16 @@ class NumberingRelWriter implements RelWriter {
 
     StringBuilder s = new StringBuilder();
     OpId id = ids.get(rel);
-    s.append(String.format("%02d-%02d",id.fragmentId, id.opId));
+    if (id != null) {
+      s.append(String.format("%02d-%02d", id.fragmentId, id.opId));
+    }else{
+      s.append("     ");
+    }
     s.append("  ");
-    if(id.opId == 0){
+
+    if (id != null && id.opId == 0) {
       for(int i =0; i < spacer.get(); i++){ s.append('-');}
     }else{
-
       spacer.spaces(s);
     }
 

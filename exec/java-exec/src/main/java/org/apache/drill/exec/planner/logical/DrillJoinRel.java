@@ -19,8 +19,18 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
@@ -28,19 +38,6 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.util.Pair;
-
-import com.google.common.collect.Lists;
 
 /**
  * Logical Join implemented in Drill.
@@ -54,13 +51,14 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType)  {
     super(cluster, traits, left, right, condition, joinType);
-
+    assert traits.contains(DrillRel.DRILL_LOGICAL);
     RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
   }
 
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType, List<Integer> leftKeys, List<Integer> rightKeys) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
+    assert traits.contains(DrillRel.DRILL_LOGICAL);
 
     assert (leftKeys != null && rightKeys != null);
     this.leftKeys = leftKeys;

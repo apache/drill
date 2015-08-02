@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -45,7 +46,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of();
   }
 
