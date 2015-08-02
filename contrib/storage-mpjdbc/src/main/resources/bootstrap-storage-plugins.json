@@ -1,0 +1,12 @@
+{
+  "storage":{
+    jdbc : {
+      type:"jdbc",
+      enabled: false,
+      driver:"",
+      uri:"jdbc://",
+      username:"",
+      password:""
+    }
+  }
+}
