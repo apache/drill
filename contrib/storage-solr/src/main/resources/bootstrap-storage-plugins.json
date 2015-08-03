@@ -1,0 +1,10 @@
+{
+  "storage":{
+    solr : {
+      type:"solr",
+      enabled: true,
+      solrServer: "http://dm2perf:20000/"
+    }
+  }
+}
+drill.exec.storage.packages += org.apache.drill.exec.store.solr
