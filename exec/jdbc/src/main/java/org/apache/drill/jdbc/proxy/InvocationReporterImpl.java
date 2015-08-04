@@ -291,8 +291,13 @@ class InvocationReporterImpl implements InvocationReporter
       else if (
           // Is type to warn about (second case).
           false
-          || rawActualType == org.apache.hadoop.io.Text.class
-          || rawActualType == org.joda.time.Period.class
+          // Note:  Using strings rather than compiled-in class references to
+          // avoid failing when run using JDBC-all Jar, which excludes
+          // org.apache.hadoop.io.Text.
+          // Note:  org.apache.hadoop.io.Text should no longer appear (see
+          // DRILL-3347, but leaving warning in for now in case Text returns).
+          || rawActualType.getName().equals( "org.apache.hadoop.io.Text" )
+          || rawActualType.getName().equals( "org.joda.time.Period" )
           || rawActualType ==
              org.apache.drill.exec.vector.accessor.sql.TimePrintMillis.class
           ) {

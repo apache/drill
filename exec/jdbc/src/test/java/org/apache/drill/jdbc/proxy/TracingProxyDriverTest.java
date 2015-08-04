@@ -67,6 +67,7 @@ public class TracingProxyDriverTest extends DrillTest {
           stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.CATALOGS" );
       assertTrue( rs.next() );
       assertThat( rs.getString( 1 ), equalTo( "DRILL" ) );
+      assertThat( rs.getObject( 1 ), equalTo( (Object) "DRILL" ) );
     }
   }
 
