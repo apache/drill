@@ -19,7 +19,9 @@ package org.apache.drill.exec.testing;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+
 import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -33,7 +35,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.test.DrillTest;
@@ -43,6 +45,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -66,7 +69,7 @@ public class TestResourceLeak extends DrillTest {
   @BeforeClass
   public static void openClient() throws Exception {
     config = DrillConfig.create(TEST_CONFIGURATIONS);
-    allocator = new TopLevelAllocator(config);
+    allocator = RootAllocatorFactory.newRoot(config);
     serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     bit = new Drillbit(config, serviceSet);
@@ -74,7 +77,7 @@ public class TestResourceLeak extends DrillTest {
     client = QueryTestUtil.createClient(config, serviceSet, 2, null);
   }
 
-  @Test()
+  @Test
   public void tpch01() throws Exception {
     final String query = getFile("memory/tpch01_memory_leak.sql");
     try {
@@ -89,7 +92,7 @@ public class TestResourceLeak extends DrillTest {
   }
 
   private static String getFile(String resource) throws IOException {
-    URL url = Resources.getResource(resource);
+    final URL url = Resources.getResource(resource);
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
@@ -115,12 +118,13 @@ public class TestResourceLeak extends DrillTest {
     @Inject DrillBuf buf;
     @Output Float8Holder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       buf.getAllocator().buffer(1);
       out.value = in.value;
     }
-
   }
 }

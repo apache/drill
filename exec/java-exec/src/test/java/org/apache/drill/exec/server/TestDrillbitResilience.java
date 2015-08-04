@@ -46,7 +46,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator.SingleSenderRootExec;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
@@ -234,7 +234,7 @@ public class TestDrillbitResilience extends DrillTest {
    */
   private static void assertDrillbitsOk() {
       final SingleRowListener listener = new SingleRowListener() {
-          private final BufferAllocator bufferAllocator = new TopLevelAllocator(zkHelper.getConfig());
+          private final BufferAllocator bufferAllocator = RootAllocatorFactory.newRoot(zkHelper.getConfig());
           private final RecordBatchLoader loader = new RecordBatchLoader(bufferAllocator);
 
           @Override
@@ -929,7 +929,7 @@ public class TestDrillbitResilience extends DrillTest {
   @Test // DRILL-3065
   public void failsAfterMSorterSorting() {
     final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
-    Class<? extends Exception> typeOfException = RuntimeException.class;
+    final Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();
     final String controls = Controls.newBuilder()
@@ -944,7 +944,7 @@ public class TestDrillbitResilience extends DrillTest {
   @Test // DRILL-3085
   public void failsAfterMSorterSetup() {
     final String query = "select n_name from cp.`tpch/nation.parquet` order by n_name";
-    Class<? extends Exception> typeOfException = RuntimeException.class;
+    final Class<? extends Exception> typeOfException = RuntimeException.class;
 
     final long before = countAllocatedMemory();
     final String controls = Controls.newBuilder()

@@ -21,9 +21,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -39,20 +40,20 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.collect.Lists;
 
 public class DumpCat {
-
-  private final static BufferAllocator allocator = new TopLevelAllocator();
+  private final static DrillConfig drillConfig = DrillConfig.create();
+  private final static BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
 
   public static void main(String args[]) throws Exception {
-    DumpCat dumpCat = new DumpCat();
+    final DumpCat dumpCat = new DumpCat();
 
-    Options o = new Options();
+    final Options o = new Options();
     JCommander jc = null;
     try {
       jc = new JCommander(o, args);
       jc.setProgramName("./drill_dumpcat");
     } catch (ParameterException e) {
       System.out.println(e.getMessage());
-      String[] valid = {"-f", "file"};
+      final String[] valid = {"-f", "file"};
       new JCommander(o, valid).usage();
       System.exit(-1);
     }
@@ -62,21 +63,19 @@ public class DumpCat {
     }
 
     /*Check if dump file exists*/
-    File file = new File(o.location);
+    final File file = new File(o.location);
     if (!file.exists()) {
       System.out.println(String.format("Trace file %s not created", o.location));
       System.exit(-1);
     }
 
-    FileInputStream input = new FileInputStream(file.getAbsoluteFile());
-
-    if (o.batch < 0) {
-      dumpCat.doQuery(input);
-    } else {
-      dumpCat.doBatch(input, o.batch, o.include_headers);
+    try (final FileInputStream input = new FileInputStream(file.getAbsoluteFile())) {
+      if (o.batch < 0) {
+        dumpCat.doQuery(input);
+      } else {
+        dumpCat.doBatch(input, o.batch, o.include_headers);
+      }
     }
-
-    input.close();
   }
 
   /**
@@ -86,7 +85,7 @@ public class DumpCat {
     @Override
     public void validate(String name, String value) throws ParameterException {
       try {
-        int batch = Integer.parseInt(value);
+        final int batch = Integer.parseInt(value);
         if (batch < 0) {
           throw new ParameterException("Parameter " + name + " should be non-negative number.");
         }
@@ -140,7 +139,7 @@ public class DumpCat {
     @Override
     public String toString() {
       String avgRecSizeStr = null;
-      if (this.rows>0) {
+      if (this.rows > 0) {
         avgRecSizeStr = String.format("Average Record Size : %d ", this.dataSize/this.rows);
       } else {
         avgRecSizeStr = "Average Record Size : 0";
@@ -169,14 +168,14 @@ public class DumpCat {
     int  batchNum = 0;
     int  emptyBatchNum = 0;
     BatchSchema prevSchema = null;
-    List<Integer> schemaChangeIdx = Lists.newArrayList();
+    final List<Integer> schemaChangeIdx = Lists.newArrayList();
 
-    BatchMetaInfo aggBatchMetaInfo = new BatchMetaInfo();
+    final BatchMetaInfo aggBatchMetaInfo = new BatchMetaInfo();
 
     while (input.available() > 0) {
-      VectorAccessibleSerializable vcSerializable = new VectorAccessibleSerializable(DumpCat.allocator);
+      final VectorAccessibleSerializable vcSerializable = new VectorAccessibleSerializable(DumpCat.allocator);
       vcSerializable.readFromStream(input);
-      VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+      final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
 
       aggBatchMetaInfo.add(getBatchMetaInfo(vcSerializable));
 
@@ -225,7 +224,7 @@ public class DumpCat {
       vcSerializable.readFromStream(input);
 
       if (batchNum != targetBatchNum) {
-        VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+        final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
         vectorContainer.zeroVectors();
       }
     }
@@ -238,22 +237,21 @@ public class DumpCat {
 
     if (vcSerializable != null) {
       showSingleBatch(vcSerializable, showHeader);
-      VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
+      final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
       vectorContainer.zeroVectors();
     }
   }
 
-
   private void showSingleBatch (VectorAccessibleSerializable vcSerializable, boolean showHeader) {
-    VectorContainer vectorContainer = (VectorContainer)vcSerializable.get();
+    final VectorContainer vectorContainer = (VectorContainer) vcSerializable.get();
 
     /* show the header of the batch */
     if (showHeader) {
       System.out.println(getBatchMetaInfo(vcSerializable).toString());
 
       System.out.println("Schema Information");
-      for (VectorWrapper w : vectorContainer) {
-        MaterializedField field = w.getValueVector().getField();
+      for (final VectorWrapper w : vectorContainer) {
+        final MaterializedField field = w.getValueVector().getField();
         System.out.println (String.format("name : %s, minor_type : %s, data_mode : %s",
                                           field.toExpr(),
                                           field.getType().getMinorType().toString(),
@@ -266,12 +264,11 @@ public class DumpCat {
     VectorUtil.showVectorAccessibleContent(vectorContainer);
   }
 
-
   /* Get batch meta info : rows, selectedRows, dataSize */
   private BatchMetaInfo getBatchMetaInfo(VectorAccessibleSerializable vcSerializable) {
-    VectorAccessible vectorContainer = vcSerializable.get();
+    final VectorAccessible vectorContainer = vcSerializable.get();
 
-    int rows =0;
+    int rows = 0;
     int selectedRows = 0;
     int totalDataSize = 0;
 
@@ -282,11 +279,10 @@ public class DumpCat {
       selectedRows = vcSerializable.getSv2().getCount();
     }
 
-    for (VectorWrapper w : vectorContainer) {
+    for (final VectorWrapper w : vectorContainer) {
        totalDataSize += w.getValueVector().getBufferSize();
     }
 
-    return new   BatchMetaInfo(rows, selectedRows, totalDataSize);
+    return new BatchMetaInfo(rows, selectedRows, totalDataSize);
   }
-
 }
