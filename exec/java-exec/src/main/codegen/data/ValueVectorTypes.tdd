@@ -151,7 +151,7 @@
       fields: [{name: "start", type: "int"}, {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"}],
       minor: [
         { class: "VarBinary" , friendlyType: "byte[]" },
-        { class: "VarChar" , friendlyType: "Text" }
+        { class: "VarChar" , friendlyType: "Text" },
         { class: "Var16Char" , friendlyType: "String" }
       ]
     },
