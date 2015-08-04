@@ -3,7 +3,7 @@
     solr : {
       type:"solr",
       enabled: true,
-      solrServer: "http://dm2perf:20000/"
+      solrServer: ""
     }
   }
 }
