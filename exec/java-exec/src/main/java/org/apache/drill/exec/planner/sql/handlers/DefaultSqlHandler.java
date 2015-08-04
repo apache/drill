@@ -66,6 +66,7 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
@@ -504,7 +505,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     DrillProjectRel topProj = DrillProjectRel.create(rel.getCluster(), rel.getTraitSet(), rel, projections, newRowType);
 
     // Add a final non-trivial Project to get the validatedRowType, if child is not project.
-    if (rel instanceof Project && ProjectRemoveRule.isTrivial(topProj)) {
+    if (rel instanceof Project && DrillRelOptUtil.isTrivialProject(topProj, true)) {
       return rel;
     } else{
       return topProj;
