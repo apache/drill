@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.Charset;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.OversizedAllocationException;
@@ -38,7 +39,8 @@ import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
 import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.UInt4Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
@@ -62,11 +64,13 @@ public class TestValueVector extends ExecTest {
   private final static byte[] STR2 = new String("BBBBBBBBB2").getBytes(Charset.forName("UTF-8"));
   private final static byte[] STR3 = new String("CCCC3").getBytes(Charset.forName("UTF-8"));
 
-  private TopLevelAllocator allocator;
+  private DrillConfig drillConfig;
+  private BufferAllocator allocator;
 
   @Before
   public void init() {
-    allocator = new TopLevelAllocator();
+    drillConfig = DrillConfig.create();
+    allocator = RootAllocatorFactory.newRoot(drillConfig);
   }
 
   @After

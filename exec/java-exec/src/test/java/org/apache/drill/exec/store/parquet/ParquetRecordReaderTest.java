@@ -41,7 +41,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
@@ -611,9 +611,9 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
   @Ignore
   public void testPerformance(@Injectable final DrillbitContext bitContext,
                               @Injectable UserServer.UserClientConnection connection) throws Exception {
-    DrillConfig c = DrillConfig.create();
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
+    final DrillConfig c = DrillConfig.create();
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    final FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
 
 //    new NonStrictExpectations() {
 //      {
@@ -642,7 +642,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     int totalRowCount = 0;
 
     final FileSystem fs = new CachedSingleFileSystem(fileName);
-    final BufferAllocator allocator = new TopLevelAllocator();
+    final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     for(int i = 0; i < 25; i++) {
       final ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           new DirectCodecFactory(dfsConfig, allocator), f.getParquetMetadata(), columns);

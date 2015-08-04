@@ -26,7 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -43,22 +43,22 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestImplicitCastFunctions extends ExecTest {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestImplicitCastFunctions.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestImplicitCastFunctions.class);
 
-  DrillConfig c = DrillConfig.create();
-  PhysicalPlanReader reader;
-  FunctionImplementationRegistry registry;
-  FragmentContext context;
+  private final DrillConfig c = DrillConfig.create();
+  private PhysicalPlanReader reader;
+  private FunctionImplementationRegistry registry;
+  private FragmentContext context;
 
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
-    for (ValueVector v : exec) {
+    for (final ValueVector v : exec) {
       size++;
     }
 
-    Object[] res = new Object [size];
+    final Object[] res = new Object [size];
     int i = 0;
-    for (ValueVector v : exec) {
+    for (final ValueVector v : exec) {
       res[i++] = v.getAccessor().getObject(0);
     }
     return res;
@@ -69,13 +69,13 @@ public class TestImplicitCastFunctions extends ExecTest {
 
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
-    String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
+    final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
     if (reader == null) {
       reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     }
@@ -85,16 +85,16 @@ public class TestImplicitCastFunctions extends ExecTest {
     if (context == null) {
       context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     }
-    PhysicalPlan plan = reader.readPhysicalPlan(planString);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    final PhysicalPlan plan = reader.readPhysicalPlan(planString);
+    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
 
     exec.next(); // skip schema batch
     while (exec.next()) {
-      Object [] res = getRunResult(exec);
+      final Object [] res = getRunResult(exec);
       assertEquals("return count does not match", res.length, expectedResults.length);
 
-      for (int i = 0; i<res.length; i++) {
+      for (int i = 0; i < res.length; i++) {
         assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);
       }
     }
@@ -109,7 +109,7 @@ public class TestImplicitCastFunctions extends ExecTest {
   @Test
   public void testImplicitCastWithConstant(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[21];
+    final Object [] expected = new Object[21];
     expected [0] = new Double (30.1);
     expected [1] = new Double (30.1);
     expected [2] = new Double (30.1);
@@ -141,7 +141,7 @@ public class TestImplicitCastFunctions extends ExecTest {
   @Test
   public void testImplicitCastWithMockColumn(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[5];
+    final Object [] expected = new Object[5];
     expected [0] = new Integer (0);
     expected [1] = new Integer (0);
     expected [2] = new Float (-2.14748365E9);
@@ -154,7 +154,7 @@ public class TestImplicitCastFunctions extends ExecTest {
   @Test
   public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[10];
+    final Object [] expected = new Object[10];
 
     expected [0] = Boolean.TRUE;
     expected [1] = Boolean.FALSE;
@@ -170,5 +170,4 @@ public class TestImplicitCastFunctions extends ExecTest {
 
     runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");
   }
-
 }

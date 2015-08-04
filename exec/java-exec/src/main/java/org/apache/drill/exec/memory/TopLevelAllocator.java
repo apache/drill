@@ -51,15 +51,17 @@ public class TopLevelAllocator implements BufferAllocator {
   private final DrillBuf empty;
   private final DrillConfig config;
 
+  /* TODO(cwestin) remove
   @Deprecated
-  public TopLevelAllocator() {
+  TopLevelAllocator() {
     this(DrillConfig.getMaxDirectMemory());
   }
 
   @Deprecated
-  public TopLevelAllocator(long maximumAllocation) {
+  TopLevelAllocator(long maximumAllocation) {
     this(null, maximumAllocation, true);
   }
+  */
 
   private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
     MAXIMUM_DIRECT_MEMORY = maximumAllocation;
@@ -70,7 +72,7 @@ public class TopLevelAllocator implements BufferAllocator {
     this.childrenMap = ENABLE_ACCOUNTING ? new IdentityHashMap<ChildAllocator, StackTraceElement[]>() : null;
   }
 
-  public TopLevelAllocator(DrillConfig config) {
+  TopLevelAllocator(DrillConfig config) {
     this(config, Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)),
         config.getBoolean(ExecConstants.ERROR_ON_MEMORY_LEAK)
         );

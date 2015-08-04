@@ -29,7 +29,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -50,23 +50,21 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class TestNewMathFunctions {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewMathFunctions.class);
-
-  DrillConfig c = DrillConfig.create();
-  PhysicalPlanReader reader;
-  FunctionImplementationRegistry registry;
-  FragmentContext context;
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewMathFunctions.class);
+  private final DrillConfig c = DrillConfig.create();
+  private PhysicalPlanReader reader;
+  private FunctionImplementationRegistry registry;
+  private FragmentContext context;
 
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
-    for (ValueVector v : exec) {
+    for (final ValueVector v : exec) {
       size++;
     }
 
-    Object[] res = new Object [size];
+    final Object[] res = new Object[size];
     int i = 0;
-    for (ValueVector v : exec) {
+    for (final ValueVector v : exec) {
       if  (v instanceof VarCharVector) {
         res[i++] = new String( ((VarCharVector) v).getAccessor().get(0));
       } else {
@@ -78,16 +76,15 @@ public class TestNewMathFunctions {
 
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
-
     new NonStrictExpectations() {{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       bitContext.getConfig(); result = c;
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
-    String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
+    final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
     if (reader == null) {
       reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     }
@@ -97,12 +94,12 @@ public class TestNewMathFunctions {
     if (context == null) {
       context =  new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry); //new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, registry);
     }
-    PhysicalPlan plan = reader.readPhysicalPlan(planString);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    final PhysicalPlan plan = reader.readPhysicalPlan(planString);
+    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     exec.next(); // skip schema batch
     while (exec.next()) {
-      Object [] res = getRunResult(exec);
+      final Object [] res = getRunResult(exec);
       assertEquals("return count does not match", expectedResults.length, res.length);
 
       for (int i = 0; i<res.length; i++) {
@@ -119,17 +116,16 @@ public class TestNewMathFunctions {
 
   @Test
   public void testTrigoMathFunc(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[] {Math.sin(45), Math.cos(45), Math.tan(45),Math.asin(45), Math.acos(45), Math.atan(45),Math.sinh(45), Math.cosh(45), Math.tanh(45)};
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    final Object [] expected = new Object[] {Math.sin(45), Math.cos(45), Math.tan(45),Math.asin(45), Math.acos(45), Math.atan(45),Math.sinh(45), Math.cosh(45), Math.tanh(45)};
     runTest(bitContext, connection, expected, "functions/testTrigoMathFunctions.json");
   }
 
   @Test
   public void testExtendedMathFunc(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    BigDecimal d = new BigDecimal("100111111111111111111111111111111111.00000000000000000000000000000000000000000000000000001");
-
-    Object [] expected = new Object[] {Math.cbrt(1000), Math.log(10), (Math.log(64.0)/Math.log(2.0)), Math.exp(10), Math.toDegrees(0.5), Math.toRadians(45.0), Math.PI, Math.cbrt(d.doubleValue()), Math.log(d.doubleValue()), (Math.log(d.doubleValue())/Math.log(2)), Math.exp(d.doubleValue()), Math.toDegrees(d.doubleValue()), Math.toRadians(d.doubleValue())};
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    final BigDecimal d = new BigDecimal("100111111111111111111111111111111111.00000000000000000000000000000000000000000000000000001");
+    final Object [] expected = new Object[] {Math.cbrt(1000), Math.log(10), (Math.log(64.0)/Math.log(2.0)), Math.exp(10), Math.toDegrees(0.5), Math.toRadians(45.0), Math.PI, Math.cbrt(d.doubleValue()), Math.log(d.doubleValue()), (Math.log(d.doubleValue())/Math.log(2)), Math.exp(d.doubleValue()), Math.toDegrees(d.doubleValue()), Math.toRadians(d.doubleValue())};
 
     runTest(bitContext, connection, expected, "functions/testExtendedMathFunctions.json");
   }
@@ -137,15 +133,14 @@ public class TestNewMathFunctions {
   @Test
   public void testTruncDivMod(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[] {101.0, 0, 101, 1010.0, 101, 481.0, 0.001099999999931267};
+    final Object [] expected = new Object[] {101.0, 0, 101, 1010.0, 101, 481.0, 0.001099999999931267};
     runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
   }
 
  @Test
  public void testIsNumeric(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-   Object [] expected = new Object[] {1, 1, 1, 0};
+   final Object [] expected = new Object[] {1, 1, 1, 0};
    runTest(bitContext, connection, expected, "functions/testIsNumericFunction.json");
  }
-
 }

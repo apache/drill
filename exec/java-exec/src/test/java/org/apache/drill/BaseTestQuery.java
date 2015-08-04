@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.io.Files;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -34,7 +35,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -166,7 +167,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   private static void openClient() throws Exception {
-    allocator = new TopLevelAllocator(config);
+    allocator = RootAllocatorFactory.newRoot(config);
     if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
       serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
     } else {
@@ -228,13 +229,13 @@ public class BaseTestQuery extends ExecTest {
   }
 
   @AfterClass
-  public static void closeClient() throws IOException, InterruptedException {
+  public static void closeClient() throws IOException {
     if (client != null) {
       client.close();
     }
 
     if (bits != null) {
-      for(Drillbit bit : bits) {
+      for(final Drillbit bit : bits) {
         if (bit != null) {
           bit.close();
         }
@@ -256,7 +257,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static void runSQL(String sql) throws Exception {
-    SilentListener listener = new SilentListener();
+    final SilentListener listener = new SilentListener();
     testWithListener(QueryType.SQL, sql, listener);
     listener.waitForCompletion();
   }
@@ -294,8 +295,8 @@ public class BaseTestQuery extends ExecTest {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n" + query);
     for (int i = 0; i < interation; i++) {
-      List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
-      for (QueryDataBatch queryDataBatch : results) {
+      final List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
+      for (final QueryDataBatch queryDataBatch : results) {
         queryDataBatch.release();
       }
     }
@@ -366,7 +367,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   public static String getFile(String resource) throws IOException{
-    URL url = Resources.getResource(resource);
+    final URL url = Resources.getResource(resource);
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
@@ -376,13 +377,13 @@ public class BaseTestQuery extends ExecTest {
   /**
    * Copy the resource (ex. file on classpath) to a physical file on FileSystem.
    * @param resource
-   * @return
+   * @return the file path
    * @throws IOException
    */
   public static String getPhysicalFileFromResource(final String resource) throws IOException {
     final File file = File.createTempFile("tempfile", ".txt");
     file.deleteOnExit();
-    PrintWriter printWriter = new PrintWriter(file);
+    final PrintWriter printWriter = new PrintWriter(file);
     printWriter.write(BaseTestQuery.getFile(resource));
     printWriter.close();
 
@@ -395,7 +396,7 @@ public class BaseTestQuery extends ExecTest {
    * @return Full path including temp parent directory and given directory name.
    */
   public static String getTempDir(final String dirName) {
-    File dir = Files.createTempDir();
+    final File dir = Files.createTempDir();
     dir.deleteOnExit();
 
     return dir.getAbsolutePath() + File.separator + dirName;
@@ -412,8 +413,8 @@ public class BaseTestQuery extends ExecTest {
 
   private static class SilentListener implements UserResultsListener {
     private volatile UserException exception;
-    private AtomicInteger count = new AtomicInteger();
-    private CountDownLatch latch = new CountDownLatch(1);
+    private final AtomicInteger count = new AtomicInteger();
+    private final CountDownLatch latch = new CountDownLatch(1);
 
     @Override
     public void submissionFailed(UserException ex) {
@@ -430,7 +431,7 @@ public class BaseTestQuery extends ExecTest {
 
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      int rows = result.getHeader().getRowCount();
+      final int rows = result.getHeader().getRowCount();
       if (result.getData() != null) {
         count.addAndGet(rows);
       }
@@ -459,8 +460,8 @@ public class BaseTestQuery extends ExecTest {
 
   protected int printResult(List<QueryDataBatch> results) throws SchemaChangeException {
     int rowCount = 0;
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryDataBatch result : results) {
+    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(final QueryDataBatch result : results) {
       rowCount += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
@@ -478,10 +479,10 @@ public class BaseTestQuery extends ExecTest {
 
   protected static String getResultString(List<QueryDataBatch> results, String delimiter)
       throws SchemaChangeException {
-    StringBuilder formattedResults = new StringBuilder();
+    final StringBuilder formattedResults = new StringBuilder();
     boolean includeHeader = true;
-    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(QueryDataBatch result : results) {
+    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(final QueryDataBatch result : results) {
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
         continue;

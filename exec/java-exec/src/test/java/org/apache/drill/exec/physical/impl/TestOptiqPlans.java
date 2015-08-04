@@ -30,7 +30,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -66,28 +66,28 @@ import com.google.common.io.Resources;
 
 @Ignore
 public class TestOptiqPlans extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
-  DrillConfig c = DrillConfig.create();
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
+  private final DrillConfig config = DrillConfig.create();
 
   @Test
   public void orderBy(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, controller, workBus);
+    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_order.json", coord, com, controller, workBus);
   }
 
   @Test
   public void stringFilter(@Injectable final BootStrapContext ctxt, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, controller, workBus);
+    final SimpleRootExec exec = doLogicalTest(ctxt, connection, "/logical_string_filter.json", coord, com, controller, workBus);
   }
 
   @Test
   public void groupBy(@Injectable final BootStrapContext bitContext, @Injectable UserClientConnection connection,
       @Injectable ClusterCoordinator coord, @Injectable DataConnectionCreator com,
       @Injectable Controller controller, @Injectable WorkEventBus workBus) throws Throwable {
-    SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, controller, workBus);
+    final SimpleRootExec exec = doLogicalTest(bitContext, connection, "/logical_group.json", coord, com, controller, workBus);
   }
 
   private SimpleRootExec doLogicalTest(final BootStrapContext context, UserClientConnection connection, String file,
@@ -97,24 +97,23 @@ public class TestOptiqPlans extends ExecTest {
         context.getMetrics();
         result = new MetricRegistry();
         context.getAllocator();
-        result = new TopLevelAllocator();
+        result = RootAllocatorFactory.newRoot(config);
         context.getConfig();
-        result = c;
+        result = config;
       }
     };
-    RemoteServiceSet lss = RemoteServiceSet.getLocalServiceSet();
-    DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller,
-        com, workBus, new LocalPStoreProvider(DrillConfig.create()), null);
-    QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
+    final RemoteServiceSet lss = RemoteServiceSet.getLocalServiceSet();
+    final DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller,
+        com, workBus, new LocalPStoreProvider(config), null);
+    final QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
         bitContext);
-    PhysicalPlanReader reader = bitContext.getPlanReader();
-    LogicalPlan plan = reader.readLogicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
-    PhysicalPlan pp = new BasicOptimizer(qc, connection).optimize(new BasicOptimizer.BasicOptimizationContext(qc), plan);
+    final PhysicalPlanReader reader = bitContext.getPlanReader();
+    final LogicalPlan plan = reader.readLogicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    final PhysicalPlan pp = new BasicOptimizer(qc, connection).optimize(new BasicOptimizer.BasicOptimizationContext(qc), plan);
 
-
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext fctxt = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(fctxt, (FragmentRoot) pp.getSortedOperators(false)
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
+    final FragmentContext fctxt = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(fctxt, (FragmentRoot) pp.getSortedOperators(false)
         .iterator().next()));
     return exec;
 
@@ -122,24 +121,23 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void testFilterPlan() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    DrillConfig config = DrillConfig.create();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(config, serviceSet);
+        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Resources.toString(Resources.getResource("physical_filter.json"), Charsets.UTF_8));
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for (QueryDataBatch b : results) {
+      final RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      for (final QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
-        for (VectorWrapper<?> vw : loader) {
+        for (final VectorWrapper<?> vw : loader) {
           System.out.println(vw.getValueVector().getField().toExpr());
-          ValueVector vv = vw.getValueVector();
+          final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
-            Object o = vv.getAccessor().getObject(i);
+            final Object o = vv.getAccessor().getObject(i);
             System.out.println(vv.getAccessor().getObject(i));
           }
         }
@@ -152,24 +150,23 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void testJoinPlan() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    DrillConfig config = DrillConfig.create();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(config, serviceSet);
+        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Resources.toString(Resources.getResource("physical_join.json"), Charsets.UTF_8));
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for (QueryDataBatch b : results) {
+      final RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      for (final QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
-        for (VectorWrapper<?> vw : loader) {
+        for (final VectorWrapper<?> vw : loader) {
           System.out.println(vw.getValueVector().getField().toExpr());
-          ValueVector vv = vw.getValueVector();
+          final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
-            Object o = vv.getAccessor().getObject(i);
+            final Object o = vv.getAccessor().getObject(i);
             System.out.println(vv.getAccessor().getObject(i));
           }
         }
@@ -182,27 +179,26 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void testFilterString() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    DrillConfig config = DrillConfig.create();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(config, serviceSet);
+        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
           Resources.toString(Resources.getResource("logical_string_filter.json"), Charsets.UTF_8));
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for (QueryDataBatch b : results) {
+      final RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      for (final QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
-        for (VectorWrapper<?> vw : loader) {
+        for (final VectorWrapper<?> vw : loader) {
           System.out.println(vw.getValueVector().getField().toExpr());
-          ValueVector vv = vw.getValueVector();
+          final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
-            Object o = vv.getAccessor().getObject(i);
+            final Object o = vv.getAccessor().getObject(i);
             if (vv instanceof VarBinaryVector) {
-              VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
-              VarBinaryHolder vbh = new VarBinaryHolder();
+              final VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
+              final VarBinaryHolder vbh = new VarBinaryHolder();
               x.get(i, vbh);
               System.out.printf("%d..%d", vbh.start, vbh.end);
 
@@ -222,27 +218,26 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void testLogicalJsonScan() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    DrillConfig config = DrillConfig.create();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(config, serviceSet);
+        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
           Resources.toString(Resources.getResource("logical_json_scan.json"), Charsets.UTF_8));
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for (QueryDataBatch b : results) {
+      final RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      for (final QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
-        for (VectorWrapper vw : loader) {
+        for (final VectorWrapper vw : loader) {
           System.out.println(vw.getValueVector().getField().toExpr());
-          ValueVector vv = vw.getValueVector();
+          final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
-            Object o = vv.getAccessor().getObject(i);
+            final Object o = vv.getAccessor().getObject(i);
             if (vv instanceof VarBinaryVector) {
-              VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
-              VarBinaryHolder vbh = new VarBinaryHolder();
+              final VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
+              final VarBinaryHolder vbh = new VarBinaryHolder();
               x.get(i, vbh);
               System.out.printf("%d..%d", vbh.start, vbh.end);
 
@@ -262,27 +257,26 @@ public class TestOptiqPlans extends ExecTest {
 
   @Test
   public void testOrderVarbinary() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    DrillConfig config = DrillConfig.create();
+    final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try (Drillbit bit1 = new Drillbit(config, serviceSet);
-        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+    try (final Drillbit bit1 = new Drillbit(config, serviceSet);
+        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+      final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Resources.toString(Resources.getResource("physical_order_varbinary.json"), Charsets.UTF_8));
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for (QueryDataBatch b : results) {
+      final RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      for (final QueryDataBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
-        for (VectorWrapper vw : loader) {
+        for (final VectorWrapper vw : loader) {
           System.out.println(vw.getValueVector().getField().toExpr());
-          ValueVector vv = vw.getValueVector();
+          final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
-            Object o = vv.getAccessor().getObject(i);
+            final Object o = vv.getAccessor().getObject(i);
             if (vv instanceof VarBinaryVector) {
-              VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
-              VarBinaryHolder vbh = new VarBinaryHolder();
+              final VarBinaryVector.Accessor x = ((VarBinaryVector) vv).getAccessor();
+              final VarBinaryHolder vbh = new VarBinaryHolder();
               x.get(i, vbh);
               System.out.printf("%d..%d", vbh.start, vbh.end);
 
@@ -307,22 +301,21 @@ public class TestOptiqPlans extends ExecTest {
         bitContext.getMetrics();
         result = new MetricRegistry();
         bitContext.getAllocator();
-        result = new TopLevelAllocator();
+        result = RootAllocatorFactory.newRoot(config);
         bitContext.getConfig();
-        result = c;
+        result = config;
       }
     };
 
-    StoragePluginRegistry reg = new StoragePluginRegistry(bitContext);
+    final StoragePluginRegistry reg = new StoragePluginRegistry(bitContext);
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),
+    final PhysicalPlanReader reader = new PhysicalPlanReader(config, config.getMapper(),
         CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), reg);
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false)
+    final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
+    final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
+    final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false)
         .iterator().next()));
     return exec;
   }
-
 }
