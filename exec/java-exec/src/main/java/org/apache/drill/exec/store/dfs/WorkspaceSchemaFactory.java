@@ -20,8 +20,11 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
@@ -62,6 +65,7 @@ public class WorkspaceSchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
+  private final List<FormatMatcher> dropFileMatchers;
   private final List<FormatMatcher> dirMatchers;
 
   private final WorkspaceConfig config;
@@ -104,6 +108,9 @@ public class WorkspaceSchemaFactory {
       final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
           ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
       fileMatchers.add(fallbackMatcher);
+      dropFileMatchers = fileMatchers.subList(0, fileMatchers.size() - 1);
+    } else {
+      dropFileMatchers = fileMatchers.subList(0, fileMatchers.size());
     }
   }
 
@@ -321,8 +328,125 @@ public class WorkspaceSchemaFactory {
       return null;
     }
 
+    private FormatMatcher findMatcher(FileStatus file) {
+      FormatMatcher matcher = null;
+      try {
+        for (FormatMatcher m : dropFileMatchers) {
+          if (m.isFileReadable(fs, file)) {
+            return m;
+          }
+        }
+      } catch (IOException e) {
+        logger.debug("Failed to find format matcher for file: %s", file, e);
+      }
+      return matcher;
+    }
+
     @Override
     public void destroy(DrillTable value) {
+    }
+
+    /**
+     * Check if the table contains homogenenous files that can be read by Drill. Eg: parquet, json csv etc.
+     * However if it contains more than one of these formats or a totally different file format that Drill cannot
+     * understand then we will raise an exception.
+     * @param tableName - name of the table to be checked for homogeneous property
+     * @return
+     * @throws IOException
+     */
+    private boolean isHomogeneous(String tableName) throws IOException {
+      FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), tableName);
+
+      if (fileSelection == null) {
+        throw UserException
+            .validationError()
+            .message(String.format("Table [%s] not found", tableName))
+            .build(logger);
+      }
+
+      FormatMatcher matcher = null;
+      Queue<FileStatus> listOfFiles = new LinkedList<>();
+      listOfFiles.addAll(fileSelection.getFileStatusList(fs));
+
+      while (!listOfFiles.isEmpty()) {
+        FileStatus currentFile = listOfFiles.poll();
+        if (currentFile.isDirectory()) {
+          listOfFiles.addAll(fs.list(true, currentFile.getPath()));
+        } else {
+          if (matcher != null) {
+            if (!matcher.isFileReadable(fs, currentFile)) {
+              return false;
+            }
+          } else {
+            matcher = findMatcher(currentFile);
+            // Did not match any of the file patterns, exit
+            if (matcher == null) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }
+
+    /**
+     * We check if the table contains homogeneous file formats that Drill can read. Once the checks are performed
+     * we rename the file to start with an "_". After the rename we issue a recursive delete of the directory.
+     * @param table - Path of table to be dropped
+     */
+    @Override
+    public void dropTable(String table) {
+      DrillFileSystem fs = getFS();
+      String defaultLocation = getDefaultLocation();
+      try {
+        if (!isHomogeneous(table)) {
+          throw UserException
+              .validationError()
+              .message("Table contains different file formats. \n" +
+                  "Drop Table is only supported for directories that contain homogeneous file formats consumable by Drill")
+              .build(logger);
+        }
+
+        StringBuilder tableRenameBuilder = new StringBuilder();
+        int lastSlashIndex = table.lastIndexOf(Path.SEPARATOR);
+        if (lastSlashIndex != -1) {
+          tableRenameBuilder.append(table.substring(0, lastSlashIndex + 1));
+        }
+        // Generate unique identifier which will be added as a suffix to the table name
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        long time =  (System.currentTimeMillis()/1000);
+        Long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
+        Long p2 = r.nextLong();
+        final String fileNameDelimiter = DrillFileSystem.HIDDEN_FILE_PREFIX;
+        String[] pathSplit = table.split(Path.SEPARATOR);
+        /*
+         * Builds the string for the renamed table
+         * Prefixes the table name with an underscore (intent for this to be treated as a hidden file)
+         * and suffixes the table name with unique identifiers (similar to how we generate query id's)
+         * separated by underscores
+         */
+        tableRenameBuilder
+            .append(DrillFileSystem.HIDDEN_FILE_PREFIX)
+            .append(pathSplit[pathSplit.length - 1])
+            .append(fileNameDelimiter)
+            .append(p1.toString())
+            .append(fileNameDelimiter)
+            .append(p2.toString());
+
+        String tableRename = tableRenameBuilder.toString();
+        fs.rename(new Path(defaultLocation, table), new Path(defaultLocation, tableRename));
+        fs.delete(new Path(defaultLocation, tableRename), true);
+      } catch (AccessControlException e) {
+        throw UserException
+            .permissionError()
+            .message("Unauthorized to drop table", e)
+            .build(logger);
+      } catch (IOException e) {
+        throw UserException
+            .dataWriteError()
+            .message("Failed to drop table", e)
+            .build(logger);
+      }
     }
   }
 }

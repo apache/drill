@@ -23,7 +23,10 @@ import org.apache.hadoop.mapred.Utils;
 public class DrillPathFilter extends Utils.OutputFileUtils.OutputFilesFilter {
   @Override
   public boolean accept(Path path) {
-    if (path.toString().contains("_metadata")) {
+    if (path.getName().startsWith(DrillFileSystem.HIDDEN_FILE_PREFIX)) {
+      return false;
+    }
+    if (path.getName().startsWith(DrillFileSystem.DOT_FILE_PREFIX)) {
       return false;
     }
     return super.accept(path);

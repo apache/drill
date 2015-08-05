@@ -71,6 +71,10 @@ import com.google.common.collect.Maps;
 public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFileSystem.class);
   private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
+
+  public static final String HIDDEN_FILE_PREFIX = "_";
+  public static final String DOT_FILE_PREFIX = ".";
+
   private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
 
   private final FileSystem underlyingFs;
