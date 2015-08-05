@@ -240,3 +240,20 @@ SqlNode SqlCreateTable() :
         return new SqlCreateTable(pos, tblName, fieldList, partitionFieldList, query);
     }
 }
+
+/**
+ * Parses a drop table statement.
+ * DROP TABLE table_name;
+ */
+SqlNode SqlDropTable() :
+{
+    SqlParserPos pos;
+}
+{
+    <DROP> { pos = getPos(); }
+    <TABLE>
+    {
+        return new SqlDropTable(pos, CompoundIdentifier());
+    }
+}
+

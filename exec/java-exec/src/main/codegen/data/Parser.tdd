@@ -46,7 +46,8 @@
     "SqlCreateOrReplaceView()",
     "SqlDropView()",
     "SqlShowFiles()",
-    "SqlCreateTable()"
+    "SqlCreateTable()",
+    "SqlDropTable()"
   ]
 
   # List of methods for parsing custom literals.

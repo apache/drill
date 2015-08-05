@@ -190,4 +190,10 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public void close() throws Exception {
     // no-op: default implementation for most implementations.
   }
+
+  public void dropTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Dropping tables is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
 }

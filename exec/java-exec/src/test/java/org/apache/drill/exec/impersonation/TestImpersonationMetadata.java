@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -36,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW and CREATE TABLE
+ * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
  */
 public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static final String user1 = "drillTestUser1";
@@ -83,7 +85,47 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     // Create /drillTestGrp1_700 directory with permissions 700 (owned by user1)
     createAndAddWorkspace("drillTestGrp1_700", "/drillTestGrp1_700", (short)0700, user1, group1, workspaces);
 
+    // create /user2_workspace1 with 775 permissions (owner by user1)
+    createAndAddWorkspace("user2_workspace1", "/user2_workspace1", (short)0775, user2, group1, workspaces);
+
+    // create /user2_workspace with 755 permissions (owner by user1)
+    createAndAddWorkspace("user2_workspace2", "/user2_workspace2", (short)0755, user2, group1, workspaces);
+
     return workspaces;
+  }
+
+  @Test
+  public void testDropTable() throws Exception {
+
+    // create tables as user2
+    updateClient(user2);
+    test(String.format("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME));
+    // create a table that can be dropped by another user in a different group
+    test("create table parquet_table_775 as select * from cp.`employee.json`");
+
+    // create a table that cannot be dropped by another user
+    test(String.format("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("create table parquet_table_700 as select * from cp.`employee.json`");
+
+    // Drop tables as user1
+    updateClient(user1);
+    test(String.format("use `%s.user2_workspace1`", MINIDFS_STORAGE_PLUGIN_NAME));
+    testBuilder()
+        .sqlQuery("drop table parquet_table_775")
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Table [%s] dropped", "parquet_table_775"))
+        .go();
+
+    test(String.format("use `%s.user2_workspace2`", MINIDFS_STORAGE_PLUGIN_NAME));
+    boolean dropFailed = false;
+    try {
+      test("drop table parquet_table_700");
+    } catch (UserException e) {
+      Assert.assertTrue(e.getMessage().contains("PERMISSION ERROR"));
+      dropFailed = true;
+    }
+    Assert.assertTrue("Permission checking failed during drop table", dropFailed);
   }
 
   @Test // DRILL-3037

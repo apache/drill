@@ -223,7 +223,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
           if (files.length == 0) {
             return false;
           }
-          return super.isReadable(fs, files[0]);
+          return super.isFileReadable(fs, files[0]);
         }
       } catch (IOException e) {
         logger.info("Failure while attempting to check for Parquet metadata file.", e);
