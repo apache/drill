@@ -437,26 +437,6 @@ Workaround: Separate lengthy objects into objects delimited by curly braces usin
 * [KVGEN]({{ site.baseurl }}/docs/kvgen/) separates objects having more elements than optimal for querying.
 
 
-### Nested Column Names
-
-You cannot use reserved words for nested column names because Drill returns null if you enclose n-level nested column names in back ticks. The previous example encloses the date and time column names in back ticks because the names are reserved words. The enclosure of column names in back ticks works because the date and time columns belong to the first level of the JSON object.
-
-For example, the following object contains the reserved word key, which you need to rename to `_key` or something other than non-reserved word:
-
-    {
-      "type": "ticket",
-      "channel": 123455,
-      "_month": 12,
-      "_day": [ 15, 25, 28, 31 ],
-      "sales": {
-        "NY": 532806,
-        "PA": 112889,
-        "TX": 898999,
-        "UT": 10875
-        "key": [ 78946, 39107, 76311 ]
-      }
-    }
-
 ### Schema changes
 Drill cannot read JSON files containing changes in the schema. For example, attempting to query an object having array elements of different data types cause an error:
 
