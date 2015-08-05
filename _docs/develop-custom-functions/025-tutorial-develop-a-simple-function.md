@@ -3,24 +3,16 @@ title: "Tutorial: Develop a Simple Function"
 parent: "Develop Custom Functions"
 ---
 
-You can create complex functions having advanced features, but for example purposes, this tutorial covers how to create a simple MASK function. You extend the Drill query engine using the Drill Simple Function interface:
+You can create complex functions having advanced features, but for example purposes, this tutorial covers how to create a simple MASK function. You extend the Drill query engine using the [Drill Simple Function interface](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/expr/DrillSimpleFunc.java):
 
 ```java
-package org.apache.drill.contrib.function;
+package org.apache.drill.exec.expr;
 
-import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.record.RecordBatch;
 
-@FunctionTemplate(         
-  /* Add annotations name, scope, and nulls */          
-)
-
-public class SimpleMaskFunc implements DrillSimpleFunc{
-
-    public void setup() {
-    }
-    public void eval() {
-    }
+public interface DrillSimpleFunc extends DrillFunc{
+  public void setup();
+  public void eval();
 }
 ```
 
@@ -53,9 +45,9 @@ First, add the following Drill dependency to your maven project:
 ```
 ----------
 
-## Step 2: Implement the function template
+## Step 2: Add annotations to the function template
 
-In the @FunctionTemplate declaration, add the following annotations:
+To start implementing the DrillSimpleFunc interface, add the following annotations to the @FunctionTemplate declaration:
 
 * Name of the custom function 
   `name="mask"`
@@ -66,14 +58,25 @@ In the @FunctionTemplate declaration, add the following annotations:
 
 ```java
 . . .
+package org.apache.drill.contrib.function;
+
+import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+
 @FunctionTemplate(
-        name = "mask",
-        scope = FunctionTemplate.FunctionScope.SIMPLE,
+        name="mask",
+        scope= FunctionTemplate.FunctionScope.SIMPLE,
         nulls = FunctionTemplate.NullHandling.NULL_IF_NULL
 )
-
 public class SimpleMaskFunc implements DrillSimpleFunc{
-. . .
+
+    public void setup() {
+
+    }
+
+    public void eval() {
+
+    }
 }
 ```
 
@@ -81,13 +84,13 @@ public class SimpleMaskFunc implements DrillSimpleFunc{
 
 ## Step 3: Declare input parameters
 
-The eval() method that you implement appears to have no parameters. By examining the simple function interface [source code](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/DrillSimpleFuncHolder.java#L42), you can see that Drill generates the function dynamically, and in this case, requires declaration of the following input parameters using the @Param annotation:
+The function will be generated dynamically, as you can see in the [DrillSimpleFuncHolder](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/DrillSimpleFuncHolder.java#L42), and the input parameters and output holders are defined using holders by annotations. Define the parameters using the @Param annotation. 
 
 * A nullable string  
 * The mask char or string  
 * The number of characters to replace starting from the first  
 
-For each of these parameters, use a holder class: VarCharHolder or NullableVarCharHolder. 
+Use a holder classes to provide a buffer to manage larger objects in an efficient way: VarCharHolder or NullableVarCharHolder. 
 
 ```java
 . . .
@@ -112,7 +115,7 @@ public class SimpleMaskFunc implements DrillSimpleFunc {
 
 ## Step 4: Declare the return value type
 
-The eval() method that you implement appears to return void, but from simple function interface, but the MASK function returns a string. To declare the return value type, use the @Output annotation and declare the type to be of the VarCharHolder type. Also, because you are manipulating a VarChar, you also have to inject a buffer that Drill uses for the output. 
+Also, using the @Output annotation, define the returned value as VarCharHolder type. Because you are manipulating a VarChar, you also have to inject a buffer that Drill uses for the output. 
 
 ```java
 
@@ -162,7 +165,7 @@ The eval() method performs the following tasks:
 * Generates a new string with masked values
 * Creates and populates the output buffer
 
-Even to a seasoned Java developer, the eval() method might look a bit mysterious because Drill generates the final code on the fly to fulfill a query request. This technique leverages Java’s just-in-time (JIT) compiler for maximum speed.
+Even to a seasoned Java developer, the eval() method might look a bit strange because Drill generates the final code on the fly to fulfill a query request. This technique leverages Java’s just-in-time (JIT) compiler for maximum speed.
 
 ## Basic Coding Rules
 To leverage Java’s just-in-time (JIT) compiler for maximum speed, you need to adhere to some basic rules.
