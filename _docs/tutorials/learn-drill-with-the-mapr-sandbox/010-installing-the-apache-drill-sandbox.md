@@ -64,8 +64,8 @@ VMware Player or VMware Fusion:
 
 7. Navigate to [localhost:8047](http://localhost:8047) to experience the Drill Web UI, or log in to the sandbox through the command line.  
 
-       * Login using ssh as described in ["Getting to Know the Sandbox"]({{site.baseurl}}/docs/getting-to-know-the-drill-sandbox). When prompted, enter `mapr` as the login name and password. 
-       * Alternatively, access the command line on the VM: Press Alt+F2 on Windows or Option+F5 on Mac.  
+   * Login using ssh as described in ["Getting to Know the Sandbox"]({{site.baseurl}}/docs/getting-to-know-the-drill-sandbox). When prompted, enter `mapr` as the login name and password.  
+   * Alternatively, access the command line on the VM: Press Alt+F2 on Windows or Option+F5 on Mac.  
 
 ### What's Next
 

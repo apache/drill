@@ -9,7 +9,7 @@ system on your machine by default.
 
 ## Connecting Drill to a File System
 
-In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. Currently, you need to use a distributed file system when connecting multiple Drillbits to get complete, consistent query results.
+In a Drill cluster, you typically do not query the local file system, but instead place files on the distributed file system. Currently, you need to use a distributed file system when connecting multiple Drillbits to get complete, consistent query results, simulate a distributed file system by copying files to each node, or use an NFS volume, such as Amazon Elastic File System. 
 
 You configure the connection property of the storage plugin workspace to connect Drill to a distributed file system. For example, the following connection property connects Drill to an HDFS cluster from a client:
 
