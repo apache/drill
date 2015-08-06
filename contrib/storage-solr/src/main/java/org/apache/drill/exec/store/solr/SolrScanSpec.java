@@ -17,11 +17,30 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.params.SolrParams;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class SolrScanSpec {
   private String solrCoreName;
+  private List<SolrFilters> filter;
 
-  public SolrScanSpec(String solrCoreName) {
-    super();
+  @JsonCreator
+  public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName) {
+    this.solrCoreName = solrCoreName;
+  }
+
+  @JsonCreator
+  public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName,
+      @JsonProperty("filter") String filter) {
     this.solrCoreName = solrCoreName;
   }
 
@@ -29,5 +48,24 @@ public class SolrScanSpec {
     return solrCoreName;
   }
 
-  
+  public List<SolrFilters> getFilter() {
+    return filter;
+  }
+
+  class SolrFilterParam {
+    private String filterName;
+    private String operator;
+    private String filterValue;
+
+    public SolrFilterParam(String filterName, String operator,
+        String filterValue) {
+      this.filterName = filterName;
+      this.operator = operator;
+      this.filterValue = filterValue;
+    }
+  }
+  @Override
+  public String toString(){
+    return "SolrScanSpec [solrCoreName=" + solrCoreName + ", filter=" + filter + "]";
+  }
 }

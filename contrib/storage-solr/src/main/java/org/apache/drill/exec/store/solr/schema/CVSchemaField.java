@@ -63,8 +63,7 @@ public class CVSchemaField implements Serializable {
 
   protected List<String> copyFields = null;
 
-  public CVSchemaField() {
-  }
+  protected Boolean idxCopyField = null;
 
   /**
    * copy constructors
@@ -123,6 +122,12 @@ public class CVSchemaField implements Serializable {
         this.copyFields.add(new String(listObj));
       }
     }
+    if (obj.idxCopyField != null) {
+      this.idxCopyField = new Boolean(obj.idxCopyField);
+    }
+  }
+
+  public CVSchemaField() {
   }
 
   public String getFieldName(boolean init) {
@@ -130,6 +135,19 @@ public class CVSchemaField implements Serializable {
       return getFieldName();
     } else {
       return this.fieldName;
+    }
+  }
+
+  public Boolean getIdxCopyField() {
+    return idxCopyField;
+  }
+
+  public Boolean getIdxCopyField(boolean init) {
+    if (init) {
+      return getIdxCopyField();
+    } else {
+
+      return this.idxCopyField;
     }
   }
 
@@ -463,6 +481,7 @@ public class CVSchemaField implements Serializable {
     list.add(Fields.AUTOCOMPLETE);
     list.add(Fields.SPELLCHECK);
     list.add(Fields.COPY_FIELDS);
+    list.add(Fields.IDX_COPY_FIELD);
     return list;
   }
 
@@ -483,6 +502,7 @@ public class CVSchemaField implements Serializable {
     String AUTOCOMPLETE = "autocomplete";
     String SPELLCHECK = "spellcheck";
     String COPY_FIELDS = "copyFields";
+    String IDX_COPY_FIELD = "idxCopyField";
   }
 
 }

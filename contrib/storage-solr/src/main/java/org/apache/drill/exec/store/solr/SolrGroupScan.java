@@ -32,13 +32,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.internal.Lists;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 
+@JsonTypeName("solr-scan")
 public class SolrGroupScan extends AbstractGroupScan {
   protected SolrStoragePlugin solrPlugin;
   protected SolrStoragePluginConfig solrPluginConfig;
   protected SolrScanSpec solrScanSpec;
-  protected List<SolrScanSpec> scanList=Lists.newArrayList();
+  protected List<SolrScanSpec> scanList = Lists.newArrayList();
   protected List<SchemaPath> columns;
   static final Logger logger = LoggerFactory.getLogger(SolrGroupScan.class);
 
@@ -60,13 +64,13 @@ public class SolrGroupScan extends AbstractGroupScan {
     this.solrScanSpec = scanSpec;
     this.columns = columns;
     this.scanList.add(this.solrScanSpec);
-    logger.info("SolrGroupScan :: param constructor :: "+columns);
+    logger.info("SolrGroupScan :: param constructor :: " + columns);
 
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    logger.info("SolrGroupScan :: clone :: "+columns);
+    logger.info("SolrGroupScan :: clone :: " + columns);
     SolrGroupScan clone = new SolrGroupScan(this);
     clone.columns = columns;
     return clone;
@@ -83,9 +87,8 @@ public class SolrGroupScan extends AbstractGroupScan {
   public SubScan getSpecificScan(int minorFragmentId)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: getSpecificScan :: "+columns);
+    logger.info("SolrGroupScan :: getSpecificScan :: " + columns);
     return new SolrSubScan(this);
-        
 
   }
 
@@ -99,7 +102,6 @@ public class SolrGroupScan extends AbstractGroupScan {
   @Override
   public String getDigest() {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: getDigest");
     return toString();
   }
 
@@ -108,7 +110,7 @@ public class SolrGroupScan extends AbstractGroupScan {
     // TODO Auto-generated method stub
     return ScanStats.TRIVIAL_TABLE;
   }
-
+  @JsonIgnore
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
       throws ExecutionSetupException {
@@ -118,4 +120,24 @@ public class SolrGroupScan extends AbstractGroupScan {
     return new SolrGroupScan(this);
   }
 
+  @JsonProperty
+  public SolrScanSpec getSolrScanSpec() {
+    return solrScanSpec;
+  }
+
+  @JsonProperty
+  public SolrStoragePluginConfig getSolrPluginConfig() {
+    return solrPluginConfig;
+  }
+
+  @JsonIgnore
+  public SolrStoragePlugin getSolrPlugin() {
+    return solrPlugin;
+  }
+
+  @Override
+  public String toString() {
+    return "SolrGroupScan [SolrScanSpec=" + solrScanSpec + ", columns="
+        + columns + "]";
+  }
 }

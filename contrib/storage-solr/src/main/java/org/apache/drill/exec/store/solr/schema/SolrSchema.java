@@ -85,7 +85,7 @@ public class SolrSchema extends AbstractSchema {
   DrillTable getDrillTable(String dbName, String collectionName) {
     logger.info("SolrSchema :: getDrillTable");
     SolrScanSpec solrScanSpec = new SolrScanSpec(collectionName);
-    return new DynamicDrillTable(solrStoragePlugin, SolrStoragePluginConfig.NAME, null, solrScanSpec);
+    return new DynamicDrillTable(solrStoragePlugin, SolrStoragePluginConfig.NAME, solrScanSpec);
   }
 
   @Override

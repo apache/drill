@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.solr;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
@@ -28,12 +29,14 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaFactory;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 
 public class SolrStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
@@ -97,5 +100,10 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
         new TypeReference<SolrScanSpec>() {
         });
     return new SolrGroupScan(userName, this, solrScanSpec, columns);
+  }
+  @Override
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(){
+    logger.info("SolrStoragePlugin :: getOptimizerRules");
+    return ImmutableSet.of(SolrQueryFilterRule.INSTANCE);
   }
 }

@@ -43,15 +43,11 @@ public class SolrSchemaFactory implements SchemaFactory {
   static final Logger logger = LoggerFactory.getLogger(SolrSchemaFactory.class);
 
   private final SolrStoragePlugin solrStorage;
-  private final SolrClient solrClient;
   private final String storageName;
-  private List<String> solrCoreLst;
 
   public SolrSchemaFactory(SolrStoragePlugin solrStorage, String storageName) {
     this.solrStorage = solrStorage;
-    solrClient = solrStorage.getSolrClient();
     this.storageName = storageName;    
-    logger.info("available solr cores are..." + solrCoreLst);
   }
 
 
@@ -67,9 +63,9 @@ public class SolrSchemaFactory implements SchemaFactory {
       throws IOException {
     logger.info("registering schema....");
     List<String> schemaPath = Lists.newArrayList();
-    schemaPath.add(SolrStoragePluginConfig.NAME);
-    SolrSchema schema = new SolrSchema(schemaPath,"root", solrStorage);
-    SchemaPlus hPlus = parent.add(SolrStoragePluginConfig.NAME, schema);
+    //schemaPath.add(SolrStoragePluginConfig.NAME);
+    SolrSchema schema = new SolrSchema(schemaPath,"root", solrStorage);    
+    SchemaPlus hPlus = parent.add(this.storageName, schema);
     
   }
 

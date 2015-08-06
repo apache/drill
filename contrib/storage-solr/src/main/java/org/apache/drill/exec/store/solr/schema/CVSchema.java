@@ -36,7 +36,7 @@ public class CVSchema {
   protected String uniqueKey = null;
 
   protected String defaultSearchField = null;
-
+ 
   protected Error errorObj = null;
 
   public List<CVSchemaField> getSchemaFields(boolean init) {

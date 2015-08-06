@@ -22,10 +22,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -47,6 +49,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class SolrRecordReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
@@ -61,6 +64,7 @@ public class SolrRecordReader extends AbstractRecordReader {
   // protected List<Tuple> resultTuple;
   protected SolrDocumentList solrDocList;
   protected Iterator<SolrDocument> resultIter;
+  protected List<String> fields;
   private MajorType.Builder t;
 
   public SolrRecordReader(FragmentContext context, SolrSubScan config) {
@@ -71,16 +75,36 @@ public class SolrRecordReader extends AbstractRecordReader {
     solrClientApiExec = config.getSolrPlugin().getSolrClientApiExec();
     solrClient = config.getSolrPlugin().getSolrClient();
     String solrCoreName = scanList.get(0).getSolrCoreName();
-
+    List<SchemaPath> colums=config.getColumns();
+    setColumns(colums);
     Map<String, String> solrParams = new HashMap<String, String>();
     solrParams.put("q", "*:*");
-    solrParams.put("rows", "100");
+    solrParams.put("rows", String.valueOf(Integer.MAX_VALUE));
     solrParams.put("qt", "/select");
-    solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName);
+    
+    solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,this.fields);
+    //solrClientApiExec.getSchemaForCore(solrCoreName);
     resultIter=solrDocList.iterator();
     logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
+    
   }
-
+  @Override
+  protected Collection<SchemaPath> transformColumns(
+      Collection<SchemaPath> projectedColumns) {
+    Set<SchemaPath> transformed = Sets.newLinkedHashSet();
+    if (!isStarQuery()) {
+      logger.debug(" This is not a start query, restring response to ");
+      fields = Lists.newArrayListWithExpectedSize(projectedColumns.size());
+      for (SchemaPath column : projectedColumns) {
+        String fieldName = column.getRootSegment().getPath();
+        transformed.add(SchemaPath.getSimplePath(fieldName));
+        this.fields.add(fieldName);
+      }
+    } else {
+      transformed.add(AbstractRecordReader.STAR_COLUMN);
+    }
+    return transformed;
+  }
   @Override
   public void setup(OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
