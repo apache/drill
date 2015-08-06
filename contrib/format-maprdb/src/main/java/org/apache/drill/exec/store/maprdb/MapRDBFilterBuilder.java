@@ -34,6 +34,7 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.NullComparator;
+import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
@@ -159,6 +160,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     String functionName = processor.getFunctionName();
     SchemaPath field = processor.getPath();
     byte[] fieldValue = processor.getValue();
+    boolean sortOrderAscending = processor.isSortOrderAscending();
     boolean isRowKey = field.getAsUnescapedPath().equals(ROW_KEY);
     if (!(isRowKey
         || (!field.getRootSegment().isLastPath()
@@ -170,6 +172,10 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
        * if the field in this function is neither the row_key nor a qualified HBase column, return.
        */
       return null;
+    }
+
+    if (processor.isRowKeyPrefixComparison()) {
+      return createRowKeyPrefixScanSpec(call, processor);
     }
 
     CompareOp compareOp = null;
@@ -189,29 +195,59 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
       compareOp = CompareOp.NOT_EQUAL;
       break;
     case "greater_than_or_equal_to":
-      compareOp = CompareOp.GREATER_OR_EQUAL;
-      if (isRowKey) {
-        startRow = fieldValue;
+      if (sortOrderAscending) {
+        compareOp = CompareOp.GREATER_OR_EQUAL;
+        if (isRowKey) {
+          startRow = fieldValue;
+        }
+      } else {
+        compareOp = CompareOp.LESS_OR_EQUAL;
+        if (isRowKey) {
+          // stopRow should be just greater than 'value'
+          stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
       }
       break;
     case "greater_than":
-      compareOp = CompareOp.GREATER;
-      if (isRowKey) {
-        // startRow should be just greater than 'value'
-        startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+      if (sortOrderAscending) {
+        compareOp = CompareOp.GREATER;
+        if (isRowKey) {
+          // startRow should be just greater than 'value'
+          startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
+      } else {
+        compareOp = CompareOp.LESS;
+        if (isRowKey) {
+          stopRow = fieldValue;
+        }
       }
       break;
     case "less_than_or_equal_to":
-      compareOp = CompareOp.LESS_OR_EQUAL;
-      if (isRowKey) {
-        // stopRow should be just greater than 'value'
-        stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+      if (sortOrderAscending) {
+        compareOp = CompareOp.LESS_OR_EQUAL;
+        if (isRowKey) {
+          // stopRow should be just greater than 'value'
+          stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
+      } else {
+        compareOp = CompareOp.GREATER_OR_EQUAL;
+        if (isRowKey) {
+          startRow = fieldValue;
+        }
       }
       break;
     case "less_than":
-      compareOp = CompareOp.LESS;
-      if (isRowKey) {
-        stopRow = fieldValue;
+      if (sortOrderAscending) {
+        compareOp = CompareOp.LESS;
+        if (isRowKey) {
+          stopRow = fieldValue;
+        }
+      } else {
+        compareOp = CompareOp.GREATER;
+        if (isRowKey) {
+          // startRow should be just greater than 'value'
+          startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        }
       }
       break;
     case "isnull":
@@ -299,4 +335,19 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     return null;
   }
 
+  private HBaseScanSpec createRowKeyPrefixScanSpec(FunctionCall call,
+      CompareFunctionsProcessor processor) {
+    byte[] startRow = processor.getRowKeyPrefixStartRow();
+    byte[] stopRow  = processor.getRowKeyPrefixStopRow();
+    Filter filter   = processor.getRowKeyPrefixFilter();
+
+    if (startRow != HConstants.EMPTY_START_ROW ||
+      stopRow != HConstants.EMPTY_END_ROW ||
+      filter != null) {
+      return new HBaseScanSpec(groupScan.getTableName(), startRow, stopRow, filter);
+    }
+
+    // else
+    return null;
+  }
 }

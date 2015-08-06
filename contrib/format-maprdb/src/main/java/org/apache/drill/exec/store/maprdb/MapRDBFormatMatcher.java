@@ -43,12 +43,16 @@ public class MapRDBFormatMatcher extends FormatMatcher {
   @Override
   public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
     FileStatus status = selection.getFirstPath(fs);
-    if (status instanceof MapRFileStatus) {
-      if (((MapRFileStatus) status).isTable()) {
-        return new FormatSelection(getFormatPlugin().getConfig(), selection);
-      }
+    if (!isFileReadable(fs, status)) {
+      return null;
     }
-    return null;
+
+    return new FormatSelection(getFormatPlugin().getConfig(), selection);
+  }
+
+  @Override
+  public boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException {
+    return (status instanceof MapRFileStatus) &&  ((MapRFileStatus) status).isTable();
   }
 
   @Override
