@@ -66,12 +66,13 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   private void allocateInternal() {
+    // TODO we don't need to allocate all container's vectors, we can pass a specific list of vectors to allocate internally
     for (VectorWrapper<?> w : container) {
       internal.addOrGet(w.getField());
-      logger.debug("{} -> {}", container.getValueVectorId(w.getField().getPath()), internal.getValueVectorId(w.getField().getPath()));
     }
     container.zeroVectors();
   }
+
   /**
    * processes all rows of current batch:
    * <ul>
@@ -88,7 +89,6 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       batches.size(), batches.get(0).getRecordCount());
 
     allocateOutgoing();
-//    allocateInternal(); // make sure we don't keep internal between partitions
 
     final WindowDataBatch current = batches.get(0);
 
@@ -102,18 +102,12 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
         // we have a pending window we need to handle from a previous call to doWork()
         logger.trace("we have a pending partition {}", partition);
       } else {
-        final int length = computePartitionSize(currentRow);
-        partition = new Partition(length);
-        setupOutputRow(current, container);
+        newPartition(current, currentRow);
       }
 
       currentRow = processPartition(currentRow);
       if (partition.isDone()) {
-        partition = null;
-        resetValues();
-        logger.trace("resetting internal");
-        internal.zeroVectors();
-        internal.setRecordCount(0);
+        cleanPartition();
       }
     }
 
@@ -135,6 +129,20 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     logger.trace("WindowFramer.doWork() END");
   }
 
+  private void newPartition(final WindowDataBatch current, final int currentRow) throws SchemaChangeException {
+    final int length = computePartitionSize(currentRow);
+    partition = new Partition(length);
+    setupPartition(current, container);
+    holdFirst(currentRow); // this is called once per partition
+  }
+
+  private void cleanPartition() {
+    partition = null;
+    resetValues();
+    internal.zeroVectors();
+    internal.setRecordCount(0);
+  }
+
   /**
    * process all rows (computes and writes aggregation values) of current batch that are part of current partition.
    * @param currentRow first unprocessed row
@@ -149,7 +157,6 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
     // copy prev row from internal
     if (internal.getRecordCount() > 0) {
-      logger.trace("copying from internal");
       setupCopyFromInternal(internal, container);
       copyFromInternal(0, 0);
     }
@@ -284,6 +291,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       }
 
       evaluatePeer(row);
+
+      if (i == peers - 1) {
+        // last row of current frame
+        holdLast(row);
+      }
     }
   }
 
@@ -336,6 +348,9 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   public abstract void evaluatePeer(@Named("index") int index);
   public abstract void setupEvaluatePeer(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
+  public abstract void holdFirst(@Named("index") int index);
+  public abstract void holdLast(@Named("index") int index);
+
   /**
    * called once for each row after we evaluate all peer rows. Used to write a value in the row
    *
@@ -343,8 +358,16 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
    * @param partition object used by "computed" window functions
    */
   public abstract void outputRow(@Named("outIndex") int outIndex, @Named("partition") Partition partition);
-  public abstract void setupOutputRow(@Named("incoming") WindowDataBatch incoming, @Named("outgoing") VectorAccessible outgoing)
-    throws SchemaChangeException;
+
+  /**
+   * Called once per partition, before processing the partition. Used to setup read/write vectors
+   * @param incoming batch we will read from
+   * @param outgoing batch we will be writing to
+   *
+   * @throws SchemaChangeException
+   */
+  public abstract void setupPartition(@Named("incoming") WindowDataBatch incoming,
+                                      @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
   /**
    * copies value(s) from inIndex row to outIndex row. Mostly used by LEAD. inIndex always points to the row next to

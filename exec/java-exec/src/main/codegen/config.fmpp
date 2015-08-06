@@ -44,7 +44,8 @@ data: {
     sumzero:                  tdd(../data/SumZero.tdd),
     numericTypes:             tdd(../data/NumericTypes.tdd),
     casthigh:                 tdd(../data/CastHigh.tdd),
-    countAggrTypes:           tdd(../data/CountAggrTypes.tdd)
+    countAggrTypes:           tdd(../data/CountAggrTypes.tdd),
+    holdTypes:                tdd(../data/HoldLastTypes.tdd)
 }
 freemarkerLinks: {
     includes: includes/

@@ -28,6 +28,7 @@ import com.sun.codemodel.JVar;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -45,6 +46,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
@@ -85,7 +87,9 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     PERCENT_RANK(true),
     CUME_DIST(true),
     LEAD(false),
-    LAG(false);
+    LAG(false),
+    FIRST_VALUE(false),
+    LAST_VALUE(false);
 
     private final boolean useDouble;
 
@@ -304,6 +308,8 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private WindowFramer createFramer(VectorAccessible batch) throws SchemaChangeException, IOException, ClassTransformationException {
     assert framer == null : "createFramer should only be called once";
 
+    final FunctionLookupContext registry = context.getFunctionRegistry();
+
     logger.trace("creating framer");
 
     final List<LogicalExpression> aggExprs = Lists.newArrayList();
@@ -313,6 +319,8 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final List<LogicalExpression> leadExprs = Lists.newArrayList();
     final List<LogicalExpression> lagExprs = Lists.newArrayList();
     final List<LogicalExpression> internalExprs = Lists.newArrayList();
+    final List<LogicalExpression> holdFirstExprs = Lists.newArrayList();
+    final List<LogicalExpression> holdLastExprs = Lists.newArrayList();
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     container.clear();
@@ -329,29 +337,59 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       if (wf != null) {
         final FunctionCall call = (FunctionCall) ne.getExpr();
 
-        if (wf == WindowFunction.LEAD) {
+        switch (wf) {
+          case LEAD:
+            leadExprs.add(materializeLeadFunction(call.args.get(0), ne.getRef(), batch, collector));
+          break;
+          case LAG:
+            {
+              final ValueVectorWriteExpression writeExpr = materializeLagFunction(call.args.get(0), ne.getRef(), batch, collector);
+              final TypedFieldId id = writeExpr.getFieldId();
 
-          leadExprs.add(materializeLeadFunction(call.args.get(0), ne.getRef(), batch, collector));
-        } else if (wf == WindowFunction.LAG) {
+              lagExprs.add(writeExpr);
+              internalExprs.add(new ValueVectorWriteExpression(id, new ValueVectorReadExpression(id), true));
+            }
+            break;
+          case FIRST_VALUE:
+            {
+              final LogicalExpression holdExpr = new FunctionCall("holdlast", call.args, ExpressionPosition.UNKNOWN);
+              final LogicalExpression expr = ExpressionTreeMaterializer.materialize(holdExpr, batch, collector, registry);
 
-          final ValueVectorWriteExpression writeExpr = materializeLagFunction(call.args.get(0), ne.getRef(), batch, collector);
-          final TypedFieldId id = writeExpr.getFieldId();
+              final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
+              ValueVector vv = container.addOrGet(outputField);
+              vv.allocateNew();
 
-          lagExprs.add(writeExpr);
-          internalExprs.add(new ValueVectorWriteExpression(id, new ValueVectorReadExpression(id), true));
-        } else {
+              TypedFieldId id = container.getValueVectorId(ne.getRef());
+              holdFirstExprs.add(new ValueVectorWriteExpression(id, expr, true));
+            }
+            break;
+          case LAST_VALUE:
+          {
+            final LogicalExpression holdExpr = new FunctionCall("holdlast", call.args, ExpressionPosition.UNKNOWN);
+            final LogicalExpression expr = ExpressionTreeMaterializer.materialize(holdExpr, batch, collector, registry);
 
-          // add corresponding ValueVector to container
-          final MaterializedField outputField = MaterializedField.create(ne.getRef(), wf.getMajorType());
-          ValueVector vv = container.addOrGet(outputField);
-          vv.allocateNew();
+            final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
+            ValueVector vv = container.addOrGet(outputField);
+            vv.allocateNew();
 
-          computedExprs.put(wf, container.getValueVectorId(ne.getRef()));
+            TypedFieldId id = container.getValueVectorId(ne.getRef());
+            holdLastExprs.add(new ValueVectorWriteExpression(id, expr, true));
+          }
+          break;
+          default:
+            {
+              // add corresponding ValueVector to container
+              final MaterializedField outputField = MaterializedField.create(ne.getRef(), wf.getMajorType());
+              ValueVector vv = container.addOrGet(outputField);
+              vv.allocateNew();
+
+              computedExprs.put(wf, container.getValueVectorId(ne.getRef()));
+            }
+            break;
         }
       } else {
         // evaluate expression over saved batch
-        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), batch, collector,
-          context.getFunctionRegistry());
+        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), batch, collector, registry);
 
         // add corresponding ValueVector to container
         final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
@@ -382,17 +420,18 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
     }
 
-    final WindowFramer framer = generateFramer(keyExprs, orderExprs, aggExprs, computedExprs, leadExprs, lagExprs, internalExprs);
+    final WindowFramer framer = generateFramer(keyExprs, orderExprs, aggExprs, computedExprs, leadExprs, lagExprs,
+      internalExprs, holdFirstExprs, holdLastExprs);
     framer.setup(batches, container, oContext);
 
     return framer;
   }
 
   private WindowFramer generateFramer(final List<LogicalExpression> keyExprs, final List<LogicalExpression> orderExprs,
-                                      final List<LogicalExpression> aggExprs,
-                                      final Map<WindowFunction, TypedFieldId> computedExprs,
-                                      final List<LogicalExpression> leadExprs, final List<LogicalExpression> lagExprs,
-                                      final List<LogicalExpression> internalExprs) throws IOException, ClassTransformationException {
+      final List<LogicalExpression> aggExprs, final Map<WindowFunction, TypedFieldId> computedExprs,
+      final List<LogicalExpression> leadExprs, final List<LogicalExpression> lagExprs,
+      final List<LogicalExpression> internalExprs, final List<LogicalExpression> holdFirstExprs,
+      final List<LogicalExpression> holdLastExprs) throws IOException, ClassTransformationException {
     final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(WindowFramer.TEMPLATE_DEFINITION, context.getFunctionRegistry());
 
     {
@@ -414,9 +453,25 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     {
       // generating aggregations
       final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupEvaluatePeer", "evaluatePeer", null, null);
-      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupOutputRow", "outputRow", "resetValues", "cleanup");
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
       final MappingSet eval = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
       generateForExpressions(cg, aggExprs, eval);
+    }
+
+    {
+      // generating FIRST_VALUE holdFirst
+      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupPartition", "holdFirst", null, null);
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      final MappingSet eval = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+      generateForExpressions(cg, holdFirstExprs, eval);
+    }
+
+    {
+      // generating LAST_VALUE holdLast
+      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupEvaluatePeer", "holdLast", null, null);
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      final MappingSet eval = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+      generateForExpressions(cg, holdLastExprs, eval);
     }
 
     {
@@ -473,7 +528,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
    * generate code to write "ranking" window function values into their respective value vectors
    */
   private void generateRankingFunctions(final ClassGenerator<WindowFramer> cg, final Map<WindowFunction, TypedFieldId> functions) {
-    final GeneratorMapping mapping = GeneratorMapping.create("setupOutputRow", "outputRow", "resetValues", "cleanup");
+    final GeneratorMapping mapping = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
     final MappingSet eval = new MappingSet(null, "outIndex", mapping, mapping);
 
     cg.setMappingSet(eval);

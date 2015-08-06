@@ -110,20 +110,12 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             SqlCall function = (SqlCall) over.getOperandList().get(0);
 
             // DRILL-3195:
-            // The following window functions are temporarily disabled
-            // NTILE(), FIRST_VALUE(), LAST_VALUE()
-            String functionName = function.getOperator().getName().toUpperCase();
-            switch(functionName) {
-              case "NTILE":
-              case "FIRST_VALUE":
-              case "LAST_VALUE":
+            // The following window functions are temporarily disabled NTILE()
+            if ("NTILE".equals(function.getOperator().getName().toUpperCase())) {
                 unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-                    "The window function " + functionName + " is not supported\n" +
+                    "The window function NTILE is not supported\n" +
                     "See Apache Drill JIRA: DRILL-3195");
                 throw new UnsupportedOperationException();
-
-              default:
-                break;
             }
 
             // DRILL-3182

@@ -180,7 +180,7 @@ public class TestWindowFrame extends BaseTestQuery {
       .sqlQuery(getFile("window/lead.oby.sql"), TEST_RES_PATH)
       .ordered()
       .csvBaselineFile("window/b4.p4.lead.oby.tsv")
-      .baselineColumns("position_id", "sub", "employee_id", "line_no", "lead")
+      .baselineColumns("lead")
       .build()
       .run();
   }
@@ -191,7 +191,7 @@ public class TestWindowFrame extends BaseTestQuery {
       .sqlQuery(getFile("window/lag.pby.oby.sql"), TEST_RES_PATH)
       .ordered()
       .csvBaselineFile("window/b4.p4.lag.pby.oby.tsv")
-      .baselineColumns("position_id", "sub", "employee_id", "line_no", "lead")
+      .baselineColumns("lag")
       .build()
       .run();
   }
@@ -203,7 +203,7 @@ public class TestWindowFrame extends BaseTestQuery {
       .sqlQuery(getFile("window/lag.oby.sql"), TEST_RES_PATH)
       .ordered()
       .csvBaselineFile("window/b4.p4.lag.oby.tsv")
-      .baselineColumns("position_id", "sub", "employee_id", "line_no", "lead")
+      .baselineColumns("lag")
       .build()
       .run();
   }
@@ -214,8 +214,42 @@ public class TestWindowFrame extends BaseTestQuery {
       .sqlQuery(getFile("window/lead.pby.oby.sql"), TEST_RES_PATH)
       .ordered()
       .csvBaselineFile("window/b4.p4.lead.pby.oby.tsv")
-      .baselineColumns("position_id", "sub", "employee_id", "line_no", "lead")
+      .baselineColumns("lead")
       .build()
       .run();
+  }
+
+  @Test
+  public void testFirstValue() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/fval.pby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.fval.pby.tsv")
+      .baselineColumns("first_value")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testLastValue() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/lval.pby.oby.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b4.p4.lval.pby.oby.tsv")
+      .baselineColumns("last_value")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValueAllTypes() throws Exception {
+    // make sure all types are handled properly
+    test(getFile("window/fval.alltypes.sql"), TEST_RES_PATH);
+  }
+
+  @Test
+  public void testLastValueAllTypes() throws Exception {
+    // make sure all types are handled properly
+    test(getFile("window/fval.alltypes.sql"), TEST_RES_PATH);
   }
 }
