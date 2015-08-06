@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
 import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
+import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
@@ -106,6 +107,7 @@ public class DrillRuleSets {
       // Add support for WHERE style joins.
       DrillFilterJoinRules.DRILL_FILTER_ON_JOIN,
       DrillFilterJoinRules.DRILL_JOIN,
+      JoinPushExpressionsRule.INSTANCE,
       // End support for WHERE style joins.
 
       /*
@@ -119,7 +121,7 @@ public class DrillRuleSets {
       ProjectRemoveRule.INSTANCE,
       SortRemoveRule.INSTANCE,
 
-      AggregateExpandDistinctAggregatesRule.INSTANCE,
+      AggregateExpandDistinctAggregatesRule.JOIN,
       DrillReduceAggregatesRule.INSTANCE,
 
       /*
