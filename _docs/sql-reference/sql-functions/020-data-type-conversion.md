@@ -6,6 +6,7 @@ Drill supports the following functions for casting and converting data types:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)
 * [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)
+* [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function)
 * [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)
 
 ## CAST
@@ -155,6 +156,8 @@ CONVERT_FROM and CONVERT_TO methods transform a known binary representation/enco
 data as encoded VARBINARY data. To read HBase data in Drill, convert every column of an HBase table *from* binary to an Drill internal type. To write HBase or Parquet binary data, convert SQL data *to* binary data and store the data in an HBase or Parquet while creating a table as a selection (CTAS).
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
+
+Use the BINARY_STRING and STRING_BINARY custom Drill functions with CONVERT_TO and CONVERT_FROM to see readable results of your conversions.
 
 ### Conversion of Data Types Examples
 
@@ -377,6 +380,139 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
         +------------+------------+------------+------------------+------------+
         4 rows selected (0.182 seconds)
 
+## STRING_BINARY function
+
+Converts a VARBINARY type into a hexadecimal-encoded string.
+
+### STRING_BINARY Syntax
+
+    STRING_BINARY(expression)
+
+*expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}
+
+This function returns a hexadecimal string, such as "\xca\xfe\xba\xbe". You can use this function with CONVERT_TO when you want to test the effects of a conversion.
+
+### STRING_BINARY Examples
+
+```
+SELECT
+  STRING_BINARY(CONVERT_TO(1, 'INT')) as i,
+  STRING_BINARY(CONVERT_TO(1, 'INT_BE')) as i_be,
+  STRING_BINARY(CONVERT_TO(1, 'BIGINT')) as l,
+  STRING_BINARY(CONVERT_TO(1, 'BIGINT')) as l_be,
+  STRING_BINARY(CONVERT_TO(1, 'INT_HADOOPV')) as l_be
+FROM (VALUES (1));
+```
+Output is:
+
+```
++-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+|         i         |       i_be        |                 l                 |               l_be                | l_be0  |
++-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+| \x01\x00\x00\x00  | \x00\x00\x00\x01  | \x01\x00\x00\x00\x00\x00\x00\x00  | \x01\x00\x00\x00\x00\x00\x00\x00  | \x01   |
++-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+1 row selected (0.323 seconds)
+```
+Encode 'hello' in UTF-8 and UTF-16 VARBINARY encoding and return the results as a VARCHAR.
+
+```
+SELECT
+  STRING_BINARY(CONVERT_TO('hello', 'UTF8')) u8,
+  STRING_BINARY(CONVERT_TO('hello', 'UTF16')) u16
+FROM (VALUES (1));
+```
+
+```
++--------+------------------------------------+
+|   u8   |                u16                 |
++--------+------------------------------------+
+| hello  | \xFE\xFF\x00h\x00e\x00l\x00l\x00o  |
++--------+------------------------------------+
+1 row selected (0.168 seconds)
+```
+
+## BINARY_STRING function
+
+Converts a hexadecimal-encoded string into a VARBINARY type. 
+
+### BINARY_STRING Syntax
+
+    BINARY_STRING(expression)
+
+*expression* is a hexadecimal string, such as "\xca\xfe\xba\xbe".
+
+This function returns a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}. You can use this function with CONVERT_FROM for readable results.
+
+### BINARY_STRING Example
+
+Converts a VARBINARY type into a hexadecimal-encoded string.
+
+### BINARY_STRING Syntax
+
+    BINARY_STRING(expression)
+
+*expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}.
+
+This function returns a hexadecimal-encoded string, such as "\xca\xfe\xba\xbe". You can use this function with CONVERT_TO for readable results.
+
+### BINARY_STRING Examples
+
+Decode the hexadecimal string 000000C8 expressed in four octets \x00\x00\x00\xC8 into its big endian four-byte integer equivalent. 
+
+```
+SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT_BE') AS cnvrt
+FROM (VALUES (1));
+```
+
+Output is:
+
+```
++--------+
+| cnvrt  |
++--------+
+| 200    |
++--------+
+1 row selected (0.133 seconds)
+```
+
+Decode the same hexadecimal string into its little endian four-byte signed integer equivalent.
+
+```
+SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT') AS cnvrt FROM (VALUES (1));
+```
+
+Output is:
+
+```
++-------------+
+|    cnvrt    |
++-------------+
+| -939524096  |
++-------------+
+1 row selected (0.133 seconds)
+```
+
+Convert a hexadecimal number BEBAFECA to its decimal equivalent and then to its VARBINARY equivalent, which is how the value is represented in HBase.
+
+```
+SELECT CONVERT_FROM(BINARY_STRING('\xBE\xBA\xFE\xCA'), 'INT_BE') FROM (VALUES (1));
+
++--------------+
+|    EXPR$0    |
++--------------+
+| -1095041334  |
++--------------+
+
+SELECT CONVERT_TO(-1095041334, 'INT_BE') FROM (VALUES (1));
+
++--------------+
+|    EXPR$0    |
++--------------+
+| [B@10c24faf  |
++--------------+
+1 row selected (0.161 seconds)
+```
+
 ## Other Data Type Conversions
 Drill supports the format for date and time literals shown in the following examples:
 
@@ -535,7 +671,7 @@ Converts a character string or a UNIX epoch timestamp to a date.
 *'format'* is a format specifier enclosed in single quotation marks that sets a pattern for the output formatting. Use this option only when the expression is a character string, not a UNIX epoch timestamp. 
 
 ### TO_DATE Usage Notes
-Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds.
+Specify a format using patterns defined in [Joda DateTimeFormat class](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html). The TO_TIMESTAMP function takes a Unix epoch timestamp. The TO_DATE function takes a UNIX epoch timestamp in milliseconds. The [UNIX_TIMESTAMP]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#unix_timestamp) function converts a time string to a UNIX timestamp in seconds. 
 
 To compare dates in the WHERE clause, use TO_DATE on the value in the date column and in the comparison value. For example:
 

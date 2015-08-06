@@ -106,7 +106,7 @@ As shown in the table, Drill can cast a NULL value, which has the lowest precede
 | Precedence | Data Type              | Precedence | Data Type     |
 |------------|------------------------|------------|---------------|
 | 1          | INTERVALYEAR (highest) | 11         | INT           |
-| 2          | INTERVLADAY            | 12         | UINT2         |
+| 2          | INTERVALDAY            | 12         | UINT2         |
 | 3          | TIMESTAMP              | 13         | SMALLINT*     |
 | 4          | DATE                   | 14         | UINT1         |
 | 5          | TIME                   | 15         | VAR16CHAR     |
