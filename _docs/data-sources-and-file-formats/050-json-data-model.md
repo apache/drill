@@ -370,7 +370,6 @@ In most cases, you can use a workaround, presented in the following sections, to
 * [Empty array]({{site.baseurl}}/docs/json-data-model/#empty-array)
 * [Lengthy JSON objects]({{site.baseurl}}/docs/json-data-model/#lengthy-json-objects)
 * [Complex JSON objects]({{site.baseurl}}/docs/json-data-model/#complex-json-objects)
-* [Nested column names]({{site.baseurl}}/docs/json-data-model/#nested-column-names)
 * [Schema changes]({{site.baseurl}}/docs/json-data-model/#schema-changes)
 * [Selecting all in a JSON directory query]({{site.baseurl}}/docs/json-data-model/#selecting-all-in-a-json-directory-query)
 
