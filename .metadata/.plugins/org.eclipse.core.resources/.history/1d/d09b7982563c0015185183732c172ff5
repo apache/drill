@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.exec.store.solr.SolrScanSpec.SolrFilters;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +194,6 @@ public class SolrQueryBuilder extends
     SolrFilters solrFilter = new SolrFilters();
     switch (functionName) {
     case "equal":
-      
       break;
     case "not_equal":
       break;
