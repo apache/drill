@@ -29,18 +29,23 @@ The following image illustrates the user authentication process in Drill:
 
 ### Installing and Configuring PAM
 
-Install and configure the provided Drill PAM. Drill only supports the PAM provided here. Optionally, you can [build and implement a custom authenticator]({{ site.baseurl }}/docs/configuring-user-authentication/#implementing-and-configuring-a-custom-authenticator).
+Install and configure the provided Drill PAM. Drill only supports the PAM provided here. Optionally, you can [build and implement a custom authenticator]({{ site.baseurl }}/docs/configuring-user-authentication/#implementing-and-configuring-a-custom-authenticator). 
+
+{% include startnote.html %}Do not point to an existing directory where other Hadoop components are installed. Other file system libraries can conflict with the Drill libraries and cause system errors.{% include endnote.html %}
  
 Complete the following steps to install and configure PAM for Drill:
 
 1. Download the `tar.gz` file for the Linux platform:  
    [http://sourceforge.net/projects/jpam/files/jpam/jpam-1.1/](http://sourceforge.net/projects/jpam/files/jpam/jpam-1.1/)
-2. Untar the file, and copy the `libjpam.so` file into a directory.  
+2. Untar the file, and copy the `libjpam.so` file into a directory that does not contain other Hadoop components.  
    Example:` /opt/pam/`
-3. Run the following command, and include the directory where you put the `libjpam.so` file:  
-   `export DRILLBIT_JAVA_OPTS=" -Djava.library.path=<directory>"`  
-   Example: `export DRILLBIT_JAVA_OPTS=" -Djava.library.path=/opt/pam/"`
-4. Add the following block to `drill.exec` in the `drill-override.conf` file located in `<DRILLINSTALL_HOME>/conf/`:  
+3. Add the following line to `<DRILL_HOME>/conf/drill-env.sh`, including the directory where the `libjpam.so` file is located:  
+  
+     `export DRILLBIT_JAVA_OPTS="-Djava.library.path=<directory>"`  
+
+      Example: `export DRILLBIT_JAVA_OPTS="-Djava.library.path=/opt/pam/"`  
+
+4. Add the following configuration to the `drill.exec` block in `<DRILL_HOME>/conf/drill-override.conf`:  
 
           drill.exec {
            security.user.auth {
@@ -128,7 +133,7 @@ Complete the following steps to build and implement a custom authenticator:
 
 2. Add the JAR file that you built to the following directory on each Drill node:  
    ` <DRILLINSTALL_HOME>/jars`
-3. Add the following block to the `drill.exec` section in the `drill-override.conf` file located in `<DRILLINSTALL_HOME>/conf/`:  
+3. Add the following configuration to the `drill.exec` block in the `drill-override.conf` file located in `<DRILLINSTALL_HOME>/conf/`:  
 
               drill.exec {
                security.user.auth {

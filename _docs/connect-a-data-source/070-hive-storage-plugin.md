@@ -43,7 +43,7 @@ To register a remote Hive metastore with Drill:
           ...
 5. Change the default location of files to suit your environment; for example, change `"fs.default.name"` property from `"file:///"` to one of these locations:
    * `hdfs://`
-   * `hdfs://<authority>:<port>`
+   * `hdfs://<hostname>:<port>`
 6. If you are running Drill and Hive in a secure MapR cluster, remove the following line from the configuration:  
    `"hive.metastore.sasl.enabled" : "false"`
 7. Click **Enable**.  
