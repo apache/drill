@@ -424,7 +424,7 @@ public class BaseTestQuery extends ExecTest {
     }
   }
 
-  private static class SilentListener implements UserResultsListener {
+  public static class SilentListener implements UserResultsListener {
     private volatile UserException exception;
     private final AtomicInteger count = new AtomicInteger();
     private final CountDownLatch latch = new CountDownLatch(1);
