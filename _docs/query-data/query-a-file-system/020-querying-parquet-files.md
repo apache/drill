@@ -2,11 +2,22 @@
 title: "Querying Parquet Files"
 parent: "Querying a File System"
 ---
-Your Drill installation includes a `sample-data` directory with Parquet files
+
+<!-- Drill 1.2 extends SQL for performant querying of Parquet files. By including a command in a query to cache Parquet file metadata, you trigger the generation of metadata files in the directory of Parquet files and its subdirectories. 
+
+You need to include the command in only the first query of a file or directory. Subsequent can queries return results quickly because Drill refers to the cached metadata. Drill updates metadata automatically when the Parquet files change by comparing timestamps of data. 
+
+To generate metadata, use the following command:
+
+## Example of Generating Parquet Metadata
+
+ -->
+## Sample Parquet Files
+The Drill installation includes a `sample-data` directory with Parquet files
 that you can query. Use SQL syntax to query the `region.parquet` and
 `nation.parquet` files in the `sample-data` directory.
 
-{% include startnote.html %}Your Drill installation location may differ from the examples used here.{% include endnote.html %} 
+{% include startnote.html %}The Drill installation location may differ from the examples used here.{% include endnote.html %} 
 
 The examples assume that Drill was [installed in embedded mode]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode). If you installed Drill in distributed mode, or your `sample-data` directory differs from the location used in the examples. Change the `sample-data` directory to the correct location before you run the queries.
 

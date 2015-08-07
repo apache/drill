@@ -24,13 +24,13 @@ By default, Drill parallelizes operations when number of records manipulated wit
 
 To configure parallelization, configure the following options in the `sys.options` table:
 
-* `planner.width.max.per.node`  
+* `planner.width.max_per_node`  
   The maximum degree of distribution of a query across cores and cluster nodes.
-* `planner.width.max.per.query`  
+* `planner.width.max_per_query`  
   Same as max per node but applies to the query as executed by the entire cluster.
 
 ### planner.width.max_per_node
-Configure the `planner.width.max.per.node` to achieve fine grained, absolute control over parallelization. In this context *width* refers to fanout or distribution potential: the ability to run a query in parallel across the cores on a node and the nodes on a cluster. A physical plan consists of intermediate operations, known as query &quot;fragments,&quot; that run concurrently, yielding opportunities for parallelism above and below each exchange operator in the plan. An exchange operator represents a breakpoint in the execution flow where processing can be distributed. For example, a single-process scan of a file may flow into an exchange operator, followed by a multi-process aggregation fragment.
+Configure the `planner.width.max_per_node` to achieve fine grained, absolute control over parallelization. In this context *width* refers to fanout or distribution potential: the ability to run a query in parallel across the cores on a node and the nodes on a cluster. A physical plan consists of intermediate operations, known as query &quot;fragments,&quot; that run concurrently, yielding opportunities for parallelism above and below each exchange operator in the plan. An exchange operator represents a breakpoint in the execution flow where processing can be distributed. For example, a single-process scan of a file may flow into an exchange operator, followed by a multi-process aggregation fragment.
 
 The maximum width per node defines the maximum degree of parallelism for any fragment of a query, but the setting applies at the level of a single node in the cluster. The *default* maximum degree of parallelism per node is calculated as follows, with the theoretical maximum automatically scaled back (and rounded down) so that only 70% of the actual available capacity is taken into account: number of active drillbits (typically one per node) * number of cores per node * 0.7
 
