@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SolrScanSpec {
   private String solrCoreName;
-  private List<SolrFilters> filter;
+  private SolrFilterParam filter;
 
   @JsonCreator
   public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName) {
@@ -43,26 +43,17 @@ public class SolrScanSpec {
       @JsonProperty("filter") String filter) {
     this.solrCoreName = solrCoreName;
   }
-
+  public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName,
+      @JsonProperty("filter") SolrFilterParam filter) {
+    this.solrCoreName = solrCoreName;
+    this.filter=filter;
+  }
   public String getSolrCoreName() {
     return solrCoreName;
   }
 
-  public List<SolrFilters> getFilter() {
+  public SolrFilterParam getFilter() {
     return filter;
-  }
-
-  class SolrFilterParam {
-    private String filterName;
-    private String operator;
-    private String filterValue;
-
-    public SolrFilterParam(String filterName, String operator,
-        String filterValue) {
-      this.filterName = filterName;
-      this.operator = operator;
-      this.filterValue = filterValue;
-    }
   }
   @Override
   public String toString(){
