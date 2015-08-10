@@ -111,13 +111,14 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(
         PrelUtil.getPlannerSettings(call.getPlanner())), scanRel, condition);
 
-    logger.debug("conditionExp " + conditionExp);
+    logger.info("conditionExp " + conditionExp);
 
     SolrQueryBuilder sQueryBuilder = new SolrQueryBuilder(solrGroupScan,
         conditionExp);
     SolrScanSpec newScanSpec = sQueryBuilder.parseTree();
     if (newScanSpec == null)
       return;
+    logger.debug(" field names :: " + scanRel.getRowType().getFieldNames());
     SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(),
         solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
     final ScanPrel newScanPrel = ScanPrel.create(scanRel,

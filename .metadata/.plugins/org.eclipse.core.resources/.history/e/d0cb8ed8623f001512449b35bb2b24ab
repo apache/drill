@@ -118,6 +118,7 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     SolrScanSpec newScanSpec = sQueryBuilder.parseTree();
     if (newScanSpec == null)
       return;
+    logger.debug(" field names :: " + scanRel.getRowType().getFieldNames());
     SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(),
         solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
     final ScanPrel newScanPrel = ScanPrel.create(scanRel,

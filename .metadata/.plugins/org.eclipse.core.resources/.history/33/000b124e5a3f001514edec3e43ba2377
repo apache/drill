@@ -33,7 +33,6 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
+public class SolrQueryFilterRule extends StoragePluginOptimizerRule {
   static final Logger logger = LoggerFactory
       .getLogger(SolrQueryFilterRule.class);
   
@@ -51,8 +50,9 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.debug("SolrQueryFilterRule :: onMatch");
-      final FilterPrel filter = (FilterPrel) call.rel(0);
-      final ScanPrel scan = (ScanPrel) call.rel(1);
+
+      final DrillFilterRel filter = (DrillFilterRel) call.rel(0);
+      final DrillScanRel scan = (DrillScanRel) call.rel(2);
 
       doOnMatch(call, filter, null, scan);
 
@@ -70,16 +70,16 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
 
   public static final StoragePluginOptimizerRule FILTER_ON_PROJECT = new SolrQueryFilterRule(
       RelOptHelper.some(
-          ProjectPrel.class,
-          RelOptHelper.some(ProjectPrel.class,
-              RelOptHelper.any(ScanPrel.class))),
-      "StoragePluginOptimizerRule:Filter_On_Project"){
+          DrillProjectRel.class,
+          RelOptHelper.some(DrillProjectRel.class,
+              RelOptHelper.any(DrillScanRel.class))),
+      "SolrAggOptimizerRule:Filter_On_Project"){
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.debug("SolrQueryFilterRule :: onMatch");
-      final FilterPrel filterRel = (FilterPrel) call.rel(0);
-      final ProjectPrel projectRel = (ProjectPrel) call.rel(1);
-      final ScanPrel scanRel = (ScanPrel) call.rel(2);
+      final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
+      final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
+      final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
 
       doOnMatch(call, filterRel, projectRel, scanRel);
 
@@ -104,20 +104,21 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
 
  
 
-  protected void doOnMatch(RelOptRuleCall call, FilterPrel filterRel,
-      ProjectPrel projectRel, ScanPrel scanRel) {
+  protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel,
+      DrillProjectRel projectRel, DrillScanRel scanRel) {
     SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
     final RexNode condition = filterRel.getCondition();
     LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(
         PrelUtil.getPlannerSettings(call.getPlanner())), scanRel, condition);
 
-    logger.debug("conditionExp " + conditionExp);
+    logger.info("conditionExp " + conditionExp);
 
     SolrQueryBuilder sQueryBuilder = new SolrQueryBuilder(solrGroupScan,
         conditionExp);
     SolrScanSpec newScanSpec = sQueryBuilder.parseTree();
     if (newScanSpec == null)
       return;
+    logger.debug(" field names :: " + scanRel.getRowType().getFieldNames());
     SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(),
         solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
     final ScanPrel newScanPrel = ScanPrel.create(scanRel,
