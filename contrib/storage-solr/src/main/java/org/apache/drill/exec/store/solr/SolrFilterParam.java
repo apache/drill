@@ -17,25 +17,17 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import java.util.LinkedList;
 
-public class SolrFilters {
-  private SolrFilterParam filterParam;
-  
-  public SolrFilters(SolrFilterParam filterParam) {
+public class SolrFilterParam extends LinkedList<String> {
+
+  public SolrFilterParam(String filterName, String operator, String filterValue) {
+    add(filterName);
+    add(operator);
+    add(filterValue);
+  }
+
+  public SolrFilterParam() {
     super();
-    this.filterParam = filterParam;
   }
-
-  public SolrFilters() {
-    super();
-  }
-
-  public SolrFilterParam getFilterParam() {
-    return filterParam;
-  }
-
-  public void setFilterParam(SolrFilterParam filterParam) {
-    this.filterParam = filterParam;
-  }
-
 }

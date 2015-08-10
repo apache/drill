@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class SolrQueryBuilder extends
@@ -60,23 +61,31 @@ public class SolrQueryBuilder extends
 
   public SolrScanSpec mergeScanSpecs(String functionName,
       SolrScanSpec leftScanSpec, SolrScanSpec rightScanSpec) {
-    List<SolrFilters> solrFilterList;
+    SolrFilterParam solrFilter = new SolrFilterParam();
     logger.info("mergeScanSpecs : init");
     switch (functionName) {
     case "booleanAnd":
       if (leftScanSpec.getFilter() != null && rightScanSpec.getFilter() != null) {
         logger.info("mergeScanSpecs : 1");
-        solrFilterList = leftScanSpec.getFilter();
+        solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
+        solrFilter.add(" AND ");
+        solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
+
       } else if (leftScanSpec.getFilter() != null) {
         logger.info("mergeScanSpecs : 2");
+        solrFilter = leftScanSpec.getFilter();
       } else {
         logger.info("mergeScanSpecs : 3");
+        solrFilter = rightScanSpec.getFilter();
       }
       break;
     case "booleanOr":
-
+      solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
+      solrFilter.add(" OR ");
+      solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
     }
-    return new SolrScanSpec(groupScan.getSolrScanSpec().getSolrCoreName());
+    return new SolrScanSpec(groupScan.getSolrScanSpec().getSolrCoreName(),
+        solrFilter);
   }
 
   @Override
@@ -189,11 +198,11 @@ public class SolrQueryBuilder extends
       Object fieldValue) {
     // extract the field name
     String fieldName = field.getAsUnescapedPath();
-    List<SolrFilters> solrFilters=Lists.newArrayList();
-    SolrFilters solrFilter = new SolrFilters();
+
+    String operator = null;
     switch (functionName) {
     case "equal":
-      
+      operator = ":";
       break;
     case "not_equal":
       break;
@@ -213,6 +222,12 @@ public class SolrQueryBuilder extends
     case "isNotNull":
     case "is not null":
       break;
+    }
+    if (operator != null) {
+      SolrFilterParam filterParam = new SolrFilterParam(fieldName,operator,fieldValue.toString());
+
+      return new SolrScanSpec(this.groupScan.getSolrScanSpec()
+          .getSolrCoreName(), filterParam);
     }
     logger.info("createSolrScanSpec :: fieldName " + fieldName
         + " :: functionName " + functionName);

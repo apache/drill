@@ -82,7 +82,7 @@ public class SolrClientAPIExec {
         coreList.add(cores.getCoreStatus().getName(i));
       }
     } catch (SolrServerException | IOException e) {
-      logger.error("error getting core info from solr server...");
+      logger.info("error getting core info from solr server...");
     }
     return coreList;
   }
@@ -116,22 +116,29 @@ public class SolrClientAPIExec {
   }
 
   public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
-      List<String> fields) {
+      List<String> fields,StringBuilder filters) {
+    logger.debug("getSolrDocs :: "+solrCoreName);
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
     SolrDocumentList sList = null;
-    SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
+    SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive").setQuery("*:*")
         .setRows(Integer.MAX_VALUE);
-    solrQuery.setParam("q", "*:*");
+    
     if (fields != null) {
-      logger.info("solr fields are " + fields);
+      logger.debug("solr fields are " + fields);
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
     }
+    if(filters.length()>0){
+      logger.info("adding filter query :: "+filters.toString());
+      solrQuery.setParam("fq", filters.toString());
+    }
     try {
+      logger.debug("setting solrquery..");
       QueryResponse rsp = solrClient.query(solrQuery);
+      logger.debug("response recieved from " + solrServer +" core "+solrCoreName);
       sList = rsp.getResults();
     } catch (SolrServerException | IOException e) {
-      logger.info("error occured while fetching results from solr server "
+      logger.debug("error occured while fetching results from solr server "
           + e.getMessage());
     }
     return sList;

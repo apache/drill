@@ -135,6 +135,10 @@ public class SolrGroupScan extends AbstractGroupScan {
     return solrPlugin;
   }
 
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+
   @Override
   public String toString() {
     return "SolrGroupScan [SolrScanSpec=" + solrScanSpec + ", columns="

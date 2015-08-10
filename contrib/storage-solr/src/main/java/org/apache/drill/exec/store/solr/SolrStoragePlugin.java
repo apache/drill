@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.solr;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -94,7 +95,7 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName,
       JSONOptions selection, List<SchemaPath> columns) throws IOException {
-    logger.info("SolrStoragePlugin :: getPhysicalScan" + " userName : "
+    logger.debug("SolrStoragePlugin :: getPhysicalScan" + " userName : "
         + userName + " columns ::" + columns);
     SolrScanSpec solrScanSpec = selection.getListWith(new ObjectMapper(),
         new TypeReference<SolrScanSpec>() {
@@ -103,7 +104,7 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
   }
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules(){
-    logger.info("SolrStoragePlugin :: getOptimizerRules");
+    logger.debug("SolrStoragePlugin :: getOptimizerRules");
     return ImmutableSet.of(SolrQueryFilterRule.INSTANCE);
   }
 }

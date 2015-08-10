@@ -75,19 +75,28 @@ public class SolrRecordReader extends AbstractRecordReader {
     solrClientApiExec = config.getSolrPlugin().getSolrClientApiExec();
     solrClient = config.getSolrPlugin().getSolrClient();
     String solrCoreName = scanList.get(0).getSolrCoreName();
-    List<SchemaPath> colums=config.getColumns();
+    List<SchemaPath> colums = config.getColumns();
+    SolrFilterParam filters = config.getSolrScanSpec().getFilter();
+    StringBuilder sb=new StringBuilder();
+    if(filters!=null){      
+      for (String filter : filters) {
+        sb.append(filter);
+      }     
+    }
     setColumns(colums);
     Map<String, String> solrParams = new HashMap<String, String>();
     solrParams.put("q", "*:*");
     solrParams.put("rows", String.valueOf(Integer.MAX_VALUE));
     solrParams.put("qt", "/select");
-    
-    solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,this.fields);
-    //solrClientApiExec.getSchemaForCore(solrCoreName);
-    resultIter=solrDocList.iterator();
+
+    solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,
+        this.fields,sb);
+    // solrClientApiExec.getSchemaForCore(solrCoreName);
+    resultIter = solrDocList.iterator();
     logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
-    
+
   }
+
   @Override
   protected Collection<SchemaPath> transformColumns(
       Collection<SchemaPath> projectedColumns) {
@@ -105,11 +114,12 @@ public class SolrRecordReader extends AbstractRecordReader {
     }
     return transformed;
   }
+
   @Override
   public void setup(OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
     logger.info("SolrRecordReader :: setup");
-    if (solrDocList != null) {
+    if (!solrDocList.isEmpty()) {
       SolrDocument solrDocument = solrDocList.get(0);
 
       Collection<String> fieldNames = solrDocument.getFieldNames();
@@ -155,10 +165,11 @@ public class SolrRecordReader extends AbstractRecordReader {
     int counter = 0;
     logger.info("SolrRecordReader :: next");
     try {
-      while(counter <= solrDocList.getNumFound() && resultIter.hasNext()){        
-        SolrDocument solrDocument =resultIter.next();
+      while (counter <= solrDocList.getNumFound() && resultIter.hasNext()) {
+        SolrDocument solrDocument = resultIter.next();
         for (ValueVector vv : vectors) {
-          String solrField=vv.getField().getPath().toString().replaceAll("`", ""); //re-think ?? 
+          String solrField = vv.getField().getPath().toString()
+              .replaceAll("`", ""); // re-think ??
           Object fieldValue = solrDocument.get(solrField);
           String fieldValueStr = "NULL";
           if (fieldValue != null) {

@@ -17,9 +17,13 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import java.io.IOException;
+
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -30,6 +34,8 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class SolrQueryFilterRule extends StoragePluginOptimizerRule {
   public static final StoragePluginOptimizerRule INSTANCE = new SolrQueryFilterRule();
@@ -49,17 +55,38 @@ public class SolrQueryFilterRule extends StoragePluginOptimizerRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    logger.info("SolrQueryFilterRule :: onMatch");
+    logger.debug("SolrQueryFilterRule :: onMatch");
     final ScanPrel scan = (ScanPrel) call.rel(1);
     final FilterPrel filter = (FilterPrel) call.rel(0);
     final RexNode condition = filter.getCondition();
-    SolrGroupScan solrGroupScan=(SolrGroupScan) scan.getGroupScan();
+    
+    SolrGroupScan solrGroupScan = (SolrGroupScan) scan.getGroupScan();
+
     LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(
         PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    
     logger.info("conditionExp " + conditionExp);
-    SolrQueryBuilder sQueryBuilder=new SolrQueryBuilder(solrGroupScan, conditionExp);
-    sQueryBuilder.parseTree();
+
+    SolrQueryBuilder sQueryBuilder = new SolrQueryBuilder(solrGroupScan,
+        conditionExp);
+    SolrScanSpec newScanSpec = sQueryBuilder.parseTree();
+    if (newScanSpec == null)
+      return;
+    logger.debug(" field names :: "+scan.getRowType().getFieldNames());
+    SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(),
+        solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
+    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(),
+        newGroupScan, scan.getRowType());
+
+    if (sQueryBuilder.isAllExpressionsConverted()) {
+      logger.info("all expressions converted.. ");
+      call.transformTo(newScanPrel);
+    } else {
+      call.transformTo(filter.copy(filter.getTraitSet(),
+          ImmutableList.of((RelNode) newScanPrel)));
+    }
   }
+
   @Override
   public boolean matches(RelOptRuleCall call) {
     final ScanPrel scan = (ScanPrel) call.rel(1);
