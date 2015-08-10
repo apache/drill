@@ -109,15 +109,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
           if(over.getOperandList().get(0) instanceof SqlCall) {
             SqlCall function = (SqlCall) over.getOperandList().get(0);
 
-            // DRILL-3195:
-            // The following window functions are temporarily disabled NTILE()
-            if ("NTILE".equals(function.getOperator().getName().toUpperCase())) {
-                unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-                    "The window function NTILE is not supported\n" +
-                    "See Apache Drill JIRA: DRILL-3195");
-                throw new UnsupportedOperationException();
-            }
-
             // DRILL-3182
             // Window function with DISTINCT qualifier is temporarily disabled
             if(function.getFunctionQuantifier() != null

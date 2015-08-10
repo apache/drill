@@ -21,9 +21,13 @@ package org.apache.drill.exec.physical.impl.window;
  * Used internally to keep track of partitions and frames
  */
 public class Partition {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Partition.class);
+
   private final int length; // size of this partition
   private int remaining;
-  private int peers;
+
+  private int frameSize; // size of current frame
+  private int peers; // remaining non-processed peers in current frame
 
   // we keep these attributes public because the generated code needs to access them
   public int row_number;
@@ -61,6 +65,8 @@ public class Partition {
 
   public void newFrame(int peers) {
     this.peers = peers;
+    frameSize = peers + row_number - 1; // default frame contains all frames from start of partition to last peer
+
     rank = row_number; // rank = row number of 1st peer
     dense_rank++;
     percent_rank = length > 1 ? (double) (rank - 1) / (length - 1) : 0;
@@ -71,8 +77,20 @@ public class Partition {
     return remaining == 0;
   }
 
-  public boolean isLastRow() {
-    return remaining == 1;
+  public int ntile(int numTiles) {
+    int mod = frameSize % numTiles;
+    double ceil = Math.ceil((double) frameSize / numTiles);
+
+    int out;
+    if (row_number <= mod * ceil) {
+      out = (int) Math.ceil(row_number / ceil);
+    } else {
+      double floor = Math.floor((double) frameSize / numTiles);
+      out = (int) Math.ceil((row_number - mod) / floor);
+    }
+
+    logger.trace("NTILE(row_number = {}, nt = {}, ct = {}) = {}", row_number, numTiles, frameSize, out);
+    return out;
   }
 
   public boolean isFrameDone() {

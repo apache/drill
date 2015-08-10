@@ -19,9 +19,7 @@ package org.apache.drill.exec.physical.impl.window;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
@@ -43,6 +41,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.GetSetVectorHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
@@ -76,49 +75,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
   private boolean noMoreBatches;
   private BatchSchema schema;
-
-  /**
-   * Describes supported window functions and if they output FLOAT8 or BIGINT
-   */
-  private enum WindowFunction {
-    ROW_NUMBER(false),
-    RANK(false),
-    DENSE_RANK(false),
-    PERCENT_RANK(true),
-    CUME_DIST(true),
-    LEAD(false),
-    LAG(false),
-    FIRST_VALUE(false),
-    LAST_VALUE(false);
-
-    private final boolean useDouble;
-
-    WindowFunction(boolean useDouble) {
-      this.useDouble = useDouble;
-    }
-
-    public TypeProtos.MajorType getMajorType() {
-      return useDouble ? Types.required(TypeProtos.MinorType.FLOAT8) : Types.required(TypeProtos.MinorType.BIGINT);
-    }
-
-    /**
-     * Extract the WindowFunction corresponding to the logical expression
-     * @param expr logical expression
-     * @return WindowFunction or null if the logical expression is not a window function
-     */
-    public static WindowFunction fromExpression(final LogicalExpression expr) {
-      if (!(expr instanceof FunctionCall)) {
-        return null;
-      }
-
-      final String name = ((FunctionCall) expr).getName();
-      try {
-        return WindowFunction.valueOf(name.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        return null; // not a window function
-      }
-    }
-  }
 
   public WindowFrameRecordBatch(WindowPOP popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -313,7 +269,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     logger.trace("creating framer");
 
     final List<LogicalExpression> aggExprs = Lists.newArrayList();
-    final Map<WindowFunction, TypedFieldId> computedExprs = Maps.newHashMap();
+    final List<WindowFunction> rankingFuncs = Lists.newArrayList();
     final List<LogicalExpression> keyExprs = Lists.newArrayList();
     final List<LogicalExpression> orderExprs = Lists.newArrayList();
     final List<LogicalExpression> leadExprs = Lists.newArrayList();
@@ -337,7 +293,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       if (wf != null) {
         final FunctionCall call = (FunctionCall) ne.getExpr();
 
-        switch (wf) {
+        switch (wf.type) {
           case LEAD:
             leadExprs.add(materializeLeadFunction(call.args.get(0), ne.getRef(), batch, collector));
           break;
@@ -376,16 +332,20 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
             holdLastExprs.add(new ValueVectorWriteExpression(id, expr, true));
           }
           break;
+          case NTILE:
+            ((WindowFunction.NtileWinFunc) wf).setNumTilesFromExpression(call.args.get(0));
+            // fall-through
           default:
-            {
-              // add corresponding ValueVector to container
-              final MaterializedField outputField = MaterializedField.create(ne.getRef(), wf.getMajorType());
-              ValueVector vv = container.addOrGet(outputField);
-              vv.allocateNew();
+          {
+            // add corresponding ValueVector to container
+            final MaterializedField outputField = MaterializedField.create(ne.getRef(), wf.getMajorType());
+            ValueVector vv = container.addOrGet(outputField);
+            vv.allocateNew();
 
-              computedExprs.put(wf, container.getValueVectorId(ne.getRef()));
-            }
-            break;
+            wf.setFieldId(container.getValueVectorId(ne.getRef()));
+            rankingFuncs.add(wf);
+          }
+          break;
         }
       } else {
         // evaluate expression over saved batch
@@ -420,7 +380,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
     }
 
-    final WindowFramer framer = generateFramer(keyExprs, orderExprs, aggExprs, computedExprs, leadExprs, lagExprs,
+    final WindowFramer framer = generateFramer(keyExprs, orderExprs, aggExprs, rankingFuncs, leadExprs, lagExprs,
       internalExprs, holdFirstExprs, holdLastExprs);
     framer.setup(batches, container, oContext);
 
@@ -428,7 +388,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   private WindowFramer generateFramer(final List<LogicalExpression> keyExprs, final List<LogicalExpression> orderExprs,
-      final List<LogicalExpression> aggExprs, final Map<WindowFunction, TypedFieldId> computedExprs,
+      final List<LogicalExpression> aggExprs, final List<WindowFunction> rankingFuncs,
       final List<LogicalExpression> leadExprs, final List<LogicalExpression> lagExprs,
       final List<LogicalExpression> internalExprs, final List<LogicalExpression> holdFirstExprs,
       final List<LogicalExpression> holdLastExprs) throws IOException, ClassTransformationException {
@@ -496,7 +456,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       generateForExpressions(cg, internalExprs, eval);
     }
 
-    generateRankingFunctions(cg, computedExprs);
+    generateRankingFunctions(cg, rankingFuncs);
 
     cg.getBlock("resetValues")._return(JExpr.TRUE);
 
@@ -527,16 +487,24 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   /**
    * generate code to write "ranking" window function values into their respective value vectors
    */
-  private void generateRankingFunctions(final ClassGenerator<WindowFramer> cg, final Map<WindowFunction, TypedFieldId> functions) {
+  private void generateRankingFunctions(final ClassGenerator<WindowFramer> cg, final List<WindowFunction> functions) {
     final GeneratorMapping mapping = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
     final MappingSet eval = new MappingSet(null, "outIndex", mapping, mapping);
 
     cg.setMappingSet(eval);
-    for (WindowFunction function : functions.keySet()) {
-      final JVar vv = cg.declareVectorValueSetupAndMember(cg.getMappingSet().getOutgoing(), functions.get(function));
+    for (final WindowFunction wf : functions) {
+      final JVar vv = cg.declareVectorValueSetupAndMember(cg.getMappingSet().getOutgoing(), wf.getFieldId());
       final JExpression outIndex = cg.getMappingSet().getValueWriteIndex();
-      JInvocation setMethod = vv.invoke("getMutator").invoke("setSafe").arg(outIndex).arg(
-        JExpr.direct("partition." + function.name().toLowerCase()));
+      JInvocation setMethod;
+
+      if (wf.type == WindowFunction.Type.NTILE) {
+        final WindowFunction.NtileWinFunc ntilesFunc = (WindowFunction.NtileWinFunc)wf;
+        setMethod = vv.invoke("getMutator").invoke("setSafe").arg(outIndex)
+          .arg(JExpr.direct("partition.ntile(" + ntilesFunc.getNumTiles() + ")"));
+      } else {
+        setMethod = vv.invoke("getMutator").invoke("setSafe").arg(outIndex).arg(JExpr.direct("partition." + wf.getName()));
+      }
+
       cg.getEvalBlock().add(setMethod);
     }
   }

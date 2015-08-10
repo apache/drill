@@ -24,6 +24,7 @@ import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -251,5 +252,50 @@ public class TestWindowFrame extends BaseTestQuery {
   public void testLastValueAllTypes() throws Exception {
     // make sure all types are handled properly
     test(getFile("window/fval.alltypes.sql"), TEST_RES_PATH);
+  }
+
+  @Test
+  public void testNtile() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/ntile.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/b2.p4.ntile.tsv")
+      .baselineColumns("ntile")
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testPartitionNtile() {
+    Partition partition = new Partition(20);
+    partition.newFrame(12);
+
+    Assert.assertEquals(1, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(1, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(1, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(2, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(3, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(3, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(4, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(4, partition.ntile(5));
+
+    partition.rowAggregated();
+    Assert.assertEquals(5, partition.ntile(5));
+    partition.rowAggregated();
+    Assert.assertEquals(5, partition.ntile(5));
   }
 }

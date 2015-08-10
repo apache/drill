@@ -66,19 +66,6 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionNTILE() throws Exception {
-    try {
-      final String query = "explain plan for select NTILE(1) over(partition by n_name order by n_name) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
   @Test(expected = UnsupportedFunctionException.class) // DRILL-3188
   public void testWindowFrame() throws Exception {
     try {
