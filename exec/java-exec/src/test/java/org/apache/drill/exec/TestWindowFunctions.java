@@ -23,6 +23,8 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
+import org.apache.drill.PlanTestBase;
+
 import org.junit.Test;
 
 public class TestWindowFunctions extends BaseTestQuery {
@@ -447,6 +449,36 @@ public class TestWindowFunctions extends BaseTestQuery {
         .baselineValues(2l, 5l, 20l)
         .baselineValues(3l, 5l, 30l)
         .baselineValues(3l, 5l, 30l)
+        .build()
+        .run();
+  }
+
+  @Test // see DRILL-3574
+  public void testWithAndWithoutPartitions() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format("select sum(a1) over(partition by b1, c1) as s1, sum(a1) over() as s2 \n" +
+        "from dfs_test.`%s` \n" +
+        "order by a1", root);
+    test("alter session set `planner.slice_target` = 1");
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{\\}.*\n" +
+        ".*UnionExchange"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("s1", "s2")
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(20l, 50l)
+        .baselineValues(20l, 50l)
         .build()
         .run();
   }
