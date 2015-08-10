@@ -13,5 +13,5 @@ title: Community Resources
 
 * Issue tracker: [JIRA](https://issues.apache.org/jira/browse/DRILL/)
 * [Contribute to Drill]({{ site.baseurl }}/docs/contribute-to-drill/)
-* Hangout: [Weekly Drill Hangout](https://plus.google.com/hangouts/_/event/ci4rdiju8bv04a64efj5fedd0lc) (Every on Tuesday at 10am PDT)
+* Hangout: [Weekly Drill Hangout](https://plus.google.com/hangouts/_/event/ci4rdiju8bv04a64efj5fedd0lc) (Every Tuesday at 10am PDT)
 * Source code: [GitHub](https://github.com/apache/drill)
