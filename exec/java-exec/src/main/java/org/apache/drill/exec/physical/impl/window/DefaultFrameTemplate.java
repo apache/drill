@@ -36,8 +36,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
   private VectorContainer container;
   private VectorContainer internal;
+  private boolean lagCopiedToInternal;
   private List<WindowDataBatch> batches;
   private int outputCount; // number of rows in currently/last processed batch
+
+  private int frameLastRow;
 
   /**
    * current partition being processed.</p>
@@ -53,7 +56,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
     internal = new VectorContainer(oContext);
     allocateInternal();
-    internal.setRecordCount(0);
+    lagCopiedToInternal = false;
 
     outputCount = 0;
     partition = null;
@@ -68,9 +71,9 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void allocateInternal() {
     // TODO we don't need to allocate all container's vectors, we can pass a specific list of vectors to allocate internally
     for (VectorWrapper<?> w : container) {
-      internal.addOrGet(w.getField());
+      ValueVector vv = internal.addOrGet(w.getField());
+      vv.allocateNew();
     }
-    container.zeroVectors();
   }
 
   /**
@@ -133,14 +136,15 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     final int length = computePartitionSize(currentRow);
     partition = new Partition(length);
     setupPartition(current, container);
-    holdFirst(currentRow); // this is called once per partition
+    setupCopyFirstValue(current, internal);
+    copyFirstValueToInternal(currentRow);
   }
 
   private void cleanPartition() {
     partition = null;
     resetValues();
     internal.zeroVectors();
-    internal.setRecordCount(0);
+    lagCopiedToInternal = false;
   }
 
   /**
@@ -154,12 +158,9 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
     final VectorAccessible current = getCurrent();
     setupCopyNext(current, container);
+    setupPasteValues(internal, container);
 
-    // copy prev row from internal
-    if (internal.getRecordCount() > 0) {
-      setupCopyFromInternal(internal, container);
-      copyFromInternal(0, 0);
-    }
+    copyPrevFromInternal();
 
     // copy remaining from current
     setupCopyPrev(current, container);
@@ -187,14 +188,25 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       setupCopyNext(batches.get(1), container);
       copyNext(0, row - 1);
 
-      // copy prev value onto internal container
-      logger.trace("copying {} into internal", row - 1);
-      setupCopyPrev(current, internal);
-      copyPrev(row - 1, 0);
-      internal.setRecordCount(1);
+      copyPrevToInternal(current, row);
     }
 
     return row;
+  }
+
+  private void copyPrevToInternal(VectorAccessible current, int row) {
+    logger.trace("copying {} into internal", row - 1);
+    setupCopyPrev(current, internal);
+    copyPrev(row - 1, 0);
+    lagCopiedToInternal = true;
+  }
+
+  private void copyPrevFromInternal() {
+    if (lagCopiedToInternal) {
+      setupCopyFromInternal(internal, container);
+      copyFromInternal(0, 0);
+      lagCopiedToInternal = false;
+    }
   }
 
   private void processRow(final int row) throws DrillException {
@@ -205,6 +217,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     }
 
     outputRow(row, partition);
+    writeLastValue(frameLastRow, row);
 
     partition.rowAggregated();
   }
@@ -294,7 +307,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
       if (i == peers - 1) {
         // last row of current frame
-        holdLast(row);
+        setupReadLastValue(current, container);
+        frameLastRow = row;
       }
     }
   }
@@ -348,8 +362,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   public abstract void evaluatePeer(@Named("index") int index);
   public abstract void setupEvaluatePeer(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
-  public abstract void holdFirst(@Named("index") int index);
-  public abstract void holdLast(@Named("index") int index);
+  public abstract void setupReadLastValue(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
+  public abstract void writeLastValue(@Named("index") int index, @Named("outIndex") int outIndex);
+
+  public abstract void setupCopyFirstValue(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
+  public abstract void copyFirstValueToInternal(@Named("index") int index);
 
   /**
    * called once for each row after we evaluate all peer rows. Used to write a value in the row
@@ -377,6 +394,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
    */
   public abstract void copyNext(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
   public abstract void setupCopyNext(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+
+  public abstract void setupPasteValues(@Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
 
   /**
    * copies value(s) from inIndex row to outIndex row. Mostly used by LAG. inIndex always points to the previous row

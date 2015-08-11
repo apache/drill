@@ -26,7 +26,6 @@ import com.sun.codemodel.JVar;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -41,7 +40,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.GetSetVectorHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
@@ -275,8 +273,9 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final List<LogicalExpression> leadExprs = Lists.newArrayList();
     final List<LogicalExpression> lagExprs = Lists.newArrayList();
     final List<LogicalExpression> internalExprs = Lists.newArrayList();
-    final List<LogicalExpression> holdFirstExprs = Lists.newArrayList();
-    final List<LogicalExpression> holdLastExprs = Lists.newArrayList();
+    final List<LogicalExpression> writeFirstValueToFirstValue = Lists.newArrayList();
+    final List<LogicalExpression> writeSourceToFirstValue = Lists.newArrayList();
+    final List<LogicalExpression> writeSourceToLastValue = Lists.newArrayList();
     final ErrorCollector collector = new ErrorCollectorImpl();
 
     container.clear();
@@ -308,28 +307,34 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
             break;
           case FIRST_VALUE:
             {
-              final LogicalExpression holdExpr = new FunctionCall("holdlast", call.args, ExpressionPosition.UNKNOWN);
-              final LogicalExpression expr = ExpressionTreeMaterializer.materialize(holdExpr, batch, collector, registry);
+              final LogicalExpression sourceRead = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector,
+                context.getFunctionRegistry());
 
-              final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-              ValueVector vv = container.addOrGet(outputField);
+              final MaterializedField firstValueColumn = MaterializedField.create(ne.getRef(), sourceRead.getMajorType());
+              final ValueVector vv = container.addOrGet(firstValueColumn);
               vv.allocateNew();
 
-              TypedFieldId id = container.getValueVectorId(ne.getRef());
-              holdFirstExprs.add(new ValueVectorWriteExpression(id, expr, true));
+              final TypedFieldId firstValueId = container.getValueVectorId(ne.getRef());
+
+              // write incoming.first_value[inIndex] to outgoing.first_value[outIndex]
+              writeFirstValueToFirstValue.add(new ValueVectorWriteExpression(firstValueId, new ValueVectorReadExpression(firstValueId), true));
+              // write incoming.source[inIndex] to outgoing.first_value[outIndex]
+              writeSourceToFirstValue.add(new ValueVectorWriteExpression(firstValueId, sourceRead, true));
             }
             break;
           case LAST_VALUE:
           {
-            final LogicalExpression holdExpr = new FunctionCall("holdlast", call.args, ExpressionPosition.UNKNOWN);
-            final LogicalExpression expr = ExpressionTreeMaterializer.materialize(holdExpr, batch, collector, registry);
+            final LogicalExpression sourceRead = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector,
+              context.getFunctionRegistry());
 
-            final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-            ValueVector vv = container.addOrGet(outputField);
+            final MaterializedField lastValueColumn = MaterializedField.create(ne.getRef(), sourceRead.getMajorType());
+            final ValueVector vv = container.addOrGet(lastValueColumn);
             vv.allocateNew();
 
-            TypedFieldId id = container.getValueVectorId(ne.getRef());
-            holdLastExprs.add(new ValueVectorWriteExpression(id, expr, true));
+            final TypedFieldId lastValueId = container.getValueVectorId(ne.getRef());
+
+            // write incoming.source[inIndex] to outgoing.last_value[outIndex]
+            writeSourceToLastValue.add(new ValueVectorWriteExpression(lastValueId, sourceRead, true));
           }
           break;
           case NTILE:
@@ -381,7 +386,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     final WindowFramer framer = generateFramer(keyExprs, orderExprs, aggExprs, rankingFuncs, leadExprs, lagExprs,
-      internalExprs, holdFirstExprs, holdLastExprs);
+      internalExprs, writeFirstValueToFirstValue, writeSourceToFirstValue, writeSourceToLastValue);
     framer.setup(batches, container, oContext);
 
     return framer;
@@ -390,8 +395,9 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private WindowFramer generateFramer(final List<LogicalExpression> keyExprs, final List<LogicalExpression> orderExprs,
       final List<LogicalExpression> aggExprs, final List<WindowFunction> rankingFuncs,
       final List<LogicalExpression> leadExprs, final List<LogicalExpression> lagExprs,
-      final List<LogicalExpression> internalExprs, final List<LogicalExpression> holdFirstExprs,
-      final List<LogicalExpression> holdLastExprs) throws IOException, ClassTransformationException {
+      final List<LogicalExpression> internalExprs,
+      final List<LogicalExpression> writeFirstValueToFirstValue, final List<LogicalExpression> writeSourceToFirstValue,
+      final List<LogicalExpression> writeSourceToLastValue) throws IOException, ClassTransformationException {
     final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(WindowFramer.TEMPLATE_DEFINITION, context.getFunctionRegistry());
 
     {
@@ -419,19 +425,52 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     {
-      // generating FIRST_VALUE holdFirst
-      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupPartition", "holdFirst", null, null);
-      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
-      final MappingSet eval = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
-      generateForExpressions(cg, holdFirstExprs, eval);
+      // in DefaultFrameTemplate we call setupCopyFirstValue:
+      //   setupCopyFirstValue(current, internal)
+      // and copyFirstValueToInternal:
+      //   copyFirstValueToInternal(currentRow, 0)
+      //
+      // this will generate the the following, pseudo, code:
+      //   write current.source[currentRow] to internal.first_value[0]
+      //
+      // so it basically copies the first value of current partition into the first row of internal.first_value
+      // this is especially useful when handling multiple batches for the same partition where we need to keep
+      // the first value of the partition somewhere after we release the first batch
+
+      final GeneratorMapping mapping = GeneratorMapping.create("setupCopyFirstValue", "copyFirstValueToInternal", null, null);
+      final MappingSet mappingSet = new MappingSet("index", "0", mapping, mapping);
+      generateForExpressions(cg, writeSourceToFirstValue, mappingSet);
     }
 
     {
-      // generating LAST_VALUE holdLast
-      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupEvaluatePeer", "holdLast", null, null);
-      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      // in DefaultFrameTemplate we call setupPasteValues:
+      //   setupPasteValues(internal, container)
+      // and outputRow:
+      //   outputRow(outIndex)
+      //
+      // this will generate the the following, pseudo, code:
+      //   write internal.first_value[0] to container.first_value[outIndex]
+      //
+      // so it basically copies the value stored in internal.first_value's first row into all rows of container.first_value
+
+      final GeneratorMapping mapping = GeneratorMapping.create("setupPasteValues", "outputRow", "resetValues", "cleanup");
+      final MappingSet eval = new MappingSet("0", "outIndex", mapping, mapping);
+      generateForExpressions(cg, writeFirstValueToFirstValue, eval);
+    }
+
+    {
+      // in DefaultFrameTemplate we call setupReadLastValue:
+      //   setupReadLastValue(current, container)
+      // and readLastValue:
+      //   writeLastValue(frameLastRow, row)
+      //
+      // this will generate the the following, pseudo, code:
+      //   write current.source_last_value[frameLastRow] to container.last_value[row]
+
+      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupReadLastValue", "readLastValue", null, null);
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
       final MappingSet eval = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
-      generateForExpressions(cg, holdLastExprs, eval);
+      generateForExpressions(cg, writeSourceToLastValue, eval);
     }
 
     {

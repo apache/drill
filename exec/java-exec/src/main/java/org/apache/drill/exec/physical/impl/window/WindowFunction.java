@@ -35,7 +35,7 @@ public class WindowFunction {
     LAG,
     FIRST_VALUE,
     LAST_VALUE,
-    NTILE;
+    NTILE
   }
 
   final Type type;
