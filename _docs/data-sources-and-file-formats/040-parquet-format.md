@@ -20,6 +20,21 @@ Apache Drill includes the following support for Parquet:
 ## Reading Parquet Files
 When a read of Parquet data occurs, Drill loads only the necessary columns of data, which reduces I/O. Reading only a small piece of the Parquet data from a data file or table, Drill can examine and analyze all values for a column across multiple files. You can create a Drill table from one format and store the data in another format, including Parquet.
 
+## Caching Metadata
+
+For performant querying of a large number of files, Drill can take advantage of metadata, such as the Hive metadata store, and includes the capability of generating a metadata cache for performant querying of thousands of Parquet files. The metadata cache is not a central caching system, but simply one or more files of metadata. Drill generates and saves a cache of metadata in each directory in nested directories. You trigger the generation of metadata caches by running the REFRESH TABLE METADATA command, as described in [Querying Parquet Files]({{site.baseurl}}/docs/querying-parquet-files/).
+
+After generating the metadata cache, Drill performs the following tasks during the planning phase for a query on a directory of Parquet files:
+
+* Finds files.  
+* Recurses directories.  
+* Reads the footers of files to get information, such as row counts and HDFS block locations for every file for Drill to assign work based on locality.  
+  When Drill reads the file, it attempts to execute the query on the node where the data rests.  
+* Summarizes the information from the footers in a single metadata cache file.  
+* Stores the metadata cache file at each level that covers that particular level and all lower levels.
+
+At execution time, Drill reads the actual files. At planning time, Drill reads only the metadata file.
+
 ## Writing Parquet Files
 CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.
 

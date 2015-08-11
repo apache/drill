@@ -83,9 +83,9 @@ An administrator can set the maximum number of hops on views to limit the number
  
 The following example depicts a scenario where the maximum hop number is set to 3, and Drill must impersonate three users to access data when Chad queries a view that Jane created:
 
-![]({{ site.baseurl }}/docs/img/user_hops_no_join.PNG)
+![]({{ site.baseurl }}/docs/img/drill_imp_simple.PNG)
 
-In the previous example, Joe created V3 from the views that user Frank created. In the following example, Joe created V3 by joining a view that Frank created with a view that Bob created. 
+In the previous example, Joe created V2 from the view that user Frank created. In the following example, Joe created V3 by joining a view that Frank created with a view that Bob created. 
  
 ![]({{ site.baseurl }}/docs/img/user_hops_joined_view.PNG)  
 
