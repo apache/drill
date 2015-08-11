@@ -34,7 +34,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 1);
 
-    final String[] expectedPlan = {".*startRow=b4, stopRow=b4.*"};
+    final String[] expectedPlan = {".*startRow=b4, stopRow=b4\\\\x00, filter=null.*"};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -52,7 +52,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 1);
 
-    final String[] expectedPlan = {".*startRow=b4, stopRow=b4.*"};
+    final String[] expectedPlan = {".*startRow=b4, stopRow=b4\\\\x00, filter=null.*"};
     final String[] excludedPlan ={".*startRow=null, stopRow=null.*"};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -122,9 +122,9 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  row_key > 'b4'";
 
-    runHBaseSQLVerifyCount(sql, 2);
+    runHBaseSQLVerifyCount(sql, 3);
 
-    final String[] expectedPlan = {".*startRow=b4.*stopRow=,.*"};
+    final String[] expectedPlan = {".*startRow=b4\\\\x00.*stopRow=,.*"};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -142,7 +142,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 2);
 
-    final String[] expectedPlan = {".*startRow=b4.*stopRow=,.*"};
+    final String[] expectedPlan = {".*startRow=b4\\\\x00.*stopRow=, filter=null.*"};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -228,7 +228,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  convert_from(row_key, 'UTF8') > 'b4'";
 
-    runHBaseSQLVerifyCount(sql, 2);
+    runHBaseSQLVerifyCount(sql, 3);
 
     final String[] expectedPlan = {".*startRow=b4\\\\x00, stopRow=,.*"};
     final String[] excludedPlan ={};
@@ -303,4 +303,62 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
   }
 
+  @Test
+  public void testFilterPushDownOrRowKeyEqual() throws Exception {
+    setColumnWidths(new int[] {8, 38, 38});
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  row_key = 'b4' or row_key = 'a2'";
+
+    runHBaseSQLVerifyCount(sql, 2);
+
+    final String[] expectedPlan = {".*startRow=a2, stopRow=b4\\\\x00, filter=FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, b4\\), RowFilter \\(EQUAL, a2\\).*"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+
+  }
+
+  @Test
+  public void testFilterPushDownOrRowKeyInPred() throws Exception {
+    setColumnWidths(new int[] {8, 38, 38});
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  row_key in ('b4', 'a2')";
+
+    runHBaseSQLVerifyCount(sql, 2);
+
+    final String[] expectedPlan = {".*startRow=a2, stopRow=b4\\\\x00, filter=FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, b4\\), RowFilter \\(EQUAL, a2\\).*"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+
+  }
+
+  @Test
+  public void testFilterPushDownOrRowKeyEqualRangePred() throws Exception {
+    setColumnWidths(new int[] {8, 38, 38});
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  row_key = 'a2' or row_key between 'b5' and 'b6'";
+
+    runHBaseSQLVerifyCount(sql, 3);
+
+    final String[] expectedPlan = {".*startRow=a2, stopRow=b6\\\\x00, filter=FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, a2\\), FilterList AND \\(2/2\\): \\[RowFilter \\(GREATER_OR_EQUAL, b5\\), RowFilter \\(LESS_OR_EQUAL, b6.*"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+
+  }
+
 }
+

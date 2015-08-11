@@ -81,6 +81,15 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c9".getBytes(), "6".getBytes());
     table.put(p);
 
+    p = new Put(new byte[]{'b', '4', 0});
+    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.add("f2".getBytes(), "c2".getBytes(), "2".getBytes());
+    p.add("f".getBytes(), "c3".getBytes(), "3".getBytes());
+    p.add("f2".getBytes(), "c4".getBytes(), "4".getBytes());
+    p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
+    p.add("f2".getBytes(), "c6".getBytes(), "6".getBytes());
+    table.put(p);
+
     p = new Put("b4".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f2".getBytes(), "c2".getBytes(), "2".getBytes());

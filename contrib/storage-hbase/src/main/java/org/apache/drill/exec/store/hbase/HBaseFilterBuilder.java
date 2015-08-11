@@ -176,8 +176,10 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     case "equal":
       compareOp = CompareOp.EQUAL;
       if (isRowKey) {
-        startRow = stopRow = fieldValue;
-        compareOp = null;
+        startRow = fieldValue;
+        /* stopRow should be just greater than 'value'*/
+        stopRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
+        compareOp = CompareOp.EQUAL;
       }
       break;
     case "not_equal":
