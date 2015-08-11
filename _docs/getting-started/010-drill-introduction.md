@@ -36,7 +36,7 @@ In this release, Drill disables the DECIMAL data type, including casting to DECI
 Key features of Apache Drill are:
 
   * Low-latency SQL queries
-  * Dynamic queries on self-describing data in files (such as JSON, Parquet, text) and MapR-DB/HBase tables, without requiring metadata definitions in the Hive metastore.
+  * Dynamic queries on self-describing data in files (such as JSON, Parquet, text) and HBase tables, without requiring metadata definitions in the Hive metastore.
   * ANSI SQL
   * Nested data support
   * Integration with Apache Hive (queries on Hive tables and views, support for all Hive file formats and Hive UDFs)

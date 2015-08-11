@@ -125,7 +125,7 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
 </table>
 
-\* Pertains only to distributed drill installations using the mapr-drill package.  
+\* Pertains only to distributed Drill installations using the mapr-drill package.  
 
 ## Using the Formats Attributes
 
@@ -144,7 +144,7 @@ For example, using uppercase letters in the query after defining the storage plu
 
 ## Storage Plugin REST API
 
-Drill provides a REST API that you can use to create a storage plugin configuration. Use an HTTP POST and pass two properties:
+If you need to add a storage plugin configuration to Drill and do not want to use a web browser, Drill provides a REST API that you can use to create a storage plugin configuration. Use an HTTP POST and pass two properties:
 
 * name  
   The storage plugin configuration name. 
@@ -158,9 +158,9 @@ For example, this command creates a storage plugin named myplugin for reading fi
 
 ## Bootstrapping a Storage Plugin
 
-If you need to add a storage plugin configurationto Drill and do not want to use a web browser, you can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin configuration loads when Drill starts up.
+The REST API is recommended for programmatically adding a storage plugin configuration to Drill. An alternative for use in a distributed environment only is bootstrapping. You can create a [bootstrap-storage-plugins.json](https://github.com/apache/drill/blob/master/contrib/storage-hbase/src/main/resources/bootstrap-storage-plugins.json) file and include it on the classpath when starting Drill. The storage plugin configuration loads when Drill starts up.
 
-Bootstrapping a storage plugin configuration works only when the first Drillbit in the cluster first starts up. The configuration is
+Currently, bootstrapping a storage plugin configuration works only when the first Drillbit in the cluster first starts up. The configuration is
 stored in ZooKeeper, preventing Drill from picking up the bootstrap-storage-plugins.json again.
 
 After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin configuration. Alternatively, you

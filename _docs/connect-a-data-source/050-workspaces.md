@@ -24,7 +24,7 @@ location of the data:
 
 You cannot include workspaces in the configurations of the
 `hive` and `hbase` plugins installed with Apache Drill, though Hive databases show up as workspaces in
-Drill. Each `hive` instance includes a `default` workspace that points to the  Hive metastore. When you query
+Drill. Each `hive` storage plugin configuration includes a `default` workspace that points to the  Hive metastore. When you query
 files and tables in the `hive default` workspaces, you can omit the
 workspace name from the query.
 

@@ -72,7 +72,7 @@ You can use the alias CHARACTER_LENGTH.
 
 ### CHAR_LENGTH Example
 
-    SELECT CHAR_LENGTH('Drill rocks') FROM sys.version;
+    SELECT CHAR_LENGTH('Drill rocks') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -90,7 +90,7 @@ Concatenates arguments.
 
 ### CONCAT Example
 
-    SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM sys.version;
+    SELECT CONCAT('Drill', ' ', 1.0, ' ', 'release') FROM (VALUES(1));
 
     +--------------------+
     |       EXPR$0       |
@@ -110,7 +110,7 @@ Returns the string using initial caps.
 
 ### INITCAP Examples
 
-    SELECT INITCAP('apache drill release 1.0') FROM sys.version;
+    SELECT INITCAP('apache drill release 1.0') FROM (VALUES(1));
 
     +---------------------------+
     |          EXPR$0           |
@@ -127,7 +127,7 @@ Returns the number of characters in the string.
 
 ### LENGTH Example
 
-    SELECT LENGTH('apache drill release 1.0') FROM sys.version;
+    SELECT LENGTH('apache drill release 1.0') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -157,7 +157,7 @@ Converts characters in the string to lowercase.
 
 ### LOWER Example
 
-    SELECT LOWER('Apache Drill') FROM sys.version;
+    SELECT LOWER('Apache Drill') FROM (VALUES(1));
 
     +---------------+
     |    EXPR$0     |
@@ -176,7 +176,7 @@ Pads the string to the length specified by prepending the fill or a space. Trunc
 
 ### LPAD Example
 
-    SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM sys.version;
+    SELECT LPAD('Release 1.0', 27, 'of Apache Drill 1.0') FROM (VALUES(1));
 
     +------------------------------+
     |            EXPR$0            |
@@ -194,7 +194,7 @@ Removes any characters from the beginning of string1 that match the characters i
 
 ### LTRIM Examples
 
-    SELECT LTRIM('Apache Drill', 'Apache ') FROM sys.version;
+    SELECT LTRIM('Apache Drill', 'Apache ') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -203,7 +203,7 @@ Removes any characters from the beginning of string1 that match the characters i
     +------------+
     1 row selected (0.131 seconds)
 
-    SELECT LTRIM('A powerful tool Apache Drill', 'Apache ') FROM sys.version;
+    SELECT LTRIM('A powerful tool Apache Drill', 'Apache ') FROM (VALUES(1));
 
     +----------------------------+
     |           EXPR$0           |
@@ -221,7 +221,7 @@ Returns the location of a substring.
 
 ### POSITION Example
 
-    SELECT POSITION('c' in 'Apache Drill') FROM sys.version;
+    SELECT POSITION('c' in 'Apache Drill') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -248,7 +248,7 @@ Substitutes new text for substrings that match [POSIX regular expression pattern
 
 Replace a's with b's in this string.
 
-    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a', 'b') FROM sys.version;
+    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a', 'b') FROM (VALUES(1));
     +---------------------+
     |       EXPR$0        |
     +---------------------+
@@ -259,7 +259,7 @@ Replace a's with b's in this string.
 
 Use the regular expression *a* followed by a period (.) in the same query to replace all a's and the subsequent character.
 
-    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a.','b') FROM sys.version;
+    SELECT REGEXP_REPLACE('abc, acd, ade, aef', 'a.','b') FROM (VALUES(1));
     +-----------------+
     |     EXPR$0      |
     +-----------------+
@@ -277,7 +277,7 @@ Pads the string to the length specified. Appends the text you specify after the 
 
 ### RPAD Example
 
-    SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM sys.version;
+    SELECT RPAD('Apache Drill ', 22, 'Release 1.0') FROM (VALUES(1));
     +-------------------------+
     |         EXPR$0          |
     +-------------------------+
@@ -294,7 +294,7 @@ Removes any characters from the end of string1 that match the characters in stri
 
 ### RTRIM Examples
 
-    SELECT RTRIM('Apache Drill', 'Drill ') FROM sys.version;
+    SELECT RTRIM('Apache Drill', 'Drill ') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -303,7 +303,7 @@ Removes any characters from the end of string1 that match the characters in stri
     +------------+
     1 row selected (0.135 seconds)
 
-    SELECT RTRIM('1.0 Apache Tomcat 1.0', 'Drill 1.0') from sys.version;
+    SELECT RTRIM('1.0 Apache Tomcat 1.0', 'Drill 1.0') from (VALUES(1));
     +--------------------+
     |       EXPR$0       |
     +--------------------+
@@ -320,7 +320,7 @@ STRPOS(string, substring)
 
 ### STRPOS Example
 
-    SELECT STRPOS('Apache Drill', 'Drill') FROM sys.version;
+    SELECT STRPOS('Apache Drill', 'Drill') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -342,7 +342,7 @@ You can use the alias SUBSTRING for this function.
 
 ### SUBSTR Example
 
-    SELECT SUBSTR('Apache Drill', 8) FROM sys.version;
+    SELECT SUBSTR('Apache Drill', 8) FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -351,7 +351,7 @@ You can use the alias SUBSTRING for this function.
     +------------+
     1 row selected (0.134 seconds)
 
-    SELECT SUBSTR('Apache Drill', 3, 2) FROM sys.version;
+    SELECT SUBSTR('Apache Drill', 3, 2) FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -369,7 +369,7 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
 
 ### TRIM Example
 
-    SELECT TRIM(trailing 'l' from 'Drill') FROM sys.version;
+    SELECT TRIM(trailing 'l' from 'Drill') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -377,7 +377,7 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
     +------------+
     1 row selected (0.172 seconds)
 
-    SELECT TRIM(both 'l' from 'long live Drill') FROM sys.version;
+    SELECT TRIM(both 'l' from 'long live Drill') FROM (VALUES(1));
     +---------------+
     |    EXPR$0     |
     +---------------+
@@ -385,7 +385,7 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
     +---------------+
     1 row selected (0.104 seconds)
 
-    SELECT TRIM(leading 'l' from 'long live Drill') FROM sys.version;
+    SELECT TRIM(leading 'l' from 'long live Drill') FROM (VALUES(1));
     +-----------------+
     |     EXPR$0      |
     +-----------------+
@@ -402,7 +402,7 @@ Converts characters in the string to uppercase.
 
 ### UPPER Example
 
-    SELECT UPPER('Apache Drill') FROM sys.version;
+    SELECT UPPER('Apache Drill') FROM (VALUES(1));
 
     +---------------+
     |    EXPR$0     |

@@ -17,7 +17,10 @@ To query MongoDB with Drill, you install Drill and MongoDB, and then you import 
 
   1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
   2. [Install MongoDB](http://docs.mongodb.org/manual/installation), if you do not already have it installed.
-  3. [Import the MongoDB zip code sample data set](http://docs.mongodb.org/manual/tutorial/aggregation-zip-code-data-set). You can use Mongo Import to get the data. 
+  3. [Import the MongoDB zip code sample data set](http://docs.mongodb.org/manual/tutorial/aggregation-zip-code-data-set).   * Copy the `zips.json` content into a file and save it.  
+     * Create `/data/db` if it doesn't already exist.
+     * Make sure you have permissions to access the directories. 
+     * Use Mongo Import to import `zips.json`. 
 
 ## Configuring MongoDB
 
@@ -37,70 +40,113 @@ Drill must be running in order to access the Web UI to configure a storage plugi
         }
 
      {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
-  6. Click **Enable** to enable the storage plugin, and save the configuration.
+  6. Click **Enable** to enable the storage plugin.
 
 ## Querying MongoDB
 
-In the [Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), you can issue the `SHOW DATABASES` command to see a list of schemas from all
-Drill data sources, including MongoDB. If you downloaded the zip codes file,
-you should see `mongo.zipdb` in the results.
+In the [Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/), set up Drill to use the zips collection you imported into MongoDB.
 
-    0: jdbc:drill:zk=local> SHOW DATABASES;
-    +--------------------+
-    |     SCHEMA_NAME    |
-    +--------------------+
-    | dfs.default        |
-    | dfs.root           |
-    | dfs.tmp            |
-    | sys                |
-    | mongo.zipdb        |
-    | cp.default         |
-    | INFORMATION_SCHEMA |
-    +--------------------+
+1. Get a list of schemas from all
+Drill data sources, including MongoDB. 
 
-If you want all queries that you submit to default to `mongo.zipdb`, you can issue
-the `USE` command to change schema.
+        SHOW DATABASES;
+   
+        +---------------------+
+        |     SCHEMA_NAME     |
+        +---------------------+
+        | INFORMATION_SCHEMA  |
+        | cp.default          |
+        | dfs.default         |
+        | dfs.root            |
+        | dfs.tmp             |
+        | mongo.local         |
+        | mongo.test          |
+        | sys                 |
+        +---------------------+
+        8 rows selected (1.385 seconds)
+    
+2. Change the schema to mongo.text.
+
+        USE mongo.test;
+
+        +-------+-----------------------------------------+
+        |  ok   |                 summary                 |
+        +-------+-----------------------------------------+
+        | true  | Default schema changed to [mongo.test]  |
+        +-------+-----------------------------------------+
+
+3. List the tables and verify that the `zips` collection appears:
+
+        SHOW TABLES;
+
+        +---------------+-----------------+
+        | TABLE_SCHEMA  |   TABLE_NAME    |
+        +---------------+-----------------+
+        | mongo.test    | system.indexes  |
+        | mongo.test    | zips            |
+        +---------------+-----------------+
+        2 rows selected (0.187 seconds)
+
+4. Set the option to read numbers as doubles instead of as text;
+
+        ALTER SYSTEM SET `store.mongo.read_numbers_as_double` = true;
+        +-------+----------------------------------------------+
+        |  ok   |                   summary                    |
+        +-------+----------------------------------------------+
+        | true  | store.mongo.read_numbers_as_double updated.  |
+        +-------+----------------------------------------------+
+        1 row selected (0.078 seconds)
+
+
 
 ### Example Queries
 
-**Example 1: View mongo.zipdb Dataset**
+**Example 1: View the zips Collection**
 
-    0: jdbc:drill:zk=local> SELECT * FROM zipcodes LIMIT 10;
-    +------------------------------------------------------------------------------------------------+
-    |                                           *                                                    |
-    +------------------------------------------------------------------------------------------------+
-    | { "city" : "AGAWAM" , "loc" : [ -72.622739 , 42.070206] , "pop" : 15338 , "state" : "MA"}      |
-    | { "city" : "CUSHMAN" , "loc" : [ -72.51565 , 42.377017] , "pop" : 36963 , "state" : "MA"}      |
-    | { "city" : "BARRE" , "loc" : [ -72.108354 , 42.409698] , "pop" : 4546 , "state" : "MA"}        |
-    | { "city" : "BELCHERTOWN" , "loc" : [ -72.410953 , 42.275103] , "pop" : 10579 , "state" : "MA"} |
-    | { "city" : "BLANDFORD" , "loc" : [ -72.936114 , 42.182949] , "pop" : 1240 , "state" : "MA"}    |
-    | { "city" : "BRIMFIELD" , "loc" : [ -72.188455 , 42.116543] , "pop" : 3706 , "state" : "MA"}    |
-    | { "city" : "CHESTER" , "loc" : [ -72.988761 , 42.279421] , "pop" : 1688 , "state" : "MA"}      |
-    | { "city" : "CHESTERFIELD" , "loc" : [ -72.833309 , 42.38167] , "pop" : 177 , "state" : "MA"}   |
-    | { "city" : "CHICOPEE" , "loc" : [ -72.607962 , 42.162046] , "pop" : 23396 , "state" : "MA"}    |
-    | { "city" : "CHICOPEE" , "loc" : [ -72.576142 , 42.176443] , "pop" : 31495 , "state" : "MA"}    |
+    SELECT * FROM zips LIMIT 10;
+
+    +---------------+-------------------------+--------+--------+
+    |     city      |           loc           |  pop   | state  |
+    +---------------+-------------------------+--------+--------+
+    | AGAWAM        | [-72.622739,42.070206]  | 15338  | MA     |
+    | CUSHMAN       | [-72.51565,42.377017]   | 36963  | MA     |
+    | BELCHERTOWN   | [-72.410953,42.275103]  | 10579  | MA     |
+    | BLANDFORD     | [-72.936114,42.182949]  | 1240   | MA     |
+    | BRIMFIELD     | [-72.188455,42.116543]  | 3706   | MA     |
+    | CHESTERFIELD  | [-72.833309,42.38167]   | 177    | MA     |
+    | BARRE         | [-72.108354,42.409698]  | 4546   | MA     |
+    | CHICOPEE      | [-72.607962,42.162046]  | 23396  | MA     |
+    | CHICOPEE      | [-72.576142,42.176443]  | 31495  | MA     |
+    | CHESTER       | [-72.988761,42.279421]  | 1688   | MA     |
+    +---------------+-------------------------+--------+--------+
+    10 rows selected (0.444 seconds)
+
 
 **Example 2: Aggregation**
 
-    0: jdbc:drill:zk=local> select state,city,avg(pop)
-    +------------+------------+------------+
-    |   state    |    city    |   EXPR$2   |
-    +------------+------------+------------+
-    | MA         | AGAWAM     | 15338.0    |
-    | MA         | CUSHMAN    | 36963.0    |
-    | MA         | BARRE      | 4546.0     |
-    | MA         | BELCHERTOWN | 10579.0   |
-    | MA         | BLANDFORD  | 1240.0     |
-    | MA         | BRIMFIELD  | 3706.0     |
-    | MA         | CHESTER    | 1688.0     |
-    | MA         | CHESTERFIELD | 177.0    |
-    | MA         | CHICOPEE   | 27445.5    |
-    | MA         | WESTOVER AFB | 1764.0   |
-    +------------+------------+------------+
+```
+SELECT city, avg(pop) FROM zips GROUP BY city LIMIT 10; 
+
++---------------+---------------------+
+|     city      |       EXPR$1        |
++---------------+---------------------+
+| AGAWAM        | 15338.0             |
+| CUSHMAN       | 18649.5             |
+| BELCHERTOWN   | 10579.0             |
+| BLANDFORD     | 1240.0              |
+| BRIMFIELD     | 2441.5              |
+| CHESTERFIELD  | 9988.857142857143   |
+| BARRE         | 9770.0              |
+| CHICOPEE      | 27445.5             |
+| CHESTER       | 7285.0952380952385  |
+| WESTOVER AFB  | 1764.0              |
++---------------+---------------------+
+10 rows selected (1.664 seconds)
+```
 
 **Example 3: Nested Data Column Array**
 
-    0: jdbc:drill:zk=local> SELECT loc FROM zipcodes LIMIT 10;
+    0: jdbc:drill:zk=local> SELECT loc FROM zips LIMIT 10;
     +------------------------+
     |    loc                 |
     +------------------------+
@@ -116,7 +162,7 @@ the `USE` command to change schema.
     | [-72.576142,42.176443] |
     +------------------------+
         
-    0: jdbc:drill:zk=local> SELECT loc[0] FROM zipcodes LIMIT 10;
+    0: jdbc:drill:zk=local> SELECT loc[0] FROM zips LIMIT 10;
     +------------+
     |   EXPR$0   |
     +------------+

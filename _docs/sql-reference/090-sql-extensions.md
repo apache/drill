@@ -44,8 +44,9 @@ The [`sys` tables](/docs/querying-system-tables/) provide port, version, and opt
     +------------+
 
     SELECT commit_id FROM sys.version;
-    +------------+
-    | commit_id  |
-    +------------+
-    | e3ab2c1760ad34bda80141e2c3108f7eda7c9104 |
-
+    +-------------------------------------------+
+    |                 commit_id                 |
+    +-------------------------------------------+
+    | e3fc7e97bfe712dc09d43a8a055a5135c96b7344  |
+    +-------------------------------------------+
+    1 row selected (0.105 seconds)

@@ -3,8 +3,7 @@ title: "SHOW TABLES"
 parent: "SQL Commands"
 ---
 The SHOW TABLES command returns a list of views created within a schema. It
-also returns the tables that exist in Hive, HBase, and MapR-DB when you have
-these data sources configured as storage plugin instances. See[ Storage Plugin
+also returns the tables that exist in Hive and HBase when you use storage plugin configurations for these data sources. See [Storage Plugin
 Registration]({{ site.baseurl }}/docs/storage-plugin-registration).
 
 ## Syntax
@@ -21,8 +20,8 @@ only want information from the `dfs.myviews` schema:
 
     USE dfs.myviews;
 
-In this example, “`myviews`” is a workspace created withing an instance of the
-`dfs` storage plugin.
+In this example, “`myviews`” is a workspace created within the
+`dfs` storage plugin configuration.
 
 When you use a particular schema and then issue the SHOW TABLES command, Drill
 returns the tables and views within that schema.
@@ -31,7 +30,7 @@ returns the tables and views within that schema.
 
   * You can create and query tables within the file system, however Drill does not return these tables when you issue the SHOW TABLES command. You can issue the [SHOW FILES ]({{ site.baseurl }}/docs/show-files-command)command to see a list of all files, tables, and views, including those created in Drill. 
 
-  * You cannot create Hive, HBase, or MapR-DB tables in Drill. 
+  * You cannot create Hive or HBase tables in Drill. 
 
 ## Examples
 

@@ -165,4 +165,66 @@ You can use a different extension for files with and without a header, and use a
       "delimiter": ","
     },
 
+## Converting a CSV file to Apache Parquet
 
+A common use case when working with Hadoop is to store and query text files, such as CSV and TSV. To get better performance and efficient storage, you convert these files into Parquet. You can use code to achieve this, as you can see in the [ConvertUtils](https://github.com/Parquet/parquet-compatibility/blob/master/parquet-compat/src/test/java/parquet/compat/test/ConvertUtils.java) sample/test class. A simpler way to convert these text files to Parquet is to query the text files using Drill, and save the result to Parquet files.
+
+### How to Convert CSV to Parquet
+
+This example uses the [Passenger Dataset](http://media.flysfo.com/media/sfo/media/air-traffic/Passenger_4.zip) from SFO Air Traffic Statistics.
+
+1. Execute a basic query:
+
+        SELECT * 
+        FROM dfs.`/opendata/Passenger/SFO_Passenger_Data/MonthlyPassengerData_200507_to_201503.csv`
+        LIMIT 5;
+
+        ["200507","ATA Airlines","TZ","ATA Airlines","TZ","Domestic","US","Deplaned","Low Fare","Terminal 1","B","27271\r"]
+        ...
+        ...
+
+   By default Drill processes each line as an array of columns, all values being a simple string. To do some operations with these values (projection or conditional query) you must convert the strings to proper types. 
+
+2. Use the column index, and cast the value to the proper type. 
+
+        SELECT 
+        columns[0] as `DATE`,
+        columns[1] as `AIRLINE`,
+        CAST(columns[11] AS DOUBLE) as `PASSENGER_COUNT`
+        FROM dfs.`/opendata/Passenger/SFO_Passenger_Data/*.csv`
+        WHERE CAST(columns[11] AS DOUBLE) < 5
+        ;
+
+        +---------+-----------------------------------+------------------+
+        |  DATE   |              AIRLINE              | PASSENGER_COUNT  |
+        +---------+-----------------------------------+------------------+
+        | 200610  | United Airlines - Pre 07/01/2013  | 2.0              |
+        ...
+        ...
+
+3. Create Parquet files.
+
+        ALTER SESSION SET `store.format`='parquet';
+
+
+        CREATE TABLE dfs.tmp.`/stats/airport_data/` AS
+        SELECT
+        CAST(SUBSTR(columns[0],1,4) AS INT)  `YEAR`,
+        CAST(SUBSTR(columns[0],5,2) AS INT) `MONTH`,
+        columns[1] as `AIRLINE`,
+        columns[2] as `IATA_CODE`,
+        columns[3] as `AIRLINE_2`,
+        columns[4] as `IATA_CODE_2`,
+        columns[5] as `GEO_SUMMARY`,
+        columns[6] as `GEO_REGION`,
+        columns[7] as `ACTIVITY_CODE`,
+        columns[8] as `PRICE_CODE`,
+        columns[9] as `TERMINAL`,
+        columns[10] as `BOARDING_AREA`,
+        CAST(columns[11] AS DOUBLE) as `PASSENGER_COUNT`
+        FROM dfs.`/opendata/Passenger/SFO_Passenger_Data/*.csv`
+
+4. Use the Parquet file in any of your Hadoop processes, or use Drill to query the file as follows:
+
+        SELECT *
+        FROM dfs.tmp.`/stats/airport_data/*`

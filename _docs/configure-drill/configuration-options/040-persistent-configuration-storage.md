@@ -4,7 +4,7 @@ parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store
 (PStore). This data is encoded in JSON or Protobuf format. Drill can use the
-local file system or a distributed file system, such as HDFS or MapR-FS to store this data. The data
+local file system or a distributed file system, such as HDFS, to store this data. The data
 stored in a PStore includes state information for storage plugins, query
 profiles, and ALTER SYSTEM settings. The default type of PStore configured
 depends on the Drill installation mode.
@@ -12,10 +12,10 @@ depends on the Drill installation mode.
 The following table provides the persistent storage mode for each of the Drill
 modes:
 
-| Mode        | Description                                                                                                                                                             |
-|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Embedded    | Drill stores persistent data in the local file system. You cannot modify the PStore location for Drill in embedded mode.                                                |
-| Distributed | Drill stores persistent data in ZooKeeper, by default. You can modify where ZooKeeper offloads data, or you can change the persistent storage mode to HBase or MapR-DB. |
+| Mode        | Description                                                                                                                                                                          |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Embedded    | Drill stores persistent data in the local file system. You cannot modify the PStore location for Drill in embedded mode.                                                             |
+| Distributed | Drill stores persistent data in ZooKeeper, by default. You can modify where ZooKeeper offloads data, or you can change the persistent storage mode to HBase, for example.            |
   
 {% include startnote.html %}Switching between storage modes does not migrate configuration data.{% include endnote.html %}
 
@@ -43,14 +43,12 @@ Drill node and then restart the Drillbit service.
 	drill.exec: {
 	 cluster-id: "my_cluster_com-drillbits",
 	 zk.connect: "<zkhostname>:<port>",
-	 sys.store.provider.zk.blobroot: "maprfs://<directory to store pstore data>/"
+	 sys.store.provider.zk.blobroot: "hdfs://<directory to store pstore data>/"
 	}
 
-Issue the following command to restart the Drillbit on all Drill nodes:
+[Restart the Drillbit]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
 
-    maprcli node services -name drill-bits -action restart -nodes <node IP addresses separated by a space>
-
-## HBase for Persistent Configuration Storage
+## Configuring HBase for Persistent Configuration Storage
 
 To change the persistent storage mode for Drill, add or modify the
 `sys.store.provider` block in `<drill_installation_directory>/conf/drill-
@@ -68,27 +66,4 @@ override.conf.`
 	      }
 	    }
 	  },
-
-## MapR-DB for Persistent Configuration Storage
-
-If you have MapR-DB in your cluster, you can use MapR-DB for persistent
-configuration storage. Using MapR-DB to store persistent configuration data
-can prevent memory strain on ZooKeeper in clusters running heavy workloads.
-
-To change the persistent storage mode to MapR-DB, add or modify the
-`sys.store.provider` block in `<drill_installation_directory>/conf/drill-
-override.conf` on each Drill node and then restart the Drillbit service.
-
-**Example**
-
-	sys.store.provider: {
-	class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
-	hbase: {
-	  table : "/tables/drill_store"
-	    }
-	},
-
-Issue the following command to restart the Drillbit on all Drill nodes:
-
-    maprcli node services -name drill-bits -action restart -nodes <node IP addresses separated by a space>
 

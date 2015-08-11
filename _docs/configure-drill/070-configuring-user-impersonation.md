@@ -114,16 +114,9 @@ Complete the following steps on each Drillbit node to enable user impersonation,
 
 3. Verify that enabled is set to `‘true’`.
 4. Set the maximum number of chained user hops that you want Drill to allow.
-5. (MapR cluster only) Add one of the following lines to the `drill-env.sh` file:
-   * If the underlying file system is not secure, add the following line:
-   ` export MAPR_IMPERSONATION_ENABLED=true`
-   * If the underlying file system has MapR security enabled, add the following line:
-    `export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket`
-6. Restart the Drillbit process on each Drill node.
-   * In a MapR cluster, run the following command:
-    `maprcli node services -name drill-bits -action restart -nodes <hostname> -f`
-   * In a non-MapR environment, run the following command:  
-     <DRILLINSTALL_HOME>/bin/drillbit.sh restart
+5. Restart the Drillbit process on each Drill node.
+
+         <DRILLINSTALL_HOME>/bin/drillbit.sh restart
 
 ## Impersonation and Chaining Example
 Frank is a senior HR manager at a company. Frank has access to all of the employee data because he is a member of the hr group. Frank created a table named “employees” in his home directory to store the employee data he uses. Only Frank has access to this table.

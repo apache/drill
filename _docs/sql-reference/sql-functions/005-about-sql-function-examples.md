@@ -2,4 +2,4 @@
 title: "About SQL Function Examples"
 parent: "SQL Functions"
 ---
-You need to use a FROM clause in Drill queries. Examples in this documentation often use `FROM sys.version` in the query for example purposes.
+You need to use a FROM clause in Drill queries. You can use the VALUES clause in the FROM clause to define rows of data in a derived table. The derived table has statement level scope.

@@ -2,28 +2,29 @@
 title: "Supported Data Types"
 parent: "Data Types"
 ---
-Drill reads from and writes to data sources having a wide variety of types. Drill uses data types at the RPC level that are not supported for query input, such as INTERVALDAY and INTERVALYEAR types, often implicitly casting data. Drill supports the following SQL data types for query input:
+Drill reads from and writes to data sources having a wide variety of types. 
 
-| SQL Data Type                                     | Description                                                                                                          | Example                                                                        |
-|---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| BIGINT                                            | 8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807                           | 9223372036854775807                                                            |
-| BINARY                                            | Variable-length byte string                                                                                          | B@e6d9eb7                                                                      |
-| BOOLEAN                                           | True or false                                                                                                        | true                                                                           |
-| DATE                                              | Years, months, and days in YYYY-MM-DD format since 4713 BC                                                           | 2015-12-30                                                                     |
-| DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)*          | 38-digit precision number, precision is p, and scale is s                                                            | DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point |
-| FLOAT                                             | 4-byte floating point number                                                                                         | 0.456                                                                          |
-| DOUBLE, DOUBLE PRECISION                          | 8-byte floating point number, precision-scalable                                                                     | 0.456                                                                          |
-| INTEGER or INT                                    | 4-byte signed integer in the range -2,147,483,648 to 2,147,483,647                                                   | 2147483646                                                                     |
-| INTERVAL                                          | A period of time in days, hours, minutes, and seconds only (INTERVALDAY) or in years and months (INTERVALYEAR)       | '1 10:20:30.123' (INTERVALDAY) or '1-2' year to month (INTERVALYEAR)           |
-| SMALLINT**                                        | 2-byte signed integer in the range -32,768 to 32,767                                                                 | 32000                                                                          |
-| TIME                                              | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                       | 22:55:55.23                                                                    |
-| TIMESTAMP                                         | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS  | 2015-12-30 22:55:55.23                                                         |
-| CHARACTER VARYING, CHARACTER, CHAR,*** or VARCHAR | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647. | CHAR(30) casts data to a 30-character string maximum.                          |
+| SQL Data Type                                        | Description                                                                                                            | Example                                                                        |
+|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| BIGINT                                               | 8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807                             | 9223372036854775807                                                            |
+| BINARY                                               | Variable-length byte string                                                                                            | B@e6d9eb7                                                                      |
+| BOOLEAN                                              | True or false                                                                                                          | true                                                                           |
+| DATE                                                 | Years, months, and days in YYYY-MM-DD format since 4713 BC                                                             | 2015-12-30                                                                     |
+| DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)*             | 38-digit precision number, precision is p, and scale is s                                                              | DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point |
+| FLOAT                                                | 4-byte floating point number                                                                                           | 0.456                                                                          |
+| DOUBLE, DOUBLE PRECISION                             | 8-byte floating point number, precision-scalable                                                                       | 0.456                                                                          |
+| INTEGER or INT                                       | 4-byte signed integer in the range -2,147,483,648 to 2,147,483,647                                                     | 2147483646                                                                     |
+| INTERVAL**                                           | A day-time or year-month interval                                                                                      | '1 10:20:30.123' (day-time) or '1-2' year to month (year-month)                |
+| SMALLINT***                                          | 2-byte signed integer in the range -32,768 to 32,767                                                                   | 32000                                                                          |
+| TIME                                                 | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                         | 22:55:55.23                                                                    |
+| TIMESTAMP                                            | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS    | 2015-12-30 22:55:55.23                                                         |
+| CHARACTER VARYING, CHARACTER, CHAR,**** or VARCHAR   | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.   | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
 \* In this release, Drill disables the DECIMAL data type (an alpha feature), including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. The NUMERIC data type is an alias for the DECIMAL data type.  
-\*\* Not currently supported.  
-\*\*\* Currently, Drill supports only variable-length strings.  
+\*\* Internally, INTERVAL is represented as INTERVALDAY or INTERVALYEAR.  
+\*\*\* SMALLINT is not currently supported.  
+\*\*\*\* Currently, Drill supports only variable-length strings.  
 
 ## Enabling the DECIMAL Type
 
@@ -159,12 +160,12 @@ The following tables show data types that Drill can cast to/from other data type
 
 
 \* Not supported in this release.   
-\*\* Used to cast binary UTF-8 data coming to/from sources such as MapR-DB/HBase.   
+\*\* Used to cast binary UTF-8 data coming to/from sources such as HBase.   
 \*\*\* You cannot convert a character string having a decimal point to an INT or BIGINT.   
 
 {% include startnote.html %}The CAST function does not support all representations of FIXEDBINARY and VARBINARY. Only the UTF-8 format is supported. {% include endnote.html %}
 
-If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, such as big endian, use the CONVERT_TO/FROM functions instead of CAST.
+If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, or big-endian encoded, use the CONVERT_TO/FROM functions instead of CAST.
 
 ### Date and Time Data Types
 
@@ -181,18 +182,18 @@ If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, such as b
 | INTERVALYEAR | Yes  | No   | Yes       | No           | Yes         |
 | INTERVALDAY  | Yes  | No   | Yes       | Yes          | No          |
 
-\* Used to cast binary UTF-8 data coming to/from sources such as MapR-DB/HBase. The CAST function does not support all representations of FIXEDBINARY and VARBINARY. Only the UTF-8 format is supported. 
+\* Used to cast binary UTF-8 data coming to/from sources such as HBase. The CAST function does not support all representations of FIXEDBINARY and VARBINARY. Only the UTF-8 format is supported. 
 
 ## CONVERT_TO and CONVERT_FROM
 
-CONVERT_TO converts data to binary from the input type. CONVERT_FROM converts data from binary to the input type. For example, the following CONVERT_TO function converts an integer in big endian format to VARBINARY:
+CONVERT_TO converts data to binary from the input type. CONVERT_FROM converts data from binary to the input type. For example, the following CONVERT_TO function converts an integer encoded using big endian to VARBINARY:
 
     CONVERT_TO(mycolumn, 'INT_BE')
 
 CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. 
 
-We recommend storing HBase/MapR-DB data in a binary representation rather than
-a string representation. Use the \*\_BE types to store integer data types in an HBase or Mapr-DB table.  INT is a 4-byte little endian signed integer. INT_BE is a 4-byte big endian signed integer. The comparison order of \*\_BE encoded bytes is the same as the integer value itself if the bytes are unsigned or positive. Using a *_BE type facilitates scan range pruning and filter pushdown into HBase scan. 
+We recommend storing HBase data in a binary representation rather than
+a string representation. Use the \*\_BE types to store integer data types in a table such as HBase.  INT is a 4-byte integer encoded in little endian. INT_BE is a 4-byte integer encoded in big endian. The comparison order of \*\_BE encoded bytes is the same as the integer value itself if the bytes are unsigned or positive. Using a *_BE type facilitates scan range pruning and filter pushdown into HBase scan. 
 
 \*\_HADOOPV in the data type name denotes the variable length integer as defined by Hadoop libraries. Use a \*\_HADOOPV type if user data is encoded in this format by a Hadoop tool outside MapR.
 

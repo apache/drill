@@ -39,7 +39,7 @@ Cast string arguments to timestamp to include time data in the calculations of t
 
 Find the interval between midnight today, April 3, 2015, and June 13, 1957.
 
-    SELECT AGE('1957-06-13') FROM sys.version;
+    SELECT AGE('1957-06-13') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -60,7 +60,7 @@ Find the interval between midnight today, May 21, 2015, and hire dates of employ
 
 Find the interval between 11:10:10 PM on January 1, 2001 and 10:10:10 PM on January 1, 2001.
 
-    SELECT AGE(CAST('2010-01-01 10:10:10' AS TIMESTAMP), CAST('2001-01-01 11:10:10' AS TIMESTAMP)) FROM sys.version;
+    SELECT AGE(CAST('2010-01-01 10:10:10' AS TIMESTAMP), CAST('2001-01-01 11:10:10' AS TIMESTAMP)) FROM (VALUES(1));
     +------------------+
     |      EXPR$0      |
     +------------------+
@@ -98,7 +98,7 @@ The following examples show how to use the syntax variations.
 
 Add two days to today's date May 15, 2015.
 
-    SELECT DATE_ADD(date '2015-05-15', 2) FROM sys.version;
+    SELECT DATE_ADD(date '2015-05-15', 2) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -174,7 +174,7 @@ Add a 10 hour interval to the hire dates of employees listed in the `employee.js
 
 Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
 
-    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
+    SELECT DATE_ADD(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM (VALUES(1));
     +------------------------+
     |         EXPR$0         |
     +------------------------+
@@ -184,7 +184,7 @@ Add 1 year and 1 month to the timestamp 2015-04-15 22:55:55.
 
 Add 1 day 2 and 1/2 hours and 45.100 seconds to the time 22:55:55.
 
-    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
+    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM (VALUES(1));
     +---------------+
     |    EXPR$0     |
     +---------------+
@@ -207,7 +207,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
 
 ### DATE_PART Examples
 
-    SELECT DATE_PART('day', '2015-04-02') FROM sys.version;
+    SELECT DATE_PART('day', '2015-04-02') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -215,7 +215,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
     +------------+
     1 row selected (0.098 seconds)
 
-    SELECT DATE_PART('hour', '23:14:30.076') FROM sys.version;
+    SELECT DATE_PART('hour', '23:14:30.076') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -225,7 +225,7 @@ Use Unix Epoch timestamp in milliseconds as the expression to get the field of a
 
 Return the day part of the one year, 2 months, 10 days interval.
 
-    SELECT DATE_PART('day', '1:2:10') FROM sys.version;
+    SELECT DATE_PART('day', '1:2:10') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -260,7 +260,7 @@ The following examples show how to apply the syntax variations.
 
 Subtract two days from today's date May 15, 2015.
 
-    SELECT DATE_SUB(date '2015-05-15', 2) FROM sys.version;
+    SELECT DATE_SUB(date '2015-05-15', 2) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -270,7 +270,7 @@ Subtract two days from today's date May 15, 2015.
 
 Subtact two months from April 15, 2015.
 
-    SELECT DATE_SUB(date '2015-04-15', interval '2' month) FROM sys.version;
+    SELECT DATE_SUB(date '2015-04-15', interval '2' month) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -282,7 +282,7 @@ Subtact two months from April 15, 2015.
 
 Subtract 10 hours from the timestamp 2015-04-15 22:55:55.
 
-    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM sys.version;
+    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '10' hour) FROM (VALUES(1));
     +------------------------+
     |         EXPR$0         |
     +------------------------+
@@ -292,7 +292,7 @@ Subtract 10 hours from the timestamp 2015-04-15 22:55:55.
 
 Subtract 10 hours from the time 22 hours, 55 minutes, 55 seconds.
 
-    SELECT DATE_SUB(time '22:55:55', interval '10' hour) FROM sys.version;
+    SELECT DATE_SUB(time '22:55:55', interval '10' hour) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -302,7 +302,7 @@ Subtract 10 hours from the time 22 hours, 55 minutes, 55 seconds.
 
 Subtract 1 year and 1 month from the timestamp 2015-04-15 22:55:55.
 
-    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM sys.version;
+    SELECT DATE_SUB(timestamp '2015-04-15 22:55:55', interval '1-2' year to month) FROM (VALUES(1));
     +------------------------+
     |         EXPR$0         |
     +------------------------+
@@ -312,7 +312,7 @@ Subtract 1 year and 1 month from the timestamp 2015-04-15 22:55:55.
 
 Subtract 1 day, 2 and 1/2 hours, and 45.100 seconds from the time 22:55:55.
 
-    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM sys.version;
+    SELECT DATE_ADD(time '22:55:55', interval '1 2:30:45.100' day to second) FROM (VALUES(1));
     +---------------+
     |    EXPR$0     |
     +---------------+
@@ -355,7 +355,7 @@ The following examples show how to use these functions:
 * NOW
 * TIMEOFDAY
 
-        SELECT CURRENT_DATE FROM sys.version;
+        SELECT CURRENT_DATE FROM (VALUES(1));
         +--------------+
         | current_date |
         +--------------+
@@ -363,7 +363,7 @@ The following examples show how to use these functions:
         +--------------+
         1 row selected (0.077 seconds)
 
-        SELECT CURRENT_TIME FROM sys.version;
+        SELECT CURRENT_TIME FROM (VALUES(1));
         +--------------+
         | current_time |
         +--------------+
@@ -371,7 +371,7 @@ The following examples show how to use these functions:
         +--------------+
         1 row selected (0.073 seconds)
 
-        SELECT CURRENT_TIMESTAMP FROM sys.version;
+        SELECT CURRENT_TIMESTAMP FROM (VALUES(1));
         +--------------------------+
         |    CURRENT_TIMESTAMP     |
         +--------------------------+
@@ -379,7 +379,7 @@ The following examples show how to use these functions:
         +--------------------------+
         1 row selected (0.109 seconds)
 
-        SELECT LOCALTIME FROM sys.version;
+        SELECT LOCALTIME FROM (VALUES(1));
 
         +---------------+
         |   LOCALTIME   |
@@ -388,7 +388,7 @@ The following examples show how to use these functions:
         +---------------+
         1 row selected (0.105 seconds)
 
-        SELECT LOCALTIMESTAMP FROM sys.version;
+        SELECT LOCALTIMESTAMP FROM (VALUES(1));
 
         +--------------------------+
         |      LOCALTIMESTAMP      |
@@ -397,7 +397,7 @@ The following examples show how to use these functions:
         +--------------------------+
         1 row selected (0.08 seconds)
 
-        SELECT NOW() FROM sys.version;
+        SELECT NOW() FROM (VALUES(1));
         +--------------------------+
         |          EXPR$0          |
         +--------------------------+
@@ -407,7 +407,7 @@ The following examples show how to use these functions:
 
 If you set up Drill for [UTC time]({{ site.baseurl }}/docs/data-type-conversion/#time-zone-limitation), TIMEOFDAY returns the result for the UTC time zone.
 
-    SELECT TIMEOFDAY() FROM sys.version;
+    SELECT TIMEOFDAY() FROM (VALUES(1));
     +-----------------------------+
     |           EXPR$0            |
     +-----------------------------+
@@ -417,7 +417,7 @@ If you set up Drill for [UTC time]({{ site.baseurl }}/docs/data-type-conversion/
 
 If you did not set up Drill for UTC time, TIMEOFDAY returns the local date and time with time zone information.
 
-    SELECT TIMEOFDAY() FROM sys.version;
+    SELECT TIMEOFDAY() FROM (VALUES(1));
     +----------------------------------------------+
     |                    EXPR$0                    |
     +----------------------------------------------+
@@ -447,7 +447,7 @@ The extract function supports the following time units: YEAR, MONTH, DAY, HOUR, 
 
 On the third day of the month, run the following function:
 
-    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
+    SELECT EXTRACT(day FROM NOW()), EXTRACT(day FROM CURRENT_DATE) FROM (VALUES(1));
 
     +------------+------------+
     |   EXPR$0   |   EXPR$1   |
@@ -458,7 +458,7 @@ On the third day of the month, run the following function:
 
 At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
-    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM sys.version;
+    SELECT EXTRACT(hour FROM CURRENT_DATE) FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -468,7 +468,7 @@ At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
 What is the hour component of this time: 17:12:28.5?
 
-    SELECT EXTRACT(hour FROM TIME '17:12:28.5') FROM sys.version;
+    SELECT EXTRACT(hour FROM TIME '17:12:28.5') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -479,7 +479,7 @@ What is the hour component of this time: 17:12:28.5?
 
 What is the seconds component of this timestamp: 2001-02-16 20:38:40
 
-    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') FROM sys.version;
+    SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -493,7 +493,7 @@ What is the seconds component of this timestamp: 2001-02-16 20:38:40
 
 Is the day returned from the NOW function the same as the day returned from the CURRENT_DATE function?
 
-    SELECT EXTRACT(day FROM NOW()) = EXTRACT(day FROM CURRENT_DATE) FROM sys.version;
+    SELECT EXTRACT(day FROM NOW()) = EXTRACT(day FROM CURRENT_DATE) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -503,7 +503,7 @@ Is the day returned from the NOW function the same as the day returned from the 
 
 Every 23 hours, a 4 hour task started. What time does the task end? 
 
-    SELECT TIME '04:00:00' + interval '23:00:00' hour to second FROM sys.version;
+    SELECT TIME '04:00:00' + interval '23:00:00' hour to second FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -513,7 +513,7 @@ Every 23 hours, a 4 hour task started. What time does the task end?
 
 Is the time 2:00 PM?
 
-    SELECT EXTRACT(hour FROM CURRENT_DATE) = 2 FROM sys.version;
+    SELECT EXTRACT(hour FROM CURRENT_DATE) = 2 FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -538,7 +538,7 @@ These functions perform the following operations, respectively:
 * Converts the time string with the given pattern to a Unix time stamp in seconds.  
 
 ```
-SELECT UNIX_TIMESTAMP FROM sys.version;
+SELECT UNIX_TIMESTAMP() FROM (VALUES(1));
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -546,7 +546,7 @@ SELECT UNIX_TIMESTAMP FROM sys.version;
 +-------------+
 1 row selected (0.749 seconds)
 
-SELECT UNIX_TIMESTAMP('2009-03-20 11:15:55') FROM sys.version;
+SELECT UNIX_TIMESTAMP('2009-03-20 11:15:55') FROM (VALUES(1));
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -554,7 +554,7 @@ SELECT UNIX_TIMESTAMP('2009-03-20 11:15:55') FROM sys.version;
 +-------------+
 1 row selected (1.848 seconds)
 
-SELECT UNIX_TIMESTAMP('2009-03-20', 'yyyy-MM-dd') FROM sys.version;
+SELECT UNIX_TIMESTAMP('2009-03-20', 'yyyy-MM-dd') FROM (VALUES(1));
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -562,7 +562,7 @@ SELECT UNIX_TIMESTAMP('2009-03-20', 'yyyy-MM-dd') FROM sys.version;
 +-------------+
 1 row selected (0.181 seconds)
 
-SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM sys.version;
+SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (VALUES(1));
 +-------------+
 |   EXPR$0    |
 +-------------+

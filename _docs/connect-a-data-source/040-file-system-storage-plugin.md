@@ -87,8 +87,8 @@ workspace named `json_files`. The configuration points Drill to the
 The `connection` parameter in this configuration is "`file:///`", connecting Drill to the local file system.
 
 To query a file in the example `json_files` workspace, you can issue the `USE`
-command to tell Drill to use the `json_files` workspace configured in the `dfs`
-instance for each query that you issue:
+command to tell Drill to use the `json_files` workspace, which is included in the `dfs`
+configuration for each query that you issue:
 
     USE dfs.json_files;
     SELECT * FROM `donuts.json` WHERE type='frosted'

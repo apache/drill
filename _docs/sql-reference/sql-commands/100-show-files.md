@@ -39,12 +39,12 @@ local (`dfs`) file system.
 	+------------+-------------+------------+------------+------------+------------+-------------+------------+------------------+
 	|    name    | isDirectory |   isFile   |   length   |   owner    |   group    | permissions | accessTime | modificationTime |
 	+------------+-------------+------------+------------+------------+------------+-------------+------------+------------------+
-	| user       | true        | false      | 1          | mapr       | mapr       | rwxr-xr-x   | 2014-07-30 21:37:06.0 | 2014-07-31 22:15:53.193 |
+	| user       | true        | false      | 1          | abcd       | abcd       | rwxr-xr-x   | 2014-07-30 21:37:06.0 | 2014-07-31 22:15:53.193 |
 	| backup.tgz | false       | true       | 36272      | root       | root       | rw-r--r--   | 2014-07-31 22:09:13.0 | 2014-07-31 22:09:13.211 |
 	| JSON       | true        | false      | 1          | root       | root       | rwxr-xr-x   | 2014-07-31 15:22:42.0 | 2014-08-04 15:43:07.083 |
 	| scripts    | true        | false      | 3          | root       | root       | rwxr-xr-x   | 2014-07-31 22:10:51.0 | 2014-08-04 18:23:09.236 |
 	| temp       | true        | false      | 2          | root       | root       | rwxr-xr-x   | 2014-08-01 20:07:37.0 | 2014-08-01 20:09:42.595 |
-	| hbase      | true        | false      | 10         | mapr       | mapr       | rwxr-xr-x   | 2014-07-30 21:36:08.0 | 2014-08-04 18:31:13.778 |
+	| hbase      | true        | false      | 10         | abcd       | abcd       | rwxr-xr-x   | 2014-07-30 21:36:08.0 | 2014-08-04 18:31:13.778 |
 	| tables     | true        | false      | 0          | root       | root       | rwxrwxrwx   | 2014-07-31 22:14:35.0 | 2014-08-04 15:42:43.415 |
 	| CSV        | true        | false      | 4          | root       | root       | rwxrwxrwx   | 2014-07-31 17:34:53.0 | 2014-08-04
 	...

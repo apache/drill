@@ -57,13 +57,9 @@ Complete the following steps to install and configure PAM for Drill:
           }
 
 5. (Optional) To add or remove different PAM profiles, add or delete the profile names in the `“pam_profiles”` array shown above.  
-6. Restart the Drillbit process on each Drill node.
-   * In a MapR cluster, run the following command:  
-
-              maprcli node services -name drill-bits -action restart -nodes <hostname> -f
-   * In a non-MapR environment, run the following command: 
+6. Restart the Drillbit process on each Drill node. 
  
-              <DRILLINSTALL_HOME>/bin/drillbit.sh restart
+        <DRILLINSTALL_HOME>/bin/drillbit.sh restart
 
 ### Implementing and Configuring a Custom Authenticator
 
@@ -143,12 +139,8 @@ Complete the following steps to build and implement a custom authenticator:
                }
               }  
 4. Restart the Drillbit process on each Drill node.
-   * In a MapR cluster, run the following command:  
-
-              maprcli node services -name drill-bits -action restart -nodes <hostname> -f
-   * In a non-MapR environment, run the following command: 
  
-              <DRILLINSTALL_HOME>/bin/drillbit.sh restart
+        <DRILLINSTALL_HOME>/bin/drillbit.sh restart
        
 
 

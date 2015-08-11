@@ -46,9 +46,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOA
 
 ## Math Function Examples
 
-Examples in this section use the `input2.json` file. Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. 
-
-You need to use a FROM clause in Drill queries. In addition to using `input2.json`, examples in this documentation often use `FROM sys.version` in the query for example purposes.
+Examples in this section use the `input2.json` file. Download the `input2.json` file from the [Drill source code](https://github.com/apache/drill/tree/master/exec/java-exec/src/test/resources/jsoninput) page. You need to use a FROM clause in Drill queries. 
 
 ### ABS Example
 Get the absolute value of the integer key in `input2.json`. The following snippet of input2.json shows the relevant integer content:
@@ -160,7 +158,7 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
 
 Get the base 2 log of 64.
 
-    SELECT LOG(2, 64) FROM sys.version;
+    SELECT LOG(2, 64) FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -171,7 +169,7 @@ Get the base 2 log of 64.
 
 Get the common log of 100.
 
-    SELECT LOG10(100) FROM sys.version;
+    SELECT LOG10(100) FROM (VALUES(1));
 
     +------------+
     |   EXPR$0   |
@@ -182,7 +180,7 @@ Get the common log of 100.
 
 Get the natural log of 7.5.
 
-    SELECT LOG(7.5) FROM sys.version;
+    SELECT LOG(7.5) FROM (VALUES(1));
 
     +---------------------+
     |       EXPR$0        |
@@ -226,7 +224,7 @@ Drill supports the following trig functions, which return a FLOAT8 result.
 
 Find the sine and tangent of a 45 degree angle. First convert degrees to radians for use in the SIN() function.
 
-    SELECT RADIANS(30) AS Degrees FROM sys.version;
+    SELECT RADIANS(30) AS Degrees FROM (VALUES(1));
 
     +------------+
     |  Degrees   |
@@ -235,7 +233,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +------------+
     1 row selected (0.045 seconds)
 
-    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM sys.version;
+    SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM (VALUES(1));
 
     +-----------------------+
     |  Sine of 45 degrees   |
@@ -244,7 +242,7 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
     +-----------------------+
     1 row selected (0.059 seconds)
 
-    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from sys.version;
+    SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from (VALUES(1));
 
     +-----------------------+
     | Tangent of 45 degrees |

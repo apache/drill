@@ -66,7 +66,7 @@ Apache Drill lets you leverage your investments in Hive. You can run interactive
 
 
 ## 7. Access multiple data sources
-Drill is extensible. You can connect Drill out-of-the-box to file systems (local or distributed, such as S3, HDFS and MapR-FS), HBase and Hive. You can implement a storage plugin to make Drill work with any other data source. Drill can combine data from multiple data sources on the fly in a single query, with no centralized metadata definitions. Here's a query that combines data from a Hive table, an HBase table (view) and a JSON file:
+Drill is extensible. You can connect Drill out-of-the-box to file systems (local or distributed, such as S3 and HDFS), HBase and Hive. You can implement a storage plugin to make Drill work with any other data source. Drill can combine data from multiple data sources on the fly in a single query, with no centralized metadata definitions. Here's a query that combines data from a Hive table, an HBase table (view) and a JSON file:
 
     SELECT custview.membership, sum(orders.order_total) AS sales
     FROM hive.orders, custview, dfs.`clicks/clicks.json` c 

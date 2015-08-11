@@ -8,18 +8,18 @@ Using familiar date and time formats, listed in the [SQL data types table]({{ si
            TIME '12:23:34', 
            TIMESTAMP '2008-2-23 12:23:34.456', 
            INTERVAL '1' YEAR, INTERVAL '2' DAY, 
-           DATE_ADD(DATE '2008-2-23', INTERVAL '1 10:20:30' DAY TO SECOND) 
+           DATE_ADD(DATE '2008-2-23', INTERVAL '1 10:20:30' DAY TO SECOND), 
            DATE_ADD(DATE '2010-2-23', 1)
-    FROM sys.version LIMIT 1;
+    FROM (VALUES (1));
     +-------------+-----------+--------------------------+---------+---------+------------------------+-------------+
     |   EXPR$0    |  EXPR$1   |          EXPR$2          | EXPR$3  | EXPR$4  |         EXPR$5         |   EXPR$6    |
     +-------------+-----------+--------------------------+---------+---------+------------------------+-------------+
     | 2008-02-23  | 12:23:34  | 2008-02-23 12:23:34.456  | P1Y     | P2D     | 2008-02-24 10:20:30.0  | 2010-02-24  |
     +-------------+-----------+--------------------------+---------+---------+------------------------+-------------+
 
-## INTERVALYEAR and INTERVALDAY
+## INTERVAL
 
-The INTERVALYEAR and INTERVALDAY types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
+The INTERVALYEAR and INTERVALDAY internal types represent a period of time. The INTERVALYEAR type specifies values from a year to a month. The INTERVALDAY type specifies values from a day to seconds.
 
 ### Interval in Data Source
 
@@ -67,13 +67,13 @@ To cast interval data to interval types you can query from a data source such as
 
 In the following example, the INTERVAL keyword followed by 200 adds 200 years to the timestamp. The 3 in parentheses in `YEAR(3)` specifies the precision of the year interval, 3 digits in this case to support the hundreds interval.
 
-    SELECT CURRENT_TIMESTAMP + INTERVAL '200' YEAR(3) FROM sys.version;
+    SELECT CURRENT_TIMESTAMP + INTERVAL '200' YEAR(3) FROM (VALUES(1));
     +--------------------------+
     |          EXPR$0          |
     +--------------------------+
-    | 2215-05-20 14:04:25.129  |
+    | 2215-08-14 15:18:00.094  |
     +--------------------------+
-    1 row selected (0.148 seconds)
+    1 row selected (0.096 seconds)
 
 The following examples show the input and output format of INTERVALYEAR (Year, Month) and INTERVALDAY (Day, Hours, Minutes, Seconds, Milliseconds). The following SELECT statements show how to format the query input. The output shows how to format the data in the data source.
 
@@ -85,7 +85,7 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
     +------------+
     1 row selected (0.054 seconds)
 
-    SELECT INTERVAL '1-2' year to month FROM sys.version;
+    SELECT INTERVAL '1-2' year to month FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -93,7 +93,7 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
     +------------+
     1 row selected (0.927 seconds)
 
-    SELECT INTERVAL '1' year FROM sys.version;
+    SELECT INTERVAL '1' year FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -101,7 +101,7 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
     +------------+
     1 row selected (0.088 seconds)
 
-    SELECT INTERVAL '13' month FROM sys.version;
+    SELECT INTERVAL '13' month FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -122,7 +122,7 @@ Next, use the following literals in a SELECT statement.
 * `time`
 * `timestamp`
 
-        SELECT date '2010-2-15' FROM sys.version;
+        SELECT date '2010-2-15' FROM (VALUES(1));
         +------------+
         |   EXPR$0   |
         +------------+
@@ -130,7 +130,7 @@ Next, use the following literals in a SELECT statement.
         +------------+
         1 row selected (0.083 seconds)
 
-        SELECT time '15:20:30' from sys.version;
+        SELECT time '15:20:30' from (VALUES(1));
         +------------+
         |   EXPR$0   |
         +------------+
@@ -138,7 +138,7 @@ Next, use the following literals in a SELECT statement.
         +------------+
         1 row selected (0.067 seconds)
 
-        SELECT timestamp '2015-03-11 6:50:08' FROM sys.version;
+        SELECT timestamp '2015-03-11 6:50:08' FROM (VALUES(1));
         +------------+
         |   EXPR$0   |
         +------------+

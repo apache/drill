@@ -16,8 +16,7 @@ Using Drill you can read tables created in Hive that use data types compatible w
 | FLOAT              | FLOAT                   | 4-byte single precision floating point number              |
 | DOUBLE             | DOUBLE                  | 8-byte double precision floating point number              |
 | INTEGER            | INT, TINYINT, SMALLINT  | 1-, 2-, or 4-byte signed integer                           |
-| INTERVALDAY        | N/A                     | Integer fields representing a day                          |
-| INTERVALYEAR       | N/A                     | Integer fields representing a year                         |
+| INTERVAL           | N/A                     | A day-time or year-month interval                          |
 | TIME               | N/A                     | Hours minutes seconds 24-hour basis                        |
 | N/A                | TIMESTAMP               | Conventional UNIX Epoch timestamp.                         |
 | TIMESTAMP          | TIMESTAMP               | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
@@ -36,7 +35,11 @@ Drill does not support the following Hive types:
 * TIMESTAMP (Unix Epoch format)
 * UNION
 
-The Hive version used in MapR supports the Hive timestamp in Unix Epoch format. Currently, the Apache Hive version used by Drill does not support this timestamp format. The workaround is to use the JDBC format for the timestamp, which Hive accepts and Drill uses, as shown in the following type mapping example. The timestamp value appears in the example CSV file in JDBC format: 2015-03-25 01:23:15. The Hive table defines column i in the CREATE EXTERNAL TABLE command as a timestamp column. The Drill extract function verifies that Drill interprets the timestamp correctly.
+Currently, the Apache Hive version used by Drill does not support the Hive timestamp in Unix Epoch format. The workaround is to use the JDBC format for the timestamp, which Hive accepts and Drill uses. The type mapping example shows how to use the workaround as follows. 
+
+* The timestamp value appears in the example CSV file in JDBC format: 2015-03-25 01:23:15.  
+* Workaround: The Hive table defines column i in the CREATE EXTERNAL TABLE command as a timestamp column.  
+* The Drill extract function verifies that Drill interprets the timestamp correctly.
 
 ## Type Mapping Example
 This example demonstrates the mapping of Hive data types to Drill data types. Using a CSV that has the following contents, you create a Hive table having values of different supported types:
@@ -46,7 +49,7 @@ This example demonstrates the mapping of Hive data types to Drill data types. Us
 ### Example Assumptions
 The example makes the following assumptions:
 
-* The CSV resides on the MapR file system (MapRFS) in the Drill sandbox: `/mapr/demo.mapr.com/data/`  
+* The CSV resides in the following location in the Drill sandbox: `/mapr/demo.mapr.com/data/`  
 * You [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type) in Drill.  
 
 ### Define an External Table in Hive

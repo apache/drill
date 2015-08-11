@@ -23,7 +23,7 @@ The emp_sales.csv file contains the following information:
        +-----------------+-----------------+------------+--------+
 You can create a CSV file named emp_sales with this data.
 
-Drill was installed locally and a workspace was created in the dfs storage plugin instance for the directory where the emp_sales.csv file is located. See [Installing Drill](https://drill.apache.org/docs/embedded-mode-prerequisites/).
+Drill was installed locally and a workspace was created in the `dfs` storage plugin configuration for the directory where the emp_sales.csv file is located. See [Installing Drill](https://drill.apache.org/docs/embedded-mode-prerequisites/).
  
 If you create a CSV file with the data provided, you can create workspace that points to the directory where you store the emp_sales.csv file. See [Configuring Storage Plugins](https://drill.apache.org/docs/file-system-storage-plugin/).
  

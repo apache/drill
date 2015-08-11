@@ -22,7 +22,7 @@ To register a remote Hive metastore with Drill:
 1. Issue the following command to start the Hive metastore service on the system specified in the `hive.metastore.uris`:
    `hive --service metastore`
 2. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), select the **Storage** tab.
-3. In the list of disabled storage plugins in the Drill Web UI, click **Update** next to the `hive` instance. For example:
+3. In the list of disabled storage plugins in the Drill Web UI, click **Update** next to `hive`. The Hive storage plugin configuration appears:
 
         {
           "type": "hive",
@@ -44,11 +44,7 @@ To register a remote Hive metastore with Drill:
 5. Change the default location of files to suit your environment; for example, change `"fs.default.name"` property from `"file:///"` to one of these locations:
    * `hdfs://`
    * `hdfs://<hostname>:<port>`
-6. If you are running Drill and Hive in a secure MapR cluster, remove the following line from the configuration:  
-   `"hive.metastore.sasl.enabled" : "false"`
-7. Click **Enable**.  
-8. If you are running Drill and Hive in a secure MapR cluster, add the following line to `<DRILL_HOME>/conf/drill-env.sh` on each Drill node and then [restart the Drillbit service]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/):  
-   `export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dmapr_sec_enabled=true -Dhadoop.login=maprsasl -Dzookeeper.saslprovider=com.mapr.security.maprsasl.MaprSaslProvider -Dmapr.library.flatclass"`
+6. Click **Enable**.  
 
 After configuring a Hive storage plugin, you can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).
 
@@ -63,7 +59,7 @@ To configure an embedded Hive metastore, complete the following
 steps:
 
 1. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), and select the **Storage** tab.
-2. In the disabled storage plugins section, click **Update** next to `hive` instance.
+2. In the disabled storage plugin configurations section, click **Update** next to `hive`.
 3. In the configuration window, add the database configuration settings.
 
     **Example**

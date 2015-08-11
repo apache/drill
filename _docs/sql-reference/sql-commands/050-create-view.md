@@ -7,7 +7,7 @@ stored query. A view can combine data from multiple underlying data sources
 and provide the illusion that all of the data is from one source. You can use
 views to protect sensitive data, for data aggregation, and to hide data
 complexity from users. You can create Drill views from files in your local and
-distributed file systems, Hive, HBase, and MapR-DB tables, as well as from
+distributed file systems, such as Hive and HBase tables, as well as from
 existing views or any other available storage plugin data sources.
 
 ## Syntax

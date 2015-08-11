@@ -13,7 +13,7 @@ The DESCRIBE command supports the following syntax:
 ## Usage Notes
 
 You can issue the DESCRIBE command against views created in a workspace and
-tables created in Hive, HBase, and MapR-DB. You can issue the DESCRIBE command
+tables created in Hive and HBase. You can issue the DESCRIBE command
 on a table or view from any schema. For example, if you are working in the
 `dfs.myworkspace` schema, you can issue the DESCRIBE command on a view or
 table in another schema. Currently, DESCRIBE does not support tables created

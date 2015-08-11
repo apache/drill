@@ -46,7 +46,7 @@ You cannot cast a character string that includes a decimal point to an INT or BI
 
 The following example shows how to cast a character to a DECIMAL having two decimal places.
 
-    SELECT CAST('1' as DECIMAL(28, 2)) FROM sys.version;
+    SELECT CAST('1' as DECIMAL(28, 2)) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -56,7 +56,7 @@ The following example shows how to cast a character to a DECIMAL having two deci
 ### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
 
-    SELECT CAST(456 as VARCHAR(3)) FROM sys.version;
+    SELECT CAST(456 as VARCHAR(3)) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -64,7 +64,7 @@ The first example shows Drill casting a number to a VARCHAR having a length of 3
     +------------+
     1 row selected (0.08 seconds)
 
-    SELECT CAST(456 as CHAR(3)) FROM sys.version;
+    SELECT CAST(456 as CHAR(3)) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -76,7 +76,7 @@ The first example shows Drill casting a number to a VARCHAR having a length of 3
 
 Cast an integer to a decimal.
 
-    SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM sys.version;
+    SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM (VALUES(1));
     +-----------------+
     |     EXPR$0      |
     +-----------------+
@@ -157,7 +157,7 @@ data as encoded VARBINARY data. To read HBase data in Drill, convert every colum
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
-Use the BINARY_STRING and STRING_BINARY custom Drill functions with CONVERT_TO and CONVERT_FROM to see readable results of your conversions.
+Use the BINARY_STRING and STRING_BINARY custom Drill functions with CONVERT_TO and CONVERT_FROM to get meaningful results.
 
 ### Conversion of Data Types Examples
 
@@ -197,7 +197,7 @@ You use the CONVERT_FROM function to decode the binary data to render it readabl
 
 This example converts from VARCHAR to a JSON map:
 
-    SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM sys.version;
+    SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM (VALUES(1));
     +----------------------+
     |        MYCOL         |
     +----------------------+
@@ -207,7 +207,7 @@ This example converts from VARCHAR to a JSON map:
 
 This example uses a list of BIGINT as input and returns a repeated list of vectors:
 
-    SELECT CONVERT_FROM('[ [1, 2], [3, 4], [5]]' ,'JSON') AS MYCOL1 FROM sys.version;
+    SELECT CONVERT_FROM('[ [1, 2], [3, 4], [5]]' ,'JSON') AS MYCOL1 FROM (VALUES(1));
     +------------+
     |   mycol1   |
     +------------+
@@ -217,7 +217,7 @@ This example uses a list of BIGINT as input and returns a repeated list of vecto
 
 This example uses a map as input to return a repeated list vector (JSON).
 
-    SELECT CONVERT_FROM('[{a : 100, b: 200}, {a:300, b: 400}]' ,'JSON') AS MYCOL1  FROM sys.version;
+    SELECT CONVERT_FROM('[{a : 100, b: 200}, {a:300, b: 400}]' ,'JSON') AS MYCOL1  FROM (VALUES(1));
     +--------------------+
     |       MYCOL1       |
     +--------------------+
@@ -227,7 +227,7 @@ This example uses a map as input to return a repeated list vector (JSON).
 
 ### Set Up a Storage Plugin for Working with HBase
 
-This example assumes you are working in the Drill Sandbox. The `maprdb` storage plugin definition is limited, so you modify the `dfs` storage plugin slightly and use that plugin for this example.
+This example assumes you are working in the Drill Sandbox. You modify the `dfs` storage plugin slightly and use that plugin for this example.
 
 1. Copy/paste the `dfs` storage plugin definition to a newly created plugin called myplugin.
 
@@ -348,7 +348,7 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
         | 0_0        | 4                         |
         +------------+---------------------------+
         1 row selected (0.414 seconds)
-8. Take a look at the binary Parquet output:
+8. Take a look at the meaningless output from sqlline:
 
         SELECT * FROM tmp.`json2parquet`;
         +-------------+-------------+-------------+-------------+-------------+
@@ -382,7 +382,7 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
 
 ## STRING_BINARY function
 
-Converts a VARBINARY type into a hexadecimal-encoded string.
+Converts a VARBINARY value into a string that is its hexadecimal encoding.
 
 ### STRING_BINARY Syntax
 
@@ -433,7 +433,7 @@ FROM (VALUES (1));
 
 ## BINARY_STRING function
 
-Converts a hexadecimal-encoded string into a VARBINARY type. 
+Converts a string that is the hexadecimal encoding of a sequence of bytes into a VARBINARY value. 
 
 ### BINARY_STRING Syntax
 
@@ -453,11 +453,11 @@ Converts a VARBINARY type into a hexadecimal-encoded string.
 
 *expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}.
 
-This function returns a hexadecimal-encoded string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO for readable results.
+This function returns a hexadecimal-encoded string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO for meaningful results.
 
 ### BINARY_STRING Examples
 
-Decode the hexadecimal string 000000C8 expressed in four octets `\x00\x00\x00\xC8` into its big endian four-byte integer equivalent. 
+Decode the hexadecimal string 000000C8 expressed in four octets `\x00\x00\x00\xC8` into an integer equivalent using big endian encoding. 
 
 ```
 SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT_BE') AS cnvrt
@@ -475,7 +475,7 @@ Output is:
 1 row selected (0.133 seconds)
 ```
 
-Decode the same hexadecimal string into its little endian four-byte signed integer equivalent.
+Decode the same hexadecimal string into an integer using little endian encoding.
 
 ```
 SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT') AS cnvrt FROM (VALUES (1));
@@ -610,7 +610,7 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
 
 Convert a FLOAT to a character string. The format specifications use a comma to separate thousands and round-off to three decimal places.
 
-    SELECT TO_CHAR(1256.789383, '#,###.###') FROM sys.version;
+    SELECT TO_CHAR(1256.789383, '#,###.###') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -620,7 +620,7 @@ Convert a FLOAT to a character string. The format specifications use a comma to 
 
 Convert an integer to a character string.
 
-    SELECT TO_CHAR(125677.4567, '#,###.###') FROM sys.version;
+    SELECT TO_CHAR(125677.4567, '#,###.###') FROM (VALUES(1));
     +--------------+
     |    EXPR$0    |
     +--------------+
@@ -630,7 +630,7 @@ Convert an integer to a character string.
 
 Convert a date to a character string.
 
-    SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM sys.version;
+    SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM (VALUES(1));
     +--------------+
     |    EXPR$0    |
     +--------------+
@@ -640,7 +640,7 @@ Convert a date to a character string.
 
 Convert a time to a string.
 
-    SELECT TO_CHAR(CAST('12:20:30' AS TIME), 'HH mm ss') FROM sys.version;
+    SELECT TO_CHAR(CAST('12:20:30' AS TIME), 'HH mm ss') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -651,7 +651,7 @@ Convert a time to a string.
 
 Convert a timestamp to a string.
 
-    SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM sys.version;
+    SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM (VALUES(1));
     +-----------------------+
     |        EXPR$0         |
     +-----------------------+
@@ -706,7 +706,7 @@ For example:
 ### TO_DATE Examples
 The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type. 
 
-    SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM sys.version;
+    SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -714,7 +714,7 @@ The first example converts a character string to a date. The second example extr
     +------------+
     1 row selected (0.077 seconds)
 
-    SELECT EXTRACT(year from mydate) `extracted year` FROM (SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') AS mydate FROM sys.version);
+    SELECT EXTRACT(year from mydate) `extracted year` FROM (SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') AS mydate FROM (VALUES(1)));
 
     +------------+
     |   myyear   |
@@ -725,7 +725,7 @@ The first example converts a character string to a date. The second example extr
 
 The following example converts a UNIX epoch timestamp to a date.
 
-    SELECT TO_DATE(1427849046000) FROM sys.version;
+    SELECT TO_DATE(1427849046000) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -766,14 +766,14 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 
 ### TO_NUMBER Examples
 
-    SELECT TO_NUMBER('987,966', '######') FROM sys.version;
+    SELECT TO_NUMBER('987,966', '######') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
     | 987.0      |
     +------------+
 
-    SELECT TO_NUMBER('987.966', '###.###') FROM sys.version;
+    SELECT TO_NUMBER('987.966', '###.###') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -781,7 +781,7 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
     +------------+
     1 row selected (0.063 seconds)
 
-    SELECT TO_NUMBER('12345', '##0.##E0') FROM sys.version;
+    SELECT TO_NUMBER('12345', '##0.##E0') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -805,7 +805,7 @@ Specify a format using patterns defined in [Joda DateTimeFormat class](http://jo
 
 ### TO_TIME Examples
 
-    SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM sys.version;
+    SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -815,7 +815,7 @@ Specify a format using patterns defined in [Joda DateTimeFormat class](http://jo
 
 Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
-    SELECT to_time(82855000) FROM sys.version;
+    SELECT to_time(82855000) FROM (VALUES(1));
     +------------+
     |   EXPR$0   |
     +------------+
@@ -840,7 +840,7 @@ Specify a format using patterns defined in [Joda DateTimeFormat class](http://jo
 
 Convert a date to a timestamp. 
 
-    SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM sys.version;
+    SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM (VALUES(1));
     +------------------------+
     |         EXPR$0         |
     +------------------------+
@@ -850,7 +850,7 @@ Convert a date to a timestamp.
 
 Convert Unix Epoch time to a timestamp.
 
-    SELECT TO_TIMESTAMP(1427936330) FROM sys.version;
+    SELECT TO_TIMESTAMP(1427936330) FROM (VALUES(1));
     +------------------------+
     |         EXPR$0         |
     +------------------------+
@@ -862,7 +862,7 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
 
     SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS New_TZ 
-    FROM sys.version;
+    FROM (VALUES(1));
 
     +------------------------+---------+
     |        Original        | New_TZ  |
@@ -876,7 +876,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
 1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function or by querying the system.options table. This TIMEOFDAY function returns the local date and time with time zone information. 
 
-        SELECT TIMEOFDAY() FROM sys.version;
+        SELECT TIMEOFDAY() FROM (VALUES(1));
 
         +----------------------------------------------+
         |                    EXPR$0                    |
@@ -893,7 +893,7 @@ Currently Drill does not support conversion of a date, time, or timestamp from o
 
 4. Confirm that Drill is now set to UTC:
 
-        SELECT TIMEOFDAY() FROM sys.version;
+        SELECT TIMEOFDAY() FROM (VALUES(1));
 
         +----------------------------------------------+
         |                    EXPR$0                    |
@@ -906,7 +906,7 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
 
     SELECT TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z') AS Original, 
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
-           FROM sys.version;
+           FROM (VALUES(1));
 
     +------------------------+-----------+
     |        Original        | TimeZone  |

@@ -8,8 +8,7 @@ latency performance at scale, Drill allows users to analyze the data without
 any ETL or up-front schema definitions. The data can be in any file format
 such as text, JSON, or Parquet. Data can have simple types such as strings,
 integers, dates, or more complex multi-structured data, such as nested maps and
-arrays. Data can exist in any file system, local or distributed, such as HDFS,
-MapR FS, or S3. Drill, has a “no schema” approach, which enables you to get
+arrays. Data can exist in any file system, local or distributed, such as HDFS or S3. Drill, has a “no schema” approach, which enables you to get
 value from your data in just a few minutes.
 
 Let’s quickly walk through the steps required to install Drill and run it

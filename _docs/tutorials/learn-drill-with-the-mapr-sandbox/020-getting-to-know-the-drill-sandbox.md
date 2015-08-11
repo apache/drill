@@ -28,7 +28,7 @@ The control panel for managing storage plugins appears.
 
 ![sandbox plugin]({{ site.baseurl }}/docs/img/get2kno_plugin.png)
 
-You see the following storage plugin controls:
+You see the following storage plugin configurations:
 
 * cp
 * dfs
@@ -39,7 +39,7 @@ You see the following storage plugin controls:
 
 Click Update to examine a configuration. 
 
-If you've used an installation of Drill before using the sandbox, you might notice that a few storage plugins in the sandbox differ from the same storage plugin in a Drill installation. The sandbox version of dfs, hive, maprdb, and hbase storage plugins definitions play a role in simulating the cluster environment for running the tutorial. 
+If you've used an installation of Drill before using the sandbox, you might notice that a few storage plugin configurations in the sandbox differ from the same storage plugin configurations in a Drill installation. The sandbox configurations of dfs, hive, maprdb, and hbase storage plugins definitions play a role in simulating the cluster environment for running the tutorial. 
 
 ### dfs
 
@@ -53,7 +53,7 @@ location in MapR-FS:
   * logs: access to flat (non-nested) JSON log data in the logs directory and its subdirectories
   * views: a workspace for creating views
 
-The `dfs` definition includes format definitions.
+The `dfs` configuration includes format definitions.
 
     {
       "type": "file",
@@ -91,11 +91,11 @@ The `dfs` definition includes format definitions.
 
 ### maprdb
 
-The maprdb format is a configuration for MapR-DB in the sandbox. You use this format in the sandbox to query MapR-DB/HBase tables. 
+The maprdb is a configuration for MapR-DB in the sandbox. You use this format in the sandbox to query MapR-DB/HBase tables. 
 
 ### hive
 
-The hive storage plugin is a configuration for a Hive data warehouse within the sandbox.
+The hive configuration for a Hive data warehouse within the sandbox.
 Drill connects to the Hive metastore by using the configured metastore thrift
 URI. Metadata for Hive tables is automatically available for users to query.
 
@@ -108,22 +108,7 @@ URI. Metadata for Hive tables is automatically available for users to query.
       }
     }
 
-## Use Case Overview
-
-This section describes the use case that serves as the basis for the tutorial. Imagine being an analyst with basic SQL skills who works for an
-emerging online retail business. The business accepts purchases from its customers
-through both an established web-based interface and a new mobile application.
-
-Your job is data-driven and independent with little or no interaction with the IT department. Recently the central IT team
-has implemented a Hadoop-based infrastructure to reduce the cost of the legacy
-database system, and most of the DWH/ETL workload is now handled by
-Hadoop/Hive. MapR-DB manages the master customer profile information and product catalog. MapR-DB is a NoSQL database. The IT team has also started
-acquiring clickstream data that comes from web and mobile applications. This
-data is stored in Hadoop as JSON files.
-
-You have a number of data sources to explore.  For example, analyzing customer records in the clickstream data and tying them to the master customer data in MapR-DB might yield some potentially interesting analytical connections. You decide to explore various data sources by using Apache Drill. You need Apache Drill to provide flexibility and analytic capability.
-
-# What's Next
+## What's Next
 
 Start running queries by going to [Lesson 1: Learn About the Data
 Set]({{ site.baseurl }}/docs/lesson-1-learn-about-the-data-set).

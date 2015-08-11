@@ -111,8 +111,7 @@ Issue the following command when you want to exit the Drill shell:
 ## Query Sample Data
 
 Your Drill installation includes a `sample-data` directory with JSON and
-Parquet files that you can query. The local file system on your machine is
-configured as the `dfs` storage plugin instance by default when you install
+Parquet files that you can query. The default `dfs` storage plugin configuration represents the local file system on your machine when you install
 Drill in embedded mode. For more information about storage plugin
 configuration, refer to [Storage Plugin Registration]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
 

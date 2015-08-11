@@ -26,8 +26,7 @@ query execution without moving data over the network or between nodes. Drill
 uses ZooKeeper to maintain cluster membership and health-check information.
 
 Though Drill works in a Hadoop cluster environment, Drill is not tied to
-Hadoop and can run in any distributed cluster environment. The only pre-
-requisite for Drill is Zookeeper.
+Hadoop and can run in any distributed cluster environment. The only pre-requisite for Drill is Zookeeper.
 
 See Drill Query Execution.
 

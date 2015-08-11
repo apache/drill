@@ -424,7 +424,7 @@ After removing the extraneous square brackets in the coordinates array, you can 
 ### Lengthy JSON objects
 Currently, Drill cannot manage lengthy JSON objects, such as a gigabit JSON file. Finding the beginning and end of records can be time consuming and require scanning the whole file.
 
-Workaround: Use a tool to split the JSON file into smaller chunks of 64-128MB or 64-256MB initially until you know the total data size and node configuration. Keep the JSON objects intact in each file. A distributed file system, such as MapR-FS, is recommended over trying to manage file partitions.
+Workaround: Use a tool to split the JSON file into smaller chunks of 64-128MB or 64-256MB initially until you know the total data size and node configuration. Keep the JSON objects intact in each file. A distributed file system, such as HDFS, is recommended over trying to manage file partitions.
 
 ### Complex JSON objects
 Complex arrays and maps can be difficult or impossible to query.

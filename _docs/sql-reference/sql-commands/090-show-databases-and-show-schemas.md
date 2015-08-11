@@ -17,7 +17,8 @@ The SHOW DATABASES and SHOW SCHEMAS commands support the following syntax:
 
 You may want to run the SHOW DATABASES or SHOW SCHEMAS command to see a list of the configured storage plugins and workspaces in Drill before you issue the USE command to switch to a particular schema for your queries.
 
-In Drill, a database or schema is a configured storage plugin instance or a configured storage plugin instance with a configured workspace. For example, dfs.donuts where dfs is the file system configured as a storage plugin instance, and donuts is a configured workspace.
+In Drill, a database or schema is a storage plugin configuration that can include a workspace. For example, in `dfs.donuts`, `dfs` is the configured file system and donuts the workspace. The workspace points to a directory
+within the file system.
 
 You can configure and use multiple storage plugins and workspaces in Drill.  See [Storage Plugin Registration]({{ site.baseurl }}/docs/storage-plugin-registration) and [Workspaces]({{ site.baseurl }}/docs/workspaces).
 

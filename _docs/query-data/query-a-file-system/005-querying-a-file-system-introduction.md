@@ -13,7 +13,7 @@ distributed file system:
 
        SELECT * FROM hdfs.logs.`AppServerLogs/20104/Jan/01/part0001.txt`;
 
-The default `dfs` storage plugin instance registered with Drill has a
+The default `dfs` storage plugin configuration registered with Drill has a
 `default` workspace. If you query data in the `default` workspace, you do not
 need to include the workspace in the query. Refer to
 [Workspaces]({{ site.baseurl }}/docs/workspaces) for
