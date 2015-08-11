@@ -40,92 +40,103 @@ package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
 
-/* This class is generated using freemarker and the ComplexWriters.java template */
+/*
+ * This class is generated using FreeMarker on the ${.template_name} template.
+ */
 @SuppressWarnings("unused")
 public class ${eName}WriterImpl extends AbstractFieldWriter {
-  
+
   private final ${name}Vector.Mutator mutator;
   final ${name}Vector vector;
-  
-  public ${eName}WriterImpl(${name}Vector vector, AbstractFieldWriter parent){
+
+  public ${eName}WriterImpl(${name}Vector vector, AbstractFieldWriter parent) {
     super(parent);
     this.mutator = vector.getMutator();
     this.vector = vector;
   }
 
-  public MaterializedField getField(){
+  @Override
+  public MaterializedField getField() {
     return vector.getField();
   }
 
+  @Override
   public int getValueCapacity() {
     return vector.getValueCapacity();
   }
 
-  public void allocate(){
+  @Override
+  public void allocate() {
     vector.allocateNew();
   }
-  
-  public void clear(){
+
+  @Override
+  public void close() {
+    vector.close();
+  }
+
+  @Override
+  public void clear() {
     vector.clear();
   }
-  
-  protected int idx(){
+
+  @Override
+  protected int idx() {
     return super.idx();
   }
-  
+
   <#if mode == "Repeated">
 
-  public void write(${minor.class?cap_first}Holder h){
+  public void write(${minor.class?cap_first}Holder h) {
     mutator.addSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
   }
-  
-  public void write(Nullable${minor.class?cap_first}Holder h){
+
+  public void write(Nullable${minor.class?cap_first}Holder h) {
     mutator.addSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
-  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     mutator.addSafe(idx(), <#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
     vector.getMutator().setValueCount(idx()+1);
   }
   </#if>
-  
-  public void setPosition(int idx){
+
+  public void setPosition(int idx) {
     super.setPosition(idx);
     mutator.startNewValue(idx);
   }
-  
-  
+
+
   <#else>
-  
-  public void write(${minor.class}Holder h){
+
+  public void write(${minor.class}Holder h) {
     mutator.setSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
   }
-  
-  public void write(Nullable${minor.class}Holder h){
+
+  public void write(Nullable${minor.class}Holder h) {
     mutator.setSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
-  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>){
+  public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     mutator.setSafe(idx(), <#if mode == "Nullable">1, </#if><#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
     vector.getMutator().setValueCount(idx()+1);
   }
 
   <#if mode == "Nullable">
-  public void writeNull(){
+
+  public void writeNull() {
     mutator.setNull(idx());
     vector.getMutator().setValueCount(idx()+1);
   }
   </#if>
   </#if>
-  
   </#if>
-
 }
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/writer/${eName}Writer.java" />
@@ -135,18 +146,14 @@ package org.apache.drill.exec.vector.complex.writer;
 
 <#include "/@includes/vv_imports.ftl" />
 @SuppressWarnings("unused")
-public interface ${eName}Writer extends BaseWriter{
+public interface ${eName}Writer extends BaseWriter {
   public void write(${minor.class}Holder h);
-  
+
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>);
   </#if>
 }
 
-
-
 </#list>
 </#list>
 </#list>
-
-

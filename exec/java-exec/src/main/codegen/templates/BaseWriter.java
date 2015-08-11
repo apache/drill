@@ -26,13 +26,15 @@ package org.apache.drill.exec.vector.complex.writer;
 
 <#include "/@includes/vv_imports.ftl" />
 
-/* This class is generated using freemarker and the BaseWriter.java template */
+/*
+ * File generated from ${.template_name} using FreeMarker.
+ */
 @SuppressWarnings("unused")
-public interface BaseWriter extends Positionable{
+  public interface BaseWriter extends AutoCloseable, Positionable {
   FieldWriter getParent();
   int getValueCapacity();
 
-  public interface MapWriter extends BaseWriter{
+  public interface MapWriter extends BaseWriter {
 
     MaterializedField getField();
 
@@ -46,21 +48,21 @@ public interface BaseWriter extends Positionable{
     </#if>
     ${capName}Writer ${lowerName}(String name);
     </#list></#list>
-    
+
     void copyReaderToField(String name, FieldReader reader);
     MapWriter map(String name);
     ListWriter list(String name);
     void start();
     void end();
   }
-  
-  public interface ListWriter extends BaseWriter{
+
+  public interface ListWriter extends BaseWriter {
     void start();
     void end();
     MapWriter map();
     ListWriter list();
     void copyReader(FieldReader reader);
-    
+
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
@@ -69,20 +71,19 @@ public interface BaseWriter extends Positionable{
     ${capName}Writer ${lowerName}();
     </#list></#list>
   }
-  
-  public interface ScalarWriter extends  
+
+  public interface ScalarWriter extends
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> ${name}Writer, </#list></#list> BaseWriter {}
-  
-  public interface ComplexWriter{
+
+  public interface ComplexWriter {
     void allocate();
     void clear();
     void copyReader(FieldReader reader);
     MapWriter rootAsMap();
     ListWriter rootAsList();
-    
-    public void setPosition(int index);
-    public void setValueCount(int count);
-    public void reset();
+
+    void setPosition(int index);
+    void setValueCount(int count);
+    void reset();
   }
 }
-
