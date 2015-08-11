@@ -2,7 +2,7 @@
 title: "Supported Data Types"
 parent: "Data Types"
 ---
-Drill reads from and writes to data sources having a wide variety of types. Drill uses data types at the RPC level that are not supported for query input, often implicitly casting data. Drill supports the following SQL data types for query input:
+Drill reads from and writes to data sources having a wide variety of types. Drill uses data types at the RPC level that are not supported for query input, such as INTERVALDAY and INTERVALYEAR types, often implicitly casting data. Drill supports the following SQL data types for query input:
 
 | SQL Data Type                                     | Description                                                                                                          | Example                                                                        |
 |---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
@@ -14,8 +14,7 @@ Drill reads from and writes to data sources having a wide variety of types. Dril
 | FLOAT                                             | 4-byte floating point number                                                                                         | 0.456                                                                          |
 | DOUBLE, DOUBLE PRECISION                          | 8-byte floating point number, precision-scalable                                                                     | 0.456                                                                          |
 | INTEGER or INT                                    | 4-byte signed integer in the range -2,147,483,648 to 2,147,483,647                                                   | 2147483646                                                                     |
-| INTERVALDAY                                       | A period of time in days, hours, minutes, and seconds only                                                           | '1 10:20:30.123'                                                               |
-| INTERVALYEAR                                      | A period of time in years and months only                                                                            | '1-2' year to month                                                            |
+| INTERVAL                                          | A period of time in days, hours, minutes, and seconds only (INTERVALDAY) or in years and months (INTERVALYEAR)       | '1 10:20:30.123' (INTERVALDAY) or '1-2' year to month (INTERVALYEAR)           |
 | SMALLINT**                                        | 2-byte signed integer in the range -32,768 to 32,767                                                                 | 32000                                                                          |
 | TIME                                              | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                       | 22:55:55.23                                                                    |
 | TIMESTAMP                                         | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS  | 2015-12-30 22:55:55.23                                                         |
@@ -99,23 +98,23 @@ The following list includes data types Drill uses in descending order of precede
 
     SELECT myBigInt FROM mytable WHERE myBigInt = 2.5;
 
-As shown in the table, Drill can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT (not supported in this release) value to INT. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT.
+As shown in the table, Drill can cast a NULL value, which has the lowest precedence, to any other type; you can cast a SMALLINT (not supported in this release) value to INT. Drill might deviate from these precedence rules for performance reasons. Under certain circumstances, such as queries involving SUBSTR and CONCAT functions, Drill reverses the order of precedence and allows a cast to VARCHAR from a type of higher precedence than VARCHAR, such as BIGINT. The INTERVALDAY and INTERVALYEAR types are internal types.
 
 ### Casting Precedence
 
-| Precedence | Data Type              | Precedence | Data Type     |
-|------------|------------------------|------------|---------------|
-| 1          | INTERVALYEAR (highest) | 11         | INT           |
-| 2          | INTERVALDAY            | 12         | UINT2         |
-| 3          | TIMESTAMP              | 13         | SMALLINT*     |
-| 4          | DATE                   | 14         | UINT1         |
-| 5          | TIME                   | 15         | VAR16CHAR     |
-| 6          | DOUBLE                 | 16         | FIXED16CHAR   |
-| 7          | DECIMAL                | 17         | VARCHAR       |
-| 8          | UINT8                  | 18         | CHAR          |
-| 9          | BIGINT                 | 19         | VARBINARY     |
-| 10         | UINT4                  | 20         | FIXEDBINARY   |
-|            |                        | 21         | NULL (lowest) |
+| Precedence | Data Type              | Precedence | Data Type      |
+|------------|------------------------|------------|----------------|
+| 1          | INTERVALYEAR (highest) | 12         | UINT2          |
+| 2          | INTERVALDAY            | 13         | SMALLINT*      |
+| 3          | TIMESTAMP              | 14         | UINT1          |
+| 4          | DATE                   | 15         | VAR16CHAR      |
+| 5          | TIME                   | 16         | FIXED16CHAR    |
+| 6          | DOUBLE                 | 17         | VARCHAR        |
+| 7          | DECIMAL                | 18         | CHAR           |
+| 8          | UINT8                  | 19         | VARBINARY      |
+| 9          | BIGINT                 | 20         | FIXEDBINARY    |
+| 10         | UINT4                  | 21         | NULL (lowest)  |
+| 11         | INT                    |            |                |
 
 \* Not supported in this release.
 
@@ -169,18 +168,18 @@ If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, such as b
 
 ### Date and Time Data Types
 
-| To:          | DATE | TIME | TIMESTAMP | INTERVALDAY | INTERVALYEAR | INTERVALDAY |
-|--------------|------|------|-----------|-------------|--------------|-------------|
-| From:        |      |      |           |             |              |             |
-| CHAR         | Yes  | Yes  | Yes       | Yes         | Yes          | Yes         |
-| FIXEDBINARY* | No   | No   | No        | No          | No           | No          |
-| VARCHAR      | Yes  | Yes  | Yes       | Yes         | Yes          | Yes         |
-| VARBINARY*   | No   | No   | Yes       | No          | No           | No          |
-| DATE         | No   | No   | Yes       | No          | No           | No          |
-| TIME         | No   | Yes  | Yes       | No          | No           | No          |
-| TIMESTAMP    | Yes  | Yes  | Yes       | No          | No           | No          |
-| INTERVALYEAR | Yes  | No   | Yes       | Yes         | No           | Yes         |
-| INTERVALDAY  | Yes  | No   | Yes       | Yes         | Yes          | No          |
+| To:          | DATE | TIME | TIMESTAMP | INTERVALYEAR | INTERVALDAY |
+|--------------|------|------|-----------|--------------|-------------|
+| From:        |      |      |           |              |             |
+| CHAR         | Yes  | Yes  | Yes       | Yes          | Yes         |
+| FIXEDBINARY* | No   | No   | No        | No           | No          |
+| VARCHAR      | Yes  | Yes  | Yes       | Yes          | Yes         |
+| VARBINARY*   | No   | No   | Yes       | No           | No          |
+| DATE         | No   | No   | Yes       | No           | No          |
+| TIME         | No   | Yes  | Yes       | No           | No          |
+| TIMESTAMP    | Yes  | Yes  | Yes       | No           | No          |
+| INTERVALYEAR | Yes  | No   | Yes       | No           | Yes         |
+| INTERVALDAY  | Yes  | No   | Yes       | Yes          | No          |
 
 \* Used to cast binary UTF-8 data coming to/from sources such as MapR-DB/HBase. The CAST function does not support all representations of FIXEDBINARY and VARBINARY. Only the UTF-8 format is supported. 
 

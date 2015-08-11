@@ -390,7 +390,7 @@ Converts a VARBINARY type into a hexadecimal-encoded string.
 
 *expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}
 
-This function returns a hexadecimal string, such as "\xca\xfe\xba\xbe". You can use this function with CONVERT_TO when you want to test the effects of a conversion.
+This function returns a hexadecimal string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO when you want to test the effects of a conversion.
 
 ### STRING_BINARY Examples
 
@@ -439,7 +439,7 @@ Converts a hexadecimal-encoded string into a VARBINARY type.
 
     BINARY_STRING(expression)
 
-*expression* is a hexadecimal string, such as "\xca\xfe\xba\xbe".
+*expression* is a hexadecimal string, such as `"\xca\xfe\xba\xbe"`.
 
 This function returns a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}. You can use this function with CONVERT_FROM for readable results.
 
@@ -453,11 +453,11 @@ Converts a VARBINARY type into a hexadecimal-encoded string.
 
 *expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}.
 
-This function returns a hexadecimal-encoded string, such as "\xca\xfe\xba\xbe". You can use this function with CONVERT_TO for readable results.
+This function returns a hexadecimal-encoded string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO for readable results.
 
 ### BINARY_STRING Examples
 
-Decode the hexadecimal string 000000C8 expressed in four octets \x00\x00\x00\xC8 into its big endian four-byte integer equivalent. 
+Decode the hexadecimal string 000000C8 expressed in four octets `\x00\x00\x00\xC8` into its big endian four-byte integer equivalent. 
 
 ```
 SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT_BE') AS cnvrt
