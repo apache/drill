@@ -44,9 +44,7 @@ public class DrillDistributionTrait implements RelTrait {
   }
 
   public DrillDistributionTrait(DistributionType type, ImmutableList<DistributionField> fields) {
-    assert (type == DistributionType.HASH_DISTRIBUTED
-        || type == DistributionType.RANGE_DISTRIBUTED
-            || type == DistributionType.SINGLETON);
+    assert (type == DistributionType.HASH_DISTRIBUTED || type == DistributionType.RANGE_DISTRIBUTED);
     this.type = type;
     this.fields = fields;
   }

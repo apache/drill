@@ -70,8 +70,7 @@ public class WindowPrule extends Prule {
       if(windowBase.keys.isEmpty()
           && windowBase.orderKeys.getFieldCollations().isEmpty()) {
         DrillDistributionTrait distEmptyKeys =
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.SINGLETON,
-                ImmutableList.copyOf(new ArrayList<DistributionField>()));
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.SINGLETON);
 
         traits = traits.plus(distEmptyKeys);
       } else if (windowBase.keys.size() > 0) {
