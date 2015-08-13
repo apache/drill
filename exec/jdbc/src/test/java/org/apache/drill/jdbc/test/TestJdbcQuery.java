@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
@@ -31,7 +30,7 @@ import org.junit.Test;
 import com.google.common.base.Function;
 
 public class TestJdbcQuery extends JdbcTestQueryBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
   // TODO:  Purge nextUntilEnd(...) and calls when remaining fragment race
   // conditions are fixed (not just DRILL-2245 fixes).
@@ -43,6 +42,22 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
   //  while (resultSet.next()) {
   //  }
   //}
+
+  @Test // DRILL-3635
+  public void testFix3635() throws Exception {
+    // When we run a CTAS query, executeQuery() should return after the table has been flushed to disk even though we
+    // didn't yet receive a terminal message. To test this, we run CTAS then immediately run a query on the newly
+    // created table.
+
+    final String tableName = "dfs_test.tmp.`testDDLs`";
+
+    try (Connection conn = connect("jdbc:drill:zk=local")) {
+      Statement s = conn.createStatement();
+      s.executeQuery(String.format("CREATE TABLE %s AS SELECT * FROM cp.`employee.json`", tableName));
+    }
+
+    testQuery(String.format("SELECT * FROM %s LIMIT 1", tableName));
+  }
 
   @Test
   @Ignore
