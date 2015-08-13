@@ -17,14 +17,29 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JVar;
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.ValueVectorReadExpression;
+import org.apache.drill.exec.expr.ValueVectorWriteExpression;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 
-public class WindowFunction {
+public abstract class WindowFunction {
   public enum Type {
     ROW_NUMBER,
     RANK,
@@ -35,78 +50,356 @@ public class WindowFunction {
     LAG,
     FIRST_VALUE,
     LAST_VALUE,
-    NTILE
+    NTILE,
+    AGGREGATE
   }
 
   final Type type;
-
-  private TypedFieldId fieldId;
 
   WindowFunction(Type type) {
     this.type = type;
   }
 
-  TypeProtos.MajorType getMajorType() {
-    if (type == Type.CUME_DIST || type == Type.PERCENT_RANK) {
-      return Types.required(TypeProtos.MinorType.FLOAT8);
-    }
-    return Types.required(TypeProtos.MinorType.BIGINT);
-  }
-
-  String getName() {
-    return type.name().toLowerCase();
-  }
-
-  public TypedFieldId getFieldId() {
-    return fieldId;
-  }
-
-  public void setFieldId(final TypedFieldId fieldId) {
-    this.fieldId = fieldId;
-  }
-
-  static WindowFunction fromExpression(final LogicalExpression expr) {
-    if (!(expr instanceof FunctionCall)) {
-      return null;
-    }
-
-    final String name = ((FunctionCall) expr).getName();
-    final Type type;
+  static WindowFunction fromExpression(final FunctionCall call) {
+    final String name = call.getName();
+    Type type;
     try {
       type = Type.valueOf(name.toUpperCase());
     } catch (IllegalArgumentException e) {
-      return null; // not a window function
+      type = Type.AGGREGATE;
     }
 
-    if (type == Type.NTILE) {
-      return new NtileWinFunc();
+    switch (type) {
+      case AGGREGATE:
+        return new Aggregate();
+      case LEAD:
+        return new Lead();
+      case LAG:
+        return new Lag();
+      case FIRST_VALUE:
+        return new FirstValue();
+      case LAST_VALUE:
+        return new LastValue();
+      case NTILE:
+        return new Ntile();
+      default:
+        return new Ranking(type);
     }
-
-    return new WindowFunction(type);
   }
 
-  static class NtileWinFunc extends WindowFunction {
+  abstract void generateCode(final ClassGenerator<WindowFramer> cg);
+
+  abstract void materialize(final NamedExpression ne, final VectorContainer batch,
+                   final ErrorCollector collector, final FunctionLookupContext registry);
+
+  static class Aggregate extends WindowFunction {
+
+    private ValueVectorWriteExpression writeAggregationToOutput;
+
+    Aggregate() {
+      super(Type.AGGREGATE);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
+                     final FunctionLookupContext registry) {
+      final LogicalExpression aggregate = ExpressionTreeMaterializer.materialize(ne.getExpr(), batch, collector, registry);
+
+      // add corresponding ValueVector to container
+      final MaterializedField output = MaterializedField.create(ne.getRef(), aggregate.getMajorType());
+      batch.addOrGet(output).allocateNew();
+      TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+      writeAggregationToOutput = new ValueVectorWriteExpression(outputId, aggregate, true);
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupEvaluatePeer", "evaluatePeer", null, null);
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+
+      cg.setMappingSet(mappingSet);
+      cg.addExpr(writeAggregationToOutput);
+    }
+  }
+
+  static class Ranking extends WindowFunction {
+
+    protected TypedFieldId fieldId;
+
+    Ranking(final Type type) {
+      super(type);
+    }
+
+    private TypeProtos.MajorType getMajorType() {
+      if (type == Type.CUME_DIST || type == Type.PERCENT_RANK) {
+        return Types.required(TypeProtos.MinorType.FLOAT8);
+      }
+      return Types.required(TypeProtos.MinorType.BIGINT);
+    }
+
+    private String getName() {
+      return type.name().toLowerCase();
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      final GeneratorMapping mapping = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet(null, "outIndex", mapping, mapping);
+
+      cg.setMappingSet(mappingSet);
+      final JVar vv = cg.declareVectorValueSetupAndMember(cg.getMappingSet().getOutgoing(), fieldId);
+      final JExpression outIndex = cg.getMappingSet().getValueWriteIndex();
+      JInvocation setMethod = vv.invoke("getMutator").invoke("setSafe").arg(outIndex).arg(JExpr.direct("partition." + getName()));
+
+      cg.getEvalBlock().add(setMethod);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector, FunctionLookupContext registry) {
+      final MaterializedField outputField = MaterializedField.create(ne.getRef(), getMajorType());
+      batch.addOrGet(outputField).allocateNew();
+      fieldId = batch.getValueVectorId(ne.getRef());
+    }
+  }
+
+  static class Ntile extends Ranking {
 
     private int numTiles;
 
-    public NtileWinFunc() {
+    public Ntile() {
       super(Type.NTILE);
     }
 
-    public int getNumTiles() {
-      return numTiles;
-    }
-
-    public void setNumTilesFromExpression(LogicalExpression numTilesExpr) {
+    private int numTilesFromExpression(LogicalExpression numTilesExpr) {
       if ((numTilesExpr instanceof ValueExpressions.IntExpression)) {
         int nt = ((ValueExpressions.IntExpression) numTilesExpr).getInt();
         if (nt >= 0) {
-          numTiles = nt;
-          return;
+          return nt;
         }
       }
 
       throw new IllegalArgumentException("NTILE only accepts unsigned integer argument");
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
+                     final FunctionLookupContext registry) {
+      final FunctionCall call = (FunctionCall) ne.getExpr();
+      final LogicalExpression argument = call.args.get(0);
+      final MaterializedField outputField = MaterializedField.create(ne.getRef(), argument.getMajorType());
+      batch.addOrGet(outputField).allocateNew();
+      fieldId = batch.getValueVectorId(ne.getRef());
+
+      numTiles = numTilesFromExpression(argument);
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      final GeneratorMapping mapping = GeneratorMapping.create("setupPartition", "outputRow", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet(null, "outIndex", mapping, mapping);
+
+      cg.setMappingSet(mappingSet);
+      final JVar vv = cg.declareVectorValueSetupAndMember(cg.getMappingSet().getOutgoing(), fieldId);
+      final JExpression outIndex = cg.getMappingSet().getValueWriteIndex();
+      JInvocation setMethod = vv.invoke("getMutator").invoke("setSafe").arg(outIndex)
+        .arg(JExpr.direct("partition.ntile(" + numTiles + ")"));
+      cg.getEvalBlock().add(setMethod);
+    }
+  }
+
+  static class Lead extends WindowFunction {
+    private LogicalExpression writeInputToLead;
+
+    public Lead() {
+      super(Type.LEAD);
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      final GeneratorMapping mapping = GeneratorMapping.create("setupCopyNext", "copyNext", null, null);
+      final MappingSet eval = new MappingSet("inIndex", "outIndex", mapping, mapping);
+
+      cg.setMappingSet(eval);
+      cg.addExpr(writeInputToLead);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
+                     final FunctionLookupContext registry) {
+      final FunctionCall call = (FunctionCall) ne.getExpr();
+      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+
+      // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
+      TypeProtos.MajorType majorType = input.getMajorType();
+      if (majorType.getMode() == TypeProtos.DataMode.REQUIRED) {
+        majorType = Types.optional(majorType.getMinorType());
+      }
+
+      // add corresponding ValueVector to container
+      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      batch.addOrGet(output).allocateNew();
+      final TypedFieldId outputId =  batch.getValueVectorId(ne.getRef());
+
+      writeInputToLead = new ValueVectorWriteExpression(outputId, input, true);
+    }
+  }
+
+  static class Lag extends WindowFunction {
+    private LogicalExpression writeLagToLag;
+    private LogicalExpression writeInputToLag;
+
+    Lag() {
+      super(Type.LAG);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch,
+                     final ErrorCollector collector, final FunctionLookupContext registry) {
+      final FunctionCall call = (FunctionCall) ne.getExpr();
+      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+
+      // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
+      TypeProtos.MajorType majorType = input.getMajorType();
+      if (majorType.getMode() == TypeProtos.DataMode.REQUIRED) {
+        majorType = Types.optional(majorType.getMinorType());
+      }
+
+      // add lag output ValueVector to container
+      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      batch.addOrGet(output).allocateNew();
+      final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+
+      writeInputToLag = new ValueVectorWriteExpression(outputId, input, true);
+      writeLagToLag = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      {
+        // generating lag copyFromInternal
+        final GeneratorMapping mapping = GeneratorMapping.create("setupCopyFromInternal", "copyFromInternal", null, null);
+        final MappingSet mappingSet = new MappingSet("inIndex", "outIndex", mapping, mapping);
+
+        cg.setMappingSet(mappingSet);
+        cg.addExpr(writeLagToLag);
+      }
+
+      {
+        // generating lag copyPrev
+        final GeneratorMapping mapping = GeneratorMapping.create("setupCopyPrev", "copyPrev", null, null);
+        final MappingSet eval = new MappingSet("inIndex", "outIndex", mapping, mapping);
+
+        cg.setMappingSet(eval);
+        cg.addExpr(writeInputToLag);
+      }
+    }
+  }
+
+  static class LastValue extends WindowFunction {
+
+    private LogicalExpression writeSourceToLastValue;
+
+    LastValue() {
+      super(Type.LAST_VALUE);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch,
+                     final ErrorCollector collector, final FunctionLookupContext registry) {
+      // call.args.get(0), ne.getRef()
+      final FunctionCall call = (FunctionCall) ne.getExpr();
+      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+
+      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      batch.addOrGet(output).allocateNew();
+      final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+
+      // write incoming.source[inIndex] to outgoing.last_value[outIndex]
+      writeSourceToLastValue = new ValueVectorWriteExpression(outputId, input, true);
+    }
+
+    @Override
+    void generateCode(ClassGenerator<WindowFramer> cg) {
+      // in DefaultFrameTemplate we call setupReadLastValue:
+      //   setupReadLastValue(current, container)
+      // and readLastValue:
+      //   writeLastValue(frameLastRow, row)
+      //
+      // this will generate the the following, pseudo, code:
+      //   write current.source_last_value[frameLastRow] to container.last_value[row]
+
+      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupReadLastValue", "readLastValue", null, null);
+      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+
+      cg.setMappingSet(mappingSet);
+      cg.addExpr(writeSourceToLastValue);
+    }
+  }
+
+  static class FirstValue extends WindowFunction {
+
+    private LogicalExpression writeInputToFirstValue;
+
+    private LogicalExpression writeFirstValueToFirstValue;
+
+    FirstValue() {
+      super(Type.FIRST_VALUE);
+    }
+
+    @Override
+    void materialize(final NamedExpression ne, final VectorContainer batch,
+                     final ErrorCollector collector, final FunctionLookupContext registry) {
+      final FunctionCall call = (FunctionCall) ne.getExpr();
+      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+
+      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      batch.addOrGet(output).allocateNew();
+      final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+
+      // write incoming.first_value[inIndex] to outgoing.first_value[outIndex]
+      writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
+      // write incoming.source[inIndex] to outgoing.first_value[outIndex]
+      writeInputToFirstValue = new ValueVectorWriteExpression(outputId, input, true);
+    }
+
+    @Override
+    void generateCode(final ClassGenerator<WindowFramer> cg) {
+      {
+        // in DefaultFrameTemplate we call setupCopyFirstValue:
+        //   setupCopyFirstValue(current, internal)
+        // and copyFirstValueToInternal:
+        //   copyFirstValueToInternal(currentRow, 0)
+        //
+        // this will generate the the following, pseudo, code:
+        //   write current.source[currentRow] to internal.first_value[0]
+        //
+        // so it basically copies the first value of current partition into the first row of internal.first_value
+        // this is especially useful when handling multiple batches for the same partition where we need to keep
+        // the first value of the partition somewhere after we release the first batch
+        final GeneratorMapping mapping = GeneratorMapping.create("setupCopyFirstValue", "copyFirstValueToInternal", null, null);
+        final MappingSet mappingSet = new MappingSet("index", "0", mapping, mapping);
+
+        cg.setMappingSet(mappingSet);
+        cg.addExpr(writeInputToFirstValue);
+      }
+
+      {
+        // in DefaultFrameTemplate we call setupPasteValues:
+        //   setupPasteValues(internal, container)
+        // and outputRow:
+        //   outputRow(outIndex)
+        //
+        // this will generate the the following, pseudo, code:
+        //   write internal.first_value[0] to container.first_value[outIndex]
+        //
+        // so it basically copies the value stored in internal.first_value's first row into all rows of container.first_value
+        final GeneratorMapping mapping = GeneratorMapping.create("setupPasteValues", "outputRow", "resetValues", "cleanup");
+        final MappingSet mappingSet = new MappingSet("0", "outIndex", mapping, mapping);
+        cg.setMappingSet(mappingSet);
+        cg.addExpr(writeFirstValueToFirstValue);
+      }
     }
   }
 }
