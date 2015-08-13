@@ -103,9 +103,9 @@ public class DrillJdbc41Factory extends DrillFactory {
                                          TimeZone timeZone) {
     final ResultSetMetaData metaData =
         newResultSetMetaData(statement, prepareResult.getColumnList());
-    return new DrillResultSetImpl( (DrillStatementImpl) statement,
-                                   (DrillPrepareResult) prepareResult,
-                                   metaData, timeZone);
+    return new DrillResultSetImpl(statement,
+                                  (DrillPrepareResult) prepareResult,
+                                  metaData, timeZone);
   }
 
   @Override
