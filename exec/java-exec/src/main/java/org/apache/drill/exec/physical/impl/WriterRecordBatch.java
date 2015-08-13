@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.Writer;
@@ -126,6 +125,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     addOutputContainerData();
     processed = true;
 
+    closeWriter();
+
     return IterOutcome.OK_NEW_SCHEMA;
   }
 
@@ -169,16 +170,20 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     schema = container.getSchema();
   }
 
+  private void closeWriter() {
+    if (recordWriter != null) {
+      try {
+        recordWriter.cleanup();
+        recordWriter = null;
+      } catch(IOException ex) {
+        context.fail(ex);
+      }
+    }
+  }
+
   @Override
   public void close() {
-    try {
-      if (recordWriter != null) {
-        recordWriter.cleanup();
-      }
-    } catch(IOException ex) {
-      logger.error("Failure while closing record writer", ex);
-      throw new RuntimeException("Failed to close RecordWriter", ex);
-    }
+    closeWriter();
     super.close();
   }
 
