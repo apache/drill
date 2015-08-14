@@ -26,7 +26,6 @@ public class Partition {
   private final int length; // size of this partition
   private int remaining;
 
-  private int frameSize; // size of current frame
   private int peers; // remaining non-processed peers in current frame
 
   // we keep these attributes public because the generated code needs to access them
@@ -65,7 +64,6 @@ public class Partition {
 
   public void newFrame(int peers) {
     this.peers = peers;
-    frameSize = peers + row_number - 1; // default frame contains all frames from start of partition to last peer
 
     rank = row_number; // rank = row number of 1st peer
     dense_rank++;
@@ -78,18 +76,18 @@ public class Partition {
   }
 
   public int ntile(int numTiles) {
-    int mod = frameSize % numTiles;
-    double ceil = Math.ceil((double) frameSize / numTiles);
+    int mod = length % numTiles;
+    double ceil = Math.ceil((double) length / numTiles);
 
     int out;
     if (row_number <= mod * ceil) {
       out = (int) Math.ceil(row_number / ceil);
     } else {
-      double floor = Math.floor((double) frameSize / numTiles);
+      double floor = Math.floor((double) length / numTiles);
       out = (int) Math.ceil((row_number - mod) / floor);
     }
 
-    logger.trace("NTILE(row_number = {}, nt = {}, ct = {}) = {}", row_number, numTiles, frameSize, out);
+    logger.trace("NTILE(row_number = {}, nt = {}, ct = {}) = {}", row_number, numTiles, length, out);
     return out;
   }
 

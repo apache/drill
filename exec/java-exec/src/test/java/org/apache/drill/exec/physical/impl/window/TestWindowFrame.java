@@ -266,9 +266,19 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test
+  public void test3648Fix() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3648.sql"), TEST_RES_PATH)
+      .ordered()
+      .csvBaselineFile("window/3648.tsv")
+      .baselineColumns("ntile")
+      .build()
+      .run();
+  }
+
+  @Test
   public void testPartitionNtile() {
-    Partition partition = new Partition(20);
-    partition.newFrame(12);
+    Partition partition = new Partition(12);
 
     Assert.assertEquals(1, partition.ntile(5));
     partition.rowAggregated();
