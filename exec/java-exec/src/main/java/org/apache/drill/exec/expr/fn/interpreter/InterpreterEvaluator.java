@@ -24,7 +24,6 @@ import java.lang.reflect.Field;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
-import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -341,7 +340,8 @@ public class InterpreterEvaluator {
     public ValueHolder visitIfExpression(IfExpression ifExpr, Integer inIndex) throws RuntimeException {
       ValueHolder condHolder = ifExpr.ifCondition.condition.accept(this, inIndex);
 
-      assert (condHolder instanceof BitHolder || condHolder instanceof NullableBitHolder);
+      Preconditions.checkArgument (condHolder instanceof BitHolder || condHolder instanceof NullableBitHolder,
+          "IfExpression's condition does not have type of BitHolder or NullableBitHolder.");
 
       Trivalent flag = isBitOn(condHolder);
 
@@ -487,7 +487,8 @@ public class InterpreterEvaluator {
     }
 
     private Trivalent isBitOn(ValueHolder holder) {
-      assert (holder instanceof BitHolder || holder instanceof NullableBitHolder);
+      Preconditions.checkArgument(holder instanceof BitHolder || holder instanceof NullableBitHolder,
+          "Input does not have type of BitHolder or NullableBitHolder.");
 
       if ( (holder instanceof BitHolder && ((BitHolder) holder).value == 1)) {
         return Trivalent.TRUE;
