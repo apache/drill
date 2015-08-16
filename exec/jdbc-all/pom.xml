@@ -28,99 +28,86 @@
   <name>JDBC JAR with all dependencies</name>
 
   <dependencies>
-  
+
     <!-- start parent dependencies -->
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
       <version>4.0.27.Final</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>14.0.1</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${dep.slf4j.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
       <version>${dep.slf4j.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
       <version>${dep.slf4j.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
       <version>${dep.slf4j.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>com.googlecode.jmockit</groupId>
       <artifactId>jmockit</artifactId>
       <version>1.3</version>
-      <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${dep.junit.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>1.9.5</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.0.13</version>
-      <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
       <version>0.9.44</version>
-      <scope>provided</scope>
     </dependency>
-        
+
     <!-- end parent dependencies -->
-            
+
     <dependency>
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq-avatica</artifactId>
       <version>0.9-drill-r20</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>log4j</groupId>
@@ -208,7 +195,6 @@
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <artifactId>javassist</artifactId>
@@ -220,7 +206,6 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-jdbc</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <artifactId>drill-storage-hive-core</artifactId>
@@ -237,13 +222,11 @@
       <groupId>org.codehaus.janino</groupId>
       <artifactId>janino</artifactId>
       <version>2.6.1</version>
-      <scope>provided</scope>
     </dependency>
     <!-- Specify xalan and xerces versions to avoid setXIncludeAware error. -->
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>xml-apis</groupId>
@@ -254,7 +237,6 @@
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>xml-apis</groupId>
@@ -266,23 +248,66 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.0.13</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <version>1.0.13</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
   <build>
-    <plugins>
+  <plugins>
 
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>2.4.1</version>
+    <executions>
+      <execution>
+        <phase>package</phase>
+        <goals>
+          <goal>shade</goal>
+        </goals>
+      </execution>
+    </executions>
+    <configuration>
+      <shadedArtifactAttached>false</shadedArtifactAttached>
+      <createDependencyReducedPom>true</createDependencyReducedPom>
+      <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+<!--       <shadedClassifierName>uber</shadedClassifierName> -->
+      <minimizeJar>false</minimizeJar>
+      <artifactSet>
+        
+        <includes>
+          <include>*:*</include>
+        </includes>
+        <excludes>
+          <exclude>org.slf4j:jcl-over-slf4j</exclude>
+          <exclude>**/LICENSE.txt</exclude>
+          <exclude>**/*.java</exclude>
+          <exclude>**/META-INF/**</exclude>
+          <exclude>**/org.codehaus.commons.compiler.properties</exclude>
+          <exclude>**/*.SF</exclude>
+          <exclude>**/*.RSA</exclude>
+          <exclude>**/*.DSA</exclude>
+        </excludes>
+      </artifactSet>
+      <relocations>
+        <relocation>
+          <pattern></pattern>
+          <shadedPattern>oadd.</shadedPattern>
+          <excludes>
+            <exclude>org.apache.drill.**</exclude>
+          </excludes>
+        </relocation>
+      </relocations>
+    </configuration>
+  </plugin>  
       <plugin>
         <groupId>com.github.wvengen</groupId>
         <artifactId>proguard-maven-plugin</artifactId>
-        <version>2.0.7</version>
+        <version>2.0.10</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -301,82 +326,67 @@
         </dependencies>
         <configuration>
           <proguardVersion>5.0</proguardVersion>
-          <obfuscate>false</obfuscate>
-          <includeDependencyInjar>true</includeDependencyInjar>
-          <outjar>${project.build.finalName}-dirty.jar</outjar>
+          <includeDependency>false</includeDependency>
+          <injar>${project.build.finalName}.jar</injar>
+          <outjar>${project.build.finalName}.jar</outjar>
           <outputDirectory>${project.build.directory}</outputDirectory>
           <maxMemory>6g</maxMemory>
+          <inFilter>!**/META-INF/**,!**/*.java,!**/org.codehaus.commons.compiler.properties,!**/*.SF,!**/*.RSA,!**/*.DSA</inFilter>
           <options>
-            <option>-dontobfuscate</option>
-            <option>-dontoptimize</option>
-            <option>-ignorewarnings</option>
-            <option>-keep class org.apache.drill.exec.proto.** { *; }</option>
-            <option>-keep class org.apache.drill.common.types.** { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.Driver { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillConnection { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillStatement { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.DrillResultSet { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.impl.DrillJdbc40Factory { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.impl.DrillJdbc41Factory { *; }</option>
-            <option>-keep class org.apache.drill.jdbc.proxy.TracingProxyDriver { *; }</option>
-            <option>-keep class org.apache.drill.common.config.CommonConstants { *; }</option>
-            <option>-keep class org.apache.drill.common.config.ConfigProvider { *; }</option>
-            <option>-keep class org.apache.drill.common.config.DrillConfig { *; }</option>
-            <option>-keep class org.apache.drill.common.config.NestedConfig { *; }</option>
-
-            <option>-keep class ch.qos.logback.** { *; }</option>
-            <option>-keep class org.slf4j.** { *; }</option>
-            <option>-keep class * implements com.fasterxml.jackson.databind.cfg.ConfigFeature { *; }</option>
-            <option>-keep class * implements com.fasterxml.jackson.databind.jsontype.TypeIdResolver { *; }</option>
+            <option>
+            -dontwarn</option>
+            <option>
+            -dontnote</option>
+            <option>
+            -dontobfuscate</option>
+            <option>
+            -dontoptimize</option>
+            <option>
+            -ignorewarnings</option>
+            <option>
+            -keep class org.apache.drill.exec.proto.** { *; }</option>
+            <option>
+            -keep class org.apache.drill.common.types.** { *; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.Driver { *; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.DrillConnection {*; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.DrillStatement {*; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.DrillResultSet {*; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.impl.DrillJdbc40Factory { *; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.impl.DrillJdbc41Factory { *; }</option>
+            <option>
+            -keep class org.apache.drill.jdbc.proxy.TracingProxyDriver { *; }</option>
+            <option>
+            -keep class org.apache.drill.common.config.CommonConstants { *; }</option>
+            <option>
+            -keep class org.apache.drill.common.config.ConfigProvider { *; }</option>
+            <option>
+            -keep class org.apache.drill.common.config.DrillConfig { *; }</option>
+            <option>
+            -keep class org.apache.drill.common.config.NestedConfig { *; }</option>
+            <option>
+            -keep class oadd.ch.qos.logback.** { *; }</option>
+            <option>
+            -keep class oadd.org.slf4j.** { *; }</option>
+            <option>
+            -keep class * implements oadd.com.fasterxml.jackson.databind.cfg.ConfigFeature { *; }</option>
+            <option>
+            -keep class * implements oadd.com.fasterxml.jackson.databind.jsontype.TypeIdResolver {*; }</option>
             <!-- do not mess with enums, Java doesn't like it -->
             <option>-keep enum ** { *; }</option>
+            <option>-libraryjars ${java.home}/lib/rt.jar(java/**,javax/**)</option>
+            <option>-libraryjars ${java.home}/lib/jsse.jar(java/**,javax/**)</option>
+            <option>-dontpreverify</option>
           </options>
-          <exclusions>
-            <exclusion>
-              <groupId>org.slf4j</groupId>
-              <artifactId>jcl-over-slf4j</artifactId>
-            </exclusion>
-          </exclusions>
-          <libs>
-            <lib>${java.home}/lib/rt.jar</lib>
-            <lib>${java.home}/lib/jsse.jar</lib>
-          </libs>
         </configuration>
       </plugin>
 
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <delete dir="${project.build.directory}/dirty"/>
-                <mkdir dir="${project.build.directory}/dirty"/>
-                <unzip src="${project.build.directory}/${project.build.finalName}-dirty.jar" dest="${project.build.directory}/dirty">
-                  <patternset>
-                    <exclude name="**/*.java"/>
-                    <exclude name="org.codehaus.commons.compiler.properties"/> <!-- This leads jad-ui to not parse classes under 'org/' -->
-                    <exclude name="**/*.SF"/>
-                    <exclude name="**/*.RSA"/>
-                    <exclude name="**/*.DSA"/>
-                    <exclude name="META-INF/services/*"/>
-                    <exclude name="META-INF/*.SF"/>
-                    <exclude name="META-INF/*.RSA"/>
-                    <exclude name="META-INF/*.DSA"/>
-                  </patternset>
-                </unzip>
-                <jar destfile="${project.build.directory}/${project.build.finalName}.jar" basedir="${project.build.directory}/dirty"/>
-                <delete dir="${project.build.directory}/dirty"/>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
+   
     </plugins>
   </build>
 
@@ -396,11 +406,13 @@
   </pluginRepositories>
 
   <profiles>
-    <!-- mondrian data includes 10s of MBs of JSON file
-        if you want to include them run maven with -Pwith-mondrian-data -->
+    <!-- mondrian data includes 10s of MBs of JSON file if you want to include 
+      them run maven with -Pwith-mondrian-data -->
     <profile>
       <id>with-mondrian-data</id>
-      <activation><activeByDefault>false</activeByDefault></activation>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
       <dependencies>
         <dependency>
           <groupId>net.hydromatic</groupId>
