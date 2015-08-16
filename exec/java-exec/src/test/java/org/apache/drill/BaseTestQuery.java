@@ -286,7 +286,7 @@ public class BaseTestQuery extends ExecTest {
     QueryTestUtil.testWithListener(client, type, query, resultListener);
   }
 
-  protected static void testNoResult(String query, Object... args) throws Exception {
+  public static void testNoResult(String query, Object... args) throws Exception {
     testNoResult(1, query, args);
   }
 

@@ -72,7 +72,7 @@ public class QueryClassLoader extends URLClassLoader {
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
   public QueryClassLoader(DrillConfig config, OptionManager sessionOptions) {
-    super(new URL[0]);
+    super(new URL[0], Thread.currentThread().getContextClassLoader());
     compilerSelector = new ClassCompilerSelector(config, sessionOptions);
   }
 
