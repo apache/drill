@@ -35,7 +35,6 @@ import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
-import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import com.google.common.base.Stopwatch;
@@ -143,32 +142,30 @@ public class PathScanner {
                  resourcePathname);
     final Set<URL> resultUrlSet = Sets.newHashSet();
 
-    final ClassLoader[] netLoaders = ClasspathHelper.classLoaders(classLoaders);
-    for (ClassLoader classLoader : netLoaders) {
-      try {
-        final Enumeration<URL> resourceUrls =
-            classLoader.getResources(resourcePathname);
-        while (resourceUrls.hasMoreElements()) {
-          final URL resourceUrl = resourceUrls.nextElement();
-          logger.trace( "- found a(n) {} at {}.", resourcePathname, resourceUrl );
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      final Enumeration<URL> resourceUrls =
+          classLoader.getResources(resourcePathname);
+      while (resourceUrls.hasMoreElements()) {
+        final URL resourceUrl = resourceUrls.nextElement();
+        logger.trace("- found a(n) {} at {}.", resourcePathname, resourceUrl);
 
-          int index = resourceUrl.toExternalForm().lastIndexOf(resourcePathname);
-          if (index != -1 && returnRootPathname) {
-            final URL classpathRootUrl =
-                new URL(resourceUrl.toExternalForm().substring(0, index));
-            resultUrlSet.add(classpathRootUrl);
-            logger.debug( "- collected resource's classpath root URL {}.",
-                          classpathRootUrl );
-          } else {
-            resultUrlSet.add(resourceUrl);
-            logger.debug( "- collected resource URL {}.", resourceUrl );
-          }
+        int index = resourceUrl.toExternalForm().lastIndexOf(resourcePathname);
+        if (index != -1 && returnRootPathname) {
+          final URL classpathRootUrl =
+              new URL(resourceUrl.toExternalForm().substring(0, index));
+          resultUrlSet.add(classpathRootUrl);
+          logger.debug("- collected resource's classpath root URL {}.",
+              classpathRootUrl);
+        } else {
+          resultUrlSet.add(resourceUrl);
+          logger.debug("- collected resource URL {}.", resourceUrl);
         }
-      } catch (IOException e) {
-        if (Reflections.log != null) {
-          Reflections.log.error(
-              "Error scanning for resources named " + resourcePathname, e);
-        }
+      }
+    } catch (IOException e) {
+      if (Reflections.log != null) {
+        Reflections.log.error(
+            "Error scanning for resources named " + resourcePathname, e);
       }
     }
 

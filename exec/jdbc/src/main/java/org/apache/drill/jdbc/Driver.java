@@ -26,15 +26,12 @@ import java.util.Properties;
 
 import org.apache.drill.jdbc.impl.DriverImpl;
 
-import org.slf4j.Logger;
-import static org.slf4j.LoggerFactory.getLogger;
-
 
 /**
  * Main class of Apache Drill JDBC driver.
  */
 public class Driver implements java.sql.Driver {
-  private static final Logger logger = getLogger( Driver.class );
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Driver.class);
 
   /** Delegate for everything except registration with DriverManager. */
   private final DriverImpl impl;
@@ -46,13 +43,10 @@ public class Driver implements java.sql.Driver {
 
   static {
     // Upon loading of class, register an instance with DriverManager.
-
     try {
-      DriverManager.registerDriver( new Driver() );
-    }
-    catch ( SQLException e ) {
-      logger.error( "Error in registering Drill JDBC driver {}: {}",
-                    Driver.class, e, e );
+      DriverManager.registerDriver(new Driver());
+    } catch (Error | SQLException e) {
+      logger.warn("Error in registering Drill JDBC driver {}: {}", Driver.class, e, e);
     }
   }
 

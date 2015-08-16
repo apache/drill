@@ -30,9 +30,9 @@ import org.apache.drill.exec.rpc.TransportCheck;
 
 import com.codahale.metrics.MetricRegistry;
 
-// TODO:  Doc.  What kind of context?  (For what aspects, RPC?  What kind of data?)
+
 public class BootStrapContext implements Closeable {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
 
   private final DrillConfig config;
   private final EventLoopGroup loop;
@@ -70,7 +70,11 @@ public class BootStrapContext implements Closeable {
 
   @Override
   public void close() {
-    DrillMetrics.resetMetrics();
+    try {
+      DrillMetrics.resetMetrics();
+    } catch (Error | Exception e) {
+      logger.warn("failure resetting metrics.", e);
+    }
     loop.shutdownGracefully();
     allocator.close();
   }

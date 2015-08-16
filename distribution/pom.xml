@@ -158,6 +158,11 @@
           </exclusions>
         </dependency>
         <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-jdbc-storage</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
           <groupId>org.apache.drill.contrib.storage-hive</groupId>
           <artifactId>drill-storage-hive-core</artifactId>
           <version>${project.version}</version>
