@@ -277,6 +277,11 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test
+  public void test3654Fix() throws Exception {
+    test("SELECT FIRST_VALUE(col8) OVER(PARTITION BY col7 ORDER BY col8) FROM dfs_test.`%s/window/3648.parquet`", TEST_RES_PATH);
+  }
+
+  @Test
   public void testPartitionNtile() {
     Partition partition = new Partition(12);
 
