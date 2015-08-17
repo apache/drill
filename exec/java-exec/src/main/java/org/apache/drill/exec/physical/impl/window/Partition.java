@@ -23,8 +23,8 @@ package org.apache.drill.exec.physical.impl.window;
 public class Partition {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Partition.class);
 
-  private final int length; // size of this partition
-  private int remaining;
+  private final long length; // size of this partition
+  private long remaining;
 
   private int peers; // remaining non-processed peers in current frame
 
@@ -38,7 +38,7 @@ public class Partition {
   /**
    * @return number of rows not yet aggregated in this partition
    */
-  public int getRemaining() {
+  public long getRemaining() {
     return remaining;
   }
 
@@ -49,7 +49,7 @@ public class Partition {
     return peers;
   }
 
-  public Partition(int length) {
+  public Partition(long length) {
     this.length = length;
     remaining = length;
     row_number = 1;
@@ -76,7 +76,7 @@ public class Partition {
   }
 
   public int ntile(int numTiles) {
-    int mod = length % numTiles;
+    long mod = length % numTiles;
     double ceil = Math.ceil((double) length / numTiles);
 
     int out;

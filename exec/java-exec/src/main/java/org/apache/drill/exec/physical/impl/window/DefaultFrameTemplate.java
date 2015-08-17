@@ -133,7 +133,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   private void newPartition(final WindowDataBatch current, final int currentRow) throws SchemaChangeException {
-    final int length = computePartitionSize(currentRow);
+    final long length = computePartitionSize(currentRow);
     partition = new Partition(length);
     setupPartition(current, container);
     setupCopyFirstValue(current, internal);
@@ -225,13 +225,13 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   /**
    * @return number of rows that are part of the partition starting at row start of first batch
    */
-  private int computePartitionSize(final int start) {
+  private long computePartitionSize(final int start) {
     logger.trace("compute partition size starting from {} on {} batches", start, batches.size());
 
     // current partition always starts from first batch
     final VectorAccessible first = getCurrent();
 
-    int length = 0;
+    long length = 0;
 
     // count all rows that are in the same partition of start
     // keep increasing length until we find first row of next partition or we reach the very
@@ -268,7 +268,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       final int recordCount = batch.getRecordCount();
 
       // for every remaining row in the partition, count it if it's a peer row
-      final int remaining = partition.getRemaining();
+      final long remaining = partition.getRemaining();
       for (int row = (batch == first) ? start : 0; row < recordCount && length < remaining; row++, length++) {
         if (!isPeer(start, first, row, batch)) {
           return length;
@@ -295,7 +295,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     setupEvaluatePeer(current, container);
 
     final int peers = partition.getPeers();
-    for (int i = 0, row = currentRow; i < peers; i++, row++) {
+    int row = currentRow;
+    for (int i = 0; i < peers; i++, row++) {
       if (row >= current.getRecordCount()) {
         // we reached the end of the current batch, move to the next one
         current = iterator.next();
@@ -304,13 +305,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
       }
 
       evaluatePeer(row);
-
-      if (i == peers - 1) {
-        // last row of current frame
-        setupReadLastValue(current, container);
-        frameLastRow = row;
-      }
     }
+
+    // last row of current frame
+    setupReadLastValue(current, container);
+    frameLastRow = row - 1;
   }
 
   @Override

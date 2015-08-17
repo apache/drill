@@ -22,8 +22,6 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.ErrorCollector;
-import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -206,7 +204,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     final List<LogicalExpression> keyExprs = Lists.newArrayList();
     final List<LogicalExpression> orderExprs = Lists.newArrayList();
     final List<WindowFunction> functions = Lists.newArrayList();
-    final ErrorCollector collector = new ErrorCollectorImpl();
 
     container.clear();
 
@@ -225,8 +222,9 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
       final FunctionCall call = (FunctionCall) ne.getExpr();
       final WindowFunction winfun = WindowFunction.fromExpression(call);
-      winfun.materialize(ne, container, collector, context.getFunctionRegistry());
-      functions.add(winfun);
+      if (winfun.materialize(ne, container, context.getFunctionRegistry())) {
+        functions.add(winfun);
+      }
     }
 
     if (container.isSchemaChanged()) {
@@ -235,18 +233,12 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     // materialize partition by expressions
     for (final NamedExpression ne : popConfig.getWithins()) {
-      keyExprs.add(
-        ExpressionTreeMaterializer.materialize(ne.getExpr(), batch, collector, context.getFunctionRegistry()));
+      keyExprs.add(ExpressionTreeMaterializer.materializeAndCheckErrors(ne.getExpr(), batch, context.getFunctionRegistry()));
     }
 
     // materialize order by expressions
     for (final Order.Ordering oe : popConfig.getOrderings()) {
-      orderExprs.add(
-        ExpressionTreeMaterializer.materialize(oe.getExpr(), batch, collector, context.getFunctionRegistry()));
-    }
-
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
+      orderExprs.add(ExpressionTreeMaterializer.materializeAndCheckErrors(oe.getExpr(), batch, context.getFunctionRegistry()));
     }
 
     final WindowFramer framer = generateFramer(keyExprs, orderExprs, functions);
@@ -291,6 +283,10 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
                                final MappingSet leftMapping, final MappingSet rightMapping) {
     cg.setMappingSet(leftMapping);
     for (LogicalExpression expr : exprs) {
+      if (expr == null) {
+        continue;
+      }
+
       cg.setMappingSet(leftMapping);
       ClassGenerator.HoldingContainer first = cg.addExpr(expr, false);
       cg.setMappingSet(rightMapping);

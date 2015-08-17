@@ -21,7 +21,6 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
-import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -30,6 +29,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
@@ -71,7 +71,7 @@ public abstract class WindowFunction {
 
     switch (type) {
       case AGGREGATE:
-        return new Aggregate();
+        return new WindowAggregate();
       case LEAD:
         return new Lead();
       case LAG:
@@ -89,27 +89,32 @@ public abstract class WindowFunction {
 
   abstract void generateCode(final ClassGenerator<WindowFramer> cg);
 
-  abstract void materialize(final NamedExpression ne, final VectorContainer batch,
-                   final ErrorCollector collector, final FunctionLookupContext registry);
+  abstract boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+    throws SchemaChangeException;
 
-  static class Aggregate extends WindowFunction {
+  static class WindowAggregate extends WindowFunction {
 
     private ValueVectorWriteExpression writeAggregationToOutput;
 
-    Aggregate() {
+    WindowAggregate() {
       super(Type.AGGREGATE);
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
-                     final FunctionLookupContext registry) {
-      final LogicalExpression aggregate = ExpressionTreeMaterializer.materialize(ne.getExpr(), batch, collector, registry);
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
+      final LogicalExpression aggregate = ExpressionTreeMaterializer.materializeAndCheckErrors(ne.getExpr(), batch, registry);
+      if (aggregate == null) {
+        return false;
+      }
 
       // add corresponding ValueVector to container
       final MaterializedField output = MaterializedField.create(ne.getRef(), aggregate.getMajorType());
       batch.addOrGet(output).allocateNew();
       TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
       writeAggregationToOutput = new ValueVectorWriteExpression(outputId, aggregate, true);
+
+      return true;
     }
 
     @Override
@@ -156,10 +161,12 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector, FunctionLookupContext registry) {
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, FunctionLookupContext registry)
+        throws SchemaChangeException {
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
+      return true;
     }
   }
 
@@ -183,8 +190,8 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
-                     final FunctionLookupContext registry) {
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
       final LogicalExpression argument = call.args.get(0);
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), argument.getMajorType());
@@ -192,6 +199,7 @@ public abstract class WindowFunction {
       fieldId = batch.getValueVectorId(ne.getRef());
 
       numTiles = numTilesFromExpression(argument);
+      return true;
     }
 
     @Override
@@ -225,10 +233,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch, final ErrorCollector collector,
-                     final FunctionLookupContext registry) {
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      if (input == null) {
+        return false;
+      }
 
       // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
       TypeProtos.MajorType majorType = input.getMajorType();
@@ -242,6 +253,7 @@ public abstract class WindowFunction {
       final TypedFieldId outputId =  batch.getValueVectorId(ne.getRef());
 
       writeInputToLead = new ValueVectorWriteExpression(outputId, input, true);
+      return true;
     }
   }
 
@@ -254,10 +266,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch,
-                     final ErrorCollector collector, final FunctionLookupContext registry) {
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      if (input == null) {
+        return false;
+      }
 
       // make sure output vector type is Nullable, because we will write a null value in the first row of each partition
       TypeProtos.MajorType majorType = input.getMajorType();
@@ -272,6 +287,7 @@ public abstract class WindowFunction {
 
       writeInputToLag = new ValueVectorWriteExpression(outputId, input, true);
       writeLagToLag = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
+      return true;
     }
 
     @Override
@@ -305,11 +321,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch,
-                     final ErrorCollector collector, final FunctionLookupContext registry) {
-      // call.args.get(0), ne.getRef()
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      if (input == null) {
+        return false;
+      }
 
       final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
@@ -317,6 +335,7 @@ public abstract class WindowFunction {
 
       // write incoming.source[inIndex] to outgoing.last_value[outIndex]
       writeSourceToLastValue = new ValueVectorWriteExpression(outputId, input, true);
+      return true;
     }
 
     @Override
@@ -349,10 +368,13 @@ public abstract class WindowFunction {
     }
 
     @Override
-    void materialize(final NamedExpression ne, final VectorContainer batch,
-                     final ErrorCollector collector, final FunctionLookupContext registry) {
+    boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
+        throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materialize(call.args.get(0), batch, collector, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      if (input == null) {
+        return false;
+      }
 
       final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
@@ -362,6 +384,7 @@ public abstract class WindowFunction {
       writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
       // write incoming.source[inIndex] to outgoing.first_value[outIndex]
       writeInputToFirstValue = new ValueVectorWriteExpression(outputId, input, true);
+      return true;
     }
 
     @Override
