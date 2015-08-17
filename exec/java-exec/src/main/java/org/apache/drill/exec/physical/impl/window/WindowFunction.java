@@ -21,6 +21,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -40,6 +41,8 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 
 public abstract class WindowFunction {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WindowFunction.class);
+
   public enum Type {
     ROW_NUMBER,
     RANK,
@@ -181,12 +184,12 @@ public abstract class WindowFunction {
     private int numTilesFromExpression(LogicalExpression numTilesExpr) {
       if ((numTilesExpr instanceof ValueExpressions.IntExpression)) {
         int nt = ((ValueExpressions.IntExpression) numTilesExpr).getInt();
-        if (nt >= 0) {
+        if (nt > 0) {
           return nt;
         }
       }
 
-      throw new IllegalArgumentException("NTILE only accepts unsigned integer argument");
+      throw UserException.functionError().message("NTILE only accepts positive integer argument").build(logger);
     }
 
     @Override
