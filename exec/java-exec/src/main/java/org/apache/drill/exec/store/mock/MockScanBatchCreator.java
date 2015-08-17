@@ -30,16 +30,16 @@ import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanBatchCreator.class);
+public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanBatchCreator.class);
 
   @Override
   public ScanBatch getBatch(FragmentContext context, MockSubScanPOP config, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    List<MockScanEntry> entries = config.getReadEntries();
-    List<RecordReader> readers = Lists.newArrayList();
-    for(MockScanEntry e : entries){
+    final List<MockScanEntry> entries = config.getReadEntries();
+    final List<RecordReader> readers = Lists.newArrayList();
+    for(final MockScanEntry e : entries) {
       readers.add(new MockRecordReader(context, e));
     }
     return new ScanBatch(config, context, readers.iterator());

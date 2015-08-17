@@ -28,7 +28,7 @@ import org.apache.hadoop.fs.Seekable;
  * An InputStream that wraps a DrillBuf and implements the seekable interface.
  */
 public class DrillBufInputStream extends ByteBufInputStream implements Seekable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBufInputStream.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBufInputStream.class);
 
   private final DrillBuf buffer;
 
@@ -52,7 +52,8 @@ public class DrillBufInputStream extends ByteBufInputStream implements Seekable 
     return false;
   }
 
-  public static DrillBufInputStream getStream(int start, int end, DrillBuf buffer){
+  // Does not adopt the buffer
+  public static DrillBufInputStream getStream(int start, int end, DrillBuf buffer) {
     DrillBuf buf = buffer.slice(start, end - start);
     return new DrillBufInputStream(buf, end - start);
   }

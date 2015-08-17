@@ -70,7 +70,7 @@ class RpcDecoder extends MessageToMessageDecoder<ByteBuf> {
     final int pBodyLength = readRawVarint32(is);
     final ByteBuf pBody = buffer.slice(buffer.readerIndex(), pBodyLength);
     buffer.skipBytes(pBodyLength);
-    pBody.retain();
+    pBody.retain(1);
     if (RpcConstants.EXTRA_DEBUGGING) {
       logger.debug("Read protobuf body of length {} into buffer {}.", pBodyLength, pBody);
     }
@@ -94,7 +94,7 @@ class RpcDecoder extends MessageToMessageDecoder<ByteBuf> {
         throw new CorruptedFrameException(String.format("Expected to receive a raw body of %d bytes but received a buffer with %d bytes.", dBodyLength, buffer.readableBytes()));
       }
       dBody = buffer.slice();
-      dBody.retain();
+      dBody.retain(1);
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Read raw body of {}", dBody);
       }

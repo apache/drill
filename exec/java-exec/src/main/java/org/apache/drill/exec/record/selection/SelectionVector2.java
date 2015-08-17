@@ -19,9 +19,6 @@ package org.apache.drill.exec.record.selection;
 
 import io.netty.buffer.DrillBuf;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.record.DeadBuf;
@@ -29,8 +26,8 @@ import org.apache.drill.exec.record.DeadBuf;
 /**
  * A selection vector that fronts, at most, a
  */
-public class SelectionVector2 implements Closeable{
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
+public class SelectionVector2 implements AutoCloseable {
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
   private final BufferAllocator allocator;
   private int recordCount;
@@ -42,7 +39,7 @@ public class SelectionVector2 implements Closeable{
     this.allocator = allocator;
   }
 
-  public int getCount(){
+  public int getCount() {
     return recordCount;
   }
 
@@ -55,7 +52,7 @@ public class SelectionVector2 implements Closeable{
 
     if (clear) {
       /* Increment the ref count for this buffer */
-      bufferHandle.retain();
+      bufferHandle.retain(1);
 
       /* We are passing ownership of the buffer to the
        * caller. clear the buffer from within our selection vector
@@ -66,28 +63,27 @@ public class SelectionVector2 implements Closeable{
     return bufferHandle;
   }
 
-  public void setBuffer(DrillBuf bufferHandle)
-  {
+  public void setBuffer(DrillBuf bufferHandle) {
       /* clear the existing buffer */
       clear();
 
       this.buffer = bufferHandle;
-      buffer.retain();
+      buffer.retain(1);
   }
 
-  public char getIndex(int index){
+  public char getIndex(int index) {
     return buffer.getChar(index * RECORD_SIZE);
   }
 
-  public void setIndex(int index, char value){
+  public void setIndex(int index, char value) {
     buffer.setChar(index * RECORD_SIZE, value);
   }
 
-  public long getDataAddr(){
+  public long getDataAddr() {
     return buffer.memoryAddress();
   }
 
-  public void setIndex(int index, int value){
+  public void setIndex(int index, int value) {
     buffer.setChar(index, value);
   }
 
@@ -106,7 +102,7 @@ public class SelectionVector2 implements Closeable{
   }
 
   @Override
-  public SelectionVector2 clone(){
+  public SelectionVector2 clone() {
     SelectionVector2 newSV = new SelectionVector2(allocator);
     newSV.recordCount = recordCount;
     newSV.buffer = buffer;
@@ -115,7 +111,7 @@ public class SelectionVector2 implements Closeable{
      * same buffer, if we don't do a retain() on the newSV's
      * buffer, it might get freed.
      */
-    newSV.buffer.retain();
+    newSV.buffer.retain(1);
     clear();
     return newSV;
   }
@@ -134,9 +130,7 @@ public class SelectionVector2 implements Closeable{
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     clear();
   }
-
-
 }

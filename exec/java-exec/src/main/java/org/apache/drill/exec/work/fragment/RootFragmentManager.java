@@ -30,7 +30,7 @@ import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 // TODO a lot of this is the same as NonRootFragmentManager
 public class RootFragmentManager implements FragmentManager {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
 
   private final IncomingBuffers buffers;
   private final FragmentExecutor runner;
@@ -68,6 +68,11 @@ public class RootFragmentManager implements FragmentManager {
   public void cancel() {
     cancel = true;
     runner.cancel();
+  }
+
+  @Override
+  public boolean isCancelled() {
+    return cancel;
   }
 
   @Override
