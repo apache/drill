@@ -48,7 +48,6 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserClient.class);
 
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
-
   private boolean supportComplexTypes = true;
 
   public UserClient(DrillConfig config, boolean supportComplexTypes, BufferAllocator alloc,
@@ -68,8 +67,8 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     send(queryResultHandler.getWrappedListener(connection, resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
-  public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint, UserProperties props, UserBitShared.UserCredentials credentials)
-      throws RpcException {
+  public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint,
+      UserProperties props, UserBitShared.UserCredentials credentials) {
     UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
         .setSupportListening(true)
@@ -113,7 +112,6 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));
     }
-
   }
 
   @Override
@@ -135,5 +133,4 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
     return new UserProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
   }
-
 }

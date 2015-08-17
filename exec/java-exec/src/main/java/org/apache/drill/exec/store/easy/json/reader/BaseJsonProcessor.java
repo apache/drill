@@ -33,7 +33,7 @@ import org.apache.drill.common.exceptions.UserException;
 
 public abstract class BaseJsonProcessor implements JsonProcessor {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper() //
+  private static final ObjectMapper MAPPER = new ObjectMapper()
     .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 
@@ -41,12 +41,12 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
   protected DrillBuf workBuf;
 
   public BaseJsonProcessor(DrillBuf workBuf) {
-    this.workBuf = Preconditions.checkNotNull(workBuf);
+    workBuf = Preconditions.checkNotNull(workBuf);
   }
 
   @Override
   public void setSource(InputStream is) throws IOException {
-    this.parser = MAPPER.getFactory().createParser(is);
+    parser = MAPPER.getFactory().createParser(is);
   }
 
   @Override
@@ -59,10 +59,10 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
                                                        String field,
                                                        String msg,
                                                        Object... args) {
-    if (msg != null){
+    if (msg != null) {
       exceptionBuilder.message(msg, args);
     }
-    if(field!=null) {
+    if(field != null) {
       exceptionBuilder.pushContext("Field ", field);
     }
     exceptionBuilder.pushContext("Column ", parser.getCurrentLocation().getColumnNr()+1)
@@ -78,5 +78,4 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
     UserException.Builder exceptionBuilder = UserException.dataReadError(e);
     return getExceptionWithContext(exceptionBuilder, field, msg, args);
   }
-
 }

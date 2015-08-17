@@ -80,12 +80,14 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     allocationSizeInBytes = getSizeFromCount(valueCount);
   }
 
+  @Override
   public void allocateNew() {
     if (!allocateNewSafe()) {
       throw new OutOfMemoryRuntimeException();
     }
   }
 
+  @Override
   public boolean allocateNewSafe() {
     long curAllocationSize = allocationSizeInBytes;
     if (allocationMonitor > 10) {
@@ -119,6 +121,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    * @param valueCount
    *          The number of values which can be contained within this vector.
    */
+  @Override
   public void allocateNew(int valueCount) {
     final int size = getSizeFromCount(valueCount);
     allocateBytes(size);
@@ -129,7 +132,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
 
-    final int curSize = (int)size;
+    final int curSize = (int) size;
     clear();
     data = allocator.buffer(curSize);
     zeroVector();
@@ -189,21 +192,27 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     this.valueCount = valueCount;
   }
 
+  @Override
   public Mutator getMutator() {
     return new Mutator();
   }
 
+  @Override
   public Accessor getAccessor() {
     return new Accessor();
   }
 
+  @Override
   public TransferPair getTransferPair() {
     return new TransferImpl(getField());
   }
+
+  @Override
   public TransferPair getTransferPair(FieldReference ref) {
     return new TransferImpl(getField().withPath(ref));
   }
 
+  @Override
   public TransferPair makeTransferPair(ValueVector to) {
     return new TransferImpl((BitVector) to);
   }
@@ -211,8 +220,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   public void transferTo(BitVector target) {
     target.clear();
+    if (target.data != null) {
+      target.data.release();
+    }
     target.data = data;
-    target.data.retain();
+    target.data.retain(1);
     target.valueCount = valueCount;
     clear();
   }
@@ -225,19 +237,22 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     if (offset == 0) {
       target.clear();
       // slice
-      target.data = (DrillBuf) this.data.slice(firstByte, byteSize);
-      target.data.retain();
+      if (target.data != null) {
+        target.data.release();
+      }
+      target.data = (DrillBuf) data.slice(firstByte, byteSize);
+      target.data.retain(1);
     } else {
       // Copy data
       // When the first bit starts from the middle of a byte (offset != 0), copy data from src BitVector.
       // Each byte in the target is composed by a part in i-th byte, another part in (i+1)-th byte.
       // The last byte copied to target is a bit tricky :
-      //   1) if length requires partly byte ( length % 8 !=0), copy the remaining bits only.
+      //   1) if length requires partly byte (length % 8 !=0), copy the remaining bits only.
       //   2) otherwise, copy the last byte in the same way as to the prior bytes.
       target.clear();
       target.allocateNew(length);
       // TODO maybe do this one word at a time, rather than byte?
-      for (int i = 0; i < byteSize - 1; i++) {
+      for(int i = 0; i < byteSize - 1; i++) {
         target.data.setByte(i, (((this.data.getByte(firstByte + i) & 0xFF) >>> offset) + (this.data.getByte(firstByte + i + 1) <<  (8 - offset))));
       }
       if (length % 8 != 0) {
@@ -261,14 +276,17 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       this.to = to;
     }
 
+    @Override
     public BitVector getTo() {
       return to;
     }
 
+    @Override
     public void transfer() {
       transferTo(to);
     }
 
+    @Override
     public void splitAndTransfer(int startIndex, int length) {
       splitAndTransferTo(startIndex, length, to);
     }
@@ -393,6 +411,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       set(index, holder.value);
     }
 
+    @Override
     public final void setValueCount(int valueCount) {
       int currentValueCapacity = getValueCapacity();
       BitVector.this.valueCount = valueCount;
@@ -411,7 +430,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     @Override
     public final void generateTestData(int values) {
       boolean even = true;
-      for (int i = 0; i < values; i++, even = !even) {
+      for(int i = 0; i < values; i++, even = !even) {
         if (even) {
           set(i, 1);
         }

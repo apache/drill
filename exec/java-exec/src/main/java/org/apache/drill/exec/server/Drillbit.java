@@ -51,7 +51,6 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Stopwatch;
-import com.google.common.io.Closeables;
 
 /**
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
@@ -287,11 +286,12 @@ public class Drillbit implements AutoCloseable {
       }
     }
 
-    Closeables.closeQuietly(engine);
+    // TODO these should use a DeferredException
+    AutoCloseables.close(engine, logger);
     AutoCloseables.close(storeProvider, logger);
-    Closeables.closeQuietly(coord);
+    AutoCloseables.close(coord, logger);
     AutoCloseables.close(manager, logger);
-    Closeables.closeQuietly(context);
+    AutoCloseables.close(context, logger);
 
     logger.info("Shutdown completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
     isClosed = true;
@@ -328,7 +328,12 @@ public class Drillbit implements AutoCloseable {
     public void run() {
       logger.info("Received shutdown request.");
       try {
-        synchronized (idCounter) {
+        /*
+         * We can avoid metrics deregistration concurrency issues by only closing
+         * one drillbit at a time. To enforce that, we synchronize on a convenient
+         * singleton object.
+         */
+        synchronized(idCounter) {
           drillbit.close();
         }
       } catch(final Exception e) {
