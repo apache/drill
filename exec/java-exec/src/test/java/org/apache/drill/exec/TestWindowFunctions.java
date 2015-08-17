@@ -417,4 +417,37 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // see DRILL-3657
+  public void testConstantsInMultiplePartitions() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format(
+        "select sum(1) over(partition by b1 order by a1) as sum1, sum(1) over(partition by a1) as sum2, rank() over(order by b1) as rank1, rank() over(order by 1) as rank2 \n" +
+        "from dfs_test.`%s` \n" +
+        "order by 1, 2, 3, 4", root);
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window.*SUM\\(\\$3\\).*\n" +
+        ".*SelectionVectorRemover.*\n" +
+        ".*Sort.*\n" +
+        ".*Window.*SUM\\(\\$2\\).*"
+    };
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("sum1", "sum2", "rank1", "rank2")
+        .baselineValues(2l, 5l, 1l, 1l)
+        .baselineValues(2l, 5l, 1l, 1l)
+        .baselineValues(2l, 5l, 6l, 1l)
+        .baselineValues(2l, 5l, 6l, 1l)
+        .baselineValues(3l, 5l, 3l, 1l)
+        .baselineValues(3l, 5l, 3l, 1l)
+        .baselineValues(3l, 5l, 3l, 1l)
+        .baselineValues(3l, 5l, 8l, 1l)
+        .baselineValues(3l, 5l, 8l, 1l)
+        .baselineValues(3l, 5l, 8l, 1l)
+        .build()
+        .run();
+  }
 }
