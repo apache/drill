@@ -172,8 +172,14 @@ public interface RecordBatch extends VectorAccessible {
      *   read no data,
      *   and the batch will have more results to return in the future (at least
      *     completion or abnormal termination ({@code NONE} or {@code STOP})).
-     *   The caller should call {@code next()} again, but later (including by
-     *     returning {@code NOT_YET} to its caller).
+     *   The caller should call {@code next()} again, but should do so later
+     *     (including by returning {@code NOT_YET} to its caller).
+     * </p>
+     * <p>
+     *   Normally, the caller should perform any locally available work while
+     *   waiting for incoming data from the callee, for example, doing partial
+     *   sorts on already received data while waiting for additional data to
+     *   sort.
      * </p>
      * <p>
      *   Used by batches that haven't received incoming data yet.
