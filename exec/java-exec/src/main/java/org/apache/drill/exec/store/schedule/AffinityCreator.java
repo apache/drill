@@ -45,7 +45,6 @@ public class AffinityCreator {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : entry.getByteMap()) {
         long bytes = cursor.value;
         float affinity = (float)bytes / (float)totalBytes;
-        logger.debug("Work: {} Endpoint: {} Bytes: {}", work, cursor.key.getAddress(), bytes);
         affinities.putOrAdd(cursor.key, affinity, affinity);
       }
     }

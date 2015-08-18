@@ -72,7 +72,7 @@ public final class DrillConfig extends NestedConfig{
     if (enableServerConfigs) {
       SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this))
-        .addDeserializer(SchemaPath.class, new SchemaPath.De(this));
+        .addDeserializer(SchemaPath.class, new SchemaPath.De());
 
       mapper.registerModule(deserModule);
       mapper.enable(SerializationFeature.INDENT_OUTPUT);

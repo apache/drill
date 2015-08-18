@@ -252,11 +252,9 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public static class De extends StdDeserializer<SchemaPath> {
-    DrillConfig config;
 
-    public De(DrillConfig config) {
+    public De() {
       super(LogicalExpression.class);
-      this.config = config;
     }
 
     @Override
