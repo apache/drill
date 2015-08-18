@@ -58,7 +58,7 @@ abstract class DrillFactory implements AvaticaFactory {
    * Creates a Drill connection for Avatica (in terms of Avatica types).
    * <p>
    *   This implementation delegates to
-   *   {@link newDrillConnection(DriverImpl, DrillFactory, String, Properties)}.
+   *   {@link #newDrillConnection(DriverImpl, DrillFactory, String, Properties)}.
    * </p>
    */
   @Override

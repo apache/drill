@@ -19,7 +19,7 @@ package org.apache.drill.jdbc;
 
 
 public class SQLConversionOverflowException extends SQLConversionException {
-  private static final long serialVersionUID = 2015_04-07L;
+  private static final long serialVersionUID = 2015_04_07L;
 
   public SQLConversionOverflowException( String message ) {
     super( message );

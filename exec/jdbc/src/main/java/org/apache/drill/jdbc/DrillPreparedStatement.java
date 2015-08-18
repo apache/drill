@@ -24,8 +24,9 @@ import java.sql.PreparedStatement;
  * Drill-specific {@link PreparedStatement}.
  *
  * <p>
+ *   <strong>Drill</strong>:
  *   Setting parameters is not supported; parameter-setting methods such as
- *   {@link setString(int, String)} throw
+ *   {@link #setString(int, String)} throw
  *   {@link SQLFeatureNotSupportedException}.
  * </p>
  * @see #unwrap

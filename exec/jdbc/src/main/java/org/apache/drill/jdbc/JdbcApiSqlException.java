@@ -17,8 +17,13 @@
  */
 package org.apache.drill.jdbc;
 
+import java.sql.ResultSet;
+import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.sql.SQLSyntaxErrorException;
+import java.sql.SQLTransientException;
+
 
 /**
  * SQLException for JDBC API calling-sequence/state problems.

@@ -39,7 +39,8 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *   Drill's implementation accepts {@code DrillResultSet.class}.
+   *   <strong>Drill</strong>:
+   *   Accepts {@code DrillResultSet.class}.
    * </p>
    */
   @Override
@@ -48,7 +49,8 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *   Drill's implementation returns true for {@code DrillResultSet.class}.
+   *   <strong>Drill</strong>:
+   *   Returns true for {@code DrillResultSet.class}.
    * </p>
    */
   @Override
@@ -69,7 +71,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from all types.
+   *    <strong>Drill: Conversions</strong>: Supports conversion from all types.
    * </p>
    */
   @Override
@@ -82,7 +84,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code SMALLINT} ({@code short}),
@@ -109,7 +111,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -136,7 +138,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -163,7 +165,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -190,7 +192,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -217,7 +219,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -244,7 +246,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from types:
+   *    <strong>Drill: Conversions</strong>: Supports conversion from types:
    * </p>
    * <ul>
    *   <li>{@code TINYINT} ({@code byte}),
@@ -274,6 +276,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getString(int)}.
    * </p>
    */
@@ -287,6 +290,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getByte(int)}.
    * </p>
    */
@@ -296,6 +300,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getShort(int)}.
    * </p>
    */
@@ -305,6 +310,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getInt(int)}.
    * </p>
    */
@@ -314,6 +320,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getLong(int)}.
    * </p>
    */
@@ -323,6 +330,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getFloat(int)}.
    * </p>
    */
@@ -332,6 +340,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getDouble(int)}.
    * </p>
    */
@@ -341,6 +350,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getBigDecimal(int)}.
    * </p>
    */
@@ -364,7 +374,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
-   *    <strong>Conversions</strong>: Supports conversion from all types.
+   *    <strong>Drill: Conversions</strong>: Supports conversion from all types.
    * </p>
    */
   @Override
@@ -373,6 +383,7 @@ public interface DrillResultSet extends ResultSet  {
   /**
    * {@inheritDoc}
    * <p>
+   *   <strong>Drill</strong>:
    *   For conversions, see {@link DrillResultSet#getObject(int)}.
    * </p>
    */
