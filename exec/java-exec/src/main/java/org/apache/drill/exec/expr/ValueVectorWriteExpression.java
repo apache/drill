@@ -34,15 +34,27 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   private final TypedFieldId fieldId;
   private final LogicalExpression child;
   private final boolean safe;
+  /**
+   * When writing into a value vector the default assumption is that the destination vector is empty, so we don't need
+   * to write null values and we can just "skip" their position. Setting writeNulls to true will override this behavior
+   * and explicitly write null values into the destination value vector. This is especially useful when the value vector
+   * is used as an internal storage that can be reused without clearing it first.
+   */
+  private final boolean writeNulls;
 
   public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child){
-    this(fieldId, child, false);
+    this(fieldId, child, false, false);
   }
 
   public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, boolean safe){
+    this(fieldId, child, safe, false);
+  }
+
+  public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, boolean safe, boolean writeNulls){
     this.fieldId = fieldId;
     this.child = child;
     this.safe = safe;
+    this.writeNulls = writeNulls;
   }
 
   public TypedFieldId getFieldId() {
@@ -57,6 +69,13 @@ public class ValueVectorWriteExpression implements LogicalExpression {
 
   public boolean isSafe() {
     return safe;
+  }
+
+  /**
+   * @return true if NULL values are explicitly written
+   */
+  public boolean isWriteNulls() {
+    return writeNulls;
   }
 
   @Override

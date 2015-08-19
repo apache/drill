@@ -288,7 +288,7 @@ public abstract class WindowFunction {
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
-      writeInputToLag = new ValueVectorWriteExpression(outputId, input, true);
+      writeInputToLag = new ValueVectorWriteExpression(outputId, input, true, true);
       writeLagToLag = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
       return true;
     }
@@ -386,7 +386,7 @@ public abstract class WindowFunction {
       // write incoming.first_value[inIndex] to outgoing.first_value[outIndex]
       writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
       // write incoming.source[inIndex] to outgoing.first_value[outIndex]
-      writeInputToFirstValue = new ValueVectorWriteExpression(outputId, input, true);
+      writeInputToFirstValue = new ValueVectorWriteExpression(outputId, input, true, true);
       return true;
     }
 
