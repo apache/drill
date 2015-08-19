@@ -168,6 +168,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     accessor.reset();
   }
 
+  public void reset() {
+    bits.zeroVector();
+    mutator.reset();
+    accessor.reset();
+    super.reset();
+  }
+
   @Override
   public int getByteCapacity(){
     return values.getByteCapacity();
@@ -191,6 +198,14 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     bits.zeroVector();
     mutator.reset();
     accessor.reset();
+  }
+
+  @Override
+  public void reset() {
+    bits.zeroVector();
+    mutator.reset();
+    accessor.reset();
+    super.reset();
   }
 
   /**

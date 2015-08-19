@@ -37,6 +37,23 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * A vector when instantiated, relies on a {@link org.apache.drill.exec.record.DeadBuf dead buffer}. It is important
  * that vector is allocated before attempting to read or write.
  *
+ * There are a few "rules" around vectors:
+ *
+ * <ul>
+ *   <li>values need to be written in order (e.g. index 0, 1, 2, 5)</li>
+ *   <li>null vectors start with all values as null before writing anything</li>
+ *   <li>for variable width types, the offset vector should be all zeros before writing</li>
+ *   <li>you must call setValueCount before a vector can be read</li>
+ *   <li>you should never write to a vector once it has been read.</li>
+ * </ul>
+ *
+ * Please note that the current implementation doesn't enfore those rules, hence we may find few places that
+ * deviate from these rules (e.g. offset vectors in Variable Length and Repeated vector)
+ *
+ * This interface "should" strive to guarantee this order of operation:
+ * <blockquote>
+ * allocate > mutate > setvaluecount > access > clear (or allocate to start the process over).
+ * </blockquote>
  */
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
 

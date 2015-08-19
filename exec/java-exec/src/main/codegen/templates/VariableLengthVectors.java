@@ -328,6 +328,15 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     offsetVector.zeroVector();
   }
 
+  @Override
+  public void reset() {
+    allocationSizeInBytes = INITIAL_BYTE_COUNT;
+    allocationMonitor = 0;
+    data.readerIndex(0);
+    offsetVector.zeroVector();
+    super.reset();
+  }
+
   public void reAlloc() {
     final long newAllocationSize = allocationSizeInBytes*2L;
     if (newAllocationSize > MAX_ALLOCATION_SIZE)  {

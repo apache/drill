@@ -104,6 +104,15 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return true;
   }
 
+  @Override
+  public void reset() {
+    valueCount = 0;
+    allocationSizeInBytes = INITIAL_VALUE_ALLOCATION;
+    allocationMonitor = 0;
+    zeroVector();
+    super.reset();
+  }
+
   /**
    * Allocate a new memory space for this vector. Must be called prior to using the ValueVector.
    *

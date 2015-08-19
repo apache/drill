@@ -123,6 +123,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     allocateBytes(valueCount * ${type.width});
   }
 
+  @Override
+  public void reset() {
+    allocationSizeInBytes = INITIAL_VALUE_ALLOCATION;
+    allocationMonitor = 0;
+    zeroVector();
+    super.reset();
+    }
+
   private void allocateBytes(final long size) {
     if (size > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");

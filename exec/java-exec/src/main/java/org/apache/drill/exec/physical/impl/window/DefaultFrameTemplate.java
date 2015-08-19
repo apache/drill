@@ -24,6 +24,8 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import javax.inject.Named;
@@ -144,6 +146,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void cleanPartition() {
     partition = null;
     resetValues();
+    for (VectorWrapper<?> vw : internal) {
+      if ((vw.getValueVector() instanceof BaseDataValueVector)) {
+        ((BaseDataValueVector) vw.getValueVector()).reset();
+      }
+    }
     lagCopiedToInternal = false;
   }
 

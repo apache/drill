@@ -296,6 +296,16 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test
+  public void test3668Fix() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3668.sql"), TEST_RES_PATH)
+      .ordered()
+      .baselineColumns("cnt").baselineValues(2L)
+      .build()
+      .run();
+  }
+
+  @Test
   public void testPartitionNtile() {
     Partition partition = new Partition(12);
 
