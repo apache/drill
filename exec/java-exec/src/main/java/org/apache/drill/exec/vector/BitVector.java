@@ -152,16 +152,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     data.setZero(0, data.capacity());
   }
 
-  @Override
-  public int load(int valueCount, DrillBuf buf) {
-    clear();
-    this.valueCount = valueCount;
-    int len = getSizeFromCount(valueCount);
-    data = buf.slice(0, len);
-    data.retain();
-    return len;
-  }
-
   public void copyFrom(int inIndex, int outIndex, BitVector from) {
     this.mutator.set(outIndex, from.accessor.get(inIndex));
   }
@@ -177,9 +167,16 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    assert this.field.matches(metadata);
-    int loaded = load(metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded;
+    assert field.matches(metadata);
+    final int valueCount = metadata.getValueCount();
+    final int expectedLength = getSizeFromCount(valueCount);
+    final int actualLength = metadata.getBufferLength();
+    assert expectedLength == actualLength: "expected and actual buffer sizes do not match";
+
+    clear();
+    data = buffer.slice(0, actualLength);
+    data.retain();
+    this.valueCount = valueCount;
   }
 
   public Mutator getMutator() {

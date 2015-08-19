@@ -23,8 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -36,9 +41,11 @@ import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
 import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
+import org.apache.drill.exec.expr.holders.UInt1Holder;
 import org.apache.drill.exec.expr.holders.UInt4Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
@@ -479,5 +486,117 @@ public class TestValueVector extends ExecTest {
     } finally {
       AutoCloseables.close(valueVectors);
     }
+  }
+
+  protected interface VectorVerifier {
+    void verify(ValueVector vector) throws Exception;
+  }
+
+  protected static class ChildVerifier implements VectorVerifier {
+    public final TypeProtos.MajorType[] types;
+
+    public ChildVerifier(TypeProtos.MajorType... childTypes) {
+      this.types = Preconditions.checkNotNull(childTypes);
+    }
+
+    @Override
+    public void verify(ValueVector vector) throws Exception {
+      final String hint = String.format("%s failed the test case", vector.getClass().getSimpleName());
+
+      final UserBitShared.SerializedField metadata = vector.getMetadata();
+      final int actual = metadata.getChildCount();
+      assertEquals(hint, types.length, actual);
+
+      for (int i = 0; i < types.length; i++) {
+        final UserBitShared.SerializedField child = metadata.getChild(i);
+
+        assertEquals(hint, types[i], child.getMajorType());
+      }
+    }
+  }
+
+  /**
+   * Convenience method that allows running tests on various {@link ValueVector vector} instances.
+   *
+   * @param test test function to execute
+   */
+  private void testVectors(VectorVerifier test) throws Exception {
+    final MaterializedField[] fields = {
+        MaterializedField.create(EMPTY_SCHEMA_PATH, UInt1Holder.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedListVector.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, MapVector.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedMapVector.TYPE)
+    };
+
+    final ValueVector[] vectors = {
+        new UInt4Vector(fields[0], allocator),
+        new BitVector(fields[1], allocator),
+        new VarCharVector(fields[2], allocator),
+        new NullableVarCharVector(fields[3], allocator),
+        new RepeatedListVector(fields[4], allocator, null),
+        new MapVector(fields[5], allocator, null),
+        new RepeatedMapVector(fields[6], allocator, null)
+    };
+
+    try {
+      for (final ValueVector vector : vectors) {
+        test.verify(vector);
+      }
+    } finally {
+      AutoCloseables.close(vectors);
+    }
+  }
+
+  @Test
+  public void testVectorMetadataIsAccurate() throws Exception {
+    final VectorVerifier noChild = new ChildVerifier();
+    final VectorVerifier offsetChild = new ChildVerifier(UInt4Holder.TYPE);
+
+    final ImmutableMap.Builder<Class, VectorVerifier> builder = ImmutableMap.builder();
+    builder.put(UInt4Vector.class, noChild);
+    builder.put(BitVector.class, noChild);
+    builder.put(VarCharVector.class, offsetChild);
+    builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.optional(TypeProtos.MinorType.VARCHAR)));
+    builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
+    builder.put(MapVector.class, noChild);
+    builder.put(RepeatedMapVector.class, offsetChild);
+    final ImmutableMap<Class, VectorVerifier> children = builder.build();
+
+    testVectors(new VectorVerifier() {
+
+      @Override
+      public void verify(ValueVector vector) throws Exception {
+
+        final Class klazz = vector.getClass();
+        final VectorVerifier verifier = children.get(klazz);
+        verifier.verify(vector);
+      }
+    });
+  }
+
+  @Test
+  public void testVectorCanLoadEmptyBuffer() throws Exception {
+    final DrillBuf empty = allocator.getEmpty();
+
+    testVectors(new VectorVerifier() {
+
+      @Override
+      public void verify(ValueVector vector) {
+        final String hint = String.format("%s failed the test case", vector.getClass().getSimpleName());
+        final UserBitShared.SerializedField metadata = vector.getMetadata();
+        assertEquals(hint, 0, metadata.getBufferLength());
+        assertEquals(hint, 0, metadata.getValueCount());
+
+        vector.load(metadata, empty);
+
+        assertEquals(hint, 0, vector.getValueCapacity());
+        assertEquals(hint, 0, vector.getAccessor().getValueCount());
+
+        vector.clear();
+      }
+    });
   }
 }

@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -52,7 +53,7 @@ import com.google.common.base.Preconditions;
 public class MapVector extends AbstractMapVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
 
-  public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REQUIRED).build();
+  public final static MajorType TYPE = Types.required(MinorType.MAP);
 
   private final SingleMapReaderImpl reader = new SingleMapReaderImpl(MapVector.this);
   private final Accessor accessor = new Accessor();
@@ -224,7 +225,7 @@ public class MapVector extends AbstractMapVector {
   @Override
   public int getValueCapacity() {
     if (size() == 0) {
-      return Integer.MAX_VALUE;
+      return 0;
     }
 
     final Ordering<ValueVector> natural = new Ordering<ValueVector>() {

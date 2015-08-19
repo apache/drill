@@ -57,10 +57,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private static final int INITIAL_BYTE_COUNT = 4096 * DEFAULT_RECORD_BYTE_COUNT;
   private static final int MIN_BYTE_COUNT = 4096;
 
-  public final static String OFFSETS_VECTOR_NAME = "offsets";
-  private final static MaterializedField offsetsField =
-    MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4));
-  private final UInt${type.width}Vector offsetVector;
+  public final static String OFFSETS_VECTOR_NAME = "$offsets$";
+  private final MaterializedField offsetsField = MaterializedField.create(OFFSETS_VECTOR_NAME, Types.required(MinorType.UINT4));
+  private final UInt${type.width}Vector offsetVector = new UInt${type.width}Vector(offsetsField, allocator);
   private final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
 
   private final Accessor accessor;
@@ -74,7 +73,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.offsetVector = new UInt${type.width}Vector(offsetsField, allocator);
     this.oAccessor = offsetVector.getAccessor();
     this.accessor = new Accessor();
     this.mutator = new Mutator();
@@ -95,7 +93,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   public int getValueCapacity(){
-    return offsetVector.getValueCapacity() - 1;
+    return Math.max(offsetVector.getValueCapacity() - 1, 0);
   }
 
   public int getByteCapacity(){
@@ -119,29 +117,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   @Override
   public SerializedField getMetadata() {
     return getMetadataBuilder() //
+             .addChild(offsetVector.getMetadata())
              .setValueCount(getAccessor().getValueCount()) //
-             .setVarByteLength(getVarByteLength()) //
+//             .setVarByteLength(getVarByteLength()) //
              .setBufferLength(getBufferSize()) //
              .build();
   }
 
-  public int load(int dataBytes, int valueCount, DrillBuf buf){
-    if(valueCount == 0){
-      allocateNew(0,0);
-      return 0;
-    }
-    clear();
-    int loaded = offsetVector.load(valueCount+1, buf);
-    data = buf.slice(loaded, dataBytes - loaded);
-    data.retain();
-    return  dataBytes;
-  }
-
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    assert this.field.matches(metadata) : String.format("The field %s doesn't match the provided metadata %s.", this.field, metadata);
-    int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
-    assert metadata.getBufferLength() == loaded : String.format("Expected to load %d bytes but actually loaded %d bytes", metadata.getBufferLength(), loaded);
+    final SerializedField offsetField = metadata.getChild(0);
+    offsetVector.load(offsetField, buffer);
+
+    final int capacity = buffer.capacity();
+    final int offsetsLength = offsetField.getBufferLength();
+    data = buffer.slice(offsetsLength, capacity - offsetsLength);
+    data.retain();
   }
 
   @Override
