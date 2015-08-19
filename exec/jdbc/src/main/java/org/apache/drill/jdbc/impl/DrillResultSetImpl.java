@@ -20,6 +20,7 @@ package org.apache.drill.jdbc.impl;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -35,6 +36,7 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -63,6 +65,7 @@ import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 import org.apache.drill.jdbc.SchemaChangeListener;
 
 import static org.slf4j.LoggerFactory.getLogger;
+
 import org.slf4j.Logger;
 
 import com.google.common.collect.Queues;
@@ -111,7 +114,9 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
    * @throws  AlreadyClosedSqlException  if ResultSet is closed
    * @throws  SQLException  if error in calling {@link #isClosed()}
    */
-  private void checkNotClosed() throws SQLException {
+  private void throwIfClosed() throws AlreadyClosedSqlException,
+                                      ExecutionCanceledSqlException,
+                                      SQLException {
     if ( isClosed() ) {
       if ( hasPendingCancelationNotification ) {
         hasPendingCancelationNotification = false;
@@ -123,6 +128,14 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       }
     }
   }
+
+
+  // Note:  Using dynamic proxies would reduce the quantity (450?) of method
+  // overrides by eliminating those that exist solely to check whether the
+  // object is closed.  It would also eliminate the need to throw non-compliant
+  // RuntimeExceptions when Avatica's method declarations won't let us throw
+  // proper SQLExceptions. (Check performance before applying to frequently
+  // called ResultSet.)
 
   @Override
   protected void cancel() {
@@ -142,13 +155,16 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   ////////////////////////////////////////
   // ResultSet-defined methods (in same order as in ResultSet):
 
+  // No isWrapperFor(Class<?>) (it doesn't throw SQLException if already closed).
+  // No unwrap(Class<T>) (it doesn't throw SQLException if already closed).
+
   // (Not delegated.)
   @Override
   public boolean next() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     // TODO:  Resolve following comments (possibly obsolete because of later
-    // addition of preceding call to checkNotClosed.  Also, NOTE that the
-    // following check, and maybe some checkNotClosed() calls, probably must
+    // addition of preceding call to throwIfClosed.  Also, NOTE that the
+    // following check, and maybe some throwIfClosed() calls, probably must
     // synchronize on the statement, per the comment on AvaticaStatement's
     // openResultSet:
 
@@ -171,246 +187,248 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public boolean wasNull() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.wasNull();
   }
 
   // Methods for accessing results by column index
   @Override
   public String getString( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getString( columnIndex );
   }
 
   @Override
   public boolean getBoolean( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBoolean( columnIndex );
   }
 
   @Override
   public byte getByte( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getByte( columnIndex );
   }
 
   @Override
   public short getShort( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getShort( columnIndex );
   }
 
   @Override
   public int getInt( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getInt( columnIndex );
   }
 
   @Override
   public long getLong( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getLong( columnIndex );
   }
 
   @Override
   public float getFloat( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getFloat( columnIndex );
   }
 
   @Override
   public double getDouble( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDouble( columnIndex );
   }
 
   @Override
-  public BigDecimal getBigDecimal( int columnIndex, int scale ) throws SQLException {
-    checkNotClosed();
+  public BigDecimal getBigDecimal( int columnIndex,
+                                   int scale ) throws SQLException {
+    throwIfClosed();
     return super.getBigDecimal( columnIndex, scale );
   }
 
   @Override
   public byte[] getBytes( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBytes( columnIndex );
   }
 
   @Override
   public Date getDate( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDate( columnIndex );
   }
 
   @Override
   public Time getTime( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTime( columnIndex );
   }
 
   @Override
   public Timestamp getTimestamp( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTimestamp( columnIndex );
   }
 
   @Override
   public InputStream getAsciiStream( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getAsciiStream( columnIndex );
   }
 
   @Override
   public InputStream getUnicodeStream( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getUnicodeStream( columnIndex );
   }
 
   @Override
   public InputStream getBinaryStream( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBinaryStream( columnIndex );
   }
 
   // Methods for accessing results by column label
   @Override
   public String getString( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getString( columnLabel );
   }
 
   @Override
   public boolean getBoolean( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBoolean( columnLabel );
   }
 
   @Override
   public byte getByte( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getByte( columnLabel );
   }
 
   @Override
   public short getShort( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getShort( columnLabel );
   }
 
   @Override
   public int getInt( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getInt( columnLabel );
   }
 
   @Override
   public long getLong( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getLong( columnLabel );
   }
 
   @Override
   public float getFloat( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getFloat( columnLabel );
   }
 
   @Override
   public double getDouble( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDouble( columnLabel );
   }
 
   @Override
-  public BigDecimal getBigDecimal( String columnLabel, int scale ) throws SQLException {
-    checkNotClosed();
+  public BigDecimal getBigDecimal( String columnLabel,
+                                   int scale ) throws SQLException {
+    throwIfClosed();
     return super.getBigDecimal( columnLabel, scale );
   }
 
   @Override
   public byte[] getBytes( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBytes( columnLabel );
   }
 
   @Override
   public Date getDate( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDate( columnLabel );
   }
 
   @Override
   public Time getTime( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTime( columnLabel );
   }
 
   @Override
   public Timestamp getTimestamp( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTimestamp( columnLabel );
   }
 
   @Override
   public InputStream getAsciiStream( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getAsciiStream( columnLabel );
   }
 
   @Override
   public InputStream getUnicodeStream( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getUnicodeStream( columnLabel );
   }
 
   @Override
   public InputStream getBinaryStream( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBinaryStream( columnLabel );
   }
 
   // Advanced features:
   @Override
   public SQLWarning getWarnings() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getWarnings();
   }
 
   @Override
   public void clearWarnings() throws SQLException {
-    checkNotClosed();
-      super.clearWarnings();
+    throwIfClosed();
+    super.clearWarnings();
   }
 
   @Override
   public String getCursorName() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getCursorName();
   }
 
   // (Not delegated.)
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getMetaData();
   }
 
   @Override
   public Object getObject( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getObject( columnIndex );
   }
 
   @Override
   public Object getObject( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getObject( columnLabel );
   }
 
   //----------------------------------------------------------------
   @Override
   public int findColumn( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.findColumn( columnLabel );
   }
 
@@ -420,25 +438,25 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public Reader getCharacterStream( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getCharacterStream( columnIndex );
   }
 
   @Override
   public Reader getCharacterStream( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getCharacterStream( columnLabel );
   }
 
   @Override
   public BigDecimal getBigDecimal( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBigDecimal( columnIndex );
   }
 
   @Override
   public BigDecimal getBigDecimal( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBigDecimal( columnLabel );
   }
 
@@ -447,73 +465,73 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public boolean isBeforeFirst() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.isBeforeFirst();
   }
 
   @Override
   public boolean isAfterLast() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.isAfterLast();
   }
 
   @Override
   public boolean isFirst() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.isFirst();
   }
 
   @Override
   public boolean isLast() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.isLast();
   }
 
   @Override
   public void beforeFirst() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.beforeFirst();
   }
 
   @Override
   public void afterLast() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.afterLast();
   }
 
   @Override
   public boolean first() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.first();
   }
 
   @Override
   public boolean last() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.last();
   }
 
   @Override
   public int getRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getRow();
   }
 
   @Override
   public boolean absolute( int row ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.absolute( row );
   }
 
   @Override
   public boolean relative( int rows ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.relative( rows );
   }
 
   @Override
   public boolean previous() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.previous();
   }
 
@@ -523,37 +541,37 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void setFetchDirection( int direction ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.setFetchDirection( direction );
   }
 
   @Override
   public int getFetchDirection() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getFetchDirection();
   }
 
   @Override
   public void setFetchSize( int rows ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.setFetchSize( rows );
   }
 
   @Override
   public int getFetchSize() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getFetchSize();
   }
 
   @Override
   public int getType() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getType();
   }
 
   @Override
   public int getConcurrency() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getConcurrency();
   }
 
@@ -562,484 +580,505 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   //---------------------------------------------------------------------
   @Override
   public boolean rowUpdated() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.rowUpdated();
   }
 
   @Override
   public boolean rowInserted() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.rowInserted();
   }
 
   @Override
   public boolean rowDeleted() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.rowDeleted();
   }
 
   @Override
   public void updateNull( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNull( columnIndex );
   }
 
   @Override
   public void updateBoolean( int columnIndex, boolean x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBoolean( columnIndex, x );
   }
 
   @Override
   public void updateByte( int columnIndex, byte x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateByte( columnIndex, x );
   }
 
   @Override
   public void updateShort( int columnIndex, short x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateShort( columnIndex, x );
   }
 
   @Override
   public void updateInt( int columnIndex, int x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateInt( columnIndex, x );
   }
 
   @Override
   public void updateLong( int columnIndex, long x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateLong( columnIndex, x );
   }
 
   @Override
   public void updateFloat( int columnIndex, float x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateFloat( columnIndex, x );
   }
 
   @Override
   public void updateDouble( int columnIndex, double x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateDouble( columnIndex, x );
   }
 
   @Override
-  public void updateBigDecimal( int columnIndex, BigDecimal x ) throws SQLException {
-    checkNotClosed();
+  public void updateBigDecimal( int columnIndex,
+                                BigDecimal x ) throws SQLException {
+    throwIfClosed();
     super.updateBigDecimal( columnIndex, x );
   }
 
   @Override
   public void updateString( int columnIndex, String x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateString( columnIndex, x );
   }
 
   @Override
   public void updateBytes( int columnIndex, byte[] x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBytes( columnIndex, x );
   }
 
   @Override
   public void updateDate( int columnIndex, Date x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateDate( columnIndex, x );
   }
 
   @Override
   public void updateTime( int columnIndex, Time x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateTime( columnIndex, x );
   }
 
   @Override
   public void updateTimestamp( int columnIndex, Timestamp x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateTimestamp( columnIndex, x );
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex, InputStream x, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( int columnIndex, InputStream x,
+                                 int length ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex, InputStream x, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( int columnIndex, InputStream x,
+                                  int length ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex, Reader x, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( int columnIndex, Reader x,
+                                     int length ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateObject( int columnIndex, Object x, int scaleOrLength ) throws SQLException {
-    checkNotClosed();
+  public void updateObject( int columnIndex, Object x,
+                            int scaleOrLength ) throws SQLException {
+    throwIfClosed();
     super.updateObject( columnIndex, x, scaleOrLength );
   }
 
   @Override
   public void updateObject( int columnIndex, Object x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateObject( columnIndex, x );
   }
 
   @Override
   public void updateNull( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNull( columnLabel );
   }
 
   @Override
   public void updateBoolean( String columnLabel, boolean x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBoolean( columnLabel, x );
   }
 
   @Override
   public void updateByte( String columnLabel, byte x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateByte( columnLabel, x );
   }
 
   @Override
   public void updateShort( String columnLabel, short x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateShort( columnLabel, x );
   }
 
   @Override
   public void updateInt( String columnLabel, int x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateInt( columnLabel, x );
   }
 
   @Override
   public void updateLong( String columnLabel, long x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateLong( columnLabel, x );
   }
 
   @Override
   public void updateFloat( String columnLabel, float x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateFloat( columnLabel, x );
   }
 
   @Override
   public void updateDouble( String columnLabel, double x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateDouble( columnLabel, x );
   }
 
   @Override
-  public void updateBigDecimal( String columnLabel, BigDecimal x ) throws SQLException {
-    checkNotClosed();
+  public void updateBigDecimal( String columnLabel,
+                                BigDecimal x ) throws SQLException {
+    throwIfClosed();
     super.updateBigDecimal( columnLabel, x );
   }
 
   @Override
   public void updateString( String columnLabel, String x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateString( columnLabel, x );
   }
 
   @Override
   public void updateBytes( String columnLabel, byte[] x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBytes( columnLabel, x );
   }
 
   @Override
   public void updateDate( String columnLabel, Date x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateDate( columnLabel, x );
   }
 
   @Override
   public void updateTime( String columnLabel, Time x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateTime( columnLabel, x );
   }
 
   @Override
   public void updateTimestamp( String columnLabel, Timestamp x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateTimestamp( columnLabel, x );
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel, InputStream x, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( String columnLabel, InputStream x,
+                                 int length ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnLabel, x, length );
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel, InputStream x, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( String columnLabel, InputStream x,
+                                  int length ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnLabel, x, length );
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel, Reader reader, int length ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( String columnLabel, Reader reader,
+                                     int length ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnLabel, reader, length );
   }
 
   @Override
-  public void updateObject( String columnLabel, Object x, int scaleOrLength ) throws SQLException {
-    checkNotClosed();
+  public void updateObject( String columnLabel, Object x,
+                            int scaleOrLength ) throws SQLException {
+    throwIfClosed();
     super.updateObject( columnLabel, x, scaleOrLength );
   }
 
   @Override
   public void updateObject( String columnLabel, Object x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateObject( columnLabel, x );
   }
 
   @Override
   public void insertRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.insertRow();
   }
 
   @Override
   public void updateRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateRow();
   }
 
   @Override
   public void deleteRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.deleteRow();
   }
 
   @Override
   public void refreshRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.refreshRow();
   }
 
   @Override
   public void cancelRowUpdates() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.cancelRowUpdates();
   }
 
   @Override
   public void moveToInsertRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.moveToInsertRow();
   }
 
   @Override
   public void moveToCurrentRow() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.moveToCurrentRow();
   }
 
   @Override
   public AvaticaStatement getStatement() {
-    // Note:  No already-closed exception for getStatement().
+    try {
+      throwIfClosed();
+    } catch ( AlreadyClosedSqlException e ) {
+      // Can't throw any SQLException because AvaticaConnection's
+      // getStatement() is missing "throws SQLException".
+      throw new RuntimeException( e.getMessage(), e );
+    } catch ( SQLException e ) {
+      throw new RuntimeException( e.getMessage(), e );
+    }
     return super.getStatement();
   }
 
   @Override
-  public Object getObject( int columnIndex, java.util.Map<String,Class<?>> map ) throws SQLException {
-    checkNotClosed();
+  public Object getObject( int columnIndex,
+                           Map<String, Class<?>> map ) throws SQLException {
+    throwIfClosed();
     return super.getObject( columnIndex, map );
   }
 
   @Override
   public Ref getRef( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getRef( columnIndex );
   }
 
   @Override
   public Blob getBlob( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBlob( columnIndex );
   }
 
   @Override
   public Clob getClob( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getClob( columnIndex );
   }
 
   @Override
   public Array getArray( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getArray( columnIndex );
   }
 
   @Override
-  public Object getObject( String columnLabel, java.util.Map<String,Class<?>> map ) throws SQLException {
-    checkNotClosed();
+  public Object getObject( String columnLabel,
+                           Map<String,Class<?>> map ) throws SQLException {
+    throwIfClosed();
     return super.getObject( columnLabel, map );
   }
 
   @Override
   public Ref getRef( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getRef( columnLabel );
   }
 
   @Override
   public Blob getBlob( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getBlob( columnLabel );
   }
 
   @Override
   public Clob getClob( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getClob( columnLabel );
   }
 
   @Override
   public Array getArray( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getArray( columnLabel );
   }
 
   @Override
   public Date getDate( int columnIndex, Calendar cal ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDate( columnIndex, cal );
   }
 
   @Override
   public Date getDate( String columnLabel, Calendar cal ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getDate( columnLabel, cal );
   }
 
   @Override
   public Time getTime( int columnIndex, Calendar cal ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTime( columnIndex, cal );
   }
 
   @Override
   public Time getTime( String columnLabel, Calendar cal ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTime( columnLabel, cal );
   }
 
   @Override
   public Timestamp getTimestamp( int columnIndex, Calendar cal ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getTimestamp( columnIndex, cal );
   }
 
   @Override
-  public Timestamp getTimestamp( String columnLabel, Calendar cal ) throws SQLException {
-    checkNotClosed();
+  public Timestamp getTimestamp( String columnLabel,
+                                 Calendar cal ) throws SQLException {
+    throwIfClosed();
     return super.getTimestamp( columnLabel, cal );
   }
 
   //-------------------------- JDBC 3.0 ----------------------------------------
 
   @Override
-  public java.net.URL getURL( int columnIndex ) throws SQLException {
-    checkNotClosed();
+  public URL getURL( int columnIndex ) throws SQLException {
+    throwIfClosed();
     return super.getURL( columnIndex );
   }
 
   @Override
-  public java.net.URL getURL( String columnLabel ) throws SQLException {
-    checkNotClosed();
+  public URL getURL( String columnLabel ) throws SQLException {
+    throwIfClosed();
     return super.getURL( columnLabel );
   }
 
   @Override
   public void updateRef( int columnIndex, Ref x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateRef( columnIndex, x );
   }
 
   @Override
   public void updateRef( String columnLabel, Ref x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateRef( columnLabel, x );
   }
 
   @Override
   public void updateBlob( int columnIndex, Blob x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBlob( columnIndex, x );
   }
 
   @Override
   public void updateBlob( String columnLabel, Blob x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateBlob( columnLabel, x );
   }
 
   @Override
   public void updateClob( int columnIndex, Clob x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateClob( columnIndex, x );
   }
 
   @Override
   public void updateClob( String columnLabel, Clob x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateClob( columnLabel, x );
   }
 
   @Override
   public void updateArray( int columnIndex, Array x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateArray( columnIndex, x );
   }
 
   @Override
   public void updateArray( String columnLabel, Array x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateArray( columnLabel, x );
   }
 
   //------------------------- JDBC 4.0 -----------------------------------
   @Override
   public RowId getRowId( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getRowId( columnIndex );
   }
 
   @Override
   public RowId getRowId( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getRowId( columnLabel );
   }
 
   @Override
   public void updateRowId( int columnIndex, RowId x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateRowId( columnIndex, x );
   }
 
   @Override
   public void updateRowId( String columnLabel, RowId x ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateRowId( columnLabel, x );
   }
 
   @Override
   public int getHoldability() throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getHoldability();
   }
 
@@ -1051,267 +1090,294 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public void updateNString( int columnIndex, String nString ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNString( columnIndex, nString );
   }
 
   @Override
-  public void updateNString( String columnLabel, String nString ) throws SQLException {
-    checkNotClosed();
+  public void updateNString( String columnLabel,
+                             String nString ) throws SQLException {
+    throwIfClosed();
     super.updateNString( columnLabel, nString );
   }
 
   @Override
   public void updateNClob( int columnIndex, NClob nClob ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNClob( columnIndex, nClob );
   }
 
   @Override
   public void updateNClob( String columnLabel, NClob nClob ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNClob( columnLabel, nClob );
   }
 
   @Override
   public NClob getNClob( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNClob( columnIndex );
   }
 
   @Override
   public NClob getNClob( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNClob( columnLabel );
   }
 
   @Override
   public SQLXML getSQLXML( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getSQLXML( columnIndex );
   }
 
   @Override
   public SQLXML getSQLXML( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getSQLXML( columnLabel );
   }
 
   @Override
-  public void updateSQLXML( int columnIndex, SQLXML xmlObject ) throws SQLException {
-    checkNotClosed();
+  public void updateSQLXML( int columnIndex,
+                            SQLXML xmlObject ) throws SQLException {
+    throwIfClosed();
     super.updateSQLXML( columnIndex, xmlObject );
   }
 
   @Override
-  public void updateSQLXML( String columnLabel, SQLXML xmlObject ) throws SQLException {
-    checkNotClosed();
+  public void updateSQLXML( String columnLabel,
+                            SQLXML xmlObject ) throws SQLException {
+    throwIfClosed();
     super.updateSQLXML( columnLabel, xmlObject );
   }
 
   @Override
   public String getNString( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNString( columnIndex );
   }
 
   @Override
   public String getNString( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNString( columnLabel );
   }
 
   @Override
   public Reader getNCharacterStream( int columnIndex ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNCharacterStream( columnIndex );
   }
 
   @Override
   public Reader getNCharacterStream( String columnLabel ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getNCharacterStream( columnLabel );
   }
 
   @Override
-  public void updateNCharacterStream( int columnIndex, Reader x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateNCharacterStream( int columnIndex, Reader x,
+                                      long length ) throws SQLException {
+    throwIfClosed();
     super.updateNCharacterStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateNCharacterStream( String columnLabel, Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateNCharacterStream( String columnLabel, Reader reader,
+                                      long length ) throws SQLException {
+    throwIfClosed();
     super.updateNCharacterStream( columnLabel, reader, length );
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex, InputStream x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( int columnIndex, InputStream x,
+                                 long length ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex, InputStream x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( int columnIndex, InputStream x,
+                                  long length ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex, Reader x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( int columnIndex, Reader x,
+                                     long length ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnIndex, x, length );
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel, InputStream x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( String columnLabel, InputStream x,
+                                 long length ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnLabel, x, length );
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel, InputStream x, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( String columnLabel, InputStream x,
+                                  long length ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnLabel, x, length );
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel, Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( String columnLabel, Reader reader,
+                                     long length ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnLabel, reader, length );
   }
 
   @Override
-  public void updateBlob( int columnIndex, InputStream inputStream, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateBlob( int columnIndex, InputStream inputStream,
+                          long length ) throws SQLException {
+    throwIfClosed();
     super.updateBlob( columnIndex, inputStream, length );
   }
 
   @Override
-  public void updateBlob( String columnLabel, InputStream inputStream, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateBlob( String columnLabel, InputStream inputStream,
+                          long length ) throws SQLException {
+    throwIfClosed();
     super.updateBlob( columnLabel, inputStream, length );
   }
 
   @Override
-  public void updateClob( int columnIndex,  Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateClob( int columnIndex,  Reader reader,
+                          long length ) throws SQLException {
+    throwIfClosed();
     super.updateClob( columnIndex, reader, length );
   }
 
   @Override
-  public void updateClob( String columnLabel,  Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateClob( String columnLabel,  Reader reader,
+                          long length ) throws SQLException {
+    throwIfClosed();
     super.updateClob( columnLabel, reader, length );
   }
 
   @Override
-  public void updateNClob( int columnIndex,  Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateNClob( int columnIndex,  Reader reader,
+                           long length ) throws SQLException {
+    throwIfClosed();
     super.updateNClob( columnIndex, reader, length );
   }
 
   @Override
-  public void updateNClob( String columnLabel,  Reader reader, long length ) throws SQLException {
-    checkNotClosed();
+  public void updateNClob( String columnLabel,  Reader reader,
+                           long length ) throws SQLException {
+    throwIfClosed();
     super.updateNClob( columnLabel, reader, length );
   }
 
   //---
   @Override
-  public void updateNCharacterStream( int columnIndex, Reader x ) throws SQLException {
-    checkNotClosed();
+  public void updateNCharacterStream( int columnIndex,
+                                      Reader x ) throws SQLException {
+    throwIfClosed();
     super.updateNCharacterStream( columnIndex, x );
   }
 
   @Override
-  public void updateNCharacterStream( String columnLabel, Reader reader ) throws SQLException {
-    checkNotClosed();
+  public void updateNCharacterStream( String columnLabel,
+                                      Reader reader ) throws SQLException {
+    throwIfClosed();
     super.updateNCharacterStream( columnLabel, reader );
   }
 
   @Override
-  public void updateAsciiStream( int columnIndex, InputStream x ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( int columnIndex,
+                                 InputStream x ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnIndex, x );
   }
 
   @Override
-  public void updateBinaryStream( int columnIndex, InputStream x ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( int columnIndex,
+                                  InputStream x ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnIndex, x );
   }
 
   @Override
-  public void updateCharacterStream( int columnIndex, Reader x ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( int columnIndex,
+                                     Reader x ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnIndex, x );
   }
 
   @Override
-  public void updateAsciiStream( String columnLabel, InputStream x ) throws SQLException {
-    checkNotClosed();
+  public void updateAsciiStream( String columnLabel,
+                                 InputStream x ) throws SQLException {
+    throwIfClosed();
     super.updateAsciiStream( columnLabel, x );
   }
 
   @Override
-  public void updateBinaryStream( String columnLabel, InputStream x ) throws SQLException {
-    checkNotClosed();
+  public void updateBinaryStream( String columnLabel,
+                                  InputStream x ) throws SQLException {
+    throwIfClosed();
     super.updateBinaryStream( columnLabel, x );
   }
 
   @Override
-  public void updateCharacterStream( String columnLabel, Reader reader ) throws SQLException {
-    checkNotClosed();
+  public void updateCharacterStream( String columnLabel,
+                                     Reader reader ) throws SQLException {
+    throwIfClosed();
     super.updateCharacterStream( columnLabel, reader );
   }
 
   @Override
-  public void updateBlob( int columnIndex, InputStream inputStream ) throws SQLException {
-    checkNotClosed();
+  public void updateBlob( int columnIndex,
+                          InputStream inputStream ) throws SQLException {
+    throwIfClosed();
     super.updateBlob( columnIndex, inputStream );
   }
 
   @Override
-  public void updateBlob( String columnLabel, InputStream inputStream ) throws SQLException {
-    checkNotClosed();
+  public void updateBlob( String columnLabel,
+                          InputStream inputStream ) throws SQLException {
+    throwIfClosed();
     super.updateBlob( columnLabel, inputStream );
   }
 
   @Override
   public void updateClob( int columnIndex,  Reader reader ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateClob( columnIndex, reader );
   }
 
   @Override
   public void updateClob( String columnLabel,  Reader reader ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateClob( columnLabel, reader );
   }
 
   @Override
   public void updateNClob( int columnIndex,  Reader reader ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNClob( columnIndex, reader );
   }
 
   @Override
   public void updateNClob( String columnLabel,  Reader reader ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     super.updateNClob( columnLabel, reader );
   }
 
   //------------------------- JDBC 4.1 -----------------------------------
   @Override
   public <T> T getObject( int columnIndex, Class<T> type ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getObject( columnIndex, type );
   }
 
   @Override
   public <T> T getObject( String columnLabel, Class<T> type ) throws SQLException {
-    checkNotClosed();
+    throwIfClosed();
     return super.getObject( columnLabel, type );
   }
 
@@ -1320,7 +1386,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   // DrillResultSet methods:
 
   public String getQueryId() throws SQLException {
-    checkNotClosed();
+    //??CHECKING throwIfClosed();
     if (resultsListener.getQueryId() != null) {
       return QueryIdHelper.getQueryId(resultsListener.getQueryId());
     } else {
