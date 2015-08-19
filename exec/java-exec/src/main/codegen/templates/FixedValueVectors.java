@@ -757,7 +757,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      boolean even = true;
      final int valueCount = getAccessor().getValueCount();
      for(int i = 0; i < valueCount; i++, even = !even) {
-       set(i, even ? ${minor.boxedType!type.boxedType}.MIN_VALUE : ${minor.boxedType!type.boxedType}.MAX_VALUE);
+       if (even) {
+         set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
+       } else {
+         set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
+       }
      }
    }
 
@@ -766,7 +770,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      boolean even = true;
      final int valueCount = getAccessor().getValueCount();
      for(int i = 0; i < valueCount; i++, even = !even) {
-       set(i, (${(minor.javaType!type.javaType)}) (even ? 1 : 0));
+       if (even) {
+         set(i, (${(minor.javaType!type.javaType)}) 1);
+       } else {
+         set(i, (${(minor.javaType!type.javaType)}) 0);
+       }
      }
    }
 

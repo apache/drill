@@ -86,11 +86,6 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   @Override
   public void close() throws Exception {
     clear();
-/* TODO(cwestin) experimental
-    for(final FieldWriter fieldWriter : fields.values()) {
-      fieldWriter.close();
-    }
-*/
     container.close();
   }
 
