@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
@@ -27,13 +28,19 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import java.util.List;
 
 public class PhysicalOperatorUtil {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorUtil.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorUtil.class);
 
-  private PhysicalOperatorUtil(){}
 
-  public synchronized static Class<?>[] getSubTypes(DrillConfig config){
-    Class<?>[] ops = PathScanner.scanForImplementationsArr(PhysicalOperator.class, config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
-    logger.debug("Adding Physical Operator sub types: {}", ((Object) ops) );
+  private PhysicalOperatorUtil() {}
+
+  public synchronized static Class<?>[] getSubTypes(final DrillConfig config) {
+    final Class<?>[] ops =
+        PathScanner.scanForImplementationsArr(PhysicalOperator.class,
+            config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
+    final String lineBrokenList =
+        ops.length == 0 ? "" : "\n\t- " + Joiner.on("\n\t- ").join(ops);
+    logger.debug("Found {} physical operator classes: {}.", ops.length,
+                 lineBrokenList);
     return ops;
   }
 

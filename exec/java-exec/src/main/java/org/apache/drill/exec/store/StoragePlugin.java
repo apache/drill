@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 public interface StoragePlugin extends SchemaFactory {
@@ -31,7 +32,7 @@ public interface StoragePlugin extends SchemaFactory {
 
   public boolean supportsWrite();
 
-  public Set<StoragePluginOptimizerRule> getOptimizerRules();
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.

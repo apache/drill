@@ -20,12 +20,18 @@ package org.apache.drill.exec.vector.accessor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.ValueVector;
 
+
 public class GenericAccessor extends AbstractSqlAccessor {
 
   private ValueVector v;
 
   public GenericAccessor(ValueVector v) {
     this.v = v;
+  }
+
+  @Override
+  public Class<?> getObjectClass() {
+    return Object.class;
   }
 
   @Override

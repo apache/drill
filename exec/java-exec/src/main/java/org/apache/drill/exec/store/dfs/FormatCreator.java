@@ -46,7 +46,8 @@ public class FormatCreator {
     final DrillConfig config = context.getConfig();
     Map<String, FormatPlugin> plugins = Maps.newHashMap();
 
-    Collection<Class<? extends FormatPlugin>> pluginClasses = PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
+    Collection<Class<? extends FormatPlugin>> pluginClasses =
+        PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
 
     if (storageConfig.formats == null || storageConfig.formats.isEmpty()) {
 

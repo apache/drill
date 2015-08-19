@@ -1069,7 +1069,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .unOrdered()
         .sqlBaselineQuery(baseQuery)
         .build()
-        .run();;
+        .run();
 
     // JoinQuery: star + window function
     final String joinQuery =
@@ -1088,7 +1088,17 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlBaselineQuery(joinBaseQuery)
         .build()
         .run();
-
   }
 
+  @Test // see DRILL-3557
+  public void testEmptyCSVinDirectory() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV").toURI().toString();
+    final String toFile = FileUtils.getResourceAsFile("/store/text/directoryWithEmpyCSV/empty.csv").toURI().toString();
+
+    String query1 = String.format("explain plan for select * from dfs_test.`%s`", root);
+    String query2 = String.format("explain plan for select * from dfs_test.`%s`", toFile);
+
+    test(query1);
+    test(query2);
+  }
 }

@@ -23,6 +23,8 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
+import org.apache.drill.PlanTestBase;
+
 import org.junit.Test;
 
 public class TestWindowFunctions extends BaseTestQuery {
@@ -51,115 +53,10 @@ public class TestWindowFunctions extends BaseTestQuery {
     test(query);
   }
 
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3196
-  public void testMultiplePartitions() throws Exception {
-    try {
-      final String query = "explain plan for select sum(a2) over(partition by a2), count(*) over(partition by a2,b2,c2) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3196
-  public void testSinglePartitionMultipleOrderBy() throws Exception {
-    try {
-      final String query = "explain plan for select sum(a2) over(partition by a2 order by a2), count(*) over(partition by a2 order by b2) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3196
-  public void testMultiplePartitionsDefinedInWindowList() throws Exception {
-    try {
-      final String query = "explain plan for select sum(a2) over(partition by a2), count(*) over w \n" +
-          "from cp.`tpch/nation.parquet` \n" +
-          "window w as (partition by a2, b2, c2)";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
   @Test(expected = UnsupportedFunctionException.class) // DRILL-3182
   public void testWindowFunctionWithDistinct() throws Exception {
     try {
       final String query = "explain plan for select a2, count(distinct b2) over(partition by a2) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionNTILE() throws Exception {
-    try {
-      final String query = "explain plan for select NTILE(1) over(partition by n_name order by n_name) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionLAG() throws Exception {
-    try {
-      final String query = "explain plan for select LAG(n_nationKey, 1) over(partition by n_name order by n_name) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionLEAD() throws Exception {
-    try {
-      final String query = "explain plan for select LEAD(n_nationKey, 1) over(partition by n_name order by n_name) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionFIRST_VALUE() throws Exception {
-    try {
-      final String query = "explain plan for select FIRST_VALUE(n_nationKey) over(partition by n_name order by n_name) \n" +
-          "from cp.`tpch/nation.parquet`";
-
-      test(query);
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test(expected = UnsupportedFunctionException.class) // DRILL-3195
-  public void testWindowFunctionLAST_VALUE() throws Exception {
-    try {
-      final String query = "explain plan for select LAST_VALUE(n_nationKey) over(partition by n_name order by n_name) \n" +
           "from cp.`tpch/nation.parquet`";
 
       test(query);
@@ -435,6 +332,88 @@ public class TestWindowFunctions extends BaseTestQuery {
         .baselineValues(4l, 8l, 31l, 2.0)
         .baselineValues(5l, 10l, 52l, 2.5)
         .baselineValues(6l, 12l, 74l, 3.0)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-3567
+  public void testMultiplePartitions1() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
+        "sum(a1)  over(partition by b1 order by c1) as sum1, \n" +
+        "count(*) over(partition by a1 order by c1) as count2 \n" +
+        "from dfs_test.`%s`", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count1", "sum1", "count2")
+        .baselineValues(1l, 0l, 2l)
+        .baselineValues(1l, 0l, 2l)
+        .baselineValues(2l, 0l, 5l)
+        .baselineValues(3l, 0l, 5l)
+        .baselineValues(3l, 0l, 5l)
+        .baselineValues(1l, 10l, 2l)
+        .baselineValues(1l, 10l, 2l)
+        .baselineValues(2l, 20l, 5l)
+        .baselineValues(3l, 30l, 5l)
+        .baselineValues(3l, 30l, 5l)
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-3567
+  public void testMultiplePartitions2() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format("select count(*) over(partition by b1 order by c1) as count1, \n" +
+        "count(*) over(partition by a1 order by c1) as count2, \n" +
+        "sum(a1)  over(partition by b1 order by c1) as sum1 \n" +
+        "from dfs_test.`%s`", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count1", "count2", "sum1")
+        .baselineValues(1l, 2l, 0l)
+        .baselineValues(1l, 2l, 0l)
+        .baselineValues(2l, 5l, 0l)
+        .baselineValues(3l, 5l, 0l)
+        .baselineValues(3l, 5l, 0l)
+        .baselineValues(1l, 2l, 10l)
+        .baselineValues(1l, 2l, 10l)
+        .baselineValues(2l, 5l, 20l)
+        .baselineValues(3l, 5l, 30l)
+        .baselineValues(3l, 5l, 30l)
+        .build()
+        .run();
+  }
+
+  @Test // see DRILL-3574
+  public void testWithAndWithoutPartitions() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format("select sum(a1) over(partition by b1, c1) as s1, sum(a1) over() as s2 \n" +
+        "from dfs_test.`%s` \n" +
+        "order by a1", root);
+    test("alter session set `planner.slice_target` = 1");
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{\\}.*\n" +
+        ".*UnionExchange"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("s1", "s2")
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(0l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(10l, 50l)
+        .baselineValues(20l, 50l)
+        .baselineValues(20l, 50l)
         .build()
         .run();
   }

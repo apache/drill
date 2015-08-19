@@ -20,10 +20,19 @@ package org.apache.drill.exec;
 import static org.junit.Assert.assertFalse;
 
 import org.apache.drill.exec.hive.HiveTestBase;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHivePartitionPruning extends HiveTestBase {
+  // enable decimal data type
+  @BeforeClass
+  public static void enableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
   //Currently we do not have a good way to test plans so using a crude string comparison
   @Test
   public void testSimplePartitionFilter() throws Exception {
@@ -37,7 +46,7 @@ public class TestHivePartitionPruning extends HiveTestBase {
   /* Partition pruning is not supported for disjuncts that do not meet pruning criteria.
    * Will be enabled when we can do wild card comparison for partition pruning
    */
-  @Ignore
+  @Test
   public void testDisjunctsPartitionFilter() throws Exception {
     final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1) or (d = 1)";
     final String plan = getPlanInString(query, OPTIQ_FORMAT);
@@ -55,12 +64,77 @@ public class TestHivePartitionPruning extends HiveTestBase {
     assertFalse(plan.contains("Filter"));
   }
 
-  @Ignore("DRILL-1571")
+  @Test
   public void testComplexFilter() throws Exception {
     final String query = "explain plan for select * from hive.`default`.partition_pruning_test where (c = 1 and d = 1) or (c = 2 and d = 3)";
     final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
     assertFalse(plan.contains("Filter"));
+  }
+
+  @Test
+  public void testRangeFilter() throws Exception {
+    final String query = "explain plan for " +
+        "select * from hive.`default`.partition_pruning_test where " +
+        "c > 1 and d > 1";
+
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+  }
+
+  @Test
+  public void testRangeFilterWithDisjunct() throws Exception {
+    final String query = "explain plan for " +
+        "select * from hive.`default`.partition_pruning_test where " +
+        "(c > 1 and d > 1) or (c < 2 and d < 2)";
+
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+  }
+
+  /**
+   * Tests pruning on table that has partitions columns of supported data types. Also tests whether Hive pruning code
+   * is able to deserialize the partition values in string format to appropriate type holder.
+   */
+  @Test
+  public void pruneDataTypeSupport() throws Exception {
+    final String query = "EXPLAIN PLAN FOR " +
+        "SELECT * FROM hive.readtest WHERE boolean_part = true";
+
+    final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+  }
+
+  @Test // DRILL-3579
+  public void selectFromPartitionedTableWithNullPartitions() throws Exception {
+    final String query = "SELECT count(*) nullCount FROM hive.partition_pruning_test " +
+        "WHERE c IS NULL OR d IS NULL OR e IS NULL";
+
+    /** Currently there is an issue with interpreter based partition pruning where some functions on partitions don't
+     * work. IS NULL is one of those functions.
+    final String plan = getPlanInString("EXPLAIN PLAN FOR " + query, OPTIQ_FORMAT);
+
+    // Check and make sure that Filter is not present in the plan
+    assertFalse(plan.contains("Filter"));
+     */
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("nullCount")
+        .baselineValues(95L)
+        .go();
+  }
+
+  @AfterClass
+  public static void disableDecimalDataType() throws Exception {
+    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 }

@@ -64,6 +64,9 @@ public class DrillTestWrapper {
   // it will only make the test slower.
   private static boolean VERBOSE_DEBUG = false;
 
+  // Unit test doesn't expect any specific batch count
+  public static final int EXPECTED_BATCH_COUNT_NOT_SET = -1;
+
   // The motivation behind the TestBuilder was to provide a clean API for test writers. The model is mostly designed to
   // prepare all of the components necessary for running the tests, before the TestWrapper is initialized. There is however
   // one case where the setup for the baseline is driven by the test query results, and this is implicit type enforcement
@@ -95,10 +98,12 @@ public class DrillTestWrapper {
   // and translated into a map in the builder
   private List<Map> baselineRecords;
 
+  private int expectedNumBatches;
+
   public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, String query, QueryType queryType,
                           String baselineOptionSettingQueries, String testOptionSettingQueries,
                           QueryType baselineQueryType, boolean ordered, boolean approximateEquality,
-                          boolean highPerformanceComparison, List<Map> baselineRecords) {
+                          boolean highPerformanceComparison, List<Map> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
     this.allocator = allocator;
     this.query = query;
@@ -110,6 +115,7 @@ public class DrillTestWrapper {
     this.testOptionSettingQueries = testOptionSettingQueries;
     this.highPerformanceComparison = highPerformanceComparison;
     this.baselineRecords = baselineRecords;
+    this.expectedNumBatches = expectedNumBatches;
   }
 
   public void run() throws Exception {
@@ -279,6 +285,8 @@ public class DrillTestWrapper {
       BaseTestQuery.test(testOptionSettingQueries);
       actual = BaseTestQuery.testRunAndReturn(queryType, query);
 
+      checkNumBatches(actual);
+
       addTypeInfoIfMissing(actual.get(0), testBuilder);
       addToMaterializedResults(actualRecords, actual, loader, schema);
 
@@ -327,6 +335,9 @@ public class DrillTestWrapper {
     try {
     BaseTestQuery.test(testOptionSettingQueries);
     actual = BaseTestQuery.testRunAndReturn(queryType, query);
+
+    checkNumBatches(actual);
+
     // To avoid extra work for test writers, types can optionally be inferred from the test query
     addTypeInfoIfMissing(actual.get(0), testBuilder);
 
@@ -365,6 +376,9 @@ public class DrillTestWrapper {
 
     BaseTestQuery.test(testOptionSettingQueries);
     List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+
+    checkNumBatches(results);
+
     // To avoid extra work for test writers, types can optionally be inferred from the test query
     addTypeInfoIfMissing(results.get(0), testBuilder);
 
@@ -377,6 +391,14 @@ public class DrillTestWrapper {
 
     compareHyperVectors(expectedSuperVectors, actualSuperVectors);
     cleanupBatches(results, expected);
+  }
+
+  private void checkNumBatches(final List<QueryDataBatch> results) {
+    if (expectedNumBatches != EXPECTED_BATCH_COUNT_NOT_SET) {
+      final int actualNumBatches = results.size();
+      assertEquals(String.format("Expected %d batches but query returned %d non empty batch(es)%n", expectedNumBatches,
+        actualNumBatches), expectedNumBatches, actualNumBatches);
+    }
   }
 
   private void addTypeInfoIfMissing(QueryDataBatch batch, TestBuilder testBuilder) {

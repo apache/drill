@@ -23,14 +23,24 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 
-public abstract class StoragePluginConfigBase extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginConfigBase.class);
+import com.google.common.base.Joiner;
 
-  public synchronized static Class<?>[] getSubTypes(DrillConfig config){
-    List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
-    Class<?>[] sec = PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
-    logger.debug("Adding Storage Engine Configs including {}", (Object) sec );
-    return sec;
+
+public abstract class StoragePluginConfigBase extends StoragePluginConfig {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginConfigBase.class);
+
+
+  public synchronized static Class<?>[] getSubTypes(final DrillConfig config) {
+    final List<String> packages =
+        config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
+    final Class<?>[] pluginClasses =
+        PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
+    final String lineBrokenList =
+        pluginClasses.length == 0
+        ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
+    logger.debug("Found {} storage plugin configuration classes: {}.",
+                 pluginClasses.length, lineBrokenList);
+    return pluginClasses;
   }
 
   @Override

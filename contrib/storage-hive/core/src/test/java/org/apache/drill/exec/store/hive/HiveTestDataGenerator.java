@@ -117,6 +117,7 @@ public class HiveTestDataGenerator {
     conf.set("mapred.job.tracker", "local");
     conf.set(ConfVars.SCRATCHDIR.varname,  getTempDir("scratch_dir"));
     conf.set(ConfVars.LOCALSCRATCHDIR.varname, getTempDir("local_scratch_dir"));
+    conf.set(ConfVars.DYNAMICPARTITIONINGMODE.varname, "nonstrict");
 
     SessionState ss = new SessionState(conf);
     SessionState.start(ss);
@@ -227,6 +228,29 @@ public class HiveTestDataGenerator {
         "  date_part='2013-07-05')"
     );
 
+    // Add a second partition to table 'readtest' which contains the same values as the first partition except
+    // for boolean_part partition column
+    executeQuery(hiveDriver,
+        "ALTER TABLE readtest ADD IF NOT EXISTS PARTITION ( " +
+            "  binary_part='binary', " +
+            "  boolean_part='false', " +
+            "  tinyint_part='64', " +
+            "  decimal0_part='36.9', " +
+            "  decimal9_part='36.9', " +
+            "  decimal18_part='3289379872.945645', " +
+            "  decimal28_part='39579334534534.35345', " +
+            "  decimal38_part='363945093845093890.9', " +
+            "  double_part='8.345', " +
+            "  float_part='4.67', " +
+            "  int_part='123456', " +
+            "  bigint_part='234235', " +
+            "  smallint_part='3455', " +
+            "  string_part='string', " +
+            "  varchar_part='varchar', " +
+            "  timestamp_part='2013-07-05 17:01:00', " +
+            "  date_part='2013-07-05')"
+    );
+
     // Load data into table 'readtest'
     executeQuery(hiveDriver,
         String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.readtest PARTITION (" +
@@ -274,29 +298,21 @@ public class HiveTestDataGenerator {
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
     executeQuery(hiveDriver, "CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
 
-    // Generate data with date and timestamp data type
-    String testDateDataFile = generateTestDataFileWithDate();
+    executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS " +
+        "partition_pruning_test_loadtable(a DATE, b TIMESTAMP, c INT, d INT, e INT) " +
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(hiveDriver,
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE partition_pruning_test_loadtable",
+        generateTestDataFileForPartitionInput()));
 
     // create partitioned hive table to test partition pruning
     executeQuery(hiveDriver,
-        "CREATE TABLE IF NOT EXISTS default.partition_pruning_test(a DATE, b TIMESTAMP) "+
-        "partitioned by (c int, d int, e int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=1)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=2, e=1)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=1, d=1, e=2)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=1)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=1, e=2)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=1)", testDateDataFile));
-    executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.partition_pruning_test partition(c=2, d=3, e=2)", testDateDataFile));
+        "CREATE TABLE IF NOT EXISTS partition_pruning_test(a DATE, b TIMESTAMP) "+
+        "partitioned by (c INT, d INT, e INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(hiveDriver, "INSERT OVERWRITE TABLE partition_pruning_test PARTITION(c, d, e) " +
+        "SELECT a, b, c, d, e FROM partition_pruning_test_loadtable");
+
+    executeQuery(hiveDriver, "DROP TABLE partition_pruning_test_loadtable");
 
     ss.close();
   }
@@ -316,15 +332,27 @@ public class HiveTestDataGenerator {
     return file.getPath();
   }
 
-  private String generateTestDataFileWithDate() throws Exception {
+  private String generateTestDataFileForPartitionInput() throws Exception {
     final File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
-    for (int i=1; i<=5; i++) {
-      Date date = new Date(System.currentTimeMillis());
-      Timestamp ts = new Timestamp(System.currentTimeMillis());
-      printWriter.println (String.format("%s,%s", date.toString(), ts.toString()));
+
+    String partValues[] = {"1", "2", "null"};
+
+    for(int c = 0; c < partValues.length; c++) {
+      for(int d = 0; d < partValues.length; d++) {
+        for(int e = 0; e < partValues.length; e++) {
+          for (int i = 1; i <= 5; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Timestamp ts = new Timestamp(System.currentTimeMillis());
+            printWriter.printf("%s,%s,%s,%s,%s",
+                date.toString(), ts.toString(), partValues[c], partValues[d], partValues[e]);
+            printWriter.println();
+          }
+        }
+      }
     }
+
     printWriter.close();
 
     return file.getPath();

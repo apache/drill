@@ -28,7 +28,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
-        , 6);
+        , 7);
   }
 
   @Test
@@ -48,7 +48,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key, t.f.c1*31 as `t.f.c1*31`, t.f.c2 as `t.f.c2`, 5 as `5`, 'abc' as `'abc'`\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` t"
-        , 6);
+        , 7);
   }
 
   @Test
@@ -58,7 +58,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
         + "row_key, f, f2\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
-        , 6);
+        , 7);
   }
 
 }

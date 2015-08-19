@@ -32,7 +32,8 @@ import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
 
 import org.apache.calcite.rel.rules.FilterMergeRule;
-import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
 import org.apache.drill.exec.planner.physical.FilterPrule;
@@ -61,9 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
 public class DrillRuleSets {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
-
-  public static RuleSet DRILL_BASIC_RULES = null;
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
   /**
    * Get a list of logical rules that can be turned on or off by session/system options.
@@ -71,19 +70,19 @@ public class DrillRuleSets {
    * If a rule is intended to always be included with the logical set, it should be added
    * to the immutable list created in the getDrillBasicRules() method below.
    *
-   * @param queryContext - used to get the list of planner settings, other rules may
-   *                     also in the future need to get other query state from this,
-   *                     such as the available list of UDFs (as is used by the
-   *                     DrillMergeProjectRule created in getDrillBasicRules())
+   * @param optimizerRulesContext - used to get the list of planner settings, other rules may
+   *                                also in the future need to get other query state from this,
+   *                                such as the available list of UDFs (as is used by the
+   *                                DrillMergeProjectRule created in getDrillBasicRules())
    * @return - a list of rules that have been filtered to leave out
    *         rules that have been turned off by system or session settings
    */
-  public static RuleSet getDrillUserConfigurableLogicalRules(QueryContext queryContext) {
-    PlannerSettings ps = queryContext.getPlannerSettings();
+  public static RuleSet getDrillUserConfigurableLogicalRules(OptimizerRulesContext optimizerRulesContext) {
+    final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     // This list is used to store rules that can be turned on an off
     // by user facing planning options
-    Builder userConfigurableRules = ImmutableSet.<RelOptRule>builder();
+    final Builder<RelOptRule> userConfigurableRules = ImmutableSet.<RelOptRule>builder();
 
     if (ps.isConstantFoldingEnabled()) {
       // TODO - DRILL-2218
@@ -96,32 +95,11 @@ public class DrillRuleSets {
     return new DrillRuleSet(userConfigurableRules.build());
   }
 
-  /**
-   * Get an immutable list of rules that will always be used when running
-   * logical planning.
-   *
-   * This would be a static member, rather than a method, but some of
-   * the rules need a reference to state that isn't available at class
-   * load time. The current example is the DrillMergeProjectRule which
-   * needs access to the registry of Drill UDFs, which is populated by
-   * scanning the class path a Drillbit startup.
-   *
-   * If a logical rule needs to be user configurable, such as turning
-   * it on and off with a system/session option, add it in the
-   * getDrillUserConfigurableLogicalRules() method instead of here.
-   *
-   * @param context - shared state used during planning, currently used here
-   *                to gain access to the fucntion registry described above.
-   * @return - a RuleSet containing the logical rules that will always
-   *           be used, either by VolcanoPlanner directly, or
-   *           used VolcanoPlanner as pre-processing for LOPTPlanner.
-   *
-   * Note : Join permutation rule is excluded here.
+  /*
+   * These basic rules don't require any context, so singleton instances can be used.
+   * These are merged with per-query rules in getDrillBasicRules() below.
    */
-  public static RuleSet getDrillBasicRules(QueryContext context) {
-    if (DRILL_BASIC_RULES == null) {
-
-      DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
+  private final static ImmutableSet<RelOptRule> staticRuleSet = ImmutableSet.<RelOptRule>builder().add(
       // Add support for Distinct Union (by using Union-All followed by Distinct)
       UnionToDistinctRule.INSTANCE,
 
@@ -141,7 +119,6 @@ public class DrillRuleSets {
       ProjectRemoveRule.NAME_CALC_INSTANCE,
       SortRemoveRule.INSTANCE,
 
-      DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY, context.getFunctionRegistry()),
       AggregateExpandDistinctAggregatesRule.INSTANCE,
       DrillReduceAggregatesRule.INSTANCE,
 
@@ -152,11 +129,6 @@ public class DrillRuleSets {
       DrillPushProjectPastJoinRule.INSTANCE,
       DrillPushProjIntoScan.INSTANCE,
       DrillProjectSetOpTransposeRule.INSTANCE,
-
-      PruneScanRule.getFilterOnProject(context),
-      PruneScanRule.getFilterOnScan(context),
-      PruneScanRule.getFilterOnProjectParquet(context),
-      PruneScanRule.getFilterOnScanParquet(context),
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.
@@ -173,30 +145,63 @@ public class DrillRuleSets {
       DrillJoinRule.INSTANCE,
       DrillUnionAllRule.INSTANCE,
       DrillValuesRule.INSTANCE
-      )
-      .build());
-    }
+      ).build();
 
-    return DRILL_BASIC_RULES;
+  /**
+   * Get an immutable list of rules that will always be used when running
+   * logical planning.
+   *
+   * This cannot be a static singleton because some of the rules need to
+   * reference state owned by the current query (including its allocator).
+   *
+   * If a logical rule needs to be user configurable, such as turning
+   * it on and off with a system/session option, add it in the
+   * getDrillUserConfigurableLogicalRules() method instead of here.
+   *
+   * @param optimizerRulesContext - shared state used during planning, currently used here
+   *                                to gain access to the function registry described above.
+   * @return - a RuleSet containing the logical rules that will always
+   *           be used, either by VolcanoPlanner directly, or
+   *           used VolcanoPlanner as pre-processing for LOPTPlanner.
+   *
+   * Note : Join permutation rule is excluded here.
+   */
+  public static RuleSet getDrillBasicRules(OptimizerRulesContext optimizerRulesContext) {
+    /*
+     * We have to create another copy of the ruleset with the context dependent elements;
+     * this cannot be reused across queries.
+     */
+    final ImmutableSet<RelOptRule> basicRules = ImmutableSet.<RelOptRule>builder()
+        .addAll(staticRuleSet)
+        .add(
+            DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
+                optimizerRulesContext.getFunctionRegistry()),
+
+            PruneScanRule.getFilterOnProject(optimizerRulesContext),
+            PruneScanRule.getFilterOnScan(optimizerRulesContext),
+            ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
+            ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext)
+            )
+        .build();
+
+    return new DrillRuleSet(basicRules);
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.
-  public static RuleSet getJoinPermRules(QueryContext context) {
+  public static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
     return new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
         JoinPushThroughJoinRule.RIGHT,
         JoinPushThroughJoinRule.LEFT
         ).build());
   }
 
-  public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //
+  public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of(
       ProjectPrule.INSTANCE
-
     ));
 
-  public static final RuleSet getPhysicalRules(QueryContext qcontext) {
-    List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
-
-    PlannerSettings ps = qcontext.getPlannerSettings();
+  public static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
+    final List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
+    final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
     ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
@@ -253,9 +258,9 @@ public class DrillRuleSets {
   }
 
   public static RuleSet mergedRuleSets(RuleSet...ruleSets) {
-    Builder<RelOptRule> relOptRuleSetBuilder = ImmutableSet.builder();
-    for (RuleSet ruleSet : ruleSets) {
-      for (RelOptRule relOptRule : ruleSet) {
+    final Builder<RelOptRule> relOptRuleSetBuilder = ImmutableSet.builder();
+    for (final RuleSet ruleSet : ruleSets) {
+      for (final RelOptRule relOptRule : ruleSet) {
         relOptRuleSetBuilder.add(relOptRule);
       }
     }
@@ -266,7 +271,6 @@ public class DrillRuleSets {
     final ImmutableSet<RelOptRule> rules;
 
     public DrillRuleSet(ImmutableSet<RelOptRule> rules) {
-      super();
       this.rules = rules;
     }
 

@@ -35,6 +35,7 @@ import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.util.Util;
 
@@ -217,8 +218,21 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   }
 
   public Void visitCall(RexCall call) {
-    // assume PUSH until proven otherwise
-    analyzeCall(call, PushDirFilter.PUSH);
+    boolean visited = false;
+    // examine the input of a CAST function; this could be extended for
+    // other functions in the future.
+    if (call.getOperator().getSyntax() == SqlSyntax.SPECIAL &&
+        call.getKind() == SqlKind.CAST) {
+      RexNode n = call.getOperands().get(0);
+      if (n instanceof RexInputRef) {
+        visitInputRef((RexInputRef) n);
+        visited = true;
+      }
+    }
+    if (!visited) {
+      // assume PUSH until proven otherwise
+      analyzeCall(call, PushDirFilter.PUSH);
+    }
     return null;
   }
 

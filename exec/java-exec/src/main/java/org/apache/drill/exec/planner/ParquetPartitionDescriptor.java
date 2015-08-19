@@ -17,11 +17,24 @@
  */
 package org.apache.drill.exec.planner;
 
-import com.google.common.collect.Maps;
+import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.physical.base.FileGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.vector.ValueVector;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -30,9 +43,13 @@ import java.util.Map;
 public class ParquetPartitionDescriptor implements PartitionDescriptor {
 
   private final List<SchemaPath> partitionColumns;
+  private final DrillScanRel scanRel;
+  static final int MAX_NESTED_SUBDIRS = 10;
 
-  public ParquetPartitionDescriptor(List<SchemaPath> partitionColumns) {
-    this.partitionColumns = partitionColumns;
+  public ParquetPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+    ParquetGroupScan scan = (ParquetGroupScan) scanRel.getGroupScan();
+    this.partitionColumns = scan.getPartitionColumns();
+    this.scanRel = scanRel;
   }
 
   @Override
@@ -58,5 +75,54 @@ public class ParquetPartitionDescriptor implements PartitionDescriptor {
   @Override
   public int getMaxHierarchyLevel() {
     return partitionColumns.size();
+  }
+
+  @Override
+  public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
+    final FileSelection newFileSelection = new FileSelection(newFiles, getBaseTableLocation(), true);
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
+    return newScan;
+  }
+
+  @Override
+  public List<PartitionLocation> getPartitions() {
+    Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
+    List<PartitionLocation> partitions = new LinkedList<>();
+    for (String file: fileLocations) {
+      partitions.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
+    }
+    return partitions;
+  }
+
+  @Override
+  public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions,
+                                       BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
+    int record = 0;
+    for (PartitionLocation partitionLocation: partitions) {
+      for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
+        SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
+        ((ParquetGroupScan) scanRel.getGroupScan()).populatePruningVector(vectors[partitionColumnIndex], record, column,
+            partitionLocation.getEntirePartitionLocation());
+      }
+      record++;
+    }
+
+    for (ValueVector v : vectors) {
+      if (v == null) {
+        continue;
+      }
+      v.getMutator().setValueCount(partitions.size());
+    }
+
+  }
+
+  @Override
+  public TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings) {
+    return ((ParquetGroupScan) scanRel.getGroupScan()).getTypeForColumn(column);
+  }
+
+  private String getBaseTableLocation() {
+    final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
+    return origSelection.getSelection().selectionRoot;
   }
 }

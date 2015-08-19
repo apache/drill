@@ -42,6 +42,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.SqlAggFunction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WindowPrule extends Prule {
@@ -64,7 +65,15 @@ public class WindowPrule extends Prule {
     for (final Ord<Window.Group> w : Ord.zip(window.groups)) {
       Window.Group windowBase = w.getValue();
       RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
-      if (windowBase.keys.size() > 0) {
+
+      // For empty Over-Clause
+      if(windowBase.keys.isEmpty()
+          && windowBase.orderKeys.getFieldCollations().isEmpty()) {
+        DrillDistributionTrait distEmptyKeys =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.SINGLETON);
+
+        traits = traits.plus(distEmptyKeys);
+      } else if (windowBase.keys.size() > 0) {
         DrillDistributionTrait distOnAllKeys =
             new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
                 ImmutableList.copyOf(getDistributionFields(windowBase)));

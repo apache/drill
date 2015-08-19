@@ -255,4 +255,15 @@ public class TestPartitionFilter extends PlanTestBase {
     String query =  String.format("select * from (select dir0, o_custkey from dfs_test.`%s` where dir0='1994' and o_custkey = 10) t limit 0", root);
     testIncludeFilter(query, 4, "Filter", 0);
   }
+
+  @Test // see DRILL-2852 and DRILL-3591
+  public void testPartitionFilterWithCast() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query = String.format("select myyear, myquarter, o_totalprice from (select cast(dir0 as varchar(10)) as myyear, "
+        + " cast(dir1 as varchar(10)) as myquarter, o_totalprice from dfs_test.`%s`) where myyear = cast('1995' as varchar(10)) "
+        + " and myquarter = cast('Q2' as varchar(10)) and o_totalprice < 40000.0 order by o_totalprice", root);
+
+    testIncludeFilter(query, 1, "Filter", 3);
+  }
+
 }

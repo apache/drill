@@ -78,6 +78,13 @@ class AvaticaDrillSqlAccessor implements Accessor {
     }
   }
 
+  /**
+   * @see SQLAccesstor#getObjectClass()
+   */
+  public Class<?> getObjectClass() {
+    return underlyingAccessor.getObjectClass();
+  }
+
   @Override
   public boolean wasNull() throws SQLException {
     return underlyingAccessor.isNull(getCurrentRecordNumber());

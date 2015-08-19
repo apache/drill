@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest.profile;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,55 +31,50 @@ import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
+/**
+ * This class contains information presented in the query profile web UI.
+ */
 public class ProfileWrapper {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
 
-  public QueryProfile profile;
-  public String id;
+  private QueryProfile profile;
+  private String id;
+  private final List<FragmentWrapper> fragmentProfiles;
+  private final List<OperatorWrapper> operatorProfiles;
 
   public ProfileWrapper(final QueryProfile profile) {
     this.profile = profile;
     this.id = QueryIdHelper.getQueryId(profile.getId());
-  }
 
-  public boolean hasError() {
-    return profile.hasError() && profile.getError() != null;
-  }
-
-  public QueryProfile getProfile() {
-    return profile;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getQueryId() {
-    return QueryIdHelper.getQueryId(profile.getId());
-  }
-
-  public List<OperatorWrapper> getOperatorProfiles() {
-    final List<OperatorWrapper> ows = Lists.newArrayList();
-    final Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<OperatorProfile, Integer>>> opmap = Maps.newHashMap();
+    final List<FragmentWrapper> fragmentProfiles = new ArrayList<>();
 
     final List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
-    Collections.sort(majors, Comparators.majorIdCompare);
+    Collections.sort(majors, Comparators.majorId);
+
+    for (final MajorFragmentProfile major : majors) {
+      fragmentProfiles.add(new FragmentWrapper(major, profile.getStart()));
+    }
+    this.fragmentProfiles = fragmentProfiles;
+
+    final List<OperatorWrapper> ows = new ArrayList<>();
+    // temporary map to store (major_id, operator_id) -> [(op_profile, minor_id)]
+    final Map<ImmutablePair<Integer, Integer>, List<ImmutablePair<OperatorProfile, Integer>>> opmap = new HashMap<>();
+
+    Collections.sort(majors, Comparators.majorId);
     for (final MajorFragmentProfile major : majors) {
 
       final List<MinorFragmentProfile> minors = new ArrayList<>(major.getMinorFragmentProfileList());
-      Collections.sort(minors, Comparators.minorIdCompare);
+      Collections.sort(minors, Comparators.minorId);
       for (final MinorFragmentProfile minor : minors) {
 
         final List<OperatorProfile> ops = new ArrayList<>(minor.getOperatorProfileList());
-        Collections.sort(ops, Comparators.operatorIdCompare);
+        Collections.sort(ops, Comparators.operatorId);
         for (final OperatorProfile op : ops) {
 
           final ImmutablePair<Integer, Integer> ip = new ImmutablePair<>(
               major.getMajorFragmentId(), op.getOperatorId());
           if (!opmap.containsKey(ip)) {
-            final List<ImmutablePair<OperatorProfile, Integer>> l = Lists.newArrayList();
+            final List<ImmutablePair<OperatorProfile, Integer>> l = new ArrayList<>();
             opmap.put(ip, l);
           }
           opmap.get(ip).add(new ImmutablePair<>(op, minor.getMinorFragmentId()));
@@ -92,38 +88,43 @@ public class ProfileWrapper {
     for (final ImmutablePair<Integer, Integer> ip : keys) {
       ows.add(new OperatorWrapper(ip.getLeft(), opmap.get(ip)));
     }
+    this.operatorProfiles = ows;
+  }
 
-    return ows;
+  public boolean hasError() {
+    return profile.hasError() && profile.getError() != null;
+  }
+
+  public QueryProfile getProfile() {
+    return profile;
+  }
+
+  public String getQueryId() {
+    return id;
   }
 
   public List<FragmentWrapper> getFragmentProfiles() {
-    final List<FragmentWrapper> fws = Lists.newArrayList();
-
-    final List<MajorFragmentProfile> majors = new ArrayList<>(profile.getFragmentProfileList());
-    Collections.sort(majors, Comparators.majorIdCompare);
-    for (final MajorFragmentProfile major : majors) {
-      fws.add(new FragmentWrapper(major, profile.getStart()));
-    }
-
-    return fws;
+    return fragmentProfiles;
   }
 
   public String getFragmentsOverview() {
     TableBuilder tb = new TableBuilder(FragmentWrapper.FRAGMENT_OVERVIEW_COLUMNS);
-    for (final FragmentWrapper fw : getFragmentProfiles()) {
+    for (final FragmentWrapper fw : fragmentProfiles) {
       fw.addSummary(tb);
     }
-    return tb.toString();
+    return tb.build();
   }
 
-
+  public List<OperatorWrapper> getOperatorProfiles() {
+    return operatorProfiles;
+  }
 
   public String getOperatorsOverview() {
     final TableBuilder tb = new TableBuilder(OperatorWrapper.OPERATORS_OVERVIEW_COLUMNS);
-    for (final OperatorWrapper ow : getOperatorProfiles()) {
+    for (final OperatorWrapper ow : operatorProfiles) {
       ow.addSummary(tb);
     }
-    return tb.toString();
+    return tb.build();
   }
 
   public String getOperatorsJSON() {
@@ -135,6 +136,4 @@ public class ProfileWrapper {
     }
     return sb.append("}").toString();
   }
-
-
 }

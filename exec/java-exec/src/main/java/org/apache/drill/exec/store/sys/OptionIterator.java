@@ -75,7 +75,7 @@ public class OptionIterator implements Iterator<Object> {
       status = Status.BOOT;
     } else {
       final OptionValue def = fragmentOptions.getSystemManager().getDefault(value.name);
-      if (value.equals(def)) {
+      if (value.equalsIgnoreType(def)) {
         status = Status.DEFAULT;
         } else {
         status = Status.CHANGED;
@@ -93,8 +93,6 @@ public class OptionIterator implements Iterator<Object> {
    * Wrapper class for OptionValue to add Status
    */
   public static class OptionValueWrapper {
-
-
 
     public final String name;
     public final Kind kind;

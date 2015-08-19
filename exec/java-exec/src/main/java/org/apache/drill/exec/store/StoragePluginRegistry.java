@@ -42,6 +42,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
@@ -59,6 +60,7 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.apache.calcite.plan.RelOptRule;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
@@ -105,10 +107,17 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   @SuppressWarnings("unchecked")
   public void init() throws DrillbitStartupException {
-    DrillConfig config = context.getConfig();
-    Collection<Class<? extends StoragePlugin>> plugins = PathScanner.scanForImplementations(StoragePlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
-    logger.debug("Loading storage plugins {}", plugins);
-    for (Class<? extends StoragePlugin> plugin : plugins) {
+    final DrillConfig config = context.getConfig();
+    final Collection<Class<? extends StoragePlugin>> pluginClasses =
+        PathScanner.scanForImplementations(
+            StoragePlugin.class,
+            config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
+    final String lineBrokenList =
+        pluginClasses.size() == 0
+        ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
+    logger.debug("Found {} storage plugin configuration classes: {}.",
+                 pluginClasses.size(), lineBrokenList);
+    for (Class<? extends StoragePlugin> plugin : pluginClasses) {
       int i = 0;
       for (Constructor<?> c : plugin.getConstructors()) {
         Class<?>[] params = c.getParameterTypes();
@@ -283,11 +292,11 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     return plugins.entrySet().iterator();
   }
 
-  public RuleSet getStoragePluginRuleSet() {
+  public RuleSet getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext) {
     // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.values()) {
-      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
+      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
       if (rules != null && rules.size() > 0) {
         setBuilder.addAll(rules);
       }

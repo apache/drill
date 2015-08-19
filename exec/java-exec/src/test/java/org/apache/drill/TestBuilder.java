@@ -80,6 +80,8 @@ public class TestBuilder {
   // use this interface) and then rely on the engine for the rest of the tests that will use the baseline queries.
   private List<Map> baselineRecords;
 
+  private int expectedNumBatches = DrillTestWrapper.EXPECTED_BATCH_COUNT_NOT_SET;
+
   public TestBuilder(BufferAllocator allocator) {
     this.allocator = allocator;
     reset();
@@ -87,7 +89,8 @@ public class TestBuilder {
 
   public TestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
                      boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                     String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                     String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
+                     int expectedNumBatches) {
     this(allocator);
     if (ordered == null) {
       throw new RuntimeException("Ordering not set, when using a baseline file or query you must explicitly call the ordered() or unOrdered() method on the " + this.getClass().getSimpleName());
@@ -100,6 +103,7 @@ public class TestBuilder {
     this.baselineOptionSettingQueries = baselineOptionSettingQueries;
     this.testOptionSettingQueries = testOptionSettingQueries;
     this.highPerformanceComparison = highPerformanceComparison;
+    this.expectedNumBatches = expectedNumBatches;
   }
 
   protected TestBuilder reset() {
@@ -118,7 +122,7 @@ public class TestBuilder {
       throw new Exception("High performance comparison only available for ordered checks, to enforce this restriction, ordered() must be called first.");
     }
     return new DrillTestWrapper(this, allocator, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
-        getValidationQueryType(), ordered, approximateEquality, highPerformanceComparison, baselineRecords);
+        getValidationQueryType(), ordered, approximateEquality, highPerformanceComparison, baselineRecords, expectedNumBatches);
   }
 
   public void go() throws Exception {
@@ -221,12 +225,14 @@ public class TestBuilder {
 
   public JSONTestBuilder jsonBaselineFile(String filePath) {
     return new JSONTestBuilder(filePath, allocator, query, queryType, ordered, approximateEquality,
-        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison);
+        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison,
+        expectedNumBatches);
   }
 
   public CSVTestBuilder csvBaselineFile(String filePath) {
     return new CSVTestBuilder(filePath, allocator, query, queryType, ordered, approximateEquality,
-        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison);
+        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison,
+        expectedNumBatches);
   }
 
   public TestBuilder baselineTypes(Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap) {
@@ -249,6 +255,17 @@ public class TestBuilder {
     return this;
   }
 
+  /**
+   * Sets the number of expected batch count for this query. The test will fail if the query returns a different number
+   * of batches
+   *
+   * @param expectedNumBatches expected batch count
+   * @return this test builder
+   */
+  public TestBuilder expectsNumBatches(int expectedNumBatches) {
+    this.expectedNumBatches = expectedNumBatches;
+    return this;
+  }
   /**
    * This method is used to pass in a simple list of values for a single record verification without
    * the need to create a CSV or JSON file to store the baseline.
@@ -326,14 +343,14 @@ public class TestBuilder {
   // provide a SQL query to validate against
   public BaselineQueryTestBuilder sqlBaselineQuery(String baselineQuery) {
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.SQL, allocator, query, queryType, ordered, approximateEquality,
-        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison);
+        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
   // provide a path to a file containing a SQL query to use as a baseline
   public BaselineQueryTestBuilder sqlBaselineQueryFromFile(String baselineQueryFilename) throws IOException {
     String baselineQuery = BaseTestQuery.getFile(baselineQueryFilename);
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.SQL, allocator, query, queryType, ordered, approximateEquality,
-        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison);
+        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
   // as physical plans are verbose, this is the only option provided for specifying them, we should enforce
@@ -341,7 +358,7 @@ public class TestBuilder {
   public BaselineQueryTestBuilder physicalPlanBaselineQueryFromFile(String baselinePhysicalPlanPath) throws IOException {
     String baselineQuery = BaseTestQuery.getFile(baselinePhysicalPlanPath);
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.PHYSICAL, allocator, query, queryType, ordered, approximateEquality,
-        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison);
+        baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
   private String getDecimalPrecisionScaleInfo(TypeProtos.MajorType type) {
@@ -371,9 +388,10 @@ public class TestBuilder {
 
     CSVTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
                    boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                   String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                   String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
+                   int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
-          highPerformanceComparison);
+          highPerformanceComparison, expectedNumBatches);
       this.baselineFilePath = baselineFile;
     }
 
@@ -461,9 +479,10 @@ public class TestBuilder {
 
     JSONTestBuilder(String baselineFile, BufferAllocator allocator, String query, UserBitShared.QueryType queryType, Boolean ordered,
                     boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                    String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                    String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
+                    int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
-          highPerformanceComparison);
+          highPerformanceComparison, expectedNumBatches);
       this.baselineFilePath = baselineFile;
       this.baselineColumns = new String[] {"*"};
     }
@@ -486,9 +505,10 @@ public class TestBuilder {
     BaselineQueryTestBuilder(String baselineQuery, UserBitShared.QueryType baselineQueryType, BufferAllocator allocator,
                              String query, UserBitShared.QueryType queryType, Boolean ordered,
                              boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
-                             String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison) {
+                             String baselineOptionSettingQueries, String testOptionSettingQueries, boolean highPerformanceComparison,
+                             int expectedNumBatches) {
       super(allocator, query, queryType, ordered, approximateEquality, baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries,
-          highPerformanceComparison);
+          highPerformanceComparison, expectedNumBatches);
       this.baselineQuery = baselineQuery;
       this.baselineQueryType = baselineQueryType;
     }
