@@ -144,6 +144,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void cleanPartition() {
     partition = null;
     resetValues();
+    resetInternal(internal);
     lagCopiedToInternal = false;
   }
 
@@ -412,6 +413,12 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
    * reset all window functions
    */
   public abstract boolean resetValues();
+
+  /**
+   * make sure all values in the internal value vectors are set to null
+   * @param internal internal batch
+   */
+  public abstract void resetInternal(@Named("internal") VectorAccessible internal);
 
   /**
    * compares two rows from different batches (can be the same), if they have the same value for the partition by
