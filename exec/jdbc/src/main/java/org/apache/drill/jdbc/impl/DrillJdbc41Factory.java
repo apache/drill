@@ -31,8 +31,6 @@ import java.util.TimeZone;
 
 import net.hydromatic.avatica.AvaticaConnection;
 import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaPreparedStatement;
-import net.hydromatic.avatica.AvaticaResultSetMetaData;
 import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.ColumnMetaData;
 
@@ -109,7 +107,7 @@ public class DrillJdbc41Factory extends DrillFactory {
   @Override
   public ResultSetMetaData newResultSetMetaData(AvaticaStatement statement,
                                                 List<ColumnMetaData> columnMetaDataList) {
-    return new AvaticaResultSetMetaData(statement, null, columnMetaDataList);
+    return new DrillResultSetMetaDataImpl(statement, null, columnMetaDataList);
   }
 
 
@@ -127,6 +125,8 @@ public class DrillJdbc41Factory extends DrillFactory {
             resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
+    // These don't need throwIfClosed(), since getParameter already calls it.
+
     @Override
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
       getParameter(parameterIndex).setRowId(x);
@@ -138,7 +138,8 @@ public class DrillJdbc41Factory extends DrillFactory {
     }
 
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, Reader value,
+                                    long length) throws SQLException {
       getParameter(parameterIndex).setNCharacterStream(value, length);
     }
 
@@ -148,17 +149,20 @@ public class DrillJdbc41Factory extends DrillFactory {
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setClob(int parameterIndex, Reader reader,
+                        long length) throws SQLException {
       getParameter(parameterIndex).setClob(reader, length);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(int parameterIndex, InputStream inputStream,
+                        long length) throws SQLException {
       getParameter(parameterIndex).setBlob(inputStream, length);
     }
 
     @Override
-    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setNClob(int parameterIndex, Reader reader,
+                         long length) throws SQLException {
       getParameter(parameterIndex).setNClob(reader, length);
     }
 
@@ -168,37 +172,44 @@ public class DrillJdbc41Factory extends DrillFactory {
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setAsciiStream(int parameterIndex, InputStream x,
+                               long length) throws SQLException {
       getParameter(parameterIndex).setAsciiStream(x, length);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x,
+                                long length) throws SQLException {
       getParameter(parameterIndex).setBinaryStream(x, length);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader,
+                                   long length) throws SQLException {
       getParameter(parameterIndex).setCharacterStream(reader, length);
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+    public void setAsciiStream(int parameterIndex,
+                               InputStream x) throws SQLException {
       getParameter(parameterIndex).setAsciiStream(x);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
+    public void setBinaryStream(int parameterIndex,
+                                InputStream x) throws SQLException {
       getParameter(parameterIndex).setBinaryStream(x);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    public void setCharacterStream(int parameterIndex,
+                                   Reader reader) throws SQLException {
       getParameter(parameterIndex).setCharacterStream(reader);
     }
 
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+    public void setNCharacterStream(int parameterIndex,
+                                    Reader value) throws SQLException {
       getParameter(parameterIndex).setNCharacterStream(value);
     }
 
@@ -208,7 +219,8 @@ public class DrillJdbc41Factory extends DrillFactory {
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBlob(int parameterIndex,
+                        InputStream inputStream) throws SQLException {
       getParameter(parameterIndex).setBlob(inputStream);
     }
 
