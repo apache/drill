@@ -28,6 +28,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
@@ -37,19 +38,20 @@ public class OrderedBytesFloatDescConvertTo implements DrillSimpleFunc {
   @Param Float4Holder in;
   @Output VarBinaryHolder out;
   @Inject DrillBuf buffer;
-
+  @Workspace byte[] bytes;
+  @Workspace org.apache.hadoop.hbase.util.PositionedByteRange br;
 
   @Override
   public void setup() {
     buffer = buffer.reallocIfNeeded(5);
+    bytes = new byte[5];
+    br = new org.apache.hadoop.hbase.util.SimplePositionedByteRange();
   }
 
   @Override
   public void eval() {
     buffer.clear();
-    byte[] bytes = new byte[5];
-    org.apache.hadoop.hbase.util.PositionedByteRange br =
-            new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, 5);
+    br.set(bytes);
     org.apache.hadoop.hbase.util.OrderedBytes.encodeFloat32(br, in.value,
             org.apache.hadoop.hbase.util.Order.DESCENDING);
 

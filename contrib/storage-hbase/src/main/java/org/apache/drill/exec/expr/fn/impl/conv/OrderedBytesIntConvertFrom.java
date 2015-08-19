@@ -24,6 +24,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
@@ -33,17 +34,20 @@ public class OrderedBytesIntConvertFrom implements DrillSimpleFunc {
 
   @Param VarBinaryHolder in;
   @Output IntHolder out;
+  @Workspace byte[] bytes;
+  @Workspace org.apache.hadoop.hbase.util.PositionedByteRange br;
 
   @Override
-  public void setup() { }
+  public void setup() {
+    bytes = new byte[5];
+    br = new org.apache.hadoop.hbase.util.SimplePositionedByteRange();
+  }
 
   @Override
   public void eval() {
     org.apache.drill.exec.util.ByteBufUtil.checkBufferLength(in.buffer, in.start, in.end, 5);
-    byte[] bytes = new byte[5];
     in.buffer.getBytes(in.start, bytes, 0, 5);
-    org.apache.hadoop.hbase.util.PositionedByteRange br =
-      new org.apache.hadoop.hbase.util.SimplePositionedByteRange(bytes, 0, in.end - in.start);
+    br.set(bytes);
     out.value = org.apache.hadoop.hbase.util.OrderedBytes.decodeInt32(br);
   }
 }

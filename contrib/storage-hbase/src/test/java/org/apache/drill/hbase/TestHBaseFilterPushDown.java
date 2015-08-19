@@ -454,62 +454,6 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
-  public void testFilterPushDownUTF8OB() throws Exception {
-    setColumnWidths(new int[] {40, 2000});
-    runHBaseSQLVerifyCount("SELECT\n"
-        + " convert_from(t.row_key, 'UTF8_OB') rk,\n"
-        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
-        + "FROM\n"
-        + "  hbase.`TestTableUTF8OB` t\n"
-        + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'UTF8_OB') > 'W' AND"
-        + "  CONVERT_FROM(row_key, 'UTF8_OB') < 'Z'"
-        , 6);
-  }
-
-  @Test
-  public void testFilterPushDownUTF8OBPlan() throws Exception {
-    setColumnWidths(new int[] {40, 2000});
-    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR SELECT\n"
-        + " convert_from(t.row_key, 'UTF8_OB') rk,\n"
-        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
-        + "FROM\n"
-        + "  hbase.`TestTableUTF8OB` t\n"
-        + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'UTF8_OB') < 'A' AND"
-        + "  CONVERT_FROM(row_key, 'UTF8_OB') >= 'H'"
-        , 1);
-  }
-
-  @Test
-  public void testFilterPushDownUTF8OBDesc() throws Exception {
-    setColumnWidths(new int[] {40, 2000});
-    runHBaseSQLVerifyCount("SELECT\n"
-        + " convert_from(t.row_key, 'UTF8_OBD') rk,\n"
-        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
-        + "FROM\n"
-        + "  hbase.`TestTableUTF8OBDesc` t\n"
-        + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'UTF8_OBD') > 'D' AND"
-        + "  CONVERT_FROM(row_key, 'UTF8_OBD') <= 'KH'"
-        , 23);
-  }
-
-  @Test
-  public void testFilterPushDownUTF8OBDescPlan() throws Exception {
-    setColumnWidths(new int[] {40, 2000});
-    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR SELECT\n"
-        + " convert_from(t.row_key, 'UTF8_OBD') rk,\n"
-        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
-        + "FROM\n"
-        + "  hbase.`TestTableUTF8OBDesc` t\n"
-        + "WHERE\n"
-        + "  CONVERT_FROM(row_key, 'UTF8_OBD') < 'HY' AND"
-        + "  CONVERT_FROM(row_key, 'UTF8_OBD') >= 'UY'"
-        , 1);
-  }
-
-  @Test
   public void testFilterPushDownRowKeyLike() throws Exception {
     setColumnWidths(new int[] {8, 22});
     final String sql = "SELECT\n"
