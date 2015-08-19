@@ -21,6 +21,12 @@
   <name>exec/Java Execution Engine</name>
 
   <dependencies>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
     <!-- <dependency> -->
     <!-- <groupId>org.ow2.asm</groupId> -->
     <!-- <artifactId>asm-util</artifactId> -->
