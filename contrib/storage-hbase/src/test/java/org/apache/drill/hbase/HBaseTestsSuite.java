@@ -61,8 +61,6 @@ public class HBaseTestsSuite {
   protected static final String TEST_TABLE_FLOAT_OB_DESC = "TestTableFloatOBDesc";
   protected static final String TEST_TABLE_BIGINT_OB_DESC = "TestTableBigIntOBDesc";
   protected static final String TEST_TABLE_INT_OB_DESC = "TestTableIntOBDesc";
-  protected static final String TEST_TABLE_UTF8_OB = "TestTableUTF8OB";
-  protected static final String TEST_TABLE_UTF8_OB_DESC = "TestTableUTF8OBDesc";
 
   private static Configuration conf;
 
@@ -159,9 +157,7 @@ public class HBaseTestsSuite {
            && admin.tableExists(TEST_TABLE_DOUBLE_OB_DESC)
            && admin.tableExists(TEST_TABLE_FLOAT_OB_DESC)
            && admin.tableExists(TEST_TABLE_BIGINT_OB_DESC)
-           && admin.tableExists(TEST_TABLE_INT_OB_DESC)
-           && admin.tableExists(TEST_TABLE_UTF8_OB)
-           && admin.tableExists(TEST_TABLE_UTF8_OB_DESC);
+           && admin.tableExists(TEST_TABLE_INT_OB_DESC);
   }
 
   private static void createTestTables() throws Exception {
@@ -183,8 +179,6 @@ public class HBaseTestsSuite {
     TestTableGenerator.generateHBaseDatasetFloatOBDesc(admin, TEST_TABLE_FLOAT_OB_DESC, 1);
     TestTableGenerator.generateHBaseDatasetBigIntOBDesc(admin, TEST_TABLE_BIGINT_OB_DESC, 1);
     TestTableGenerator.generateHBaseDatasetIntOBDesc(admin, TEST_TABLE_INT_OB_DESC, 1);
-    TestTableGenerator.generateHBaseDatasetUTF8OB(admin, TEST_TABLE_UTF8_OB, 1);
-    TestTableGenerator.generateHBaseDatasetUTF8OBDesc(admin, TEST_TABLE_UTF8_OB_DESC, 1);
   }
 
   private static void cleanupTestTables() throws IOException {
@@ -214,10 +208,6 @@ public class HBaseTestsSuite {
     admin.deleteTable(TEST_TABLE_BIGINT_OB_DESC);
     admin.disableTable(TEST_TABLE_INT_OB_DESC);
     admin.deleteTable(TEST_TABLE_INT_OB_DESC);
-    admin.disableTable(TEST_TABLE_UTF8_OB);
-    admin.deleteTable(TEST_TABLE_UTF8_OB);
-    admin.disableTable(TEST_TABLE_UTF8_OB_DESC);
-    admin.deleteTable(TEST_TABLE_UTF8_OB_DESC);
   }
 
   public static int getZookeeperPort() {
