@@ -44,4 +44,10 @@ class RootAllocatorDebug extends BaseAllocatorDebug {
     // the end total has already been checked against maxAllocation, so we can just return true
     return true;
   }
+
+  @Override
+  public void close() throws Exception {
+    super.close();
+    logger.debug("RootAllocatorDebug.close(): " + getRetries());
+  }
 }

@@ -525,6 +525,7 @@ public class BaseAllocator implements BufferAllocator {
 
     // Keep track of how much memory we've gotten from our parent.
     final MutableLong obtainedFromParent = new MutableLong();
+    int retries = 0;
     while(true) {
       final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
       final Transacted cv = ar.get(); // current values, not to be modified
@@ -544,7 +545,44 @@ public class BaseAllocator implements BufferAllocator {
         }
         return rv;
       }
+      if (DEBUG) {
+        tallyRetries(++retries);
+      }
     }
+  }
+
+  private final static int[] retryMap = {1, 2, 3, 4, 8, 16, 32};
+  private final static AtomicInteger[] retriesCounts;
+  static {
+    for(int i = 1; i < retryMap.length; ++i) {
+      assert retryMap[i - 1] < retryMap[i] : "Entries in the retry map must be strictly ascending";
+    }
+    retriesCounts = new AtomicInteger[retryMap.length];
+    for(int i = 0; i < retryMap.length; ++i) {
+      retriesCounts[i] = new AtomicInteger(0);
+    }
+  }
+
+  private static void tallyRetries(final int retries) {
+    final int end = retryMap.length;
+    for(int i = 1; i < end; ++i) {
+      if (retries < retryMap[i]) {
+        retriesCounts[i - 1].incrementAndGet();
+        return;
+      }
+    }
+
+    // If we got here, put the entry in the largest bucket.
+    retriesCounts[end - 1].incrementAndGet();
+  }
+
+  protected static String getRetries() {
+    final StringBuilder sb = new StringBuilder("allocation transaction retries:");
+    for(int i = 0; i < retryMap.length; ++i) {
+      sb.append(String.format(" [%d](%d)", retryMap[i], retriesCounts[i].get()));
+    }
+
+    return sb.toString();
   }
 
   private void releaseBytes(final Transacted nv,
@@ -602,6 +640,7 @@ public class BaseAllocator implements BufferAllocator {
     }
 
     final MutableLong returnedToParent = new MutableLong();
+    int retries = 0;
     while (true) {
       final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
       final Transacted cv = ar.get();
@@ -616,6 +655,9 @@ public class BaseAllocator implements BufferAllocator {
 
         return;
       }
+      if (DEBUG) {
+        tallyRetries(++retries);
+      }
     }
   }
 
@@ -627,6 +669,7 @@ public class BaseAllocator implements BufferAllocator {
     final int udleMaxCapacity = byteBuf.maxCapacity();
 
     final MutableLong returnedToParent = new MutableLong();
+    int retries = 0;
     while(true) {
       final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
       final Transacted cv = ar.get();
@@ -651,6 +694,9 @@ public class BaseAllocator implements BufferAllocator {
         }
 
         return;
+      }
+      if (DEBUG) {
+        tallyRetries(++retries);
       }
     }
   }
@@ -855,6 +901,7 @@ public class BaseAllocator implements BufferAllocator {
     final MutableLong obtainedFromParent = new MutableLong();
     boolean reserved;
     Transacted newNv;
+    int retries = 0;
     while(true) {
       final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
       final Transacted newCv = newAllocator.ar.get();
@@ -868,6 +915,9 @@ public class BaseAllocator implements BufferAllocator {
           newAllocator.historicalLog.append(bufferedLog);
         }
         break;
+      }
+      if (DEBUG) {
+        tallyRetries(++retries);
       }
     }
 
@@ -1340,6 +1390,7 @@ public class BaseAllocator implements BufferAllocator {
 
     final Pointer<DrillBuf> wrapped = new Pointer<>(null); // No DrillBuf allocated yet.
     final MutableLong obtainedFromParent = new MutableLong();
+    int retries = 0;
     while(true) {
       final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
       final Transacted cv = ar.get();
@@ -1353,6 +1404,9 @@ public class BaseAllocator implements BufferAllocator {
         }
 
         return drillBuf;
+      }
+      if (DEBUG) {
+        tallyRetries(++retries);
       }
     }
   }
@@ -1462,6 +1516,7 @@ public class BaseAllocator implements BufferAllocator {
 
   @Override
   public void close() throws Exception {
+    int retries = 0;
     while(true) {
       final Transacted cv = ar.get();
       /*
@@ -1573,6 +1628,9 @@ public class BaseAllocator implements BufferAllocator {
         }
 
         break;
+      }
+      if (DEBUG) {
+        tallyRetries(++retries);
       }
     }
   }
@@ -1686,6 +1744,7 @@ public class BaseAllocator implements BufferAllocator {
     protected DrillBuf allocate(int nBytes) {
       final MutableLong obtainedFromParent = new MutableLong();
       final Pointer<DrillBuf> wrapped = new Pointer<>(null);
+      int retries = 0;
       while(true) {
         final HistoricalLog bufferedLog = LOGGING ? new HistoricalLog(logger, "buffer") : null;
         final Transacted cv = ar.get();
@@ -1711,6 +1770,9 @@ public class BaseAllocator implements BufferAllocator {
           }
 
           return drillBuf;
+        }
+        if (DEBUG) {
+          tallyRetries(++retries);
         }
       }
     }
