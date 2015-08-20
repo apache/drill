@@ -26,7 +26,7 @@ import org.apache.drill.exec.vector.accessor.AbstractSqlAccessor;
 import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.SQLConversionOverflowException;
-import org.apache.drill.jdbc.TypeConvertingSqlAccessor;
+import org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
