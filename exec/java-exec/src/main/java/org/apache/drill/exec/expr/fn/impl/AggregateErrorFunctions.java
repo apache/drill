@@ -34,7 +34,6 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
  * to perform function resolution. Otherwise with implicit cast we will try to bind to an existing function.
  */
 public class AggregateErrorFunctions {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AggregateErrorFunctions.class);
 
   @FunctionTemplate(names = {"sum", "max", "avg", "stddev_pop", "stddev_samp", "stddev", "var_pop",
       "var_samp", "variance"}, scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
@@ -48,7 +47,7 @@ public class AggregateErrorFunctions {
       if (true) {
         throw org.apache.drill.common.exceptions.UserException.unsupportedError()
           .message("Only COUNT aggregate function supported for Boolean type")
-          .build(logger);
+          .build();
       }
     }
 
@@ -78,7 +77,7 @@ public class AggregateErrorFunctions {
       if (true) {
         throw org.apache.drill.common.exceptions.UserException.unsupportedError()
           .message("Only COUNT aggregate function supported for Boolean type")
-          .build(logger);
+          .build();
       }
     }
 
@@ -108,7 +107,7 @@ public class AggregateErrorFunctions {
       if (true) {
         throw org.apache.drill.common.exceptions.UserException.unsupportedError()
           .message("Only COUNT, MIN and MAX aggregate functions supported for VarChar type")
-          .build(logger);
+          .build();
       }
     }
 
@@ -138,7 +137,7 @@ public class AggregateErrorFunctions {
       if (true) {
         throw org.apache.drill.common.exceptions.UserException.unsupportedError()
           .message("Only COUNT, MIN and MAX aggregate functions supported for VarChar type")
-          .build(logger);
+          .build();
       }
     }
 
