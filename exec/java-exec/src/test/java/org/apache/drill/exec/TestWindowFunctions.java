@@ -478,4 +478,27 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // see DRILL-3657
+  public void testProjectPushPastWindow() throws Exception {
+    String query = "select sum(n_nationkey) over(partition by 1 order by 1) as col1, \n" +
+            "count(n_nationkey) over(partition by 1 order by 1) as col2 \n" +
+            "from cp.`tpch/nation.parquet` \n" +
+            "limit 5";
+
+    // Validate the plan
+    final String[] expectedPlan = {"Scan.*columns=\\[`n_nationkey`\\].*"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2")
+        .baselineValues(300l, 25l)
+        .baselineValues(300l, 25l)
+        .baselineValues(300l, 25l)
+        .baselineValues(300l, 25l)
+        .baselineValues(300l, 25l)
+        .build()
+        .run();
+  }
 }
