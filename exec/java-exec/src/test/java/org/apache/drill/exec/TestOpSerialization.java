@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class TestOpSerialization {
   @Test
   public void testSerializedDeserialize() throws Throwable {
     DrillConfig c = DrillConfig.create();
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader reader = newPhysicalPlanReader(c);
     MockSubScanPOP s = new MockSubScanPOP("abc", null);
     s.setOperatorId(3);
     Filter f = new Filter(s, new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN), 0.1f);

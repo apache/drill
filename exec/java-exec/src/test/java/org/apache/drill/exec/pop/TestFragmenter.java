@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.pop;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -36,7 +37,7 @@ public class TestFragmenter extends PopUnitTestBase {
 
   @Test
   public void ensureOneFragment() throws FragmentSetupException, IOException, ForemanSetupException {
-    PhysicalPlanReader ppr = new PhysicalPlanReader(CONFIG, CONFIG.getMapper(), DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader ppr = newPhysicalPlanReader(CONFIG);
     Fragment b = getRootFragment(ppr, "/physical_test1.json");
     assertEquals(1, getFragmentCount(b));
     assertEquals(0, b.getReceivingExchangePairs().size());
@@ -45,7 +46,7 @@ public class TestFragmenter extends PopUnitTestBase {
 
   @Test
   public void ensureThreeFragments() throws FragmentSetupException, IOException, ForemanSetupException {
-    PhysicalPlanReader ppr = new PhysicalPlanReader(CONFIG, CONFIG.getMapper(), DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader ppr = newPhysicalPlanReader(CONFIG);
     Fragment b = getRootFragment(ppr, "/physical_double_exchange.json");
     logger.debug("Fragment Node {}", b);
     assertEquals(3, getFragmentCount(b));

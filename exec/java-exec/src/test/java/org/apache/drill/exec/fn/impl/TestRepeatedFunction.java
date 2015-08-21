@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
@@ -68,7 +69,7 @@ public class TestRepeatedFunction extends ExecTest{
     }};
 
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader reader = newPhysicalPlanReader(c);
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_repeated_1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);

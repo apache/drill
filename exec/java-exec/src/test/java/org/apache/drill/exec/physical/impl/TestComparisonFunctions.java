@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
@@ -62,7 +64,7 @@ public class TestComparisonFunctions extends ExecTest {
 
     String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), Charsets.UTF_8).replaceAll("EXPRESSION", expression);
     if (reader == null) {
-      reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+      reader = newPhysicalPlanReader(c);
     }
     if (registry == null) {
       registry = new FunctionImplementationRegistry(c);

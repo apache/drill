@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.client;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
@@ -74,7 +75,7 @@ public class DumpCatTest  extends ExecTest{
           bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       }};
 
-      PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+      PhysicalPlanReader reader = newPhysicalPlanReader(c);
       PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
       FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
       FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
@@ -65,7 +66,7 @@ public class TestSimpleSort extends ExecTest {
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    final PhysicalPlanReader reader = newPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/sort/one_key_sort.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
@@ -109,7 +110,7 @@ public class TestSimpleSort extends ExecTest {
       bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    final PhysicalPlanReader reader = newPhysicalPlanReader(c);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/sort/two_key_sort.json"), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);

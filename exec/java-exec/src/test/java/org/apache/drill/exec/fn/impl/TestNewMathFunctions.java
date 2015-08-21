@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.fn.impl;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -89,7 +90,7 @@ public class TestNewMathFunctions {
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
     if (reader == null) {
-      reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+      reader = newPhysicalPlanReader(c);
     }
     if (registry == null) {
       registry = new FunctionImplementationRegistry(c);

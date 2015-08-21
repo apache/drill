@@ -70,14 +70,6 @@ public class PhysicalPlanReader {
     this.logicalPlanReader = mapper.reader(LogicalPlan.class).with(injectables);
   }
 
-  // TODO - we do not want to storage engine registry generated here in production, this was created to keep old
-  // tests passing, this constructor should be removed and the tests should be updated to use the contstructor
-  // that takes a storage engine registry
-  @Deprecated
-  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint) {
-    this(config, mapper, endpoint, null);
-  }
-
   public String writeJson(OptionList list) throws JsonProcessingException{
     return mapper.writeValueAsString(list);
   }
