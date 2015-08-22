@@ -67,6 +67,8 @@
   ]
   
   includeCompoundIdentifier: false,
+  includeBraces: true,
+  includeAdditionalDeclarations: false,
 
   identifierMaxLength: 1024
 
