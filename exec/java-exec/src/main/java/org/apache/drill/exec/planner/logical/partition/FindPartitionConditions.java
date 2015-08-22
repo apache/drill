@@ -33,6 +33,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSyntax;
@@ -47,26 +48,26 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
    * it can be pushed into the scan.
    */
   enum PushDirFilter {
-    NO_PUSH, PUSH
+    NO_PUSH, PUSH, PARTIAL_PUSH
   }
 
   /**
    * During top-down traversal of the expression tree, keep track of the
-   * boolean operators such that if a directory filter is found, it will
-   * be added as a child of the current boolean operator.
+   * current operators that are directory filters. Children that are
+   * directory filters add themselves to their parent operators.
    *
    * NOTE: this auxiliary class is necessary because RexNodes are immutable.
    * If they were mutable, we could have easily added/dropped inputs as we
    * encountered directory filters.
    */
-  public class BooleanOpState {
-    private SqlOperator booleanOp;
+  public class OpState {
+    private SqlOperator sqlOperator;
     private List<RexNode> children = Lists.newArrayList();
-    public BooleanOpState(SqlOperator op) {
-      booleanOp = op;
+    public OpState(SqlOperator op) {
+      sqlOperator = op;
     }
     public SqlOperator getOp() {
-      return booleanOp;
+      return sqlOperator;
     }
     public void addChild(RexNode n) {
       if (!children.contains(n)) {
@@ -84,8 +85,16 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   private final BitSet dirs;
 
   private final List<PushDirFilter> pushStatusStack =  Lists.newArrayList();
-  private final Deque<SqlOperator> parentCallTypeStack = new ArrayDeque<SqlOperator>();
-  private final Deque<BooleanOpState> opStack = new ArrayDeque<BooleanOpState>();
+  private final Deque<OpState> opStack = new ArrayDeque<OpState>();
+
+  /* While traversing the filter tree, some RexCalls need special handling where
+   * a partial expression cannot be built bottom up and the whole expression needs
+   * to be built. Eg: cast(VALUE/COLUMN as Type). We need to treat this as holistic
+   * expression and cannot treat the VALUE/COLUMN to be casted as a separate expression
+   * Below count keeps track of expressions that need such handling. Its type is an integer
+   * and not a boolean because we can have such nested expressions.
+   */
+  private int holisticExpression = 0;
 
   private RexBuilder builder = null;
   private RexNode resultCondition = null;
@@ -110,7 +119,6 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
     // Deal with top of stack
     assert pushStatusStack.size() == 1;
-    assert parentCallTypeStack.isEmpty();
     PushDirFilter rootPushDirFilter = pushStatusStack.get(0);
     if (rootPushDirFilter == PushDirFilter.PUSH) {
       // The entire subtree was directory filter, so add it to the result.
@@ -129,73 +137,84 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   }
 
   private void addResult(RexNode exp) {
-    // when we find a directory filter, add it to the current boolean operator's
+    // processing a special expression, will be handled holistically by the parent
+    if (holisticExpression > 0) {
+      return;
+    }
+    // when we find a directory filter, add it to the current operator's
     // children (if one exists)
     if (!opStack.isEmpty()) {
-      BooleanOpState op = opStack.peek();
+      OpState op = opStack.peek();
       op.addChild(exp);
     } else {
       resultCondition = exp;
     }
   }
 
-  /**
-   * For an OR node that is marked as NO_PUSH, there could be 3 situations:
-   * 1. left child has a partition condition, right child does not.  In this case, we should not push any child of this OR
-   * 2. left child does not have partition condition, right child has one.  Again, we should not push any child of this OR
-   * 3. left and right child both have partition condition but both sides may have had other non-partition conditions. In
-   *    this case, we can push the partition conditions by building a new OR combining both children.
-   * In this method we clear the children of the OR for cases 1 and 2 and leave it alone for case 3
+  /*
+   * One of the children for the current OP is a NO PUSH. Clear all the children
+   * added for the current OP that were a PUSH.
    */
-  private void clearOrChildrenIfSingle() {
+  private void clearChildren() {
     if (!opStack.isEmpty()) {
-      BooleanOpState op = opStack.peek();
-      assert op.getOp().getKind() == SqlKind.OR;
-      if (op.getChildren().size() == 1) {
+      OpState op = opStack.peek();
+      if (op.getChildren().size() >= 1) {
         op.clear();
       }
     }
   }
 
-  /**
-   * If the top of the parentCallTypeStack is an AND or OR, get the corresponding
-   * top item from the BooleanOpState stack and examine its children - these must
-   * be the directory filters we are interested in.  Create a new filter condition
-   * using the boolean operation and the children. Add this new filter as a child
-   * of the parent boolean operator - thus the filter condition gets built bottom-up.
+  /*
+   * Pop the current operation from the stack (opStack) as we are done with it.
+   * If it has children, then it means the current OP itself is a PUSH
+   * and hence add itself as a child to the parent OP. If no more parents
+   * remains, it means that the current OP is the root condition and
+   * set the root condition in that case.
    */
-  private void popAndBuildFilter() {
-    SqlOperator op1 = null;
-    if (!parentCallTypeStack.isEmpty()) {
-      op1 = parentCallTypeStack.pop();
+  private void popOpStackAndBuildFilter() {
+    // Parsing a special expression; handled holistically by the parent
+    if (holisticExpression > 0) {
+      return;
     }
-    if (op1 != null
-        && (op1.getKind() == SqlKind.AND || op1.getKind() == SqlKind.OR)
-        && !opStack.isEmpty()) {
-      BooleanOpState op = opStack.pop();
-      int size = op.getChildren().size();
-      RexNode newFilter = null;
-      if (size > 1) {
-        newFilter = builder.makeCall(op.getOp(),  op.getChildren());
-      } else if (size == 1) {
-        newFilter = op.getChildren().get(0);
+    OpState currentOp = opStack.pop();
+    int size = currentOp.getChildren().size();
+    RexNode newFilter = null;
+    if (size >= 1) {
+      if (size == 1 && currentOp.getOp() instanceof SqlBinaryOperator) {
+        /* The only operator for which we allow partial pushes is AND.
+         * For all other operators we clear the children if one of the
+         * children is a no push.
+         */
+        assert currentOp.getOp().getKind() == SqlKind.AND;
+        newFilter = currentOp.getChildren().get(0);
+      } else {
+        newFilter = builder.makeCall(currentOp.getOp(), currentOp.getChildren());
       }
-      if (newFilter != null) {
-        // add this new filter to my parent boolean operator's children
-        if (!opStack.isEmpty()) {
-          op = opStack.peek();
-          op.addChild(newFilter);
-        } else {
-          resultCondition = newFilter;
-        }
+    }
+
+    if (newFilter != null) {
+      // add this new filter to my parent boolean operator's children
+      if (!opStack.isEmpty()) {
+        OpState parentOp = opStack.peek();
+        parentOp.addChild(newFilter);
+      } else {
+        resultCondition = newFilter;
       }
     }
   }
 
+  private boolean isHolisticExpression(RexCall call) {
+    if (call.getOperator().getSyntax() == SqlSyntax.SPECIAL ||
+        call.getOperator().getSyntax() == SqlSyntax.FUNCTION) {
+      return true;
+    }
+    return false;
+  }
 
   public Void visitInputRef(RexInputRef inputRef) {
     if(dirs.get(inputRef.getIndex())){
       pushStatusStack.add(PushDirFilter.PUSH);
+      addResult(inputRef);
     }else{
       pushStatusStack.add(PushDirFilter.NO_PUSH);
     }
@@ -204,6 +223,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
   public Void visitLiteral(RexLiteral literal) {
     pushStatusStack.add(PushDirFilter.PUSH);
+    addResult(literal);
     return null;
   }
 
@@ -218,28 +238,27 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   }
 
   public Void visitCall(RexCall call) {
-    boolean visited = false;
-    // examine the input of a CAST function; this could be extended for
-    // other functions in the future.
-    if (call.getOperator().getSyntax() == SqlSyntax.SPECIAL &&
-        call.getKind() == SqlKind.CAST) {
-      RexNode n = call.getOperands().get(0);
-      if (n instanceof RexInputRef) {
-        visitInputRef((RexInputRef) n);
-        visited = true;
-      }
-    }
-    if (!visited) {
-      // assume PUSH until proven otherwise
-      analyzeCall(call, PushDirFilter.PUSH);
-    }
+    analyzeCall(call, PushDirFilter.PUSH);
     return null;
   }
 
+  /*
+   * Traverse over the RexCall recursively. All children that are potential
+   * PUSH are added as children to the current operator. Once all children
+   * of the current operator are processed and if it satisfies to be a
+   * PUSH then the current operator is added as a child to its parent and so on.
+   *
+   * This bottom up building does not work for some expressions like 'cast'.
+   * In that case, we don't add the current operator or its children in the
+   * opStack and based on whether the special expression is a PUSH we add the
+   * whole expression to its parent op. Fpr such special expressions we maintain
+   * specialExpression count.
+   */
   private void analyzeCall(RexCall call, PushDirFilter callPushDirFilter) {
-    parentCallTypeStack.push(call.getOperator());
-    if (call.getKind() == SqlKind.AND || call.getKind() == SqlKind.OR) {
-      opStack.push(new BooleanOpState(call.getOperator()));
+    if (isHolisticExpression(call)) {
+      holisticExpression++;
+    } else {
+      opStack.push(new OpState(call.getOperator()));
     }
 
     // visit operands, pushing their states onto stack
@@ -251,6 +270,8 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
     for (PushDirFilter operandPushDirFilter : operandStack) {
       if (operandPushDirFilter == PushDirFilter.NO_PUSH) {
         callPushDirFilter = PushDirFilter.NO_PUSH;
+      } else if (operandPushDirFilter == PushDirFilter.PARTIAL_PUSH) {
+        callPushDirFilter = PushDirFilter.PARTIAL_PUSH;
       }
     }
 
@@ -271,29 +292,29 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
 
 
     if (callPushDirFilter == PushDirFilter.NO_PUSH) {
-      if (call.getKind() == SqlKind.AND) {
-        // one or more children is not a push-able directory filter. If this is an AND, add
-        // all the ones that are push-able directory filters.
-        for (int iOperand = 0; iOperand < operandCount; ++iOperand) {
-          PushDirFilter pushDirFilter = operandStack.get(iOperand);
-          RexNode n = call.getOperands().get(iOperand);
-          if (pushDirFilter == PushDirFilter.PUSH && !(n.getKind() == SqlKind.AND || n.getKind() == SqlKind.OR)) {
-            addResult(n);
-          }
+      if (call.getKind() != SqlKind.AND) {
+        clearChildren();
+      } else {
+        // AND op, check if we pushed some children
+        OpState currentOp = opStack.peek();
+        if (currentOp.children.size() > 0) {
+          callPushDirFilter = PushDirFilter.PARTIAL_PUSH;
         }
-      } else if (call.getKind() == SqlKind.OR) {
-        clearOrChildrenIfSingle();
       }
-    }
-    else if (callPushDirFilter == PushDirFilter.PUSH && !(call.getKind() == SqlKind.AND || call.getKind() == SqlKind.OR)) {
-      addResult(call);
     }
 
     // pop operands off of the stack
     operandStack.clear();
 
-    // pop this parent call operator off the stack and build the intermediate filters as we go
-    popAndBuildFilter();
+    if (isHolisticExpression(call)) {
+      assert holisticExpression > 0;
+      holisticExpression--;
+      if (callPushDirFilter == PushDirFilter.PUSH) {
+        addResult(call);
+      }
+    } else {
+      popOpStackAndBuildFilter();
+    }
 
     // push PushDirFilter result for this call onto stack
     pushStatusStack.add(callPushDirFilter);

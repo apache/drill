@@ -266,4 +266,21 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 3);
   }
 
+  @Test
+  public void testPPWithNestedExpression() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query = String.format("select * from dfs_test.`%s` where dir0 not in(1994) and o_orderpriority = '2-HIGH'",
+        root);
+    testIncludeFilter(query, 8, "Filter", 24);
+  }
+
+  @Test
+  public void testPPWithCase() throws Exception {
+    String root = FileUtils.getResourceAsFile("/multilevel/parquet").toURI().toString();
+    String query = String.format("select 1 from " +
+            "(select  CASE WHEN '07' = '13' THEN '13' ELSE CAST(dir0 as VARCHAR(4)) END as YEAR_FILTER from dfs_test.`%s` where o_orderpriority = '2-HIGH') subq" +
+            " where subq.YEAR_FILTER not in('1994')", root);
+    testIncludeFilter(query, 8, "Filter", 24);
+  }
+
 }
