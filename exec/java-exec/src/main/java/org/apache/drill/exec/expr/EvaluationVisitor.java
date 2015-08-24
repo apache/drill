@@ -323,10 +323,13 @@ public class EvaluationVisitor {
         final JInvocation setMeth = GetSetVectorHelper.write(e.getChild().getMajorType(), vv, inputContainer, outIndex, e.isSafe() ? "setSafe" : "set");
           if (inputContainer.isOptional()) {
             JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
-            block = jc._then();
+            jc._then().add(setMeth);
+            if (e.isWriteNulls()) {
+              jc._else().add(vv.invoke("getMutator").invoke("setNull").arg(outIndex));
+            }
+          } else {
+            block.add(setMeth);
           }
-          block.add(setMeth);
-
       }
 
       return null;

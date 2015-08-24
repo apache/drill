@@ -22,9 +22,13 @@ import java.util.Properties;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -277,35 +281,60 @@ public class TestWindowFrame extends BaseTestQuery {
   }
 
   @Test
+  public void test3654Fix() throws Exception {
+    test("SELECT FIRST_VALUE(col8) OVER(PARTITION BY col7 ORDER BY col8) FROM dfs_test.`%s/window/3648.parquet`", TEST_RES_PATH);
+  }
+
+  @Test
+  public void test3643Fix() throws Exception {
+    try {
+      test("SELECT NTILE(0) OVER(PARTITION BY col7 ORDER BY col8) FROM dfs_test.`%s/window/3648.parquet`", TEST_RES_PATH);
+      fail("Query should have failed");
+    } catch (UserRemoteException e) {
+      assertEquals(ErrorType.FUNCTION, e.getErrorType());
+    }
+  }
+
+  @Test
+  public void test3668Fix() throws Exception {
+    testBuilder()
+      .sqlQuery(getFile("window/3668.sql"), TEST_RES_PATH)
+      .ordered()
+      .baselineColumns("cnt").baselineValues(2L)
+      .build()
+      .run();
+  }
+
+  @Test
   public void testPartitionNtile() {
     Partition partition = new Partition(12);
 
-    Assert.assertEquals(1, partition.ntile(5));
+    assertEquals(1, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(1, partition.ntile(5));
+    assertEquals(1, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(1, partition.ntile(5));
+    assertEquals(1, partition.ntile(5));
 
     partition.rowAggregated();
-    Assert.assertEquals(2, partition.ntile(5));
+    assertEquals(2, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(2, partition.ntile(5));
+    assertEquals(2, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(2, partition.ntile(5));
+    assertEquals(2, partition.ntile(5));
 
     partition.rowAggregated();
-    Assert.assertEquals(3, partition.ntile(5));
+    assertEquals(3, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(3, partition.ntile(5));
+    assertEquals(3, partition.ntile(5));
 
     partition.rowAggregated();
-    Assert.assertEquals(4, partition.ntile(5));
+    assertEquals(4, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(4, partition.ntile(5));
+    assertEquals(4, partition.ntile(5));
 
     partition.rowAggregated();
-    Assert.assertEquals(5, partition.ntile(5));
+    assertEquals(5, partition.ntile(5));
     partition.rowAggregated();
-    Assert.assertEquals(5, partition.ntile(5));
+    assertEquals(5, partition.ntile(5));
   }
 }
