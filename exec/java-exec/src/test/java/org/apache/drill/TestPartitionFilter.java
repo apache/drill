@@ -283,4 +283,10 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 8, "Filter", 24);
   }
 
+  @Test // DRILL-3702
+  public void testPartitionFilterWithNonNullabeFilterExpr() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/parquet` where concat(dir0, '') = '1994' and concat(dir1, '') = 'Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
 }

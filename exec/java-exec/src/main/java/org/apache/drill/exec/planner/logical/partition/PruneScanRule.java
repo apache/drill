@@ -28,6 +28,7 @@ import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -207,9 +208,20 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
       // materialize the expression
       logger.debug("Attempting to prune {}", pruneCondition);
-      LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
-      ErrorCollectorImpl errors = new ErrorCollectorImpl();
+      final LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
+      final ErrorCollectorImpl errors = new ErrorCollectorImpl();
+
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, optimizerContext.getFunctionRegistry());
+      // Make sure pruneCondition's materialized expression is always of BitType, so that
+      // it's same as the type of output vector.
+      if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
+        materializedExpr = ExpressionTreeMaterializer.convertToNullableType(
+            materializedExpr,
+            materializedExpr.getMajorType().getMinorType(),
+            optimizerContext.getFunctionRegistry(),
+            errors);
+      }
+
       if (errors.getErrorCount() != 0) {
         logger.warn("Failure while materializing expression [{}].  Errors: {}", expr, errors);
       }
