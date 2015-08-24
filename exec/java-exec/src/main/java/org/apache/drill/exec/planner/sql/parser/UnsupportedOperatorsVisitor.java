@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
@@ -117,6 +118,40 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
                   "DISTINCT for window aggregate functions is not currently supported\n" +
                   "See Apache Drill JIRA: DRILL-3182");
               throw new UnsupportedOperationException();
+            }
+
+            // DRILL-3596: we only allow (<column-name>) or (<column-name>, 1)
+            final String functionName = function.getOperator().getName().toUpperCase();
+            if ("LEAD".equals(functionName) || "LAG".equals(functionName)) {
+              boolean supported = true;
+              if (function.operandCount() > 2) {
+                // we don't support more than 2 arguments
+                supported = false;
+              } else if (function.operandCount() == 2) {
+                SqlNode operand = function.operand(1);
+                if (operand instanceof SqlNumericLiteral) {
+                  SqlNumericLiteral offsetLiteral = (SqlNumericLiteral) operand;
+                  try {
+                    if (offsetLiteral.intValue(true) != 1) {
+                      // we don't support offset != 1
+                      supported = false;
+                    }
+                  } catch (AssertionError e) {
+                    // we only support offset as an integer
+                    supported = false;
+                  }
+                } else {
+                  // we only support offset as a numeric literal
+                  supported = false;
+                }
+              }
+
+              if (!supported) {
+                unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+                  "Function " + functionName + " only supports (<value expression>) or (<value expression>, 1)\n" +
+                    "See Apache DRILL JIRA: DRILL-3596");
+                throw new UnsupportedOperationException();
+              }
             }
           }
         }
