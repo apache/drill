@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
+import com.google.common.base.Preconditions;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -167,7 +168,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
-    assert field.matches(metadata);
+    Preconditions.checkArgument(this.field.matches(metadata), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int valueCount = metadata.getValueCount();
     final int expectedLength = getSizeFromCount(valueCount);
     final int actualLength = metadata.getBufferLength();

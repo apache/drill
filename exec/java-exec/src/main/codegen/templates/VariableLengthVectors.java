@@ -126,6 +126,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
+    // the bits vector is the first child (the order in which the children are added in getMetadataBuilder is significant)
     final SerializedField offsetField = metadata.getChild(0);
     offsetVector.load(offsetField, buffer);
 

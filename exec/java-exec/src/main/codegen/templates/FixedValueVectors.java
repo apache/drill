@@ -167,6 +167,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
+    Preconditions.checkArgument(this.field.matches(metadata), "The field %s doesn't match the provided metadata %s.", this.field, metadata);
     final int actualLength = metadata.getBufferLength();
     final int valueCount = metadata.getValueCount();
     final int expectedLength = valueCount * ${type.width};

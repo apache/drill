@@ -522,7 +522,7 @@ public class TestValueVector extends ExecTest {
    */
   private void testVectors(VectorVerifier test) throws Exception {
     final MaterializedField[] fields = {
-        MaterializedField.create(EMPTY_SCHEMA_PATH, UInt1Holder.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE),
         MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE),
         MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE),
         MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE),

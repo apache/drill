@@ -207,6 +207,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
     clear();
+    // the bits vector is the first child (the order in which the children are added in getMetadataBuilder is significant)
     final SerializedField bitsField = metadata.getChild(0);
     bits.load(bitsField, buffer);
 
