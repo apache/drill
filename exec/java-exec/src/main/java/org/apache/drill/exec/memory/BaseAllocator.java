@@ -90,6 +90,7 @@ public class BaseAllocator implements BufferAllocator {
   private final AtomicReference<Transacted> ar = new AtomicReference<>(new Transacted()); // transacted variables
 
   private final long maxAllocation; // the maximum amount of memory this allocator will give out
+  private final long chunkSize; // size of secondary chunks to allocate
   private final AllocationPolicyAgent policyAgent;
   private final BaseAllocator parentAllocator;
   private final AllocatorOwner allocatorOwner;
@@ -99,6 +100,8 @@ public class BaseAllocator implements BufferAllocator {
   private final InnerBufferLedger bufferLedger = DEBUG ? new InnerBufferLedgerDebug() : new InnerBufferLedger();
 
   // members used purely for debugging
+  private int getsFromParent;
+  private int putsToParent;
   private final IdentityHashMap<UnsafeDirectLittleEndian, BufferLedger> allocatedBuffers;
   protected final IdentityHashMap<BaseAllocator, Object> childAllocators;
   private final IdentityHashMap<ReservationDebug, Object> reservations;
@@ -272,7 +275,7 @@ public class BaseAllocator implements BufferAllocator {
     public boolean shouldReleaseToParent(final BufferAllocator bufferAllocator) {
       final BaseAllocator baseAllocator = getBaseAllocator(bufferAllocator);
       final Transacted tv = baseAllocator.ar.get();
-      return (tv.bufferAllocation > globals.maxBufferAllocation);
+      return (tv.owned + baseAllocator.chunkSize > globals.maxBufferAllocation);
     }
   }
 
@@ -358,6 +361,19 @@ public class BaseAllocator implements BufferAllocator {
     if ((initReservation > 0) && !parentAllocator.reserveXact(this, initReservation, 0)) {
       throw new OutOfMemoryRuntimeException(
           "can't fulfill initial reservation of size (unavailable from parent)" + initReservation);
+    }
+
+    /*
+     * Figure out how much more to ask for from our parent if we're out.
+     * Secondary allocations from the parent will be done in integral multiples of
+     * chunkSize. We also use this to determine when to hand back memory to our
+     * parent in order to create hysteresis. This reduces contention on the parent's
+     * lock
+     */
+    if (initReservation == 0) {
+      chunkSize = maxAllocation / 8;
+    } else {
+      chunkSize = initReservation;
     }
 
     this.parentAllocator = parentAllocator;
@@ -466,16 +482,28 @@ public class BaseAllocator implements BufferAllocator {
 
     // Do we need more from our parent first?
     if (ownAtLeast > nv.owned) {
+      /*
+       * Allocate space in integral multiples of chunkSize, as long as it doesn't exceed
+       * the maxAllocation.
+       */
       final long needAdditional = ownAtLeast - nv.owned;
-      if (!canIncreaseOwned(needAdditional, flags)) {
+      final long getInChunks = (1 + ((needAdditional - 1) / chunkSize)) * chunkSize;
+      final long getFromParent;
+      if (getInChunks + nv.owned <= maxAllocation) {
+        getFromParent = getInChunks;
+      } else {
+        getFromParent = needAdditional;
+      }
+      if (!canIncreaseOwned(getFromParent, flags)) {
         parentAllocator.releaseBytesXact(obtainedFromParent.value);
         obtainedFromParent.value = 0L;
         return false;
       }
-      obtainedFromParent.value += needAdditional;
-      nv.owned += needAdditional;
+      obtainedFromParent.value += getFromParent;
+      nv.owned += getFromParent;
 
       if (LOGGING) {
+        ++getsFromParent;
         bufferedLog.recordEvent("increased owned by %d, now owned == %d", needAdditional, nv.owned);
       }
     }
@@ -599,35 +627,42 @@ public class BaseAllocator implements BufferAllocator {
 
     nv.allocated -= nBytes;
 
+    if (bufferedLog != null) {
+      bufferedLog.recordEvent(
+          "allocator[%d] released nBytes == %d, allocated now %d", id,
+          nBytes, nv.allocated);
+    }
+
     /*
      * Return space to our parent if our allocation is over the currently allowed amount.
      */
     final boolean releaseToParent = (parentAllocator != null)
-        && policyAgent.shouldReleaseToParent(this);
+        && (nv.owned > maxAllocation) && policyAgent.shouldReleaseToParent(this);
     if (releaseToParent) {
       if (returnedToParent.value == 0) {
-        parentAllocator.releaseBytesXact(nBytes);
-        returnedToParent.value = nBytes;
+        final long canFree = nv.owned - maxAllocation;
+        parentAllocator.releaseBytesXact(canFree);
+        returnedToParent.value = canFree;
+        nv.owned -= canFree;
+
+        if (DEBUG) {
+          ++putsToParent;
+          historicalLog.recordEvent("returned %d to parent, now owned == %d", canFree, nv.owned);
+        }
       }
 
       nv.owned -= returnedToParent.value;
       if (nv.owned < 0) {
-        throw new IllegalStateException(); // TODO(cwestin) remove
+        throw new IllegalStateException();
       }
       if (nv.owned < nv.allocated) {
-        throw new IllegalStateException(); // TODO(cwestin) remove
+        throw new IllegalStateException();
       }
 
       if (bufferedLog != null) {
         bufferedLog.recordEvent("returned %d to parent, now owned == %d",
             returnedToParent.value, nv.owned);
       }
-    }
-
-    if (bufferedLog != null) {
-      bufferedLog.recordEvent(
-          "allocator[%d] released nBytes == %d, allocated now %d", id,
-          nBytes, nv.allocated);
     }
   }
 
@@ -1847,6 +1882,9 @@ public class BaseAllocator implements BufferAllocator {
 
           super.close();
           historicalLog.recordEvent("closed");
+          logger.debug(String.format(
+              "closed allocator[%d]; getsFromParent == %d, putsToParent == %d",
+              id, getsFromParent, putsToParent));
         }
       }
     }
