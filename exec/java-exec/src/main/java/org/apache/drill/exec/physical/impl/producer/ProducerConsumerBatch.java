@@ -108,7 +108,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       return false;
     } else {
       container.clear();
-      for (final VectorWrapper w : newContainer) {
+      for (final VectorWrapper<?> w : newContainer) {
         container.add(w.getValueVector());
       }
       container.buildSchema(SelectionVectorMode.NONE);
@@ -118,7 +118,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   }
 
   private class Producer implements Runnable {
-
     RecordBatchDataWrapper wrapper;
 
     @Override
@@ -206,7 +205,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       cleanUpLatch.await();
     } catch (final InterruptedException e) {
       logger.warn("Interrupted while waiting for producer to clean up first. I will try to clean up now...", e);
-      // TODO InterruptedException
+      // TODO we should retry to wait for the latch
     } finally {
       super.close();
       clearQueue();

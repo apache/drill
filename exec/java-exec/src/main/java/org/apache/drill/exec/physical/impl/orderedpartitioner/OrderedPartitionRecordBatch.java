@@ -159,8 +159,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   @Override
   public void close() {
     super.close();
-    this.partitionVectors.clear();
-    this.partitionKeyVector.clear();
+    partitionVectors.clear();
+    partitionKeyVector.clear();
   }
 
 

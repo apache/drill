@@ -37,14 +37,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Queues;
 
-public abstract class MSortTemplate implements MSorter, IndexedSortable{
+public abstract class MSortTemplate implements MSorter, IndexedSortable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
 
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
   private long compares;
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
-  private Queue<Integer> newRunStarts;
   private FragmentContext context;
 
   /**
@@ -67,7 +66,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       final int newBatch = this.vector4.get(i) >>> 16;
       if (newBatch == batch) {
         continue;
-      } else if(newBatch == batch + 1) {
+      } else if (newBatch == batch + 1) {
         runStarts.add(i);
         batch = newBatch;
       } else {
@@ -135,7 +134,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       }
 
       int outIndex = 0;
-      newRunStarts = Queues.newLinkedBlockingQueue();
+      final Queue<Integer> newRunStarts = Queues.newLinkedBlockingQueue();
       newRunStarts.add(outIndex);
       final int size = runStarts.size();
       for (int i = 0; i < size / 2; i++) {
@@ -155,9 +154,9 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       }
       final SelectionVector4 tmp = aux.createNewWrapperCurrent(desiredRecordBatchCount);
       aux.clear();
-      aux = this.vector4.createNewWrapperCurrent(desiredRecordBatchCount);
+      aux = vector4.createNewWrapperCurrent(desiredRecordBatchCount);
       vector4.clear();
-      this.vector4 = tmp.createNewWrapperCurrent(desiredRecordBatchCount);
+      vector4 = tmp.createNewWrapperCurrent(desiredRecordBatchCount);
       tmp.clear();
       runStarts = newRunStarts;
     }
@@ -198,5 +197,4 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
-
 }

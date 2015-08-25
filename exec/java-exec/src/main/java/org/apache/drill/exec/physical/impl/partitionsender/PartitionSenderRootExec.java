@@ -58,8 +58,7 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JType;
 
 public class PartitionSenderRootExec extends BaseRootExec {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
   private RecordBatch incoming;
   private HashPartitionSender operator;
   private PartitionerDecorator partitioner;
@@ -105,10 +104,10 @@ public class PartitionSenderRootExec extends BaseRootExec {
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
-    this.outGoingBatchCount = operator.getDestinations().size();
-    this.popConfig = operator;
-    this.remainingReceivers = new AtomicIntegerArray(outGoingBatchCount);
-    this.remaingReceiverCount = new AtomicInteger(outGoingBatchCount);
+    outGoingBatchCount = operator.getDestinations().size();
+    popConfig = operator;
+    remainingReceivers = new AtomicIntegerArray(outGoingBatchCount);
+    remaingReceiverCount = new AtomicInteger(outGoingBatchCount);
     stats.setLongStat(Metric.N_RECEIVERS, outGoingBatchCount);
     // Algorithm to figure out number of threads to parallelize output
     // numberOfRows/sliceTarget/numReceivers/threadfactor
@@ -137,7 +136,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   @Override
   public boolean innerNext() {
-
     if (!ok) {
       return false;
     }
@@ -332,6 +330,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
+  @Override
   public void close() throws Exception {
     logger.debug("Partition sender stopping.");
     super.close();
@@ -340,7 +339,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
       updateAggregateStats();
       partitioner.clear();
     }
-
   }
 
   public void sendEmptyBatch(boolean isLast) {

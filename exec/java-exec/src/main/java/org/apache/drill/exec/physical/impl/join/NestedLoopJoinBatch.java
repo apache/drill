@@ -39,9 +39,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.server.options.DrillConfigIterator.Iter;
 import org.apache.drill.exec.vector.AllocationHelper;
-
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
@@ -183,7 +181,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     outputRecords = nljWorker.outputRecords();
 
     // Set the record count
-    for (VectorWrapper vw : container) {
+    for (final VectorWrapper<?> vw : container) {
       vw.getValueVector().getMutator().setValueCount(outputRecords);
     }
 
@@ -202,7 +200,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     }
     right.kill(true);
     while (hasMore(rightUpstream)) {
-      for (VectorWrapper<?> wrapper : right) {
+      for (final VectorWrapper<?> wrapper : right) {
         wrapper.getValueVector().clear();
       }
       rightUpstream = next(HashJoinHelper.RIGHT_INPUT, right);
@@ -280,7 +278,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
    * Simple method to allocate space for all the vectors in the container.
    */
   private void allocateVectors() {
-    for (VectorWrapper vw : container) {
+    for (final VectorWrapper<?> vw : container) {
       AllocationHelper.allocateNew(vw.getValueVector(), MAX_BATCH_SIZE);
     }
   }
@@ -309,7 +307,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
       if (leftUpstream != IterOutcome.NONE) {
         leftSchema = left.getSchema();
-        for (VectorWrapper vw : left) {
+        for (final VectorWrapper<?> vw : left) {
           container.addOrGet(vw.getField());
         }
 
@@ -321,7 +319,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
       if (rightUpstream != IterOutcome.NONE) {
         rightSchema = right.getSchema();
-        for (VectorWrapper vw : right) {
+        for (final VectorWrapper<?> vw : right) {
           container.addOrGet(vw.getField());
         }
         addBatchToHyperContainer(right);
@@ -341,7 +339,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   }
 
   private void addBatchToHyperContainer(RecordBatch inputBatch) {
-    RecordBatchData batchCopy = new RecordBatchData(inputBatch);
+    final RecordBatchData batchCopy = new RecordBatchData(inputBatch);
     boolean success = false;
     try {
       rightCounts.addLast(inputBatch.getRecordCount());

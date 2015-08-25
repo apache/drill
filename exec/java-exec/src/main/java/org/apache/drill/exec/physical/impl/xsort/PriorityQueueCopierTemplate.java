@@ -66,7 +66,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     allocateVectors(targetRecordCount);
     for (int outgoingIndex = 0; outgoingIndex < targetRecordCount; outgoingIndex++) {
       if (queueSize == 0) {
-        cleanup();
+        close();
         return 0;
       }
       int compoundIndex = vector4.get(0);
@@ -96,12 +96,12 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     vector4.clear();
-    for (VectorWrapper w: outgoing) {
+    for (final VectorWrapper<?> w: outgoing) {
       w.getValueVector().clear();
     }
-    for (VectorWrapper w : hyperBatch) {
+    for (final VectorWrapper<?> w : hyperBatch) {
       w.clear();
     }
   }

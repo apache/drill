@@ -171,7 +171,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   @Override
   protected void buildSchema() throws SchemaChangeException {
     logger.trace("buildSchema()");
-    IterOutcome outcome = next(incoming);
+    final IterOutcome outcome = next(incoming);
     switch (outcome) {
       case NONE:
         state = BatchState.DONE;
@@ -208,7 +208,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     container.clear();
 
     // all existing vectors will be transferred to the outgoing container in framer.doWork()
-    for (VectorWrapper wrapper : batch) {
+    for (final VectorWrapper<?> wrapper : batch) {
       container.addOrGet(wrapper.getField());
     }
 
@@ -292,10 +292,10 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       cg.setMappingSet(rightMapping);
       ClassGenerator.HoldingContainer second = cg.addExpr(expr, false);
 
-      LogicalExpression fh =
+      final LogicalExpression fh =
         FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(first, second, context.getFunctionRegistry());
-      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
+      final ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
