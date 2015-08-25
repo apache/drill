@@ -33,7 +33,7 @@
         <executions>
           <execution>
             <id>install-tgz</id>
-            <phase>prepare-package</phase>
+            <phase>generate-resources</phase>
             <goals>
               <goal>wget</goal>
             </goals>
@@ -41,7 +41,28 @@
               <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet_typed.tgz</url>
               <outputFileName>tpch.tgz</outputFileName>
               <unpack>true</unpack>
-              <outputDirectory>${project.build.directory}/classes/tpch</outputDirectory>
+              <outputDirectory>${project.build.directory}/downloaded-resources/tpch</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
+        <executions>
+          <execution>
+            <id>add-resource</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>${project.build.directory}/downloaded-resources</directory>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
