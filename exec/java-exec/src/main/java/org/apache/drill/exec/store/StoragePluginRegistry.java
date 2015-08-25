@@ -43,11 +43,8 @@ import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -89,15 +86,15 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public StoragePluginRegistry(DrillbitContext context) {
     try {
       this.context = context;
-      this.pluginSystemTable = context //
-          .getPersistentStoreProvider() //
-          .getStore(PStoreConfig //
-              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
-              .name("sys.storage_plugins") //
+      this.pluginSystemTable = context
+          .getPersistentStoreProvider()
+          .getStore(PStoreConfig
+              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class)
+              .name("sys.storage_plugins")
               .build());
     } catch (IOException | RuntimeException e) {
       logger.error("Failure while loading storage plugin registry.", e);
-      throw new RuntimeException("Faiure while reading and loading storage plugin configuration.", e);
+      throw new RuntimeException("Failure while reading and loading storage plugin configuration.", e);
     }
   }
 
@@ -132,7 +129,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         i++;
       }
       if (i == 0) {
-        logger.debug("Skipping registration of StoragePlugin {} as it doesn't have a constructor with the parameters of (StorangePluginConfig, Config)", plugin.getCanonicalName());
+        logger.debug("Skipping registration of StoragePlugin {} as it doesn't have a constructor with the parameters of (StoragePluginConfig, Config)", plugin.getCanonicalName());
       }
     }
 
@@ -145,7 +142,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     try {
       /*
-       * Check if the storage plugins system table has any entries.  If not, load the boostrap-storage-plugin file into the system table.
+       * Check if the storage plugins system table has any entries.
+       * If not, load the bootstrap-storage-plugin file into the system table.
        */
       if (!pluginSystemTable.iterator().hasNext()) {
         // bootstrap load the config since no plugins are stored.
@@ -261,7 +259,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig) throws ExecutionSetupException {
     StoragePlugin p = getPlugin(storageConfig);
     if (!(p instanceof FileSystemPlugin)) {
-      throw new ExecutionSetupException(String.format("You tried to request a format plugin for a storage plugin that wasn't of type FileSystemPlugin.  The actual type of plugin was %s.", p.getClass().getName()));
+      throw new ExecutionSetupException(String.format(
+              "You tried to request a format plugin for a storage plugin that wasn't of type FileSystemPlugin. The actual type of plugin was %s.",
+              p.getClass().getName()));
     }
     FileSystemPlugin storage = (FileSystemPlugin) p;
     return storage.getFormatPlugin(formatConfig);
@@ -388,7 +388,5 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
       logger.debug("Took {} ms to register schemas.", watch.elapsed(TimeUnit.MILLISECONDS));
     }
-
   }
-
 }
