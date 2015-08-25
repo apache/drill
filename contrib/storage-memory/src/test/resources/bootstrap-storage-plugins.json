@@ -1,0 +1,8 @@
+{
+  "storage":{
+    memory : {
+      type:"memory",
+      enabled: true
+    }
+  }
+}
