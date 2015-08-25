@@ -27,6 +27,9 @@ public interface FixedWidthVector extends ValueVector{
    */
   void allocateNew(int valueCount);
 
+/**
+ * Zero out the underlying buffer backing this vector.
+ */
   void zeroVector();
 
 }
