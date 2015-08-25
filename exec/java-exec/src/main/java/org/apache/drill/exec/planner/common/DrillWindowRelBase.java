@@ -36,6 +36,6 @@ public class DrillWindowRelBase extends Window implements DrillRelNode {
       List<RexLiteral> constants,
       RelDataType rowType,
       List<Group> windows) {
-    super(cluster, traits, child, constants, rowType, windows);
+    super(cluster, traits, child, constants, DrillRelOptUtil.uniqifyFieldName(rowType, cluster.getTypeFactory()), windows);
   }
 }

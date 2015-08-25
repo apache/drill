@@ -27,10 +27,12 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -124,6 +126,17 @@ public abstract class DrillRelOptUtil {
     }  else {
       return containIdentity(project.getProjects(), project.getRowType(), project.getInput().getRowType());
     }
+  }
+
+  /** Returns a rowType having all unique field name.
+   *
+   * @param rowType : input rowType
+   * @param typeFactory : type factory used to create a new row type.
+   * @return
+   */
+  public static RelDataType uniqifyFieldName(final RelDataType rowType, final RelDataTypeFactory typeFactory) {
+    return typeFactory.createStructType(RelOptUtil.getFieldTypeList(rowType),
+        SqlValidatorUtil.uniquify(rowType.getFieldNames()));
   }
 
   /**

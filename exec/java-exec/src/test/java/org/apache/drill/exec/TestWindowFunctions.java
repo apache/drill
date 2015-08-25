@@ -810,4 +810,50 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-3679, DRILL-3680
+  public void testWindowFunInNestSubQ() throws Exception {
+    final String query =
+        " select n_nationkey , n_regionkey , " +
+        "        lead(n_regionkey) OVER ( PARTITION BY n_regionkey ORDER BY n_nationkey) lead_c2 " +
+        " FROM (SELECT n_nationkey ,n_regionkey, " +
+        "          ntile(3) over(PARTITION BY n_regionkey ORDER BY n_nationkey) " +
+        "       FROM cp.`tpch/nation.parquet`) " +
+        " order by n_regionkey, n_nationkey";
+    test(query);
+
+    final String baselineQuery =
+        "select n_nationkey , n_regionkey , " +
+        "       lead(n_regionkey) OVER ( PARTITION BY n_regionkey ORDER BY n_nationkey) lead_c2 " +
+        "FROM cp.`tpch/nation.parquet`   " +
+        "order by n_regionkey, n_nationkey";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .sqlBaselineQuery(baselineQuery)
+        .build()
+        .run();
+
+    final String query2 =
+         " select rnum, position_id, " +
+         "   ntile(4) over(order by position_id) " +
+         " from (select position_id, row_number() " +
+         "       over(order by position_id) as rnum " +
+         "       from cp.`employee.json`)";
+
+    final String baselineQuery2 =
+        " select row_number() over(order by position_id) as rnum, " +
+        "    position_id, " +
+        "    ntile(4) over(order by position_id) " +
+        " from cp.`employee.json`";
+
+    testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .sqlBaselineQuery(baselineQuery2)
+        .build()
+        .run();
+  }
+
 }
