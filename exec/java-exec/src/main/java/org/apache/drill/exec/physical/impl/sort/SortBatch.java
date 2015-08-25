@@ -92,9 +92,9 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     if (schema != null) {
       if (getSelectionVector4().next()) {
         return IterOutcome.OK;
-      } else {
-        return IterOutcome.NONE;
       }
+
+      return IterOutcome.NONE;
     }
 
     try{

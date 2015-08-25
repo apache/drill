@@ -134,7 +134,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SPILL_DIRECTORIES = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
     dirs = Iterators.cycle(Lists.newArrayList(SPILL_DIRECTORIES));
     copierAllocator = oContext.getAllocator().getChildAllocator(
-        context, PriorityQueueCopier.initialAllocation, PriorityQueueCopier.maxAllocation, true);
+        context, PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION, true);
     FragmentHandle handle = context.getHandle();
     fileName = String.format("%s/major_fragment_%s/minor_fragment_%s/operator_%s", QueryIdHelper.getQueryId(handle.getQueryId()),
         handle.getMajorFragmentId(), handle.getMinorFragmentId(), popConfig.getOperatorId());
@@ -188,7 +188,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         sv4.clear();
       }
       if (copier != null) {
-        copier.cleanup();
+        copier.close();
       }
       copierAllocator.close();
       super.close();
@@ -707,7 +707,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         g.setMappingSet(MAIN_MAPPING);
         copier = context.getImplementationClass(cg);
       } else {
-        copier.cleanup();
+        copier.close();
       }
 
       BufferAllocator allocator = spilling ? copierAllocator : oContext.getAllocator();

@@ -21,8 +21,6 @@ import com.carrotsearch.hppc.LongObjectOpenHashMap;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 
-import java.io.Closeable;
-
 /**
  * Manages a list of {@link DrillBuf}s that can be reallocated as needed. Upon
  * re-allocation the old buffer will be freed. Managing a list of these buffers
@@ -38,7 +36,6 @@ import java.io.Closeable;
  * and {@link QueryContext}.
  */
 public class BufferManager implements AutoCloseable {
-
   private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
   private final BufferAllocator allocator;
 
@@ -51,11 +48,12 @@ public class BufferManager implements AutoCloseable {
     this.fragmentContext = fragmentContext;
   }
 
+  @Override
   public void close() throws Exception {
-    Object[] mbuffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
-    for (int i =0; i < mbuffers.length; i++) {
+    final Object[] mbuffers = ((LongObjectOpenHashMap<Object>) (Object) managedBuffers).values;
+    for (int i = 0; i < mbuffers.length; i++) {
       if (managedBuffers.allocated[i]) {
-        ((DrillBuf)mbuffers[i]).release();
+        ((DrillBuf) mbuffers[i]).release(1);
       }
     }
     managedBuffers.clear();
@@ -65,7 +63,7 @@ public class BufferManager implements AutoCloseable {
     if (managedBuffers.remove(old.memoryAddress()) == null) {
       throw new IllegalStateException("Tried to remove unmanaged buffer.");
     }
-    old.release();
+    old.release(1);
     return getManagedBuffer(newSize);
   }
 
@@ -80,5 +78,4 @@ public class BufferManager implements AutoCloseable {
     newBuf.setBufferManager(this);
     return newBuf;
   }
-
 }

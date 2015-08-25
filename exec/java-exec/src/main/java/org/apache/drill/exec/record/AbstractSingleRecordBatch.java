@@ -25,7 +25,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected final RecordBatch incoming;
   protected boolean outOfMemory = false;
@@ -51,7 +51,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     IterOutcome upstream = next(incoming);
     if (state != BatchState.FIRST && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
       do {
-        for (VectorWrapper w : incoming) {
+        for (final VectorWrapper<?> w : incoming) {
           w.clear();
         }
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
@@ -118,9 +118,9 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   public BatchSchema getSchema() {
     if (container.hasSchema()) {
       return container.getSchema();
-    } else {
-      return null;
     }
+
+    return null;
   }
 
   protected abstract boolean setupNewSchema() throws SchemaChangeException;

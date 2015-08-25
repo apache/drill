@@ -185,7 +185,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  public void close(){
+  public void close() {
     super.close();
   }
 

@@ -28,7 +28,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Filter;
@@ -44,11 +43,10 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.google.common.collect.Lists;
 
 public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
 
   private SelectionVector2 sv2;
   private SelectionVector4 sv4;
-  private BufferAllocator.PreAllocator svAllocator;
   private Filterer filter;
 
   public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
@@ -83,7 +81,6 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     return IterOutcome.OK;
   }
-
 
   @Override
   public void close() {
@@ -152,15 +149,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     cg.addExpr(new ReturnValueExpression(expr));
 
-//    for (VectorWrapper<?> i : incoming) {
-//      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
-//      container.add(v);
-//      allocators.add(getAllocator4(v));
-//    }
-
-    for (VectorWrapper<?> vw : incoming) {
-      for (ValueVector vv : vw.getValueVectors()) {
-        TransferPair pair = vv.getTransferPair();
+    for (final VectorWrapper<?> vw : incoming) {
+      for (final ValueVector vv : vw.getValueVectors()) {
+        final TransferPair pair = vv.getTransferPair();
         container.add(pair.getTo());
         transfers.add(pair);
       }
@@ -170,8 +161,8 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     container.buildSchema(SelectionVectorMode.FOUR_BYTE);
 
     try {
-      TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      Filterer filter = context.getImplementationClass(cg);
+      final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
+      final Filterer filter = context.getImplementationClass(cg);
       filter.setup(context, incoming, this, tx);
       return filter;
     } catch (ClassTransformationException | IOException e) {
@@ -192,21 +183,18 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     cg.addExpr(new ReturnValueExpression(expr));
 
-    for (VectorWrapper<?> v : incoming) {
-      TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));
+    for (final VectorWrapper<?> v : incoming) {
+      final TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
     }
 
-
     try {
-      TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      Filterer filter = context.getImplementationClass(cg);
+      final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
+      final Filterer filter = context.getImplementationClass(cg);
       filter.setup(context, incoming, this, tx);
       return filter;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
-
   }
-
 }

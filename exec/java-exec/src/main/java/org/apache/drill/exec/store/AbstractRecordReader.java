@@ -80,7 +80,7 @@ public abstract class AbstractRecordReader implements RecordReader {
 
   @Override
   public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
-    for (ValueVector v : vectorMap.values()) {
+    for (final ValueVector v : vectorMap.values()) {
       v.allocateNew();
     }
   }

@@ -25,15 +25,18 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 
-public interface PriorityQueueCopier {
-  public static long initialAllocation = 10000000;
-  public static long maxAllocation = 20000000;
+public interface PriorityQueueCopier extends AutoCloseable {
+  public static final long INITIAL_ALLOCATION = 10000000;
+  public static final long MAX_ALLOCATION = 20000000;
 
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
-                    VectorAccessible outgoing) throws SchemaChangeException;
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch,
+      List<BatchGroup> batchGroups, VectorAccessible outgoing) throws SchemaChangeException;
+
   public int next(int targetRecordCount);
-  public void cleanup();
 
-  public static TemplateClassDefinition<PriorityQueueCopier> TEMPLATE_DEFINITION = new TemplateClassDefinition<PriorityQueueCopier>(PriorityQueueCopier.class, PriorityQueueCopierTemplate.class);
+  public final static TemplateClassDefinition<PriorityQueueCopier> TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<>(PriorityQueueCopier.class, PriorityQueueCopierTemplate.class);
 
+  @Override
+  abstract public void close(); // specify this to leave out the Exception
 }
