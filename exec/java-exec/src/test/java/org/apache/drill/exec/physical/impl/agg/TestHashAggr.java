@@ -57,4 +57,20 @@ public class TestHashAggr extends BaseTestQuery{
     testPhysicalFromFile("agg/hashagg/q8.json");
   }
 
+
+  public void testHashAggrWithSV2() throws Exception {
+    final String query = "select  sum(l_orderkey) as total from cp.`tpch/lineitem.parquet` where l_orderkey >0 group by l_linenumber;";
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("total")
+            .baselineValues(449872500)
+            .baselineValues(386605746)
+            .baselineValues(320758616)
+            .baselineValues(257351397)
+            .baselineValues(193070044)
+            .baselineValues(129743302)
+            .baselineValues(65357968)
+            .build().run();
+  }
 }
