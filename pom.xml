@@ -38,10 +38,10 @@
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
 
     <!--
-      Currently Hive storage plugin only supports Apache Hive 1.0.0 or vendor specific variants of the
-      Apache Hive 1.0.0. If the version is changed, make sure the jars and their dependencies are updated.
+      Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
+      Apache Hive 1.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
-    <hive.version>1.0.0</hive.version>
+    <hive.version>1.2.1</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
     <fmpp.version>0.9.14</fmpp.version>
   </properties>
@@ -1381,7 +1381,7 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.0.0-mapr-1504</hive.version>
+        <hive.version>1.2.0-mapr-1510</hive.version>
         <hbase.version>0.98.9-mapr-1503-m7-4.1.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1506</hadoop.version>
         <mapr.core.version>4.1.0-mapr</mapr.core.version>

@@ -33,7 +33,7 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
-import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 
@@ -99,7 +99,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
           // delegation tokens).
           String delegationToken = processUserMetaStoreClient.getDelegationToken(userName, userName);
           try {
-            ShimLoader.getHadoopShims().setTokenStr(ugiForRpc, delegationToken, HiveClientWithAuthzWithCaching.DRILL2HMS_TOKEN);
+            Utils.setTokenStr(ugiForRpc, delegationToken, HiveClientWithAuthzWithCaching.DRILL2HMS_TOKEN);
           } catch (IOException e) {
             throw new DrillRuntimeException("Couldn't setup delegation token in the UGI for Hive MetaStoreClient", e);
           }
