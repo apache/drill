@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.config;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
@@ -37,7 +39,7 @@ public class TestParsePhysicalPlan extends ExecTest {
   @Test
   public void parseSimplePlan() throws Exception{
     DrillConfig c = DrillConfig.create();
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader reader = newPhysicalPlanReader(c);
     ObjectReader r = c.getMapper().reader(PhysicalPlan.class);
     ObjectWriter writer = c.getMapper().writer();
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));

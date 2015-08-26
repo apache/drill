@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
+
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -57,7 +59,7 @@ private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnec
 
 
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader reader = newPhysicalPlanReader(c);
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(plan_path), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);

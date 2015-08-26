@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.pop;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class TestInjectionValue extends ExecTest {
 
   @Test
   public void testInjected() throws Exception{
-    PhysicalPlanReader r = new PhysicalPlanReader(config, config.getMapper(), DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader r = newPhysicalPlanReader(config);
     PhysicalPlan p = r.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_screen.json"), Charsets.UTF_8));
 
     List<PhysicalOperator> o = p.getSortedOperators(false);

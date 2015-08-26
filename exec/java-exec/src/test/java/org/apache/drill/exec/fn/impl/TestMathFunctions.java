@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.fn.impl;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
@@ -69,7 +70,7 @@ public class TestMathFunctions extends ExecTest {
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
         }};
 
-        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlanReader reader = newPhysicalPlanReader(c);
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/simple_math_functions.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);

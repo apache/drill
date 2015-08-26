@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.pop;
 
+import static org.apache.drill.exec.SimpleTestFactory.newPhysicalPlanReader;
 import java.util.List;
 
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -48,7 +49,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
 
   private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception{
     System.out.println(String.format("=================Building plan fragments for [%s].  Allowing %d total Drillbits.==================", fragmentFile, bitCount));
-    PhysicalPlanReader ppr = new PhysicalPlanReader(CONFIG, CONFIG.getMapper(), DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader ppr = newPhysicalPlanReader(CONFIG);
     Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
     SimpleParallelizer par = new SimpleParallelizer(1000*1000, 5, 10, 1.2);
     List<DrillbitEndpoint> endpoints = Lists.newArrayList();
