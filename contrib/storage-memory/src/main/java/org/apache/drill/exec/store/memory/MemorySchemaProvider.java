@@ -19,6 +19,10 @@ package org.apache.drill.exec.store.memory;
 
 import com.google.common.base.Preconditions;
 
+import org.apache.calcite.sql.type.SqlTypeName;
+
+import org.apache.commons.lang3.ClassUtils;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.memory.MemoryTable.MemoryTableDefinition;
 import org.apache.drill.exec.store.memory.MemoryTable.MemoryColumnDefinition;
@@ -27,9 +31,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.sql.Timestamp;
 
 /**
  *
@@ -75,13 +82,34 @@ public class MemorySchemaProvider {
             Class type = field.getType();
 
             if (type.isPrimitive()) {
-                columns.add(new MemoryColumnDefinition(
-                        field.getName(),
-                        SchemaPath.getSimplePath(field.getName()),
-                        true));
+
+                Class<?> wrapper = ClassUtils.primitiveToWrapper(type);
+                SqlTypeName sqlType = SqlTypeName.get(wrapper.getSimpleName().toUpperCase(Locale.ENGLISH));
+
+                if (sqlType != null) {
+                    columns.add(new MemoryColumnDefinition(
+                            field.getName(), SchemaPath.getSimplePath(field.getName()), sqlType));
+                }
+                else {
+                    logger.warn("Unsupported data type: [{}]", type);
+                }
             }
             else {
-                MemoryColumnDefinition column = createColumn(type);
+                if (type == String.class) {
+                    columns.add(new MemoryColumnDefinition(
+                            field.getName(), SchemaPath.getSimplePath(field.getName()), SqlTypeName.VARCHAR));
+                }
+                else if (type == Timestamp.class) {
+                    columns.add(new MemoryColumnDefinition(
+                            field.getName(), SchemaPath.getSimplePath(field.getName()), SqlTypeName.TIMESTAMP));
+                }
+                else if (type == Date.class) {
+                    columns.add(new MemoryColumnDefinition(
+                            field.getName(), SchemaPath.getSimplePath(field.getName()), SqlTypeName.DATE));
+                }
+                else {
+                    logger.warn("Unsupported data type: [{}]", type);
+                }
             }
         }
 
@@ -90,11 +118,5 @@ public class MemorySchemaProvider {
 
         return definition;
     }
-
-    private MemoryColumnDefinition createColumn(Class c) {
-
-        List<MemoryColumnDefinition> columns = new ArrayList<>();
-
-        return null;
-    }
+    
 }

@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.store.memory;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -111,13 +113,13 @@ public class MemoryTable extends DrillTable {
 
         private final String name;
         private final SchemaPath path;
-        private final boolean nullable;
+        private final SqlTypeName type;
         private final List<MemoryColumnDefinition> children = new ArrayList<>();
 
-        public MemoryColumnDefinition(String name, SchemaPath path, boolean nullable) {
+        public MemoryColumnDefinition(String name, SchemaPath path, SqlTypeName type) {
             this.name = name;
             this.path = path;
-            this.nullable = nullable;
+            this.type = type;
         }
 
         public String name() {
@@ -128,8 +130,8 @@ public class MemoryTable extends DrillTable {
             return path;
         }
 
-        public boolean nullable() {
-            return nullable;
+        public SqlTypeName type() {
+            return type;
         }
 
         public boolean hasChildren() {
@@ -149,7 +151,7 @@ public class MemoryTable extends DrillTable {
             return "MemoryColumnDefinition{" +
                     "name='" + name + '\'' +
                     ", path=" + path +
-                    ", nullable=" + nullable +
+                    ", type=" + type +
                     ", children=" + children +
                     '}';
         }
