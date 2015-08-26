@@ -15,9 +15,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
@@ -28,49 +29,50 @@
   <packaging>jar</packaging>
   <name>Common (Logical Plan, Base expressions)</name>
 
+  <properties>
+    <carrotsearch.testframework>2.1.16</carrotsearch.testframework>
+    <execution.hint.file>.local-${project.version}-execution-hints.log</execution.hint.file>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
     </dependency>
-
     <dependency>
-      <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
+      <!--
+          Add as provided scope so that we can compile TestTools.
+          Should only be ever used in a test scenario where someone else is bringing JUnit in.
+      -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${dep.junit.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.apache.calcite</groupId>
       <artifactId>calcite-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
       <version>1.0.0</version>
     </dependency>
-
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.1</version>
     </dependency>
-
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack</artifactId>
       <version>0.6.6</version>
     </dependency>
-
     <dependency>
       <groupId>org.reflections</groupId>
       <artifactId>reflections</artifactId>
       <version>0.9.8</version>
     </dependency>
-
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
@@ -81,7 +83,6 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.4.3</version>
     </dependency>
-    
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator</artifactId>
@@ -98,15 +99,33 @@
       <artifactId>antlr-runtime</artifactId>
       <version>3.4</version>
     </dependency>
-
     <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>2.3</version>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>2.3</version>
     </dependency>
 
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>com.carrotsearch.randomizedtesting</groupId>
+      <artifactId>randomizedtesting-runner</artifactId>
+      <version>${carrotsearch.testframework}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch.randomizedtesting</groupId>
+      <artifactId>junit4-maven-plugin</artifactId>
+      <version>${carrotsearch.testframework}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <!-- Something in Drill seems to conflict with this, so leave it out. -->
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
-
 
   <build>
     <plugins>
@@ -115,7 +134,57 @@
         <version>2.15</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
+          <skipTests>true</skipTests>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.carrotsearch.randomizedtesting</groupId>
+        <artifactId>junit4-maven-plugin</artifactId>
+        <version>${carrotsearch.testframework}</version>
+        <configuration>
+          <printSummary>true</printSummary>
+          <assertions>
+            <enable/>
+          </assertions>
+          <listeners>
+            <report-text
+                    showThrowable="true"
+                    showStackTraces="true"
+                    showOutput="always"
+                    showStatusOk="true"
+                    showStatusError="true"
+                    showStatusFailure="true"
+                    showStatusIgnored="true"
+                    showSuiteSummary="true"
+                    timestamps="false">
+            </report-text>
+          </listeners>
+        </configuration>
+        <executions>
+          <execution>
+            <id>tests</id>
+            <phase>test</phase>
+            <goals>
+              <goal>junit4</goal>
+            </goals>
+            <configuration>
+              <listeners>
+                <report-ant-xml mavenExtensions="true"
+                                dir="${project.build.directory}/surefire-reports"/>
+                <report-execution-times historyLength="20" file="${basedir}/${execution.hint.file}"/>
+              </listeners>
+              <balancers>
+                <execution-times>
+                  <fileset dir="${basedir}" includes="${execution.hint.file}"/>
+                </execution-times>
+              </balancers>
+              <includes>
+                <include>**/*Tests.class</include>
+                <include>**/*Test.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
@@ -132,9 +201,7 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr3-maven-plugin</artifactId>
         <version>3.4</version>
-        <configuration>
-
-        </configuration>
+        <configuration/>
         <executions>
           <execution>
             <goals>
