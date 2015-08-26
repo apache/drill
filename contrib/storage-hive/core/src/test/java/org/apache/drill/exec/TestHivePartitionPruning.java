@@ -105,7 +105,7 @@ public class TestHivePartitionPruning extends HiveTestBase {
   @Test
   public void pruneDataTypeSupport() throws Exception {
     final String query = "EXPLAIN PLAN FOR " +
-        "SELECT * FROM hive.readtest WHERE boolean_part = true";
+        "SELECT * FROM hive.readtest WHERE tinyint_part = 64";
 
     final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
@@ -118,7 +118,7 @@ public class TestHivePartitionPruning extends HiveTestBase {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
       final String query = "EXPLAIN PLAN FOR " +
-          "SELECT * FROM hive.readtest_parquet WHERE boolean_part = true";
+          "SELECT * FROM hive.readtest_parquet WHERE tinyint_part = 64";
 
       final String plan = getPlanInString(query, OPTIQ_FORMAT);
 
