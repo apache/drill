@@ -23,25 +23,26 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestByteComparisonFunctions extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
+public class TestByteComparisonFunctions extends ExecTest {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestByteComparisonFunctions.class);
 
-  static TopLevelAllocator allocator;
-  static VarCharHolder hello;
-  static VarCharHolder goodbye;
-  static VarCharHolder helloLong;
-  static VarCharHolder goodbyeLong;
+  private static BufferAllocator allocator;
+  private static VarCharHolder hello;
+  private static VarCharHolder goodbye;
+  private static VarCharHolder helloLong;
+  private static VarCharHolder goodbyeLong;
 
   @BeforeClass
-  public static void setup(){
+  public static void setup() {
     DrillConfig c= DrillConfig.create();
-    allocator = new TopLevelAllocator(c);
+    allocator = RootAllocatorFactory.newRoot(c);
     hello = ValueHolderHelper.getVarCharHolder(allocator, "hello");
     goodbye = ValueHolderHelper.getVarCharHolder(allocator, "goodbye");
     helloLong = ValueHolderHelper.getVarCharHolder(allocator, "hellomyfriend");
@@ -49,7 +50,7 @@ public class TestByteComparisonFunctions extends ExecTest{
   }
 
   @AfterClass
-  public static void teardown(){
+  public static void teardown() {
     hello.buffer.release();
     helloLong.buffer.release();
     goodbye.buffer.release();
@@ -58,72 +59,72 @@ public class TestByteComparisonFunctions extends ExecTest{
   }
 
   @Test
-  public void testAfter(){
-    VarCharHolder left = hello;
-    VarCharHolder right = goodbye;
+  public void testAfter() {
+    final VarCharHolder left = hello;
+    final VarCharHolder right = goodbye;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
-  public void testBefore(){
-    VarCharHolder left = goodbye;
-    VarCharHolder right = hello;
+  public void testBefore() {
+    final VarCharHolder left = goodbye;
+    final VarCharHolder right = hello;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == -1);
   }
 
   @Test
-  public void testEqualCompare(){
-    VarCharHolder left = hello;
-    VarCharHolder right = hello;
+  public void testEqualCompare() {
+    final VarCharHolder left = hello;
+    final VarCharHolder right = hello;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
-  public void testEqual(){
-    VarCharHolder left = hello;
-    VarCharHolder right = hello;
+  public void testEqual() {
+    final VarCharHolder left = hello;
+    final VarCharHolder right = hello;
     assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
-  public void testNotEqual(){
-    VarCharHolder left = hello;
-    VarCharHolder right = goodbye;
+  public void testNotEqual() {
+    final VarCharHolder left = hello;
+    final VarCharHolder right = goodbye;
     assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
-  public void testAfterLong(){
-    VarCharHolder left = helloLong;
-    VarCharHolder right = goodbyeLong;
+  public void testAfterLong() {
+    final VarCharHolder left = helloLong;
+    final VarCharHolder right = goodbyeLong;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
-  public void testBeforeLong(){
-    VarCharHolder left = goodbyeLong;
-    VarCharHolder right = helloLong;
+  public void testBeforeLong() {
+    final VarCharHolder left = goodbyeLong;
+    final VarCharHolder right = helloLong;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == -1);
   }
 
   @Test
-  public void testEqualCompareLong(){
-    VarCharHolder left = helloLong;
-    VarCharHolder right = helloLong;
+  public void testEqualCompareLong() {
+    final VarCharHolder left = helloLong;
+    final VarCharHolder right = helloLong;
     assertTrue(ByteFunctionHelpers.compare(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 
   @Test
-  public void testEqualLong(){
-    VarCharHolder left = helloLong;
-    VarCharHolder right = helloLong;
+  public void testEqualLong() {
+    final VarCharHolder left = helloLong;
+    final VarCharHolder right = helloLong;
     assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 1);
   }
 
   @Test
-  public void testNotEqualLong(){
-    VarCharHolder left = helloLong;
-    VarCharHolder right = goodbyeLong;
+  public void testNotEqualLong() {
+    final VarCharHolder left = helloLong;
+    final VarCharHolder right = goodbyeLong;
     assertTrue(ByteFunctionHelpers.equal(left.buffer, left.start, left.end, right.buffer, right.start, right.end) == 0);
   }
 }

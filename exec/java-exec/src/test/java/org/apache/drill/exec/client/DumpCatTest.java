@@ -30,7 +30,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -58,9 +58,9 @@ import com.google.common.io.Files;
  * which will produce a dump file.  The dump file will be input into DumpCat to test query mode and batch mode.
  */
 
-public class DumpCatTest  extends ExecTest{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DumpCatTest.class);
-  DrillConfig c = DrillConfig.create();
+public class DumpCatTest  extends ExecTest {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DumpCatTest.class);
+  private final DrillConfig c = DrillConfig.create();
 
   @Test
   public void testDumpCat(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
@@ -68,22 +68,22 @@ public class DumpCatTest  extends ExecTest{
 
       new NonStrictExpectations(){{
           bitContext.getMetrics(); result = new MetricRegistry();
-          bitContext.getAllocator(); result = new TopLevelAllocator();
+          bitContext.getAllocator(); result = RootAllocatorFactory.newRoot(c);
           bitContext.getConfig(); result = c;
           bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
           bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
       }};
 
-      PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-      PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
-      FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-      FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-      SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+      final PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+      final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
+      final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+      final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+      final SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-      while(exec.next()){
+      while(exec.next()) {
       }
 
-      if(context.getFailureCause() != null){
+      if(context.getFailureCause() != null) {
           throw context.getFailureCause();
       }
       assertTrue(!context.isFailed());
@@ -95,37 +95,34 @@ public class DumpCatTest  extends ExecTest{
       /* Form the file name to which the trace output will dump the record batches */
       String qid = QueryIdHelper.getQueryId(handle.getQueryId());
 
-      int majorFragmentId = handle.getMajorFragmentId();
-      int minorFragmentId = handle.getMinorFragmentId();
+      final int majorFragmentId = handle.getMajorFragmentId();
+      final int minorFragmentId = handle.getMinorFragmentId();
 
-      String logLocation = c.getString(ExecConstants.TRACE_DUMP_DIRECTORY);
+      final String logLocation = c.getString(ExecConstants.TRACE_DUMP_DIRECTORY);
 
       System.out.println("Found log location: " + logLocation);
 
-      String filename = String.format("%s//%s_%d_%d_mock-scan", logLocation, qid, majorFragmentId, minorFragmentId);
+      final String filename = String.format("%s//%s_%d_%d_mock-scan", logLocation, qid, majorFragmentId, minorFragmentId);
 
       System.out.println("File Name: " + filename);
 
-      Configuration conf = new Configuration();
+      final Configuration conf = new Configuration();
       conf.set(FileSystem.FS_DEFAULT_NAME_KEY, c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
 
-      FileSystem fs = FileSystem.get(conf);
-      Path path = new Path(filename);
+      final FileSystem fs = FileSystem.get(conf);
+      final Path path = new Path(filename);
       assertTrue("Trace file does not exist", fs.exists(path));
 
-      DumpCat dumpCat = new DumpCat();
+      final DumpCat dumpCat = new DumpCat();
 
       //Test Query mode
-      FileInputStream input = new FileInputStream(filename);
-
-      dumpCat.doQuery(input);
-      input.close();
+      try (final FileInputStream input = new FileInputStream(filename)) {
+        dumpCat.doQuery(input);
+      }
 
       //Test Batch mode
-      input = new FileInputStream(filename);
-      dumpCat.doBatch(input,0,true);
-
-      input.close();
+      try(final FileInputStream input = new FileInputStream(filename)) {
+        dumpCat.doBatch(input, 0, true);
+      }
   }
-
 }

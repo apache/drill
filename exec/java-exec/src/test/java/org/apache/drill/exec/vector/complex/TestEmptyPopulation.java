@@ -19,9 +19,11 @@ package org.apache.drill.exec.vector.complex;
 
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
+
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,7 +38,8 @@ public class TestEmptyPopulation extends BaseTestQuery {
   private UInt4Vector.Accessor accessor;
   private UInt4Vector.Mutator mutator;
   private EmptyValuePopulator populator;
-  private BufferAllocator allocator = new TopLevelAllocator();
+  private final DrillConfig drillConfig = DrillConfig.create();
+  private final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
 
 
   @Before
@@ -310,5 +313,4 @@ public class TestEmptyPopulation extends BaseTestQuery {
         .baselineValues(listOf(listOf(listOf(2L), listOf()), listOf()))
         .go();
   }
-
 }
