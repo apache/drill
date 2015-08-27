@@ -95,6 +95,8 @@ public class SolrClientAPIExec {
     CVSchema oCVSchema = null;
     request.setHeader("Content-Type", "application/json");
     try {
+      logger.info("getting schema details for core... " + coreName
+          + " schemaUrl :" + schemaUrl);
       HttpResponse response = client.execute(request);
       BufferedReader rd = new BufferedReader(new InputStreamReader(response
           .getEntity().getContent()));
@@ -116,17 +118,19 @@ public class SolrClientAPIExec {
 
   public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
       List<String> fields, StringBuilder filters) {
+    logger.debug("getSolrDocs :: " + solrCoreName);
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
     SolrDocumentList sList = null;
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
         .setQuery("*:*").setRows(Integer.MAX_VALUE);
 
     if (fields != null) {
-
+      logger.debug("solr fields are " + fields);
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
     }
     if (filters.length() > 0) {
+      logger.info("adding filter query :: " + filters.toString());
       solrQuery.setParam("fq", filters.toString());
     }
     try {

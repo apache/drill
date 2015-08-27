@@ -126,7 +126,7 @@ public class SolrClientAPIExec {
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
     }
-    if (filters.length() > 0) {
+    if (filters.length() > 0) {     
       solrQuery.setParam("fq", filters.toString());
     }
     try {
