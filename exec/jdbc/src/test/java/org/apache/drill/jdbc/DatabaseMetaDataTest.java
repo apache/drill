@@ -1,10 +1,10 @@
 /**
- * Licensed to the Apache Software Foundation ( ASF ) under one
+ * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 ( the
- * "License" ); you may not use this file except in compliance
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -68,10 +68,23 @@ public class DatabaseMetaDataTest {
   //  getURL()
   //  getUserName()
   //  isReadOnly()
-  //  nullsAreSortedHigh()
-  //  nullsAreSortedLow()
-  //  nullsAreSortedAtStart()
-  //  nullsAreSortedAtEnd()
+
+
+  @Test
+  public void testNullsAreSortedMethodsSaySortedHigh() throws SQLException {
+    assertThat( "DatabaseMetadata.nullsAreSortedHigh()",
+                dbmd.nullsAreSortedHigh(), equalTo( true ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedLow()",
+                dbmd.nullsAreSortedLow(), equalTo( false ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedAtEnd()",
+                dbmd.nullsAreSortedAtEnd(), equalTo( false ) );
+    assertThat( "DatabaseMetadata.nullsAreSortedAtStart()",
+                dbmd.nullsAreSortedAtStart(), equalTo( false ) );
+  }
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
   //  getDatabaseProductName()
   //  getDatabaseProductVersion()
   //  getDriverName()
@@ -88,7 +101,17 @@ public class DatabaseMetaDataTest {
   //  storesUpperCaseQuotedIdentifiers()
   //  storesLowerCaseQuotedIdentifiers()
   //  storesMixedCaseQuotedIdentifiers()
-  //  getIdentifierQuoteString()
+
+
+  // TODO(DRILL-3510):  Update when Drill accepts standard SQL's double quote.
+  @Test
+  public void testGetIdentifierQuoteStringSaysBackquote() throws SQLException {
+    assertThat( dbmd.getIdentifierQuoteString(), equalTo( "`" ) );
+  }
+
+
+  // For matching order of java.sql.DatabaseMetaData:
+  //
   //  getSQLKeywords()
   //  getNumericFunctions()
   //  getStringFunctions()
@@ -389,6 +412,7 @@ public class DatabaseMetaDataTest {
   }
   // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
 
+
   // For matching order of java.sql.DatabaseMetaData:
   //
   //  supportsStoredFunctionsUsingCallSyntax()
@@ -402,10 +426,10 @@ public class DatabaseMetaDataTest {
   }
   // TODO:  Later, test more (e.g., right columns (even if/though zero rows)).
 
+
   // For matching order of java.sql.DatabaseMetaData:
   //
   //   generatedKeyAlwaysReturned()
-
 
 
 }

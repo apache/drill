@@ -1220,22 +1220,34 @@
           <dependency>
             <groupId>sqlline</groupId>
             <artifactId>sqlline</artifactId>
-            <version>1.1.9-drill-r5</version>
+            <version>1.1.9-drill-r6</version>
           </dependency>
 
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.1.0-drill-r16</version>
+            <version>1.4.0-drill-r0</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
                 <artifactId>jgrapht-jdk1.5</artifactId>
               </exclusion>
-            <exclusion>
+              <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-            </exclusion>
+              </exclusion>
+              <exclusion>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+              </exclusion>
+              <exclusion>
+                 <groupId>com.fasterxml.jackson.core</groupId>
+                 <artifactId>jackson-core</artifactId>
+              </exclusion>
+              <exclusion>
+                 <groupId>com.fasterxml.jackson.core</groupId>
+                 <artifactId>jackson-databind</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
 

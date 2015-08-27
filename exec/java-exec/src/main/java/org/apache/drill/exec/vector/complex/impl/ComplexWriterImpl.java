@@ -29,12 +29,12 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.google.common.base.Preconditions;
 
-public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWriter{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexWriterImpl.class);
+public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWriter {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexWriterImpl.class);
 
-  SingleMapWriter mapRoot;
-  SingleListWriter listRoot;
-  MapVector container;
+  private SingleMapWriter mapRoot;
+  private SingleListWriter listRoot;
+  private final MapVector container;
 
   Mode mode = Mode.INIT;
   private final String name;
@@ -47,6 +47,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     this.container = container;
   }
 
+  @Override
   public MaterializedField getField() {
     return container.getField();
   }
@@ -60,10 +61,21 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     StateTool.check(mode, modes);
   }
 
+  @Override
   public void reset(){
     setPosition(0);
   }
 
+  @Override
+  public void close() throws Exception {
+    clear();
+    mapRoot.close();
+    if (listRoot != null) {
+      listRoot.close();
+    }
+  }
+
+  @Override
   public void clear(){
     switch(mode){
     case MAP:
@@ -75,6 +87,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
     }
   }
 
+  @Override
   public void setValueCount(int count){
     switch(mode){
     case MAP:
@@ -146,9 +159,9 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
   @Override
   public void allocate() {
-    if(mapRoot != null){
+    if(mapRoot != null) {
       mapRoot.allocate();
-    }else if(listRoot != null){
+    } else if(listRoot != null) {
       listRoot.allocate();
     }
   }
@@ -184,7 +197,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     @Override
     public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
-      ValueVector v = vc.addOrGet(name, type, clazz);
+      final ValueVector v = vc.addOrGet(name, type, clazz);
       putChild(name, v);
       return this.typeify(v, clazz);
 

@@ -76,6 +76,11 @@ public class HiveUDFOperator extends SqlFunction {
     }
 
     @Override
+    public Consistency getConsistency() {
+      return Consistency.NONE;
+    }
+
+    @Override
     public SqlOperandCountRange getOperandCountRange() {
       return range;
     }

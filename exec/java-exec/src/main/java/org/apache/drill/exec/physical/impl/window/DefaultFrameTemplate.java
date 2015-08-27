@@ -95,6 +95,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
     final WindowDataBatch current = batches.get(0);
 
+    setupCopyFirstValue(current, internal);
+
     // we need to store the record count explicitly, because we release current batch at the end of this call
     outputCount = current.getRecordCount();
 
@@ -136,14 +138,12 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     final long length = computePartitionSize(currentRow);
     partition = new Partition(length);
     setupPartition(current, container);
-    setupCopyFirstValue(current, internal);
     copyFirstValueToInternal(currentRow);
   }
 
   private void cleanPartition() {
     partition = null;
     resetValues();
-    internal.zeroVectors();
     lagCopiedToInternal = false;
   }
 
