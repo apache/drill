@@ -31,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -403,7 +404,12 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public String getCursorName() throws SQLException {
     throwIfClosed();
-    return super.getCursorName();
+    try {
+      return super.getCursorName();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   // (Not delegated.)
@@ -484,31 +490,56 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public boolean isLast() throws SQLException {
     throwIfClosed();
-    return super.isLast();
+    try {
+      return super.isLast();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void beforeFirst() throws SQLException {
     throwIfClosed();
-    super.beforeFirst();
+    try {
+      super.beforeFirst();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void afterLast() throws SQLException {
     throwIfClosed();
-    super.afterLast();
+    try {
+      super.afterLast();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean first() throws SQLException {
     throwIfClosed();
-    return super.first();
+    try {
+      return super.first();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean last() throws SQLException {
     throwIfClosed();
-    return super.last();
+    try {
+      return super.last();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -520,19 +551,34 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public boolean absolute( int row ) throws SQLException {
     throwIfClosed();
-    return super.absolute( row );
+    try {
+      return super.absolute( row );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean relative( int rows ) throws SQLException {
     throwIfClosed();
-    return super.relative( rows );
+    try {
+      return super.relative( rows );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public boolean previous() throws SQLException {
     throwIfClosed();
-    return super.previous();
+    try {
+      return super.previous();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   //---------------------------------------------------------------------
@@ -599,281 +645,506 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public void updateNull( int columnIndex ) throws SQLException {
     throwIfClosed();
-    super.updateNull( columnIndex );
+    try {
+      super.updateNull( columnIndex );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBoolean( int columnIndex, boolean x ) throws SQLException {
     throwIfClosed();
-    super.updateBoolean( columnIndex, x );
+    try {
+      super.updateBoolean( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateByte( int columnIndex, byte x ) throws SQLException {
     throwIfClosed();
-    super.updateByte( columnIndex, x );
+    try {
+      super.updateByte( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateShort( int columnIndex, short x ) throws SQLException {
     throwIfClosed();
-    super.updateShort( columnIndex, x );
+    try {
+      super.updateShort( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateInt( int columnIndex, int x ) throws SQLException {
     throwIfClosed();
-    super.updateInt( columnIndex, x );
+    try {
+      super.updateInt( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateLong( int columnIndex, long x ) throws SQLException {
     throwIfClosed();
-    super.updateLong( columnIndex, x );
+    try {
+      super.updateLong( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateFloat( int columnIndex, float x ) throws SQLException {
     throwIfClosed();
-    super.updateFloat( columnIndex, x );
+    try {
+      super.updateFloat( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateDouble( int columnIndex, double x ) throws SQLException {
     throwIfClosed();
-    super.updateDouble( columnIndex, x );
+    try {
+      super.updateDouble( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBigDecimal( int columnIndex,
                                 BigDecimal x ) throws SQLException {
     throwIfClosed();
-    super.updateBigDecimal( columnIndex, x );
+    try {
+      super.updateBigDecimal( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateString( int columnIndex, String x ) throws SQLException {
     throwIfClosed();
-    super.updateString( columnIndex, x );
+    try {
+      super.updateString( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBytes( int columnIndex, byte[] x ) throws SQLException {
     throwIfClosed();
-    super.updateBytes( columnIndex, x );
+    try {
+      super.updateBytes( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateDate( int columnIndex, Date x ) throws SQLException {
     throwIfClosed();
-    super.updateDate( columnIndex, x );
+    try {
+      super.updateDate( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateTime( int columnIndex, Time x ) throws SQLException {
     throwIfClosed();
-    super.updateTime( columnIndex, x );
+    try {
+      super.updateTime( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateTimestamp( int columnIndex, Timestamp x ) throws SQLException {
     throwIfClosed();
-    super.updateTimestamp( columnIndex, x );
+    try {
+      super.updateTimestamp( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( int columnIndex, InputStream x,
                                  int length ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnIndex, x, length );
+    try {
+      super.updateAsciiStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( int columnIndex, InputStream x,
                                   int length ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnIndex, x, length );
+    try {
+      super.updateBinaryStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( int columnIndex, Reader x,
                                      int length ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnIndex, x, length );
+    try {
+      super.updateCharacterStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateObject( int columnIndex, Object x,
                             int scaleOrLength ) throws SQLException {
     throwIfClosed();
-    super.updateObject( columnIndex, x, scaleOrLength );
+    try {
+      super.updateObject( columnIndex, x, scaleOrLength );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateObject( int columnIndex, Object x ) throws SQLException {
     throwIfClosed();
-    super.updateObject( columnIndex, x );
+    try {
+      super.updateObject( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNull( String columnLabel ) throws SQLException {
     throwIfClosed();
-    super.updateNull( columnLabel );
+    try {
+      super.updateNull( columnLabel );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBoolean( String columnLabel, boolean x ) throws SQLException {
     throwIfClosed();
-    super.updateBoolean( columnLabel, x );
+    try {
+      super.updateBoolean( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateByte( String columnLabel, byte x ) throws SQLException {
     throwIfClosed();
-    super.updateByte( columnLabel, x );
+    try {
+      super.updateByte( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateShort( String columnLabel, short x ) throws SQLException {
     throwIfClosed();
-    super.updateShort( columnLabel, x );
+    try {
+      super.updateShort( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateInt( String columnLabel, int x ) throws SQLException {
     throwIfClosed();
-    super.updateInt( columnLabel, x );
+    try {
+      super.updateInt( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateLong( String columnLabel, long x ) throws SQLException {
     throwIfClosed();
-    super.updateLong( columnLabel, x );
+    try {
+      super.updateLong( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateFloat( String columnLabel, float x ) throws SQLException {
     throwIfClosed();
-    super.updateFloat( columnLabel, x );
+    try {
+      super.updateFloat( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateDouble( String columnLabel, double x ) throws SQLException {
     throwIfClosed();
-    super.updateDouble( columnLabel, x );
+    try {
+      super.updateDouble( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBigDecimal( String columnLabel,
                                 BigDecimal x ) throws SQLException {
     throwIfClosed();
-    super.updateBigDecimal( columnLabel, x );
+    try {
+      super.updateBigDecimal( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateString( String columnLabel, String x ) throws SQLException {
     throwIfClosed();
-    super.updateString( columnLabel, x );
+    try {
+      super.updateString( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBytes( String columnLabel, byte[] x ) throws SQLException {
     throwIfClosed();
-    super.updateBytes( columnLabel, x );
+    try {
+      super.updateBytes( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateDate( String columnLabel, Date x ) throws SQLException {
     throwIfClosed();
-    super.updateDate( columnLabel, x );
+    try {
+      super.updateDate( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateTime( String columnLabel, Time x ) throws SQLException {
     throwIfClosed();
-    super.updateTime( columnLabel, x );
+    try {
+      super.updateTime( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateTimestamp( String columnLabel, Timestamp x ) throws SQLException {
     throwIfClosed();
-    super.updateTimestamp( columnLabel, x );
+    try {
+      super.updateTimestamp( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( String columnLabel, InputStream x,
                                  int length ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnLabel, x, length );
+    try {
+      super.updateAsciiStream( columnLabel, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( String columnLabel, InputStream x,
                                   int length ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnLabel, x, length );
+    try {
+      super.updateBinaryStream( columnLabel, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( String columnLabel, Reader reader,
                                      int length ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnLabel, reader, length );
+    try {
+      super.updateCharacterStream( columnLabel, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateObject( String columnLabel, Object x,
                             int scaleOrLength ) throws SQLException {
     throwIfClosed();
-    super.updateObject( columnLabel, x, scaleOrLength );
+    try {
+      super.updateObject( columnLabel, x, scaleOrLength );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateObject( String columnLabel, Object x ) throws SQLException {
     throwIfClosed();
-    super.updateObject( columnLabel, x );
+    try {
+      super.updateObject( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void insertRow() throws SQLException {
     throwIfClosed();
-    super.insertRow();
+    try {
+      super.insertRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateRow() throws SQLException {
     throwIfClosed();
-    super.updateRow();
+    try {
+      super.updateRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void deleteRow() throws SQLException {
     throwIfClosed();
-    super.deleteRow();
+    try {
+      super.deleteRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void refreshRow() throws SQLException {
     throwIfClosed();
-    super.refreshRow();
+    try {
+      super.refreshRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void cancelRowUpdates() throws SQLException {
     throwIfClosed();
-    super.cancelRowUpdates();
+    try {
+      super.cancelRowUpdates();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void moveToInsertRow() throws SQLException {
     throwIfClosed();
-    super.moveToInsertRow();
+    try {
+      super.moveToInsertRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void moveToCurrentRow() throws SQLException {
     throwIfClosed();
-    super.moveToCurrentRow();
+    try {
+      super.moveToCurrentRow();
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -1006,74 +1277,134 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public void updateRef( int columnIndex, Ref x ) throws SQLException {
     throwIfClosed();
-    super.updateRef( columnIndex, x );
+    try {
+      super.updateRef( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateRef( String columnLabel, Ref x ) throws SQLException {
     throwIfClosed();
-    super.updateRef( columnLabel, x );
+    try {
+      super.updateRef( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( int columnIndex, Blob x ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnIndex, x );
+    try {
+      super.updateBlob( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( String columnLabel, Blob x ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnLabel, x );
+    try {
+      super.updateBlob( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( int columnIndex, Clob x ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnIndex, x );
+    try {
+      super.updateClob( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( String columnLabel, Clob x ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnLabel, x );
+    try {
+      super.updateClob( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateArray( int columnIndex, Array x ) throws SQLException {
     throwIfClosed();
-    super.updateArray( columnIndex, x );
+    try {
+      super.updateArray( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateArray( String columnLabel, Array x ) throws SQLException {
     throwIfClosed();
-    super.updateArray( columnLabel, x );
+    try {
+      super.updateArray( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   //------------------------- JDBC 4.0 -----------------------------------
   @Override
   public RowId getRowId( int columnIndex ) throws SQLException {
     throwIfClosed();
-    return super.getRowId( columnIndex );
+    try {
+      return super.getRowId( columnIndex );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public RowId getRowId( String columnLabel ) throws SQLException {
     throwIfClosed();
-    return super.getRowId( columnLabel );
+    try {
+      return super.getRowId( columnLabel );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateRowId( int columnIndex, RowId x ) throws SQLException {
     throwIfClosed();
-    super.updateRowId( columnIndex, x );
+    try {
+      super.updateRowId( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateRowId( String columnLabel, RowId x ) throws SQLException {
     throwIfClosed();
-    super.updateRowId( columnLabel, x );
+    try {
+      super.updateRowId( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -1091,26 +1422,46 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public void updateNString( int columnIndex, String nString ) throws SQLException {
     throwIfClosed();
-    super.updateNString( columnIndex, nString );
+    try {
+      super.updateNString( columnIndex, nString );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNString( String columnLabel,
                              String nString ) throws SQLException {
     throwIfClosed();
-    super.updateNString( columnLabel, nString );
+    try {
+      super.updateNString( columnLabel, nString );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( int columnIndex, NClob nClob ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnIndex, nClob );
+    try {
+      super.updateNClob( columnIndex, nClob );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( String columnLabel, NClob nClob ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnLabel, nClob );
+    try {
+      super.updateNClob( columnLabel, nClob );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -1141,14 +1492,24 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   public void updateSQLXML( int columnIndex,
                             SQLXML xmlObject ) throws SQLException {
     throwIfClosed();
-    super.updateSQLXML( columnIndex, xmlObject );
+    try {
+      super.updateSQLXML( columnIndex, xmlObject );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateSQLXML( String columnLabel,
                             SQLXML xmlObject ) throws SQLException {
     throwIfClosed();
-    super.updateSQLXML( columnLabel, xmlObject );
+    try {
+      super.updateSQLXML( columnLabel, xmlObject );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -1179,98 +1540,168 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   public void updateNCharacterStream( int columnIndex, Reader x,
                                       long length ) throws SQLException {
     throwIfClosed();
-    super.updateNCharacterStream( columnIndex, x, length );
+    try {
+      super.updateNCharacterStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNCharacterStream( String columnLabel, Reader reader,
                                       long length ) throws SQLException {
     throwIfClosed();
-    super.updateNCharacterStream( columnLabel, reader, length );
+    try {
+      super.updateNCharacterStream( columnLabel, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( int columnIndex, InputStream x,
                                  long length ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnIndex, x, length );
+    try {
+      super.updateAsciiStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( int columnIndex, InputStream x,
                                   long length ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnIndex, x, length );
+    try {
+      super.updateBinaryStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( int columnIndex, Reader x,
                                      long length ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnIndex, x, length );
+    try {
+      super.updateCharacterStream( columnIndex, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( String columnLabel, InputStream x,
                                  long length ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnLabel, x, length );
+    try {
+      super.updateAsciiStream( columnLabel, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( String columnLabel, InputStream x,
                                   long length ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnLabel, x, length );
+    try {
+      super.updateBinaryStream( columnLabel, x, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( String columnLabel, Reader reader,
                                      long length ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnLabel, reader, length );
+    try {
+      super.updateCharacterStream( columnLabel, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( int columnIndex, InputStream inputStream,
                           long length ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnIndex, inputStream, length );
+    try {
+      super.updateBlob( columnIndex, inputStream, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( String columnLabel, InputStream inputStream,
                           long length ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnLabel, inputStream, length );
+    try {
+      super.updateBlob( columnLabel, inputStream, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( int columnIndex,  Reader reader,
                           long length ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnIndex, reader, length );
+    try {
+      super.updateClob( columnIndex, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( String columnLabel,  Reader reader,
                           long length ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnLabel, reader, length );
+    try {
+      super.updateClob( columnLabel, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( int columnIndex,  Reader reader,
                            long length ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnIndex, reader, length );
+    try {
+      super.updateNClob( columnIndex, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( String columnLabel,  Reader reader,
                            long length ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnLabel, reader, length );
+    try {
+      super.updateNClob( columnLabel, reader, length );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   //---
@@ -1278,94 +1709,164 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   public void updateNCharacterStream( int columnIndex,
                                       Reader x ) throws SQLException {
     throwIfClosed();
-    super.updateNCharacterStream( columnIndex, x );
+    try {
+      super.updateNCharacterStream( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNCharacterStream( String columnLabel,
                                       Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateNCharacterStream( columnLabel, reader );
+    try {
+      super.updateNCharacterStream( columnLabel, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( int columnIndex,
                                  InputStream x ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnIndex, x );
+    try {
+      super.updateAsciiStream( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( int columnIndex,
                                   InputStream x ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnIndex, x );
+    try {
+      super.updateBinaryStream( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( int columnIndex,
                                      Reader x ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnIndex, x );
+    try {
+      super.updateCharacterStream( columnIndex, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateAsciiStream( String columnLabel,
                                  InputStream x ) throws SQLException {
     throwIfClosed();
-    super.updateAsciiStream( columnLabel, x );
+    try {
+      super.updateAsciiStream( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBinaryStream( String columnLabel,
                                   InputStream x ) throws SQLException {
     throwIfClosed();
-    super.updateBinaryStream( columnLabel, x );
+    try {
+      super.updateBinaryStream( columnLabel, x );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateCharacterStream( String columnLabel,
                                      Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateCharacterStream( columnLabel, reader );
+    try {
+      super.updateCharacterStream( columnLabel, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( int columnIndex,
                           InputStream inputStream ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnIndex, inputStream );
+    try {
+      super.updateBlob( columnIndex, inputStream );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateBlob( String columnLabel,
                           InputStream inputStream ) throws SQLException {
     throwIfClosed();
-    super.updateBlob( columnLabel, inputStream );
+    try {
+      super.updateBlob( columnLabel, inputStream );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( int columnIndex,  Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnIndex, reader );
+    try {
+      super.updateClob( columnIndex, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateClob( String columnLabel,  Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateClob( columnLabel, reader );
+    try {
+      super.updateClob( columnLabel, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( int columnIndex,  Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnIndex, reader );
+    try {
+      super.updateNClob( columnIndex, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   @Override
   public void updateNClob( String columnLabel,  Reader reader ) throws SQLException {
     throwIfClosed();
-    super.updateNClob( columnLabel, reader );
+    try {
+      super.updateNClob( columnLabel, reader );
+    }
+    catch (UnsupportedOperationException e) {
+      throw new SQLFeatureNotSupportedException(e.getMessage(), e);
+    }
   }
 
   //------------------------- JDBC 4.1 -----------------------------------

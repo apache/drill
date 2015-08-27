@@ -22,6 +22,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillDatabaseMetaData;
@@ -121,7 +122,6 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
     throwIfClosed();
     return false;
   }
-
 
   @Override
   public String getDatabaseProductName() throws SQLException {
@@ -921,55 +921,154 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean ownUpdatesAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.ownUpdatesAreVisible(type);
+    try {
+      return super.ownUpdatesAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "ownUpdatesAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean ownDeletesAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.ownDeletesAreVisible(type);
+    try {
+      return super.ownDeletesAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "ownDeletesAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean ownInsertsAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.ownInsertsAreVisible(type);
+    try {
+      return super.ownInsertsAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "ownInsertsAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean othersUpdatesAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.othersUpdatesAreVisible(type);
+    try {
+      return super.othersUpdatesAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "othersUpdatesAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean othersDeletesAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.othersDeletesAreVisible(type);
+    try {
+      return super.othersDeletesAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "othersDeletesAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean othersInsertsAreVisible(int type) throws SQLException {
     throwIfClosed();
-    return super.othersInsertsAreVisible(type);
+    try {
+      return super.othersInsertsAreVisible(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "othersInsertsAreVisible(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean updatesAreDetected(int type) throws SQLException {
     throwIfClosed();
-    return super.updatesAreDetected(type);
+    try {
+      return super.updatesAreDetected(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "updatesAreDetected(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean deletesAreDetected(int type) throws SQLException {
     throwIfClosed();
-    return super.deletesAreDetected(type);
+    try {
+      return super.deletesAreDetected(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "deletesAreDetected(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
   public boolean insertsAreDetected(int type) throws SQLException {
     throwIfClosed();
-    return super.insertsAreDetected(type);
+    try {
+      return super.insertsAreDetected(type);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "insertsAreDetected(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
@@ -1042,7 +1141,18 @@ class DrillDatabaseMetaDataImpl extends AvaticaDatabaseMetaData
   @Override
   public boolean supportsResultSetHoldability(int holdability) throws SQLException {
     throwIfClosed();
-    return super.supportsResultSetHoldability(holdability);
+    try {
+      return super.supportsResultSetHoldability(holdability);
+    }
+    catch (RuntimeException e) {
+      if ("todo: implement this method".equals(e.getMessage())) {
+        throw new SQLFeatureNotSupportedException(
+            "supportsResultSetHoldability(int) is not supported", e);
+      }
+      else {
+        throw new SQLException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
