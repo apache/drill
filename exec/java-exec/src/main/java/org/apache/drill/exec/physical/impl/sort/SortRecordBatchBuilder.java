@@ -45,15 +45,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
 
   private int recordCount;
-  private long runningBytes;
   private long runningBatches;
-  private final long maxBytes;
   private SelectionVector4 sv4;
   final PreAllocator svAllocator;
   private boolean svAllocatorUsed = false;
 
-  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes) {
-    this.maxBytes = maxBytes;
+  public SortRecordBatchBuilder(BufferAllocator a) {
     this.svAllocator = a.getNewPreAllocator();
   }
 
@@ -84,10 +81,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     if (batchBytes == 0 && batches.size() > 0) {
       return true;
     }
-    if (batchBytes + runningBytes > maxBytes) {
-      return false; // enough data memory.
-    }
-    if (runningBatches+1 > Character.MAX_VALUE) {
+    if (runningBatches >= Character.MAX_VALUE) {
       return false; // allowed in batch.
     }
     if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
@@ -96,7 +90,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
 
     RecordBatchData bd = new RecordBatchData(batch);
-    runningBytes += batchBytes;
+    runningBatches++;
     batches.put(batch.getSchema(), bd);
     recordCount += bd.getRecordCount();
     return true;
@@ -108,12 +102,6 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       return;
     }
 
-    if(batchBytes + runningBytes > maxBytes) {
-      final String errMsg = String.format("Adding this batch causes the total size to exceed max allowed size. " +
-          "Current runningBytes %d, Incoming batchBytes %d. maxBytes %d", runningBytes, batchBytes, maxBytes);
-      logger.error(errMsg);
-      throw new DrillRuntimeException(errMsg);
-    }
     if(runningBatches >= Character.MAX_VALUE) {
       final String errMsg = String.format("Tried to add more than %d number of batches.", Character.MAX_VALUE);
       logger.error(errMsg);
@@ -135,7 +123,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       }
       return;
     }
-    runningBytes += batchBytes;
+    runningBatches++;
     batches.put(rbd.getContainer().getSchema(), rbd);
     recordCount += rbd.getRecordCount();
   }

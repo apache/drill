@@ -109,7 +109,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   public final MappingSet partitionMapping = new MappingSet("partitionIndex", null, "partitionVectors", null,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
 
-  private static long MAX_SORT_BYTES = 8l * 1024 * 1024 * 1024;
   private final int recordsToSample; // How many records must be received before analyzing
   private final int samplingFactor; // Will collect samplingFactor * number of partitions to send to distributed cache
   private final float completionFactor; // What fraction of fragments must be completed before attempting to build
@@ -171,7 +170,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Start collecting batches until recordsToSample records have been collected
 
-    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
+    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     WritableBatch batch = null;
     CachedVectorContainer sampleToSave = null;
     VectorContainer containerToCache = new VectorContainer();
@@ -344,7 +343,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
-    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator());
     final VectorContainer allSamplesContainer = new VectorContainer();
     final VectorContainer candidatePartitionTable = new VectorContainer();
     CachedVectorContainer wrap = null;
