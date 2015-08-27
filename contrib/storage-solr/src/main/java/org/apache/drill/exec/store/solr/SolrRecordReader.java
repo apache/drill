@@ -28,25 +28,30 @@ import org.apache.commons.io.Charsets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.store.solr.schema.CVSchema;
+import org.apache.drill.exec.store.solr.schema.CVSchemaField;
+import org.apache.drill.exec.vector.DateVector;
+import org.apache.drill.exec.vector.Float8Vector;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -66,6 +71,7 @@ public class SolrRecordReader extends AbstractRecordReader {
   protected Iterator<SolrDocument> resultIter;
   protected List<String> fields;
   private MajorType.Builder t;
+  private Map<String, CVSchemaField> schemaFieldMap;
 
   public SolrRecordReader(FragmentContext context, SolrSubScan config) {
     fc = context;
@@ -77,11 +83,11 @@ public class SolrRecordReader extends AbstractRecordReader {
     String solrCoreName = scanList.get(0).getSolrCoreName();
     List<SchemaPath> colums = config.getColumns();
     SolrFilterParam filters = config.getSolrScanSpec().getFilter();
-    StringBuilder sb=new StringBuilder();
-    if(filters!=null){      
+    StringBuilder sb = new StringBuilder();
+    if (filters != null) {
       for (String filter : filters) {
         sb.append(filter);
-      }     
+      }
     }
     setColumns(colums);
     Map<String, String> solrParams = new HashMap<String, String>();
@@ -90,8 +96,17 @@ public class SolrRecordReader extends AbstractRecordReader {
     solrParams.put("qt", "/select");
 
     solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,
-        this.fields,sb);
-    // solrClientApiExec.getSchemaForCore(solrCoreName);
+        this.fields, sb); // solr docs
+    CVSchema oCVSchema = solrClientApiExec.getSchemaForCore(solrCoreName,
+        solrServerUrl); // solr core schema
+    if (oCVSchema.getFields() != null) {
+      schemaFieldMap = new HashMap<String, CVSchemaField>(oCVSchema.getFields()
+          .size());
+      for (CVSchemaField cvSchemaField : oCVSchema.getFields()) {
+        schemaFieldMap.put(cvSchemaField.getName(), cvSchemaField);
+      }
+    }
+
     resultIter = solrDocList.iterator();
     logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
 
@@ -121,21 +136,60 @@ public class SolrRecordReader extends AbstractRecordReader {
     logger.info("SolrRecordReader :: setup");
     if (!solrDocList.isEmpty()) {
       SolrDocument solrDocument = solrDocList.get(0);
-
       Collection<String> fieldNames = solrDocument.getFieldNames();
-      for (String field : fieldNames) {
-        MaterializedField m_field = null;
-        logger.debug("solr column is " + field);
-        t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR);
-        m_field = MaterializedField.create(field, t.build());
-        try {
-          vectors.add(output.addField(m_field, NullableVarCharVector.class));
-        } catch (SchemaChangeException e) {
-          logger.debug("error while creating result vector "
-              + e.getLocalizedMessage());
+      try {
+        for (String field : fieldNames) {
+          MaterializedField m_field = null;
+          CVSchemaField cvSchemaField = schemaFieldMap.get(field);
+          if (cvSchemaField != null) {
+            logger.debug(" column field name ::" + cvSchemaField.getName()
+                + " type " + cvSchemaField.getType());
+            switch (cvSchemaField.getType()) {
+            case "string":
+              t = MajorType.newBuilder().setMinorType(
+                  TypeProtos.MinorType.VARCHAR);
+              m_field = MaterializedField.create(field, t.build());
+              vectors
+                  .add(output.addField(m_field, NullableVarCharVector.class));
+              break;
+            case "double":
+              t = MajorType.newBuilder().setMinorType(
+                  TypeProtos.MinorType.BIGINT);
+              m_field = MaterializedField.create(field, t.build());
+              vectors.add(output.addField(m_field, NullableBigIntVector.class));
+              break;
+            case "int":
+              t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT);
+              m_field = MaterializedField.create(field, t.build());
+              vectors.add(output.addField(m_field, NullableIntVector.class));
+              break;
+            case "float":
+              t = MajorType.newBuilder().setMinorType(
+                  TypeProtos.MinorType.FLOAT8);
+              m_field = MaterializedField.create(field, t.build());
+              vectors.add(output.addField(m_field, Float8Vector.class));
+              break;
+            case "timestamp":
+              t = MajorType.newBuilder().setMinorType(
+                  TypeProtos.MinorType.TIMESTAMP);
+              m_field = MaterializedField.create(field, t.build());
+              vectors.add(output.addField(m_field, TimeStampVector.class));
+              break;
+            default:
+              t = MajorType.newBuilder().setMinorType(
+                  TypeProtos.MinorType.VARCHAR);
+              m_field = MaterializedField.create(field, t.build());
+              vectors
+                  .add(output.addField(m_field, NullableVarCharVector.class));
+              break;
+            }
+          }
         }
+        this.outputMutator = output;
+      } catch (SchemaChangeException e) {
+        throw new ExecutionSetupException(e);
       }
-      this.outputMutator = output;
+
     }
   }
 
@@ -171,7 +225,7 @@ public class SolrRecordReader extends AbstractRecordReader {
           String solrField = vv.getField().getPath().toString()
               .replaceAll("`", ""); // re-think ??
           Object fieldValue = solrDocument.get(solrField);
-          String fieldValueStr = "NULL";
+          String fieldValueStr = null;
           if (fieldValue != null) {
             fieldValueStr = fieldValue.toString();
           }
@@ -180,6 +234,20 @@ public class SolrRecordReader extends AbstractRecordReader {
             NullableVarCharVector v = (NullableVarCharVector) vv;
             v.getMutator().setSafe(counter, record, 0, record.length);
             v.getMutator().setValueLengthSafe(counter, record.length);
+          } else if (vv.getClass().equals(VarCharVector.class)) {
+            VarCharVector v = (VarCharVector) vv;
+            v.getMutator().setSafe(counter, record, 0, record.length);
+            v.getMutator().setValueLengthSafe(counter, record.length);
+          } else if (vv.getClass().equals(NullableBigIntVector.class)) {
+            NullableBigIntVector v = (NullableBigIntVector) vv;
+            v.getMutator().setSafe(counter, Long.parseLong(fieldValueStr));
+          } else if (vv.getClass().equals(NullableIntVector.class)) {
+            NullableIntVector v = (NullableIntVector) vv;
+            v.getMutator().setSafe(counter, Integer.parseInt(fieldValueStr));
+          } else if (vv.getClass().equals(DateVector.class)) {
+            DateVector v = (DateVector) vv;
+            long dtime = DateTime.parse(fieldValueStr).toDate().getTime();
+            v.getMutator().setSafe(counter, dtime);
           } else {
             NullableVarCharVector v = (NullableVarCharVector) vv;
             v.getMutator().setSafe(counter, record, 0, record.length);

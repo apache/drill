@@ -24,18 +24,27 @@ import org.junit.Test;
 public class TestSolr extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(TestSolr.class);
-  private static final String solrServer = "http://sgdev1:20000/solr/";
+  private static final String solrServer = "http://localhost:20000/solr/";
   private static final String solrCoreName = "bootstrap_5";
   private SolrScanSpec solrScanSpec;
+
   @Before
-  public void setUp(){
-    solrScanSpec=new SolrScanSpec(solrCoreName);
-    
+  public void setUp() {
+    solrScanSpec = new SolrScanSpec(solrCoreName);
+
   }
 
   @Test
   public void solrBasicQuery() throws Exception {
     testBuilder().sqlQuery("select * from solr.`bootstrap_5`").unOrdered()
         .build().run();
+  }
+
+  @Test
+  public void solrFilterQuery() throws Exception {
+    testBuilder()
+        .sqlQuery(
+            "select * from solr.`bikemini_3` where start_station_id='514'")
+        .unOrdered().build().run();
   }
 }

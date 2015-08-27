@@ -17,16 +17,7 @@
  */
 package org.apache.drill.exec.store.solr;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.common.params.SolrParams;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SolrScanSpec {
@@ -43,11 +34,13 @@ public class SolrScanSpec {
       @JsonProperty("filter") String filter) {
     this.solrCoreName = solrCoreName;
   }
+
   public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName,
       @JsonProperty("filter") SolrFilterParam filter) {
     this.solrCoreName = solrCoreName;
-    this.filter=filter;
+    this.filter = filter;
   }
+
   public String getSolrCoreName() {
     return solrCoreName;
   }
@@ -55,8 +48,10 @@ public class SolrScanSpec {
   public SolrFilterParam getFilter() {
     return filter;
   }
+
   @Override
-  public String toString(){
-    return "SolrScanSpec [solrCoreName=" + solrCoreName + ", filter=" + filter + "]";
+  public String toString() {
+    return "SolrScanSpec [solrCoreName=" + solrCoreName + ", filter=" + filter
+        + "]";
   }
 }

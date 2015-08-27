@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +42,10 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.beust.jcommander.internal.Lists;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 
 public class SolrClientAPIExec {
@@ -87,9 +87,9 @@ public class SolrClientAPIExec {
     return coreList;
   }
 
-  public CVSchema getSchemaForCore(String coreName) {
-    String schemaUrl = "http://dm2perf:20000/servlets/collection?type=GETSCHEMAFIELDS&corename={0}";
-    schemaUrl = MessageFormat.format(schemaUrl, coreName);
+  public CVSchema getSchemaForCore(String coreName, String solrServerUrl) {
+    String schemaUrl = "{0}{1}/schema/fields";
+    schemaUrl = MessageFormat.format(schemaUrl, solrServerUrl, coreName);
     HttpClient client = new DefaultHttpClient();
     HttpGet request = new HttpGet(schemaUrl);
     CVSchema oCVSchema = null;
@@ -105,8 +105,9 @@ public class SolrClientAPIExec {
       while ((line = rd.readLine()) != null) {
         result.append(line);
       }
-      logger.info("schema info... " + result);
       ObjectMapper mapper = new ObjectMapper();
+      mapper
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       oCVSchema = mapper.readValue(result.toString(), CVSchema.class);
     } catch (Exception e) {
       logger.info("exception occured while fetching schema details..."
@@ -116,26 +117,27 @@ public class SolrClientAPIExec {
   }
 
   public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
-      List<String> fields,StringBuilder filters) {
-    logger.debug("getSolrDocs :: "+solrCoreName);
+      List<String> fields, StringBuilder filters) {
+    logger.debug("getSolrDocs :: " + solrCoreName);
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
     SolrDocumentList sList = null;
-    SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive").setQuery("*:*")
-        .setRows(Integer.MAX_VALUE);
-    
+    SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
+        .setQuery("*:*").setRows(Integer.MAX_VALUE);
+
     if (fields != null) {
       logger.debug("solr fields are " + fields);
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
     }
-    if(filters.length()>0){
-      logger.info("adding filter query :: "+filters.toString());
+    if (filters.length() > 0) {
+      logger.info("adding filter query :: " + filters.toString());
       solrQuery.setParam("fq", filters.toString());
     }
     try {
       logger.debug("setting solrquery..");
       QueryResponse rsp = solrClient.query(solrQuery);
-      logger.debug("response recieved from " + solrServer +" core "+solrCoreName);
+      logger.debug("response recieved from " + solrServer + " core "
+          + solrCoreName);
       sList = rsp.getResults();
     } catch (SolrServerException | IOException e) {
       logger.debug("error occured while fetching results from solr server "

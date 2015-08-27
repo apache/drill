@@ -19,24 +19,15 @@ package org.apache.drill.exec.store.solr.schema;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.solr.SolrClientAPIExec;
 import org.apache.drill.exec.store.solr.SolrStoragePlugin;
 import org.apache.drill.exec.store.solr.SolrStoragePluginConfig;
-import org.apache.solr.client.solrj.SolrClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 
 public class SolrSchemaFactory implements SchemaFactory {
@@ -47,9 +38,8 @@ public class SolrSchemaFactory implements SchemaFactory {
 
   public SolrSchemaFactory(SolrStoragePlugin solrStorage, String storageName) {
     this.solrStorage = solrStorage;
-    this.storageName = storageName;    
+    this.storageName = storageName;
   }
-
 
   /*
    * (non-Javadoc)
@@ -63,10 +53,10 @@ public class SolrSchemaFactory implements SchemaFactory {
       throws IOException {
     logger.info("registering schema....");
     List<String> schemaPath = Lists.newArrayList();
-    //schemaPath.add(SolrStoragePluginConfig.NAME);
-    SolrSchema schema = new SolrSchema(schemaPath,"root", solrStorage);    
+    schemaPath.add(SolrStoragePluginConfig.NAME);
+    SolrSchema schema = new SolrSchema(schemaPath, "root", solrStorage);
     SchemaPlus hPlus = parent.add(this.storageName, schema);
-    
+
   }
 
 }

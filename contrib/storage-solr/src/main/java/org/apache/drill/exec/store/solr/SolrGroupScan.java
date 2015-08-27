@@ -110,6 +110,7 @@ public class SolrGroupScan extends AbstractGroupScan {
     // TODO Auto-generated method stub
     return ScanStats.TRIVIAL_TABLE;
   }
+
   @JsonIgnore
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)

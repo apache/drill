@@ -17,28 +17,19 @@
  */
 package org.apache.drill.exec.store.solr.schema;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
-import javax.inject.Inject;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.solr.SolrClientAPIExec;
 import org.apache.drill.exec.store.solr.SolrScanSpec;
 import org.apache.drill.exec.store.solr.SolrStoragePlugin;
 import org.apache.drill.exec.store.solr.SolrStoragePluginConfig;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class SolrSchema extends AbstractSchema {
@@ -49,11 +40,16 @@ public class SolrSchema extends AbstractSchema {
   private String currentSchema = "root";
   private final Map<String, DrillTable> drillTables = Maps.newHashMap();
   private final SolrStoragePlugin solrStoragePlugin;
+  private final List<String> schemaPath;
 
-  public SolrSchema(List<String> schemaPath,String currentSchema, SolrStoragePlugin solrStoragePlugin) {   
+  public SolrSchema(List<String> schemaPath, String currentSchema,
+      SolrStoragePlugin solrStoragePlugin) {
     super(schemaPath, currentSchema);
+    this.schemaPath = schemaPath;
+    this.currentSchema = currentSchema;
     this.solrStoragePlugin = solrStoragePlugin;
-    availableSolrCores = solrStoragePlugin.getSolrClientApiExec().getSolrCoreList();
+    availableSolrCores = solrStoragePlugin.getSolrClientApiExec()
+        .getSolrCoreList();
   }
 
   @Override
@@ -85,7 +81,8 @@ public class SolrSchema extends AbstractSchema {
   DrillTable getDrillTable(String dbName, String collectionName) {
     logger.info("SolrSchema :: getDrillTable");
     SolrScanSpec solrScanSpec = new SolrScanSpec(collectionName);
-    return new DynamicDrillTable(solrStoragePlugin, SolrStoragePluginConfig.NAME, solrScanSpec);
+    return new DynamicDrillTable(solrStoragePlugin,
+        SolrStoragePluginConfig.NAME, solrScanSpec);
   }
 
   @Override
@@ -94,4 +91,8 @@ public class SolrSchema extends AbstractSchema {
     return availableSolrCores;
   }
 
+  @Override
+  public boolean showInInformationSchema() {
+    return true;
+  }
 }

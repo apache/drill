@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import static org.apache.drill.common.graph.GraphValue.logger;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   private SolrStoragePluginConfig solrPluginConfig;
   private SolrScanSpec solrScanSpec;
   private List<SchemaPath> columns;
-  private List<SolrScanSpec> scanList; 
+  private List<SolrScanSpec> scanList;
 
   private String userName;
 
@@ -51,7 +53,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
     this.solrPlugin = that.solrPlugin;
     this.solrPluginConfig = that.solrPluginConfig;
     this.solrScanSpec = that.solrScanSpec;
-    this.scanList=that.scanList;
+    this.scanList = that.scanList;
     logger.info("SolrSubScan : constructor ::" + columns);
   }
 
@@ -120,9 +122,11 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   public SolrStoragePlugin getSolrPlugin() {
     return solrPlugin;
   }
+
   public List<SolrScanSpec> getScanList() {
     return scanList;
   }
+
   public SolrScanSpec getSolrScanSpec() {
     return solrScanSpec;
   }

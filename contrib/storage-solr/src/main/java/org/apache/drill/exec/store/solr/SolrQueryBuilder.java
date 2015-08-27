@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.solr;
 
 import java.util.List;
-import java.util.Queue;
 
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
@@ -26,11 +25,9 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -224,7 +221,8 @@ public class SolrQueryBuilder extends
       break;
     }
     if (operator != null) {
-      SolrFilterParam filterParam = new SolrFilterParam(fieldName,operator,fieldValue.toString());
+      SolrFilterParam filterParam = new SolrFilterParam(fieldName, operator,
+          fieldValue.toString());
 
       return new SolrScanSpec(this.groupScan.getSolrScanSpec()
           .getSolrCoreName(), filterParam);

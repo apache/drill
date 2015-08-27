@@ -28,16 +28,17 @@ public class SolrStoragePluginConfig extends StoragePluginConfig {
   public static final String NAME = "solr";
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(SolrStoragePluginConfig.class);
-  
-  @JsonProperty
-  private String solrServer="";
 
-  
+  @JsonProperty
+  private String solrServer = "";
+
   @JsonCreator
   public SolrStoragePluginConfig(@JsonProperty("solrServer") String solrServer) {
-    logger.debug("Initializing SOLR StoragePlugin configuration with solr server :: "+solrServer);
+    logger
+        .debug("Initializing SOLR StoragePlugin configuration with solr server :: "
+            + solrServer);
     this.solrServer = solrServer;
-    
+
   }
 
   @JsonProperty("solrServer")
@@ -45,7 +46,6 @@ public class SolrStoragePluginConfig extends StoragePluginConfig {
     return this.solrServer;
   }
 
-  
   @Override
   public boolean equals(Object that) {
     if (this == that) {
