@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
+import org.apache.drill.jdbc.InvalidParameterSqlException;
 
 import net.hydromatic.avatica.AvaticaResultSetMetaData;
 import net.hydromatic.avatica.AvaticaStatement;
@@ -56,6 +57,17 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
     }
   }
 
+  private void throwIfClosedOrOutOfBounds( int columnNumber )
+      throws InvalidParameterSqlException,
+             SQLException {
+    throwIfClosed();
+    if ( 1 > columnNumber || columnNumber > getColumnCount() ) {
+      throw new InvalidParameterSqlException(
+          "Column number " + columnNumber + " out of range of from 1 through "
+          + getColumnCount() + " (column count)" );
+    }
+  }
+
 
   // Note:  Using dynamic proxies would reduce the quantity (450?) of method
   // overrides by eliminating those that exist solely to check whether the
@@ -76,123 +88,123 @@ public class DrillResultSetMetaDataImpl extends AvaticaResultSetMetaData {
   }
 
   @Override
-  public boolean isAutoIncrement(int column) throws SQLException {
-    throwIfClosed();
-    return super.isAutoIncrement(column);
+  public boolean isAutoIncrement( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isAutoIncrement( columnNumber );
   }
 
   @Override
-  public boolean isCaseSensitive(int column) throws SQLException {
-    throwIfClosed();
-    return super.isCaseSensitive(column);
+  public boolean isCaseSensitive( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isCaseSensitive( columnNumber );
   }
 
   @Override
-  public boolean isSearchable(int column) throws SQLException {
-    throwIfClosed();
-    return super.isSearchable(column);
+  public boolean isSearchable( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isSearchable( columnNumber );
   }
 
   @Override
-  public boolean isCurrency(int column) throws SQLException {
-    throwIfClosed();
-    return super.isCurrency(column);
+  public boolean isCurrency( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isCurrency( columnNumber );
   }
 
   @Override
-  public int isNullable(int column) throws SQLException {
-    throwIfClosed();
-    return super.isNullable(column);
+  public int isNullable( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isNullable( columnNumber );
   }
 
   @Override
-  public boolean isSigned(int column) throws SQLException {
-    throwIfClosed();
-    return super.isSigned(column);
+  public boolean isSigned( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isSigned( columnNumber );
   }
 
   @Override
-  public int getColumnDisplaySize(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnDisplaySize(column);
+  public int getColumnDisplaySize( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnDisplaySize( columnNumber );
   }
 
   @Override
-  public String getColumnLabel(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnLabel(column);
+  public String getColumnLabel( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnLabel( columnNumber );
   }
 
   @Override
-  public String getColumnName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnName(column);
+  public String getColumnName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnName( columnNumber );
   }
 
   @Override
-  public String getSchemaName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getSchemaName(column);
+  public String getSchemaName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getSchemaName( columnNumber );
   }
 
   @Override
-  public int getPrecision(int column) throws SQLException {
-    throwIfClosed();
-    return super.getPrecision(column);
+  public int getPrecision( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getPrecision( columnNumber );
   }
 
   @Override
-  public int getScale(int column) throws SQLException {
-    throwIfClosed();
-    return super.getScale(column);
+  public int getScale( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getScale( columnNumber );
   }
 
   @Override
-  public String getTableName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getTableName(column);
+  public String getTableName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getTableName( columnNumber );
   }
 
   @Override
-  public String getCatalogName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getCatalogName(column);
+  public String getCatalogName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getCatalogName( columnNumber );
   }
 
   @Override
-  public int getColumnType(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnType(column);
+  public int getColumnType( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnType( columnNumber );
   }
 
   @Override
-  public String getColumnTypeName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnTypeName(column);
+  public String getColumnTypeName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnTypeName( columnNumber );
   }
 
   @Override
-  public boolean isReadOnly(int column) throws SQLException {
-    throwIfClosed();
-    return super.isReadOnly(column);
+  public boolean isReadOnly( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isReadOnly( columnNumber );
   }
 
   @Override
-  public boolean isWritable(int column) throws SQLException {
-    throwIfClosed();
-    return super.isWritable(column);
+  public boolean isWritable( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isWritable( columnNumber );
   }
 
   @Override
-  public boolean isDefinitelyWritable(int column) throws SQLException {
-    throwIfClosed();
-    return super.isDefinitelyWritable(column);
+  public boolean isDefinitelyWritable( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.isDefinitelyWritable( columnNumber );
   }
 
   @Override
-  public String getColumnClassName(int column) throws SQLException {
-    throwIfClosed();
-    return super.getColumnClassName(column);
+  public String getColumnClassName( int columnNumber ) throws SQLException {
+    throwIfClosedOrOutOfBounds( columnNumber );
+    return super.getColumnClassName( columnNumber );
   }
 
 }

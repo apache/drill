@@ -130,13 +130,23 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public int executeUpdate( String sql, int[] columnIndexes ) throws SQLException {
     throwIfClosed();
-    return super.executeUpdate( sql, columnIndexes );
+    try {
+      return super.executeUpdate( sql, columnIndexes );
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public int executeUpdate( String sql, String[] columnNames ) throws SQLException {
     throwIfClosed();
-    return super.executeUpdate( sql, columnNames );
+    try {
+      return super.executeUpdate( sql, columnNames );
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
@@ -195,13 +205,23 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public int getMaxFieldSize() throws SQLException {
     throwIfClosed();
-    return super.getMaxFieldSize();
+    try {
+      return super.getMaxFieldSize();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public void setMaxFieldSize(int max) throws SQLException {
     throwIfClosed();
-    super.setMaxFieldSize(max);
+    try {
+      super.setMaxFieldSize(max);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
@@ -225,7 +245,12 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public void setEscapeProcessing(boolean enable) throws SQLException {
     throwIfClosed();
-    super.setEscapeProcessing(enable);
+    try {
+      super.setEscapeProcessing(enable);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
@@ -249,7 +274,12 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public void setCursorName(String name) throws SQLException {
     throwIfClosed();
-    super.setCursorName(name);
+    try {
+      super.setCursorName(name);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
@@ -267,7 +297,12 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public boolean getMoreResults() throws SQLException {
     throwIfClosed();
-    return super.getMoreResults();
+    try {
+      return super.getMoreResults();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
@@ -309,85 +344,155 @@ class DrillStatementImpl extends AvaticaStatement implements DrillStatement,
   @Override
   public int getResultSetConcurrency() throws SQLException {
     throwIfClosed();
-    return super.getResultSetConcurrency();
+    try {
+      return super.getResultSetConcurrency();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public int getResultSetType() throws SQLException {
     throwIfClosed();
-    return super.getResultSetType();
+    try {
+      return super.getResultSetType();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public void addBatch( String sql ) throws SQLException {
     throwIfClosed();
-    super.addBatch( sql );
+    try {
+      super.addBatch( sql );
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public void clearBatch() throws SQLException {
     throwIfClosed();
-    super.clearBatch();
+    try {
+      super.clearBatch();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public int[] executeBatch() throws SQLException {
     throwIfClosed();
-    return super.executeBatch();
+    try {
+      return super.executeBatch();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public boolean getMoreResults(int current) throws SQLException {
     throwIfClosed();
-    return super.getMoreResults(current);
+    try {
+      return super.getMoreResults(current);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
     throwIfClosed();
-    return super.getGeneratedKeys();
+    try {
+      return super.getGeneratedKeys();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
     throwIfClosed();
-    return super.executeUpdate(sql, autoGeneratedKeys);
+    try {
+      return super.executeUpdate(sql, autoGeneratedKeys);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
     throwIfClosed();
-    return super.execute(sql, autoGeneratedKeys);
+    try {
+      return super.execute(sql, autoGeneratedKeys);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public boolean execute(String sql, int columnIndexes[]) throws SQLException {
     throwIfClosed();
-    return super.execute(sql, columnIndexes);
+    try {
+      return super.execute(sql, columnIndexes);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public boolean execute(String sql, String columnNames[]) throws SQLException {
     throwIfClosed();
-    return super.execute(sql, columnNames);
+    try {
+      return super.execute(sql, columnNames);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public int getResultSetHoldability() throws SQLException {
     throwIfClosed();
-    return super.getResultSetHoldability();
+    try {
+      return super.getResultSetHoldability();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public void setPoolable(boolean poolable) throws SQLException {
     throwIfClosed();
-    super.setPoolable(poolable);
+    try {
+      super.setPoolable(poolable);
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
   public boolean isPoolable() throws SQLException {
     throwIfClosed();
-    return super.isPoolable();
+    try {
+      return super.isPoolable();
+    }
+    catch ( UnsupportedOperationException e ) {
+      throw new SQLFeatureNotSupportedException( e.getMessage(), e );
+    }
   }
 
   @Override
