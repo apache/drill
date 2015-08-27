@@ -83,7 +83,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ExternalSortBatch.class);
 
-  private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
   private static final GeneratorMapping COPIER_MAPPING = new GeneratorMapping("doSetup", "doCopy", null, null);
   private static final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
   private static final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
@@ -390,7 +389,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           builder.clear();
           builder.close();
         }
-        builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
+        builder = new SortRecordBatchBuilder(oContext.getAllocator());
 
         for (BatchGroup group : batchGroups) {
           RecordBatchData rbd = new RecordBatchData(group.getContainer());
