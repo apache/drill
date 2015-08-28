@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.Test;
 
@@ -59,5 +60,56 @@ public class TestNewTextReader extends BaseTestQuery {
       assertEquals(ErrorType.DATA_READ, ex.getErrorType());
       assertTrue("Error message should contain " + COL_NAME, ex.getMessage().contains(COL_NAME));
     }
+  }
+
+  @Test // see DRILL-3718
+  public void testTabSeparatedWithQuote() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tsv").toURI().toString();
+    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+        "from dfs_test.`%s` ", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c0", "c1", "c2")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .build()
+        .run();
+  }
+
+  @Test // see DRILL-3718
+  public void testSpaceSeparatedWithQuote() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.ssv").toURI().toString();
+    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+        "from dfs_test.`%s` ", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c0", "c1", "c2")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .build()
+        .run();
+  }
+
+  @Test // see DRILL-3718
+  public void testPipSeparatedWithQuote() throws Exception {
+    final String root = FileUtils.getResourceAsFile("/store/text/WithQuote.tbl").toURI().toString();
+    final String query = String.format("select columns[0] as c0, columns[1] as c1, columns[2] as c2 \n" +
+            "from dfs_test.`%s` ", root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c0", "c1", "c2")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .baselineValues("a", "a", "a")
+        .build()
+        .run();
   }
 }

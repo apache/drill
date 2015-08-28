@@ -29,6 +29,11 @@
           extensions: [ "tsv" ],
           delimiter: "\t"
         },
+        "ssv" : {
+          type: "text",
+          extensions: [ "ssv" ],
+          delimiter: " "
+        },
         "parquet" : {
           type: "parquet"
         },

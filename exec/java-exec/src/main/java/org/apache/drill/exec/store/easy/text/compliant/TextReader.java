@@ -259,9 +259,11 @@ final class TextReader {
       ch = input.nextChar();
     }
 
-    // handles whitespaces after quoted value: whitespaces are ignored. Content after whitespaces may be parsed if
-    // 'parseUnescapedQuotes' is enabled.
-    if (ch != newLine && ch <= ' ') {
+    // Handles whitespaces after quoted value:
+    // Whitespaces are ignored (i.e., ch <= ' ') if they are not used as delimiters (i.e., ch != ' ')
+    // For example, in tab-separated files (TSV files), '\t' is used as delimiter and should not be ignored
+    // Content after whitespaces may be parsed if 'parseUnescapedQuotes' is enabled.
+    if (ch != newLine && ch <= ' ' && ch != delimiter) {
       final DrillBuf workBuf = this.workBuf;
       workBuf.resetWriterIndex();
       do {
@@ -272,7 +274,7 @@ final class TextReader {
         if (ch == newLine) {
           return;
         }
-      } while (ch <= ' ');
+      } while (ch <= ' ' && ch != delimiter);
 
       // there's more stuff after the quoted value, not only empty spaces.
       if (!(ch == delimiter || ch == newLine) && parseUnescapedQuotes) {

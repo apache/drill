@@ -170,6 +170,7 @@
             <exclude>**/*.csv</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
+            <exclude>**/*.ssv</exclude>
             <exclude>**/drill-*.conf</exclude>
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.proto</exclude>
