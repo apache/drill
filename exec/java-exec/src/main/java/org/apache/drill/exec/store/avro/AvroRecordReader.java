@@ -65,6 +65,8 @@ public class AvroRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AvroRecordReader.class);
 
   private final Path hadoop;
+  private final long start;
+  private final long end;
   private DrillBuf buffer;
   private VectorContainerWriter writer;
 
@@ -77,17 +79,23 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   public AvroRecordReader(final FragmentContext fragmentContext,
                           final String inputPath,
+                          final long start,
+                          final long length,
                           final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns) {
-    this(fragmentContext, inputPath, fileSystem, projectedColumns, DEFAULT_BATCH_SIZE);
+    this(fragmentContext, inputPath, start, length, fileSystem, projectedColumns, DEFAULT_BATCH_SIZE);
   }
 
   public AvroRecordReader(final FragmentContext fragmentContext,
                           final String inputPath,
+                          final long start,
+                          final long length,
                           final FileSystem fileSystem,
                           List<SchemaPath> projectedColumns, final int defaultBatchSize) {
 
     hadoop = new Path(inputPath);
+    this.start = start;
+    this.end = start + length;
     buffer = fragmentContext.getManagedBuffer();
     this.fs = fileSystem;
 
@@ -101,6 +109,8 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     try {
       reader = new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
+      logger.debug("Processing file : {}, start position : {}, end position : {} ", hadoop, start, end);
+      reader.sync(this.start);
     } catch (IOException e) {
       throw new ExecutionSetupException(e);
     }
@@ -125,7 +135,7 @@ public class AvroRecordReader extends AbstractRecordReader {
 
       // XXX - Implement batch size
 
-      for (GenericContainer container = null; reader.hasNext(); recordCount++) {
+      for (GenericContainer container = null; reader.hasNext() && !reader.pastSync(end); recordCount++) {
         writer.setPosition(recordCount);
         container = reader.next(container);
         processRecord(container, container.getSchema());

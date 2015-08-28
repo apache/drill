@@ -47,7 +47,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
   }
 
   public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("avro"), "avro");
+    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("avro"), "avro");
   }
 
   @Override
@@ -57,7 +57,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException {
-    return new AvroRecordReader(context, fileWork.getPath(), dfs, columns);
+    return new AvroRecordReader(context, fileWork.getPath(), fileWork.getStart(), fileWork.getLength(), dfs, columns);
   }
 
   @Override
