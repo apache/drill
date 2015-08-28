@@ -18,7 +18,9 @@
 package org.apache.drill.exec.expr;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.expression.BooleanOperator;
@@ -53,6 +55,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
+import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
@@ -92,7 +95,7 @@ public class EvaluationVisitor {
     } else {
       constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
     }
-    return e.accept(new ConstantFilter(constantBoundaries), generator);
+    return e.accept(new CommonReaderExprFilter(constantBoundaries), generator);
   }
 
   private class EvalVisitor extends AbstractExprVisitor<HoldingContainer, ClassGenerator<?>, RuntimeException> {
@@ -1053,6 +1056,43 @@ public class EvaluationVisitor {
       generator.getMappingSet().exitConstant();
       return new HoldingContainer(input.getMajorType(), fieldValue, fieldValue.ref("value"), fieldValue.ref("isSet"))
           .setConstant(true);
+    }
+  }
+
+
+  private class CommonReaderExprFilter extends ConstantFilter {
+    public CommonReaderExprFilter(Set<LogicalExpression> constantBoundaries) {
+      super(constantBoundaries);
+    }
+
+    @Override
+    public HoldingContainer visitUnknown(LogicalExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      // reduce common valueVectorReadExpression :
+      if (e instanceof ValueVectorReadExpression) {
+        final MappingSet mappingSet = generator.getMappingSet();
+
+        // Conditions to qualify for a common valueVectorReadExpression:
+        //    - The reference is used in the same JBlock
+        //    - The TypeFieldID of valueVectorReadExpression is same
+        //    - The mappingSet's incoming is same ( Meaning reading from the same recordBatch)
+        //    - The mappingSet's readIndex is same (Meaning reading the same entry in value vector).
+        ClassGenerator.ValueVectorReadExpEntry entry = new ClassGenerator.ValueVectorReadExpEntry(
+            generator.getEvalBlock(),
+            (ValueVectorReadExpression)e,
+            mappingSet.getValueReadIndex(),
+            mappingSet.getIncoming());
+
+        Map<ClassGenerator.ValueVectorReadExpEntry, HoldingContainer> readerExprMap = generator.getCommonReaderExprMap();
+        if (readerExprMap.containsKey(entry)) {
+          return readerExprMap.get(entry);
+        } else {
+          HoldingContainer hc = super.visitUnknown(e, generator);
+          readerExprMap.put(entry, hc);
+          return hc;
+        }
+      } else {
+        return super.visitUnknown(e, generator);
+      }
     }
   }
 

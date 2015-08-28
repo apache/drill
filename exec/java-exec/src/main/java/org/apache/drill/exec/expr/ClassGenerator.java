@@ -54,6 +54,7 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import org.apache.drill.exec.store.sys.PStoreConfig;
 
 public class ClassGenerator<T>{
 
@@ -80,6 +81,8 @@ public class ClassGenerator<T>{
   private int index = 0;
   private int labelIndex = 0;
   private MappingSet mappings;
+
+  private Map<ValueVectorReadExpEntry, HoldingContainer> commonReaderExprMap = Maps.newHashMap();
 
   public static MappingSet getDefaultMapping() {
     return new MappingSet("inIndex", "outIndex", DEFAULT_CONSTANT_MAP, DEFAULT_SCALAR_MAP);
@@ -328,6 +331,10 @@ public class ClassGenerator<T>{
     return this.workspaceVectors;
   }
 
+  public Map<ValueVectorReadExpEntry, HoldingContainer> getCommonReaderExprMap() {
+    return commonReaderExprMap;
+  }
+
   private static class ValueVectorSetup{
     final DirectExpression batch;
     final TypedFieldId fieldId;
@@ -450,6 +457,77 @@ public class ClassGenerator<T>{
     public TypeProtos.MinorType getMinorType() {
       return type.getMinorType();
     }
+  }
+
+  public static class ValueVectorReadExpEntry {
+    private final JBlock block;
+    private final ValueVectorReadExpression readExpression;
+    private final DirectExpression readIndex;
+    private final DirectExpression incoming;
+
+    public ValueVectorReadExpEntry(JBlock block, ValueVectorReadExpression readExpression, DirectExpression readIndex, DirectExpression incoming) {
+      this.block = block;
+      this.readExpression = readExpression;
+      this.readIndex = readIndex;
+      this.incoming = incoming;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      ValueVectorReadExpEntry other = (ValueVectorReadExpEntry) obj;
+
+      if (block == null) {
+        if (other.block != null) {
+          return false;
+        }
+      } else if (!block.equals(other.block)) {
+        return false;
+      }
+      if (readExpression == null) {
+        if (other.readExpression != null) {
+          return false;
+        }
+      } else if (!readExpression.equals(other.readExpression)) {
+        return false;
+      }
+      if (readIndex == null) {
+        if (other.readIndex != null) {
+          return false;
+        }
+      } else if (!readIndex.equals(other.readIndex)) {
+        return false;
+      }
+      if (incoming == null) {
+        if (other.incoming != null) {
+          return false;
+        }
+      } else if (!incoming.equals(other.incoming)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((block == null) ? 0 : block.hashCode());
+      result = prime * result + ((readExpression == null) ? 0 : readExpression.hashCode());
+      result = prime * result + ((readIndex == null) ? 0 : readIndex.hashCode());
+      result = prime * result + ((incoming == null) ? 0 : incoming.hashCode());
+      return result;
+    }
+
   }
 
   public JType getHolderType(MajorType t) {

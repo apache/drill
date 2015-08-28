@@ -22,6 +22,7 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -85,6 +86,30 @@ public class ValueVectorReadExpression implements LogicalExpression{
   @Override
   public int getCumulativeCost() {
     return 0; // TODO
+  }
+
+  @Override
+  public int hashCode() {
+    return fieldId.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof ValueVectorReadExpression)) {
+      return false;
+    }
+
+    ValueVectorReadExpression other = (ValueVectorReadExpression) obj;
+    if (fieldId == null) {
+      return (other.fieldId == null);
+    }
+    return fieldId.equals(other.fieldId);
   }
 
 }
