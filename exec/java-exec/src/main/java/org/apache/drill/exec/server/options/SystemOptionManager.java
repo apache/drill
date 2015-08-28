@@ -73,6 +73,7 @@ public class SystemOptionManager extends BaseOptionManager {
       PlannerSettings.PARTITION_SENDER_SET_THREADS,
       PlannerSettings.ENABLE_DECIMAL_DATA_TYPE,
       PlannerSettings.HEP_JOIN_OPT,
+      PlannerSettings.PLANNER_MEMORY_LIMIT,
       ExecConstants.CAST_TO_NULLABLE_NUMERIC_OPTION,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
