@@ -52,6 +52,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
@@ -64,7 +69,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
- * Abstract base class for all Drill integration tests.
+ * Abstract base class for integration tests.
  */
 public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
@@ -88,6 +93,86 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
             put(ExecConstants.HTTP_ENABLE, "false");
         }
     };
+
+    /* *** Cluster Scope Settings *** */
+
+    private static final int DEFAULT_MIN_NUM_DRILLBITS = 1;
+    private static final int DEFAULT_MAX_NUM_DRILLBITS = 3;
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE})
+    public @interface ClusterScope {
+
+        /**
+         * Returns the scope. {@link Scope#SUITE} is default.
+         */
+        Scope scope() default Scope.SUITE;
+
+        /**
+         * Returns the number of drillbits in the cluster. Default is <tt>-1</tt> which means
+         * a random number of drillbits is used, where the minimum and maximum number of nodes
+         * are either the specified ones or the default ones if not specified.
+         */
+        int numDrillbits() default -1;
+
+        /**
+         * Returns the minimum number of drillbits in the cluster. Default is <tt>-1</tt>.
+         * Ignored when {@link ClusterScope#numDrillbits()} is set.
+         */
+        int minNumDrillbits() default -1;
+
+        /**
+         * Returns the maximum number of drillbits in the cluster. Default is <tt>-1</tt>.
+         * Ignored when {@link ClusterScope#numDrillbits()} is set.
+         */
+        int maxNumDrillbits() default -1;
+    }
+
+    /**
+     * The scope of a test cluster used together with
+     * {@link ClusterScope} annotations on {@link DrillIntegrationTestBase} subclasses.
+     */
+    public enum Scope {
+        /** A cluster shared across all methods in a single test suite */
+        SUITE,
+        /** A cluster that is exclusive to an individual test */
+        TEST
+    }
+
+    private Scope getCurrentClusterScope() {
+        return getCurrentClusterScope(this.getClass());
+    }
+
+    private static Scope getCurrentClusterScope(Class<?> clazz) {
+        ClusterScope annotation = getAnnotation(clazz, ClusterScope.class);
+        return annotation == null ? Scope.SUITE : annotation.scope();
+    }
+
+    private int getNumDrillbits() {
+        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
+        return annotation == null ? -1 : annotation.numDrillbits();
+    }
+
+    private int getMinNumDrillbits() {
+        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
+        return annotation == null || annotation.minNumDrillbits() == -1 ? DEFAULT_MIN_NUM_DRILLBITS : annotation.minNumDrillbits();
+    }
+
+    private int getMaxNumDrillbits() {
+        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
+        return annotation == null || annotation.maxNumDrillbits() == -1 ? DEFAULT_MAX_NUM_DRILLBITS : annotation.maxNumDrillbits();
+    }
+
+    private static <A extends Annotation> A getAnnotation(Class<?> clazz, Class<A> annotationClass) {
+        if (clazz == Object.class || clazz == DrillIntegrationTestBase.class) {
+            return null;
+        }
+        A annotation = clazz.getAnnotation(annotationClass);
+        if (annotation != null) {
+            return annotation;
+        }
+        return getAnnotation(clazz.getSuperclass(), annotationClass);
+    }
 
     /**
      * Number of Drillbits in test cluster. Default is 1.
