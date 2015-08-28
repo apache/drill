@@ -1101,4 +1101,24 @@ public class TestExampleQueries extends BaseTestQuery {
     test(query1);
     test(query2);
   }
+
+  @Test
+  public void testNegativeExtractOperator() throws Exception {
+    String query = "select -EXTRACT(DAY FROM birth_date) as col \n" +
+        "from cp.`employee.json` \n" +
+        "order by col \n" +
+        "limit 5";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col")
+        .baselineValues(-27l)
+        .baselineValues(-27l)
+        .baselineValues(-27l)
+        .baselineValues(-26l)
+        .baselineValues(-26l)
+        .build()
+        .run();
+  }
 }

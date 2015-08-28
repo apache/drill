@@ -41,6 +41,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -123,9 +124,18 @@ public class DrillOptiq {
         logger.debug("Prefix");
         LogicalExpression arg = call.getOperands().get(0).accept(this);
         switch(call.getKind()){
-        case NOT:
-          return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
-            ExpressionPosition.UNKNOWN, arg);
+          case NOT:
+            return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
+                ExpressionPosition.UNKNOWN, arg);
+          case MINUS_PREFIX:
+            final RexBuilder builder = input.getCluster().getRexBuilder();
+            final List<RexNode> operands = Lists.newArrayList();
+            operands.add(builder.makeExactLiteral(new BigDecimal(-1)));
+            operands.add(call.getOperands().get(0));
+
+            return visitCall((RexCall) builder.makeCall(
+                SqlStdOperatorTable.MULTIPLY,
+                    operands));
         }
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case SPECIAL:
@@ -242,7 +252,6 @@ public class DrillOptiq {
     public LogicalExpression visitFieldAccess(RexFieldAccess fieldAccess) {
       return super.visitFieldAccess(fieldAccess);
     }
-
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
       LogicalExpression arg = call.getOperands().get(0).accept(this);
