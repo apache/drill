@@ -30,6 +30,7 @@
   <name>Common (Logical Plan, Base expressions)</name>
 
   <properties>
+    <lucene.version>5.2.1</lucene.version>
     <carrotsearch.testframework>2.1.16</carrotsearch.testframework>
     <execution.hint.file>.local-${project.version}-execution-hints.log</execution.hint.file>
   </properties>
@@ -122,6 +123,18 @@
           <!-- Something in Drill seems to conflict with this, so leave it out. -->
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-test-framework</artifactId>
+      <version>${lucene.version}</version>
+      <!-- we specify our own junit4 version -->
+      <exclusions>
+        <exclusion>
+          <groupId>com.carrotsearch.randomizedtesting</groupId>
+          <artifactId>junit4-ant</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

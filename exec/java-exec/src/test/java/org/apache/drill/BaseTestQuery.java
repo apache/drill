@@ -59,13 +59,17 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class BaseTestQuery extends ExecTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(BaseTestQuery.class);
 
   protected static final String TEMP_SCHEMA = "dfs_test.tmp";
 

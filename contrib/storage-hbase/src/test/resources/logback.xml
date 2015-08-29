@@ -51,6 +51,11 @@
     <appender-ref ref="SOCKET" />
   </logger>
 
+  <logger name="org.apache.drill" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="org.apache.hadoop" additivity="false">
     <level value="info" />
     <appender-ref ref="FILE" />

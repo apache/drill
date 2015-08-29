@@ -18,12 +18,10 @@
 package org.apache.drill.exec;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import org.apache.drill.QueryTestUtil;
-import org.apache.drill.TestBuilder;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
@@ -43,12 +41,15 @@ import org.apache.drill.exec.util.TestUtilities;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.test.DrillTestBase;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -76,15 +77,14 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DrillIntegrationTestBase.class);
 
     protected static final String TEMP_SCHEMA = "dfs_test.tmp";
-
     private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
-    private static final int MAX_WIDTH_PER_NODE = 2;
 
-    protected static DrillClient client;
-    protected static Drillbit[] bits;
-    protected static RemoteServiceSet serviceSet;
-    protected static DrillConfig config;
     protected static BufferAllocator allocator;
+
+    private static Scope scope;
+    private static DrillTestCluster cluster;
+
+    private int[] columnWidths = new int[] { 8 };
 
     @SuppressWarnings("serial")
     private static final Properties TEST_CONFIGURATIONS = new Properties() {
@@ -96,8 +96,11 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
     /* *** Cluster Scope Settings *** */
 
-    private static final int DEFAULT_MIN_NUM_DRILLBITS = 1;
-    private static final int DEFAULT_MAX_NUM_DRILLBITS = 3;
+    public static final int MIN_NUM_DRILLBITS = 1;
+    public static final int MAX_NUM_DRILLBITS = 3;
+
+    public static final int MIN_PARALLELIZATION_WIDTH = 1;
+    public static final int MAX_PARALLELIZATION_WIDTH = 3;
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE})
@@ -109,23 +112,25 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         Scope scope() default Scope.SUITE;
 
         /**
-         * Returns the number of drillbits in the cluster. Default is <tt>-1</tt> which means
-         * a random number of drillbits is used, where the minimum and maximum number of nodes
-         * are either the specified ones or the default ones if not specified.
+         * Sets the number of drillbits to create in the test cluster.
+         *
+         * Default is <tt>-1</tt>, which indicates that the test framework should choose a
+         * random value in the inclusive range [{@link DrillIntegrationTestBase#MIN_NUM_DRILLBITS},
+         * {@link DrillIntegrationTestBase#MAX_NUM_DRILLBITS}].
          */
-        int numDrillbits() default -1;
+        int bits() default -1;
 
         /**
-         * Returns the minimum number of drillbits in the cluster. Default is <tt>-1</tt>.
-         * Ignored when {@link ClusterScope#numDrillbits()} is set.
+         * Sets the value of {@link ExecConstants#MAX_WIDTH_PER_NODE_KEY}, which determines
+         * the level of parallelization per drillbit.
+         *
+         * Default is <tt>-1</tt>, which indicates that the test framework should choose a
+         * random value in the inclusive range [{@link DrillIntegrationTestBase#MIN_PARALLELIZATION_WIDTH},
+         * {@link DrillIntegrationTestBase#MAX_PARALLELIZATION_WIDTH}].
          */
-        int minNumDrillbits() default -1;
+        int width() default -1;
 
-        /**
-         * Returns the maximum number of drillbits in the cluster. Default is <tt>-1</tt>.
-         * Ignored when {@link ClusterScope#numDrillbits()} is set.
-         */
-        int maxNumDrillbits() default -1;
+        // XXX - WHAT IF THESE VALUES CHANGE FROM ONE CLASS TO THE NEXT? WE HAVE TO UPDATE THE CLUSTER
     }
 
     /**
@@ -139,28 +144,19 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         TEST
     }
 
-    private Scope getCurrentClusterScope() {
-        return getCurrentClusterScope(this.getClass());
-    }
-
     private static Scope getCurrentClusterScope(Class<?> clazz) {
         ClusterScope annotation = getAnnotation(clazz, ClusterScope.class);
         return annotation == null ? Scope.SUITE : annotation.scope();
     }
 
-    private int getNumDrillbits() {
-        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
-        return annotation == null ? -1 : annotation.numDrillbits();
+    private static int getNumDrillbits() {
+        ClusterScope annotation = getAnnotation(getTestClass(), ClusterScope.class);
+        return annotation == null ? -1 : annotation.bits();
     }
 
-    private int getMinNumDrillbits() {
-        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
-        return annotation == null || annotation.minNumDrillbits() == -1 ? DEFAULT_MIN_NUM_DRILLBITS : annotation.minNumDrillbits();
-    }
-
-    private int getMaxNumDrillbits() {
-        ClusterScope annotation = getAnnotation(this.getClass(), ClusterScope.class);
-        return annotation == null || annotation.maxNumDrillbits() == -1 ? DEFAULT_MAX_NUM_DRILLBITS : annotation.maxNumDrillbits();
+    private static int getParallelizationWidth() {
+        ClusterScope annotation = getAnnotation(getTestClass(), ClusterScope.class);
+        return annotation == null ? -1 : annotation.width();
     }
 
     private static <A extends Annotation> A getAnnotation(Class<?> clazz, Class<A> annotationClass) {
@@ -174,160 +170,138 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         return getAnnotation(clazz.getSuperclass(), annotationClass);
     }
 
-    /**
-     * Number of Drillbits in test cluster. Default is 1.
-     *
-     * Tests can update the cluster size through {@link #updateTestCluster(int, DrillConfig)}
-     */
-    private static int drillbitCount = 1;
-
-    /**
-     * Location of the dfs_test.tmp schema on local filesystem.
-     */
-    private static String dfsTestTmpSchemaLocation;
-
-    private int[] columnWidths = new int[] { 8 };
-
-    @BeforeClass
-    public static void setupDefaultTestCluster() throws Exception {
-        config = DrillConfig.create(TEST_CONFIGURATIONS);
-        openClient();
-    }
-
-    protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {
-        Preconditions.checkArgument(newDrillbitCount > 0, "Number of Drillbits must be at least one");
-        if (drillbitCount != newDrillbitCount || config != null) {
-            // TODO: Currently we have to shutdown the existing Drillbit cluster before starting a new one with the given
-            // Drillbit count. Revisit later to avoid stopping the cluster.
-            try {
-                closeClient();
-                drillbitCount = newDrillbitCount;
-                if (newConfig != null) {
-                    // For next test class, updated DrillConfig will be replaced by default DrillConfig in BaseTestQuery as part
-                    // of the @BeforeClass method of test class.
-                    config = newConfig;
-                }
-                openClient();
-            } catch(Exception e) {
-                throw new RuntimeException("Failure while updating the test Drillbit cluster.", e);
-            }
-        }
-    }
-
-    /**
-     * Useful for tests that require a DrillbitContext to get/add storage plugins, options etc.
-     *
-     * @return DrillbitContext of first Drillbit in the cluster.
-     */
-    protected static DrillbitContext getDrillbitContext() {
-        Preconditions.checkState(bits != null && bits[0] != null, "Drillbits are not setup.");
-        return bits[0].getContext();
-    }
-
-    protected static Properties cloneDefaultTestConfigProperties() {
-        final Properties props = new Properties();
-        for(String propName : TEST_CONFIGURATIONS.stringPropertyNames()) {
-            props.put(propName, TEST_CONFIGURATIONS.getProperty(propName));
-        }
-
-        return props;
-    }
-
-    protected static String getDfsTestTmpSchemaLocation() {
-        return dfsTestTmpSchemaLocation;
-    }
-
-    private static void resetClientAndBit() throws Exception{
-        closeClient();
-        openClient();
-    }
-
-    private static void openClient() throws Exception {
-        allocator = new TopLevelAllocator(config);
-        if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
-            serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-        } else {
-            serviceSet = RemoteServiceSet.getLocalServiceSet();
-        }
-
-        dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
-
-        bits = new Drillbit[drillbitCount];
-        for(int i = 0; i < drillbitCount; i++) {
-            bits[i] = new Drillbit(config, serviceSet);
-            bits[i].run();
-
-            final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
-            TestUtilities.updateDfsTestTmpSchemaLocation(pluginRegistry, dfsTestTmpSchemaLocation);
-            TestUtilities.makeDfsTmpSchemaImmutable(pluginRegistry);
-        }
-
-        client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, null);
-    }
-
-    /**
-     * Close the current <i>client</i> and open a new client using the given <i>properties</i>. All tests executed
-     * after this method call use the new <i>client</i>.
-     */
-    public static void updateClient(Properties properties) throws Exception {
-        Preconditions.checkState(bits != null && bits[0] != null, "Drillbits are not setup.");
-        if (client != null) {
-            client.close();
-            client = null;
-        }
-
-        client = QueryTestUtil.createClient(config, serviceSet, MAX_WIDTH_PER_NODE, properties);
-    }
-
-    /*
-     * Close the current <i>client</i> and open a new client for the given user. All tests executed
-     * after this method call use the new <i>client</i>.
-     * @param user
-     */
-    public static void updateClient(String user) throws Exception {
-        final Properties props = new Properties();
-        props.setProperty("user", user);
-        updateClient(props);
-    }
-
     protected static BufferAllocator getAllocator() {
         return allocator;
     }
 
-    public static TestBuilder newTest() {
-        return testBuilder();
+    protected static DrillTestCluster getCluster() {
+        return cluster;
     }
 
-    public static TestBuilder testBuilder() {
-        return new TestBuilder(allocator);
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+
+        logger.debug("Initializing test framework for suite: {}", getTestClass());
+
+        if (cluster != null) {
+            logger.info("Re-using existing test cluster of {} drillbits", cluster.bits().length);
+            return;
+        }
+
+        allocator = new TopLevelAllocator(DrillConfig.create(TEST_CONFIGURATIONS));
+        scope = getCurrentClusterScope(getTestClass());
+
+        int size = getNumDrillbits();
+        if (size <= 0 || size > MAX_NUM_DRILLBITS) {
+            size = randomIntBetween(MIN_NUM_DRILLBITS, MAX_NUM_DRILLBITS);
+        }
+
+        int width = getParallelizationWidth();
+        if (width <= 0 || width > MAX_PARALLELIZATION_WIDTH) {
+            width = randomIntBetween(MIN_PARALLELIZATION_WIDTH, MAX_PARALLELIZATION_WIDTH);
+        }
+
+        switch (scope) {
+            case SUITE:
+            case TEST:
+                cluster = new DrillTestCluster(size, width, DrillConfig.create(TEST_CONFIGURATIONS));
+                break;
+            default:
+                fail("Unsupported cluster scope: " + scope);
+        }
+    }
+
+    @Before
+    public void beforeDrillIntegrationTest() throws Exception {
+        ;
     }
 
     @AfterClass
-    public static void closeClient() throws IOException, InterruptedException {
-        if (client != null) {
-            client.close();
+    public static void afterClass() throws IOException, InterruptedException {
+        if (cluster != null) {
+           cluster.close();
         }
+    }
 
-        if (bits != null) {
-            for(Drillbit bit : bits) {
-                if (bit != null) {
-                    bit.close();
-                }
+    protected static final class DrillTestCluster implements Closeable {
+
+        private final Drillbit[]       bits;
+        private final DrillClient      client;
+        private final DrillConfig      config;
+        private final BufferAllocator  allocator;
+        private final RemoteServiceSet serviceSet;
+        private final String           tmpSchemaLocation;
+
+        public DrillTestCluster(int size, int width, DrillConfig config) throws Exception {
+
+            logger.info("Initializing test cluster of {} drillbits (parallelization: {})", size, width);
+
+            this.config = config;
+            this.allocator = new TopLevelAllocator(config);
+            this.tmpSchemaLocation = TestUtilities.createTempDir();
+
+            if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
+                serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
             }
+            else {
+                serviceSet = RemoteServiceSet.getLocalServiceSet();
+            }
+
+            bits = new Drillbit[size];
+            for (int i = 0; i < bits.length; i++) {
+                logger.debug("Initializing drillbit #{}", i);
+                bits[i] = new Drillbit(config, serviceSet);
+                bits[i].run();
+                StoragePluginRegistry registry = bits[i].getContext().getStorage();
+                TestUtilities.updateDfsTestTmpSchemaLocation(registry, tmpSchemaLocation);
+                TestUtilities.makeDfsTmpSchemaImmutable(registry);
+            }
+
+            client = QueryTestUtil.createClient(config, serviceSet, width, null);
         }
 
-        if(serviceSet != null) {
-            serviceSet.close();
+        public DrillClient client() {
+            return client;
         }
-        if (allocator != null) {
-            allocator.close();
+
+        public Drillbit[] bits() {
+            return bits;
+        }
+
+        public DrillConfig config() {
+            return config;
+        }
+
+        public BufferAllocator allocator() {
+            return allocator;
+        }
+
+        public Drillbit randomBit() {
+            return randomFrom(bits);
+        }
+
+        public DrillbitContext randomDrillBitContext() {
+            return randomBit().getContext();
+        }
+
+        public RemoteServiceSet serviceSet() {
+            return serviceSet;
+        }
+
+        @Override
+        public void close() throws IOException {
+            cluster.client().close();
+            for (Drillbit bit : cluster.bits()) {
+                bit.close();
+            }
+            cluster.serviceSet().close();
+            cluster.allocator().close();
         }
     }
 
-    @AfterClass
-    public static void resetDrillbitCount() {
-        // some test classes assume this value to be 1 and will fail if run along other tests that increase it
-        drillbitCount = 1;
+    @After
+    public void afterDrillIntegrationTest() {
+
     }
 
     protected static void runSQL(String sql) throws Exception {
@@ -350,26 +324,26 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
     public static List<QueryDataBatch>  testRunAndReturn(UserBitShared.QueryType type, String query) throws Exception{
         query = QueryTestUtil.normalizeQuery(query);
-        return client.runQuery(type, query);
+        return cluster.client().runQuery(type, query);
     }
 
     public static int testRunAndPrint(final UserBitShared.QueryType type, final String query) throws Exception {
-        return QueryTestUtil.testRunAndPrint(client, type, query);
+        return QueryTestUtil.testRunAndPrint(cluster.client(), type, query);
     }
 
     protected static void testWithListener(UserBitShared.QueryType type, String query, UserResultsListener resultListener) {
-        QueryTestUtil.testWithListener(client, type, query, resultListener);
+        QueryTestUtil.testWithListener(cluster.client(), type, query, resultListener);
     }
 
     protected static void testNoResult(String query, Object... args) throws Exception {
         testNoResult(1, query, args);
     }
 
-    protected static void testNoResult(int interation, String query, Object... args) throws Exception {
+    protected static void testNoResult(int iteration, String query, Object... args) throws Exception {
         query = String.format(query, args);
         logger.debug("Running query:\n--------------\n" + query);
-        for (int i = 0; i < interation; i++) {
-            List<QueryDataBatch> results = client.runQuery(UserBitShared.QueryType.SQL, query);
+        for (int i = 0; i < iteration; i++) {
+            List<QueryDataBatch> results = cluster.client().runQuery(UserBitShared.QueryType.SQL, query);
             for (QueryDataBatch queryDataBatch : results) {
                 queryDataBatch.release();
             }
@@ -377,11 +351,11 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     }
 
     public static void test(String query, Object... args) throws Exception {
-        QueryTestUtil.test(client, String.format(query, args));
+        QueryTestUtil.test(cluster.client(), String.format(query, args));
     }
 
     public static void test(final String query) throws Exception {
-        QueryTestUtil.test(client, query);
+        QueryTestUtil.test(cluster.client(), query);
     }
 
     protected static int testLogical(String query) throws Exception{
@@ -546,26 +520,5 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         }
         System.out.println("Total record count: " + rowCount);
         return rowCount;
-    }
-
-    protected static String getResultString(List<QueryDataBatch> results, String delimiter)
-            throws SchemaChangeException {
-        StringBuilder formattedResults = new StringBuilder();
-        boolean includeHeader = true;
-        RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-        for(QueryDataBatch result : results) {
-            loader.load(result.getHeader().getDef(), result.getData());
-            if (loader.getRecordCount() <= 0) {
-                continue;
-            }
-            VectorUtil.appendVectorAccessibleContent(loader, formattedResults, delimiter, includeHeader);
-            if (!includeHeader) {
-                includeHeader = false;
-            }
-            loader.clear();
-            result.release();
-        }
-
-        return formattedResults.toString();
     }
 }

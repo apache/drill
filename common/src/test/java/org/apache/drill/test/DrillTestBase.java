@@ -21,12 +21,15 @@ import org.junit.Before;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+
+import org.apache.lucene.util.TestRuleStoreClassName;
 
 import com.carrotsearch.randomizedtesting.RandomizedTest;
 import com.carrotsearch.randomizedtesting.RandomizedRunner;
@@ -77,6 +80,9 @@ public abstract class DrillTestBase {
     @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
     @Rule public TestName TEST_NAME = new TestName();
 
+    @ClassRule
+    public static final TestRuleStoreClassName classNameRule = new TestRuleStoreClassName();
+
     @BeforeClass
     public static void initDrillTest() throws Exception {
         memWatcher = new MemWatcher();
@@ -96,6 +102,10 @@ public abstract class DrillTestBase {
     @After
     public void afterDrillTestBase() {
         // Optionally add anything here that needs to be cleared after each test.
+    }
+
+    public static Class<?> getTestClass() {
+        return classNameRule.getTestClass();
     }
 
     /* *** Randomization Utilities *** */
@@ -134,6 +144,10 @@ public abstract class DrillTestBase {
 
     public static int randomInt(int max) {
         return RandomizedTest.randomInt(max);
+    }
+
+    public static int randomIntBetween(int min, int max) {
+        return RandomizedTest.randomIntBetween(min, max);
     }
 
     public static String randomAscii() {
