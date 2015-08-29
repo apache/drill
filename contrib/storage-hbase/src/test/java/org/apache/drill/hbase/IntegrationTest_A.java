@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  *
  */
-@DrillIntegrationTestBase.ClusterScope(scope = DrillIntegrationTestBase.Scope.SUITE, bits = -1, width = -1)
+@DrillIntegrationTestBase.ClusterScope(scope = DrillIntegrationTestBase.Scope.GLOBAL, bits = -1, width = -1)
 public class IntegrationTest_A extends DrillIntegrationTestBase {
 
     @Test

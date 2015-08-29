@@ -97,19 +97,19 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     /* *** Cluster Scope Settings *** */
 
     public static final int MIN_NUM_DRILLBITS = 1;
-    public static final int MAX_NUM_DRILLBITS = 3;
+    public static final int MAX_NUM_DRILLBITS = 5;
 
     public static final int MIN_PARALLELIZATION_WIDTH = 1;
-    public static final int MAX_PARALLELIZATION_WIDTH = 3;
+    public static final int MAX_PARALLELIZATION_WIDTH = 5;
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE})
     public @interface ClusterScope {
 
         /**
-         * Returns the scope. {@link Scope#SUITE} is default.
+         * Returns the scope. {@link Scope#GLOBAL} is default.
          */
-        Scope scope() default Scope.SUITE;
+        Scope scope() default Scope.GLOBAL;
 
         /**
          * Sets the number of drillbits to create in the test cluster.
@@ -129,8 +129,6 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
          * {@link DrillIntegrationTestBase#MAX_PARALLELIZATION_WIDTH}].
          */
         int width() default -1;
-
-        // XXX - WHAT IF THESE VALUES CHANGE FROM ONE CLASS TO THE NEXT? WE HAVE TO UPDATE THE CLUSTER
     }
 
     /**
@@ -138,15 +136,19 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
      * {@link ClusterScope} annotations on {@link DrillIntegrationTestBase} subclasses.
      */
     public enum Scope {
-        /** A cluster shared across all methods in a single test suite */
-        SUITE,
-        /** A cluster that is exclusive to an individual test */
-        TEST
+        /**
+         * A cluster that is shared across all test suites
+         */
+        GLOBAL,
+        /**
+         * A cluster shared across all methods in a single test suite, but not shared across test suites
+         */
+        SUITE
     }
 
     private static Scope getCurrentClusterScope(Class<?> clazz) {
         ClusterScope annotation = getAnnotation(clazz, ClusterScope.class);
-        return annotation == null ? Scope.SUITE : annotation.scope();
+        return annotation == null ? Scope.GLOBAL : annotation.scope();
     }
 
     private static int getNumDrillbits() {
@@ -181,14 +183,14 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     @BeforeClass
     public static void beforeClass() throws Exception {
 
-        logger.debug("Initializing test framework for suite: {}", getTestClass());
+        logger.debug("Initializing test framework for class: {}", getTestClass());
+        allocator = new TopLevelAllocator(DrillConfig.create(TEST_CONFIGURATIONS));
 
         if (cluster != null) {
             logger.info("Re-using existing test cluster of {} drillbits", cluster.bits().length);
             return;
         }
 
-        allocator = new TopLevelAllocator(DrillConfig.create(TEST_CONFIGURATIONS));
         scope = getCurrentClusterScope(getTestClass());
 
         int size = getNumDrillbits();
@@ -202,8 +204,8 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         }
 
         switch (scope) {
+            case GLOBAL:
             case SUITE:
-            case TEST:
                 cluster = new DrillTestCluster(size, width, DrillConfig.create(TEST_CONFIGURATIONS));
                 break;
             default:
@@ -223,6 +225,15 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         }
     }
 
+    @After
+    public void afterDrillIntegrationTest() {
+        logger.info("Executing post-test cleanup: [{}]", getTestClass());
+        if (allocator != null) {
+            allocator.close();
+            allocator = null;
+        }
+    }
+
     protected static final class DrillTestCluster implements Closeable {
 
         private final Drillbit[]       bits;
@@ -234,18 +245,12 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
         public DrillTestCluster(int size, int width, DrillConfig config) throws Exception {
 
-            logger.info("Initializing test cluster of {} drillbits (parallelization: {})", size, width);
+            logger.info("Initializing test cluster of {} drillbits (parallelization width: {})", size, width);
 
             this.config = config;
             this.allocator = new TopLevelAllocator(config);
             this.tmpSchemaLocation = TestUtilities.createTempDir();
-
-            if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
-                serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-            }
-            else {
-                serviceSet = RemoteServiceSet.getLocalServiceSet();
-            }
+            this.serviceSet = RemoteServiceSet.getLocalServiceSet();
 
             bits = new Drillbit[size];
             for (int i = 0; i < bits.length; i++) {
@@ -297,11 +302,6 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
             cluster.serviceSet().close();
             cluster.allocator().close();
         }
-    }
-
-    @After
-    public void afterDrillIntegrationTest() {
-
     }
 
     protected static void runSQL(String sql) throws Exception {
@@ -446,7 +446,6 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
         return dir.getAbsolutePath() + File.separator + dirName;
     }
-
 
     protected static void setSessionOption(final String option, final String value) {
         try {

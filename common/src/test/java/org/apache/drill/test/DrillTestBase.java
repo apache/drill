@@ -91,7 +91,6 @@ public abstract class DrillTestBase {
     @AfterClass
     public static void finishDrillTest() throws InterruptedException{
         logger.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
-        LOG_OUTCOME.sleepIfFailure();
     }
 
     @Before
@@ -205,7 +204,6 @@ public abstract class DrillTestBase {
     private static class TestLogReporter extends TestWatcher {
 
         private DrillTest.MemWatcher memWatcher;
-        private int failureCount = 0;
 
         @Override
         protected void starting(Description description) {
@@ -217,22 +215,11 @@ public abstract class DrillTestBase {
         @Override
         protected void failed(Throwable e, Description description) {
             logger.error(String.format("Test Failed (%s): %s", memWatcher.getMemString(), description.getDisplayName()), e);
-            failureCount++;
         }
 
         @Override
         public void succeeded(Description description) {
             logger.info(String.format("Test Succeeded (%s): %s", memWatcher.getMemString(), description.getDisplayName()));
-        }
-
-        public void sleepIfFailure() throws InterruptedException {
-            if(failureCount > 0){
-                Thread.sleep(2000);
-                failureCount = 0;
-            } else {
-                // pause to get logger to catch up.
-                Thread.sleep(250);
-            }
         }
     }
 
