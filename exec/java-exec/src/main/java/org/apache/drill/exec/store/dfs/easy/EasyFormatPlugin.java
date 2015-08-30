@@ -115,6 +115,10 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return blockSplittable;
   }
 
+  /** Whether or not this format could also be in a compression container (for example: csv.gz versus csv).  
+   * This is an external compression container that would be handled outside of the format code. 
+   * This is an internal compression scheme, not supported by Parquet.
+   */
   public boolean isCompressible() {
     return compressible;
   }
