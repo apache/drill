@@ -27,6 +27,10 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
+/** Interface for all implementations of the storage plugins. Different implementations of the storage 
+ * formats will implement methods that indicate if Drill can write or read its tables from that format,
+ * if there are optimizer rules specific for the format, getting a storage config. etc.
+ */
 public interface StoragePlugin extends SchemaFactory {
   
   /** Indicates if Drill can read the table from this format.
