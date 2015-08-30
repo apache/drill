@@ -28,10 +28,19 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 public interface StoragePlugin extends SchemaFactory {
+  
+  /** Indicates if Drill can read the table from this format.
+   */
   public boolean supportsRead();
 
+  /** Indicates if Drill can write a table to this format (e.g. as JSON, csv, etc.).
+   */
   public boolean supportsWrite();
 
+  /** An implementation of this method will return one or more specialized rules that Drill query 
+   *  optimizer can leverage. Otherwise, it should return an empty set. 
+   * @return an empty set or a set of plugin specific optimizer rules.
+   */
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
@@ -52,10 +61,13 @@ public interface StoragePlugin extends SchemaFactory {
    * @param columns (optional) The list of column names to scan from the data source.
    * @return
    * @throws IOException
-   */
+  */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException;
-
+  
+  /** Method returns a jackson serializable object that extends a StoragePluginConfig
+   * @return an extension of StoragePluginConfig
+   */ 
   public StoragePluginConfig getConfig();
 
 }
