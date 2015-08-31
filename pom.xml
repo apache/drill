@@ -1276,6 +1276,12 @@
             </exclusions>
           </dependency>
 
+          <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>1.52</version>
+          </dependency>
+
           <!-- Test Dependencies -->
           <dependency>
             <groupId>org.apache.hadoop</groupId>

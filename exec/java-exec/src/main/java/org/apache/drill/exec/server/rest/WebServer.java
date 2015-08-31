@@ -1,0 +1,244 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest;
+
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.servlets.MetricsServlet;
+import com.codahale.metrics.servlets.ThreadDumpServlet;
+import com.google.common.base.Strings;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.work.WorkManager;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.joda.time.DateTime;
+
+import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+
+/**
+ * Wrapper class around jetty based webserver.
+ */
+public class WebServer implements AutoCloseable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
+
+  private final DrillConfig config;
+  private final MetricRegistry metrics;
+  private final WorkManager workManager;
+  private final Server embeddedJetty;
+
+  /**
+   * Create Jetty based web server.
+   * @param config DrillConfig instance.
+   * @param metrics Metrics registry.
+   * @param workManager WorkManager instance.
+   */
+  public WebServer(final DrillConfig config, final MetricRegistry metrics, final WorkManager workManager) {
+    this.config = config;
+    this.metrics = metrics;
+    this.workManager = workManager;
+
+    if (config.getBoolean(ExecConstants.HTTP_ENABLE)) {
+      embeddedJetty = new Server();
+    } else {
+      embeddedJetty = null;
+    }
+  }
+
+  /**
+   * Start the web server including setup.
+   * @throws Exception
+   */
+  public void start() throws Exception {
+    if (embeddedJetty == null) {
+      return;
+    }
+
+    final ServerConnector serverConnector;
+    if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
+      serverConnector = createHttpsConnector();
+    } else {
+      serverConnector = createHttpConnector();
+    }
+    embeddedJetty.addConnector(serverConnector);
+
+    // Add resources
+    final ErrorHandler errorHandler = new ErrorHandler();
+    errorHandler.setShowStacks(true);
+    errorHandler.setShowMessageInTitle(true);
+
+    final ServletContextHandler servletContextHandler =
+        new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+    servletContextHandler.setErrorHandler(errorHandler);
+    servletContextHandler.setContextPath("/");
+    embeddedJetty.setHandler(servletContextHandler);
+
+    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(workManager)));
+    servletHolder.setInitOrder(1);
+    servletContextHandler.addServlet(servletHolder, "/*");
+
+    servletContextHandler.addServlet(
+        new ServletHolder(new MetricsServlet(metrics)), "/status/metrics");
+    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
+
+    final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
+    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
+    staticHolder.setInitParameter("dirAllowed","false");
+    staticHolder.setInitParameter("pathInfoOnly","true");
+    servletContextHandler.addServlet(staticHolder,"/static/*");
+
+    embeddedJetty.start();
+  }
+
+  /**
+   * Create an HTTPS connector for given jetty server instance. If the admin has specified keystore/truststore settings
+   * they will be used else a self-signed certificate is generated and used.
+   *
+   * @return Initialized {@link ServerConnector} for HTTPS connectios.
+   * @throws Exception
+   */
+  private ServerConnector createHttpsConnector() throws Exception {
+    logger.info("Setting up HTTPS connector for web server");
+
+    final SslContextFactory sslContextFactory = new SslContextFactory();
+
+    if (config.hasPath(ExecConstants.HTTP_KEYSTORE_PATH) &&
+        !Strings.isNullOrEmpty(config.getString(ExecConstants.HTTP_KEYSTORE_PATH))) {
+      logger.info("Using configured SSL settings for web server");
+      sslContextFactory.setKeyStorePath(config.getString(ExecConstants.HTTP_KEYSTORE_PATH));
+      sslContextFactory.setKeyStorePassword(config.getString(ExecConstants.HTTP_KEYSTORE_PASSWORD));
+
+      // TrustStore and TrustStore password are optional
+      if (config.hasPath(ExecConstants.HTTP_TRUSTSTORE_PATH)) {
+        sslContextFactory.setTrustStorePath(config.getString(ExecConstants.HTTP_TRUSTSTORE_PATH));
+        if (config.hasPath(ExecConstants.HTTP_TRUSTSTORE_PASSWORD)) {
+          sslContextFactory.setTrustStorePassword(config.getString(ExecConstants.HTTP_TRUSTSTORE_PASSWORD));
+        }
+      }
+    } else {
+      logger.info("Using generated self-signed SSL settings for web server");
+      final SecureRandom random = new SecureRandom();
+
+      // Generate a private-public key pair
+      final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+      keyPairGenerator.initialize(1024, random);
+      final KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+      final DateTime now = DateTime.now();
+
+      // Create builder for certificate attributes
+      final X500NameBuilder nameBuilder =
+          new X500NameBuilder(BCStyle.INSTANCE)
+              .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
+              .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
+              .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
+
+      final Date notBefore = now.minusMinutes(1).toDate();
+      final Date notAfter = now.plusYears(5).toDate();
+      final BigInteger serialNumber = new BigInteger(128, random);
+
+      // Create a certificate valid for 5years from now.
+      final X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(
+          nameBuilder.build(), // attributes
+          serialNumber,
+          notBefore,
+          notAfter,
+          nameBuilder.build(),
+          keyPair.getPublic());
+
+      // Sign the certificate using the private key
+      final ContentSigner contentSigner =
+          new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
+      final X509Certificate certificate =
+          new JcaX509CertificateConverter().getCertificate(certificateBuilder.build(contentSigner));
+
+      // Check the validity
+      certificate.checkValidity(now.toDate());
+
+      // Make sure the certificate is self-signed.
+      certificate.verify(certificate.getPublicKey());
+
+      // Generate a random password for keystore protection
+      final String keyStorePasswd = RandomStringUtils.random(20);
+      final KeyStore keyStore = KeyStore.getInstance("JKS");
+      keyStore.load(null, null);
+      keyStore.setKeyEntry("DrillAutoGeneratedCert", keyPair.getPrivate(),
+          keyStorePasswd.toCharArray(), new java.security.cert.Certificate[]{certificate});
+
+      sslContextFactory.setKeyStore(keyStore);
+      sslContextFactory.setKeyStorePassword(keyStorePasswd);
+    }
+
+    final HttpConfiguration httpsConfig = new HttpConfiguration();
+    httpsConfig.addCustomizer(new SecureRequestCustomizer());
+
+    // SSL Connector
+    final ServerConnector sslConnector = new ServerConnector(embeddedJetty,
+        new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+        new HttpConnectionFactory(httpsConfig));
+    sslConnector.setPort(config.getInt(ExecConstants.HTTP_PORT));
+
+    return sslConnector;
+  }
+
+  /**
+   * Create HTTP connector.
+   * @return Initialized {@link ServerConnector} instance for HTTP connections.
+   * @throws Exception
+   */
+  private ServerConnector createHttpConnector() throws Exception {
+    logger.info("Setting up HTTP connector for web server");
+    final HttpConfiguration httpConfig = new HttpConfiguration();
+    final ServerConnector httpConnector = new ServerConnector(embeddedJetty, new HttpConnectionFactory(httpConfig));
+    httpConnector.setPort(config.getInt(ExecConstants.HTTP_PORT));
+
+    return httpConnector;
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (embeddedJetty != null) {
+      embeddedJetty.stop();
+    }
+  }
+}

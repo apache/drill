@@ -80,6 +80,11 @@ public interface ExecConstants {
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
+  public static final String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
+  public static final String HTTP_KEYSTORE_PATH = "javax.net.ssl.keyStore";
+  public static final String HTTP_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
+  public static final String HTTP_TRUSTSTORE_PATH = "javax.net.ssl.trustStore";
+  public static final String HTTP_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";

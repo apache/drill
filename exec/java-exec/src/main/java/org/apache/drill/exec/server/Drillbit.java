@@ -32,7 +32,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.server.rest.DrillRestServer;
+import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.sys.CachingStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreProvider;
@@ -40,16 +40,7 @@ import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.resource.Resource;
-import org.glassfish.jersey.servlet.ServletContainer;
 
-import com.codahale.metrics.servlets.MetricsServlet;
-import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.base.Stopwatch;
 
 /**
@@ -172,24 +163,19 @@ public class Drillbit implements AutoCloseable {
   private final PStoreProvider storeProvider;
   private final WorkManager manager;
   private final BootStrapContext context;
-  private final Server embeddedJetty;
+  private final WebServer webServer;
   private RegistrationHandle registrationHandle;
 
   public Drillbit(final DrillConfig config, final RemoteServiceSet serviceSet) throws Exception {
     final Stopwatch w = new Stopwatch().start();
     logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
-    final boolean enableHttp = config.getBoolean(ExecConstants.HTTP_ENABLE);
     context = new BootStrapContext(config);
     manager = new WorkManager(context);
     engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context,
         manager.getWorkBus(), manager.getDataHandler(), allowPortHunting);
 
-    if (enableHttp) {
-      embeddedJetty = new Server(config.getInt(ExecConstants.HTTP_PORT));
-    } else {
-      embeddedJetty = null;
-    }
+    webServer = new WebServer(config, context.getMetrics(), manager);
 
     if (serviceSet != null) {
       coord = serviceSet.getCoordinator();
@@ -199,39 +185,6 @@ public class Drillbit implements AutoCloseable {
       storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
     }
     logger.info("Construction completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
-  }
-
-  private void startJetty() throws Exception {
-    if (embeddedJetty == null) {
-      return;
-    }
-
-    final ErrorHandler errorHandler = new ErrorHandler();
-    errorHandler.setShowStacks(true);
-    errorHandler.setShowMessageInTitle(true);
-
-    final ServletContextHandler servletContextHandler =
-        new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-    servletContextHandler.setErrorHandler(errorHandler);
-    servletContextHandler.setContextPath("/");
-    embeddedJetty.setHandler(servletContextHandler);
-
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(new DrillRestServer(manager)));
-//    servletHolder.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "org.apache.drill.exec.server");
-    servletHolder.setInitOrder(1);
-    servletContextHandler.addServlet(servletHolder, "/*");
-
-    servletContextHandler.addServlet(
-        new ServletHolder(new MetricsServlet(context.getMetrics())), "/status/metrics");
-    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
-
-    final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
-    staticHolder.setInitParameter("resourceBase", Resource.newClassPathResource("/rest/static").toString());
-    staticHolder.setInitParameter("dirAllowed","false");
-    staticHolder.setInitParameter("pathInfoOnly","true");
-    servletContextHandler.addServlet(staticHolder,"/static/*");
-
-    embeddedJetty.start();
   }
 
   public void run() throws Exception {
@@ -246,7 +199,7 @@ public class Drillbit implements AutoCloseable {
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     registrationHandle = coord.register(md);
-    startJetty();
+    webServer.start();
 
     Runtime.getRuntime().addShutdownHook(new ShutdownThread(this, new StackTrace()));
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
@@ -278,15 +231,8 @@ public class Drillbit implements AutoCloseable {
       Thread.currentThread().interrupt();
     }
 
-    if (embeddedJetty != null) {
-      try {
-        embeddedJetty.stop();
-      } catch (final Exception e) {
-        logger.warn("Failure while shutting down embedded jetty server.");
-      }
-    }
-
     // TODO these should use a DeferredException
+    AutoCloseables.close(webServer, logger);
     AutoCloseables.close(engine, logger);
     AutoCloseables.close(storeProvider, logger);
     AutoCloseables.close(coord, logger);
