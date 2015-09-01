@@ -27,3 +27,4 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Steven Phillips | smp |
 | Bridget Bevens | bridgetb |
 | Hanifi Gunes | hg |
+| Abdelhakim Deneche | adeneche |
