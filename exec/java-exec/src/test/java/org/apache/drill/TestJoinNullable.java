@@ -20,10 +20,9 @@ package org.apache.drill;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.common.util.TestTools;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestJoinNullable extends BaseTestQuery{
+public class TestJoinNullable extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJoinNullable.class);
 
   static final String WORKING_PATH = TestTools.getWorkingPath();

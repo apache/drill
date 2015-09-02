@@ -22,7 +22,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestBugFixes extends BaseTestQuery {
+public class TestBugFixes extends DrillIntegrationTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
 
   @Test

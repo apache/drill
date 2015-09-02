@@ -19,7 +19,7 @@ package org.apache.drill;
 
 import org.junit.Test;
 
-public class TestAltSortQueries extends BaseTestQuery{
+public class TestAltSortQueries extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAltSortQueries.class);
 
   @Test

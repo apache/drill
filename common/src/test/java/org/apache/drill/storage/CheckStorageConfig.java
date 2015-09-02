@@ -26,12 +26,12 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.PathScanner;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class CheckStorageConfig extends DrillTest {
+public class CheckStorageConfig extends DrillTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CheckStorageConfig.class);
 
   @Test

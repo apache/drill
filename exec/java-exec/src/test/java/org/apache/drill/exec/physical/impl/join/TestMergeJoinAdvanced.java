@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestMergeJoinAdvanced extends BaseTestQuery {
+public class TestMergeJoinAdvanced extends DrillIntegrationTestBase {
 
   // Have to disable hash join to test merge join in this class
   @BeforeClass

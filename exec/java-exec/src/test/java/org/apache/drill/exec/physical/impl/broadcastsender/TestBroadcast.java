@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestBroadcast extends BaseTestQuery {
+public class TestBroadcast extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBroadcast.class);
 
   String broadcastQuery = "select * from "

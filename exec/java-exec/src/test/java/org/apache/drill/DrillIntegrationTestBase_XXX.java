@@ -15,19 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec;
+package org.apache.drill;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
-import org.apache.drill.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
@@ -72,14 +73,11 @@ import static org.junit.Assert.fail;
 /**
  * Abstract base class for integration tests.
  */
-public abstract class DrillIntegrationTestBase extends DrillTestBase {
+public abstract class DrillIntegrationTestBase_XXX extends DrillTestBase {
 
-    private static final Logger logger = LoggerFactory.getLogger(DrillIntegrationTestBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(DrillIntegrationTestBase_XXX.class);
 
     protected static final String TEMP_SCHEMA = "dfs_test.tmp";
-    private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
-
-    protected static BufferAllocator allocator;
 
     private static Scope scope;
     private static DrillTestCluster cluster;
@@ -96,11 +94,15 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
     /* *** Cluster Scope Settings *** */
 
-    public static final int MIN_NUM_DRILLBITS = 1;
-    public static final int MAX_NUM_DRILLBITS = 5;
+    public static final int MIN_NUM_DRILLBITS     = 1;
+    public static final int MAX_NUM_DRILLBITS     = 5;
+    public static final int DEFAULT_NUM_DRILLBITS = 2;
+    public static final int RANDOM_NUM_DRILLBITS  = -1;
 
-    public static final int MIN_PARALLELIZATION_WIDTH = 1;
-    public static final int MAX_PARALLELIZATION_WIDTH = 5;
+    public static final int MIN_PARALLELIZATION_WIDTH     = 1;
+    public static final int MAX_PARALLELIZATION_WIDTH     = 5;
+    public static final int DEFAULT_PARALLELIZATION_WIDTH = 2;
+    public static final int RANDOM_PARALLELIZATION_WIDTH  = -1;
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE})
@@ -114,26 +116,28 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         /**
          * Sets the number of drillbits to create in the test cluster.
          *
-         * Default is <tt>-1</tt>, which indicates that the test framework should choose a
-         * random value in the inclusive range [{@link DrillIntegrationTestBase#MIN_NUM_DRILLBITS},
-         * {@link DrillIntegrationTestBase#MAX_NUM_DRILLBITS}].
+         * Default is <tt>DEFAULT_NUM_DRILLBITS</tt>.
+         * A value of <tt>RANDOM_NUM_DRILLBITS</tt> indicates that the test framework should choose a
+         * random value in the inclusive range [{@link DrillIntegrationTestBase_XXX#MIN_NUM_DRILLBITS},
+         * {@link DrillIntegrationTestBase_XXX#MAX_NUM_DRILLBITS}].
          */
-        int bits() default -1;
+        int bits() default DEFAULT_NUM_DRILLBITS;
 
         /**
          * Sets the value of {@link ExecConstants#MAX_WIDTH_PER_NODE_KEY}, which determines
          * the level of parallelization per drillbit.
          *
-         * Default is <tt>-1</tt>, which indicates that the test framework should choose a
-         * random value in the inclusive range [{@link DrillIntegrationTestBase#MIN_PARALLELIZATION_WIDTH},
-         * {@link DrillIntegrationTestBase#MAX_PARALLELIZATION_WIDTH}].
+         * Default is <tt>DEFAULT_PARALLELIZATION_WIDTH</tt>.
+         * A value of <tt>RANDOM_PARALLELIZATION_WIDTH</tt> indicates that the test framework should choose a
+         * random value in the inclusive range [{@link DrillIntegrationTestBase_XXX#MIN_PARALLELIZATION_WIDTH},
+         * {@link DrillIntegrationTestBase_XXX#MAX_PARALLELIZATION_WIDTH}].
          */
-        int width() default -1;
+        int width() default DEFAULT_PARALLELIZATION_WIDTH;
     }
 
     /**
      * The scope of a test cluster used together with
-     * {@link ClusterScope} annotations on {@link DrillIntegrationTestBase} subclasses.
+     * {@link ClusterScope} annotations on {@link DrillIntegrationTestBase_XXX} subclasses.
      */
     public enum Scope {
         /**
@@ -162,7 +166,7 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     }
 
     private static <A extends Annotation> A getAnnotation(Class<?> clazz, Class<A> annotationClass) {
-        if (clazz == Object.class || clazz == DrillIntegrationTestBase.class) {
+        if (clazz == Object.class || clazz == DrillIntegrationTestBase_XXX.class) {
             return null;
         }
         A annotation = clazz.getAnnotation(annotationClass);
@@ -170,10 +174,6 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
             return annotation;
         }
         return getAnnotation(clazz.getSuperclass(), annotationClass);
-    }
-
-    protected static BufferAllocator getAllocator() {
-        return allocator;
     }
 
     protected static DrillTestCluster getCluster() {
@@ -184,7 +184,6 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     public static void beforeClass() throws Exception {
 
         logger.debug("Initializing test framework for class: {}", getTestClass());
-        allocator = new TopLevelAllocator(DrillConfig.create(TEST_CONFIGURATIONS));
 
         if (cluster != null) {
             logger.info("Re-using existing test cluster of {} drillbits", cluster.bits().length);
@@ -194,12 +193,12 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         scope = getCurrentClusterScope(getTestClass());
 
         int size = getNumDrillbits();
-        if (size <= 0 || size > MAX_NUM_DRILLBITS) {
+        if (size <= RANDOM_NUM_DRILLBITS || size > MAX_NUM_DRILLBITS) {
             size = randomIntBetween(MIN_NUM_DRILLBITS, MAX_NUM_DRILLBITS);
         }
 
         int width = getParallelizationWidth();
-        if (width <= 0 || width > MAX_PARALLELIZATION_WIDTH) {
+        if (width <= RANDOM_PARALLELIZATION_WIDTH || width > MAX_PARALLELIZATION_WIDTH) {
             width = randomIntBetween(MIN_PARALLELIZATION_WIDTH, MAX_PARALLELIZATION_WIDTH);
         }
 
@@ -228,10 +227,7 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
     @After
     public void afterDrillIntegrationTest() {
         logger.info("Executing post-test cleanup: [{}]", getTestClass());
-        if (allocator != null) {
-            allocator.close();
-            allocator = null;
-        }
+        DrillMetrics.resetMetrics();
     }
 
     protected static final class DrillTestCluster implements Closeable {
@@ -430,7 +426,7 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
         final File file = File.createTempFile("tempfile", ".txt");
         file.deleteOnExit();
         PrintWriter printWriter = new PrintWriter(file);
-        printWriter.write(DrillIntegrationTestBase.getFile(resource));
+        printWriter.write(DrillIntegrationTestBase_XXX.getFile(resource));
         printWriter.close();
 
         return file.getPath();
@@ -504,7 +500,7 @@ public abstract class DrillIntegrationTestBase extends DrillTestBase {
 
     protected int printResult(List<QueryDataBatch> results) throws SchemaChangeException {
         int rowCount = 0;
-        RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+        RecordBatchLoader loader = new RecordBatchLoader(cluster.allocator());
         for(QueryDataBatch result : results) {
             rowCount += result.getHeader().getRowCount();
             loader.load(result.getHeader().getDef(), result.getData());

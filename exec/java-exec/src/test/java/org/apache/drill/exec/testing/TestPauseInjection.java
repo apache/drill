@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
@@ -39,14 +39,14 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class TestPauseInjection extends BaseTestQuery {
+public class TestPauseInjection extends DrillIntegrationTestBase {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
       .withCredentials(UserCredentials.newBuilder()
         .setUserName("foo")
         .build())
       .withUserProperties(UserProperties.getDefaultInstance())
-      .withOptionManager(bits[0].getContext().getOptionManager())
+      .withOptionManager(getCluster().randomBit().getContext().getOptionManager())
       .build();
 
   /**
@@ -126,7 +126,7 @@ public class TestPauseInjection extends BaseTestQuery {
 
     ControlsInjectionUtil.setControls(session, controls);
 
-    final QueryContext queryContext = new QueryContext(session, bits[0].getContext());
+    final QueryContext queryContext = new QueryContext(session, getCluster().randomBit().getContext());
 
     (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
 

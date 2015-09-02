@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -35,7 +35,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class TestExceptionInjection extends BaseTestQuery {
+public class TestExceptionInjection extends DrillIntegrationTestBase {
   private static final String NO_THROW_FAIL = "Didn't throw expected exception";
 
   private static final UserSession session = UserSession.Builder.newBuilder()

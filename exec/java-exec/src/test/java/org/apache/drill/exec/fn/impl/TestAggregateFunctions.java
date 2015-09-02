@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestAggregateFunctions extends BaseTestQuery {
+public class TestAggregateFunctions extends DrillIntegrationTestBase {
 
   private static final String TEST_RES_PATH =   TestTools.getWorkingPath() + "/src/test/resources";
 

@@ -18,7 +18,7 @@ package org.apache.drill.exec.expr;
  * limitations under the License.
  */
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -27,7 +27,7 @@ import org.junit.Test;
 /**
  * Test LogicalExpressions are serialized and deserialized properly when query is planned into multiple fragments.
  */
-public class TestLogicalExprSerDe extends BaseTestQuery {
+public class TestLogicalExprSerDe extends DrillIntegrationTestBase {
 
   @BeforeClass
   public static void setSliceCount() throws Exception {

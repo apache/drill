@@ -36,7 +36,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -47,7 +47,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 
-public class TestResourceLeak extends DrillTest {
+public class TestResourceLeak extends DrillTestBase {
 
   private static DrillClient client;
   private static Drillbit bit;

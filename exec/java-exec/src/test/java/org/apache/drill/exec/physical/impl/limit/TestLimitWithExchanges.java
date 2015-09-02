@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestLimitWithExchanges extends BaseTestQuery {
+public class TestLimitWithExchanges extends DrillIntegrationTestBase {
 
   @Test
   public void testLimitWithExchanges() throws Exception{

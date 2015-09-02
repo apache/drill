@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 
 import org.junit.Test;
 
 /**
  * Unit tests for Avro record reader.
  */
-public class AvroFormatTest extends BaseTestQuery {
+public class AvroFormatTest extends DrillIntegrationTestBase {
 
   // XXX
   //      1. Need to test nested field names with same name as top-level names for conflict.

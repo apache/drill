@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class Drill2283InfoSchemaVarchar1BugTest extends BaseTestQuery {
+public class Drill2283InfoSchemaVarchar1BugTest extends DrillIntegrationTestBase {
 
   @Test
   public void testInfoSchemaStringsNotOfLength1() throws Exception {

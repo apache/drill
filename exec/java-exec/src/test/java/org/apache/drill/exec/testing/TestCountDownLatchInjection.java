@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
@@ -31,7 +31,7 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class TestCountDownLatchInjection extends BaseTestQuery {
+public class TestCountDownLatchInjection extends DrillIntegrationTestBase {
 
   private static final UserSession session = UserSession.Builder.newBuilder()
     .withCredentials(UserCredentials.newBuilder()

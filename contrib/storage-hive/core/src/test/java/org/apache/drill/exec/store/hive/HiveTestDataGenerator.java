@@ -25,7 +25,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,7 +36,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.google.common.collect.Maps;
 
-import static org.apache.drill.BaseTestQuery.getTempDir;
+import static org.apache.drill.DrillIntegrationTestBase.getTempDir;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 
 public class HiveTestDataGenerator {
@@ -148,7 +148,7 @@ public class HiveTestDataGenerator {
         "STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' " +
         "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' " +
         "TBLPROPERTIES ('avro.schema.url'='file:///%s')",
-        BaseTestQuery.getPhysicalFileFromResource("avro_test_schema.json").replace('\\', '/'));
+        DrillIntegrationTestBase.getPhysicalFileFromResource("avro_test_schema.json").replace('\\', '/'));
 
     executeQuery(hiveDriver, avroCreateQuery);
     executeQuery(hiveDriver, "INSERT INTO TABLE db1.avro SELECT * FROM default.kv");

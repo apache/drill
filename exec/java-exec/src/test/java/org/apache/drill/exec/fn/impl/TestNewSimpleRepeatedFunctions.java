@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestNewSimpleRepeatedFunctions extends BaseTestQuery {
+public class TestNewSimpleRepeatedFunctions extends DrillIntegrationTestBase {
   @Test
   public void testRepeatedContainsForWildCards() throws Exception {
      testBuilder().

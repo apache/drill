@@ -17,7 +17,7 @@
  */
 package org.apache.drill.jdbc.proxy;
 
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -44,7 +44,7 @@ import static org.hamcrest.CoreMatchers.*;
 /**
  * Test of TracingProxyDriver other than loading of driver classes.
  */
-public class TracingProxyDriverTest extends DrillTest {
+public class TracingProxyDriverTest extends DrillTestBase {
 
   private static Driver proxyDriver;
   private static Connection proxyConnection;

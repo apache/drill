@@ -18,10 +18,10 @@
 
 package org.apache.drill.exec.vector.complex.writer;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestComplexTypeReader extends BaseTestQuery{
+public class TestComplexTypeReader extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
 
   @Test

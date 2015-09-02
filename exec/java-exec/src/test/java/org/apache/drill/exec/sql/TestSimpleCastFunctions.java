@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestSimpleCastFunctions extends BaseTestQuery {
+public class TestSimpleCastFunctions extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleCastFunctions.class);
 
   @Test

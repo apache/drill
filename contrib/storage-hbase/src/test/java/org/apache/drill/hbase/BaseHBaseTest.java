@@ -20,7 +20,7 @@ package org.apache.drill.hbase;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -36,7 +36,7 @@ import org.junit.BeforeClass;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class BaseHBaseTest extends BaseTestQuery {
+public class BaseHBaseTest extends DrillIntegrationTestBase {
 
   private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
@@ -55,7 +55,7 @@ public class BaseHBaseTest extends BaseTestQuery {
     HBaseTestsSuite.configure(true, true);
     HBaseTestsSuite.initCluster();
 
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    final StoragePluginRegistry pluginRegistry = getCluster().randomDrillBitContext().getStorage();
     storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(HBASE_STORAGE_PLUGIN_NAME);
     storagePluginConfig = storagePlugin.getConfig();
     storagePluginConfig.setEnabled(true);

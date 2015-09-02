@@ -24,7 +24,7 @@ import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
-public class TestUnionDistinct extends BaseTestQuery {
+public class TestUnionDistinct extends DrillIntegrationTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionDistinct.class);
 
   @Test  // Simple Unionover two scans

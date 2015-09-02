@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.google.common.io.Resources;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestParquetScan extends BaseTestQuery {
+public class TestParquetScan extends DrillIntegrationTestBase {
 
   static FileSystem fs;
 

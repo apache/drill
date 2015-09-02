@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestStringFunctions extends BaseTestQuery {
+public class TestStringFunctions extends DrillIntegrationTestBase {
 
   @Test
   public void testILike() throws Exception {

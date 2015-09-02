@@ -18,7 +18,7 @@
 package org.apache.drill.exec.sql;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.TestBuilder;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ import java.util.List;
  * -- USE schema
  * -- SHOW FILES
  */
-public class TestInfoSchema extends BaseTestQuery {
+public class TestInfoSchema extends DrillIntegrationTestBase {
   @Test
   public void selectFromAllTables() throws Exception{
     test("select * from INFORMATION_SCHEMA.SCHEMATA");

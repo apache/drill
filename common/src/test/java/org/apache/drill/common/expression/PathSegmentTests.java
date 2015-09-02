@@ -19,10 +19,10 @@ package org.apache.drill.common.expression;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.Test;
 
-public class PathSegmentTests extends DrillTest {
+public class PathSegmentTests extends DrillTestBase {
   protected PathSegment makeArraySegment(final int len, final PathSegment tail) {
     PathSegment node = tail;
     for (int i = 0; i < len; i++) {

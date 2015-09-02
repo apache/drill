@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
-public class TestSystemTable extends BaseTestQuery {
+public class TestSystemTable extends DrillIntegrationTestBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSystemTable.class);
 
   @Test

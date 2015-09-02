@@ -37,7 +37,7 @@ import org.apache.calcite.sql.SqlExplainLevel;
 
 import com.google.common.base.Strings;
 
-public class PlanTestBase extends BaseTestQuery {
+public class PlanTestBase extends DrillIntegrationTestBase {
 
   protected static final String OPTIQ_FORMAT = "text";
   protected static final String JSON_FORMAT = "json";

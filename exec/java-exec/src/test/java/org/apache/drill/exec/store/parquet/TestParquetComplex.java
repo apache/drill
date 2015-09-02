@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestParquetComplex extends BaseTestQuery {
+public class TestParquetComplex extends DrillIntegrationTestBase {
 
   private static final String DATAFILE = "cp.`store/parquet/complex/complex.parquet`";
 

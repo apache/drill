@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.Test;
 
-public class TestNewTextReader extends BaseTestQuery {
+public class TestNewTextReader extends DrillIntegrationTestBase {
 
   @Test
   public void fieldDelimiterWithinQuotes() throws Exception {

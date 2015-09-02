@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.expr;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestSchemaPathMaterialization extends BaseTestQuery {
+public class TestSchemaPathMaterialization extends DrillIntegrationTestBase {
 
   @Test
   public void testSingleProjectionFromMultiLevelRepeatedList() throws Exception {

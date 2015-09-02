@@ -22,7 +22,7 @@ import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
@@ -34,7 +34,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.util.List;
 
-public class TestFlatten extends BaseTestQuery {
+public class TestFlatten extends DrillIntegrationTestBase {
 
   /**
    *  enable this if you have the following files:
@@ -58,7 +58,7 @@ public class TestFlatten extends BaseTestQuery {
   public void testFlatten_Drill2162_complex() throws Exception {
     String path = folder.getRoot().toPath().toString();
 
-    String jsonRecords = BaseTestQuery.getFile("flatten/complex_transaction_example_data.json");
+    String jsonRecords = DrillIntegrationTestBase.getFile("flatten/complex_transaction_example_data.json");
     int numCopies = 700;
     new TestConstantFolding.SmallFileCreator(folder)
         .setRecord(jsonRecords)
@@ -216,7 +216,7 @@ public class TestFlatten extends BaseTestQuery {
   public void drill1673() throws Exception {
     String path = folder.getRoot().toPath().toString();
 
-    String jsonRecords = BaseTestQuery.getFile("store/json/1673.json");
+    String jsonRecords = DrillIntegrationTestBase.getFile("store/json/1673.json");
     int numCopies = 25000;
     new TestConstantFolding.SmallFileCreator(folder)
         .setRecord(jsonRecords)

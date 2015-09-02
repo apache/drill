@@ -25,7 +25,7 @@ import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
 
-public class TestDisabledFunctionality extends BaseTestQuery{
+public class TestDisabledFunctionality extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test(expected = UserException.class)  // see DRILL-2054

@@ -19,10 +19,10 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestSVRemover extends BaseTestQuery {
+public class TestSVRemover extends DrillIntegrationTestBase {
   @Test
   public void testSelectionVectorRemoval() throws Exception {
     int numOutputRecords = testPhysical(getFile("remover/test1.json"));

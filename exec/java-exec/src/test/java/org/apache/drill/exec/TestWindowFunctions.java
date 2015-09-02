@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
@@ -27,7 +27,7 @@ import org.apache.drill.PlanTestBase;
 
 import org.junit.Test;
 
-public class TestWindowFunctions extends BaseTestQuery {
+public class TestWindowFunctions extends DrillIntegrationTestBase {
   static final String WORKING_PATH = TestTools.getWorkingPath();
   static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 

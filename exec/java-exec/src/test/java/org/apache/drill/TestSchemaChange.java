@@ -21,7 +21,7 @@ import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestSchemaChange extends BaseTestQuery {
+public class TestSchemaChange extends DrillIntegrationTestBase {
 
   protected static final String WORKING_PATH = TestTools.getWorkingPath();
   protected static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";

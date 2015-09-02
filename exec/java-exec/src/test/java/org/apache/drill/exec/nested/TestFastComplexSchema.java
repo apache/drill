@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.nested;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestFastComplexSchema extends BaseTestQuery {
+public class TestFastComplexSchema extends DrillIntegrationTestBase {
 
   @Test
   public void test() throws Exception {

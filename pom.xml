@@ -35,7 +35,8 @@
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <forkCount>2</forkCount>
     <parquet.version>1.6.0rc3-drill-r0.3</parquet.version>
-
+    <carrotsearch.testframework>2.1.16</carrotsearch.testframework>
+    <execution.hint.file>.local-${project.version}-execution-hints.log</execution.hint.file>
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.0.0 or vendor specific variants of the
       Apache Hive 1.0.0. If the version is changed, make sure the jars and their dependencies are updated.
@@ -155,7 +156,6 @@
           </execution>
         </executions>
         <configuration>
-
           <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <exclude>**/*.log</exclude>
@@ -244,7 +244,6 @@
           </archive>
         </configuration>
       </plugin>
-
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -374,20 +373,69 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
           <configuration>
-            <argLine>-Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
+            <!-- Delegate the running of tests to the carrot plugin (see below) -->
+            <skipTests>true</skipTests>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.carrotsearch.randomizedtesting</groupId>
+          <artifactId>junit4-maven-plugin</artifactId>
+          <version>${carrotsearch.testframework}</version>
+          <configuration>
+            <parallelism>max</parallelism>
+            <printSummary>true</printSummary>
+            <argLine>
+              -Xms512m -Xmx3g -Ddrill.exec.http.enabled=false
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=3072M
-              -XX:+CMSClassUnloadingEnabled -ea</argLine>
-            <forkCount>${forkCount}</forkCount>
-            <reuseForks>true</reuseForks>
+              -XX:+CMSClassUnloadingEnabled -ea
+            </argLine>
             <additionalClasspathElements>
               <additionalClasspathElement>./exec/jdbc/src/test/resources/storage-plugins.json</additionalClasspathElement>
             </additionalClasspathElements>
-            <systemPropertyVariables>
-              <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
-            </systemPropertyVariables>
+            <assertions>
+              <enable/>
+            </assertions>
+            <listeners>
+              <report-text
+                      showThrowable="true"
+                      showStackTraces="true"
+                      showOutput="always"
+                      showStatusOk="true"
+                      showStatusError="true"
+                      showStatusFailure="true"
+                      showStatusIgnored="true"
+                      showSuiteSummary="true"
+                      timestamps="false">
+              </report-text>
+            </listeners>
           </configuration>
+          <executions>
+            <execution>
+              <id>tests</id>
+              <phase>test</phase>
+              <goals>
+                <goal>junit4</goal>
+              </goals>
+              <configuration>
+                <listeners>
+                  <report-ant-xml mavenExtensions="true"
+                                  dir="${project.build.directory}/surefire-reports"/>
+                  <report-execution-times historyLength="20" file="${basedir}/${execution.hint.file}"/>
+                </listeners>
+                <balancers>
+                  <execution-times>
+                    <fileset dir="${basedir}" includes="${execution.hint.file}"/>
+                  </execution-times>
+                </balancers>
+                <includes>
+                  <include>**/*Tests.class</include>
+                  <include>**/*Test.class</include>
+                </includes>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -554,6 +602,25 @@
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
       <version>0.9.44</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch.randomizedtesting</groupId>
+      <artifactId>randomizedtesting-runner</artifactId>
+      <version>${carrotsearch.testframework}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch.randomizedtesting</groupId>
+      <artifactId>junit4-maven-plugin</artifactId>
+      <version>${carrotsearch.testframework}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <!-- Something in Drill seems to conflict with this, so leave it out. -->
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>

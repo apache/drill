@@ -20,7 +20,7 @@ package org.apache.drill.exec.store;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.TestTools;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Unit testing for {@link TimedRunnable}.
  */
-public class TestTimedRunnable extends DrillTest {
+public class TestTimedRunnable extends DrillTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTimedRunnable.class);
 
   @Rule

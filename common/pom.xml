@@ -143,63 +143,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.15</version>
-        <configuration>
-          <useSystemClassLoader>false</useSystemClassLoader>
-          <skipTests>true</skipTests>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.carrotsearch.randomizedtesting</groupId>
-        <artifactId>junit4-maven-plugin</artifactId>
-        <version>${carrotsearch.testframework}</version>
-        <configuration>
-          <printSummary>true</printSummary>
-          <assertions>
-            <enable/>
-          </assertions>
-          <listeners>
-            <report-text
-                    showThrowable="true"
-                    showStackTraces="true"
-                    showOutput="always"
-                    showStatusOk="true"
-                    showStatusError="true"
-                    showStatusFailure="true"
-                    showStatusIgnored="true"
-                    showSuiteSummary="true"
-                    timestamps="false">
-            </report-text>
-          </listeners>
-        </configuration>
-        <executions>
-          <execution>
-            <id>tests</id>
-            <phase>test</phase>
-            <goals>
-              <goal>junit4</goal>
-            </goals>
-            <configuration>
-              <listeners>
-                <report-ant-xml mavenExtensions="true"
-                                dir="${project.build.directory}/surefire-reports"/>
-                <report-execution-times historyLength="20" file="${basedir}/${execution.hint.file}"/>
-              </listeners>
-              <balancers>
-                <execution-times>
-                  <fileset dir="${basedir}" includes="${execution.hint.file}"/>
-                </execution-times>
-              </balancers>
-              <includes>
-                <include>**/*Tests.class</include>
-                <include>**/*Test.class</include>
-              </includes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
