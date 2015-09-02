@@ -76,11 +76,10 @@ class DrillCursor implements Cursor {
    *   Currently, can be true only for first call to {@link #next()}.
    * </p>
    * <p>
-   *   (Relates to {@link #loadInitialSchema()}'s calling nextRowInternally()
-   *   one "extra" time
-   *   (extra relative to number of {@link ResultSet#next()} calls) at the
-   *   beginning to get first batch and schema before Statement.execute...(...)
-   *   even returns.
+   *   (Relates to {@link #loadInitialSchema()}'s calling
+   *   {@link #nextRowInternally()} one "extra" time (extra relative to number
+   *   of {@link ResultSet#next()} calls) at the beginning to get first batch
+   *   and schema before {@code Statement.execute...(...)} even returns.)
    * </p>
    */
   private boolean returnTrueForNextCallToNext = false;
