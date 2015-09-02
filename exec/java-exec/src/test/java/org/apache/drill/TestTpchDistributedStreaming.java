@@ -20,7 +20,7 @@ package org.apache.drill;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestTpchDistributedStreaming extends BaseTestQuery{
+public class TestTpchDistributedStreaming extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributedStreaming.class);
 
   private void testDistributed(String fileName) throws Exception{

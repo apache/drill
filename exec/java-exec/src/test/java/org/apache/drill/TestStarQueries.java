@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestStarQueries extends BaseTestQuery{
+public class TestStarQueries extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
   static final String WORKING_PATH = TestTools.getWorkingPath();
   static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";

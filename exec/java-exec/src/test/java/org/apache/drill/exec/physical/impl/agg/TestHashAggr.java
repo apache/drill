@@ -18,12 +18,12 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Ignore;
 import org.junit.Test;
 
 
-public class TestHashAggr extends BaseTestQuery{
+public class TestHashAggr extends DrillIntegrationTestBase {
 
   @Test
   public void testQ6() throws Exception{

@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.window;
 
 import java.util.Properties;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.DrillTestWrapper;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -32,7 +32,7 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestWindowFrame extends BaseTestQuery {
+public class TestWindowFrame extends DrillIntegrationTestBase {
 
   private static final String TEST_RES_PATH = TestTools.getWorkingPath() + "/src/test/resources";
 

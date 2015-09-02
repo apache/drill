@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
@@ -27,7 +27,7 @@ import org.junit.Test;
  * Placeholder for all sort related test. Can be used as we move
  * more tests to use the new test framework
  */
-public class TestSort extends BaseTestQuery {
+public class TestSort extends DrillIntegrationTestBase {
 
   private static final JsonStringHashMap x = new JsonStringHashMap();
   private static final JsonStringArrayList<JsonStringHashMap> repeated_map = new JsonStringArrayList<>();

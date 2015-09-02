@@ -18,14 +18,14 @@
 
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestCastEmptyStrings extends BaseTestQuery {
+public class TestCastEmptyStrings extends DrillIntegrationTestBase {
     // enable decimal data type
     @BeforeClass
     public static void enableDecimalDataType() throws Exception {

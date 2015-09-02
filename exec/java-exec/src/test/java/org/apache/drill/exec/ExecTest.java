@@ -18,10 +18,10 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.exec.metrics.DrillMetrics;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.After;
 
-public class ExecTest extends DrillTest {
+public class ExecTest extends DrillTestBase {
 
   @After
   public void clear(){

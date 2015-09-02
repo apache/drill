@@ -54,7 +54,7 @@ import static org.junit.Assert.assertNotNull;
  * the BaseTestQuery class, and instance of the builder is accessible through the testBuilder() method.
  */
 public class DrillTestWrapper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillIntegrationTestBase.class);
 
   // TODO - when in JSON, read baseline in all text mode to avoid precision loss for decimal values
 
@@ -282,8 +282,8 @@ public class DrillTestWrapper {
     List<Map> actualRecords = new ArrayList<>();
 
     try {
-      BaseTestQuery.test(testOptionSettingQueries);
-      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      DrillIntegrationTestBase.test(testOptionSettingQueries);
+      actual = DrillIntegrationTestBase.testRunAndReturn(queryType, query);
 
       checkNumBatches(actual);
 
@@ -293,8 +293,8 @@ public class DrillTestWrapper {
       // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
-        BaseTestQuery.test(baselineOptionSettingQueries);
-        expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+        DrillIntegrationTestBase.test(baselineOptionSettingQueries);
+        expected = DrillIntegrationTestBase.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
         addToMaterializedResults(expectedRecords, expected, loader, schema);
       } else {
         expectedRecords = baselineRecords;
@@ -333,8 +333,8 @@ public class DrillTestWrapper {
     Map<String, List> expectedSuperVectors;
 
     try {
-    BaseTestQuery.test(testOptionSettingQueries);
-    actual = BaseTestQuery.testRunAndReturn(queryType, query);
+    DrillIntegrationTestBase.test(testOptionSettingQueries);
+    actual = DrillIntegrationTestBase.testRunAndReturn(queryType, query);
 
     checkNumBatches(actual);
 
@@ -346,8 +346,8 @@ public class DrillTestWrapper {
     // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
     // the cases where the baseline is stored in a file.
     if (baselineRecords == null) {
-      BaseTestQuery.test(baselineOptionSettingQueries);
-      expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+      DrillIntegrationTestBase.test(baselineOptionSettingQueries);
+      expected = DrillIntegrationTestBase.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
       expectedSuperVectors = addToCombinedVectorResults(expected, loader, schema);
     } else {
       // data is built in the TestBuilder in a row major format as it is provided by the user
@@ -374,8 +374,8 @@ public class DrillTestWrapper {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     BatchSchema schema = null;
 
-    BaseTestQuery.test(testOptionSettingQueries);
-    List<QueryDataBatch> results = BaseTestQuery.testRunAndReturn(queryType, query);
+    DrillIntegrationTestBase.test(testOptionSettingQueries);
+    List<QueryDataBatch> results = DrillIntegrationTestBase.testRunAndReturn(queryType, query);
 
     checkNumBatches(results);
 
@@ -384,8 +384,8 @@ public class DrillTestWrapper {
 
     Map<String, HyperVectorValueIterator> actualSuperVectors = addToHyperVectorMap(results, loader, schema);
 
-    BaseTestQuery.test(baselineOptionSettingQueries);
-    List<QueryDataBatch> expected = BaseTestQuery.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
+    DrillIntegrationTestBase.test(baselineOptionSettingQueries);
+    List<QueryDataBatch> expected = DrillIntegrationTestBase.testRunAndReturn(baselineQueryType, testBuilder.getValidationQuery());
 
     Map<String, HyperVectorValueIterator> expectedSuperVectors = addToHyperVectorMap(expected, loader, schema);
 

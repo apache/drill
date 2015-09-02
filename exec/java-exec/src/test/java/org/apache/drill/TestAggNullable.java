@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
-public class TestAggNullable extends BaseTestQuery{
+public class TestAggNullable extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAggNullable.class);
 
   static final String WORKING_PATH = TestTools.getWorkingPath();

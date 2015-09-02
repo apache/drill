@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 
-public class TestDrillParquetReader extends BaseTestQuery {
+public class TestDrillParquetReader extends DrillIntegrationTestBase {
   // enable decimal data type
   @BeforeClass
   public static void enableDecimalDataType() throws Exception {

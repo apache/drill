@@ -24,7 +24,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -36,7 +36,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestQueriesOnLargeFile extends BaseTestQuery {
+public class TestQueriesOnLargeFile extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestQueriesOnLargeFile.class);
 
   private static File dataFile = null;

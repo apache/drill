@@ -20,7 +20,7 @@ package org.apache.drill;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestTpchExplain extends BaseTestQuery{
+public class TestTpchExplain extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchExplain.class);
 
   private static final String EXPLAIN_PREFIX = "EXPLAIN PLAN FOR ";

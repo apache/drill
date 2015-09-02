@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.complex;
 
 import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TestEmptyPopulation extends BaseTestQuery {
+public class TestEmptyPopulation extends DrillIntegrationTestBase {
 
   private UInt4Vector offsets;
   private UInt4Vector.Accessor accessor;

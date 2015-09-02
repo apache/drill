@@ -25,10 +25,10 @@ import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.Test;
 
-public class TreeTest extends DrillTest {
+public class TreeTest extends DrillTestBase {
 
   @Test
   public void testIfWithCase() throws Exception{

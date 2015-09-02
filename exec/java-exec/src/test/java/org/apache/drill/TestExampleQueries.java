@@ -29,7 +29,7 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import static org.apache.drill.TestBuilder.listOf;
 
-public class TestExampleQueries extends BaseTestQuery {
+public class TestExampleQueries extends DrillIntegrationTestBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test // see DRILL-2328

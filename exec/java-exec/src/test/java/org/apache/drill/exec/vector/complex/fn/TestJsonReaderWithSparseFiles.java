@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.util.JsonStringArrayList;
@@ -29,7 +29,7 @@ import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
+public class TestJsonReaderWithSparseFiles extends DrillIntegrationTestBase {
   private interface Function<T> {
     void apply(T param);
   }

@@ -31,7 +31,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -49,7 +49,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.rules.TemporaryFolder;
 
-public class TestJsonReader extends BaseTestQuery {
+public class TestJsonReader extends DrillIntegrationTestBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);
 
   private static final boolean VERBOSE_DEBUG = false;

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
@@ -25,7 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-public class TestLargeFileCompilation extends BaseTestQuery {
+public class TestLargeFileCompilation extends DrillIntegrationTestBase {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(150000); // 150secs
 
   private static final String LARGE_QUERY_GROUP_BY;

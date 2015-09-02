@@ -17,7 +17,7 @@
  */
 package org.apache.drill.jdbc.proxy;
 
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.*;
 /**
  * Test of TracingProxyDriver's loading of driver class.
  */
-public class TracingProxyDriverClassLoadingTest extends DrillTest {
+public class TracingProxyDriverClassLoadingTest extends DrillTestBase {
 
   @Ignore( "except when run in own JVM (so Drill Driver not already loaded)" )
   @Test

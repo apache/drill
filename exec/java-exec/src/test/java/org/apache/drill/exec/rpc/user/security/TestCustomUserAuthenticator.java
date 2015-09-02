@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
@@ -35,7 +35,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-public class TestCustomUserAuthenticator extends BaseTestQuery {
+public class TestCustomUserAuthenticator extends DrillIntegrationTestBase {
 
   @BeforeClass
   public static void setupCluster() {

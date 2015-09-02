@@ -20,7 +20,7 @@ package org.apache.drill;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
-public class TestTextJoin extends BaseTestQuery{
+public class TestTextJoin extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTextJoin.class);
 
   static final String WORKING_PATH = TestTools.getWorkingPath();

@@ -140,14 +140,14 @@ public class TestBuilder {
   }
 
   public TestBuilder sqlQueryFromFile(String queryFile) throws IOException {
-    String query = BaseTestQuery.getFile(queryFile);
+    String query = DrillIntegrationTestBase.getFile(queryFile);
     this.query = query;
     this.queryType = UserBitShared.QueryType.SQL;
     return this;
   }
 
   public TestBuilder physicalPlanFromFile(String queryFile) throws IOException {
-    String query = BaseTestQuery.getFile(queryFile);
+    String query = DrillIntegrationTestBase.getFile(queryFile);
     this.query = query;
     this.queryType = UserBitShared.QueryType.PHYSICAL;
     return this;
@@ -348,7 +348,7 @@ public class TestBuilder {
 
   // provide a path to a file containing a SQL query to use as a baseline
   public BaselineQueryTestBuilder sqlBaselineQueryFromFile(String baselineQueryFilename) throws IOException {
-    String baselineQuery = BaseTestQuery.getFile(baselineQueryFilename);
+    String baselineQuery = DrillIntegrationTestBase.getFile(baselineQueryFilename);
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.SQL, allocator, query, queryType, ordered, approximateEquality,
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
@@ -356,7 +356,7 @@ public class TestBuilder {
   // as physical plans are verbose, this is the only option provided for specifying them, we should enforce
   // that physical plans, or any large JSON strings do not live in the Java source as literals
   public BaselineQueryTestBuilder physicalPlanBaselineQueryFromFile(String baselinePhysicalPlanPath) throws IOException {
-    String baselineQuery = BaseTestQuery.getFile(baselinePhysicalPlanPath);
+    String baselineQuery = DrillIntegrationTestBase.getFile(baselinePhysicalPlanPath);
     return new BaselineQueryTestBuilder(baselineQuery, UserBitShared.QueryType.PHYSICAL, allocator, query, queryType, ordered, approximateEquality,
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }

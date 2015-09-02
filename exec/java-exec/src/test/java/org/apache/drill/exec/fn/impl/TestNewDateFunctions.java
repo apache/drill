@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
 
-public class TestNewDateFunctions extends BaseTestQuery {
+public class TestNewDateFunctions extends DrillIntegrationTestBase {
   DateTime date;
   DateTimeFormatter formatter;
   long unixTimeStamp = -1;

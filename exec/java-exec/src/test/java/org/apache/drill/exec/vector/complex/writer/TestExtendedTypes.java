@@ -24,12 +24,12 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Test;
 
-public class TestExtendedTypes extends BaseTestQuery {
+public class TestExtendedTypes extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExtendedTypes.class);
 
   @Test
@@ -52,7 +52,7 @@ public class TestExtendedTypes extends BaseTestQuery {
 
       // check that original file and new file match.
       final byte[] originalData = Files.readAllBytes(Paths.get(originalFile));
-      final byte[] newData = Files.readAllBytes(Paths.get(BaseTestQuery.getDfsTestTmpSchemaLocation() + '/' + newTable
+      final byte[] newData = Files.readAllBytes(Paths.get(DrillIntegrationTestBase.getDfsTestTmpSchemaLocation() + '/' + newTable
           + "/0_0_0.json"));
       assertEquals(new String(originalData), new String(newData));
     } finally {

@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Test;
 
-public class TestGlob extends BaseTestQuery {
+public class TestGlob extends DrillIntegrationTestBase {
 
     String MULTILEVEL = TestTools.getWorkingPath() + "/../java-exec/src/test/resources/multilevel";
 

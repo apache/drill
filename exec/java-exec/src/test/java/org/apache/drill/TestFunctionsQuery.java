@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 
-public class TestFunctionsQuery extends BaseTestQuery {
+public class TestFunctionsQuery extends DrillIntegrationTestBase {
 
   // enable decimal data type
   @BeforeClass

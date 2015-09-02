@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.store.json;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.junit.Test;
@@ -27,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 import static org.junit.Assert.assertTrue;
 
-public class TestJsonRecordReader extends BaseTestQuery{
+public class TestJsonRecordReader extends DrillIntegrationTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonRecordReader.class);
 
   @Test

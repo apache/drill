@@ -18,13 +18,11 @@
 package org.apache.drill.exec.fn.impl;
 
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
 
-import java.util.Date;
-
-public class TestCastFunctions extends BaseTestQuery {
+public class TestCastFunctions extends DrillIntegrationTestBase {
 
   @Test
   public void testVarbinaryToDate() throws Exception {

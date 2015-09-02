@@ -28,7 +28,7 @@ import org.junit.Test;
  * Run several tpch queries and inject an OutOfMemoryException in ScanBatch that will cause an OUT_OF_MEMORY outcome to
  * be propagated downstream. Make sure the proper "memory error" message is sent to the client.
  */
-public class TestOutOfMemoryOutcome extends BaseTestQuery{
+public class TestOutOfMemoryOutcome extends DrillIntegrationTestBase {
 
   private static final String SINGLE_MODE = "ALTER SESSION SET `planner.disable_exchanges` = true";
 

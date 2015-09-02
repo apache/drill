@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import mockit.Injectable;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
@@ -82,7 +82,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 @Ignore
-public class ParquetRecordReaderTest extends BaseTestQuery {
+public class ParquetRecordReaderTest extends DrillIntegrationTestBase {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
 
   static final boolean VERBOSE_DEBUG = false;

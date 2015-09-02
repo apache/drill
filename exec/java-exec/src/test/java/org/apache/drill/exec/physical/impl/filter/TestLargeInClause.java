@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.filter;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestLargeInClause extends BaseTestQuery {
+public class TestLargeInClause extends DrillIntegrationTestBase {
 
   private static String getInIntList(int size){
     StringBuffer sb = new StringBuffer();

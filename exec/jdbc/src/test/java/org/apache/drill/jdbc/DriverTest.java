@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 /**
  * (Some) unit and integration tests for org.apache.drill.jdbc.Driver.
  */
-public class DriverTest extends DrillTest {
+public class DriverTest extends DrillTestBase {
 
   // TODO: Move Jetty status server disabling to DrillTest.
   private static final String STATUS_SERVER_PROPERTY_NAME =

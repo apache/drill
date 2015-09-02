@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
-public class TestDateReader extends BaseTestQuery {
+public class TestDateReader extends DrillIntegrationTestBase {
 
   /**
    * check if DateReader works well with dictionary encoding.

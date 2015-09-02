@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.Float4Vector;
@@ -35,7 +35,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class TestHiveUDFs extends BaseTestQuery {
+public class TestHiveUDFs extends DrillIntegrationTestBase {
 
   @Test
   public void testGenericUDF() throws Throwable {

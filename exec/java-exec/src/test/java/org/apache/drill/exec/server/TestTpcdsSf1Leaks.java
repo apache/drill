@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET_DEFAULT;
@@ -43,7 +43,7 @@ import org.junit.rules.Timeout;
  *
  */
 @Ignore
-public class TestTpcdsSf1Leaks extends BaseTestQuery {
+public class TestTpcdsSf1Leaks extends DrillIntegrationTestBase {
 
   @Rule
   final public TestRule TIMEOUT = new Timeout(0); // wait forever

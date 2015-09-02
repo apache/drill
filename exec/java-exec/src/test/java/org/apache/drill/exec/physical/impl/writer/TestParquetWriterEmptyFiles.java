@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestParquetWriterEmptyFiles extends BaseTestQuery {
+public class TestParquetWriterEmptyFiles extends DrillIntegrationTestBase {
 
   private static FileSystem fs;
 
@@ -47,7 +47,7 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
     try {
       test("CREATE TABLE dfs_test.tmp.%s AS SELECT * FROM cp.`employee.json` WHERE 1=0", outputFile);
 
-      final Path path = new Path(getDfsTestTmpSchemaLocation(), outputFile);
+      final Path path = new Path(getCluster().tmpSchemaLocation(), outputFile);
       Assert.assertFalse(fs.exists(path));
     } finally {
       deleteTableIfExists(outputFile);
@@ -104,7 +104,7 @@ public class TestParquetWriterEmptyFiles extends BaseTestQuery {
 
   private static boolean deleteTableIfExists(String tableName) {
     try {
-      Path path = new Path(getDfsTestTmpSchemaLocation(), tableName);
+      Path path = new Path(getCluster().tmpSchemaLocation(), tableName);
       if (fs.exists(path)) {
         return fs.delete(path, true);
       }

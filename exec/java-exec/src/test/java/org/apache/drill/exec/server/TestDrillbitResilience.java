@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
 import org.apache.drill.common.AutoCloseables;
@@ -80,7 +80,7 @@ import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.ForemanException;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -94,7 +94,7 @@ import com.google.common.base.Preconditions;
  * Test how resilient drillbits are to throwing exceptions during various phases of query
  * execution by injecting exceptions at various points, and to cancellations in various phases.
  */
-public class TestDrillbitResilience extends DrillTest {
+public class TestDrillbitResilience extends DrillTestBase {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
 
   private static ZookeeperHelper zkHelper;
@@ -864,7 +864,7 @@ public class TestDrillbitResilience extends DrillTest {
         .build();
       String query = null;
       try {
-        query = BaseTestQuery.getFile("queries/tpch/09.sql");
+        query = DrillIntegrationTestBase.getFile("queries/tpch/09.sql");
         query = query.substring(0, query.length() - 1); // drop the ";"
       } catch (final IOException e) {
         fail("Failed to get query file: " + e);
@@ -910,7 +910,7 @@ public class TestDrillbitResilience extends DrillTest {
 
       String query = null;
       try {
-        query = BaseTestQuery.getFile("queries/tpch/09.sql");
+        query = DrillIntegrationTestBase.getFile("queries/tpch/09.sql");
         query = query.substring(0, query.length() - 1); // drop the ";"
       } catch (final IOException e) {
         fail("Failed to get query file: " + e);

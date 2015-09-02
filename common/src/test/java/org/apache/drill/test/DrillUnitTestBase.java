@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,21 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.sql;
+package org.apache.drill.test;
 
-import org.apache.drill.DrillIntegrationTestBase;
-import org.junit.Test;
+/**
+ * Abstract base class for all Drill unit tests.
+ *
+ * Tests which do not require a drillbit to be running should extend this class.
+ */
+public abstract class DrillUnitTestBase extends DrillTestBase {
 
-public class TestSimpleCastFunctions extends DrillIntegrationTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleCastFunctions.class);
-
-  @Test
-  public void castFromBoolean() throws Exception {
-    test("select cast(false as varchar(5)), cast(true as varchar(4)), cast((1 < 5) as varchar(4)) from sys.options limit 1;");
-  }
-
-  @Test
-  public void castToBoolean() throws Exception {
-    test("select cast('false' as boolean), cast('true' as boolean) from sys.options limit 1;");
-  }
 }

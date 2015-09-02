@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
@@ -28,7 +28,7 @@ import org.junit.Test;
  * Run several tpch queries and inject an OutOfMemoryException in ScanBatch that will cause an OUT_OF_MEMORY outcome to
  * be propagated downstream. Make sure the proper "memory error" message is sent to the client.
  */
-public class TestFragmentExecutorCancel extends BaseTestQuery {
+public class TestFragmentExecutorCancel extends DrillIntegrationTestBase {
 
   @Test
   public void testCancelNonRunningFragments() throws Exception{

@@ -31,8 +31,7 @@ import java.util.List;
 
 import mockit.Injectable;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.TestBuilder;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -51,14 +50,13 @@ import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.joda.time.DateTime;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class TestConvertFunctions extends BaseTestQuery {
+public class TestConvertFunctions extends DrillIntegrationTestBase {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestConvertFunctions.class);
 
   private static final String CONVERSION_TEST_LOGICAL_PLAN = "functions/conv/conversionTestWithLogicalPlan.json";

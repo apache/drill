@@ -25,10 +25,10 @@ import static org.junit.Assert.fail;
 import java.util.regex.Pattern;
 
 import org.apache.drill.exec.store.hbase.HBaseRegexParser;
-import org.apache.drill.test.DrillTest;
+import org.apache.drill.test.DrillTestBase;
 import org.junit.Test;
 
-public class TestHBaseRegexParser extends DrillTest {
+public class TestHBaseRegexParser extends DrillTestBase {
 
   @Test
   public void testLikeExprToRegex() throws Exception {

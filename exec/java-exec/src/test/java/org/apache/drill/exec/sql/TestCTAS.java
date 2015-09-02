@@ -18,12 +18,12 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.BaseTestQuery;
+import org.apache.drill.DrillIntegrationTestBase;
 import org.junit.Test;
 
 import java.io.File;
 
-public class TestCTAS extends BaseTestQuery {
+public class TestCTAS extends DrillIntegrationTestBase {
   @Test // DRILL-2589
   public void withDuplicateColumnsInDef1() throws Exception {
     ctasErrorTestHelper("CREATE TABLE %s.%s AS SELECT region_id, region_id FROM cp.`region.json`",
