@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
@@ -349,17 +350,17 @@ public class WorkspaceSchemaFactory {
      * Check if the table contains homogenenous files that can be read by Drill. Eg: parquet, json csv etc.
      * However if it contains more than one of these formats or a totally different file format that Drill cannot
      * understand then we will raise an exception.
-     * @param key
+     * @param tableName - name of the table to be checked for homogeneous property
      * @return
      * @throws IOException
      */
-    private boolean isHomogeneous(String key) throws IOException {
-      FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
+    private boolean isHomogeneous(String tableName) throws IOException {
+      FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), tableName);
 
       if (fileSelection == null) {
         throw UserException
             .validationError()
-            .message(String.format("Table [%s] not found", key))
+            .message(String.format("Table [%s] not found", tableName))
             .build(logger);
       }
 
@@ -395,15 +396,6 @@ public class WorkspaceSchemaFactory {
      */
     @Override
     public void dropTable(String table) {
-
-      String[] pathSplit = table.split(Path.SEPARATOR);
-      String dirName = DrillFileSystem.HIDDEN_FILE_PREFIX + pathSplit[pathSplit.length - 1];
-      int lastSlashIndex = table.lastIndexOf(Path.SEPARATOR);
-
-      if (lastSlashIndex != -1) {
-        dirName = table.substring(0, lastSlashIndex + 1) + dirName;
-      }
-
       DrillFileSystem fs = getFS();
       String defaultLocation = getDefaultLocation();
       try {
@@ -414,12 +406,45 @@ public class WorkspaceSchemaFactory {
                   "Drop Table is only supported for directories that contain homogeneous file formats consumable by Drill")
               .build(logger);
         }
-        fs.rename(new Path(defaultLocation, table), new Path(defaultLocation, dirName));
-        fs.delete(new Path(defaultLocation, dirName), true);
-      } catch (IOException e) {
+
+        StringBuilder tableRenameBuilder = new StringBuilder();
+        int lastSlashIndex = table.lastIndexOf(Path.SEPARATOR);
+        if (lastSlashIndex != -1) {
+          tableRenameBuilder.append(table.substring(0, lastSlashIndex + 1));
+        }
+        // Generate unique identifier which will be added as a suffix to the table name
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        long time =  (System.currentTimeMillis()/1000);
+        Long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
+        Long p2 = r.nextLong();
+        final String fileNameDelimiter = DrillFileSystem.HIDDEN_FILE_PREFIX;
+        String[] pathSplit = table.split(Path.SEPARATOR);
+        /*
+         * Builds the string for the renamed table
+         * Prefixes the table name with an underscore (intent for this to be treated as a hidden file)
+         * and suffixes the table name with unique identifiers (similar to how we generate query id's)
+         * separated by underscores
+         */
+        tableRenameBuilder
+            .append(DrillFileSystem.HIDDEN_FILE_PREFIX)
+            .append(pathSplit[pathSplit.length - 1])
+            .append(fileNameDelimiter)
+            .append(p1.toString())
+            .append(fileNameDelimiter)
+            .append(p2.toString());
+
+        String tableRename = tableRenameBuilder.toString();
+        fs.rename(new Path(defaultLocation, table), new Path(defaultLocation, tableRename));
+        fs.delete(new Path(defaultLocation, tableRename), true);
+      } catch (AccessControlException e) {
         throw UserException
             .permissionError()
             .message("Unauthorized to drop table", e)
+            .build(logger);
+      } catch (IOException e) {
+        throw UserException
+            .dataWriteError()
+            .message("Failed to drop table", e)
             .build(logger);
       }
     }

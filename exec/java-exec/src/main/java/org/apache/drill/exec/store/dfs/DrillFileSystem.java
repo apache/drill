@@ -73,6 +73,7 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
 
   public static final String HIDDEN_FILE_PREFIX = "_";
+  public static final String DOT_FILE_PREFIX = ".";
 
   private final ConcurrentMap<DrillFSDataInputStream, DebugStackTrace> openedFiles = Maps.newConcurrentMap();
 
