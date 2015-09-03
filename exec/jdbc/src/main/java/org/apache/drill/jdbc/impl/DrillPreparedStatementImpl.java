@@ -30,7 +30,8 @@ import net.hydromatic.avatica.AvaticaPreparedStatement;
  * Implementation of {@link java.sql.PreparedStatement} for Drill.
  *
  * <p>
- * This class has sub-classes which implement JDBC 3.0 and JDBC 4.0 APIs; it is instantiated using
+ * This class has sub-classes which implement JDBC 3.0 and JDBC 4.0 APIs; it is
+ * instantiated using
  * {@link net.hydromatic.avatica.AvaticaFactory#newPreparedStatement}.
  * </p>
  */

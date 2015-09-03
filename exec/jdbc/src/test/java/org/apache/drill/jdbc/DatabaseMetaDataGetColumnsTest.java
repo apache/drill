@@ -412,10 +412,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_CAT_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
     assertThat( rowsMetadata.getColumnClassName( 1 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -471,10 +469,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_SCHEM_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 2 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -521,10 +518,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TABLE_NAME_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 3 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -579,10 +575,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_NAME_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 4 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -931,10 +926,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_TYPE_NAME_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 6 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -1972,10 +1966,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_REMARKS_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 12 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
@@ -2021,10 +2014,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_DEF_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 13 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) ); //???Text
   }
 
   @Test
@@ -2540,10 +2532,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_NULLABLE_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 18 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Ignore( "until resolved:  any requirement on nullability (DRILL-2420?)" )
@@ -2590,10 +2581,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_CATALOG_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 19 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
@@ -2639,10 +2629,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_SCHEMA_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 20 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
@@ -2688,10 +2677,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_SCOPE_TABLE_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 21 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
@@ -2791,10 +2779,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_AUTOINCREMENT_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 23 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
@@ -2844,10 +2831,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_IS_GENERATEDCOLUMN_hasRightClass() throws SQLException {
-    // TODO(DRILL-3347):  Resolve which type(s) to test for:
+
     assertThat( rowsMetadata.getColumnClassName( 24 ),
-                anyOf( equalTo( String.class.getName() ),
-                       equalTo( org.apache.hadoop.io.Text.class.getName() ) ) );
+                equalTo( String.class.getName() ) );
   }
 
   @Test
