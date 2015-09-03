@@ -36,6 +36,11 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
   protected final OptionManager fallback;
 
   public FallbackOptionManager(OptionManager fallback) {
+    /**
+     * TODO(DRILL-2097): Add a Preconditions.checkNotNull(fallback, "A fallback manager must be provided.") and remove
+     * the null check in {@link #getOption(String)}. This is not added currently only to avoid modifying the long list
+     * of test files.
+     */
     this.fallback = fallback;
   }
 

@@ -21,14 +21,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * A special type of {@link Map} with {@link String}s as keys, and the case of a key is ignored for operations involving
- * keys like {@link #put}, {@link #get}, etc. The keys are stored and retrieved in lower case. Use the static methods to
- * create instances of this class (e.g. {@link #newConcurrentMap}).
+ * keys like {@link #put}, {@link #get}, etc. The keys are stored and retrieved in lower case. Use the static factory
+ * methods to create instances of this class (e.g. {@link #newConcurrentMap}).
  *
  * @param <VALUE> the type of values to be stored in the map
  */
@@ -73,7 +72,12 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
 
   private final Map<String, VALUE> underlyingMap;
 
-  protected CaseInsensitiveMap(final Map<String, VALUE> underlyingMap) {
+  /**
+   * Use the static factory methods to create instances of this class (e.g. {@link #newConcurrentMap}).
+   *
+   * @param underlyingMap the underlying map
+   */
+  private CaseInsensitiveMap(final Map<String, VALUE> underlyingMap) {
     this.underlyingMap = underlyingMap;
   }
 

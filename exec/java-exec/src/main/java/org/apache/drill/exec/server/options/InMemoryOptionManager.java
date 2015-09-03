@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.common.map.CaseInsensitiveMap;
+import java.util.Map;
 
 /**
  * {@link OptionManager} that hold options in memory rather than in a persistent store. Option stored in
@@ -27,9 +27,9 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 public abstract class InMemoryOptionManager extends FallbackOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryOptionManager.class);
 
-  protected final CaseInsensitiveMap<OptionValue> options;
+  protected final Map<String, OptionValue> options;
 
-  InMemoryOptionManager(final OptionManager fallback, final CaseInsensitiveMap<OptionValue> options) {
+  InMemoryOptionManager(final OptionManager fallback, final Map<String, OptionValue> options) {
     super(fallback);
     this.options = options;
   }

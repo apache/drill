@@ -32,7 +32,7 @@ public class FragmentOptionManager extends InMemoryOptionManager {
     super(systemOptions, getMapFromOptionList(options));
   }
 
-  private static CaseInsensitiveMap<OptionValue> getMapFromOptionList(final OptionList options) {
+  private static Map<String, OptionValue> getMapFromOptionList(final OptionList options) {
     final Map<String, OptionValue> tmp = Maps.newHashMap();
     for (final OptionValue value : options) {
       tmp.put(value.name, value);

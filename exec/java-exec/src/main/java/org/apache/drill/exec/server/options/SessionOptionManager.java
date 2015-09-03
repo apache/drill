@@ -24,6 +24,7 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.rpc.user.UserSession} context.
@@ -36,11 +37,11 @@ public class SessionOptionManager extends InMemoryOptionManager {
   /**
    * Map of short lived options. Key: option name, Value: [ start, end )
    */
-  private final CaseInsensitiveMap<ImmutablePair<Integer, Integer>> shortLivedOptions =
+  private final Map<String, ImmutablePair<Integer, Integer>> shortLivedOptions =
     CaseInsensitiveMap.newConcurrentMap();
 
   public SessionOptionManager(final OptionManager systemOptions, final UserSession session) {
-    super(systemOptions, CaseInsensitiveMap.<OptionValue>newHashMap());
+    super(systemOptions, CaseInsensitiveMap.<OptionValue>newConcurrentMap());
     this.session = session;
   }
 
