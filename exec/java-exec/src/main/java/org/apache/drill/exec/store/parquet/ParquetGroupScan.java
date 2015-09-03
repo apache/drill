@@ -482,117 +482,113 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
   }
 
-  private void init() {
-      ParquetTableMetadata_v1 parquetTableMetadata;
-      List<FileStatus> fileStatuses = null;
-      try {
-        if (entries.size() == 1) {
-          Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
-          Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
-          if (fs.exists(metaPath)) {
-            parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString());
-          } else {
-            parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString());
-          }
-        } else {
-          Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
-          Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
-          if (fs.exists(metaPath)) {
-            parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString()));
-          } else {
-            fileStatuses = Lists.newArrayList();
-            for (ReadEntryWithPath entry : entries) {
-              getFiles(entry.getPath(), fileStatuses);
-            }
-            parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses);
+  private void init() throws IOException {
+    ParquetTableMetadata_v1 parquetTableMetadata;
+    List<FileStatus> fileStatuses = null;
+    if (entries.size() == 1) {
+      Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
+      Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
+      if (fs.exists(metaPath)) {
+        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString());
+      } else {
+        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString());
+      }
+    } else {
+      Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
+      Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
+      if (fs.exists(metaPath)) {
+        parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString()));
+      } else {
+        fileStatuses = Lists.newArrayList();
+        for (ReadEntryWithPath entry : entries) {
+          getFiles(entry.getPath(), fileStatuses);
+        }
+        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses);
+      }
+    }
+
+    if (fileSet == null) {
+      fileSet = Sets.newHashSet();
+      for (ParquetFileMetadata file : parquetTableMetadata.files) {
+        fileSet.add(file.path);
+      }
+    }
+
+    Map<String,DrillbitEndpoint> hostEndpointMap = Maps.newHashMap();
+
+    for (DrillbitEndpoint endpoint : formatPlugin.getContext().getBits()) {
+      hostEndpointMap.put(endpoint.getAddress(), endpoint);
+    }
+
+    rowGroupInfos = Lists.newArrayList();
+    for (ParquetFileMetadata file : parquetTableMetadata.files) {
+      int rgIndex = 0;
+      for (RowGroupMetadata rg : file.rowGroups) {
+        RowGroupInfo rowGroupInfo = new RowGroupInfo(file.path, rg.start, rg.length, rgIndex);
+        EndpointByteMap endpointByteMap = new EndpointByteMapImpl();
+        for (String host : rg.hostAffinity.keySet()) {
+          if (hostEndpointMap.containsKey(host)) {
+            endpointByteMap.add(hostEndpointMap.get(host), (long) (rg.hostAffinity.get(host) * rg.length));
           }
         }
+        rowGroupInfo.setEndpointByteMap(endpointByteMap);
+        rgIndex++;
+        rowGroupInfos.add(rowGroupInfo);
+      }
+    }
 
-        if (fileSet == null) {
-          fileSet = Sets.newHashSet();
-          for (ParquetFileMetadata file : parquetTableMetadata.files) {
-            fileSet.add(file.path);
-          }
-        }
+    this.endpointAffinities = AffinityCreator.getAffinityMap(rowGroupInfos);
 
-        Map<String,DrillbitEndpoint> hostEndpointMap = Maps.newHashMap();
+    columnValueCounts = Maps.newHashMap();
+    this.rowCount = 0;
+    boolean first = true;
+    for (ParquetFileMetadata file : parquetTableMetadata.files) {
+      for (RowGroupMetadata rowGroup : file.rowGroups) {
+        long rowCount = rowGroup.rowCount;
+        for (ColumnMetadata column : rowGroup.columns) {
+          SchemaPath schemaPath = column.name;
+          Long previousCount = columnValueCounts.get(schemaPath);
+          if (previousCount != null) {
+            if (previousCount != GroupScan.NO_COLUMN_STATS) {
+              if (column.nulls != null) {
+                Long newCount = rowCount - column.nulls;
+                columnValueCounts.put(schemaPath, columnValueCounts.get(schemaPath) + newCount);
+              } else {
 
-        for (DrillbitEndpoint endpoint : formatPlugin.getContext().getBits()) {
-          hostEndpointMap.put(endpoint.getAddress(), endpoint);
-        }
-
-        rowGroupInfos = Lists.newArrayList();
-        for (ParquetFileMetadata file : parquetTableMetadata.files) {
-          int rgIndex = 0;
-          for (RowGroupMetadata rg : file.rowGroups) {
-            RowGroupInfo rowGroupInfo = new RowGroupInfo(file.path, rg.start, rg.length, rgIndex);
-            EndpointByteMap endpointByteMap = new EndpointByteMapImpl();
-            for (String host : rg.hostAffinity.keySet()) {
-              if (hostEndpointMap.containsKey(host)) {
-                endpointByteMap.add(hostEndpointMap.get(host), (long) (rg.hostAffinity.get(host) * rg.length));
               }
             }
-            rowGroupInfo.setEndpointByteMap(endpointByteMap);
-            rgIndex++;
-            rowGroupInfos.add(rowGroupInfo);
+          } else {
+            if (column.nulls != null) {
+              Long newCount = rowCount - column.nulls;
+              columnValueCounts.put(schemaPath, newCount);
+            } else {
+              columnValueCounts.put(schemaPath, GroupScan.NO_COLUMN_STATS);
+            }
           }
-        }
-
-        this.endpointAffinities = AffinityCreator.getAffinityMap(rowGroupInfos);
-
-        columnValueCounts = Maps.newHashMap();
-        this.rowCount = 0;
-        boolean first = true;
-        for (ParquetFileMetadata file : parquetTableMetadata.files) {
-          for (RowGroupMetadata rowGroup : file.rowGroups) {
-            long rowCount = rowGroup.rowCount;
-            for (ColumnMetadata column : rowGroup.columns) {
-              SchemaPath schemaPath = column.name;
-              Long previousCount = columnValueCounts.get(schemaPath);
-              if (previousCount != null) {
-                if (previousCount != GroupScan.NO_COLUMN_STATS) {
-                  if (column.nulls != null) {
-                    Long newCount = rowCount - column.nulls;
-                    columnValueCounts.put(schemaPath, columnValueCounts.get(schemaPath) + newCount);
-                  } else {
-
-                  }
-                }
-              } else {
-                if (column.nulls != null) {
-                  Long newCount = rowCount - column.nulls;
-                  columnValueCounts.put(schemaPath, newCount);
-                } else {
-                  columnValueCounts.put(schemaPath, GroupScan.NO_COLUMN_STATS);
-                }
-              }
-              boolean partitionColumn = checkForPartitionColumn(column, first);
-              if (partitionColumn) {
-                Map<SchemaPath,Object> map = partitionValueMap.get(file.path);
-                if (map == null) {
-                  map = Maps.newHashMap();
-                  partitionValueMap.put(file.path, map);
-                }
-                Object value = map.get(schemaPath);
-                Object currentValue = column.max;
-                if (value != null) {
-                  if (value != currentValue) {
-                    columnTypeMap.remove(schemaPath);
-                  }
-                } else {
-                  map.put(schemaPath, currentValue);
-                }
-              } else {
+          boolean partitionColumn = checkForPartitionColumn(column, first);
+          if (partitionColumn) {
+            Map<SchemaPath,Object> map = partitionValueMap.get(file.path);
+            if (map == null) {
+              map = Maps.newHashMap();
+              partitionValueMap.put(file.path, map);
+            }
+            Object value = map.get(schemaPath);
+            Object currentValue = column.max;
+            if (value != null) {
+              if (value != currentValue) {
                 columnTypeMap.remove(schemaPath);
               }
+            } else {
+              map.put(schemaPath, currentValue);
             }
-            this.rowCount += rowGroup.rowCount;
-            first = false;
+          } else {
+            columnTypeMap.remove(schemaPath);
           }
         }
-      } catch (IOException e) {
-        logger.warn("Failure while determining operator affinity.", e);
+        this.rowCount += rowGroup.rowCount;
+        first = false;
       }
+    }
   }
 
   private ParquetTableMetadata_v1 removeUnneededRowGroups(ParquetTableMetadata_v1 parquetTableMetadata) {
