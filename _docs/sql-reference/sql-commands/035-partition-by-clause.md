@@ -6,7 +6,7 @@ The PARTITION BY clause in the CTAS command partitions data, which Drill [prunes
 
 ## Syntax
 
-     [ PARTITION_BY ( column_name[, . . .] ) ]
+     [ PARTITION BY ( column_name[, . . .] ) ]
 
 The PARTITION BY clause partitions the data by the first column_name, and then subpartitions the data by the next column_name, if there is one, and so on. 
 
@@ -15,13 +15,13 @@ Only the Parquet storage format is supported for partitioning. Before using CTAS
 When the base table in the SELECT statement is schema-less, include columns in the PARTITION BY clause in the table's column list, or use a select all (SELECT *) statement:  
 
     CREATE TABLE dest_name [ (column, . . .) ]
-    [ PARTITION_BY (column, . . .) ] 
+    [ PARTITION BY (column, . . .) ] 
     AS SELECT column_list FROM <source_name>;
 
 When columns in the source table have ambiguous names, such as COLUMNS[0], define one or more column aliases in the SELECT statement. Use the alias name or names in the CREATE TABLE list. List aliases in the same order as the corresponding columns in the SELECT statement. Matching order is important because Drill performs an overwrite operation.  
 
     CREATE TABLE dest_name (alias1, alias2, . . .) 
-    [ PARTITION_BY (alias1, . . . ) ] 
+    [ PARTITION BY (alias1, . . . ) ] 
     AS SELECT column1 alias1, column2 alias2, . . .;
 
 For example:
