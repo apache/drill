@@ -46,6 +46,7 @@ import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.GroupType;
+import parquet.schema.MessageType;
 import parquet.schema.OriginalType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 import parquet.schema.Type;
@@ -235,6 +236,14 @@ public class Metadata {
     }
   }
 
+  private OriginalType getOriginalType(Type type, String[] path, int depth) {
+    if (type.isPrimitive()) {
+      return type.getOriginalType();
+    }
+    Type t = ((GroupType) type).getType(path[depth]);
+    return getOriginalType(t, path, depth + 1);
+  }
+
   /**
    * Get the metadata for a single file
    * @param file
@@ -243,11 +252,12 @@ public class Metadata {
    */
   private ParquetFileMetadata getParquetFileMetadata(FileStatus file) throws IOException {
     ParquetMetadata metadata = ParquetFileReader.readFooter(fs.getConf(), file);
-    GroupType schema = metadata.getFileMetaData().getSchema();
+    MessageType schema = metadata.getFileMetaData().getSchema();
 
-    Map<String,OriginalType> originalTypeMap = Maps.newHashMap();
-    for (Type type : schema.getFields()) {
-      originalTypeMap.put(type.getName(), type.getOriginalType());
+    Map<SchemaPath,OriginalType> originalTypeMap = Maps.newHashMap();
+    schema.getPaths();
+    for (String[] path : schema.getPaths()) {
+      originalTypeMap.put(SchemaPath.getCompoundPath(path), getOriginalType(schema, path, 0));
     }
 
     List<RowGroupMetadata> rowGroupMetadataList = Lists.newArrayList();
