@@ -482,31 +482,6 @@
               </resources>
             </configuration>
           </execution>
-          <execution>
-            <id>copy-java-sources</id>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/classes/</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/java</directory>
-                  <filtering>true</filtering>
-                </resource>
-                <resource>
-                  <directory>src/test/java</directory>
-                  <filtering>true</filtering>
-                </resource>
-                <resource>
-                  <directory>target/generated-sources</directory>
-                  <!-- <include>*/org</include> -->
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -590,6 +565,13 @@
               <sources>
                 <source>${project.build.directory}/generated-sources</source>
               </sources>
+              <resources>
+                <resource>
+                  <directory>${project.build.directory}/generated-resources</directory>
+                  <directory>src/main/java</directory>
+                  <directory>src/test/java</directory>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
