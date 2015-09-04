@@ -92,14 +92,12 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
                      ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
     super(statement, prepareResult, resultSetMetaData, timeZone);
     connection = (DrillConnectionImpl) statement.getConnection();
+    client = connection.getClient();
     final int batchQueueThrottlingThreshold =
-        connection.getClient().getConfig().getInt(
+        client.getConfig().getInt(
             ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
-    resultsListener = new ResultsListener( batchQueueThrottlingThreshold );
-    DrillConnection c = (DrillConnection) statement.getConnection();
-    DrillClient client = c.getClient();
+    resultsListener = new ResultsListener(batchQueueThrottlingThreshold);
     batchLoader = new RecordBatchLoader(client.getAllocator());
-    this.client = client;
     cursor = new DrillCursor(this);
   }
 
@@ -852,7 +850,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   public AvaticaStatement getStatement() {
-    // Note:  No already-closed exception for close().
+    // Note:  No already-closed exception for getStatement().
     return super.getStatement();
   }
 
@@ -1335,8 +1333,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
 
   @Override
   protected DrillResultSetImpl execute() throws SQLException{
-    connection.getClient().runQuery(QueryType.SQL, this.prepareResult.getSql(),
-                                    resultsListener);
+    client.runQuery(QueryType.SQL, this.prepareResult.getSql(), resultsListener);
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     super.execute();
