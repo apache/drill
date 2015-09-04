@@ -26,7 +26,7 @@ import java.util.HashMap;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 
-import parquet.bytes.ByteBufferAllocator;
+import org.apache.parquet.bytes.ByteBufferAllocator;
 
 /**
  * {@link ByteBufferAllocator} implementation that uses Drill's {@link BufferAllocator} to allocate and release
@@ -70,6 +70,11 @@ public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
       bb.release();
       allocatedBuffers.remove(key);
     }
+  }
+
+  @Override
+  public boolean isDirect() {
+    return true;
   }
 
   /**

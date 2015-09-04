@@ -21,9 +21,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.ValueVector;
 
-import parquet.column.ColumnDescriptor;
-import parquet.format.SchemaElement;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.format.SchemaElement;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
 final class BitReader extends ColumnReader {
 

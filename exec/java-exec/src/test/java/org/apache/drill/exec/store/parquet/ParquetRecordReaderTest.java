@@ -63,18 +63,19 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.parquet.hadoop.CodecFactory;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import parquet.bytes.BytesInput;
-import parquet.column.page.DataPageV1;
-import parquet.column.page.PageReadStore;
-import parquet.column.page.PageReader;
-import parquet.hadoop.Footer;
-import parquet.hadoop.ParquetFileReader;
-import parquet.hadoop.metadata.ParquetMetadata;
-import parquet.schema.MessageType;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.column.page.DataPageV1;
+import org.apache.parquet.column.page.PageReadStore;
+import org.apache.parquet.column.page.PageReader;
+import org.apache.parquet.hadoop.Footer;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.schema.MessageType;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
@@ -638,7 +639,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     for(int i = 0; i < 25; i++) {
       final ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
-          new DirectCodecFactory(dfsConfig, allocator), f.getParquetMetadata(), columns);
+          CodecFactory.createDirectCodecFactory(dfsConfig, new ParquetDirectByteBufferAllocator(allocator), 0),
+          f.getParquetMetadata(), columns);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
       final Stopwatch watch = new Stopwatch();

@@ -46,7 +46,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import parquet.Preconditions;
+import com.google.common.base.Preconditions;
 
 @XmlRootElement
 public class QueryWrapper {

@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 // TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
@@ -237,7 +239,8 @@ public class TestFrameworkTest extends BaseTestQuery{
         .baselineColumns("employee_id", "first_name", "last_name")
         .build().run();
     } catch (Exception ex) {
-      assertEquals("at position 0 column '`employee_id`' mismatched values, expected: 12(Integer) but received 12(Long)", ex.getMessage());
+      assertThat(ex.getMessage(), CoreMatchers.containsString(
+          "at position 0 column '`employee_id`' mismatched values, expected: 12(Integer) but received 12(Long)"));
       // this indicates successful completion of the test
       return;
     }
@@ -254,7 +257,8 @@ public class TestFrameworkTest extends BaseTestQuery{
           .baselineColumns("employee_id", "first_name", "last_name")
           .build().run();
     } catch (Exception ex) {
-      assertEquals("at position 0 column '`first_name`' mismatched values, expected: Jewel(String) but received Peggy(String)", ex.getMessage());
+      assertThat(ex.getMessage(), CoreMatchers.containsString(
+          "at position 0 column '`first_name`' mismatched values, expected: Jewel(String) but received Peggy(String)"));
       // this indicates successful completion of the test
       return;
     }
@@ -319,9 +323,9 @@ public class TestFrameworkTest extends BaseTestQuery{
           .optionSettingQueriesForBaseline("alter system set `store.json.all_text_mode` = true")
           .build().run();
     } catch (Exception ex) {
-      assertEquals("at position 1 column '`field_1`' mismatched values, " +
-          "expected: [\"5\",\"2\",\"3\",\"4\",\"1\",\"2\"](JsonStringArrayList) but received [\"5\"](JsonStringArrayList)",
-          ex.getMessage());
+      assertThat(ex.getMessage(), CoreMatchers.containsString(
+          "at position 1 column '`field_1`' mismatched values, " +
+          "expected: [\"5\",\"2\",\"3\",\"4\",\"1\",\"2\"](JsonStringArrayList) but received [\"5\"](JsonStringArrayList)"));
       // this indicates successful completion of the test
       return;
     }

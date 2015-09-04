@@ -15,36 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package parquet.hadoop;
+package org.apache.parquet.hadoop;
 
 import java.io.IOException;
 
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 
-import parquet.column.page.PageWriteStore;
-import parquet.hadoop.CodecFactory.BytesCompressor;
-import parquet.schema.MessageType;
+import org.apache.parquet.column.page.PageWriteStore;
+import org.apache.parquet.hadoop.CodecFactory.BytesCompressor;
+import org.apache.parquet.schema.MessageType;
 
 public class ColumnChunkPageWriteStoreExposer {
 
   public static ColumnChunkPageWriteStore newColumnChunkPageWriteStore(
       OperatorContext oContext,
       BytesCompressor compressor,
-      MessageType schema,
-      int initialSize
+      MessageType schema
       ) {
-    return new ColumnChunkPageWriteStore(compressor, schema, initialSize, new ParquetDirectByteBufferAllocator(oContext));
+    return new ColumnChunkPageWriteStore(compressor, schema, new ParquetDirectByteBufferAllocator(oContext));
   }
 
   public static void flushPageStore(PageWriteStore pageStore, ParquetFileWriter w) throws IOException {
     ((ColumnChunkPageWriteStore) pageStore).flushToFileWriter(w);
   }
 
-  public static void close(PageWriteStore pageStore) throws IOException {
-    ((ColumnChunkPageWriteStore) pageStore).close();
-
-  }
-
+  // TODO(jaltekruse) - review, this used to have a method for closing a pageStore
+  // the parquet code once rebased did not include this close method, make sure it isn't needed
+  // I might have messed up the merge
 
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,7 +27,7 @@ public class RowGroupReadEntry extends ReadEntryFromHDFS {
 
   private int rowGroupIndex;
 
-  @parquet.org.codehaus.jackson.annotate.JsonCreator
+  @JsonCreator
   public RowGroupReadEntry(@JsonProperty("path") String path, @JsonProperty("start") long start,
                            @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex) {
     super(path, start, length);

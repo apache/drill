@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package parquet.hadoop;
+package org.apache.parquet.hadoop;
 
 import io.netty.buffer.ByteBuf;
 
@@ -29,42 +29,42 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
-import org.apache.drill.exec.store.parquet.DirectCodecFactory;
+import org.apache.drill.exec.store.parquet.ColumnDataReader;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.bytes.BytesInput;
-import parquet.column.ColumnDescriptor;
-import parquet.column.page.DataPage;
-import parquet.column.page.DataPageV1;
-import parquet.column.page.DataPageV2;
-import parquet.column.page.DictionaryPage;
-import parquet.column.page.PageReadStore;
-import parquet.column.page.PageReader;
-import parquet.format.DataPageHeaderV2;
-import parquet.format.PageHeader;
-import parquet.format.Util;
-import parquet.format.converter.ParquetMetadataConverter;
-import parquet.hadoop.CodecFactory.BytesDecompressor;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.page.DataPage;
+import org.apache.parquet.column.page.DataPageV1;
+import org.apache.parquet.column.page.DataPageV2;
+import org.apache.parquet.column.page.DictionaryPage;
+import org.apache.parquet.column.page.PageReadStore;
+import org.apache.parquet.column.page.PageReader;
+import org.apache.parquet.format.DataPageHeaderV2;
+import org.apache.parquet.format.PageHeader;
+import org.apache.parquet.format.Util;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.hadoop.CodecFactory.BytesDecompressor;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.hadoop.util.CompatibilityUtil;
 
-import static parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 
 
 public class ColumnChunkIncReadStore implements PageReadStore {
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 
-  private DirectCodecFactory codecFactory;
+  private CodecFactory codecFactory;
   private BufferAllocator allocator;
   private FileSystem fs;
   private Path path;
   private long rowCount;
   private List<FSDataInputStream> streams = new ArrayList();
 
-  public ColumnChunkIncReadStore(long rowCount, DirectCodecFactory codecFactory, BufferAllocator allocator,
+  public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, BufferAllocator allocator,
       FileSystem fs, Path path) {
     this.codecFactory = codecFactory;
     this.allocator = allocator;
@@ -88,7 +88,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
 
     private ByteBuf lastPage;
 
-    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, ColumnDescriptor columnDescriptor, FSDataInputStream in) {
+    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, ColumnDescriptor columnDescriptor, FSDataInputStream in) throws IOException {
       this.metaData = metaData;
       this.columnDescriptor = columnDescriptor;
       this.size = metaData.getTotalSize();
@@ -165,8 +165,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuf buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              while (buffer.remaining() > 0) {
-                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              int lengthLeftToRead = pageHeader.compressed_page_size;
+              while (lengthLeftToRead > 0) {
+                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
               }
               return new DataPageV1(
                       decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
@@ -183,8 +184,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              while (buffer.remaining() > 0) {
-                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              lengthLeftToRead = pageHeader.compressed_page_size;
+              while (lengthLeftToRead > 0) {
+                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
               }
               DataPageHeaderV2 dataHeaderV2 = pageHeader.getData_page_header_v2();
               int dataSize = compressedPageSize - dataHeaderV2.getRepetition_levels_byte_length() - dataHeaderV2.getDefinition_levels_byte_length();

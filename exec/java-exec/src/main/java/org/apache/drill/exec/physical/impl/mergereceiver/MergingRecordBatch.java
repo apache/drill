@@ -78,7 +78,7 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 
-import parquet.Preconditions;
+import com.google.common.base.Preconditions;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JConditional;

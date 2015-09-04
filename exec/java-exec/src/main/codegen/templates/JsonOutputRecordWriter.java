@@ -22,36 +22,13 @@
 
 package org.apache.drill.exec.store;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.collect.Lists;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
-import org.apache.drill.exec.store.parquet.ParquetTypeHelper;
-import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import parquet.io.api.RecordConsumer;
-import parquet.schema.MessageType;
-import parquet.io.api.Binary;
-import io.netty.buffer.ByteBuf;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
-
-
-
-import org.apache.drill.common.types.TypeProtos;
-
-import org.joda.time.DateTimeUtils;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Abstract implementation of RecordWriter interface which exposes interface:

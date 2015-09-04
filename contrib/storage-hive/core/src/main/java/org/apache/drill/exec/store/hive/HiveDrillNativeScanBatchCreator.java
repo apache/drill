@@ -37,7 +37,7 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.parquet.DirectCodecFactory;
+import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
@@ -50,9 +50,10 @@ import org.apache.hadoop.hive.ql.io.parquet.ProjectionPusher;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import parquet.hadoop.ParquetFileReader;
-import parquet.hadoop.metadata.BlockMetaData;
-import parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.metadata.BlockMetaData;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 @SuppressWarnings("unused")
 public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNativeParquetSubScan> {
@@ -125,7 +126,8 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
                   context,
                   Path.getPathWithoutSchemeAndAuthority(finalPath).toString(),
                   rowGroupNum, fs,
-                  new DirectCodecFactory(fs.getConf(), oContext.getAllocator()),
+                  CodecFactory.createDirectCodecFactory(fs.getConf(),
+                      new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                   parquetMetadata,
                   newColumns)
           );

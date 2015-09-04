@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc;
 
+import com.google.common.base.Preconditions;
+
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -35,8 +37,6 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
-
-import parquet.Preconditions;
 
 /**
  * A connection decorator that ignores {@link Connection#close} calls.

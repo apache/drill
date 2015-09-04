@@ -46,12 +46,12 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
-import parquet.column.ColumnDescriptor;
-import parquet.column.Encoding;
-import parquet.format.ConvertedType;
-import parquet.format.SchemaElement;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.schema.PrimitiveType;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.Encoding;
+import org.apache.parquet.format.ConvertedType;
+import org.apache.parquet.format.SchemaElement;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.schema.PrimitiveType;
 
 public class ColumnReaderFactory {
 

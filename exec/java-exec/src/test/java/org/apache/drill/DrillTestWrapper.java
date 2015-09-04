@@ -166,12 +166,44 @@ public class DrillTestWrapper {
       assertEquals("Different number of records returned", expectedValues.size(), actualValues.size());
 
       for (int i = 0; i < expectedValues.size(); i++) {
-        compareValuesErrorOnMismatch(expectedValues.get(i), actualValues.get(i), i, s);
+        try {
+          compareValuesErrorOnMismatch(expectedValues.get(i), actualValues.get(i), i, s);
+        } catch (Exception ex) {
+          throw new Exception(ex.getMessage() + "\n\n" + printNearbyRecords(expectedRecords, actualRecords, i), ex);
+        }
       }
     }
     if (actualRecords.size() < expectedRecords.size()) {
       throw new Exception(findMissingColumns(expectedRecords.keySet(), actualRecords.keySet()));
     }
+  }
+
+  private String printNearbyRecords(Map<String, List> expectedRecords, Map<String, List> actualRecords, int offset) {
+    StringBuilder expected = new StringBuilder();
+    StringBuilder actual = new StringBuilder();
+    expected.append("Expected Records near verification failure:\n");
+    actual.append("Actual Records near verification failure:\n");
+    int firstRecordToPrint = Math.max(0, offset - 5);
+    List<Object> expectedValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    List<Object> actualValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    int numberOfRecordsToPrint = Math.min(Math.min(10, expectedValuesInFirstColumn.size()), actualValuesInFirstColumn.size());
+    for (int i = firstRecordToPrint; i < numberOfRecordsToPrint; i++) {
+      expected.append("Record Number: ").append(i).append(" { ");
+      actual.append("Record Number: ").append(i).append(" { ");
+      for (String s : actualRecords.keySet()) {
+        List actualValues = actualRecords.get(s);
+        actual.append(s).append(" : ").append(actualValues.get(i)).append(",");
+      }
+      for (String s : expectedRecords.keySet()) {
+        List expectedValues = expectedRecords.get(s);
+        expected.append(s).append(" : ").append(expectedValues.get(i)).append(",");
+      }
+      expected.append(" }\n");
+      actual.append(" }\n");
+    }
+
+    return expected.append("\n\n").append(actual).toString();
+
   }
 
   private Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryDataBatch> records, RecordBatchLoader loader,

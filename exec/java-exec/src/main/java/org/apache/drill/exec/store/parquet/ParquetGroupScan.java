@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -86,9 +87,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTimeUtils;
-
-import parquet.io.api.Binary;
-import parquet.org.codehaus.jackson.annotate.JsonCreator;
+import org.apache.parquet.io.api.Binary;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -99,9 +98,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-
-import parquet.schema.OriginalType;
-import parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractFileGroupScan {

@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 
-import parquet.bytes.BytesInput;
-import parquet.format.PageHeader;
-import parquet.format.Util;
-import parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.format.PageHeader;
+import org.apache.parquet.format.Util;
+import org.apache.parquet.hadoop.util.CompatibilityUtil;
 
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
@@ -46,6 +46,10 @@ public class ColumnDataReader {
     return Util.readPageHeader(input);
   }
 
+  public FSDataInputStream getInputStream() {
+    return input;
+  }
+
   public BytesInput getPageAsBytesInput(int pageLength) throws IOException{
     byte[] b = new byte[pageLength];
     input.read(b);
@@ -55,8 +59,9 @@ public class ColumnDataReader {
   public void loadPage(DrillBuf target, int pageLength) throws IOException {
     target.clear();
     ByteBuffer directBuffer = target.nioBuffer(0, pageLength);
-    while (directBuffer.remaining() > 0) {
-      CompatibilityUtil.getBuf(input, directBuffer, directBuffer.remaining());
+    int lengthLeftToRead = pageLength;
+    while (lengthLeftToRead > 0) {
+      lengthLeftToRead -= CompatibilityUtil.getBuf(input, directBuffer, lengthLeftToRead);
     }
     target.writerIndex(pageLength);
   }

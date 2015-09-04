@@ -39,7 +39,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
@@ -47,15 +46,16 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.column.ColumnDescriptor;
-import parquet.format.FileMetaData;
-import parquet.format.SchemaElement;
-import parquet.format.converter.ParquetMetadataConverter;
-import parquet.hadoop.ParquetFileWriter;
-import parquet.hadoop.metadata.BlockMetaData;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.hadoop.metadata.ParquetMetadata;
-import parquet.schema.PrimitiveType;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.format.FileMetaData;
+import org.apache.parquet.format.SchemaElement;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.hadoop.ParquetFileWriter;
+import org.apache.parquet.hadoop.metadata.BlockMetaData;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.schema.PrimitiveType;
 
 import com.google.common.collect.Lists;
 
@@ -101,7 +101,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   // records specified in the row group metadata
   long mockRecordsRead;
 
-  private final DirectCodecFactory codecFactory;
+  private final CodecFactory codecFactory;
   int rowGroupIndex;
   long totalRecordsRead;
   private final FragmentContext fragmentContext;
@@ -110,7 +110,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       String path,
       int rowGroupIndex,
       FileSystem fs,
-      DirectCodecFactory codecFactory,
+      CodecFactory codecFactory,
       ParquetMetadata footer,
                              List<SchemaPath> columns) throws ExecutionSetupException {
     this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactory, footer,
@@ -123,7 +123,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       String path,
       int rowGroupIndex,
       FileSystem fs,
-      DirectCodecFactory codecFactory,
+      CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns) throws ExecutionSetupException {
     this.hadoopPath = new Path(path);
@@ -136,7 +136,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     setColumns(columns);
   }
 
-  public DirectCodecFactory getCodecFactory() {
+  public CodecFactory getCodecFactory() {
     return codecFactory;
   }
 
@@ -471,7 +471,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       columnStatuses = null;
     }
 
-    codecFactory.close();
+    codecFactory.release();
 
     if (varLengthReader != null) {
       for (final VarLengthColumn r : varLengthReader.columns) {

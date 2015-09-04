@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
@@ -34,9 +35,9 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 
-import parquet.column.ColumnDescriptor;
-import parquet.format.SchemaElement;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.format.SchemaElement;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
 public class VarLengthColumnReaders {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLengthColumnReaders.class);
@@ -222,7 +223,8 @@ public class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
-        mutator.setSafe(index, currDictValToWrite.toByteBuffer(), 0, currDictValToWrite.length());
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
         mutator.setSafe(index, 1, start, start + length, value);
       }
@@ -257,7 +259,8 @@ public class VarLengthColumnReaders {
 
       if (usingDictionary) {
         currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-        mutator.setSafe(index, currDictValToWrite.toByteBuffer(), 0, currDictValToWrite.length());
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
         mutator.setSafe(index, start, start + length, value);
       }
@@ -294,8 +297,8 @@ public class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
-        mutator.setSafe(index, currDictValToWrite.toByteBuffer(), 0,
-            currDictValToWrite.length());
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
         mutator.setSafe(index, 1, start, start + length, value);
       }

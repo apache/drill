@@ -24,9 +24,9 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 
-import parquet.column.ColumnDescriptor;
-import parquet.format.SchemaElement;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.format.SchemaElement;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
 public class FixedWidthRepeatedReader extends VarLengthColumn {
 

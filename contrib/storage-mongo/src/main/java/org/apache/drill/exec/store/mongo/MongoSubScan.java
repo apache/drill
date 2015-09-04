@@ -132,7 +132,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     protected BasicDBObject filter;
 
-    @parquet.org.codehaus.jackson.annotate.JsonCreator
+    @JsonCreator
     public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
         @JsonProperty("collectionName") String collectionName,
         @JsonProperty("hosts") List<String> hosts,
