@@ -21,16 +21,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.exec.store.solr.schema.CVSchema;
+import org.apache.drill.exec.store.solr.schema.CVSchemaField;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -79,7 +86,8 @@ public class SolrClientAPIExec {
       CoreAdminResponse cores = request.process(solrClient);
       coreList = new HashSet<String>(cores.getCoreStatus().size());
       for (int i = 0; i < cores.getCoreStatus().size(); i++) {
-        coreList.add(cores.getCoreStatus().getName(i));
+        String coreName = cores.getCoreStatus().getName(i);
+        coreList.add(coreName);
       }
     } catch (SolrServerException | IOException e) {
       logger.info("error getting core info from solr server...");
@@ -122,12 +130,13 @@ public class SolrClientAPIExec {
         .setQuery("*:*").setRows(Integer.MAX_VALUE);
 
     if (fields != null) {
-
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
+      logger.debug("response field list.." + fieldStr);
     }
     if (filters.length() > 0) {
       solrQuery.setParam("fq", filters.toString());
+      logger.debug("filter query.." + filters.toString());
     }
     try {
       logger.debug("setting solrquery..");
@@ -166,7 +175,7 @@ public class SolrClientAPIExec {
       try {
         solrStream.close();
       } catch (IOException e) {
-        logger.info("error occured while fetching results from solr server "
+        logger.debug("error occured while fetching results from solr server "
             + e.getMessage());
       }
 
@@ -174,4 +183,33 @@ public class SolrClientAPIExec {
     return resultTuple;
   }
 
+  public void createSolrView(String solrCoreName, String solrServerUrl,
+      String solrCoreViewWorkspace) throws ClientProtocolException, IOException {
+    CVSchema oCVSchema = getSchemaForCore(solrCoreName, solrServerUrl);
+    List<CVSchemaField> schemaFieldList = oCVSchema.getFields();
+    List<String> fieldNames = Lists.newArrayList(schemaFieldList.size());
+    String createViewSql = "CREATE OR REPLACE VIEW {0}.{1} as SELECT {2} from solr.{3}";
+    for (CVSchemaField cvSchemaField : schemaFieldList) {
+      fieldNames.add(cvSchemaField.getName());
+    }
+    String fieldStr = Joiner.on(",").join(fieldNames);
+    int lastIdxOf = solrCoreName.lastIndexOf("_");
+    String viewName = solrCoreName.toLowerCase() + "view";
+    if (lastIdxOf > -1) {
+      viewName = solrCoreName.substring(0, lastIdxOf).toLowerCase() + "view";
+    }
+    createViewSql = MessageFormat.format(createViewSql, solrCoreViewWorkspace,
+        viewName, fieldStr, solrCoreName);
+    logger.debug("create solr view with sql command :: " + createViewSql);
+    String drillWebUI = "http://localhost:8047/query";
+    HttpClient client = HttpClientBuilder.create().build();
+    HttpPost httpPost = new HttpPost(drillWebUI);
+    List<BasicNameValuePair> urlParameters = new ArrayList<BasicNameValuePair>();
+    urlParameters.add(new BasicNameValuePair("queryType", "SQL"));
+    urlParameters.add(new BasicNameValuePair("query", createViewSql));
+    httpPost.setEntity(new UrlEncodedFormEntity(urlParameters));
+    HttpResponse response = client.execute(httpPost);
+    logger.debug("Response Code after executing create view command : "
+        + response.getStatusLine().getStatusCode());
+  }
 }
