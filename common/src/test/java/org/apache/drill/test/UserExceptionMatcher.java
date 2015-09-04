@@ -43,6 +43,7 @@ public class UserExceptionMatcher extends TypeSafeMatcher<UserException> {
 
   @Override
   protected boolean matchesSafely(final UserException e) {
+    // Use .contains(...) to compare expected and actual message as the exact messages may differ.
     return expectedType == e.getErrorType() && (expectedMessage == null || e.getMessage().contains(expectedMessage));
   }
 

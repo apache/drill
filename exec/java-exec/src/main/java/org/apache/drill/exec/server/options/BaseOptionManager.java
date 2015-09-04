@@ -25,13 +25,15 @@ import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 abstract class BaseOptionManager implements OptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
 
-
-  private OptionValue getOptionSafe(OptionValidator validator){
-    OptionValue value = getOption(validator.getOptionName());
-    if(value == null){
-      throw new IllegalArgumentException(String.format("Unknown value for option `%s`.", validator.getOptionName()));
-    }
-    return value;
+  /**
+   * Gets the current option value given a validator.
+   *
+   * @param validator the validator
+   * @return option value
+   * @throws IllegalArgumentException - if the validator is not found
+   */
+  private OptionValue getOptionSafe(OptionValidator validator)  {
+    return getOption(validator.getOptionName());
   }
 
   @Override

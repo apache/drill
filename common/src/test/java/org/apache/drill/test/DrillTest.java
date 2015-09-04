@@ -60,6 +60,11 @@ public class DrillTest {
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
 
+  /**
+   * Rule for tests that verify {@link org.apache.drill.common.exceptions.UserException} type and message. See
+   * {@link UserExceptionMatcher} and e.g. {@link org.apache.drill.exec.server.TestOptions#checkValidationException}.
+   * Tests that do not use this rule are not affected.
+   */
   @Rule public final ExpectedException thrownException = ExpectedException.none();
 
   @Rule public TestName TEST_NAME = new TestName();
