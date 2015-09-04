@@ -31,11 +31,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.bytes.BytesUtils;
-import parquet.hadoop.Footer;
-import parquet.hadoop.ParquetFileReader;
-import parquet.hadoop.ParquetFileWriter;
-import parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.bytes.BytesUtils;
+import org.apache.parquet.hadoop.Footer;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.ParquetFileWriter;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

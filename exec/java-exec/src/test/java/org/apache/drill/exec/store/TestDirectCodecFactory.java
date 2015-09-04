@@ -34,9 +34,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
-import parquet.bytes.BytesInput;
-import parquet.hadoop.CodecFactory.BytesCompressor;
-import parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.hadoop.CodecFactory.BytesCompressor;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 public class TestDirectCodecFactory extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDirectCodecFactory.class);

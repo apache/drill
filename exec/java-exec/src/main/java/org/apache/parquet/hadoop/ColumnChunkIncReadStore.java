@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package parquet.hadoop;
+package org.apache.parquet.hadoop;
 
 import io.netty.buffer.ByteBuf;
 
@@ -34,23 +34,23 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.bytes.BytesInput;
-import parquet.column.ColumnDescriptor;
-import parquet.column.page.DataPage;
-import parquet.column.page.DataPageV1;
-import parquet.column.page.DataPageV2;
-import parquet.column.page.DictionaryPage;
-import parquet.column.page.PageReadStore;
-import parquet.column.page.PageReader;
-import parquet.format.DataPageHeaderV2;
-import parquet.format.PageHeader;
-import parquet.format.Util;
-import parquet.format.converter.ParquetMetadataConverter;
-import parquet.hadoop.CodecFactory.BytesDecompressor;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.page.DataPage;
+import org.apache.parquet.column.page.DataPageV1;
+import org.apache.parquet.column.page.DataPageV2;
+import org.apache.parquet.column.page.DictionaryPage;
+import org.apache.parquet.column.page.PageReadStore;
+import org.apache.parquet.column.page.PageReader;
+import org.apache.parquet.format.DataPageHeaderV2;
+import org.apache.parquet.format.PageHeader;
+import org.apache.parquet.format.Util;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.hadoop.CodecFactory.BytesDecompressor;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.hadoop.util.CompatibilityUtil;
 
-import static parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
 
 
 public class ColumnChunkIncReadStore implements PageReadStore {

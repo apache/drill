@@ -17,10 +17,10 @@
  */
 
 import org.apache.drill.common.types.MinorType;
-import parquet.format.ConvertedType;
-import parquet.schema.DecimalMetadata;
-import parquet.schema.OriginalType;
-import parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.apache.parquet.format.ConvertedType;
+import org.apache.parquet.schema.DecimalMetadata;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="org/apache/drill/exec/store/parquet/ParquetTypeHelper.java" />
@@ -31,10 +31,10 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
-import parquet.schema.OriginalType;
-import parquet.schema.DecimalMetadata;
-import parquet.schema.PrimitiveType.PrimitiveTypeName;
-import parquet.schema.Type.Repetition;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.DecimalMetadata;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.apache.parquet.schema.Type.Repetition;
 
 import java.util.HashMap;
 import java.util.Map;

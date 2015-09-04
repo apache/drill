@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import static parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.fromParquetStatistics;
+import static org.apache.parquet.column.Encoding.valueOf;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
@@ -36,21 +37,21 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.bytes.BytesInput;
-import parquet.column.Dictionary;
-import parquet.column.Encoding;
-import parquet.column.ValuesType;
-import parquet.column.page.DictionaryPage;
-import parquet.column.statistics.Statistics;
-import parquet.column.values.ValuesReader;
-import parquet.column.values.dictionary.DictionaryValuesReader;
-import parquet.format.PageHeader;
-import parquet.format.PageType;
-import parquet.format.Util;
-import parquet.format.converter.ParquetMetadataConverter;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.hadoop.metadata.CompressionCodecName;
-import parquet.schema.PrimitiveType;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.column.Dictionary;
+import org.apache.parquet.column.Encoding;
+import org.apache.parquet.column.ValuesType;
+import org.apache.parquet.column.page.DictionaryPage;
+import org.apache.parquet.column.statistics.Statistics;
+import org.apache.parquet.column.values.ValuesReader;
+import org.apache.parquet.column.values.dictionary.DictionaryValuesReader;
+import org.apache.parquet.format.PageHeader;
+import org.apache.parquet.format.PageType;
+import org.apache.parquet.format.Util;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.PrimitiveType;
 
 import com.google.common.base.Preconditions;
 
@@ -155,8 +156,8 @@ final class PageReader {
           asBytesInput(dictionaryData, 0, pageHeader.uncompressed_page_size),
           pageHeader.uncompressed_page_size,
           pageHeader.dictionary_page_header.num_values,
-          parquet.column.Encoding.valueOf(pageHeader.dictionary_page_header.encoding.name())
-          );
+          valueOf(pageHeader.dictionary_page_header.encoding.name()));
+
       this.dictionary = page.getEncoding().initDictionary(parentStatus.columnDescriptor, page);
     }
   }
@@ -212,8 +213,8 @@ final class PageReader {
             asBytesInput(uncompressedData, 0, pageHeader.uncompressed_page_size),
             pageHeader.uncompressed_page_size,
             pageHeader.dictionary_page_header.num_values,
-            parquet.column.Encoding.valueOf(pageHeader.dictionary_page_header.encoding.name())
-        );
+            valueOf(pageHeader.dictionary_page_header.encoding.name()));
+
         this.dictionary = page.getEncoding().initDictionary(parentColumnReader.columnDescriptor, page);
       }
     } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);

@@ -17,25 +17,26 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import static parquet.column.Encoding.PLAIN;
-import static parquet.column.Encoding.RLE;
+import static org.apache.parquet.column.Encoding.PLAIN;
+import static org.apache.parquet.column.Encoding.RLE;
 
 import java.util.HashMap;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.ByteArrayUtil;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import parquet.bytes.BytesInput;
-import parquet.bytes.DirectByteBufferAllocator;
-import parquet.column.ColumnDescriptor;
-import parquet.column.values.rle.RunLengthBitPackingHybridValuesWriter;
-import parquet.hadoop.ParquetFileWriter;
-import parquet.hadoop.metadata.CompressionCodecName;
-import parquet.schema.MessageType;
-import parquet.schema.MessageTypeParser;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.bytes.DirectByteBufferAllocator;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.values.rle.RunLengthBitPackingHybridValuesWriter;
+import org.apache.parquet.hadoop.ParquetFileWriter;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
 
 public class TestFileGenerator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFileGenerator.class);
@@ -185,16 +186,19 @@ public class TestFileGenerator {
         ColumnDescriptor c1 = schema.getColumnDescription(path1);
 
         w.startColumn(c1, props.recordsPerRowGroup, codec);
-        int valsPerPage = (int) Math.ceil(props.recordsPerRowGroup / (float) fieldInfo.numberOfPages);
+        final int valsPerPage = (int) Math.ceil(props.recordsPerRowGroup / (float) fieldInfo.numberOfPages);
+        final int PAGE_SIZE = 1024 * 1024; // 1 MB
         byte[] bytes;
         RunLengthBitPackingHybridValuesWriter defLevels = new RunLengthBitPackingHybridValuesWriter(
-          MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
-          valsPerPage,
-          new DirectByteBufferAllocator());
+            MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
+            valsPerPage,
+            PAGE_SIZE,
+            new DirectByteBufferAllocator());
         RunLengthBitPackingHybridValuesWriter repLevels = new RunLengthBitPackingHybridValuesWriter(
-          MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
-          valsPerPage,
-          new DirectByteBufferAllocator());
+            MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS,
+            valsPerPage,
+            PAGE_SIZE,
+            new DirectByteBufferAllocator());
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;
         if ((int) fieldInfo.bitLength > 0) {

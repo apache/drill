@@ -34,13 +34,13 @@ import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.DirectDecompressor;
 import org.xerial.snappy.Snappy;
 
-import parquet.bytes.ByteBufferAllocator;
-import parquet.bytes.BytesInput;
-import parquet.hadoop.CodecFactory;
-import parquet.hadoop.CodecFactory.BytesCompressor;
-import parquet.hadoop.HeapCodecFactory.HeapBytesCompressor;
-import parquet.hadoop.HeapCodecFactory.HeapBytesDecompressor;
-import parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.bytes.ByteBufferAllocator;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.hadoop.CodecFactory.BytesCompressor;
+import org.apache.parquet.hadoop.HeapCodecFactory.HeapBytesCompressor;
+import org.apache.parquet.hadoop.HeapCodecFactory.HeapBytesDecompressor;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 import com.google.common.base.Preconditions;
 

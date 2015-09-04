@@ -51,17 +51,18 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
 
-import parquet.column.ColumnDescriptor;
-import parquet.common.schema.ColumnPath;
-import parquet.hadoop.ColumnChunkIncReadStore;
-import parquet.hadoop.metadata.BlockMetaData;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
-import parquet.hadoop.metadata.ParquetMetadata;
-import parquet.io.ColumnIOFactory;
-import parquet.io.MessageColumnIO;
-import parquet.schema.GroupType;
-import parquet.schema.MessageType;
-import parquet.schema.Type;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.hadoop.metadata.ColumnPath;
+import org.apache.parquet.io.RecordReader;
+import org.apache.parquet.hadoop.ColumnChunkIncReadStore;
+import org.apache.parquet.hadoop.metadata.BlockMetaData;
+import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.io.ColumnIOFactory;
+import org.apache.parquet.io.MessageColumnIO;
+import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.Type;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -80,7 +81,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   private RowGroupReadEntry entry;
   private VectorContainerWriter writer;
   private ColumnChunkIncReadStore pageReadStore;
-  private parquet.io.RecordReader<Void> recordReader;
+  private RecordReader<Void> recordReader;
   private DrillParquetRecordMaterializer recordMaterializer;
   private int recordCount;
   private List<ValueVector> primitiveVectors;

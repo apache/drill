@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 
-import parquet.bytes.BytesInput;
-import parquet.format.PageHeader;
-import parquet.format.Util;
-import parquet.hadoop.util.CompatibilityUtil;
+import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.format.PageHeader;
+import org.apache.parquet.format.Util;
+import org.apache.parquet.hadoop.util.CompatibilityUtil;
 
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
