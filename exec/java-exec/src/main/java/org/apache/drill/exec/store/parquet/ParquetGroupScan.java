@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -88,7 +89,6 @@ import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTimeUtils;
 
 import parquet.io.api.Binary;
-import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JacksonInject;
