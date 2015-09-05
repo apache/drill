@@ -26,6 +26,9 @@ public class DrillPathFilter extends Utils.OutputFileUtils.OutputFilesFilter {
     if (path.toString().contains("_metadata")) {
       return false;
     }
+    if (path.getName().startsWith(".")) {
+      return false;
+    }
     return super.accept(path);
   }
 }
