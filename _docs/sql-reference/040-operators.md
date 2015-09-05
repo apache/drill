@@ -13,6 +13,7 @@ You can use the following logical operators in your Drill queries:
   * BETWEEN
   * IN
   * LIKE
+  * ILIKE
   * NOT
   * OR 
 
@@ -38,6 +39,7 @@ You can use the following comparison operators in your Drill queries:
 You can use the following pattern matching operators in your Drill queries:
 
   * LIKE
+  * ILIKE
   * NOT LIKE
   * SIMILAR TO
   * NOT SIMILAR TO
@@ -72,4 +74,30 @@ You can use the following string operators in your Drill queries to concatenate 
 The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation#concat).
 
 The concat function treats NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
+
+## Operator Precedence 
+
+The following table shows the precedence of operators in decreasing order:
+
+| Operator/Element                     | Associativity | Description                                                 |
+|--------------------------------------|---------------|-------------------------------------------------------------|
+| .                                    | left          | dot notation used, for example, to drill down in a JSON map |
+| [ ]                                  | left          | array-style notation to drill down into a JSON array        |
+| -                                    | right         | unary minus                                                 |
+| E                                    | left          | exponentiation                                              |
+| * / %                                | left          | multiplication, division, modulo                            |
+| + -                                  | left          | addition, subtraction                                       |
+| IS                                   |               | IS TRUE, IS FALSE, IS UNKNOWN, IS NULL                      |
+| IS NULL                              |               | test for null                                               |
+| IS NOT NULL                          |               | test for not null                                           |
+| (any other)                          | left          | all other native and user-defined operators                 |
+| IN                                   |               | set membership                                              |
+| BETWEEN                              |               | range containment                                           |
+| OVERLAPS                             |               | time interval overlap                                       |
+| LIKE ILIKE SIMILAR TO NOT SIMILAR TO |               | string pattern matching                                     |
+| < >                                  |               | less than, greater than                                     |
+| =                                    | right         | equality, assignment                                        |
+| NOT                                  | right         | logical negation                                            |
+| AND                                  | left          | logical conjunction                                         |
+| OR                                   | left          | logical disjunction                                         |
 
