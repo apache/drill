@@ -33,6 +33,8 @@ The installer for Mac OS X creates a sample user DSN in odbc.ini in either of th
 
 Depending on the driver manager you use, the user DSN in one of these files will be effective.
 
+{% include startnote.html %}The System and User DSN use different ini files in different locations on OS X.{% include endnote.html %}
+
 ----------
 
 ## Step 1: Set Environment Variables 

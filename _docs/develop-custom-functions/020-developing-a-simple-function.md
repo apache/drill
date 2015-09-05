@@ -6,7 +6,10 @@ The section presents a brief overview of developing a simple function. The [tuto
 
 To develop a simple function, you need to create a class within a Java package that implements Drill’s simple interface
 into the program, and include the required information for the function type.
-Your function must use [data types]({{ site.baseurl }}/docs/supported-data-types/) that Drill supports. 
+Your function must use [data types]({{ site.baseurl }}/docs/supported-data-types/) that Drill supports. Keep the following requirements in mind:
+
+* Annotate all data that a UDF uses.
+* Fully qualify class references.
 
 Complete the following steps to develop a simple function using Drill’s simple
 function interface:

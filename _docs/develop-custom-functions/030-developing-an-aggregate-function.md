@@ -5,7 +5,10 @@ parent: "Develop Custom Functions"
 The API for developing aggregate custom functions is at the alpha stage and intended for experimental use only. To experiment with this API, create a class within a Java package that implements Drill’s aggregate
 interface into the program. Include the required information for the function.
 Your function must include data types that Drill supports, such as INTEGER or
-BIGINT. For a list of supported data types, refer to the [SQL Reference]({{ site.baseurl }}/docs/supported-data-types/).
+BIGINT. For a list of supported data types, refer to the [SQL Reference]({{ site.baseurl }}/docs/supported-data-types/). Keep the following guidelines in mind:
+
+* Do not use complex @Workspace variables. 
+* You cannot allocate a Repeated* value or have a ComplexWriter in the @Workspace.
 
 Complete the following steps to create an aggregate function:
 

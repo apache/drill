@@ -7,9 +7,9 @@ the Drill service.
 
 Install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#system-requirements). Complete the following steps, described in detail in this document:
 
-  * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/install-the-driver-on-mac-os-x/#step-1:-download-the-mapr-drill-odbc-driver) 
-  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2:-install-the-mapr-drill-odbc-driver) 
-  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}docs/installing-the-driver-on-mac-os-x/#step-3:-check-the-mapr-drill-odbc-driver-version)
+  * [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-1-download-the-mapr-drill-odbc-driver)  
+  * [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-2-install-the-mapr-drill-odbc-driver) 
+  * [Step 3: Check the MapR Drill ODBC Driver Version]({{site.baseurl}}/docs/installing-the-driver-on-mac-os-x/#step-3-check-the-mapr-drill-odbc-driver-version)
 
 ## System Requirements
 

@@ -16,7 +16,7 @@ To create a Hive table and query it with Drill, complete the following steps:
         hive> create table customers(FirstName string, LastName string, Company string, Address string, City string, County string, State string, Zip string, Phone string, Fax string, Email string, Web string) row format delimited fields terminated by ',' stored as textfile;
   3. Issue the following command to load the customer data into the customers table:  
 
-        hive> load data local inpath '/<directory path>/customers.csv' overwrite into table customers;`
+        hive> load data local inpath '/<directory path>/customers.csv' overwrite into table customers;
   4. Issue `quit` or `exit` to leave the Hive shell.
   5. Start the Drill shell. 
   6. Issue the following query to Drill to get the first and last names of the first ten customers in the Hive table:  

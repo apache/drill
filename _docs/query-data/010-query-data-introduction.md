@@ -4,7 +4,7 @@ parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 
 
-The query specifies the data source location and include data casting. 
+The query specifies the data source location and includes data casting. 
 
 ## Specifying the Data Source Location
 The optional [USE statement]({{site.baseurl}}/docs/use) runs subsequent queries against a particular [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction/). The USE statement typically saves typing some of the storage plugin information in the FROM statement. If you omit the USE statement, specify a storage plugin, such as dfs, and optionally a workspace, such as default, and a path to the data source using dot notation and back ticks. For example:
@@ -17,7 +17,7 @@ In some cases, Drill converts schema-less data to correctly-typed data implicitl
 For example, you have to cast a string `"100"` in a JSON file to an integer in order to apply a math function
 or an aggregate function.
 
-Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types, as described in section "[CONVERT_TO and CONVERT_FROM Usage Notes](/docs/data-type-conversion/#convert_to-and-convert_from-usage-notes)".
+To query HBase data using Drill, convert every column of an HBase table to/from byte arrays from/to an SQL data type as described in the section ["Querying HBase"]({{ site.baseurl}}/docs/querying-hbase/). Use [CONVERT_TO or CONVERT_FROM]({{ site.baseurl }}/docs//data-type-conversion/#convert_to-and-convert_from) functions to perform conversions of HBase data.
 
 ## Troubleshooting Queries
 

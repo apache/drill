@@ -27,10 +27,11 @@ The target data type, such as INTEGER or DATE, to which to cast the expression
 
 ### CAST Usage Notes
 
-Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the VARBINARY source/destination, use CAST.  
+Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types.
 
-Refer to the following tables for information about the data types to use for casting:
+See the following tables for information about the data types to use for casting:
 
+* [CONVERT_TO and CONVERT_FROM Data Types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)
 * [Supported Data Types for Casting]({{ site.baseurl }}/docs/supported-data-types)
 * [Explicit Type Casting Maps]({{ site.baseurl }}/docs/supported-data-types/#explicit-type-casting-maps)
 
@@ -136,8 +137,7 @@ Because you cast the INTERVAL_col to INTERVAL SECOND, Drill returns the interval
 
 ## CONVERT_TO and CONVERT_FROM
 
-The CONVERT_TO and CONVERT_FROM functions encode and decode
-data to and from another data type.
+The CONVERT_TO and CONVERT_FROM functions convert binary data to/from Drill internal types based on the little or big endian encoding of the data.
 
 ### CONVERT_TO and CONVERT_FROM Syntax  
 
@@ -147,21 +147,22 @@ data to and from another data type.
 
 *column* is the name of a column Drill reads.
 
-*type* is one of the data types listed in the [CONVERT_TO/FROM Data Types]({{ site.baseurl }}/docs/data-types#convert_to-and-convert_from-data-types) table.
+*type* is one of the encoding types listed in the [CONVERT_TO/FROM Data Types]({{ site.baseurl }}/docs/data-types#convert_to-and-convert_from-data-types) table. 
 
 
 ### CONVERT_TO and CONVERT_FROM Usage Notes
 
-CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types with one exception: When converting data represented as a string in HBase to an INT or BIGINT number, use CAST. CONVERT_TO/FROM functions work for data in a binary representation and are more efficient to use than CAST. For example, HBase stores
-data as encoded VARBINARY data. To read HBase data in Drill, convert every column of an HBase table *from* binary to an Drill internal type. To write HBase or Parquet binary data, convert SQL data *to* binary data and store the data in an HBase or Parquet while creating a table as a selection (CTAS).
+CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types. CONVERT_TO/FROM functions work for data in a binary representation and are more efficient to use than CAST. 
+
+Drill can optimize scans of HBase tables when you use the \*\_BE encoded types shown in section  ["CONVERT_TO and CONVERT_FROM Data Types"]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types) on big endian-encoded data. You need to use the HBase storage plugin and query data as described in ["Querying Hbase"]({{ site.baseurl }}/docs/querying-hbase). To write Parquet binary data, convert SQL data *to* binary data and store the data in a Parquet table while creating a table as a selection (CTAS).
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
-Use the BINARY_STRING and STRING_BINARY custom Drill functions with CONVERT_TO and CONVERT_FROM to get meaningful results.
+You can use [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function) custom Drill functions with CONVERT_TO and CONVERT_FROM to get meaningful results.
 
 ### Conversion of Data Types Examples
 
-This example shows how to use the CONVERT_FROM function to convert complex HBase data to a readable type. The example summarizes and continues the ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example. The ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example stores the following data in the students table on the Drill Sandbox:  
+This example shows how to use the CONVERT_FROM function to convert HBase data to a SQL type. The example summarizes and continues the ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example. The ["Query HBase"]({{ site.baseurl }}/docs/querying-hbase) example stores the following data in the students table on the Drill Sandbox:  
 
     USE maprdb;
 
@@ -177,7 +178,7 @@ This example shows how to use the CONVERT_FROM function to convert complex HBase
     +-------------+---------------------+---------------------------------------------------------------------------+
     4 rows selected (1.335 seconds)
 
-You use the CONVERT_FROM function to decode the binary data to render it readable, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types). JSON supports strings. To convert binary to strings, use the UTF8 type.:
+You use the CONVERT_FROM function to decode the binary data, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types). JSON supports strings. To convert bytes to strings, use the UTF8 type:
 
     SELECT CONVERT_FROM(row_key, 'UTF8') AS studentid, 
            CONVERT_FROM(students.account.name, 'UTF8') AS name, 
@@ -195,7 +196,7 @@ You use the CONVERT_FROM function to decode the binary data to render it readabl
     +------------+------------+------------+------------------+------------+
     4 rows selected (0.504 seconds)
 
-This example converts from VARCHAR to a JSON map:
+This example converts VARCHAR data to a JSON map:
 
     SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM (VALUES(1));
     +----------------------+
@@ -205,7 +206,7 @@ This example converts from VARCHAR to a JSON map:
     +----------------------+
     1 row selected (0.163 seconds)
 
-This example uses a list of BIGINT as input and returns a repeated list of vectors:
+This example uses a list of BIGINT data as input and returns a repeated list of vectors:
 
     SELECT CONVERT_FROM('[ [1, 2], [3, 4], [5]]' ,'JSON') AS MYCOL1 FROM (VALUES(1));
     +------------+
@@ -231,7 +232,7 @@ This example assumes you are working in the Drill Sandbox. You modify the `dfs` 
 
 1. Copy/paste the `dfs` storage plugin definition to a newly created plugin called myplugin.
 
-2. Change the root location to "/mapr/demo.mapr.com/tables". This change allows you to query tables for reading in the tables directory by workspace.table name. This change allows you to read a table in the `tables` directory. You can write a converted version of the table in the `tmp` directory because the writable property is true.
+2. Change the root location to "/mapr/demo.mapr.com/tables". After this change, you can read a table in the `tables` directory. You can write a converted version of the table in the `tmp` directory because the writable property is true.
 
         {
           "type": "file",
@@ -361,7 +362,7 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
         +-------------+-------------+-------------+-------------+-------------+
         4 rows selected (0.12 seconds)
 
-9. Use CONVERT_FROM to convert the Parquet data to a readable format:
+9. Use CONVERT_FROM to read the Parquet data:
 
         SELECT CONVERT_FROM(id, 'UTF8') AS id, 
                CONVERT_FROM(name, 'UTF8') AS name, 

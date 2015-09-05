@@ -232,7 +232,7 @@ Returns the location of a substring.
 
 ## REGEXP_REPLACE
 
-Substitutes new text for substrings that match [POSIX regular expression patterns](http://www.regular-expressions.info/posix.html).
+Substitutes new text for substrings that match [Java regular expression patterns](http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html).
 
 ### REGEXP_REPLACE Syntax
 

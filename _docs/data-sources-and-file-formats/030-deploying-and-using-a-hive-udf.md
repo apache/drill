@@ -48,7 +48,7 @@ To set up the UDF:
    `<drill installation directory>/bin/drillbit.sh restart`
  
 ## Using a UDF
-Use a Hive UDF just as you would use a Drill custom function. For example, to query using a Hive UDF named upper-to-lower that takes a column.value argument, the SELECT statement looks something like this:  
+Use a Hive UDF just as you would use a Drill custom function. For example, to query using a Hive UDF named MY_UPPER, the SELECT statement looks something like this:  
      
     SELECT MY_UPPER('abc') from (VALUES(1));
     +---------+
