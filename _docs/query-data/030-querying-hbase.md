@@ -2,7 +2,7 @@
 title: "Querying HBase"
 parent: "Query Data"
 ---
-To use Drill to query HBase data, you need to understand how to work with the HBase byte arrays. If you want Drill to interpret the underlying HBase row key as something other than a byte array, you need to know the encoding of the data in HBase. By default, HBase stores data in little endian and Drill assumes the data is little endian, which is unsorted. The following table shows the sorting of typical rowkey IDs in bytes, encoded in little endian and big endian, respectively:
+<!-- To use Drill to query HBase data, you need to understand how to work with the HBase byte arrays. If you want Drill to interpret the underlying HBase row key as something other than a byte array, you need to know the encoding of the data in HBase. By default, HBase stores data in little endian and Drill assumes the data is little endian, which is unsorted. The following table shows the sorting of typical rowkey IDs in bytes, encoded in little endian and big endian, respectively:
 
 | IDs in Byte Notation Little Endian Sorting | IDs in Decimal Notation | IDs in Byte Notation Big Endian Sorting | IDs in Decimal Notation |
 |--------------------------------------------|-------------------------|-----------------------------------------|-------------------------|
@@ -76,7 +76,7 @@ By taking advantage of ordered byte encoding, Drill 1.2 and later can performant
 
 ## Querying Little Endian-Encoded Data
 
-As mentioned earlier, HBase stores data in little endian by default and Drill assumes the data is encoded in little endian. This exercise involves working with data that is encoded in little endian. First, you create two tables in HBase, students and clicks, that you can query with Drill. You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to/from typed data. You use the CAST function to convert the binary data to an INT in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the binary source/destination, use CAST.
+As mentioned earlier,  -->HBase stores data in little endian by default and Drill assumes the data is encoded in little endian. This exercise involves working with data that is encoded in little endian. First, you create two tables in HBase, students and clicks, that you can query with Drill. You use the CONVERT_TO and CONVERT_FROM functions to convert binary text to/from typed data. You use the CAST function to convert the binary data to an INT in step 4 of [Query HBase Tables]({{site.baseurl}}/docs/querying-hbase/#query-hbase-tables). When converting an INT or BIGINT number, having a byte count in the destination/source that does not match the byte count of the number in the binary source/destination, use CAST.
 
 ### Create the HBase tables
 
