@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -127,6 +128,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   public static final String INTERRUPTION_AFTER_SORT = "after-sort";
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
+  public static final String INTERRUPTION_WHILE_SPILLING = "spilling";
 
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
@@ -164,11 +166,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     return sv4;
   }
 
-  private void cleanupBatchGroups(Collection<BatchGroup> groups) {
+  private void closeBatchGroups(Collection<BatchGroup> groups) {
     for (BatchGroup group: groups) {
       try {
-        group.cleanup();
-      } catch (IOException e) {
+        group.close();
+      } catch (Exception e) {
         // collect all failure and make sure to cleanup all remaining batches
         // Originally we would have thrown a RuntimeException that would propagate to FragmentExecutor.closeOutResources()
         // where it would have been passed to context.fail()
@@ -183,11 +185,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   public void close() {
     try {
       if (batchGroups != null) {
-        cleanupBatchGroups(batchGroups);
+        closeBatchGroups(batchGroups);
         batchGroups = null;
       }
       if (spilledBatchGroups != null) {
-        cleanupBatchGroups(spilledBatchGroups);
+        closeBatchGroups(spilledBatchGroups);
         spilledBatchGroups = null;
       }
     } finally {
@@ -534,7 +536,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
     BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext.getAllocator());
-
+    boolean success = false;
     logger.info("Merging and spilling to {}", outputFile);
     try {
       while ((count = copier.next(targetRecordCount)) > 0) {
@@ -543,13 +545,23 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         // note that addBatch also clears the outputContainer
         newGroup.addBatch(outputContainer);
       }
+      injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
+      success = true;
+    } catch (IOException e) {
+      throw UserException.resourceError(e)
+        .message("External Sort encountered an error while spilling to disk")
+        .build(logger);
+    } finally {
+      // make sure we properly release merged batch groups
       for (BatchGroup group : batchGroupList) {
-        group.cleanup();
+        AutoCloseables.close(group, logger);
       }
       hyperBatch.clear();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+
+      if (!success) {
+        AutoCloseables.close(newGroup, logger);
+      }
     }
     takeOwnership(c1); // transfer ownership from copier allocator to external sort allocator
     long bufSize = getBufferSize(c1);
