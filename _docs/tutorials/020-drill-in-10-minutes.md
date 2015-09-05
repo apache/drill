@@ -11,11 +11,11 @@ without having to perform any setup tasks.
 
 ## Installation Overview
 
-You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about installing Drill in distributed mode, see [Installing Drill in Distributed Mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode).
+You can install Drill to run in embedded mode on a machine running Linux, Mac OS X, or Windows. For information about installing Drill to run in distributed mode, see [Installing Drill in Distributed Mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode).
 
-This installation procedure includes how to download the Apache Drill archive and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
+This installation procedure includes how to download the Apache Drill archive file and extract the contents to a directory on your machine. The Apache Drill archive contains sample JSON and Parquet files that you can query immediately.
 
-After installing Drill, you start the Drill shell. The Drill shell is a pure-Java console-based utility for connecting to relational databases and executing SQL commands. Drill follows the ANSI SQL: 2011 standard with [extensions]({{site.baseurl}}/docs/sql-extensions/) for nested data formats and other capabilities.
+After installing Drill, you start the Drill shell. The Drill shell is a pure-Java console-based utility for connecting to relational databases and executing SQL commands. Drill follows the SQL:2011 standard with [extensions]({{site.baseurl}}/docs/sql-extensions/) for nested data formats and other capabilities.
 
 ## Embedded Mode Installation Prerequisites
 
@@ -23,15 +23,15 @@ You need to meet the following prerequisites to run Drill:
 
 * Linux, Mac OS X, and Windows: [Oracle Java SE Development (JDK) Kit 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) installation  
 * Windows only:  
-  * A JAVA_HOME environment variable set up that points to  to the JDK installation  
-  * A PATH environment variable that includes a pointer to the JDK installation  
-  * A third-party utility for unzipping a tar.gz file 
+  * A JAVA_HOME environment variable set up that points to the JDK installation  
+  * A PATH environment variable that includes a pointer to the bin directory of the JDK installation 
+  * A third-party utility for unzipping a .tar.gz file 
   
 ### Java Installation Prerequisite Check
 
 Run the following command in a terminal (Linux and Mac OS X) or Command Prompt (Windows) to verify that Java 7 is the version in effect:
 
-    java -version
+`java -version`
 
 The output looks something like this:
 
@@ -43,7 +43,7 @@ The output looks something like this:
 
 Complete the following steps to install Drill:  
 
-1. In a terminal windows, change to the directory where you want to install Drill.
+1. In a terminal window, change to the directory where you want to install Drill.
 
 2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz) or run one of the following commands, depending on which you have installed on your system:
 
@@ -52,11 +52,11 @@ Complete the following steps to install Drill:
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
-4. Extract the contents of the Drill tar.gz file. Use sudo only if necessary:  
+4. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
 
-        tar -xvzf apache-drill-1.1.0.tar.gz  
+    `tar -xvzf apache-drill-1.1.0.tar.gz`  
 
-The extraction process creates the installation directory named apache-drill-1.1.0 containing the Drill software.
+The extraction process creates an installation directory containing the Drill software.
 
 At this point, you can start Drill.
 
@@ -65,11 +65,11 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
 1. Navigate to the Drill installation directory. For example:  
 
-        cd apache-drill-1.1.0  
+    `cd apache-drill-1.1.0`  
 
 2. Issue the following command to launch Drill in embedded mode:
 
-        bin/drill-embedded  
+    `bin/drill-embedded`  
 
    The message of the day followed by the `0: jdbc:drill:zk=local>`  prompt appears.  
 
@@ -106,7 +106,7 @@ At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes
 
 Issue the following command when you want to exit the Drill shell:
 
-    !quit
+`!quit`
 
 ## Query Sample Data
 
@@ -124,7 +124,7 @@ A sample JSON file, `employee.json`, contains fictitious employee data.
 To view the data in the `employee.json` file, submit the following SQL query
 to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/) to point to the file.
     
-    0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;
+`0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;`
 
 The query output is:
 
@@ -153,7 +153,7 @@ systems.
 To view the data in the `region.parquet` file, issue the query appropriate for
 your operating system:
 
-        SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/region.parquet`;
+``SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/region.parquet`;``
 
 The query returns the following results:
 
@@ -179,7 +179,7 @@ systems.
 To view the data in the `nation.parquet` file, issue the query appropriate for
 your operating system:
 
-          SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/nation.parquet`;
+``SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/nation.parquet`;``
 
 The query returns the following results:
 

@@ -5,9 +5,9 @@ parent: "Getting Started"
 
 ## Top 10 Reasons to Use Drill
 
-### 1. Get started in minutes
+## 1. Get started in minutes
 
-It takes just a few minutes to get started with Drill. Untar the Drill software on your Mac or Windows laptop and run a query on a local file. No need to set up any infrastructure or to define schemas. Just point to the data, such as data in a file, directory, HBase table, and drill.
+It takes just a few minutes to get started with Drill. Untar the Drill software on your Linux, Mac, or Windows laptop and run a query on a local file. No need to set up any infrastructure or to define schemas. Just point to the data, such as data in a file, directory, HBase table, and drill.
 
     $ tar -xvf apache-drill-<version>.tar.gz
     $ <install directory>/bin/drill-embedded
@@ -37,14 +37,14 @@ Using Drill's schema-free JSON model, you can query complex, semi-structured dat
 
 
 ## 4. Real SQL -- not "SQL-like"
-Drill supports the standard SQL:2003 syntax. No need to learn a new "SQL-like" language or struggle with a semi-functional BI tool. Drill supports many data types including DATE, INTERVALDAY/INTERVALYEAR, TIMESTAMP, and VARCHAR, as well as complex query constructs such as correlated sub-queries and joins in WHERE clauses. Here is an example of a TPC-H standard query that runs in Drill "as is":
+Drill supports the standard SQL:2003 syntax. No need to learn a new "SQL-like" language or struggle with a semi-functional BI tool. Drill supports many data types including DATE, INTERVAL, TIMESTAMP, and VARCHAR, as well as complex query constructs such as correlated sub-queries and joins in WHERE clauses. Here is an example of a TPC-H standard query that runs in Drill:
 
 ### TPC-H query 4
 
-    SELECT  o.o_orderpriority, count(*) AS order_count
+    SELECT  o.o_orderpriority, COUNT(*) AS order_count
     FROM orders o
-    WHERE o.o_orderdate >= date '1996-10-01'
-          AND o.o_orderdate < date '1996-10-01' + interval '3' month
+    WHERE o.o_orderdate >= DATE '1996-10-01'
+          AND o.o_orderdate < DATE '1996-10-01' + INTERVAL '3' month
           AND EXISTS(
                      SELECT * FROM lineitem l 
                      WHERE l.l_orderkey = o.o_orderkey

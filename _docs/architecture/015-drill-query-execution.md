@@ -9,7 +9,7 @@ The following image represents the communication between clients, applications, 
 
 ![]({{ site.baseurl }}/docs/img/query-flow-client.png)
 
-The Drillbit that receives the query from a client or application becomes the Foreman for the query and drives the entire query. A parser in the Foreman parses the SQL, applying custom rules to convert specific SQL operators into a specific logical operator syntax that Drill understands. This collection of logical operators forms a logical plan. The logical plan describes the work required to generate the query results and defines what data sources and operations to apply.
+The Drillbit that receives the query from a client or application becomes the Foreman for the query and drives the entire query. A parser in the Foreman parses the SQL, applying custom rules to convert specific SQL operators into a specific logical operator syntax that Drill understands. This collection of logical operators forms a logical plan. The logical plan describes the work required to generate the query results and defines which data sources and operations to apply.
 
 The Foreman sends the logical plan into a cost-based optimizer to optimize the order of SQL operators in a statement and read the logical plan. The optimizer applies various types of rules to rearrange operators and functions into an optimal plan. The optimizer converts the logical plan into a physical plan that describes how to execute the query.
 
@@ -21,24 +21,24 @@ A parallelizer in the Foreman transforms the physical plan into multiple phases,
 
 
 ## Major Fragments
-A major fragment is an abstract concept that represents a phase of the query execution. A phase can consist of one or multiple operations that Drill must perform to execute the query. Drill assigns each major fragment a MajorFragmentID.
+A major fragment is a concept that represents a phase of the query execution. A phase can consist of one or multiple operations that Drill must perform to execute the query. Drill assigns each major fragment a MajorFragmentID.
 
 For example, to perform a hash aggregation of two files, Drill may create a plan with two major phases (major fragments) where the first phase is dedicated to scanning the two files and the second phase is dedicated to the aggregation of the data.  
 
 ![]({{ site.baseurl }}/docs/img/ex-operator.png)
 
-Drill separates major fragments by an exchange operator. An exchange is a change in data location and/or parallelization of the physical plan. An exchange is composed of a sender and a receiver to allow data to move between nodes. 
+Drill uses an exchange operator to separate major fragments. An exchange is a change in data location and/or parallelization of the physical plan. An exchange is composed of a sender and a receiver to allow data to move between nodes. 
 
 Major fragments do not actually perform any query tasks. Each major fragment is divided into one or multiple minor fragments (discussed in the next section) that actually execute the operations required to complete the query and return results back to the client.
 
-You can interact with major fragments within the physical plan by capturing a JSON representation of the plan in a file, manually modifying it, and then submitting it back to Drill using the SUBMIT PLAN command. You can also view major fragments in the query profile, which is visible in the Drill Web UI. See [EXPLAIN ]({{ site.baseurl }}/docs/explain/)and [Query Profiles]({{ site.baseurl }}/docs/query-profiles/) for more information.
+You can work with major fragments within the physical plan by capturing a JSON representation of the plan in a file, manually modifying it, and then submitting it back to Drill using the SUBMIT PLAN command. You can also view major fragments in the query profile, which is visible in the Drill Web UI. See [EXPLAIN ]({{ site.baseurl }}/docs/explain/)and [Query Profiles]({{ site.baseurl }}/docs/query-profiles/) for more information.
 
 ## Minor Fragments
-Each major fragment is parallelized into minor fragments. A minor fragment is a logical unit of work that runs inside of a thread. A logical unit of work in Drill is also referred to as a slice. The execution plan that Drill creates is composed of minor fragments. Drill assigns each minor fragment a MinorFragmentID.  
+Each major fragment is parallelized into minor fragments. A minor fragment is a logical unit of work that runs inside a thread. A logical unit of work in Drill is also referred to as a slice. The execution plan that Drill creates is composed of minor fragments. Drill assigns each minor fragment a MinorFragmentID.  
 
 ![]({{ site.baseurl }}/docs/img/min-frag.png)
 
-The parallelizer in the Foreman creates one or more minor fragments from a major fragment at execution time, by breaking a major fragment into as many minor fragments as it can run simultaneously on the cluster.
+The parallelizer in the Foreman creates one or more minor fragments from a major fragment at execution time, by breaking a major fragment into as many minor fragments as it can usefully run at the same time on the cluster.
 
 Drill executes each minor fragment in its own thread as quickly as possible based on its upstream data requirements. Drill schedules the minor fragments on nodes with data locality. Otherwise, Drill schedules them in a round-robin fashion on the existing, available Drillbits.
 
