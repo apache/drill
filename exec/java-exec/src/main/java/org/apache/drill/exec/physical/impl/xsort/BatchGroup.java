@@ -39,7 +39,7 @@ import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Stopwatch;
 
-public class BatchGroup implements VectorAccessible {
+public class BatchGroup implements VectorAccessible, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchGroup.class);
 
   private VectorContainer currentContainer;
@@ -142,7 +142,8 @@ public class BatchGroup implements VectorAccessible {
     return currentContainer;
   }
 
-  public void cleanup() throws IOException {
+  @Override
+  public void close() throws IOException {
     currentContainer.zeroVectors();
     if (sv2 != null) {
       sv2.clear();

@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -127,6 +128,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   public static final String INTERRUPTION_AFTER_SORT = "after-sort";
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
+  public static final String INTERRUPTION_WHILE_SPILLING = "spilling";
 
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
@@ -164,11 +166,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     return sv4;
   }
 
-  private void cleanupBatchGroups(Collection<BatchGroup> groups) {
+  private void closeBatchGroups(Collection<BatchGroup> groups) {
     for (BatchGroup group: groups) {
       try {
-        group.cleanup();
-      } catch (IOException e) {
+        group.close();
+      } catch (Exception e) {
         // collect all failure and make sure to cleanup all remaining batches
         // Originally we would have thrown a RuntimeException that would propagate to FragmentExecutor.closeOutResources()
         // where it would have been passed to context.fail()
@@ -183,11 +185,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   public void close() {
     try {
       if (batchGroups != null) {
-        cleanupBatchGroups(batchGroups);
+        closeBatchGroups(batchGroups);
         batchGroups = null;
       }
       if (spilledBatchGroups != null) {
-        cleanupBatchGroups(spilledBatchGroups);
+        closeBatchGroups(spilledBatchGroups);
         spilledBatchGroups = null;
       }
     } finally {
@@ -534,7 +536,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
     BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext.getAllocator());
-
+    boolean threw = true; // true if an exception is thrown in the try block below
     logger.info("Merging and spilling to {}", outputFile);
     try {
       while ((count = copier.next(targetRecordCount)) > 0) {
@@ -543,13 +545,20 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         // note that addBatch also clears the outputContainer
         newGroup.addBatch(outputContainer);
       }
+      injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
-      for (BatchGroup group : batchGroupList) {
-        group.cleanup();
-      }
-      hyperBatch.clear();
+      threw = false; // this should always be the last statement of this try block to make sure we cleanup properly
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw UserException.resourceError(e)
+        .message("External Sort encountered an error while spilling to disk")
+        .build(logger);
+    } finally {
+      hyperBatch.clear();
+      cleanAfterMergeAndSpill(batchGroupList, threw);
+      if (threw) {
+        // we only need to cleanup newGroup if spill failed
+        AutoCloseables.close(newGroup, logger);
+      }
     }
     takeOwnership(c1); // transfer ownership from copier allocator to external sort allocator
     long bufSize = getBufferSize(c1);
@@ -557,6 +566,25 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     logger.debug("mergeAndSpill: final total size in memory = {}", totalSizeInMemory);
     logger.info("Completed spilling to {}", outputFile);
     return newGroup;
+  }
+
+  /**
+   * Make sure we cleanup properly after merge and spill.<br>If there was any error during the spilling,
+   * we cleanup the resources silently, otherwise we throw any exception we hit during the cleanup
+   *
+   * @param batchGroups spilled batch groups
+   * @param silently true to log any exception that happens during cleanup, false to throw it
+   */
+  private void cleanAfterMergeAndSpill(final List<BatchGroup> batchGroups, boolean silently) {
+      try {
+        AutoCloseables.close(batchGroups.toArray(new BatchGroup[batchGroups.size()]));
+      } catch (Exception e) {
+        if (silently) {
+          logger.warn("Error while cleaning up after merge and spill", e);
+        } else {
+          throw new RuntimeException("Error while cleaning up after merge and spill", e);
+        }
+      }
   }
 
   private void takeOwnership(VectorAccessible batch) {
