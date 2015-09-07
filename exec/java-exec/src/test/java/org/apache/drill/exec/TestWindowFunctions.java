@@ -215,7 +215,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`tpch/nation.parquet` \n" +
         "group by n_name";
 
-    parseErrorHelper(query);
+    validationErrorHelper(query);
   }
 
   @Test // DRILL-3346
@@ -229,7 +229,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
       test("use dfs_test.tmp");
       test(createView);
-      parseErrorHelper(query);
+      validationErrorHelper(query);
     } finally {
       test("drop view testWindowGroupByOnView");
     }
@@ -403,15 +403,16 @@ public class TestWindowFunctions extends BaseTestQuery {
       PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
 
       testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .baselineColumns("cnt")
-        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
-        .baselineValues(1l)
-        .baselineValues(4l)
-        .baselineValues(4l)
-        .baselineValues(4l)
-        .build().run();
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("cnt")
+          .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
+          .baselineValues(1l)
+          .baselineValues(4l)
+          .baselineValues(4l)
+          .baselineValues(4l)
+          .build()
+          .run();
     } finally {
       test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }

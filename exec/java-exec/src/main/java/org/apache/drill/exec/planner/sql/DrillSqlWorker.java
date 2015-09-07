@@ -178,15 +178,15 @@ public class DrillSqlWorker {
       return handler.getPlan(sqlNode);
     } catch(ValidationException e) {
       String errorMessage = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-      throw UserException.parseError(e)
-        .message(errorMessage)
-        .build(logger);
+      throw UserException.validationError(e)
+          .message(errorMessage)
+          .build(logger);
     } catch (AccessControlException e) {
       throw UserException.permissionError(e)
-        .build(logger);
+          .build(logger);
     } catch(SqlUnsupportedException e) {
       throw UserException.unsupportedError(e)
-        .build(logger);
+          .build(logger);
     } catch (IOException | RelConversionException e) {
       throw new QueryInputException("Failure handling SQL.", e);
     }
