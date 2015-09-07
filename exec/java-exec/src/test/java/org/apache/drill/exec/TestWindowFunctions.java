@@ -21,10 +21,12 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 import org.apache.drill.PlanTestBase;
 
+import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.Test;
 
 public class TestWindowFunctions extends BaseTestQuery {
@@ -211,16 +213,18 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3344
   public void testWindowGroupBy() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "explain plan for SELECT max(n_nationkey) OVER (), n_name as col2 \n" +
         "from cp.`tpch/nation.parquet` \n" +
         "group by n_name";
 
-    parseErrorHelper(query);
+    test(query);
   }
 
   @Test // DRILL-3346
   public void testWindowGroupByOnView() throws Exception {
     try {
+      thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
       String createView = "create view testWindowGroupByOnView(a, b) as \n" +
           "select n_nationkey, n_name from cp.`tpch/nation.parquet`";
       String query = "explain plan for SELECT max(a) OVER (), b as col2 \n" +
@@ -229,7 +233,7 @@ public class TestWindowFunctions extends BaseTestQuery {
 
       test("use dfs_test.tmp");
       test(createView);
-      parseErrorHelper(query);
+      test(query);
     } finally {
       test("drop view testWindowGroupByOnView");
     }
@@ -402,15 +406,16 @@ public class TestWindowFunctions extends BaseTestQuery {
       PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
 
       testBuilder()
-        .sqlQuery(query)
-        .ordered()
-        .baselineColumns("cnt")
-        .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
-        .baselineValues(1l)
-        .baselineValues(4l)
-        .baselineValues(4l)
-        .baselineValues(4l)
-        .build().run();
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("cnt")
+          .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1")
+          .baselineValues(1l)
+          .baselineValues(4l)
+          .baselineValues(4l)
+          .baselineValues(4l)
+          .build()
+          .run();
     } finally {
       test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }
