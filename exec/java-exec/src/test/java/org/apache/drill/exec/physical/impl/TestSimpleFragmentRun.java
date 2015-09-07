@@ -21,12 +21,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -41,34 +40,32 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestSimpleFragmentRun extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFragmentRun.class);
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFragmentRun.class);
 
   @Test
   public void runNoExchangeFragment() throws Exception {
-    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-        Drillbit bit = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+    try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+        final Drillbit bit = new Drillbit(CONFIG, serviceSet);
+        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
     // run query.
     bit.run();
     client.connect();
-    String path = "/physical_test2.json";
+    final String path = "/physical_test2.json";
 //      String path = "/filter/test1.json";
-    List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
+    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(path), Charsets.UTF_8));
 
     // look at records
-    RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+    final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
     int recordCount = 0;
-    for (QueryDataBatch batch : results) {
-      boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
+    for (final QueryDataBatch batch : results) {
+      final boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
       boolean firstColumn = true;
 
       // print headers.
       if (schemaChanged) {
         System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (VectorWrapper<?> value : batchLoader) {
+        for (final VectorWrapper<?> value : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
@@ -86,7 +83,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
         boolean first = true;
         recordCount++;
-        for (VectorWrapper<?> value : batchLoader) {
+        for (final VectorWrapper<?> value : batchLoader) {
           if (first) {
             first = false;
           } else {
@@ -108,20 +105,20 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
   @Test
   public void runJSONScanPopFragment() throws Exception {
-    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-         Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+    try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+         final Drillbit bit = new Drillbit(CONFIG, serviceSet);
+         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
 
       // run query.
       bit.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
+      final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
               .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
       );
 
       // look at records
-      RecordBatchLoader batchLoader = new RecordBatchLoader(new TopLevelAllocator(CONFIG));
+      final RecordBatchLoader batchLoader = new RecordBatchLoader(RootAllocatorFactory.newRoot(CONFIG));
       int recordCount = 0;
 
       //int expectedBatchCount = 2;
@@ -129,7 +126,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       //assertEquals(expectedBatchCount, results.size());
 
       for (int i = 0; i < results.size(); ++i) {
-        QueryDataBatch batch = results.get(i);
+        final QueryDataBatch batch = results.get(i);
         if (i == 0) {
           assertTrue(batch.hasData());
         } else {
@@ -143,7 +140,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
         // print headers.
         System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (VectorWrapper<?> v : batchLoader) {
+        for (final VectorWrapper<?> v : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
@@ -162,14 +159,14 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         for (int r = 0; r < batchLoader.getRecordCount(); r++) {
           boolean first = true;
           recordCount++;
-          for (VectorWrapper<?> v : batchLoader) {
+          for (final VectorWrapper<?> v : batchLoader) {
             if (first) {
               first = false;
             } else {
               System.out.print("\t");
             }
 
-            ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+            final ValueVector.Accessor accessor = v.getValueVector().getAccessor();
             System.out.print(accessor.getObject(r));
           }
           if (!first) {
@@ -183,5 +180,4 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       assertEquals(2, recordCount);
     }
   }
-
 }

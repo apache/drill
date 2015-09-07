@@ -18,10 +18,14 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 
+import org.apache.calcite.util.NlsString;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
@@ -61,11 +65,50 @@ public class SetOptionHandler extends AbstractSqlHandler {
         default:
           throw new ValidationException("Invalid OPTION scope. Scope must be SESSION or SYSTEM.");
       }
-      context.getOptions().setOption(name, (SqlLiteral) value, type);
+      final OptionValue optionValue = createOptionValue(name, type, (SqlLiteral) value);
+      context.getOptions().setOption(optionValue);
     }else{
       throw new ValidationException("Sql options can only be literals.");
     }
 
     return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", name));
+  }
+
+  private static OptionValue createOptionValue(final String name, final OptionValue.OptionType type,
+                                               final SqlLiteral literal) {
+    final Object object = literal.getValue();
+    final SqlTypeName typeName = literal.getTypeName();
+    switch (typeName) {
+    case DECIMAL: {
+      final BigDecimal bigDecimal = (BigDecimal) object;
+      if (bigDecimal.scale() == 0) {
+        return OptionValue.createLong(type, name, bigDecimal.longValue());
+      } else {
+        return OptionValue.createDouble(type, name, bigDecimal.doubleValue());
+      }
+    }
+
+    case DOUBLE:
+    case FLOAT:
+      return OptionValue.createDouble(type, name, ((BigDecimal) object).doubleValue());
+
+    case SMALLINT:
+    case TINYINT:
+    case BIGINT:
+    case INTEGER:
+      return OptionValue.createLong(type, name, ((BigDecimal) object).longValue());
+
+    case VARBINARY:
+    case VARCHAR:
+    case CHAR:
+      return OptionValue.createString(type, name, ((NlsString) object).getValue());
+
+    case BOOLEAN:
+      return OptionValue.createBoolean(type, name, (Boolean) object);
+
+    default:
+      throw new ExpressionParsingException(String.format(
+        "Drill doesn't support set option expressions with literals of type %s.", typeName));
+    }
   }
 }

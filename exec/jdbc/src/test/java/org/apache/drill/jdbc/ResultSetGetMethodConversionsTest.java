@@ -55,7 +55,7 @@ import java.sql.Statement;
  * <p>
  *   This test class is intended for higher-level type-vs.-type coverage tests.
  *   Detailed-case tests (e.g., boundary conditions) are intended to be in
- *   {@link org.apache.drill.jdbc.impl.TypeConvertingAccessor}).
+ *   {@link org.apache.drill.jdbc.impl.TypeConvertingSqlAccessor}).
  * </p>
  */
 public class ResultSetGetMethodConversionsTest extends JdbcTestBase {

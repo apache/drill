@@ -226,6 +226,234 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
+  public void testFilterPushDownDoubleOB() throws Exception {
+    setColumnWidths(new int[] {8, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'DOUBLE_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableDoubleOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)"
+        , 6);
+  }
+
+  @Test
+  public void testFilterPushDownDoubleOBPlan() throws Exception {
+    setColumnWidths(new int[] {8, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'DOUBLE_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableDoubleOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OB') > cast(95.54 as DOUBLE)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownDoubleOBDesc() throws Exception {
+    setColumnWidths(new int[] {8, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'DOUBLE_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableDoubleOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)"
+        , 6);
+  }
+
+  @Test
+  public void testFilterPushDownDoubleOBDescPlan() throws Exception {
+    setColumnWidths(new int[] {8, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'DOUBLE_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableDoubleOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'DOUBLE_OBD') > cast(95.54 as DOUBLE)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownIntOB() throws Exception {
+    setColumnWidths(new int[] {15, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'INT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableIntOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'INT_OB') >= cast(-32 as INT) AND"
+        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(59 as INT)"
+        , 91);
+  }
+
+  @Test
+  public void testFilterPushDownIntOBDesc() throws Exception {
+    setColumnWidths(new int[] {15, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'INT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableIntOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'INT_OBD') >= cast(-32 as INT) AND"
+        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(59 as INT)"
+        , 91);
+  }
+
+  @Test
+  public void testFilterPushDownIntOBPlan() throws Exception {
+    setColumnWidths(new int[] {15, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'INT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableIntOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'INT_OB') > cast(-23 as INT) AND"
+        + "  CONVERT_FROM(row_key, 'INT_OB') < cast(14 as INT)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownIntOBDescPlan() throws Exception {
+    setColumnWidths(new int[] {15, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'INT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableIntOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'INT_OBD') > cast(-23 as INT) AND"
+        + "  CONVERT_FROM(row_key, 'INT_OBD') < cast(14 as INT)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownBigIntOB() throws Exception {
+    setColumnWidths(new int[] {15, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'BIGINT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableBigIntOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') > cast(1438034423063 as BIGINT) AND"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') <= cast(1438034423097 as BIGINT)"
+        , 34);
+  }
+
+  @Test
+  public void testFilterPushDownBigIntOBPlan() throws Exception {
+    setColumnWidths(new int[] {15, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'BIGINT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableBigIntOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') > cast(1438034423063 as BIGINT) AND"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OB') < cast(1438034423097 as BIGINT)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownFloatOB() throws Exception {
+    setColumnWidths(new int[] {8, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'FLOAT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableFloatOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') > cast(95.74 as FLOAT) AND"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.5 as FLOAT)"
+        , 5);
+  }
+
+  @Test
+  public void testFilterPushDownFloatOBPlan() throws Exception {
+    setColumnWidths(new int[] {8, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'FLOAT_OB') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableFloatOB` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') > cast(95.54 as FLOAT) AND"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OB') < cast(99.77 as FLOAT)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownBigIntOBDesc() throws Exception {
+    setColumnWidths(new int[] {15, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'BIGINT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableBigIntOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') > cast(1438034423063 as BIGINT) AND"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') <= cast(1438034423097 as BIGINT)"
+        , 34);
+  }
+
+  @Test
+  public void testFilterPushDownBigIntOBDescPlan() throws Exception {
+    setColumnWidths(new int[] {15, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'BIGINT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableBigIntOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') > cast(1438034423063 as BIGINT) AND"
+        + "  CONVERT_FROM(row_key, 'BIGINT_OBD') < cast(1438034423097 as BIGINT)"
+        , 1);
+  }
+
+  @Test
+  public void testFilterPushDownFloatOBDesc() throws Exception {
+    setColumnWidths(new int[] {8, 25});
+    runHBaseSQLVerifyCount("SELECT\n"
+        + " convert_from(t.row_key, 'FLOAT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableFloatOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') > cast(95.74 as FLOAT) AND"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.5 as FLOAT)"
+        , 5);
+  }
+
+  @Test
+  public void testFilterPushDownFloatOBDescPlan() throws Exception {
+    setColumnWidths(new int[] {8, 2000});
+    runHBaseSQLVerifyCount("EXPLAIN PLAN FOR\n"
+        + "SELECT\n"
+        + " convert_from(t.row_key, 'FLOAT_OBD') rk,\n"
+        + " convert_from(t.`f`.`c`, 'UTF8') val\n"
+        + "FROM\n"
+        + "  hbase.`TestTableFloatOBDesc` t\n"
+        + "WHERE\n"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') > cast(95.54 as FLOAT) AND"
+        + "  CONVERT_FROM(row_key, 'FLOAT_OBD') < cast(99.77 as FLOAT)"
+        , 1);
+  }
+
+  @Test
   public void testFilterPushDownRowKeyLike() throws Exception {
     setColumnWidths(new int[] {8, 22});
     final String sql = "SELECT\n"

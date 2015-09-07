@@ -23,9 +23,10 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.drill.common.DeferredException;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.ByteBufBytesInput;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory.DirectBytesDecompressor;
@@ -38,7 +39,8 @@ import parquet.hadoop.CodecFactory.BytesCompressor;
 import parquet.hadoop.metadata.CompressionCodecName;
 
 public class TestDirectCodecFactory extends ExecTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDirectCodecFactory.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDirectCodecFactory.class);
+  private final DrillConfig drillConfig = DrillConfig.create();
 
   private static enum Decompression {
     ON_HEAP, OFF_HEAP, DRILLBUF
@@ -47,14 +49,14 @@ public class TestDirectCodecFactory extends ExecTest {
   private void test(int size, CompressionCodecName codec, boolean useOnHeapCompression, Decompression decomp) {
     DrillBuf rawBuf = null;
     DrillBuf outBuf = null;
-    try (BufferAllocator allocator = new TopLevelAllocator();
-        DirectCodecFactory codecFactory = new DirectCodecFactory(new Configuration(), allocator)) {
+    try (final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);
+        final DirectCodecFactory codecFactory = new DirectCodecFactory(new Configuration(), allocator)) {
       try {
         rawBuf = allocator.buffer(size);
         final byte[] rawArr = new byte[size];
         outBuf = allocator.buffer(size * 2);
-        Random r = new Random();
-        byte[] random = new byte[1024];
+        final Random r = new Random();
+        final byte[] random = new byte[1024];
         int pos = 0;
         while (pos < size) {
           r.nextBytes(random);
@@ -63,10 +65,10 @@ public class TestDirectCodecFactory extends ExecTest {
           pos += random.length;
         }
 
-        BytesCompressor c = codecFactory.getCompressor(codec, 64 * 1024);
-        DirectBytesDecompressor d = codecFactory.getDecompressor(codec);
+        final BytesCompressor c = codecFactory.getCompressor(codec, 64 * 1024);
+        final DirectBytesDecompressor d = codecFactory.getDecompressor(codec);
 
-        BytesInput compressed;
+        final BytesInput compressed;
         if (useOnHeapCompression) {
           compressed = c.compress(BytesInput.from(rawArr));
         } else {
@@ -75,8 +77,8 @@ public class TestDirectCodecFactory extends ExecTest {
 
         switch (decomp) {
         case DRILLBUF: {
-          ByteBuffer buf = compressed.toByteBuffer();
-          DrillBuf b = allocator.buffer(buf.capacity());
+          final ByteBuffer buf = compressed.toByteBuffer();
+          final DrillBuf b = allocator.buffer(buf.capacity());
           try {
             b.writeBytes(buf);
             d.decompress(b, (int) compressed.size(), outBuf, size);
@@ -90,11 +92,11 @@ public class TestDirectCodecFactory extends ExecTest {
         }
 
         case OFF_HEAP: {
-          ByteBuffer buf = compressed.toByteBuffer();
-          DrillBuf b = allocator.buffer(buf.capacity());
+          final ByteBuffer buf = compressed.toByteBuffer();
+          final DrillBuf b = allocator.buffer(buf.capacity());
           try {
             b.writeBytes(buf);
-            BytesInput input = d.decompress(new ByteBufBytesInput(b), size);
+            final BytesInput input = d.decompress(new ByteBufBytesInput(b), size);
             Assert.assertArrayEquals(input.toByteArray(), rawArr);
           } finally {
             b.release();
@@ -102,14 +104,14 @@ public class TestDirectCodecFactory extends ExecTest {
           break;
         }
         case ON_HEAP: {
-          byte[] buf = compressed.toByteArray();
-          BytesInput input = d.decompress(BytesInput.from(buf), size);
+          final byte[] buf = compressed.toByteArray();
+          final BytesInput input = d.decompress(BytesInput.from(buf), size);
           Assert.assertArrayEquals(input.toByteArray(), rawArr);
           break;
         }
         }
       } catch (Exception e) {
-        String msg = String.format(
+        final String msg = String.format(
             "Failure while testing Codec: %s, OnHeapCompressionInput: %s, Decompression Mode: %s, Data Size: %d",
             codec.name(),
             useOnHeapCompression, decomp.name(), size);
@@ -128,14 +130,14 @@ public class TestDirectCodecFactory extends ExecTest {
 
   @Test
   public void compressionCodecs() throws Exception {
-    int[] sizes = { 4 * 1024, 1 * 1024 * 1024 };
-    boolean[] comp = { true, false };
+    final int[] sizes = { 4 * 1024, 1 * 1024 * 1024 };
+    final boolean[] comp = { true, false };
 
-    try (DeferredException ex = new DeferredException()) {
-      for (int size : sizes) {
-        for (boolean useOnHeapComp : comp) {
-          for (Decompression decomp : Decompression.values()) {
-            for (CompressionCodecName codec : CompressionCodecName.values()) {
+    try (final DeferredException ex = new DeferredException()) {
+      for (final int size : sizes) {
+        for (final boolean useOnHeapComp : comp) {
+          for (final Decompression decomp : Decompression.values()) {
+            for (final CompressionCodecName codec : CompressionCodecName.values()) {
               if (codec == CompressionCodecName.LZO) {
                 // not installed as gpl.
                 continue;
@@ -151,5 +153,4 @@ public class TestDirectCodecFactory extends ExecTest {
       }
     }
   }
-
 }

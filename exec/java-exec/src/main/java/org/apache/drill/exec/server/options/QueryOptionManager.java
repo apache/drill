@@ -17,17 +17,18 @@
  */
 package org.apache.drill.exec.server.options;
 
-import java.util.HashMap;
-
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
+/**
+ * {@link OptionManager} that holds options within {@link org.apache.drill.exec.ops.QueryContext}.
+ */
 public class QueryOptionManager extends InMemoryOptionManager {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryOptionManager.class);
 
   public QueryOptionManager(OptionManager sessionOptions) {
-    super(sessionOptions, new HashMap<String, OptionValue>());
+    super(sessionOptions, CaseInsensitiveMap.<OptionValue>newHashMap());
   }
-
 
   @Override
   public OptionList getOptionList() {
@@ -36,11 +37,8 @@ public class QueryOptionManager extends InMemoryOptionManager {
     return list;
   }
 
-
   @Override
   boolean supportsOption(OptionValue value) {
     return value.type == OptionType.QUERY;
   }
-
-
 }

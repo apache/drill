@@ -40,7 +40,7 @@ public class SingleConnectionCachingFactory implements CachingConnectionFactory 
    * {@inheritDoc}
    * <p>
    *   For this implementation, calls to {@code createConnection} without any
-   *   intervening calls to {@link closeConnection} return the same Connection
+   *   intervening calls to {@link #closeConnections} return the same Connection
    *   instance.
    * </p>
    */

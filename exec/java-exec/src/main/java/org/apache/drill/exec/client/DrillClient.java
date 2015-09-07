@@ -37,7 +37,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -123,7 +123,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     this.isDirectConnection = isDirect;
     this.ownsZkConnection = coordinator == null && !isDirect;
     this.ownsAllocator = allocator == null;
-    this.allocator = ownsAllocator ? new TopLevelAllocator(config) : allocator;
+    this.allocator = ownsAllocator ? RootAllocatorFactory.newRoot(config) : allocator;
     this.config = config;
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
@@ -173,8 +173,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     final DrillbitEndpoint endpoint;
     if (isDirectConnection) {
-      String[] connectInfo = props.getProperty("drillbit").split(":");
-      String port = connectInfo.length==2?connectInfo[1]:config.getString(ExecConstants.INITIAL_USER_PORT);
+      final String[] connectInfo = props.getProperty("drillbit").split(":");
+      final String port = connectInfo.length==2?connectInfo[1]:config.getString(ExecConstants.INITIAL_USER_PORT);
       endpoint = DrillbitEndpoint.newBuilder()
               .setAddress(connectInfo[0])
               .setUserPort(Integer.parseInt(port))
@@ -189,7 +189,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         }
       }
 
-      ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+      final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
       checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
       // shuffle the collection then get the first endpoint
       Collections.shuffle(endpoints);
@@ -197,8 +197,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
 
     if (props != null) {
-      UserProperties.Builder upBuilder = UserProperties.newBuilder();
-      for (String key : props.stringPropertyNames()) {
+      final UserProperties.Builder upBuilder = UserProperties.newBuilder();
+      for (final String key : props.stringPropertyNames()) {
         upBuilder.addProperties(Property.newBuilder().setKey(key).setValue(props.getProperty(key)));
       }
 
@@ -225,7 +225,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       retry--;
       try {
         Thread.sleep(this.reconnectDelay);
-        ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
+        final ArrayList<DrillbitEndpoint> endpoints = new ArrayList<>(clusterCoordinator.getAvailableEndpoints());
         if (endpoints.isEmpty()) {
           continue;
         }
@@ -240,7 +240,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
-    FutureHandler f = new FutureHandler();
+    final FutureHandler f = new FutureHandler();
     client.connect(f, endpoint, props, getUserCredentials());
     f.checkedGet();
   }
@@ -285,8 +285,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * @throws RpcException
    */
   public List<QueryDataBatch> runQuery(QueryType type, String plan) throws RpcException {
-    UserProtos.RunQuery query = newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build();
-    ListHoldingResultsListener listener = new ListHoldingResultsListener(query);
+    final UserProtos.RunQuery query = newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build();
+    final ListHoldingResultsListener listener = new ListHoldingResultsListener(query);
     client.submitQuery(listener, query);
     return listener.getResults();
   }
@@ -329,17 +329,15 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    * Submits a Logical plan for direct execution (bypasses parsing)
    *
    * @param  plan  the plan to execute
-   * @return a handle for the query result
-   * @throws RpcException
    */
   public void runQuery(QueryType type, String plan, UserResultsListener resultsListener) {
     client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
 
   private class ListHoldingResultsListener implements UserResultsListener {
-    private Vector<QueryDataBatch> results = new Vector<>();
-    private SettableFuture<List<QueryDataBatch>> future = SettableFuture.create();
-    private UserProtos.RunQuery query ;
+    private final Vector<QueryDataBatch> results = new Vector<>();
+    private final SettableFuture<List<QueryDataBatch>> future = SettableFuture.create();
+    private final UserProtos.RunQuery query ;
 
     public ListHoldingResultsListener(UserProtos.RunQuery query) {
       logger.debug( "Listener created for query \"\"\"{}\"\"\"", query );
@@ -395,11 +393,9 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         logger.debug("Query ID arrived: {}", QueryIdHelper.getQueryId(queryId));
       }
     }
-
   }
 
   private class FutureHandler extends AbstractCheckedFuture<Void, RpcException> implements RpcConnectionHandler<ServerConnection>, DrillRpcFuture<Void>{
-
     protected FutureHandler() {
       super( SettableFuture.<Void>create());
     }
@@ -427,6 +423,5 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     public DrillBuf getBuffer() {
       return null;
     }
-
   }
 }

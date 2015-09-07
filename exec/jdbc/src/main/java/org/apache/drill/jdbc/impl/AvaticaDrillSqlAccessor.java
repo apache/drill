@@ -79,7 +79,7 @@ class AvaticaDrillSqlAccessor implements Accessor {
   }
 
   /**
-   * @see SQLAccesstor#getObjectClass()
+   * @see SQLAccessor#getObjectClass()
    */
   public Class<?> getObjectClass() {
     return underlyingAccessor.getObjectClass();

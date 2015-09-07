@@ -25,29 +25,30 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 
 import com.google.common.collect.Lists;
 
 public class TestMemoryRetention {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
 
-  static final int SMALL_AVERAGE_BYTES = 1024 * 32;
-  static final int LARGE_BYTES = 32 * 1024 * 1024;
-  static final int PARALLEL_THREADS = 32;
-  static final double SMALL_ALLOCATION_MEM = 0.20;
-  static final double OVERHEAD_ALLOWANCE = 0.20;
-  static final List<Integer> ALLOCATIONS;
-  static final int MAX_ALLOCS = 100;
-  static final AtomicInteger ALLOCS = new AtomicInteger(0);
+  private static final int SMALL_AVERAGE_BYTES = 1024 * 32;
+  private static final int LARGE_BYTES = 32 * 1024 * 1024;
+  private static final int PARALLEL_THREADS = 32;
+  private static final double SMALL_ALLOCATION_MEM = 0.20;
+  private static final double OVERHEAD_ALLOWANCE = 0.20;
+  private static final List<Integer> ALLOCATIONS;
+  private static final int MAX_ALLOCS = 100;
+  private static final AtomicInteger ALLOCS = new AtomicInteger(0);
 
   static {
-    Random r = new Random();
-    long maxMemory = DrillConfig.getMaxDirectMemory();
-    long maxPerThread = maxMemory / PARALLEL_THREADS;
-    double smallCount = (maxPerThread * SMALL_ALLOCATION_MEM) / SMALL_AVERAGE_BYTES;
-    double largeCount = (maxPerThread * (1 - SMALL_ALLOCATION_MEM - OVERHEAD_ALLOWANCE)) / LARGE_BYTES;
-    List<Integer> allocations = Lists.newArrayList();
+    final Random r = new Random();
+    final long maxMemory = DrillConfig.getMaxDirectMemory();
+    final long maxPerThread = maxMemory / PARALLEL_THREADS;
+    final double smallCount = (maxPerThread * SMALL_ALLOCATION_MEM) / SMALL_AVERAGE_BYTES;
+    final double largeCount = (maxPerThread * (1 - SMALL_ALLOCATION_MEM - OVERHEAD_ALLOWANCE)) / LARGE_BYTES;
+    final List<Integer> allocations = Lists.newArrayList();
 
     for (int i = 0; i < smallCount; i++) {
       allocations.add(SMALL_AVERAGE_BYTES / 2 + r.nextInt(SMALL_AVERAGE_BYTES));
@@ -63,7 +64,7 @@ public class TestMemoryRetention {
   public static void main(String[] args) throws Exception {
 
     final DrillConfig config = DrillConfig.create();
-    final TopLevelAllocator a = new TopLevelAllocator(config);
+    final BufferAllocator a = RootAllocatorFactory.newRoot(config);
     for (int i = 0; i < PARALLEL_THREADS; i++) {
       Alloc alloc = new Alloc(a);
       alloc.start();
@@ -71,15 +72,15 @@ public class TestMemoryRetention {
   }
 
   private static class Alloc extends Thread {
-    final TopLevelAllocator allocator;
+    final BufferAllocator allocator;
 
-    Alloc(TopLevelAllocator allocator) {
+    Alloc(BufferAllocator allocator) {
       this.allocator = allocator;
     }
 
     @Override
     public void run() {
-      Random r = new Random();
+      final Random r = new Random();
       try {
 
         if (ALLOCS.incrementAndGet() > MAX_ALLOCS) {
@@ -93,7 +94,7 @@ public class TestMemoryRetention {
 
       logger.info("Starting alloc.");
       final List<DrillBuf> bufs = Lists.newLinkedList();
-      for (Integer i : ALLOCATIONS) {
+      for (final Integer i : ALLOCATIONS) {
         bufs.add(allocator.buffer(i));
       }
       Collections.shuffle(bufs);
@@ -107,25 +108,24 @@ public class TestMemoryRetention {
       } else {
         d.run();
       }
-
     }
-
   }
 
   private static class Dealloc extends Thread {
     final List<DrillBuf> bufs;
-    final TopLevelAllocator a;
+    final BufferAllocator a;
 
-    public Dealloc(List<DrillBuf> bufs, TopLevelAllocator a) {
+    public Dealloc(List<DrillBuf> bufs, BufferAllocator a) {
       this.bufs = bufs;
       this.a = a;
     }
 
+    @Override
     public void run() {
       try {
         Thread.sleep(8000);
         logger.info("Starting release.");
-        for (DrillBuf buf : bufs) {
+        for (final DrillBuf buf : bufs) {
           buf.release();
         }
         logger.info("Finished release.");
@@ -139,6 +139,4 @@ public class TestMemoryRetention {
       alloc.start();
     }
   }
-
-
 }

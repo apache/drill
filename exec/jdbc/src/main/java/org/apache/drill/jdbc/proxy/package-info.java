@@ -18,6 +18,6 @@
 /**
  * Tracing proxy JDBC driver.  Traces calls to another JDBC driver.
  *
- * @see TracingProxyDriver
+ * @see org.apache.drill.jdbc.proxy.TracingProxyDriver
  */
 package org.apache.drill.jdbc.proxy;

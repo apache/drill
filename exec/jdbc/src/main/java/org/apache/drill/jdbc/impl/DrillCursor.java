@@ -18,6 +18,8 @@
 package org.apache.drill.jdbc.impl;
 
 import java.sql.SQLException;
+import java.sql.ResultSet;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.List;
 import net.hydromatic.avatica.ArrayImpl.Factory;
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.Cursor;
+import net.hydromatic.avatica.AvaticaResultSet;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -66,17 +69,17 @@ class DrillCursor implements Cursor {
   private boolean afterFirstBatch = false;
 
   /**
-   * Whether the next call to this.next() should just return {@code true} rather
-   * than calling nextRowInternally() to try to advance to the next
-   * record.
+   * Whether the next call to {@code this.}{@link #next()} should just return
+   * {@code true} rather than calling {@link #nextRowInternally()} to try to
+   * advance to the next record.
    * <p>
-   *   Currently, can be true only for first call to next().
+   *   Currently, can be true only for first call to {@link #next()}.
    * </p>
    * <p>
-   *   (Relates to loadInitialSchema()'s calling nextRowInternally()
-   *   one "extra" time
-   *   (extra relative to number of ResultSet.next() calls) at the beginning to
-   *   get first batch and schema before Statement.execute...(...) even returns.
+   *   (Relates to {@link #loadInitialSchema()}'s calling
+   *   {@link #nextRowInternally()} one "extra" time (extra relative to number
+   *   of {@link ResultSet#next()} calls) at the beginning to get first batch
+   *   and schema before {@code Statement.execute...(...)} even returns.)
    * </p>
    */
   private boolean returnTrueForNextCallToNext = false;
@@ -265,7 +268,7 @@ class DrillCursor implements Cursor {
    * Advances to first batch to load schema data into result set metadata.
    * <p>
    *   To be called once from {@link DrillResultSetImpl#execute()} before
-   *   {@link next()} is called from {@link AvaticaResultSet#next()}.
+   *   {@link #next()} is called from {@link AvaticaResultSet#next()}.
    * <p>
    */
   void loadInitialSchema() throws SQLException {

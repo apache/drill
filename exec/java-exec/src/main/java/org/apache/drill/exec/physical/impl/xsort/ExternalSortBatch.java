@@ -348,8 +348,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 logger.info("Merging spills");
                 spilledBatchGroups.addFirst(mergeAndSpill(spilledBatchGroups));
               }
-              spilledBatchGroups.add(mergeAndSpill(batchGroups));
-              batchesSinceLastSpill = 0;
+              final BatchGroup merged = mergeAndSpill(batchGroups);
+              if (merged != null) { // make sure we don't add null to spilledBatchGroups
+                spilledBatchGroups.add(merged);
+                batchesSinceLastSpill = 0;
+              }
             }
             long t = w.elapsed(TimeUnit.MICROSECONDS);
 //          logger.debug("Took {} us to sort {} records", t, count);
@@ -417,8 +420,12 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 //        logger.debug("Took {} us to sort {} records", t, sv4.getTotalCount());
         container.buildSchema(SelectionVectorMode.FOUR_BYTE);
       } else {
-        spilledBatchGroups.add(mergeAndSpill(batchGroups));
+        final BatchGroup merged = mergeAndSpill(batchGroups);
+        if (merged != null) {
+          spilledBatchGroups.add(merged);
+        }
         batchGroups.addAll(spilledBatchGroups);
+        spilledBatchGroups = null; // no need to cleanup spilledBatchGroups, all it's batches are in batchGroups now
         logger.warn("Starting to merge. {} batch groups. Current allocated memory: {}", batchGroups.size(), oContext.getAllocator().getAllocatedMemory());
         VectorContainer hyperBatch = constructHyperBatch(batchGroups);
         createCopier(hyperBatch, batchGroups, container, false);

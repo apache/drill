@@ -18,6 +18,7 @@
 package org.apache.drill.jdbc.impl;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -38,7 +39,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -89,7 +90,7 @@ class DrillConnectionImpl extends AvaticaConnection
         }
 
         final DrillConfig dConfig = DrillConfig.create(info);
-        this.allocator = new TopLevelAllocator(dConfig);
+        this.allocator = RootAllocatorFactory.newRoot(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
         if (set == null) {
           // We're embedded; start a local drill bit.
@@ -119,12 +120,12 @@ class DrillConnectionImpl extends AvaticaConnection
         this.client.connect(null, info);
       } else if(config.isDirect()) {
         final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = new TopLevelAllocator(dConfig);
+        this.allocator = RootAllocatorFactory.newRoot(dConfig);
         this.client = new DrillClient(dConfig, true); // Get a direct connection
         this.client.connect(config.getZookeeperConnectionString(), info);
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();
-        this.allocator = new TopLevelAllocator(dConfig);
+        this.allocator = RootAllocatorFactory.newRoot(dConfig);
         // TODO:  Check:  Why does new DrillClient() create another DrillConfig,
         // with enableServerConfigs true, and cause scanning for function
         // implementations (needed by a server, but not by a client-only

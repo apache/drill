@@ -22,7 +22,8 @@ import org.apache.drill.exec.planner.PartitionLocation;
 public class HivePartitionLocation implements PartitionLocation {
   private final String partitionLocation;
   private final String[] partitionValue;
-  private final String fileSeparator = System.getProperty("file.separator");
+  // The path names passed in to this class are already sanitised and use the forward slash as the separator
+  private static final String fileSeparator = "/";
   public HivePartitionLocation(int max, String baseTableLocation, String entireLocation) {
     this.partitionLocation = entireLocation;
     partitionValue = new String[max];
@@ -39,7 +40,6 @@ public class HivePartitionLocation implements PartitionLocation {
     for (int i = 0; i < mostDirs.length; i++) {
       this.partitionValue[i] = mostDirs[i].substring(mostDirs[i].indexOf("=") + 1);
     }
-
   }
   @Override
   public String getPartitionValue(int index) {

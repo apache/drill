@@ -18,5 +18,8 @@
 
 /**
  * JDBC driver for Drill.
+ * <p>
+ *   Drill's JDBC driver class is {@link org.apache.drill.jdbc.Driver}.
+ * </p>
  */
 package org.apache.drill.jdbc;

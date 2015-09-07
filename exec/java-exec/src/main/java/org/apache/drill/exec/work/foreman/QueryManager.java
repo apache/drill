@@ -420,11 +420,18 @@ public class QueryManager {
      * the internal fragmentComplete() method so whether we have failure or success, the nodeComplete event will only
      * occur once. (Two threads could be decrementing the fragment at the same time since this will likely come from an
      * external event).
+     *
+     * @return true if the node has fragments that are pending (non-terminal state); false if all fragments running on
+     * this node have already terminated.
      */
-    public void nodeDead() {
+    public boolean nodeDead() {
+      if (completedFragments.get() == totalFragments.get()) {
+        return false;
+      }
       while (completedFragments.get() < totalFragments.get()) {
         fragmentComplete();
       }
+      return true;
     }
 
   }
@@ -492,26 +499,29 @@ public class QueryManager {
       final StringBuilder failedNodeList = new StringBuilder();
       boolean atLeastOneFailure = false;
 
-      for(final DrillbitEndpoint ep : unregisteredDrillbits) {
+      for (final DrillbitEndpoint ep : unregisteredDrillbits) {
         final NodeTracker tracker = nodeMap.get(ep);
-        if (tracker != null) {
-          // mark node as dead.
-          tracker.nodeDead();
-
-          // capture node name for exception or logging message
-          if (atLeastOneFailure) {
-            failedNodeList.append(", ");
-          }else{
-            atLeastOneFailure = true;
-          }
-          failedNodeList.append(ep.getAddress());
-          failedNodeList.append(":");
-          failedNodeList.append(ep.getUserPort());
-
+        if (tracker == null) {
+          continue; // fragments were not assigned to this Drillbit
         }
+
+        // mark node as dead.
+        if (!tracker.nodeDead()) {
+          continue; // fragments assigned to this Drillbit completed
+        }
+
+        // fragments were running on the Drillbit, capture node name for exception or logging message
+        if (atLeastOneFailure) {
+          failedNodeList.append(", ");
+        } else {
+          atLeastOneFailure = true;
+        }
+        failedNodeList.append(ep.getAddress());
+        failedNodeList.append(":");
+        failedNodeList.append(ep.getUserPort());
       }
 
-      if (!atLeastOneFailure) {
+      if (atLeastOneFailure) {
         logger.warn("Drillbits [{}] no longer registered in cluster.  Canceling query {}",
             failedNodeList, QueryIdHelper.getQueryId(queryId));
         stateListener.moveToState(QueryState.FAILED,

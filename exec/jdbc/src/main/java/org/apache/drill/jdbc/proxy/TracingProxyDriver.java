@@ -39,38 +39,44 @@ import static org.slf4j.LoggerFactory.getLogger;
  *   To set up a tracing version of a JDBC connection:
  * </p>
  * <ul>
- *   <li>Construct the proxying URL corresponding to the original URL.  (See
- *       below).</li>
- *   <li>Replace the occurrence, in the JDBC-client code or tool, of the
- *       original URL with the corresponding proxying URL.</li>
- *   <li>Make sure that class {@link TracingProxyDriver} will be loaded (e.g.,
- *       configure the client to use as the driver class).</li>
- * </ul>
- * <p>
- *   The proxying URL corresponding to an original URL is
- *   "<code>jdbc:proxy:<i>original.Driver</i>:<i>original_URL</i></code>",
- *   where:
- * </p>
- * <ul>
  *   <li>
- *     <code><i>original.Driver</i></code> is the fully qualified name of the
- *     driver class to proxy and trace (used to load the class to get it
- *     registered with JDBC's {@link DriverManager}, when or in case it's not
- *     already loaded); it can blank if the driver class will already be loaded,
- *     and
+ *     Construct the proxying URL corresponding to the original URL.
+ *     <p>
+ *       The proxying URL corresponding to an original URL is
+ *       "<code>jdbc:proxy:<i>original.Driver</i>:<i>original_URL</i></code>",
+ *       where:
+ *     </p>
+ *     <ul>
+ *       <li>
+ *         <code><i>original.Driver</i></code> is the fully qualified name of
+ *         the driver class to proxy and trace (used to load the class to get it
+ *         registered with JDBC's {@link DriverManager}, when or in case it's
+ *         not already loaded) and can be blank if the driver class will already
+ *         be loaded, and
+ *       </li>
+ *       <li>
+ *         <code><i>original_URL</i></code> is the original URL for the JDBC
+ *         data source to now be traced.
+ *       </li>
+ *     </ul>
+ *     <p>
+ *       For example, for an original URL of "{@code jdbc:drill:zk=local}", the
+ *       tracing URL is
+ *       "{@code jdbc:proxy:org.apache.drill.jdbc.Driver:jdbc:drill:zk=local}".
+ *     </p>
  *   </li>
  *   <li>
- *     <code><i>original_URL</i></code> is the original URL for the JDBC data
- *     source to now be traced.
+ *     In the JDBC-client code or tool, replace the occurrence of the original
+ *     URL with the corresponding proxying URL.
+ *   </li>
+ *   <li>
+ *     Make sure that class {@link TracingProxyDriver} will be loaded (e.g.,
+ *     configure the client to use it as the driver class).
  *   </li>
  * </ul>
- * <p>
- *   For example, for "{@code jdbc:drill:zk=local}", the tracing URL is
- *   "{@code jdbc:proxy:org.apache.drill.jdbc.Driver:jdbc:drill:zk=local}".
- * </p>
  * <p><strong>Output:</strong></p>
  * <p>
- *   Currently, the tracing output line are simply written to {@link System.out}
+ *   Currently, the tracing output line are simply written to {@link System#out}
  *   ({@code stdout} or "standard output").
  * </p>
  */

@@ -27,8 +27,9 @@ import java.sql.Statement;
 public interface DrillStatement extends Statement {
 
   /**
-   * Returns zero.
-   * {@inheritDoc}
+   * <strong>Drill</strong>:
+   * Returns zero, indicating that no timeout is set.
+   *
    * @throws  AlreadyClosedSqlException
    *            if connection is closed
    */
@@ -36,6 +37,7 @@ public interface DrillStatement extends Statement {
   int getQueryTimeout() throws AlreadyClosedSqlException;
 
   /**
+   * <strong>Drill</strong>:
    * Not supported (for non-zero timeout value).
    * <p>
    *   Normally, just throws {@link SQLFeatureNotSupportedException} unless

@@ -22,6 +22,24 @@ import java.util.TimeZone;
 
 import net.hydromatic.avatica.ConnectionConfigImpl;
 
+
+// TODO(DRILL-3730):  Change public DrillConnectionConfig from class to
+// interface.  Move implementation (including inheritance from
+// net.hydromatic.avatica.ConnectionConfigImpl) from published-interface package
+// org.apache.drill.jdbc to class in implementation package
+// org.apache.drill.jdbc.impl.
+/**
+ *  ...
+ *  <p>
+ *    NOTE:  DrillConnectionConfig will be changed from a class to an interface.
+ *  </p>
+ *  <p>
+ *    In the meantime, clients must not use the fact that
+ *    {@code DrillConnectionConfig} currently extends
+ *    {@link net.hydromatic.avatica.ConnectionConfigImpl}.  They must call only
+ *    methods declared directly in DrillConnectionConfig (or inherited Object).
+ *  </p>
+ */
 public class DrillConnectionConfig extends ConnectionConfigImpl {
   private final Properties props;
 

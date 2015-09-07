@@ -20,22 +20,23 @@ package org.apache.drill.exec.memory;
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.junit.Test;
 
 
-
-public class TestEndianess extends ExecTest{
-
+public class TestEndianess extends ExecTest {
   @Test
-  public void testLittleEndian(){
-    TopLevelAllocator a = new TopLevelAllocator(Long.MAX_VALUE);
-    ByteBuf b = a.buffer(4);
+  public void testLittleEndian() {
+    final DrillConfig drillConfig = DrillConfig.create();
+    final BufferAllocator a = RootAllocatorFactory.newRoot(drillConfig);
+    final ByteBuf b = a.buffer(4);
     b.setInt(0, 35);
-    assertEquals((int) b.getByte(0), 35);
-    assertEquals((int) b.getByte(1), 0);
-    assertEquals((int) b.getByte(2), 0);
-    assertEquals((int) b.getByte(3), 0);
+    assertEquals(b.getByte(0), 35);
+    assertEquals(b.getByte(1), 0);
+    assertEquals(b.getByte(2), 0);
+    assertEquals(b.getByte(3), 0);
+    b.release();
+    a.close();
   }
-
 }

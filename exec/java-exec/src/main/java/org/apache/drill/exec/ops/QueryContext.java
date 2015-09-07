@@ -57,9 +57,6 @@ import org.apache.drill.exec.util.Utilities;
 public class QueryContext implements AutoCloseable, OptimizerRulesContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
-  private static final int INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES = 1024 * 1024;
-  private static final int MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 256 * 1024 * 1024;
-
   private final DrillbitContext drillbitContext;
   private final UserSession session;
   private final OptionManager queryOptions;
@@ -94,8 +91,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
     try {
-      allocator = drillbitContext.getAllocator().getChildAllocator(null, INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES,
-          MAX_OFF_HEAP_ALLOCATION_IN_BYTES, false);
+      allocator = drillbitContext.getAllocator().getChildAllocator(null, plannerSettings.getInitialPlanningMemorySize(),
+          plannerSettings.getPlanningMemoryLimit(), false);
     } catch (OutOfMemoryException e) {
       throw new DrillRuntimeException("Error creating off-heap allocator for planning context.",e);
     }

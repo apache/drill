@@ -31,7 +31,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 
 /**
- * Apache Drill JDBC driver main class.
+ * Main class of Apache Drill JDBC driver.
  */
 public class Driver implements java.sql.Driver {
   private static final Logger logger = getLogger( Driver.class );
@@ -60,7 +60,7 @@ public class Driver implements java.sql.Driver {
    * Ensures that class is loaded.
    * <p>
    *   (Avoids extra instance of calling {@code new Driver();}; avoids verbosity
-   *   of {@code Class.forName("org.apache.drill.jdbc.Driver");}
+   *   of {@code Class.forName("org.apache.drill.jdbc.Driver");}.)
    * </p>
    */
   public static boolean load() {
