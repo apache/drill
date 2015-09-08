@@ -32,6 +32,7 @@ import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.DirectExpression;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
@@ -264,6 +265,8 @@ public abstract class WindowFunction {
     private LogicalExpression writeLagToLag;
     private LogicalExpression writeInputToLag;
 
+    private TypedFieldId outputId;
+
     Lag() {
       super(Type.LAG);
     }
@@ -286,7 +289,7 @@ public abstract class WindowFunction {
       // add lag output ValueVector to container
       final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
       batch.addOrGet(output).allocateNew();
-      final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+      outputId = batch.getValueVectorId(ne.getRef());
 
       writeInputToLag = new ValueVectorWriteExpression(outputId, input, true);
       writeLagToLag = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
@@ -312,7 +315,27 @@ public abstract class WindowFunction {
         cg.setMappingSet(eval);
         cg.addExpr(writeInputToLag);
       }
+
+      resetInternal(cg, outputId);
     }
+  }
+
+  /**
+   * make sure we set to null the value cached in internal buffer
+   *
+   * @see <a href="https://issues.apache.org/jira/browse/DRILL-3668">DRILL-3668</a>
+   *
+   * @param cg class generator for the window framer
+   * @param internalId type field id corresponding to the internal vv
+   */
+  private static void resetInternal(final ClassGenerator<WindowFramer> cg, final TypedFieldId internalId) {
+    final GeneratorMapping mapping = GeneratorMapping.create("resetInternal", "resetInternal", null, null);
+    final MappingSet eval = new MappingSet(null, "outIndex", null, "internal", mapping, mapping);
+    cg.setMappingSet(eval);
+
+    final JVar vv = cg.declareVectorValueSetupAndMember(cg.getMappingSet().getOutgoing(), internalId);
+    JInvocation setMethod = vv.invoke("getMutator").invoke("setNull").arg(JExpr.lit(0));
+    cg.getBlock("resetInternal").add(setMethod);
   }
 
   static class LastValue extends WindowFunction {
@@ -366,6 +389,8 @@ public abstract class WindowFunction {
 
     private LogicalExpression writeFirstValueToFirstValue;
 
+    private TypedFieldId outputId;
+
     FirstValue() {
       super(Type.FIRST_VALUE);
     }
@@ -381,7 +406,7 @@ public abstract class WindowFunction {
 
       final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
-      final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
+      outputId = batch.getValueVectorId(ne.getRef());
 
       // write incoming.first_value[inIndex] to outgoing.first_value[outIndex]
       writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
@@ -410,6 +435,8 @@ public abstract class WindowFunction {
         cg.setMappingSet(mappingSet);
         cg.addExpr(writeInputToFirstValue);
       }
+
+      resetInternal(cg, outputId);
 
       {
         // in DefaultFrameTemplate we call setupPasteValues:
