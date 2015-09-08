@@ -111,6 +111,8 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR,
       ExecConstants.USE_OLD_ASSIGNMENT_CREATOR_VALIDATOR,
       ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR,
+      ExecConstants.ADMIN_USERS_VALIDATOR,
+      ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,

@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.util;
 
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -26,12 +28,15 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Set;
 
 /**
  * Utilities for impersonation purpose.
  */
 public class ImpersonationUtil {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImpersonationUtil.class);
+
+  private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
   /**
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} of operator owner if operator
@@ -151,5 +156,40 @@ public class ImpersonationUtil {
     }
 
     return fs;
+  }
+
+  /**
+   * Given admin user/group list, finds whether the given username has admin privileges.
+   *
+   * @param userName User who is checked for administrative privileges.
+   * @param adminUsers Comma separated list of admin usernames,
+   * @param adminGroups Comma separated list of admin usergroups
+   * @return
+   */
+  public static boolean hasAdminPrivileges(final String userName, final String adminUsers, final String adminGroups) {
+    // Process user is by default an admin
+    if (getProcessUserName().equals(userName)) {
+      return true;
+    }
+
+    final Set<String> adminUsersSet = Sets.newHashSet(SPLITTER.split(adminUsers));
+    if (adminUsersSet.contains(userName)) {
+      return true;
+    }
+
+    final UserGroupInformation ugi = createProxyUgi(userName);
+    final String[] userGroups = ugi.getGroupNames();
+    if (userGroups == null || userGroups.length == 0) {
+      return false;
+    }
+
+    final Set<String> adminUserGroupsSet = Sets.newHashSet(SPLITTER.split(adminGroups));
+    for (String userGroup : userGroups) {
+      if (adminUserGroupsSet.contains(userGroup)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

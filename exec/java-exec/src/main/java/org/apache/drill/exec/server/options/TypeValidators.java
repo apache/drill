@@ -133,6 +133,22 @@ public class TypeValidators {
     }
   }
 
+  public static class AdminOptionValidator extends StringValidator {
+    public AdminOptionValidator(String name, String def) {
+      super(name, def);
+    }
+
+    @Override
+    public void validate(OptionValue v) {
+      if (v.type != OptionType.SYSTEM) {
+        throw UserException.validationError()
+            .message("Admin related settings can only be set at SYSTEM level scope. Given scope '%s'.", v.type)
+            .build(logger);
+      }
+      super.validate(v);
+    }
+  }
+
   /**
    * Validator that checks if the given value is included in a list of acceptable values. Case insensitive.
    */

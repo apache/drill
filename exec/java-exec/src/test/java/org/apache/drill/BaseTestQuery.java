@@ -44,6 +44,7 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -211,8 +212,20 @@ public class BaseTestQuery extends ExecTest {
    * @param user
    */
   public static void updateClient(String user) throws Exception {
+    updateClient(user, null);
+  }
+
+  /*
+   * Close the current <i>client</i> and open a new client for the given user and password credentials. Tests
+   * executed after this method call use the new <i>client</i>.
+   * @param user
+   */
+  public static void updateClient(final String user, final String password) throws Exception {
     final Properties props = new Properties();
-    props.setProperty("user", user);
+    props.setProperty(UserSession.USER, user);
+    if (password != null) {
+      props.setProperty(UserSession.PASSWORD, password);
+    }
     updateClient(props);
   }
 

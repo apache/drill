@@ -217,6 +217,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
      return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
+  public boolean isUserAuthenticationEnabled() {
+    return getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+  }
+
   public DrillOperatorTable getDrillOperatorTable() {
     return table;
   }

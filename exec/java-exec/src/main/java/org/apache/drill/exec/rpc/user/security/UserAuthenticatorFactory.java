@@ -92,13 +92,13 @@ public class UserAuthenticatorFactory {
           return authenticator;
         } catch(IllegalArgumentException | IllegalAccessException | InstantiationException e) {
           throw new DrillbitStartupException(
-              String.format("Failed to create and initialize the UserAuthenticator class '{}'",
+              String.format("Failed to create and initialize the UserAuthenticator class '%s'",
                   clazz.getCanonicalName()), e);
         }
       }
     }
 
-    String errMsg = String.format("Failed to find the implementation of '{}' for type '{}'",
+    String errMsg = String.format("Failed to find the implementation of '%s' for type '%s'",
         UserAuthenticator.class.getCanonicalName(), authImplConfigured);
     logger.error(errMsg);
     throw new DrillbitStartupException(errMsg);

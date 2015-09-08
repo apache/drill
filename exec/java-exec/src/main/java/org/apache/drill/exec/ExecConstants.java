@@ -19,6 +19,7 @@ package org.apache.drill.exec;
 
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminOptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
@@ -29,6 +30,7 @@ import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 public interface ExecConstants {
   public static final String ZK_RETRY_TIMES = "drill.exec.zk.retry.count";
@@ -254,4 +256,18 @@ public interface ExecConstants {
 
   public static final String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   public static final BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE, false);
+
+  /**
+   * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
+   * such as changing system options.
+   */
+  String ADMIN_USERS_KEY = "security.admin.users";
+  StringValidator ADMIN_USERS_VALIDATOR =
+      new AdminOptionValidator(ADMIN_USERS_KEY, ImpersonationUtil.getProcessUserName());
+
+  /**
+   * Option whose value is a comma separated list of admin usergroups.
+   */
+  String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
+  StringValidator ADMIN_USER_GROUPS_VALIDATOR = new AdminOptionValidator(ADMIN_USER_GROUPS_KEY, "");
 }

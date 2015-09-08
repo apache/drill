@@ -26,17 +26,21 @@ import org.apache.calcite.tools.ValidationException;
 
 import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSetOption;
 
 public class SetOptionHandler extends AbstractSqlHandler {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
   private final QueryContext context;
 
@@ -65,6 +69,21 @@ public class SetOptionHandler extends AbstractSqlHandler {
         default:
           throw new ValidationException("Invalid OPTION scope. Scope must be SESSION or SYSTEM.");
       }
+
+      if (type == OptionType.SYSTEM) {
+        // If the user authentication is enabled, make sure the user who is trying to change the system option has
+        // administrative privileges.
+        if (context.isUserAuthenticationEnabled() &&
+            !ImpersonationUtil.hasAdminPrivileges(
+                context.getQueryUserName(),
+                context.getOptions().getOption(ExecConstants.ADMIN_USERS_KEY).string_val,
+                context.getOptions().getOption(ExecConstants.ADMIN_USER_GROUPS_KEY).string_val)) {
+          throw UserException.permissionError()
+              .message("Not authorized to change SYSTEM options.")
+              .build(logger);
+        }
+      }
+
       final OptionValue optionValue = createOptionValue(name, type, (SqlLiteral) value);
       context.getOptions().setOption(optionValue);
     }else{

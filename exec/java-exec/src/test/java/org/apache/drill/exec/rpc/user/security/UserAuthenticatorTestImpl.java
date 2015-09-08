@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.google.common.base.Strings;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 
@@ -33,8 +34,20 @@ public class UserAuthenticatorTestImpl implements UserAuthenticator {
 
   public static final String TEST_USER_1 = "testUser1";
   public static final String TEST_USER_2 = "testUser2";
+  public static final String ADMIN_USER = "admin";
+  public static final String PROCESS_USER = ImpersonationUtil.getProcessUserName();
   public static final String TEST_USER_1_PASSWORD = "testUser1Password";
   public static final String TEST_USER_2_PASSWORD = "testUser2Password";
+  public static final String ADMIN_USER_PASSWORD = "adminUserPw";
+  public static final String PROCESS_USER_PASSWORD = "processUserPw";
+
+  public static final String ADMIN_GROUP = "admingrp";
+
+  static {
+    UserGroupInformation.createUserForTesting("testUser1", new String[]{"g1", ADMIN_GROUP});
+    UserGroupInformation.createUserForTesting("testUser2", new String[]{ "g1" });
+    UserGroupInformation.createUserForTesting("admin", new String[]{ ADMIN_GROUP });
+  }
 
   @Override
   public void setup(DrillConfig drillConfig) throws DrillbitStartupException {
@@ -50,7 +63,9 @@ public class UserAuthenticatorTestImpl implements UserAuthenticator {
     }
 
     if (!(TEST_USER_1.equals(user) && TEST_USER_1_PASSWORD.equals(password)) &&
-        !(TEST_USER_2.equals(user) && TEST_USER_2_PASSWORD.equals(password))) {
+        !(TEST_USER_2.equals(user) && TEST_USER_2_PASSWORD.equals(password)) &&
+        !(ADMIN_USER.equals(user) && ADMIN_USER_PASSWORD.equals(password)) &&
+        !(PROCESS_USER.equals(user) && PROCESS_USER_PASSWORD.equals(password))) {
       throw new UserAuthenticationException();
     }
   }
