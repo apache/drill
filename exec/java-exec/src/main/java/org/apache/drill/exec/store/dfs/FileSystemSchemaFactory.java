@@ -75,8 +75,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     public FileSystemSchema(String name, SchemaConfig schemaConfig) throws IOException {
       super(ImmutableList.<String>of(), name);
       for(WorkspaceSchemaFactory f :  factories){
-        WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
-        schemaMap.put(s.getName(), s);
+        if (f.accessible(schemaConfig.getUserName())) {
+          WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig);
+          schemaMap.put(s.getName(), s);
+        }
       }
 
       defaultSchema = schemaMap.get(DEFAULT_WS_NAME);

@@ -177,12 +177,40 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
         containsString("Permission denied: user=drillTestUser2, " +
-        "access=READ_EXECUTE, inode=\"/drillTestGrp1_700\":drillTestUser1:drillTestGrp1:drwx------"));
+            "access=READ_EXECUTE, inode=\"/drillTestGrp1_700\":drillTestUser1:drillTestGrp1:drwx------"));
   }
 
   @Test
-  public void testShowSchemasSanityCheck() throws Exception {
-    test("SHOW SCHEMAS");
+  public void testShowSchemasAsUser1() throws Exception {
+    // "user1" is part of "group0" and has access to following workspaces
+    // drillTestGrp1_700 (through ownership)
+    // drillTestGrp0_750, drillTestGrp0_770 (through "group" category permissions)
+    // drillTestGrp0_755, drillTestGrp0_777 (through "others" category permissions)
+    updateClient(user1);
+    testBuilder()
+        .sqlQuery("SHOW SCHEMAS LIKE '%drillTest%'")
+        .unOrdered()
+        .baselineColumns("SCHEMA_NAME")
+        .baselineValues(String.format("%s.drillTestGrp0_750", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drillTestGrp0_770", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drillTestGrp0_777", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drillTestGrp1_700", MINIDFS_STORAGE_PLUGIN_NAME))
+        .go();
+  }
+
+  @Test
+  public void testShowSchemasAsUser2() throws Exception {
+    // "user2" is part of "group0", but part of "group1" and has access to following workspaces
+    // drillTestGrp0_755, drillTestGrp0_777 (through "others" category permissions)
+    updateClient(user2);
+    testBuilder()
+        .sqlQuery("SHOW SCHEMAS LIKE '%drillTest%'")
+        .unOrdered()
+        .baselineColumns("SCHEMA_NAME")
+        .baselineValues(String.format("%s.drillTestGrp0_755", MINIDFS_STORAGE_PLUGIN_NAME))
+        .baselineValues(String.format("%s.drillTestGrp0_777", MINIDFS_STORAGE_PLUGIN_NAME))
+        .go();
   }
 
   @Test

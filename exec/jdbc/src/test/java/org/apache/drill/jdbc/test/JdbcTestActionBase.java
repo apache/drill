@@ -116,7 +116,7 @@ public class JdbcTestActionBase extends JdbcTestBase {
 
   @BeforeClass
   public static void openClient() throws Exception {
-    connection = DriverManager.getConnection("jdbc:drill:zk=local", null);
+    connection = DriverManager.getConnection("jdbc:drill:zk=local", JdbcAssert.getDefaultProperties());
   }
 
   @AfterClass

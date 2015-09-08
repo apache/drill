@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -52,6 +53,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,6 +77,7 @@ public class WorkspaceSchemaFactory {
   private final String schemaName;
   private final FileSystemPlugin plugin;
   private final ObjectMapper mapper;
+  private final Path wsPath;
 
   public WorkspaceSchemaFactory(DrillConfig drillConfig, FileSystemPlugin plugin, String schemaName,
       String storageEngineName, WorkspaceConfig config, List<FormatMatcher> formatMatchers)
@@ -88,6 +91,7 @@ public class WorkspaceSchemaFactory {
     this.dirMatchers = Lists.newArrayList();
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
+    this.wsPath = new Path(config.getLocation());
 
     for (FormatMatcher m : formatMatchers) {
       if (m.supportDirectoryReads()) {
@@ -112,6 +116,30 @@ public class WorkspaceSchemaFactory {
     } else {
       dropFileMatchers = fileMatchers.subList(0, fileMatchers.size());
     }
+  }
+
+  /**
+   * Checks whether the given user has permission to list files/directories under the workspace directory.
+   *
+   * @param userName User who is trying to access the workspace.
+   * @return True if the user has access. False otherwise.
+   */
+  public boolean accessible(final String userName) throws IOException {
+    final FileSystem fs = ImpersonationUtil.createFileSystem(userName, fsConf);
+    try {
+      // We have to rely on the listStatus as a FileSystem can have complicated controls such as regular unix style
+      // permissions, Access Control Lists (ACLs) or Access Control Expressions (ACE). Hadoop 2.7 version of FileSystem
+      // has a limited private API (FileSystem.access) to check the permissions directly
+      // (see https://issues.apache.org/jira/browse/HDFS-6570). Drill currently relies on Hadoop 2.5.0 version of
+      // FileClient. TODO: Update this when DRILL-3749 is fixed.
+      fs.listStatus(wsPath);
+    } catch (final UnsupportedOperationException e) {
+      logger.trace("The filesystem for this workspace does not support this operation.", e);
+    } catch (final FileNotFoundException | AccessControlException e) {
+      return false;
+    }
+
+    return true;
   }
 
   private Path getViewPath(String name) {
