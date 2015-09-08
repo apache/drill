@@ -450,4 +450,32 @@ public class TestWindowFunctions extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-3580
+  public void testExpressionInWindowFunction() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/t.json").toURI().toString();
+    String query = String.format("select a1, b1, sum(b1) over (partition by a1) as c1, sum(a1 + b1) over (partition by a1) as c2\n" +
+        "from dfs_test.`%s`", root);
+
+    // Validate the plan
+    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} order by \\[\\].*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("a1", "b1", "c1", "c2")
+        .baselineValues(0l, 1l, 8l, 8l)
+        .baselineValues(0l, 1l, 8l, 8l)
+        .baselineValues(0l, 2l, 8l, 8l)
+        .baselineValues(0l, 2l, 8l, 8l)
+        .baselineValues(0l, 2l, 8l, 8l)
+        .baselineValues(10l, 3l, 21l, 71l)
+        .baselineValues(10l, 3l, 21l, 71l)
+        .baselineValues(10l, 5l, 21l, 71l)
+        .baselineValues(10l, 5l, 21l, 71l)
+        .baselineValues(10l, 5l, 21l, 71l)
+        .build()
+        .run();
+  }
 }
