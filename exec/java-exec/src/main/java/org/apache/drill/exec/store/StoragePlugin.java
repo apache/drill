@@ -27,22 +27,22 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
-/** Interface for all implementations of the storage plugins. Different implementations of the storage 
+/** Interface for all implementations of the storage plugins. Different implementations of the storage
  * formats will implement methods that indicate if Drill can write or read its tables from that format,
  * if there are optimizer rules specific for the format, getting a storage config. etc.
  */
 public interface StoragePlugin extends SchemaFactory {
-  
+
   /** Indicates if Drill can read the table from this format.
-   */
+  */
   public boolean supportsRead();
 
   /** Indicates if Drill can write a table to this format (e.g. as JSON, csv, etc.).
    */
   public boolean supportsWrite();
 
-  /** An implementation of this method will return one or more specialized rules that Drill query 
-   *  optimizer can leverage. Otherwise, it should return an empty set. 
+  /** An implementation of this method will return one or more specialized rules that Drill query
+   *  optimizer can leverage. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific optimizer rules.
    */
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
@@ -68,10 +68,10 @@ public interface StoragePlugin extends SchemaFactory {
   */
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException;
-  
+
   /** Method returns a jackson serializable object that extends a StoragePluginConfig
-   * @return an extension of StoragePluginConfig
-   */ 
+  * @return an extension of StoragePluginConfig
+  */
   public StoragePluginConfig getConfig();
 
 }

@@ -28,9 +28,8 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 import com.google.common.collect.ImmutableSet;
 
-/** Abstract class for StorePlugin implementations. 
+/** Abstract class for StorePlugin implementations.
  * See StoragePlugin for description of the interface intent and its methods.
- * 
  */
 public abstract class AbstractStoragePlugin implements StoragePlugin{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStoragePlugin.class);
