@@ -70,7 +70,7 @@ class FieldSelection {
       for(Entry<String, FieldSelection> e : children.entrySet()){
         newMap.put(e.getKey(), e.getValue().fixNodes());
       }
-      return new FieldSelection(newMap, ValidityMode.CHECK_CHILDREN);
+      return new FieldSelection(newMap, mode);
     }
   }
 

@@ -186,6 +186,7 @@ public class MongoTestSuit implements MongoTestConstants {
       mongod = mongodExecutable.start();
       mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
+      createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
     }
 
     private static void cleanup() {
@@ -209,6 +210,7 @@ public class MongoTestSuit implements MongoTestConstants {
         SingleMode.setup();
       }
       TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
+      TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
     }
   }
 

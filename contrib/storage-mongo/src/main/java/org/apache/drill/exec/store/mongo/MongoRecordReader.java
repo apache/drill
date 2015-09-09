@@ -98,7 +98,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     if (!isStarQuery()) {
       for (SchemaPath column : projectedColumns ) {
         String fieldName = column.getRootSegment().getPath();
-        transformed.add(SchemaPath.getSimplePath(fieldName));
+        transformed.add(column);
         this.fields.put(fieldName, Integer.valueOf(1));
       }
     } else {

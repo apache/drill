@@ -397,7 +397,7 @@ public class DrillTestWrapper {
     if (expectedNumBatches != EXPECTED_BATCH_COUNT_NOT_SET) {
       final int actualNumBatches = results.size();
       assertEquals(String.format("Expected %d batches but query returned %d non empty batch(es)%n", expectedNumBatches,
-        actualNumBatches), expectedNumBatches, actualNumBatches);
+          actualNumBatches), expectedNumBatches, actualNumBatches);
     }
   }
 
@@ -560,7 +560,23 @@ public class DrillTestWrapper {
         break;
       }
       if (!found) {
-        throw new Exception(String.format("After matching %d records, did not find expected record in result set: %s", counter, printRecord(expectedRecord)));
+        StringBuilder sb = new StringBuilder();
+        for (int expectedRecordDisplayCount = 0;
+             expectedRecordDisplayCount < 10 && expectedRecordDisplayCount < expectedRecords.size();
+             expectedRecordDisplayCount++) {
+          sb.append(printRecord(expectedRecords.get(expectedRecordDisplayCount)));
+        }
+        String expectedRecordExamples = sb.toString();
+        sb.setLength(0);
+        for (int actualRecordDisplayCount = 0;
+             actualRecordDisplayCount < 10 && actualRecordDisplayCount < actualRecords.size();
+             actualRecordDisplayCount++) {
+          sb.append(printRecord(actualRecords.get(actualRecordDisplayCount)));
+        }
+        String actualRecordExamples = sb.toString();
+        throw new Exception(String.format("After matching %d records, did not find expected record in result set: %s\n\n" +
+            "Some examples of expected records:%s\n\n Some examples of records returned by the test query:%s",
+            counter, printRecord(expectedRecord), expectedRecordExamples, actualRecordExamples));
       } else {
         actualRecords.remove(i);
         counter++;

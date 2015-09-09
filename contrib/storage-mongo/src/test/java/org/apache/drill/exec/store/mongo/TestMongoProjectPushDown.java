@@ -17,9 +17,52 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.apache.drill.exec.ExecConstants;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
+
+import static org.apache.drill.TestBuilder.listOf;
+import static org.apache.drill.TestBuilder.mapOf;
+
 public class TestMongoProjectPushDown extends MongoTestBase {
+
+  /**
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testComplexProjectPushdown() throws Exception {
+
+    try {
+      testBuilder()
+          .sqlQuery("select t.field_4.inner_3 as col_1, t.field_4 as col_2 from mongo.employee.schema_change t")
+          .unOrdered()
+          .optionSettingQueriesForTestQuery(String.format("alter session set `%s` = true", ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE))
+              .baselineColumns("col_1", "col_2")
+              .baselineValues(
+                  mapOf(),
+                  mapOf(
+                      "inner_1", listOf(),
+                      "inner_3", mapOf()))
+              .baselineValues(
+                  mapOf("inner_object_field_1", 2.0),
+                  mapOf(
+                      "inner_1", listOf(1.0, 2.0, 3.0),
+                      "inner_2", 3.0,
+                      "inner_3", mapOf("inner_object_field_1", 2.0)))
+              .baselineValues(
+                  mapOf(),
+                  mapOf(
+                      "inner_1", listOf(4.0, 5.0, 6.0),
+                      "inner_2", 3.0,
+                      "inner_3", mapOf()))
+              .go();
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE));
+    }
+  }
 
   @Test
   public void testSingleColumnProject() throws Exception {

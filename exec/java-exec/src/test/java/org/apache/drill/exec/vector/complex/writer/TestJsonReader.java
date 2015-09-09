@@ -63,6 +63,37 @@ public class TestJsonReader extends BaseTestQuery {
   }
 
   @Test
+  public void testFieldSelectionBug() throws Exception {
+    try {
+      testBuilder()
+          .sqlQuery("select t.field_4.inner_3 as col_1, t.field_4 as col_2 from cp.`store/json/schema_change_int_to_string.json` t")
+          .unOrdered()
+          .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+          .baselineColumns("col_1", "col_2")
+          .baselineValues(
+              mapOf(),
+              mapOf(
+                  "inner_1", listOf(),
+                  "inner_3", mapOf()))
+          .baselineValues(
+              mapOf("inner_object_field_1", "2"),
+              mapOf(
+                  "inner_1", listOf("1", "2", "3"),
+                  "inner_2", "3",
+                  "inner_3", mapOf("inner_object_field_1", "2")))
+          .baselineValues(
+              mapOf(),
+              mapOf(
+                  "inner_1", listOf("4", "5", "6"),
+                  "inner_2", "3",
+                  "inner_3", mapOf()))
+          .go();
+    } finally {
+      test("alter session set `store.json.all_text_mode` = false");
+    }
+  }
+
+  @Test
   public void testSplitAndTransferFailure() throws Exception {
     final String testVal = "a string";
     testBuilder()
