@@ -112,8 +112,10 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
 
       final List <RexNode> updatedExpr = Lists.newArrayListWithExpectedSize(childRowTypeFields.size());
       removeUpdatedExpr = Lists.newArrayListWithExpectedSize(childRowTypeFields.size());
-      for ( RelDataTypeField field : childRowTypeFields) {
-        RexNode rex = rexBuilder.makeInputRef(field.getType(), field.getIndex());
+
+      for (int i = 0; i < childRowTypeFields.size(); ++i) {
+        final RelDataTypeField field = childRowTypeFields.get(i);
+        RexNode rex = rexBuilder.makeInputRef(field.getType(), i);
         updatedExpr.add(rex);
         removeUpdatedExpr.add(rex);
       }
