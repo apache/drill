@@ -28,6 +28,7 @@ import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
@@ -133,6 +134,7 @@ public class DrillRuleSets {
       DrillPushProjectPastJoinRule.INSTANCE,
       DrillPushProjIntoScan.INSTANCE,
       DrillProjectSetOpTransposeRule.INSTANCE,
+      ProjectWindowTransposeRule.INSTANCE,
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.

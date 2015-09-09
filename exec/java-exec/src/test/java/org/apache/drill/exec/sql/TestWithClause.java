@@ -39,4 +39,26 @@ public class TestWithClause extends BaseTestQuery {
         "select x, y from alpha");
   }
 
+  @Test // DRILL-2318
+  public void withClauseOrderBy() throws Exception {
+    String query = "WITH x \n" +
+        "AS (SELECT n_nationkey a1 \n" +
+        "FROM  cp.`tpch/nation.parquet`) \n" +
+        "SELECT  x.a1 \n" +
+        "FROM  x \n" +
+        "ORDER BY x.a1 \n" +
+        "limit 5";
+
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("a1")
+      .baselineValues(0)
+      .baselineValues(1)
+      .baselineValues(2)
+      .baselineValues(3)
+      .baselineValues(4)
+      .build()
+      .run();
+  }
 }

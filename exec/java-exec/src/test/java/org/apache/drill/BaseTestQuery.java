@@ -379,6 +379,16 @@ public class BaseTestQuery extends ExecTest {
     errorMsgTestHelper(testSqlQuery, UserBitShared.DrillPBError.ErrorType.PARSE.name());
   }
 
+  /**
+   * Utility method which tests given query produces a {@link UserException}
+   * with {@link org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType}
+   * being DrillPBError.ErrorType.VALIDATION the given message.
+   * @param testSqlQuery Test query
+   */
+  protected static void validationErrorHelper(final String testSqlQuery) throws Exception {
+    errorMsgTestHelper(testSqlQuery, UserBitShared.DrillPBError.ErrorType.VALIDATION.name());
+  }
+
   public static String getFile(String resource) throws IOException{
     final URL url = Resources.getResource(resource);
     if (url == null) {
