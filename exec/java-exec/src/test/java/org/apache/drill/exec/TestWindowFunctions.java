@@ -211,6 +211,41 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-3360
+  public void testWindowInWindow() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    String query = "select rank() over(order by row_number() over(order by n_nationkey)) \n" +
+        "from cp.`tpch/nation.parquet`";
+
+    test(query);
+  }
+
+  @Test // DRILL-3280
+  public void testMissingOverWithWindowClause() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    String query = "select rank(), cume_dist() over w \n" +
+        "from cp.`tpch/nation.parquet` \n" +
+        "window w as (partition by n_name order by n_nationkey)";
+
+    test(query);
+  }
+
+  @Test // DRILL-3601
+  public void testLeadMissingOver() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    String query = "select lead(n_nationkey) from cp.`tpch/nation.parquet`";
+
+    test(query);
+  }
+
+  @Test // DRILL-3649
+  public void testMissingOverWithConstant() throws Exception {
+    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    String query = "select NTILE(1) from cp.`tpch/nation.parquet`";
+
+    test(query);
+  }
+
   @Test // DRILL-3344
   public void testWindowGroupBy() throws Exception {
     thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
