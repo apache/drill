@@ -3,7 +3,7 @@ title: "Querying Parquet Files"
 parent: "Querying a File System"
 ---
 
-<!-- Drill extends SQL for performant querying of a large number, thousands or more, of Parquet files. By including the following command in a query, you trigger the generation of metadata files in the directory of Parquet files and its subdirectories:
+Drill 1.2 and later extends SQL for performant querying of a large number, thousands or more, of Parquet files. By including the following command in a query, you trigger the generation of metadata files in the directory of Parquet files and its subdirectories:
 
     REFRESH TABLE METADATA <path to table>
 
@@ -15,7 +15,7 @@ You can query nested directories from any level. For example, you can query a su
 
 TBD (fill in when the feature is ready)
 
-## Sample Parquet Files -->
+## Sample Parquet Files  
 The Drill installation includes a `sample-data` directory with Parquet files
 that you can query. Use SQL syntax to query the `region.parquet` and
 `nation.parquet` files in the `sample-data` directory.
