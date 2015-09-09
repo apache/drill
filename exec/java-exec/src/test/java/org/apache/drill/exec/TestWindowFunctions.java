@@ -209,6 +209,27 @@ public class TestWindowFunctions extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-3360
+  public void testWindowInWindow() throws Exception {
+    String query = "select rank() over(order by row_number() over(order by n_nationkey)) \n" +
+        "from cp.`tpch/nation.parquet`";
+
+    validationErrorHelper(query);
+  }
+
+  @Test // DRILL-3280, DRILL-3601, DRILL-3649
+  public void testMissingOver() throws Exception {
+    String query1 = "select lead(n_nationkey) from cp.`tpch/nation.parquet`";
+    String query2 = "select rank(), cume_dist() over w \n" +
+        "from cp.`tpch/nation.parquet` \n" +
+        "window w as (partition by n_name order by n_nationkey)";
+    String query3 = "select NTILE(1) from cp.`tpch/nation.parquet`";
+
+    validationErrorHelper(query1);
+    validationErrorHelper(query2);
+    validationErrorHelper(query3);
+  }
+
   @Test // DRILL-3344
   public void testWindowGroupBy() throws Exception {
     String query = "explain plan for SELECT max(n_nationkey) OVER (), n_name as col2 \n" +
