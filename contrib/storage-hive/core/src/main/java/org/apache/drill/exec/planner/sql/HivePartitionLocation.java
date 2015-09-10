@@ -17,34 +17,23 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.PartitionLocation;
+
+import java.util.List;
 
 public class HivePartitionLocation implements PartitionLocation {
   private final String partitionLocation;
-  private final String[] partitionValue;
-  // The path names passed in to this class are already sanitised and use the forward slash as the separator
-  private static final String fileSeparator = "/";
-  public HivePartitionLocation(int max, String baseTableLocation, String entireLocation) {
-    this.partitionLocation = entireLocation;
-    partitionValue = new String[max];
-    int start = partitionLocation.indexOf(baseTableLocation) + baseTableLocation.length();
-    String postPath = entireLocation.substring(start);
-    if (postPath.length() == 0) {
-      return;
-    }
-    if (postPath.startsWith(fileSeparator)) {
-      postPath = postPath.substring(postPath.indexOf(fileSeparator) + 1);
-    }
-    String[] mostDirs = postPath.split(fileSeparator);
-    assert mostDirs.length <= max;
-    for (int i = 0; i < mostDirs.length; i++) {
-      this.partitionValue[i] = mostDirs[i].substring(mostDirs[i].indexOf("=") + 1);
-    }
+  private final List<String> partitionValues;
+
+  public HivePartitionLocation(final List<String> partitionValues, final String partitionLocation) {
+    this.partitionValues = ImmutableList.copyOf(partitionValues);
+    this.partitionLocation = partitionLocation;
   }
   @Override
   public String getPartitionValue(int index) {
-    assert index < partitionValue.length;
-    return partitionValue[index];
+    assert index < partitionValues.size();
+    return partitionValues.get(index);
   }
 
   @Override

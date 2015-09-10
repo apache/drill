@@ -312,6 +312,15 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "INSERT OVERWRITE TABLE partition_pruning_test PARTITION(c, d, e) " +
         "SELECT a, b, c, d, e FROM partition_pruning_test_loadtable");
 
+    // Add a partition with custom location
+    executeQuery(hiveDriver,
+        String.format("ALTER TABLE partition_pruning_test ADD PARTITION (c=99, d=98, e=97) LOCATION '%s'",
+            getTempDir("part1")));
+    executeQuery(hiveDriver,
+        String.format("INSERT INTO TABLE partition_pruning_test PARTITION(c=99, d=98, e=97) " +
+                "SELECT '%s', '%s' FROM kv LIMIT 1",
+        new Date(System.currentTimeMillis()).toString(), new Timestamp(System.currentTimeMillis()).toString()));
+
     executeQuery(hiveDriver, "DROP TABLE partition_pruning_test_loadtable");
 
     ss.close();

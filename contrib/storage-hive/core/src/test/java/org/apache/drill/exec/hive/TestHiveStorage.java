@@ -207,4 +207,15 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineValues("5", " key_5")
         .go();
   }
+
+
+  @Test // DRILL-3746
+  public void readFromPartitionWithCustomLocation() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT count(*) as cnt FROM hive.partition_pruning_test WHERE c=99 AND d=98 AND e=97")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(1L)
+        .go();
+  }
 }

@@ -116,14 +116,10 @@ public class TestHivePartitionPruning extends HiveTestBase {
   public void selectFromPartitionedTableWithNullPartitions() throws Exception {
     final String query = "SELECT count(*) nullCount FROM hive.partition_pruning_test " +
         "WHERE c IS NULL OR d IS NULL OR e IS NULL";
-
-    /** Currently there is an issue with interpreter based partition pruning where some functions on partitions don't
-     * work. IS NULL is one of those functions.
     final String plan = getPlanInString("EXPLAIN PLAN FOR " + query, OPTIQ_FORMAT);
 
     // Check and make sure that Filter is not present in the plan
     assertFalse(plan.contains("Filter"));
-     */
 
     testBuilder()
         .sqlQuery(query)

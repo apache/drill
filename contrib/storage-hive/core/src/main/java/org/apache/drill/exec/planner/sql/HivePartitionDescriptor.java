@@ -47,7 +47,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 public class HivePartitionDescriptor implements PartitionDescriptor {
 
   private final Map<String, Integer> partitionMap = new HashMap<>();
-  private final int MAX_NESTED_SUBDIRS;
+  private final int numPartitionLevels;
   private final DrillScanRel scanRel;
   private final String defaultPartitionValue;
   private final DrillBuf managedBuffer;
@@ -62,7 +62,7 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
       partitionMap.put(wrapper.name, i);
       i++;
     }
-    MAX_NESTED_SUBDIRS = i;
+    numPartitionLevels = i;
   }
 
   @Override
@@ -77,7 +77,7 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
 
   @Override
   public int getMaxHierarchyLevel() {
-    return MAX_NESTED_SUBDIRS;
+    return numPartitionLevels;
   }
 
   public String getBaseTableLocation() {
@@ -110,12 +110,8 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   public List<PartitionLocation> getPartitions() {
     List<PartitionLocation> partitions = new LinkedList<>();
     HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
-    List<String> allFileLocations = new LinkedList<>();
     for (Partition partition: origEntry.getPartitions()) {
-      allFileLocations.add(partition.getSd().getLocation());
-    }
-    for (String file: allFileLocations) {
-      partitions.add(new HivePartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
+      partitions.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
     }
     return partitions;
   }
