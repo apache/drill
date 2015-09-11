@@ -1,0 +1,10 @@
+{
+  "storage":{
+    solr : {
+      type:"solr",
+      enabled: true,
+      solrServer: ""
+    }
+  }
+}
+drill.exec.storage.packages += org.apache.drill.exec.store.solr
