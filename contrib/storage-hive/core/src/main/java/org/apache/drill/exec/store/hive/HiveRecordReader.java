@@ -133,7 +133,7 @@ public class HiveRecordReader extends AbstractRecordReader {
     String inputFormatName = (partition == null) ? table.getSd().getInputFormat() : partition.getSd().getInputFormat();
     try {
       format = (InputFormat) Class.forName(inputFormatName).getConstructor().newInstance();
-      Class c = Class.forName(sLib);
+      Class<?> c = Class.forName(sLib);
       serde = (SerDe) c.getConstructor().newInstance();
       serde.initialize(job, properties);
     } catch (ReflectiveOperationException | SerDeException e) {
@@ -286,7 +286,6 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   private boolean readHiveRecordAndInsertIntoRecordBatch(Object deSerializedValue, int outputRecordIndex) {
-    boolean success;
     for (int i = 0; i < selectedColumnNames.size(); i++) {
       String columnName = selectedColumnNames.get(i);
       Object hiveValue = sInspector.getStructFieldData(deSerializedValue, sInspector.getStructFieldRef(columnName));
@@ -311,7 +310,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (reader != null) {
         reader.close();

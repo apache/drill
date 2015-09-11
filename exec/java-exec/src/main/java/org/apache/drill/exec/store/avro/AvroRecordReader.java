@@ -351,7 +351,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     if (reader != null) {
       try {
         reader.close();

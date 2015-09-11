@@ -31,9 +31,9 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
@@ -75,7 +75,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private boolean rowKeyOnly;
 
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
+      List<SchemaPath> projectedColumns, FragmentContext context) {
     hbaseConf = conf;
     hbaseTableName = Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName();
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
@@ -169,15 +169,16 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     done:
     for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
       Result result = null;
+      final OperatorStats operatorStats = operatorContext == null ? null : operatorContext.getStats();
       try {
-        if (operatorContext != null) {
-          operatorContext.getStats().startWait();
+        if (operatorStats != null) {
+          operatorStats.startWait();
         }
         try {
           result = resultScanner.next();
         } finally {
-          if (operatorContext != null) {
-            operatorContext.getStats().stopWait();
+          if (operatorStats != null) {
+            operatorStats.stopWait();
           }
         }
       } catch (IOException e) {
@@ -193,20 +194,20 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         rowKeyVector.getMutator().setSafe(rowCount, cells[0].getRowArray(), cells[0].getRowOffset(), cells[0].getRowLength());
       }
       if (!rowKeyOnly) {
-        for (Cell cell : cells) {
-          int familyOffset = cell.getFamilyOffset();
-          int familyLength = cell.getFamilyLength();
-          byte[] familyArray = cell.getFamilyArray();
-          MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
+        for (final Cell cell : cells) {
+          final int familyOffset = cell.getFamilyOffset();
+          final int familyLength = cell.getFamilyLength();
+          final byte[] familyArray = cell.getFamilyArray();
+          final MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
 
-          int qualifierOffset = cell.getQualifierOffset();
-          int qualifierLength = cell.getQualifierLength();
-          byte[] qualifierArray = cell.getQualifierArray();
-          NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
+          final int qualifierOffset = cell.getQualifierOffset();
+          final int qualifierLength = cell.getQualifierLength();
+          final byte[] qualifierArray = cell.getQualifierArray();
+          final NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(qualifierArray, qualifierOffset, qualifierLength));
 
-          int valueOffset = cell.getValueOffset();
-          int valueLength = cell.getValueLength();
-          byte[] valueArray = cell.getValueArray();
+          final int valueOffset = cell.getValueOffset();
+          final int valueLength = cell.getValueLength();
+          final byte[] valueArray = cell.getValueArray();
           v.getMutator().setSafe(rowCount, valueArray, valueOffset, valueLength);
         }
       }
@@ -246,7 +247,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (resultScanner != null) {
         resultScanner.close();
@@ -267,5 +268,4 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       rowKeyVector.getMutator().setValueCount(count);
     }
   }
-
 }

@@ -144,7 +144,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
    * This would internally close the input stream we are reading from.
    */
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (reader != null) {
         reader.close();

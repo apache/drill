@@ -123,7 +123,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
 
   @Override
   public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
-    for (ValueVector v : vectorMap.values()) {
+    for (final ValueVector v : vectorMap.values()) {
       AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
     }
   }
@@ -146,7 +146,6 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
     injector.injectPause(operatorContext.getExecutionControls(), "read-next", logger);
     try {
       int i =0;
-      outside:
       while (doCurrent || iterator.hasNext()) {
         if (doCurrent) {
           doCurrent = false;
@@ -175,7 +174,6 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
   }
-
 }

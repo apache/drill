@@ -92,45 +92,47 @@ public class ScanBatch implements CloseableRecordBatch {
     if (!readers.hasNext()) {
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
     }
-    this.currentReader = readers.next();
+    currentReader = readers.next();
     this.oContext = oContext;
 
     boolean setup = false;
     try {
       oContext.getStats().startProcessing();
-      this.currentReader.setup(oContext, mutator);
+      currentReader.setup(oContext, mutator);
       setup = true;
     } finally {
       // if we had an exception during setup, make sure to release existing data.
       if (!setup) {
-        currentReader.cleanup();
+        try {
+          currentReader.close();
+        } catch(final Exception e) {
+          throw new ExecutionSetupException(e);
+        }
       }
       oContext.getStats().stopProcessing();
     }
     this.partitionColumns = partitionColumns.iterator();
-    this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
+    partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
     this.selectedPartitionColumns = selectedPartitionColumns;
 
     // TODO Remove null check after DRILL-2097 is resolved. That JIRA refers to test cases that do not initialize
     // options; so labelValue = null.
     final OptionValue labelValue = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    this.partitionColumnDesignator = labelValue == null ? "dir" : labelValue.string_val;
+    partitionColumnDesignator = labelValue == null ? "dir" : labelValue.string_val;
 
     addPartitionVectors();
   }
 
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers)
+      throws ExecutionSetupException {
     this(subScanConfig, context,
         context.newOperatorContext(subScanConfig, false /* ScanBatch is not subject to fragment memory limit */),
         readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
   }
 
+  @Override
   public FragmentContext getContext() {
     return context;
-  }
-
-  public OperatorContext getOperatorContext() {
-    return oContext;
   }
 
   @Override
@@ -156,6 +158,12 @@ public class ScanBatch implements CloseableRecordBatch {
     container.zeroVectors();
   }
 
+  private void clearFieldVectorMap() {
+    for (final ValueVector v : fieldVectorMap.values()) {
+      v.clear();
+    }
+  }
+
   @Override
   public IterOutcome next() {
     if (done) {
@@ -169,15 +177,13 @@ public class ScanBatch implements CloseableRecordBatch {
         currentReader.allocate(fieldVectorMap);
       } catch (OutOfMemoryException | OutOfMemoryRuntimeException e) {
         logger.debug("Caught Out of Memory Exception", e);
-        for (ValueVector v : fieldVectorMap.values()) {
-          v.clear();
-        }
+        clearFieldVectorMap();
         return IterOutcome.OUT_OF_MEMORY;
       }
       while ((recordCount = currentReader.next()) == 0) {
         try {
           if (!readers.hasNext()) {
-            currentReader.cleanup();
+            currentReader.close();
             releaseAssets();
             done = true;
             if (mutator.isNewSchema()) {
@@ -196,7 +202,7 @@ public class ScanBatch implements CloseableRecordBatch {
             fieldVectorMap.clear();
           }
 
-          currentReader.cleanup();
+          currentReader.close();
           currentReader = readers.next();
           partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
           currentReader.setup(oContext, mutator);
@@ -204,9 +210,7 @@ public class ScanBatch implements CloseableRecordBatch {
             currentReader.allocate(fieldVectorMap);
           } catch (OutOfMemoryException e) {
             logger.debug("Caught OutOfMemoryException");
-            for (ValueVector v : fieldVectorMap.values()) {
-              v.clear();
-            }
+            clearFieldVectorMap();
             return IterOutcome.OUT_OF_MEMORY;
           }
           addPartitionVectors();
@@ -249,7 +253,7 @@ public class ScanBatch implements CloseableRecordBatch {
     }
   }
 
-  private void addPartitionVectors() throws ExecutionSetupException{
+  private void addPartitionVectors() throws ExecutionSetupException {
     try {
       if (partitionVectors != null) {
         for (ValueVector v : partitionVectors) {
@@ -258,8 +262,10 @@ public class ScanBatch implements CloseableRecordBatch {
       }
       partitionVectors = Lists.newArrayList();
       for (int i : selectedPartitionColumns) {
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
-        ValueVector v = mutator.addField(field, NullableVarCharVector.class);
+        final MaterializedField field =
+            MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i),
+                Types.optional(MinorType.VARCHAR));
+        final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
         partitionVectors.add(v);
       }
     } catch(SchemaChangeException e) {
@@ -269,12 +275,12 @@ public class ScanBatch implements CloseableRecordBatch {
 
   private void populatePartitionVectors() {
     for (int index = 0; index < selectedPartitionColumns.size(); index++) {
-      int i = selectedPartitionColumns.get(index);
-      NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(index);
+      final int i = selectedPartitionColumns.get(index);
+      final NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(index);
       if (partitionValues.length > i) {
-        String val = partitionValues[i];
+        final String val = partitionValues[i];
         AllocationHelper.allocate(v, recordCount, val.length());
-        byte[] bytes = val.getBytes();
+        final byte[] bytes = val.getBytes();
         for (int j = 0; j < recordCount; j++) {
           v.getMutator().setSafe(j, bytes, 0, bytes.length);
         }
@@ -306,27 +312,24 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
-
-
   private class Mutator implements OutputMutator {
+    private boolean schemaChange = true;
 
-    boolean schemaChange = true;
-
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       // Check if the field exists
       ValueVector v = fieldVectorMap.get(field.key());
-
       if (v == null || v.getClass() != clazz) {
         // Field does not exist add it to the map and the output container
         v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
-          throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+          throw new SchemaChangeException(String.format(
+              "The class that was provided %s does not correspond to the expected vector type of %s.",
+              clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
 
-        ValueVector old = fieldVectorMap.put(field.key(), v);
-        if(old != null){
+        final ValueVector old = fieldVectorMap.put(field.key(), v);
+        if (old != null) {
           old.clear();
           container.remove(old);
         }
@@ -336,12 +339,12 @@ public class ScanBatch implements CloseableRecordBatch {
         schemaChange = true;
       }
 
-      return (T) v;
+      return clazz.cast(v);
     }
 
     @Override
     public void allocate(int recordCount) {
-      for (ValueVector v : fieldVectorMap.values()) {
+      for (final ValueVector v : fieldVectorMap.values()) {
         AllocationHelper.allocate(v, recordCount, 50, 10);
       }
     }
@@ -378,18 +381,17 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     container.clear();
-    for (ValueVector v : partitionVectors) {
+    for (final ValueVector v : partitionVectors) {
       v.clear();
     }
     fieldVectorMap.clear();
-    currentReader.cleanup();
+    currentReader.close();
   }
 
   @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
-
 }

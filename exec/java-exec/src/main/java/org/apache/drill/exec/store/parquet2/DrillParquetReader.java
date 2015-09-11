@@ -68,7 +68,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class DrillParquetReader extends AbstractRecordReader {
-
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
   // same as the DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH in ParquetRecordReader
@@ -155,7 +154,7 @@ public class DrillParquetReader extends AbstractRecordReader {
     }
 
     // loop through projection columns and add any columns that are missing from parquet schema to columnsNotFound list
-    outer: for (SchemaPath columnPath : modifiedColumns) {
+    for (SchemaPath columnPath : modifiedColumns) {
       boolean notFound = true;
       for (SchemaPath schemaPath : schemaPaths) {
         if (schemaPath.contains(columnPath)) {
@@ -191,7 +190,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   @Override
   public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
-      for (ValueVector v : vectorMap.values()) {
+      for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
       }
     } catch (NullPointerException e) {
@@ -216,7 +215,7 @@ public class DrillParquetReader extends AbstractRecordReader {
             projection = schema;
         }
         if(columnsNotFound!=null && columnsNotFound.size()>0) {
-          nullFilledVectors = new ArrayList();
+          nullFilledVectors = new ArrayList<>();
           for(SchemaPath col: columnsNotFound){
             nullFilledVectors.add(
               (NullableIntVector)output.addField(MaterializedField.create(col,
@@ -234,7 +233,7 @@ public class DrillParquetReader extends AbstractRecordReader {
 
       ColumnIOFactory factory = new ColumnIOFactory(false);
       MessageColumnIO columnIO = factory.getColumnIO(projection, schema);
-      Map<ColumnPath, ColumnChunkMetaData> paths = new HashMap();
+      Map<ColumnPath, ColumnChunkMetaData> paths = new HashMap<>();
 
       for (ColumnChunkMetaData md : footer.getBlocks().get(entry.getRowGroupIndex()).getColumns()) {
         paths.put(md.getPath(), md);
@@ -273,7 +272,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   protected void handleAndRaise(String s, Exception e) {
-    cleanup();
+    close();
     String message = "Error in drill parquet reader (complex).\nMessage: " + s +
       "\nParquet Metadata: " + footer;
     throw new DrillRuntimeException(message, e);
@@ -319,7 +318,7 @@ public class DrillParquetReader extends AbstractRecordReader {
     // if we have requested columns that were not found in the file fill their vectors with null
     // (by simply setting the value counts inside of them, as they start null filled)
     if (nullFilledVectors != null) {
-      for (ValueVector vv : nullFilledVectors ) {
+      for (final ValueVector vv : nullFilledVectors) {
         vv.getMutator().setValueCount(count);
       }
     }
@@ -328,7 +327,7 @@ public class DrillParquetReader extends AbstractRecordReader {
 
   private int getPercentFilled() {
     int filled = 0;
-    for (ValueVector v : primitiveVectors) {
+    for (final ValueVector v : primitiveVectors) {
       filled = Math.max(filled, v.getAccessor().getValueCount() * 100 / v.getValueCapacity());
       if (v instanceof VariableWidthVector) {
         filled = Math.max(filled, ((VariableWidthVector) v).getCurrentSizeInBytes() * 100 / ((VariableWidthVector) v).getByteCapacity());
@@ -343,7 +342,7 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (pageReadStore != null) {
         pageReadStore.close();
@@ -354,20 +353,13 @@ public class DrillParquetReader extends AbstractRecordReader {
     }
   }
 
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
+  static public class ProjectedColumnType {
+    public final String projectedColumnName;
+    public final MessageType type;
 
-  static public class ProjectedColumnType{
-    ProjectedColumnType(String projectedColumnName, MessageType type){
-      this.projectedColumnName=projectedColumnName;
-      this.type=type;
+    ProjectedColumnType(String projectedColumnName, MessageType type) {
+      this.projectedColumnName = projectedColumnName;
+      this.type = type;
     }
-
-    public String projectedColumnName;
-    public MessageType type;
-
-
   }
-
 }
