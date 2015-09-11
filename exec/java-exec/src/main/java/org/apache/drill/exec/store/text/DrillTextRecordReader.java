@@ -52,17 +52,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class DrillTextRecordReader extends AbstractRecordReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
 
-  static final String COL_NAME = "columns";
+  private static final String COL_NAME = "columns";
 
   private org.apache.hadoop.mapred.RecordReader<LongWritable, Text> reader;
-  private List<ValueVector> vectors = Lists.newArrayList();
+  private final List<ValueVector> vectors = Lists.newArrayList();
   private byte delimiter;
-  private int targetRecordCount;
   private FieldReference ref = new FieldReference(COL_NAME);
-  private FragmentContext fragmentContext;
-  private OperatorContext operatorContext;
   private RepeatedVarCharVector vector;
   private List<Integer> columnIds = Lists.newArrayList();
   private LongWritable key;
@@ -71,9 +68,8 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   private FileSplit split;
   private long totalRecordsRead;
 
-  public DrillTextRecordReader(FileSplit split, Configuration fsConf, FragmentContext context, char delimiter,
-      List<SchemaPath> columns) {
-    this.fragmentContext = context;
+  public DrillTextRecordReader(FileSplit split, Configuration fsConf, FragmentContext context,
+      char delimiter, List<SchemaPath> columns) {
     this.delimiter = (byte) delimiter;
     this.split = split;
     setColumns(columns);
@@ -95,7 +91,6 @@ public class DrillTextRecordReader extends AbstractRecordReader {
       Collections.sort(columnIds);
       numCols = columnIds.size();
     }
-    targetRecordCount = context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BATCH_SIZE);
 
     TextInputFormat inputFormat = new TextInputFormat();
     JobConf job = new JobConf(fsConf);
@@ -120,14 +115,6 @@ public class DrillTextRecordReader extends AbstractRecordReader {
         return path.equals(COLUMNS);
       }
     }).isPresent();
-  }
-
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
   }
 
   @Override
@@ -155,6 +142,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
     int batchSize = 0;
     try {
       int recordCount = 0;
+      final RepeatedVarCharVector.Mutator mutator = vector.getMutator();
       while (recordCount < Character.MAX_VALUE && batchSize < 200*1000 && reader.next(key, value)) {
         int start;
         int end = -1;
@@ -162,7 +150,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
         // index of the scanned field
         int p = 0;
         int i = 0;
-        vector.getMutator().startNewValue(recordCount);
+        mutator.startNewValue(recordCount);
         // Process each field in this line
         while (end < value.getLength() - 1) {
           if(numCols > 0 && p >= numCols) {
@@ -178,24 +166,24 @@ public class DrillTextRecordReader extends AbstractRecordReader {
             }
           }
           if (numCols > 0 && i++ < columnIds.get(p)) {
-            vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, 0);
+            mutator.addSafe(recordCount, value.getBytes(), start + 1, 0);
             continue;
           }
           p++;
-          vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, end - start - 1);
+          mutator.addSafe(recordCount, value.getBytes(), start + 1, end - start - 1);
           batchSize += end - start;
         }
         recordCount++;
         totalRecordsRead++;
       }
-      for (ValueVector v : vectors) {
+      for (final ValueVector v : vectors) {
         v.getMutator().setValueCount(recordCount);
       }
-      vector.getMutator().setValueCount(recordCount);
-//      logger.debug("text scan batch size {}", batchSize);
+      mutator.setValueCount(recordCount);
+      // logger.debug("text scan batch size {}", batchSize);
       return recordCount;
     } catch(Exception e) {
-      cleanup();
+      close();
       handleAndRaise("Failure while parsing text. Parser was at record: " + (totalRecordsRead + 1), e);
     }
 
@@ -229,7 +217,7 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     try {
       if (reader != null) {
         reader.close();

@@ -27,11 +27,11 @@ import static org.junit.Assert.assertEquals;
 
 import static org.junit.Assert.assertTrue;
 
-public class TestJsonRecordReader extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonRecordReader.class);
+public class TestJsonRecordReader extends BaseTestQuery {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonRecordReader.class);
 
   @Test
-  public void testComplexJsonInput() throws Exception{
+  public void testComplexJsonInput() throws Exception {
 //  test("select z[0]['orange']  from cp.`jsoninput/input2.json` limit 10");
     test("select `integer`, x['y'] as x1, x['y'] as x2, z[0], z[0]['orange'], z[1]['pink']  from cp.`jsoninput/input2.json` limit 10 ");
 //    test("select x from cp.`jsoninput/input2.json`");
@@ -45,14 +45,14 @@ public class TestJsonRecordReader extends BaseTestQuery{
   }
 
   @Test
-  public void testComplexMultipleTimes() throws Exception{
-    for(int i =0 ; i < 5; i++){
+  public void testComplexMultipleTimes() throws Exception {
+    for(int i =0 ; i < 5; i++) {
     test("select * from cp.`join/merge_join.json`");
     }
   }
 
   @Test
-  public void trySimpleQueryWithLimit() throws Exception{
+  public void trySimpleQueryWithLimit() throws Exception {
     test("select * from cp.`limit/test1.json` limit 10");
   }
 
@@ -90,9 +90,7 @@ public class TestJsonRecordReader extends BaseTestQuery{
 
   @Test //DRILL-1832
   public void testJsonWithNulls1() throws Exception {
-
     final String query="select * from cp.`jsoninput/twitter_43.json`";
-
     testBuilder()
             .sqlQuery(query)
             .unOrdered()
@@ -102,9 +100,7 @@ public class TestJsonRecordReader extends BaseTestQuery{
 
   @Test //DRILL-1832
   public void testJsonWithNulls2() throws Exception {
-
     final String query="select SUM(1) as `sum_Number_of_Records_ok` from cp.`/jsoninput/twitter_43.json` having (COUNT(1) > 0)";
-
     testBuilder()
             .sqlQuery(query)
             .unOrdered()

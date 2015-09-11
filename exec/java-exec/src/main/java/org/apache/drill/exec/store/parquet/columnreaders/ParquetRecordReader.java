@@ -67,9 +67,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
 
   // TODO - should probably find a smarter way to set this, currently 1 megabyte
-  private static final int VAR_LEN_FIELD_LENGTH = 1024 * 1024 * 1;
   public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 1;
-  private static final String SEPERATOR = System.getProperty("file.separator");
 
   // used for clearing the last n bits of a byte
   public static final byte[] endBitMasks = {-2, -4, -8, -16, -32, -64, -128};
@@ -79,16 +77,16 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private int bitWidthAllFixedFields;
   private boolean allFieldsFixedLength;
   private int recordsPerBatch;
+  private OperatorContext operatorContext;
 //  private long totalRecords;
 //  private long rowGroupOffset;
 
-  private List<ColumnReader> columnStatuses;
+  private List<ColumnReader<?>> columnStatuses;
   private FileSystem fileSystem;
   private long batchSize;
   Path hadoopPath;
   private VarLenBinaryReader varLengthReader;
   private ParquetMetadata footer;
-  private OperatorContext operatorContext;
   // This is a parallel list to the columns list above, it is used to determine the subset of the project
   // pushdown columns that do not appear in this file
   private boolean[] columnsFound;
@@ -160,14 +158,6 @@ public class ParquetRecordReader extends AbstractRecordReader {
     return batchSize;
   }
 
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
-  }
-
   /**
    * @param type a fixed length type from the parquet library enum
    * @return the length in pageDataByteArray of the type
@@ -205,9 +195,13 @@ public class ParquetRecordReader extends AbstractRecordReader {
     return false;
   }
 
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
   @Override
-  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    this.operatorContext = context;
+  public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
+    this.operatorContext = operatorContext;
     if (!isStarQuery()) {
       columnsFound = new boolean[getColumns().size()];
       nullFilledVectors = new ArrayList<>();
@@ -276,7 +270,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     try {
       ValueVector vector;
       SchemaElement schemaElement;
-      ArrayList<VarLengthColumn> varLengthColumns = new ArrayList<>();
+      final ArrayList<VarLengthColumn> varLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
       boolean fieldFixedLength;
       for (int i = 0; i < columns.size(); ++i) {
@@ -342,7 +336,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   @Override
   public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
-      for (ValueVector v : vectorMap.values()) {
+      for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, recordsPerBatch, 50, 10);
       }
     } catch (NullPointerException e) {
@@ -366,17 +360,17 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   private void resetBatch() {
-    for (ColumnReader column : columnStatuses) {
+    for (final ColumnReader<?> column : columnStatuses) {
       column.valuesReadInCurrentPass = 0;
     }
-    for (VarLengthColumn r : varLengthReader.columns) {
+    for (final VarLengthColumn<?> r : varLengthReader.columns) {
       r.valuesReadInCurrentPass = 0;
     }
   }
 
  public void readAllFixedFields(long recordsToRead) throws IOException {
 
-   for (ColumnReader crs : columnStatuses) {
+   for (ColumnReader<?> crs : columnStatuses) {
      crs.processPages(recordsToRead);
    }
  }
@@ -386,7 +380,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     resetBatch();
     long recordsToRead = 0;
     try {
-      ColumnReader firstColumnStatus;
+      ColumnReader<?> firstColumnStatus;
       if (columnStatuses.size() > 0) {
         firstColumnStatus = columnStatuses.iterator().next();
       }
@@ -404,7 +398,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
           return 0;
         }
         recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH, footer.getBlocks().get(rowGroupIndex).getRowCount() - mockRecordsRead);
-        for (ValueVector vv : nullFilledVectors ) {
+        for (final ValueVector vv : nullFilledVectors ) {
           vv.getMutator().setValueCount( (int) recordsToRead);
         }
         mockRecordsRead += recordsToRead;
@@ -429,7 +423,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       // if we have requested columns that were not found in the file fill their vectors with null
       // (by simply setting the value counts inside of them, as they start null filled)
       if (nullFilledVectors != null) {
-        for (ValueVector vv : nullFilledVectors ) {
+        for (final ValueVector vv : nullFilledVectors ) {
           vv.getMutator().setValueCount(firstColumnStatus.getRecordsReadInCurrentPass());
         }
       }
@@ -451,13 +445,13 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     logger.debug("Read {} records out of row group({}) in file '{}'", totalRecordsRead, rowGroupIndex, hadoopPath.toUri().getPath());
     // enable this for debugging when it is know that a whole file will be read
     // limit kills upstream operators once it has enough records, so this assert will fail
 //    assert totalRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount();
     if (columnStatuses != null) {
-      for (ColumnReader column : columnStatuses) {
+      for (final ColumnReader column : columnStatuses) {
         column.clear();
       }
       columnStatuses.clear();
@@ -467,7 +461,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     codecFactory.close();
 
     if (varLengthReader != null) {
-      for (VarLengthColumn r : varLengthReader.columns) {
+      for (final VarLengthColumn r : varLengthReader.columns) {
         r.clear();
       }
       varLengthReader.columns.clear();

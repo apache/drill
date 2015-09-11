@@ -52,7 +52,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
 public class MongoRecordReader extends AbstractRecordReader {
-  static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
 
   private MongoCollection<Document> collection;
   private MongoCursor<Document> cursor;
@@ -187,7 +187,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
   }
 
 

@@ -386,7 +386,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     }
   }
 
-
   private void validateContains(MessageType schema, PageReadStore pages, String[] path, int values, BytesInput bytes)
       throws IOException {
     PageReader pageReader = pages.getPageReader(schema.getColumnDescription(path));
@@ -394,7 +393,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     assertEquals(values, page.getValueCount());
     assertArrayEquals(bytes.toByteArray(), page.getBytes().toByteArray());
   }
-
 
   @Test
   public void testMultipleRowGroups() throws Exception {
@@ -544,7 +542,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
         "unused, no file is generated", 1, props, QueryType.LOGICAL);
 
-    fields = new HashMap();
+    fields = new HashMap<>();
     props = new ParquetTestProperties(1, 100000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHSupplierFields(props);
     readEntries = "\"/tmp/tpc-h/supplier\"";
@@ -602,11 +600,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     testParquetFullEngineEventBased(true, false, "/parquet/parquet_selective_column_read.json", null, "/tmp/test.parquet", 1, props, QueryType.PHYSICAL);
   }
 
-  public static void main(String[] args) throws Exception {
-    // TODO - not sure why this has a main method, test below can be run directly
-    //new ParquetRecordReaderTest().testPerformance();
-  }
-
   @Test
   @Ignore
   public void testPerformance(@Injectable final DrillbitContext bitContext,
@@ -656,7 +649,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
         totalRowCount += rowCount;
       }
       System.out.println(String.format("Time completed: %s. ", watch.elapsed(TimeUnit.MILLISECONDS)));
-      rr.cleanup();
+      rr.close();
     }
 
     allocator.close();

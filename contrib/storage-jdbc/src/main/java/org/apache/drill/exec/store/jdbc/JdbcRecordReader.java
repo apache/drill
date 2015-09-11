@@ -229,7 +229,7 @@ class JdbcRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void cleanup() {
+  public void close() {
     AutoCloseables.close(resultSet, logger);
     AutoCloseables.close(statement, logger);
     AutoCloseables.close(connection, logger);
