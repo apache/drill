@@ -20,7 +20,7 @@ example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
 
 ## Installing and Starting Drill
 
-### Step 1: Download Apache Drill onto your local machine
+### Download Apache Drill onto your local machine
 
 To experiment with Drill locally, follow the installation instructions in [Drill in 10 Minutes]({{site.baseurl}}/docs/drill-in-10-minutes/).
 

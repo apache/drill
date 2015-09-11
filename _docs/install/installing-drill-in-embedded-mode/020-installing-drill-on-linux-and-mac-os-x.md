@@ -14,10 +14,8 @@ Complete the following steps to install Drill:
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
-4. Extract the contents of the Drill tar.gz file. Use sudo only if necessary:  
+4. Extract the contents of the Drill `.tar.gz` file. Use sudo only if necessary:  
 
-        tar -xvzf apache-drill-1.1.0.tar.gz  
+    `tar -xvzf <.tar.gz file name>`  
 
-The extraction process creates the installation directory named apache-drill-1.1.0 containing the Drill software.
-
-At this point, you can [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).
+The extraction process creates the installation directory containing the Drill software. You can now [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).

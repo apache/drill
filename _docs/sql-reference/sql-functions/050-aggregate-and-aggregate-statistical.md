@@ -10,18 +10,18 @@ Drill queries:
 
 **Function** | **Argument Type** | **Return Type**  
   --------   |   -------------   |   -----------
-AVG(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALYEAR or INTERVALDAY| DECIMAL for any integer-type argument, DOUBLE for a floating-point argument, otherwise the same as the argument data type
+AVG(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL| DECIMAL for any integer-type argument, DOUBLE for a floating-point argument, otherwise the same as the argument data type
 COUNT(*)| _-_| BIGINT
 COUNT([DISTINCT] expression)| any| BIGINT
 MAX(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
 MIN(expression)| BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP| same as argument type
-SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVALDAY, or INTERVALYEAR| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
+SUM(expression)| SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL| BIGINT for SMALLINT or INTEGER arguments, DECIMAL for BIGINT arguments, DOUBLE for floating-point arguments, otherwise the same as the argument data type
 
 \* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
 
 AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 
-These examples of aggregate functions use the `cp` storage plugin to access a JSON file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.
+These examples of aggregate functions use the `cp` storage plugin to access a the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.
 
 ## AVG 
 
@@ -110,8 +110,8 @@ Returns the number of rows that match the given criteria.
 
 ### COUNT Syntax
 
-    SELECT COUNT([DISTINCT | ALL] column) FROM . . .
-    SELECT COUNT(*) FROM . . .
+`SELECT COUNT([DISTINCT | ALL] column) FROM . . .`  
+`SELECT COUNT(*) FROM . . .`  
 
 * column  
   Returns the number of values of the specified column.  
@@ -203,7 +203,7 @@ Returns the total of a numeric column.
 
 ### SUM syntax
 
-SUM(column)
+`SUM(column)`
 
 ### Examples
 

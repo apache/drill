@@ -9,7 +9,7 @@ restart any of the Drillbits when you add or update a storage plugin configurati
 
 ## Using the Drill Web UI
 
-Use the Drill Web UI to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web UI. To open the Drill Web UI, launch a web browser, and go to: `http://<IP address or host name>:8047` of any Drillbit in the cluster. Select the Storage tab to view, update, or add a new storage plugin configuration. 
+Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/), you can use the Drill Web UI to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web UI. In Drill 1.2 and later, to open the Drill Web UI, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
 
 To create a name and new configuration:
 
@@ -144,7 +144,7 @@ For example, using uppercase letters in the query after defining the storage plu
 
 ## Storage Plugin REST API
 
-If you need to add a storage plugin configuration to Drill and do not want to use a web browser, Drill provides a REST API that you can use to create a storage plugin configuration. Use an HTTP POST and pass two properties:
+If you need to add a storage plugin configuration to Drill and do not want to use a web browser, Drill provides a REST API that you can use to create a storage plugin configuration. Use a POST and pass two properties:
 
 * name  
   The storage plugin configuration name. 
@@ -154,7 +154,7 @@ If you need to add a storage plugin configuration to Drill and do not want to us
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
-    curl -X POST -/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
+    curl -X POST -/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
 
 ## Bootstrapping a Storage Plugin
 

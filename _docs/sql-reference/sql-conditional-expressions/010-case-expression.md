@@ -25,7 +25,9 @@ Drill processes the CASE expression as follows:
 
 ## Example
 
-The Drill installation includes sample files in the Drill classpath. You use the classpath (cp) storage plugin point to these files. One sample file, `employee.json`, contains some fictitious employee data that you query in this example. The employee having an ID of 99 is Elizabeth Horne. The employee having a ID of 100 is Mary Hunt. The example CASE statement gets the first name of the employee 99 and the last name of employee 100. Any other employee ID does not meet the condition; the ID is too high.
+The Drill installation includes [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) in the Drill classpath that this example queries. You use the classpath (cp) storage plugin point to this file. 
+
+The employee having an ID of 99 is Elizabeth Horne. The employee having a ID of 100 is Mary Hunt. The example CASE statement gets the first name of the employee 99 and the last name of employee 100. Any other employee ID does not meet the condition; the ID is too high.
 
     USE cp;  
     SELECT employee_id, 

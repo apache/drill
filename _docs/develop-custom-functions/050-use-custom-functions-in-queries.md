@@ -8,7 +8,7 @@ locates the function for the request, Drill processes the query and applies
 the function during processing.
 
 Your Drill installation includes sample files in the Drill classpath. One
-sample file, `employee.json`, contains some fictitious employee data that you
+sample file, [`employee.json`]({{site.baseurl}}/docs/querying-json-files/), contains some fictitious employee data that you
 can query with a custom function.
 
 ## Simple Function Example

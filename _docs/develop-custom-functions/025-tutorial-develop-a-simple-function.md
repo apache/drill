@@ -170,8 +170,8 @@ Even to a seasoned Java developer, the eval() method might look a bit strange be
 ## Basic Coding Rules
 To leverage Java’s just-in-time (JIT) compiler for maximum speed, you need to adhere to some basic rules.
 
-* Do not use imports. Instead, use the fully qualified class name as required by the Google Guava API packaged in Apache Drill and as shown in ["Step 3: Declare input parameters"]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/#step-3-declare-input-parameters).  
-* Manipulate the ValueHolders classes, for example VarCharHolder and IntHolder, as structs by calling helper methods, such as getStringFromVarCharHolder and toStringFromUTF8 as shown in ["Step 5: Implement the eval() function"]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/#step-5-implement-the-eval-function).  
+* Do not use imports. Instead, use the fully qualified class name as required by the Google Guava API packaged in Apache Drill and as shown in ["Step 3: Declare input parameters"]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/#step-3:-declare-input-parameters).  
+* Manipulate the ValueHolders classes, for example VarCharHolder and IntHolder, as structs by calling helper methods, such as getStringFromVarCharHolder and toStringFromUTF8 as shown in ["Step 5: Implement the eval() function"]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/#step-5:-implement-the-eval()-method).  
 * Do not call methods such as toString because this causes serious problems.
 
 
@@ -221,7 +221,7 @@ Add a `drill-module.conf` file in the resources folder of your project. The pres
 
 ## Test the New Function
 
-Restart drill and run the following query:
+Restart drill and run the following query on the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill:
 
     SELECT MASK(first_name, '*' , 3) FIRST , MASK(last_name, '#', 7) LAST  FROM cp.`employee.json` LIMIT 5;
     +----------+------------+

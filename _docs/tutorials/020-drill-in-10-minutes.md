@@ -5,7 +5,7 @@ description: Get started with Drill in 10 minutes or less.
 ---
 ## Objective
 
-Use Apache Drill to query sample data in 10 minutes. For simplicity, you’ll
+Use Apache Drill to query sample data in 10 minutes. For simplicity, you
 run Drill in _embedded_ mode rather than _distributed_ mode to try out Drill
 without having to perform any setup tasks.
 
@@ -52,9 +52,9 @@ Complete the following steps to install Drill:
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
-4. Extract the contents of the Drill tar.gz file. Use sudo if necessary:  
+4. Extract the contents of the Drill .tar.gz file. Use sudo if necessary:  
 
-    `tar -xvzf apache-drill-1.1.0.tar.gz`  
+    `tar -xvzf <.tar.gz file name>`  
 
 The extraction process creates an installation directory containing the Drill software.
 
@@ -65,13 +65,13 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
 1. Navigate to the Drill installation directory. For example:  
 
-    `cd apache-drill-1.1.0`  
+    `cd apache-drill-<version>`  
 
 2. Issue the following command to launch Drill in embedded mode:
 
     `bin/drill-embedded`  
 
-   The message of the day followed by the `0: jdbc:drill:zk=local>`  prompt appears.  
+   The message of the day followed by the [`0: jdbc:drill:zk=local>`  prompt]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/#about-the-drill-prompt) appears.  
 
    At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data) to Drill.
 
@@ -80,27 +80,25 @@ Start Drill in embedded mode using the `drill-embedded` command:
 You can install Drill on Windows 7 or 8. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
 1. Click the following link to download the latest version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz](http://getdrill.org/drill/download/apache-drill-1.1.0.tar.gz)  
-2. Move the `apache-drill-1.1.0.tar.gz` file to a directory where you want to install Drill.  
-3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-1.1.0.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-1.1.0 containing the Drill software. For example:  
-   ![drill install dir]({{ site.baseurl }}/docs/img/drill-directory.png)
+2. Move the `apache-drill-<version>.tar.gz` file to a directory where you want to install Drill.  
+3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-<version>.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-<version> containing the Drill software. 
 
 At this point, you can start Drill.  
 
 ## Start Drill on Windows
 Start Drill by running the sqlline.bat file and typing a connection string, as shown in the following procedure. The `zk=local` in the connection string means the local node is the ZooKeeper node:
 
-Start the Drill shell using the **sqlline command**. The `zk=local` means the local node is the ZooKeeper node. Complete the following steps to launch the Drill shell:
+Start the Drill shell using the **sqlline command**. Complete the following steps to launch the Drill shell:
 
 1. Open Command Prompt.  
-2. Open the apache-drill-1.1.0 folder. For example:  
-   ``cd apache-drill-1.1.0``
+2. Open the apache-drill-<version> folder. 
 3. Go to the bin directory. For example:  
    ``cd bin``
 4. Type the following command on the command line:
    ``sqlline.bat -u "jdbc:drill:zk=local"``
    ![drill install dir]({{ site.baseurl }}/docs/img/sqlline1.png)
 
-At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data).
+The `zk=local` means the local node is the ZooKeeper node. At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data).
 
 ## Stopping Drill
 
@@ -110,19 +108,17 @@ Issue the following command when you want to exit the Drill shell:
 
 ## Query Sample Data
 
-Your Drill installation includes a `sample-data` directory with JSON and
+At the root of the Drill installation, a `sample-data` directory includes JSON and
 Parquet files that you can query. The default `dfs` storage plugin configuration represents the local file system on your machine when you install
 Drill in embedded mode. For more information about storage plugin
 configuration, refer to [Storage Plugin Registration]({{ site.baseurl }}/docs/connect-a-data-source-introduction).
 
-Use SQL syntax to query the sample `JSON` and `Parquet` files in the `sample-data` directory on your local file system.
+Use SQL to query the sample `JSON` and `Parquet` files in the `sample-data` directory on your local file system.
 
 ### Querying a JSON File
 
-A sample JSON file, `employee.json`, contains fictitious employee data.
-
-To view the data in the `employee.json` file, submit the following SQL query
-to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/) to point to the file.
+A sample JSON file, [`employee.json`]({{site.baseurl}}/docs/querying-json-files/), contains fictitious employee data. To view the data in the `employee.json` file, submit the following SQL query
+to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/) configuration to point to the file.
     
 `0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;`
 
@@ -148,10 +144,7 @@ If you followed the Apache Drill in 10 Minutes instructions to install Drill
 in embedded mode, the path to the parquet file varies between operating
 systems.
 
-{% include startnote.html %}Substitute your installation path and the Drill version in the angle-bracketed locations when you enter the query.{% include endnote.html %} 
-
-To view the data in the `region.parquet` file, issue the query appropriate for
-your operating system:
+To view the data in the `region.parquet` file, use the actual path to your Drill installation to construct this query:
 
 ``SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/region.parquet`;``
 
@@ -170,20 +163,14 @@ The query returns the following results:
 
 #### Nation File
 
-If you followed the Apache Drill in 10 Minutes instructions to install Drill
-in embedded mode, the path to the parquet file varies between operating
-systems.
-
-{% include startnote.html %}Substitute your installation path and the Drill version in the angle-bracketed locations when you enter the query{% include endnote.html %}
-
-To view the data in the `nation.parquet` file, issue the query appropriate for
-your operating system:
+The path to the parquet file varies between operating
+systems. Use the actual path to your Drill installation to construct this query:
 
 ``SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/nation.parquet`;``
 
 The query returns the following results:
 
-    SELECT * FROM dfs.`Users/khahn/drill/apache-drill-1.1.0-SNAPSHOT/sample-data/nation.parquet`;
+    SELECT * FROM dfs.`Users/drilluser/apache-drill-1.1.0/sample-data/nation.parquet`;
     +--------------+-----------------+--------------+-----------------------+
     | N_NATIONKEY  |     N_NAME      | N_REGIONKEY  |       N_COMMENT       |
     +--------------+-----------------+--------------+-----------------------+
@@ -217,13 +204,7 @@ The query returns the following results:
 
 ## Summary
 
-Now, you have been introduced to Apache Drill, which supports nested data, schema-less execution, and decentralized metadata. To summarize, you have completed the following tasks:
-
-  * Downloaded and installed Apache Drill.
-  * Started Drill in embedded mode.
-  * Queried the sample JSON file, `employee.json`, to view its data.
-  * Queried the sample `region.parquet` file to view its data.
-  * Queried the sample `nation.parquet` file to view its data.
+Apache Drill supports nested data, schema-less execution, and decentralized metadata. At this point, you know how to create a simple query on a JSON or Parquet file.
 
 ## Next Steps
 
@@ -237,5 +218,4 @@ Now that you have an idea about what Drill can do, you might want to:
 
 ## More Information
 
-For more information about Apache Drill, explore the  [Apache Drill
-web site](http://drill.apache.org).
+For more information about Apache Drill, explore the [Apache Drill web site](http://drill.apache.org).

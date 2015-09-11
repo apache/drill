@@ -2,7 +2,7 @@
 title: "Monitoring and Canceling Queries in the Drill Web UI"
 parent: "Query Data"
 ---
-You can monitor and cancel queries from the Drill Web UI. To access the Drill
+You can monitor and cancel queries from the Drill Web UI if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to do so. To access the Drill
 Web UI, the Drillbit process must be running on the Drill node that you use to
 access the Drill Web UI.
 

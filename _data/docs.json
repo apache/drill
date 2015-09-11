@@ -1,22 +1,5 @@
 {
     "by_title": {
-        "2014 Q1 Drill Report": {
-            "breadcrumbs": [
-                {
-                    "title": "Progress Reports", 
-                    "url": "/docs/progress-reports/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Project Bylaws", 
-            "next_url": "/docs/project-bylaws/", 
-            "parent": "Progress Reports", 
-            "previous_title": "Progress Reports", 
-            "previous_url": "/docs/progress-reports/", 
-            "relative_path": "_docs/progress-reports/001-2014-q1.md", 
-            "title": "2014 Q1 Drill Report", 
-            "url": "/docs/2014-q1-drill-report/"
-        }, 
         "ALTER SESSION": {
             "breadcrumbs": [
                 {
@@ -521,53 +504,6 @@
             "title": "Architecture Introduction", 
             "url": "/docs/architecture-introduction/"
         }, 
-        "Archived Pages": {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "What is Apache Drill", 
-                    "next_url": "/docs/what-is-apache-drill/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "Archived Pages", 
-                    "previous_url": "/docs/archived-pages/", 
-                    "relative_path": "_docs/archived-pages/010-how-to-run-the-drill-demo.md", 
-                    "title": "How to Run the Drill Demo", 
-                    "url": "/docs/how-to-run-the-drill-demo/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "How to Run the Drill Demo", 
-                    "previous_url": "/docs/how-to-run-the-drill-demo/", 
-                    "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
-                    "title": "What is Apache Drill", 
-                    "url": "/docs/what-is-apache-drill/"
-                }
-            ], 
-            "next_title": "How to Run the Drill Demo", 
-            "next_url": "/docs/how-to-run-the-drill-demo/", 
-            "parent": "", 
-            "previous_title": "Wikipedia Edit History", 
-            "previous_url": "/docs/wikipedia-edit-history/", 
-            "relative_path": "_docs/150-archived-pages.md", 
-            "title": "Archived Pages", 
-            "url": "/docs/archived-pages/"
-        }, 
         "Browsing Data and Defining Views": {
             "breadcrumbs": [
                 {
@@ -643,8 +579,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "DROP VIEW", 
-            "next_url": "/docs/drop-view/", 
+            "next_title": "DESCRIBE", 
+            "next_url": "/docs/describe/", 
             "parent": "SQL Commands", 
             "previous_title": "PARTITION BY Clause", 
             "previous_url": "/docs/partition-by-clause/", 
@@ -786,8 +722,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring User Impersonation with Hive Authorization", 
-            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+            "previous_title": "Configuring Web UI and REST API Security", 
+            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -973,14 +909,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring Web UI and REST API Security", 
+                    "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
                     "title": "Configuring User Impersonation with Hive Authorization", 
                     "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
+                    "title": "Configuring Web UI and REST API Security", 
+                    "url": "/docs/configuring-web-ui-and-rest-api-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1078,8 +1031,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "previous_title": "Configuring Web UI and REST API Security", 
+                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1122,8 +1075,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting Drill in Distributed Mode", 
-            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "previous_title": "Starting the Web UI", 
+            "previous_url": "/docs/starting-the-web-ui/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -1474,14 +1427,31 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuration Options", 
-            "next_url": "/docs/configuration-options/", 
+            "next_title": "Configuring Web UI and REST API Security", 
+            "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Authentication", 
             "previous_url": "/docs/configuring-user-authentication/", 
             "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
             "title": "Configuring User Impersonation with Hive Authorization", 
             "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
+        }, 
+        "Configuring Web UI and REST API Security": {
+            "breadcrumbs": [
+                {
+                    "title": "Configure Drill", 
+                    "url": "/docs/configure-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configuration Options", 
+            "next_url": "/docs/configuration-options/", 
+            "parent": "Configure Drill", 
+            "previous_title": "Configuring User Impersonation with Hive Authorization", 
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+            "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
+            "title": "Configuring Web UI and REST API Security", 
+            "url": "/docs/configuring-web-ui-and-rest-api-security/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
@@ -1992,14 +1962,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "EXPLAIN", 
-            "next_url": "/docs/explain/", 
+            "next_title": "DROP TABLE", 
+            "next_url": "/docs/drop-table/", 
             "parent": "SQL Commands", 
-            "previous_title": "DROP VIEW", 
-            "previous_url": "/docs/drop-view/", 
-            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
+            "previous_title": "CREATE VIEW", 
+            "previous_url": "/docs/create-view/", 
+            "relative_path": "_docs/sql-reference/sql-commands/053-describe.md", 
             "title": "DESCRIBE", 
             "url": "/docs/describe/"
+        }, 
+        "DROP TABLE": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "DROP VIEW", 
+            "next_url": "/docs/drop-view/", 
+            "parent": "SQL Commands", 
+            "previous_title": "DESCRIBE", 
+            "previous_url": "/docs/describe/", 
+            "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
+            "title": "DROP TABLE", 
+            "url": "/docs/drop-table/"
         }, 
         "DROP VIEW": {
             "breadcrumbs": [
@@ -2013,12 +2004,12 @@
                 }
             ], 
             "children": [], 
-            "next_title": "DESCRIBE", 
-            "next_url": "/docs/describe/", 
+            "next_title": "EXPLAIN", 
+            "next_url": "/docs/explain/", 
             "parent": "SQL Commands", 
-            "previous_title": "CREATE VIEW", 
-            "previous_url": "/docs/create-view/", 
-            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
+            "previous_title": "DROP TABLE", 
+            "previous_url": "/docs/drop-table/", 
+            "relative_path": "_docs/sql-reference/sql-commands/056-drop-view.md", 
             "title": "DROP VIEW", 
             "url": "/docs/drop-view/"
         }, 
@@ -3108,8 +3099,8 @@
             "next_title": "SELECT", 
             "next_url": "/docs/select/", 
             "parent": "SQL Commands", 
-            "previous_title": "DESCRIBE", 
-            "previous_url": "/docs/describe/", 
+            "previous_title": "DROP VIEW", 
+            "previous_url": "/docs/drop-view/", 
             "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
             "title": "EXPLAIN", 
             "url": "/docs/explain/"
@@ -3485,23 +3476,6 @@
             "title": "Hive-to-Drill Data Type Mapping", 
             "url": "/docs/hive-to-drill-data-type-mapping/"
         }, 
-        "How to Run the Drill Demo": {
-            "breadcrumbs": [
-                {
-                    "title": "Archived Pages", 
-                    "url": "/docs/archived-pages/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "What is Apache Drill", 
-            "next_url": "/docs/what-is-apache-drill/", 
-            "parent": "Archived Pages", 
-            "previous_title": "Archived Pages", 
-            "previous_url": "/docs/archived-pages/", 
-            "relative_path": "_docs/archived-pages/010-how-to-run-the-drill-demo.md", 
-            "title": "How to Run the Drill Demo", 
-            "url": "/docs/how-to-run-the-drill-demo/"
-        }, 
         "Identifying Performance Issues": {
             "breadcrumbs": [
                 {
@@ -3767,8 +3741,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configure Drill", 
-                            "next_url": "/docs/configure-drill/", 
+                            "next_title": "Starting the Web UI", 
+                            "next_url": "/docs/starting-the-web-ui/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -3785,6 +3759,23 @@
                     "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
                     "title": "Installing Drill in Distributed Mode", 
                     "url": "/docs/installing-drill-in-distributed-mode/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Starting Drill in Distributed Mode", 
+                    "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+                    "relative_path": "_docs/install/060-starting-the-web-ui.md", 
+                    "title": "Starting the Web UI", 
+                    "url": "/docs/starting-the-web-ui/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -3875,8 +3866,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configure Drill", 
-                    "next_url": "/docs/configure-drill/", 
+                    "next_title": "Starting the Web UI", 
+                    "next_url": "/docs/starting-the-web-ui/", 
                     "parent": "Installing Drill in Distributed Mode", 
                     "previous_title": "Installing Drill on the Cluster", 
                     "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -6233,44 +6224,14 @@
             "title": "Ports Used by Drill", 
             "url": "/docs/ports-used-by-drill/"
         }, 
-        "Progress Reports": {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Progress Reports", 
-                            "url": "/docs/progress-reports/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Project Bylaws", 
-                    "next_url": "/docs/project-bylaws/", 
-                    "parent": "Progress Reports", 
-                    "previous_title": "Progress Reports", 
-                    "previous_url": "/docs/progress-reports/", 
-                    "relative_path": "_docs/progress-reports/001-2014-q1.md", 
-                    "title": "2014 Q1 Drill Report", 
-                    "url": "/docs/2014-q1-drill-report/"
-                }
-            ], 
-            "next_title": "2014 Q1 Drill Report", 
-            "next_url": "/docs/2014-q1-drill-report/", 
-            "parent": "", 
-            "previous_title": "What is Apache Drill", 
-            "previous_url": "/docs/what-is-apache-drill/", 
-            "relative_path": "_docs/160-progress-reports.md", 
-            "title": "Progress Reports", 
-            "url": "/docs/progress-reports/"
-        }, 
         "Project Bylaws": {
             "breadcrumbs": [], 
             "children": [], 
             "next_title": "", 
             "next_url": "", 
             "parent": "", 
-            "previous_title": "2014 Q1 Drill Report", 
-            "previous_url": "/docs/2014-q1-drill-report/", 
+            "previous_title": "Wikipedia Edit History", 
+            "previous_url": "/docs/wikipedia-edit-history/", 
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"
@@ -7514,8 +7475,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Window Functions Examples", 
-            "next_url": "/docs/sql-window-functions-examples/", 
+            "next_title": "Value Window Functions", 
+            "next_url": "/docs/value-window-functions/", 
             "parent": "SQL Window Functions", 
             "previous_title": "Aggregate Window Functions", 
             "previous_url": "/docs/aggregate-window-functions/", 
@@ -7970,8 +7931,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DROP VIEW", 
-                    "next_url": "/docs/drop-view/", 
+                    "next_title": "DESCRIBE", 
+                    "next_url": "/docs/describe/", 
                     "parent": "SQL Commands", 
                     "previous_title": "PARTITION BY Clause", 
                     "previous_url": "/docs/partition-by-clause/", 
@@ -7991,14 +7952,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "DESCRIBE", 
-                    "next_url": "/docs/describe/", 
+                    "next_title": "DROP TABLE", 
+                    "next_url": "/docs/drop-table/", 
                     "parent": "SQL Commands", 
                     "previous_title": "CREATE VIEW", 
                     "previous_url": "/docs/create-view/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
-                    "title": "DROP VIEW", 
-                    "url": "/docs/drop-view/"
+                    "relative_path": "_docs/sql-reference/sql-commands/053-describe.md", 
+                    "title": "DESCRIBE", 
+                    "url": "/docs/describe/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "DROP VIEW", 
+                    "next_url": "/docs/drop-view/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "DESCRIBE", 
+                    "previous_url": "/docs/describe/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
+                    "title": "DROP TABLE", 
+                    "url": "/docs/drop-table/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8015,11 +7997,11 @@
                     "next_title": "EXPLAIN", 
                     "next_url": "/docs/explain/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "DROP VIEW", 
-                    "previous_url": "/docs/drop-view/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
-                    "title": "DESCRIBE", 
-                    "url": "/docs/describe/"
+                    "previous_title": "DROP TABLE", 
+                    "previous_url": "/docs/drop-table/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/056-drop-view.md", 
+                    "title": "DROP VIEW", 
+                    "url": "/docs/drop-view/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8036,8 +8018,8 @@
                     "next_title": "SELECT", 
                     "next_url": "/docs/select/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "DESCRIBE", 
-                    "previous_url": "/docs/describe/", 
+                    "previous_title": "DROP VIEW", 
+                    "previous_url": "/docs/drop-view/", 
                     "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
                     "title": "EXPLAIN", 
                     "url": "/docs/explain/"
@@ -8950,8 +8932,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions Examples", 
-                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "next_title": "Value Window Functions", 
+                            "next_url": "/docs/value-window-functions/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "Aggregate Window Functions", 
                             "previous_url": "/docs/aggregate-window-functions/", 
@@ -8971,11 +8953,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "Ranking Window Functions", 
                             "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/035-value-window-functions.md", 
+                            "title": "Value Window Functions", 
+                            "url": "/docs/value-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Value Window Functions", 
+                            "previous_url": "/docs/value-window-functions/", 
                             "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
                             "title": "SQL Window Functions Examples", 
                             "url": "/docs/sql-window-functions-examples/"
@@ -9255,8 +9258,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "DESCRIBE", 
+                            "next_url": "/docs/describe/", 
                             "parent": "SQL Commands", 
                             "previous_title": "PARTITION BY Clause", 
                             "previous_url": "/docs/partition-by-clause/", 
@@ -9276,14 +9279,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DESCRIBE", 
-                            "next_url": "/docs/describe/", 
+                            "next_title": "DROP TABLE", 
+                            "next_url": "/docs/drop-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW", 
                             "previous_url": "/docs/create-view/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
-                            "title": "DROP VIEW", 
-                            "url": "/docs/drop-view/"
+                            "relative_path": "_docs/sql-reference/sql-commands/053-describe.md", 
+                            "title": "DESCRIBE", 
+                            "url": "/docs/describe/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "DESCRIBE", 
+                            "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
+                            "title": "DROP TABLE", 
+                            "url": "/docs/drop-table/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9300,11 +9324,11 @@
                             "next_title": "EXPLAIN", 
                             "next_url": "/docs/explain/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DROP VIEW", 
-                            "previous_url": "/docs/drop-view/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
-                            "title": "DESCRIBE", 
-                            "url": "/docs/describe/"
+                            "previous_title": "DROP TABLE", 
+                            "previous_url": "/docs/drop-table/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/056-drop-view.md", 
+                            "title": "DROP VIEW", 
+                            "url": "/docs/drop-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9321,8 +9345,8 @@
                             "next_title": "SELECT", 
                             "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DESCRIBE", 
-                            "previous_url": "/docs/describe/", 
+                            "previous_title": "DROP VIEW", 
+                            "previous_url": "/docs/drop-view/", 
                             "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
                             "title": "EXPLAIN", 
                             "url": "/docs/explain/"
@@ -9814,8 +9838,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Window Functions Examples", 
-                    "next_url": "/docs/sql-window-functions-examples/", 
+                    "next_title": "Value Window Functions", 
+                    "next_url": "/docs/value-window-functions/", 
                     "parent": "SQL Window Functions", 
                     "previous_title": "Aggregate Window Functions", 
                     "previous_url": "/docs/aggregate-window-functions/", 
@@ -9835,11 +9859,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Nested Data Functions", 
-                    "next_url": "/docs/nested-data-functions/", 
+                    "next_title": "SQL Window Functions Examples", 
+                    "next_url": "/docs/sql-window-functions-examples/", 
                     "parent": "SQL Window Functions", 
                     "previous_title": "Ranking Window Functions", 
                     "previous_url": "/docs/ranking-window-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-window-functions/035-value-window-functions.md", 
+                    "title": "Value Window Functions", 
+                    "url": "/docs/value-window-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Window Functions", 
+                            "url": "/docs/sql-window-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Nested Data Functions", 
+                    "next_url": "/docs/nested-data-functions/", 
+                    "parent": "SQL Window Functions", 
+                    "previous_title": "Value Window Functions", 
+                    "previous_url": "/docs/value-window-functions/", 
                     "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
                     "title": "SQL Window Functions Examples", 
                     "url": "/docs/sql-window-functions-examples/"
@@ -9869,8 +9914,8 @@
             "next_title": "Nested Data Functions", 
             "next_url": "/docs/nested-data-functions/", 
             "parent": "SQL Window Functions", 
-            "previous_title": "Ranking Window Functions", 
-            "previous_url": "/docs/ranking-window-functions/", 
+            "previous_title": "Value Window Functions", 
+            "previous_url": "/docs/value-window-functions/", 
             "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
             "title": "SQL Window Functions Examples", 
             "url": "/docs/sql-window-functions-examples/"
@@ -9962,8 +10007,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Archived Pages", 
-                    "next_url": "/docs/archived-pages/", 
+                    "next_title": "Project Bylaws", 
+                    "next_url": "/docs/project-bylaws/", 
                     "parent": "Sample Datasets", 
                     "previous_title": "Enron Emails", 
                     "previous_url": "/docs/enron-emails/", 
@@ -10098,8 +10143,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configure Drill", 
-            "next_url": "/docs/configure-drill/", 
+            "next_title": "Starting the Web UI", 
+            "next_url": "/docs/starting-the-web-ui/", 
             "parent": "Installing Drill in Distributed Mode", 
             "previous_title": "Installing Drill on the Cluster", 
             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -10148,6 +10193,23 @@
             "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
             "title": "Starting Drill on Windows", 
             "url": "/docs/starting-drill-on-windows/"
+        }, 
+        "Starting the Web UI": {
+            "breadcrumbs": [
+                {
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Configure Drill", 
+            "next_url": "/docs/configure-drill/", 
+            "parent": "Install Drill", 
+            "previous_title": "Starting Drill in Distributed Mode", 
+            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "relative_path": "_docs/install/060-starting-the-web-ui.md", 
+            "title": "Starting the Web UI", 
+            "url": "/docs/starting-the-web-ui/"
         }, 
         "Storage Plugin Configuration": {
             "breadcrumbs": [
@@ -11290,6 +11352,27 @@
             "title": "Value Vectors", 
             "url": "/docs/value-vectors/"
         }, 
+        "Value Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Window Functions", 
+                    "url": "/docs/sql-window-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Window Functions Examples", 
+            "next_url": "/docs/sql-window-functions-examples/", 
+            "parent": "SQL Window Functions", 
+            "previous_title": "Ranking Window Functions", 
+            "previous_url": "/docs/ranking-window-functions/", 
+            "relative_path": "_docs/sql-reference/sql-window-functions/035-value-window-functions.md", 
+            "title": "Value Window Functions", 
+            "url": "/docs/value-window-functions/"
+        }, 
         "WHERE Clause": {
             "breadcrumbs": [
                 {
@@ -11332,23 +11415,6 @@
             "title": "WITH Clause", 
             "url": "/docs/with-clause/"
         }, 
-        "What is Apache Drill": {
-            "breadcrumbs": [
-                {
-                    "title": "Archived Pages", 
-                    "url": "/docs/archived-pages/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Progress Reports", 
-            "next_url": "/docs/progress-reports/", 
-            "parent": "Archived Pages", 
-            "previous_title": "How to Run the Drill Demo", 
-            "previous_url": "/docs/how-to-run-the-drill-demo/", 
-            "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
-            "title": "What is Apache Drill", 
-            "url": "/docs/what-is-apache-drill/"
-        }, 
         "Why Drill": {
             "breadcrumbs": [
                 {
@@ -11374,8 +11440,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Archived Pages", 
-            "next_url": "/docs/archived-pages/", 
+            "next_title": "Project Bylaws", 
+            "next_url": "/docs/project-bylaws/", 
             "parent": "Sample Datasets", 
             "previous_title": "Enron Emails", 
             "previous_url": "/docs/enron-emails/", 
@@ -12002,8 +12068,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Configure Drill", 
-                            "next_url": "/docs/configure-drill/", 
+                            "next_title": "Starting the Web UI", 
+                            "next_url": "/docs/starting-the-web-ui/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -12020,6 +12086,23 @@
                     "relative_path": "_docs/install/040-installing-drill-in-distributed-mode.md", 
                     "title": "Installing Drill in Distributed Mode", 
                     "url": "/docs/installing-drill-in-distributed-mode/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configure Drill", 
+                    "next_url": "/docs/configure-drill/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Starting Drill in Distributed Mode", 
+                    "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+                    "relative_path": "_docs/install/060-starting-the-web-ui.md", 
+                    "title": "Starting the Web UI", 
+                    "url": "/docs/starting-the-web-ui/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -12191,14 +12274,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuration Options", 
-                    "next_url": "/docs/configuration-options/", 
+                    "next_title": "Configuring Web UI and REST API Security", 
+                    "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
                     "relative_path": "_docs/configure-drill/076-configuring-user-impersonation-with-hive-authorization.md", 
                     "title": "Configuring User Impersonation with Hive Authorization", 
                     "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Configure Drill", 
+                            "url": "/docs/configure-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Configuration Options", 
+                    "next_url": "/docs/configuration-options/", 
+                    "parent": "Configure Drill", 
+                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
+                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
+                    "title": "Configuring Web UI and REST API Security", 
+                    "url": "/docs/configuring-web-ui-and-rest-api-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12296,8 +12396,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring User Impersonation with Hive Authorization", 
-                    "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
+                    "previous_title": "Configuring Web UI and REST API Security", 
+                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -12340,8 +12440,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting Drill in Distributed Mode", 
-            "previous_url": "/docs/starting-drill-in-distributed-mode/", 
+            "previous_title": "Starting the Web UI", 
+            "previous_url": "/docs/starting-the-web-ui/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -14318,8 +14418,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions Examples", 
-                            "next_url": "/docs/sql-window-functions-examples/", 
+                            "next_title": "Value Window Functions", 
+                            "next_url": "/docs/value-window-functions/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "Aggregate Window Functions", 
                             "previous_url": "/docs/aggregate-window-functions/", 
@@ -14339,11 +14439,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Nested Data Functions", 
-                            "next_url": "/docs/nested-data-functions/", 
+                            "next_title": "SQL Window Functions Examples", 
+                            "next_url": "/docs/sql-window-functions-examples/", 
                             "parent": "SQL Window Functions", 
                             "previous_title": "Ranking Window Functions", 
                             "previous_url": "/docs/ranking-window-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-window-functions/035-value-window-functions.md", 
+                            "title": "Value Window Functions", 
+                            "url": "/docs/value-window-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Window Functions", 
+                                    "url": "/docs/sql-window-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Nested Data Functions", 
+                            "next_url": "/docs/nested-data-functions/", 
+                            "parent": "SQL Window Functions", 
+                            "previous_title": "Value Window Functions", 
+                            "previous_url": "/docs/value-window-functions/", 
                             "relative_path": "_docs/sql-reference/sql-window-functions/040-sql-window-functions-examples.md", 
                             "title": "SQL Window Functions Examples", 
                             "url": "/docs/sql-window-functions-examples/"
@@ -14623,8 +14744,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DROP VIEW", 
-                            "next_url": "/docs/drop-view/", 
+                            "next_title": "DESCRIBE", 
+                            "next_url": "/docs/describe/", 
                             "parent": "SQL Commands", 
                             "previous_title": "PARTITION BY Clause", 
                             "previous_url": "/docs/partition-by-clause/", 
@@ -14644,14 +14765,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "DESCRIBE", 
-                            "next_url": "/docs/describe/", 
+                            "next_title": "DROP TABLE", 
+                            "next_url": "/docs/drop-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "CREATE VIEW", 
                             "previous_url": "/docs/create-view/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-view.md", 
-                            "title": "DROP VIEW", 
-                            "url": "/docs/drop-view/"
+                            "relative_path": "_docs/sql-reference/sql-commands/053-describe.md", 
+                            "title": "DESCRIBE", 
+                            "url": "/docs/describe/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "DROP VIEW", 
+                            "next_url": "/docs/drop-view/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "DESCRIBE", 
+                            "previous_url": "/docs/describe/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/055-drop-table.md", 
+                            "title": "DROP TABLE", 
+                            "url": "/docs/drop-table/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -14668,11 +14810,11 @@
                             "next_title": "EXPLAIN", 
                             "next_url": "/docs/explain/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DROP VIEW", 
-                            "previous_url": "/docs/drop-view/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/060-describe.md", 
-                            "title": "DESCRIBE", 
-                            "url": "/docs/describe/"
+                            "previous_title": "DROP TABLE", 
+                            "previous_url": "/docs/drop-table/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/056-drop-view.md", 
+                            "title": "DROP VIEW", 
+                            "url": "/docs/drop-view/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -14689,8 +14831,8 @@
                             "next_title": "SELECT", 
                             "next_url": "/docs/select/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "DESCRIBE", 
-                            "previous_url": "/docs/describe/", 
+                            "previous_title": "DROP VIEW", 
+                            "previous_url": "/docs/drop-view/", 
                             "relative_path": "_docs/sql-reference/sql-commands/070-explain.md", 
                             "title": "EXPLAIN", 
                             "url": "/docs/explain/"
@@ -15846,8 +15988,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Archived Pages", 
-                    "next_url": "/docs/archived-pages/", 
+                    "next_title": "Project Bylaws", 
+                    "next_url": "/docs/project-bylaws/", 
                     "parent": "Sample Datasets", 
                     "previous_title": "Enron Emails", 
                     "previous_url": "/docs/enron-emails/", 
@@ -15867,89 +16009,12 @@
         }, 
         {
             "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "What is Apache Drill", 
-                    "next_url": "/docs/what-is-apache-drill/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "Archived Pages", 
-                    "previous_url": "/docs/archived-pages/", 
-                    "relative_path": "_docs/archived-pages/010-how-to-run-the-drill-demo.md", 
-                    "title": "How to Run the Drill Demo", 
-                    "url": "/docs/how-to-run-the-drill-demo/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Archived Pages", 
-                            "url": "/docs/archived-pages/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Progress Reports", 
-                    "next_url": "/docs/progress-reports/", 
-                    "parent": "Archived Pages", 
-                    "previous_title": "How to Run the Drill Demo", 
-                    "previous_url": "/docs/how-to-run-the-drill-demo/", 
-                    "relative_path": "_docs/archived-pages/020-what-is-apache-drill.md", 
-                    "title": "What is Apache Drill", 
-                    "url": "/docs/what-is-apache-drill/"
-                }
-            ], 
-            "next_title": "How to Run the Drill Demo", 
-            "next_url": "/docs/how-to-run-the-drill-demo/", 
-            "parent": "", 
-            "previous_title": "Wikipedia Edit History", 
-            "previous_url": "/docs/wikipedia-edit-history/", 
-            "relative_path": "_docs/150-archived-pages.md", 
-            "title": "Archived Pages", 
-            "url": "/docs/archived-pages/"
-        }, 
-        {
-            "breadcrumbs": [], 
-            "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Progress Reports", 
-                            "url": "/docs/progress-reports/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Project Bylaws", 
-                    "next_url": "/docs/project-bylaws/", 
-                    "parent": "Progress Reports", 
-                    "previous_title": "Progress Reports", 
-                    "previous_url": "/docs/progress-reports/", 
-                    "relative_path": "_docs/progress-reports/001-2014-q1.md", 
-                    "title": "2014 Q1 Drill Report", 
-                    "url": "/docs/2014-q1-drill-report/"
-                }
-            ], 
-            "next_title": "2014 Q1 Drill Report", 
-            "next_url": "/docs/2014-q1-drill-report/", 
-            "parent": "", 
-            "previous_title": "What is Apache Drill", 
-            "previous_url": "/docs/what-is-apache-drill/", 
-            "relative_path": "_docs/160-progress-reports.md", 
-            "title": "Progress Reports", 
-            "url": "/docs/progress-reports/"
-        }, 
-        {
-            "breadcrumbs": [], 
             "children": [], 
             "next_title": "", 
             "next_url": "", 
             "parent": "", 
-            "previous_title": "2014 Q1 Drill Report", 
-            "previous_url": "/docs/2014-q1-drill-report/", 
+            "previous_title": "Wikipedia Edit History", 
+            "previous_url": "/docs/wikipedia-edit-history/", 
             "relative_path": "_docs/170-bylaws.md", 
             "title": "Project Bylaws", 
             "url": "/docs/project-bylaws/"

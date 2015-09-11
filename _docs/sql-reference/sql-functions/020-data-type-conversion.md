@@ -383,7 +383,8 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
 
 ## STRING_BINARY function
 
-Converts a VARBINARY value into a string that is its hexadecimal encoding.
+Prints the bytes that are printable, and prints a hexadecimal
+representation for bytes that are not printable. This function is modeled after the hbase utilities.
 
 ### STRING_BINARY Syntax
 
@@ -391,7 +392,7 @@ Converts a VARBINARY value into a string that is its hexadecimal encoding.
 
 *expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}
 
-This function returns a hexadecimal string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO when you want to test the effects of a conversion.
+You can use this function with CONVERT_TO when you want to test the effects of a conversion.
 
 ### STRING_BINARY Examples
 
@@ -442,7 +443,7 @@ Converts a string that is the hexadecimal encoding of a sequence of bytes into a
 
 *expression* is a hexadecimal string, such as `"\xca\xfe\xba\xbe"`.
 
-This function returns a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}. You can use this function with CONVERT_FROM for readable results.
+This function returns a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}. 
 
 ### BINARY_STRING Example
 
@@ -454,7 +455,7 @@ Converts a VARBINARY type into a hexadecimal-encoded string.
 
 *expression* is a byte array, such as {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}.
 
-This function returns a hexadecimal-encoded string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_TO for meaningful results.
+This function returns a hexadecimal-encoded string, such as `"\xca\xfe\xba\xbe"`. You can use this function with CONVERT_FROM/TO for meaningful results.
 
 ### BINARY_STRING Examples
 

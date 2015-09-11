@@ -28,7 +28,7 @@ Returns the interval between two timestamps or subtracts a timestamp from midnig
 
 ### AGE Syntax
 
-    AGE (timestamp[, timestamp])
+`AGE (timestamp[, timestamp])`
 
 *timestamp* is the data and time formatted as shown in the following examples.
 
@@ -47,7 +47,7 @@ Find the interval between midnight today, April 3, 2015, and June 13, 1957.
     +------------+
     1 row selected (0.064 seconds)
 
-Find the interval between midnight today, May 21, 2015, and hire dates of employees 578 and 761 in the `employees.json` file. The file is installed with Drill and located in the Drill classpath.
+Find the interval between midnight today, May 21, 2015, and hire dates of employees 578 and 761 in the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. The file is installed with Drill and located in the Drill classpath.
 
     SELECT AGE(CAST(hire_date AS TIMESTAMP)) FROM cp.`employee.json` where employee_id IN( '578','761');
     +------------------+
@@ -75,13 +75,10 @@ Returns the sum of a date/time and a number of days/hours, or of a date/time and
 
 ### DATE_ADD Syntax
 
-    DATE_ADD(keyword literal, integer)
-
-    DATE_ADD(keyword literal, interval expr)
-
-    DATE_ADD(column, integer)
-
-    DATE_ADD(column, interval expr)
+`DATE_ADD(keyword literal, integer)`  
+`DATE_ADD(keyword literal, interval expr)`  
+`DATE_ADD(column, integer)`  
+`DATE_ADD(column, interval expr)`  
 
 *keyword* is the word date, time, or timestamp.  
 *literal* is a date, time, or timestamp literal.  For example, a date in yyyy-mm-dd format enclosed in single quotation marks.  
@@ -197,7 +194,7 @@ Returns a field of a date, time, timestamp, or interval.
 
 ### DATE_PART Syntax 
 
-    date_part(keyword, expression) 
+`date_part(keyword, expression)`  
 
 *keyword* is year, month, day, hour, minute, or second enclosed in single quotation marks.  
 *expression* is date, time, timestamp, or interval literal enclosed in single quotation marks.
@@ -238,13 +235,10 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
 ### DATE_SUB Syntax
 
-    DATE_SUB(keyword literal, integer) 
-
-    DATE_SUB(keyword literal, interval expr)  
-
-    DATE_ADD(column, integer)  
-
-    DATE_SUB(column, interval expr)
+`DATE_SUB(keyword literal, integer)`  
+`DATE_SUB(keyword literal, interval expr)`  
+`DATE_ADD(column, integer)`  
+`DATE_SUB(column, interval expr)`  
 
 *keyword* is the word date, time, or timestamp.  
 *literal* is a date, time, or timestamp literal. For example, a date in yyyy-mm-dd format enclosed in single quotation marks.   
@@ -431,7 +425,7 @@ Returns a component of a timestamp, time, date, or interval.
 
 ### EXTRACT Syntax
 
-    EXTRACT (extract_expression) 
+`EXTRACT (extract_expression)`  
 
 *extract_expression* is:
 
@@ -459,7 +453,6 @@ On the third day of the month, run the following function:
 At 8:00 am, extract the hour from the value of CURRENT_DATE.
 
     SELECT EXTRACT(hour FROM CURRENT_DATE) FROM (VALUES(1));
-
     +------------+
     |   EXPR$0   |
     +------------+
@@ -469,7 +462,6 @@ At 8:00 am, extract the hour from the value of CURRENT_DATE.
 What is the hour component of this time: 17:12:28.5?
 
     SELECT EXTRACT(hour FROM TIME '17:12:28.5') FROM (VALUES(1));
-
     +------------+
     |   EXPR$0   |
     +------------+
@@ -480,7 +472,6 @@ What is the hour component of this time: 17:12:28.5?
 What is the seconds component of this timestamp: 2001-02-16 20:38:40
 
     SELECT EXTRACT(SECOND FROM TIMESTAMP '2001-02-16 20:38:40') FROM (VALUES(1));
-
     +------------+
     |   EXPR$0   |
     +------------+
@@ -527,9 +518,9 @@ Returns UNIX Epoch time, which is the number of seconds elapsed since January 1,
 
 ### UNIX_TIMESTAMP Syntax
 
-    UNIX_TIMESTAMP()  
-    UNIX_TIMESTAMP(string date)  
-    UNIX_TIMESTAMP(string date, string pattern)  
+`UNIX_TIMESTAMP()`  
+`UNIX_TIMESTAMP(string date)`  
+`UNIX_TIMESTAMP(string date, string pattern)`  
 
 These functions perform the following operations, respectively:
 

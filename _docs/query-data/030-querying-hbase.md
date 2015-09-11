@@ -58,7 +58,7 @@ Drill can performantly query HBase data that uses composite keys, as shown in th
 
 Drill 1.2 leverages new features introduced by [HBASE-8201 Jira](https://issues.apache.org/jira/browse/HBASE-8201) that allows ordered byte encoding of different data types. This encoding scheme preserves the sort order of the native data type when the data is stored as sorted byte arrays on disk. Thus, Drill will be able to process data through the HBase storage plugin if the row keys have been encoded in OrderedBytes format.
 
-To execute the following query, Drill prunes the scan range to only include the row keys representing [-32,59) range, thus reducing the amount of data read.
+To execute the following query, Drill prunes the scan range to only include the row keys representing [-32,59] range, thus reducing the amount of data read.
 
 ```
 SELECT

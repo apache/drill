@@ -66,12 +66,11 @@ See [SELECT Statements]({{ site.baseurl }}/docs/select).
 
 ## String Concatenate Operator
 
-You can use the following string operators in your Drill queries to concatenate strings:
+You can use the following string operator in your Drill queries to concatenate strings:
 
   * string || string
-  * string || non-string or non-string || string
 
-The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation#concat).
+The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation#concat) and will concatenate input if Drill can implicitly convert the input to a string.
 
 The concat function treats NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
 

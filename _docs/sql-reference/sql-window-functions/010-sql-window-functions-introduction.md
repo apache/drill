@@ -86,6 +86,7 @@ Ranking
 
 * CUME_DIST()
 * DENSE_RANK()
+* NTILE()
 * PERCENT_RANK()
 * RANK()
 * ROW_NUMBER()
@@ -126,6 +127,7 @@ Any of the following functions used with the OVER clause to provide a window spe
 * MIN()
 * SUM()
 * DENSE_RANK()
+* NTILE()
 * PERCENT_RANK()
 * RANK()
 * ROW_NUMBER()
