@@ -18,10 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -39,7 +36,6 @@ import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.proto.UserBitShared.NamePart.Type;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
@@ -54,15 +50,16 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public static SchemaPath getCompoundPath(String... strings) {
-    List<String> paths = Arrays.asList(strings);
-    Collections.reverse(paths);
     NameSegment s = null;
-    for (String p : paths) {
-      s = new NameSegment(p, s);
+    final int length = strings.length;
+    // loop through strings in reverse order
+    for (int i = 0; i < length; i++) {
+      s = new NameSegment(strings[length - 1 - i], s);
     }
     return new SchemaPath(s);
   }
 
+  @SuppressWarnings("unused")
   public PathSegment getLastSegment() {
     PathSegment s= rootSegment;
     while (s.getChild() != null) {
@@ -71,10 +68,6 @@ public class SchemaPath extends LogicalExpressionBase {
     return s;
   }
 
-  /**
-   *
-   * @param simpleName
-   */
   @Deprecated
   public SchemaPath(String simpleName, ExpressionPosition pos) {
     super(pos);
@@ -165,6 +158,7 @@ public class SchemaPath extends LogicalExpressionBase {
     return new SchemaPath(newRoot);
   }
 
+  @SuppressWarnings("unused")
   public SchemaPath getUnindexedArrayChild() {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(null));
     return new SchemaPath(newRoot);
@@ -220,9 +214,6 @@ public class SchemaPath extends LogicalExpressionBase {
     }
 
     SchemaPath other = (SchemaPath) obj;
-    if (rootSegment == null) {
-      return true;
-    }
     return rootSegment.contains(other.rootSegment);
   }
 
@@ -270,8 +261,7 @@ public class SchemaPath extends LogicalExpressionBase {
     }
 
     @Override
-    public SchemaPath deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
-        JsonProcessingException {
+    public SchemaPath deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
       String expr = jp.getText();
 
       if (expr == null || expr.isEmpty()) {
