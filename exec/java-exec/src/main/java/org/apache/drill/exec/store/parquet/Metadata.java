@@ -240,7 +240,7 @@ public class Metadata {
     if (type.isPrimitive()) {
       return type.getOriginalType();
     }
-    Type t = ((GroupType) type).getType(path[path.length - depth - 1]);
+    Type t = ((GroupType) type).getType(path[depth]);
     return getOriginalType(t, path, depth + 1);
   }
 
