@@ -115,6 +115,9 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return blockSplittable;
   }
 
+  /** Method indicates whether or not this format could also be in a compression container (for example: csv.gz versus csv).
+   * If this format uses its own internal compression scheme, such as Parquet does, then this should return false.
+   */
   public boolean isCompressible() {
     return compressible;
   }
