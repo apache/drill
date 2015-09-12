@@ -17,21 +17,20 @@
  */
 package org.apache.drill.exec.planner;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
 // Interface used to describe partitions. Currently used by file system based partitions and hive partitions
-public interface PartitionDescriptor {
+public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
+
+  public static final int PARTITION_BATCH_SIZE = Character.MAX_VALUE;
 
   /* Get the hierarchy index of the given partition
    * For eg: if we have the partition laid out as follows
@@ -56,12 +55,10 @@ public interface PartitionDescriptor {
 
   public GroupScan createNewGroupScan(List<String> newFiles) throws Exception;
 
-  public List<PartitionLocation> getPartitions();
-
   /**
    * Method creates an in memory representation of all the partitions. For each level of partitioning we
    * will create a value vector which this method will populate for all the partitions with the values of the
-   * partioning key
+   * partitioning key
    * @param vectors - Array of vectors in the container that need to be populated
    * @param partitions - List of all the partitions that exist in the table
    * @param partitionColumnBitSet - Partition columns selected in the query
