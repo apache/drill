@@ -18,11 +18,13 @@
 package org.apache.drill.exec.planner.sql;
 
 import io.netty.buffer.DrillBuf;
+
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.AbstractPartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.PartitionLocation;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
@@ -43,8 +45,10 @@ import java.util.Map;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
+import com.google.common.collect.Lists;
+
 // Partition descriptor for hive tables
-public class HivePartitionDescriptor implements PartitionDescriptor {
+public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
 
   private final Map<String, Integer> partitionMap = new HashMap<>();
   private final int numPartitionLevels;
@@ -107,16 +111,6 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   }
 
   @Override
-  public List<PartitionLocation> getPartitions() {
-    List<PartitionLocation> partitions = new LinkedList<>();
-    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
-    for (Partition partition: origEntry.getPartitions()) {
-      partitions.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
-    }
-    return partitions;
-  }
-
-  @Override
   public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions,
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
     int record = 0;
@@ -162,6 +156,17 @@ public class HivePartitionDescriptor implements PartitionDescriptor {
   @Override
   public Integer getIdIfValid(String name) {
     return partitionMap.get(name);
+  }
+
+  @Override
+  protected void createPartitionSublists() {
+    List<PartitionLocation> locations = new LinkedList<>();
+    HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+    for (Partition partition: origEntry.getPartitions()) {
+      locations.add(new HivePartitionLocation(partition.getValues(), partition.getSd().getLocation()));
+    }
+    locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
+    sublistsCreated = true;
   }
 
 }

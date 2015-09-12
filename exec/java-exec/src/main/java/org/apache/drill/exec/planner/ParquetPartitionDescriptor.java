@@ -29,6 +29,8 @@ import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.google.common.collect.Lists;
+
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.LinkedList;
@@ -40,7 +42,7 @@ import java.util.Set;
 /**
  * PartitionDescriptor that describes partitions based on column names instead of directory structure
  */
-public class ParquetPartitionDescriptor implements PartitionDescriptor {
+public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   private final List<SchemaPath> partitionColumns;
   private final DrillScanRel scanRel;
@@ -85,16 +87,6 @@ public class ParquetPartitionDescriptor implements PartitionDescriptor {
   }
 
   @Override
-  public List<PartitionLocation> getPartitions() {
-    Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
-    List<PartitionLocation> partitions = new LinkedList<>();
-    for (String file: fileLocations) {
-      partitions.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
-    }
-    return partitions;
-  }
-
-  @Override
   public void populatePartitionVectors(ValueVector[] vectors, List<PartitionLocation> partitions,
                                        BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap) {
     int record = 0;
@@ -125,4 +117,16 @@ public class ParquetPartitionDescriptor implements PartitionDescriptor {
     final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
+
+  @Override
+  protected void createPartitionSublists() {
+    Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
+    List<PartitionLocation> locations = new LinkedList<>();
+    for (String file: fileLocations) {
+      locations.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
+    }
+    locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
+    sublistsCreated = true;
+  }
+
 }

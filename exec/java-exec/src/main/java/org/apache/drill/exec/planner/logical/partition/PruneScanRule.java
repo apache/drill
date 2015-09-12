@@ -154,20 +154,19 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     BitSet columnBitset = new BitSet();
     BitSet partitionColumnBitSet = new BitSet();
 
-    {
-      int relColIndex = 0;
-      for (String field : fieldNames) {
-        final Integer partitionIndex = descriptor.getIdIfValid(field);
-        if (partitionIndex != null) {
-          fieldNameMap.put(partitionIndex, field);
-          partitionColumnBitSet.set(partitionIndex);
-          columnBitset.set(relColIndex);
-        }
-        relColIndex++;
+    int relColIndex = 0;
+    for (String field : fieldNames) {
+      final Integer partitionIndex = descriptor.getIdIfValid(field);
+      if (partitionIndex != null) {
+        fieldNameMap.put(partitionIndex, field);
+        partitionColumnBitSet.set(partitionIndex);
+        columnBitset.set(relColIndex);
       }
+      relColIndex++;
     }
 
     if (partitionColumnBitSet.isEmpty()) {
+      logger.debug("No partition columns are projected from the scan..continue.");
       return;
     }
 
@@ -176,81 +175,94 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     RexNode pruneCondition = c.getFinalCondition();
 
     if (pruneCondition == null) {
+      logger.debug("No conditions were found eligible for partition pruning.");
       return;
     }
-
 
     // set up the partitions
-    final GroupScan groupScan = scanRel.getGroupScan();
-    List<PartitionLocation> partitions = descriptor.getPartitions();
+    List<String> newFiles = Lists.newArrayList();
+    long numTotal = 0; // total number of partitions
+    int batchIndex = 0;
+    String firstLocation = null;
+    LogicalExpression materializedExpr = null;
 
-    if (partitions.size() > Character.MAX_VALUE) {
-      return;
+    // Outer loop: iterate over a list of batches of PartitionLocations
+    for (List<PartitionLocation> partitions : descriptor) {
+      numTotal += partitions.size();
+      logger.debug("Evaluating partition pruning for batch {}", batchIndex);
+      if (batchIndex == 0) { // save the first location in case everything is pruned
+        firstLocation = partitions.get(0).getEntirePartitionLocation();
+      }
+      final NullableBitVector output = new NullableBitVector(MaterializedField.create("", Types.optional(MinorType.BIT)), allocator);
+      final VectorContainer container = new VectorContainer();
+
+      try {
+        final ValueVector[] vectors = new ValueVector[descriptor.getMaxHierarchyLevel()];
+        for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
+          SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
+          MajorType type = descriptor.getVectorType(column, settings);
+          MaterializedField field = MaterializedField.create(column, type);
+          ValueVector v = TypeHelper.getNewVector(field, allocator);
+          v.allocateNew();
+          vectors[partitionColumnIndex] = v;
+          container.add(v);
+        }
+
+        // populate partition vectors.
+        descriptor.populatePartitionVectors(vectors, partitions, partitionColumnBitSet, fieldNameMap);
+
+        // materialize the expression; only need to do this once
+        if (batchIndex == 0) {
+          materializedExpr = materializePruneExpr(pruneCondition, settings, scanRel, container);
+          if (materializedExpr == null) {
+            // continue without partition pruning; no need to log anything here since
+            // materializePruneExpr logs it already
+            return;
+          }
+        }
+
+        output.allocateNew(partitions.size());
+        InterpreterEvaluator.evaluate(partitions.size(), optimizerContext, container, output, materializedExpr);
+        int recordCount = 0;
+        int qualifiedCount = 0;
+
+        // Inner loop: within each batch iterate over the PartitionLocations
+        for(PartitionLocation part: partitions){
+          if(!output.getAccessor().isNull(recordCount) && output.getAccessor().get(recordCount) == 1){
+            newFiles.add(part.getEntirePartitionLocation());
+            qualifiedCount++;
+          }
+          recordCount++;
+        }
+        logger.debug("Within batch {}: total records: {}, qualified records: {}", batchIndex, recordCount, qualifiedCount);
+        batchIndex++;
+      } catch (Exception e) {
+        logger.warn("Exception while trying to prune partition.", e);
+        return; // continue without partition pruning
+      } finally {
+        container.clear();
+        if (output != null) {
+          output.clear();
+        }
+      }
     }
 
-    final NullableBitVector output = new NullableBitVector(MaterializedField.create("", Types.optional(MinorType.BIT)), allocator);
-    final VectorContainer container = new VectorContainer();
-
     try {
-      final ValueVector[] vectors = new ValueVector[descriptor.getMaxHierarchyLevel()];
-      for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
-        SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
-        MajorType type = descriptor.getVectorType(column, settings);
-        MaterializedField field = MaterializedField.create(column, type);
-        ValueVector v = TypeHelper.getNewVector(field, allocator);
-        v.allocateNew();
-        vectors[partitionColumnIndex] = v;
-        container.add(v);
-      }
-
-      // populate partition vectors.
-      descriptor.populatePartitionVectors(vectors, partitions, partitionColumnBitSet, fieldNameMap);
-
-      // materialize the expression
-      logger.debug("Attempting to prune {}", pruneCondition);
-      final LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
-      final ErrorCollectorImpl errors = new ErrorCollectorImpl();
-
-      LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, optimizerContext.getFunctionRegistry());
-      // Make sure pruneCondition's materialized expression is always of BitType, so that
-      // it's same as the type of output vector.
-      if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
-        materializedExpr = ExpressionTreeMaterializer.convertToNullableType(
-            materializedExpr,
-            materializedExpr.getMajorType().getMinorType(),
-            optimizerContext.getFunctionRegistry(),
-            errors);
-      }
-
-      if (errors.getErrorCount() != 0) {
-        logger.warn("Failure while materializing expression [{}].  Errors: {}", expr, errors);
-      }
-
-      output.allocateNew(partitions.size());
-      InterpreterEvaluator.evaluate(partitions.size(), optimizerContext, container, output, materializedExpr);
-      int record = 0;
-
-      List<String> newFiles = Lists.newArrayList();
-      for(PartitionLocation part: partitions){
-        if(!output.getAccessor().isNull(record) && output.getAccessor().get(record) == 1){
-          newFiles.add(part.getEntirePartitionLocation());
-        }
-        record++;
-      }
 
       boolean canDropFilter = true;
 
       if (newFiles.isEmpty()) {
-        newFiles.add(partitions.get(0).getEntirePartitionLocation());
+        assert firstLocation != null;
+        newFiles.add(firstLocation);
         canDropFilter = false;
       }
 
-      if (newFiles.size() == partitions.size()) {
+      if (newFiles.size() == numTotal) {
+        logger.info("No partitions were eligible for pruning");
         return;
       }
 
-      logger.debug("Pruned {} => {}", partitions.size(), newFiles.size());
-
+      logger.info("Pruned {} partitions down to {}", numTotal, newFiles.size());
 
       List<RexNode> conjuncts = RelOptUtil.conjunctions(condition);
       List<RexNode> pruneConjuncts = RelOptUtil.conjunctions(pruneCondition);
@@ -284,13 +296,36 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       }
 
     } catch (Exception e) {
-      logger.warn("Exception while trying to prune partition.", e);
-    } finally {
-      container.clear();
-      if (output != null) {
-        output.clear();
-      }
+      logger.warn("Exception while using the pruned partitions.", e);
     }
+  }
+
+  protected LogicalExpression materializePruneExpr(RexNode pruneCondition,
+      PlannerSettings settings,
+      RelNode scanRel,
+      VectorContainer container
+      ) {
+    // materialize the expression
+    logger.debug("Attempting to prune {}", pruneCondition);
+    final LogicalExpression expr = DrillOptiq.toDrill(new DrillParseContext(settings), scanRel, pruneCondition);
+    final ErrorCollectorImpl errors = new ErrorCollectorImpl();
+
+    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, container, errors, optimizerContext.getFunctionRegistry());
+    // Make sure pruneCondition's materialized expression is always of BitType, so that
+    // it's same as the type of output vector.
+    if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.REQUIRED) {
+      materializedExpr = ExpressionTreeMaterializer.convertToNullableType(
+          materializedExpr,
+          materializedExpr.getMajorType().getMinorType(),
+          optimizerContext.getFunctionRegistry(),
+          errors);
+    }
+
+    if (errors.getErrorCount() != 0) {
+      logger.warn("Failure while materializing expression [{}].  Errors: {}", expr, errors);
+      return null;
+    }
+    return materializedExpr;
   }
 
   protected OptimizerRulesContext getOptimizerRulesContext() {
