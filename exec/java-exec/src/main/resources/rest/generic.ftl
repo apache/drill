@@ -53,16 +53,30 @@
             <a class="navbar-brand" href="/">Apache Drill</a>
           </div>
           <div class="navbar-collapse collapse">
+            <#if showControls == true>
             <ul class="nav navbar-nav">
               <li><a href="/query">Query</a></li>
               <li><a href="/profiles">Profiles</a></li>
+              <#if showStorage == true>
               <li><a href="/storage">Storage</a></li>
+              </#if>
               <li><a href="/metrics">Metrics</a></li>
+              <#if showThreads == true>
               <li><a href="/threads">Threads</a></li>
+              </#if>
             </ul>
+            </#if>
             <ul class="nav navbar-nav navbar-right">
+              <#if showOptions == true>
               <li><a href="/options">Options</a></li>
+              </#if>
               <li><a href="http://drill.apache.org/docs/">Documentation</a>
+              <#if showLogin == true >
+              <li><a href="/login">Log In</a>
+              </#if>
+              <#if showLogout == true >
+              <li><a href="/logout">Log Out (${loggedInUserName})</a>
+              </#if>
             </ul>
           </div>
         </div>

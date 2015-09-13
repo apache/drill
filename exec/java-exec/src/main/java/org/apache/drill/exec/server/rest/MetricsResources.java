@@ -17,21 +17,28 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 @Path("/metrics")
+@RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class MetricsResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetricsResources.class);
+
+  @Inject SecurityContext sc;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   public Viewable getMetrics() {
-    return new Viewable("/rest/metrics/metrics.ftl");
+    return ViewableWithPermissions.create("/rest/metrics/metrics.ftl", sc);
   }
 
 }
