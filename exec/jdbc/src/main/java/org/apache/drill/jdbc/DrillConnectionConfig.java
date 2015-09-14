@@ -29,7 +29,6 @@ import net.hydromatic.avatica.ConnectionConfigImpl;
 // org.apache.drill.jdbc to class in implementation package
 // org.apache.drill.jdbc.impl.
 /**
- *  ...
  *  <p>
  *    NOTE:  DrillConnectionConfig will be changed from a class to an interface.
  *  </p>

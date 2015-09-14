@@ -76,8 +76,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * </ul>
  * <p><strong>Output:</strong></p>
  * <p>
- *   Currently, the tracing output line are simply written to {@link System#out}
- *   ({@code stdout} or "standard output").
+ *   Currently, the tracing output lines are simply written to
+ *   {@link System#out} ({@code stdout} or "standard output").
  * </p>
  */
 public class TracingProxyDriver implements java.sql.Driver {
