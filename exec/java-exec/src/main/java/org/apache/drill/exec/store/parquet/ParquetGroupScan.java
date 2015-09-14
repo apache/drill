@@ -127,7 +127,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   static final String READ_FOOTER_TIMER = MetricRegistry.name(ParquetGroupScan.class, "readFooter");
 
   private final List<ReadEntryWithPath> entries;
-  private final Stopwatch watch = new Stopwatch();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;

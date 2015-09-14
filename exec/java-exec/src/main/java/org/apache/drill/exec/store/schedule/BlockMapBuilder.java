@@ -216,8 +216,7 @@ public class BlockMapBuilder {
    * @throws IOException
    */
   public EndpointByteMap getEndpointByteMap(FileWork work) throws IOException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     Path fileName = new Path(work.getPath());
 
 
@@ -267,8 +266,7 @@ public class BlockMapBuilder {
    * Builds a mapping of Drillbit endpoints to hostnames
    */
   private static ImmutableMap<String, DrillbitEndpoint> buildEndpointMap(Collection<DrillbitEndpoint> endpoints) {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     HashMap<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
     for (DrillbitEndpoint d : endpoints) {
       String hostName = d.getAddress();

@@ -74,7 +74,7 @@ public class ImplCreator {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
     final ImplCreator creator = new ImplCreator();
-    Stopwatch watch = new Stopwatch();
+    Stopwatch watch = Stopwatch.createStarted();
     watch.start();
 
     try {

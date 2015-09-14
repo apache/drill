@@ -33,7 +33,7 @@ public class AffinityCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCreator.class);
 
   public static <T extends CompleteWork> List<EndpointAffinity> getAffinityMap(List<T> work){
-    Stopwatch watch = new Stopwatch();
+    Stopwatch watch = Stopwatch.createStarted();
 
     long totalBytes = 0;
     for (CompleteWork entry : work) {

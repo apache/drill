@@ -25,6 +25,8 @@ import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.common.io.Closeables;
 
+import java.io.IOException;
+
 /**
  * Manages communication tunnels between nodes.
  */
@@ -60,11 +62,13 @@ public class ControllerImpl implements Controller {
     return new ControlTunnel(endpoint, connectionRegistry.getConnectionManager(endpoint));
   }
 
-  public void close() {
-    Closeables.closeQuietly(server);
-    for (ControlConnectionManager bt : connectionRegistry) {
-      bt.close();
+  public void close() throws IOException {
+    try {
+      Closeables.close(server, true);
+    } finally {
+      for (ControlConnectionManager bt : connectionRegistry) {
+        bt.close();
+      }
     }
   }
-
 }

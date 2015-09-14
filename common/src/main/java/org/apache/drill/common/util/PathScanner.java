@@ -94,7 +94,7 @@ public class PathScanner {
    */
   public static <T> Set<Class<? extends T>> scanForImplementations(final Class<T> baseClass,
                                                                    final List<String> scanPackages) {
-    final Stopwatch w = new Stopwatch().start();
+    final Stopwatch w = Stopwatch.createStarted();
     try {
       synchronized(SYNC) {
         final Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);

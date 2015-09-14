@@ -234,8 +234,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (spillCount == 0) {
         return (getSelectionVector4().next()) ? IterOutcome.OK : IterOutcome.NONE;
       } else {
-        Stopwatch w = new Stopwatch();
-        w.start();
+        Stopwatch w = Stopwatch.createStarted();
         int count = copier.next(targetRecordCount);
         if (count > 0) {
           long t = w.elapsed(TimeUnit.MICROSECONDS);
@@ -254,8 +253,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     try{
       container.clear();
       outer: while (true) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
+        Stopwatch watch = Stopwatch.createStarted();
         IterOutcome upstream;
         if (first) {
           upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -315,8 +313,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           int count = sv2.getCount();
           totalCount += count;
           sorter.setup(context, sv2, incoming);
-          Stopwatch w = new Stopwatch();
-          w.start();
+          Stopwatch w = Stopwatch.createStarted();
           sorter.sort(sv2);
 //          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), count);
           RecordBatchData rbd = new RecordBatchData(incoming);
@@ -382,8 +379,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         return IterOutcome.NONE;
       }
       if (spillCount == 0) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
+        Stopwatch watch = Stopwatch.createStarted();
 
         if (builder != null) {
           builder.clear();

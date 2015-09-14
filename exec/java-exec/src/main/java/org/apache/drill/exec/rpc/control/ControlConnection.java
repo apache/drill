@@ -110,7 +110,9 @@ public class ControlConnection extends RemoteConnection {
 
   public void shutdownIfClient() {
     if (bus.isClient()) {
-      Closeables.closeQuietly(bus);
+      try {
+        Closeables.close(bus, true);
+      } catch (Exception e) { /* do nothing */ }
     }
   }
 
