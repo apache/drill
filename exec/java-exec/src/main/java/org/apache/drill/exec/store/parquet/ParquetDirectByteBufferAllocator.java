@@ -72,6 +72,11 @@ public class ParquetDirectByteBufferAllocator implements ByteBufferAllocator {
     }
   }
 
+  @Override
+  public boolean isDirect() {
+    return true;
+  }
+
   /**
    * ByteBuffer wrapper that computes a fixed hashcode.
    * <br><br>

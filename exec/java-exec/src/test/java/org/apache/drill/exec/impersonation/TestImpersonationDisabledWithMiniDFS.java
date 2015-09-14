@@ -18,11 +18,18 @@
 package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.physical.impl.writer.TestParquetWriter;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * Note to future devs, please do not put random tests here. Make sure that they actually require
+ * access to a DFS instead of the local filesystem implementation used by default in the rest of
+ * the tests. Running this mini cluster is slow and it is best for these tests to only cover
+ * necessary cases.
+ */
 public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation {
 
   @BeforeClass
@@ -37,6 +44,38 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
     // Create test table in minidfs.tmp schema for use in test queries
     test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`",
         MINIDFS_STORAGE_PLUGIN_NAME));
+
+    // generate a large enough file that the DFS will not fulfill requests to read a
+    // page of data all at once, see notes above testReadLargeParquetFileFromDFS()
+    test(String.format(
+        "CREATE TABLE %s.tmp.large_employee AS " +
+            "(SELECT employee_id, full_name FROM cp.`/employee.json`) " +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+            "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)" +
+        "UNION ALL (SELECT employee_id, full_name FROM cp.`/employee.json`)",
+        MINIDFS_STORAGE_PLUGIN_NAME));
+  }
+
+  /**
+   * When working on merging the Drill fork of parquet a bug was found that only manifested when
+   * run on a cluster. It appears that the local implementation of the Hadoop FileSystem API
+   * never fails to provide all of the bytes that are requested in a single read. The API is
+   * designed to allow for a subset of the requested bytes be returned, and a client can decide
+   * if they want to do processing on teh subset that are available now before requesting the rest.
+   *
+   * For parquet's block compression of page data, we need all of the bytes. This test is here as
+   * a sanitycheck  to make sure we don't accidentally introduce an issue where a subset of the bytes
+   * are read and would otherwise require testing on a cluster for the full contract of the read method
+   * we are using to be exercised.
+   */
+  @Test
+  public void testReadLargeParquetFileFromDFS() throws Exception {
+    test(String.format("USE %s", MINIDFS_STORAGE_PLUGIN_NAME));
+    test("SELECT * FROM tmp.`large_employee`");
   }
 
   @Test // DRILL-3037

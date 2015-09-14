@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
-import org.apache.drill.exec.store.parquet.DirectCodecFactory;
+import org.apache.drill.exec.store.parquet.ColumnDataReader;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -57,14 +57,14 @@ public class ColumnChunkIncReadStore implements PageReadStore {
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 
-  private DirectCodecFactory codecFactory;
+  private CodecFactory codecFactory;
   private BufferAllocator allocator;
   private FileSystem fs;
   private Path path;
   private long rowCount;
   private List<FSDataInputStream> streams = new ArrayList();
 
-  public ColumnChunkIncReadStore(long rowCount, DirectCodecFactory codecFactory, BufferAllocator allocator,
+  public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, BufferAllocator allocator,
       FileSystem fs, Path path) {
     this.codecFactory = codecFactory;
     this.allocator = allocator;
@@ -88,7 +88,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
 
     private ByteBuf lastPage;
 
-    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, ColumnDescriptor columnDescriptor, FSDataInputStream in) {
+    public ColumnChunkIncPageReader(ColumnChunkMetaData metaData, ColumnDescriptor columnDescriptor, FSDataInputStream in) throws IOException {
       this.metaData = metaData;
       this.columnDescriptor = columnDescriptor;
       this.size = metaData.getTotalSize();
@@ -165,8 +165,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuf buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              while (buffer.remaining() > 0) {
-                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              int lengthLeftToRead = pageHeader.compressed_page_size;
+              while (lengthLeftToRead > 0) {
+                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
               }
               return new DataPageV1(
                       decompressor.decompress(BytesInput.from(buffer, 0, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
@@ -183,8 +184,9 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               buf = allocator.buffer(pageHeader.compressed_page_size);
               lastPage = buf;
               buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
-              while (buffer.remaining() > 0) {
-                CompatibilityUtil.getBuf(in, buffer, pageHeader.compressed_page_size);
+              lengthLeftToRead = pageHeader.compressed_page_size;
+              while (lengthLeftToRead > 0) {
+                lengthLeftToRead -= CompatibilityUtil.getBuf(in, buffer, lengthLeftToRead);
               }
               DataPageHeaderV2 dataHeaderV2 = pageHeader.getData_page_header_v2();
               int dataSize = compressedPageSize - dataHeaderV2.getRepetition_levels_byte_length() - dataHeaderV2.getDefinition_levels_byte_length();
