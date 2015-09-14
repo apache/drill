@@ -51,7 +51,7 @@ public class PrintingResultsListener implements UserResultsListener {
   BufferAllocator allocator;
   volatile UserException exception;
   QueryId queryId;
-  Stopwatch w = Stopwatch.createStarted();
+  Stopwatch w = Stopwatch.createUnstarted();
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
     this.allocator = RootAllocatorFactory.newRoot(config);
