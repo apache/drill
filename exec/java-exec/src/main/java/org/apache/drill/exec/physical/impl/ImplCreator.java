@@ -75,7 +75,6 @@ public class ImplCreator {
     }
     final ImplCreator creator = new ImplCreator();
     Stopwatch watch = Stopwatch.createStarted();
-    watch.start();
 
     try {
       final RootExec rootExec = creator.getRootExec(root, context);
