@@ -63,12 +63,9 @@ public class ControllerImpl implements Controller {
   }
 
   public void close() throws IOException {
-    try {
-      Closeables.close(server, true);
-    } finally {
-      for (ControlConnectionManager bt : connectionRegistry) {
-        bt.close();
-      }
+    Closeables.close(server, true);
+    for (ControlConnectionManager bt : connectionRegistry) {
+      bt.close();
     }
   }
 }

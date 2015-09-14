@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.control;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -108,11 +109,9 @@ public class ControlConnection extends RemoteConnection {
     return true;
   }
 
-  public void shutdownIfClient() {
+  public void shutdownIfClient() throws IOException {
     if (bus.isClient()) {
-      try {
-        Closeables.close(bus, true);
-      } catch (Exception e) { /* do nothing */ }
+      Closeables.close(bus, true);
     }
   }
 
