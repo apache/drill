@@ -392,37 +392,37 @@
            <filter>
              <artifact>*:*</artifact>
              <excludes>
-                <exclude>**/logback.xml</exclude>
-                <exclude>**/LICENSE.txt</exclude>
-                <exclude>**/*.java</exclude>
-                <exclude>**/META-INF/**</exclude>
-                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
-                <exclude>**/*.SF</exclude>
-                <exclude>**/*.RSA</exclude>
-                <exclude>**/*.DSA</exclude>
-                <exclude>javax/**</exclude>
-                <exclude>rest/**</exclude>
-                <exclude>*.tokens</exclude>
-                <exclude>com/google/common/math</exclude>
-                <exclude>com/google/common/net</exclude>
-                <exclude>com/google/common/primitives</exclude>
-                <exclude>com/google/common/reflect</exclude>
-                <exclude>com/google/common/util</exclude>
-                <exclude>com/google/common/cache</exclude>
-                <exclude>com/google/common/collect/Tree*</exclude>
-                <exclude>com/google/common/collect/Standard*</exclude>
-                <exclude>org/apache/drill/exec/expr/annotations/**</exclude>
-                <exclude>org/apache/drill/exec/expr/fn/**</exclude>
-                <exclude>org/apache/drill/exec/proto/beans/**</exclude>
-                <exclude>org/apache/drill/exec/compile/**</exclude>
-                <exclude>org/apache/drill/exec/planner/**</exclude>
-                <exclude>org/apache/drill/exec/physical/**</exclude>
-                <exclude>org/apache/drill/exec/store/**</exclude>
-                <exclude>org/apache/drill/exec/server/rest/**</exclude>
-                <exclude>org/apache/drill/exec/rpc/data/**</exclude>
-                <exclude>org/apache/drill/exec/rpc/control/**</exclude>
-                <exclude>org/apache/drill/exec/work/**</exclude>
-              </excludes>
+               <exclude>**/logback.xml</exclude>
+               <exclude>**/LICENSE.txt</exclude>
+               <exclude>**/*.java</exclude>
+               <exclude>**/META-INF/**</exclude>
+               <exclude>**/org.codehaus.commons.compiler.properties</exclude>
+               <exclude>**/*.SF</exclude>
+               <exclude>**/*.RSA</exclude>
+               <exclude>**/*.DSA</exclude>
+               <exclude>javax/**</exclude>
+               <exclude>rest/**</exclude>
+               <exclude>*.tokens</exclude>
+               <exclude>com/google/common/math</exclude>
+               <exclude>com/google/common/net</exclude>
+               <exclude>com/google/common/primitives</exclude>
+               <exclude>com/google/common/reflect</exclude>
+               <exclude>com/google/common/util</exclude>
+               <exclude>com/google/common/cache</exclude>
+               <exclude>com/google/common/collect/Tree*</exclude>
+               <exclude>com/google/common/collect/Standard*</exclude>
+               <exclude>org/apache/drill/exec/expr/annotations/**</exclude>
+               <exclude>org/apache/drill/exec/expr/fn/**</exclude>
+               <exclude>org/apache/drill/exec/proto/beans/**</exclude>
+               <exclude>org/apache/drill/exec/compile/**</exclude>
+               <exclude>org/apache/drill/exec/planner/**</exclude>
+               <exclude>org/apache/drill/exec/physical/**</exclude>
+               <exclude>org/apache/drill/exec/store/**</exclude>
+               <exclude>org/apache/drill/exec/server/rest/**</exclude>
+               <exclude>org/apache/drill/exec/rpc/data/**</exclude>
+               <exclude>org/apache/drill/exec/rpc/control/**</exclude>
+               <exclude>org/apache/drill/exec/work/**</exclude>
+             </excludes>
            </filter>
          </filters>
         </configuration>
@@ -462,14 +462,43 @@
                 </goals>
                 <inherited>false</inherited>
                 <configuration>
-                  <!-- Only inlcude the published interface in the java-doc. Unfortunately,
-                       the javadoc tool and in turn, the plugin does not support inclusion
-                       pattern and hence we have to rely on exclusion pattern. -->
-                  <excludePackageNames>org.apache.drill.jdbc.impl</excludePackageNames>
                   <includeDependencySources>true</includeDependencySources>
                   <dependencySourceIncludes>
                     <dependencySourceInclude>org.apache.drill.exec:drill-jdbc</dependencySourceInclude>
                   </dependencySourceIncludes>
+                  <!-- Include only the published interface in the Javadoc-
+                       generated documentation.  Unfortunately, the plugin does
+                       not support inclusion patterns and hence we have to rely
+                       on an exclusion pattern. -->
+                  <excludePackageNames>org.apache.drill.jdbc.impl</excludePackageNames>
+
+                  <!-- windowtitle: common part of window titles (goes in
+                       parentheses at end of window title, after in-page title
+                       (e.g., package name)) -->
+                  <windowtitle>
+                    Apache Drill JDBC Driver v. ${project.version}
+                  </windowtitle>
+
+                  <!-- header, footer:  small text at right edge of
+                       top, bottom Overview/Package/etc. menu bars -->
+                  <header>Apache Drill JDBC Driver v. ${project.version}</header>
+                  <footer>Apache Drill JDBC Driver v. ${project.version}</footer>
+
+                  <!-- doctitle:  in-page title for overview page  -->
+                  <doctitle>
+                    Apache Drill JDBC Driver version ${project.version}
+                  </doctitle>
+                  <groups>
+                    <group>
+                      <title>Drill JDBC Driver</title>
+                      <packages>org.apache.drill.jdbc</packages>
+                    </group>
+                    <group>
+                      <title>Tracing Proxy JDBC Driver</title>
+                      <packages>org.apache.drill.jdbc.proxy</packages>
+                    </group>
+                  </groups>
+
                 </configuration>
               </execution>
             </executions>
@@ -478,7 +507,7 @@
       </build>
     </profile>
     <!-- mondrian data includes 10s of MBs of JSON file if you want to include 
-      them run maven with -Pwith-mondrian-data -->
+         them run maven with -Pwith-mondrian-data -->
     <profile>
       <id>with-mondrian-data</id>
       <activation>

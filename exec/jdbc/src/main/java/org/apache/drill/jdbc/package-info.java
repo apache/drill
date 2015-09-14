@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,13 @@
 /**
  * JDBC driver for Drill.
  * <p>
- *   Drill's JDBC driver class is {@link org.apache.drill.jdbc.Driver}.
+ *   Drill's JDBC driver class is
+ *   {@link org.apache.drill.jdbc.Driver org.apache.drill.jdbc.Driver}.
  * </p>
+ *
+ * @see
+ * <a href="http://drill.apache.org/docs/using-the-jdbc-driver">Using the JDBC Driver</a>
+ * in the on-line
+ * <a href="http://drill.apache.org/docs">Apache Drill Documentation</a>
  */
 package org.apache.drill.jdbc;

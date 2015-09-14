@@ -35,7 +35,7 @@ public interface RawBatchBuffer extends RawFragmentBatchProvider {
    * @param batch
    *          Batch to enqueue
    * @throws IOException
-   * @returns Whether response should be returned.
+   * @return Whether response should be returned.
    */
   public void enqueue(RawFragmentBatch batch) throws IOException;
 }

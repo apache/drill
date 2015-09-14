@@ -21,8 +21,9 @@ import java.sql.ResultSet;
 import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.sql.SQLSyntaxErrorException;
-import java.sql.SQLTransientException;
+import java.sql.SQLSyntaxErrorException;  // (for Javadoc reference(s))
+import java.sql.SQLTransientException;  // (for Javadoc reference(s))
+import java.sql.ResultSet;  // (for Javadoc reference(s))
 
 
 /**

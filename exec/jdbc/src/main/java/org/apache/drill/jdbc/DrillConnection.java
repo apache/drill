@@ -80,7 +80,7 @@ public interface DrillConnection extends Connection {
   /**
    * <strong>Drill</strong>:
    * Not supported.  Always throws {@link SQLFeatureNotSupportedException} (or
-   * {@link AlreadyClosedSqlException})..
+   * {@link AlreadyClosedSqlException}).
    */
   @Override
   void commit() throws SQLException;

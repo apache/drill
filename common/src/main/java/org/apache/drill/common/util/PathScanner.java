@@ -133,7 +133,7 @@ public class PathScanner {
    * @param  classLoaders  set of class loaders in which to look up resource;
    *           none (empty array) to specify to use current thread's context
    *           class loader and {@link Reflections}'s class loader
-   * @returns  ...; empty set if none
+   * @return  ...; empty set if none
    */
   public static Set<URL> forResource(final String resourcePathname,
                                      final boolean returnRootPathname,

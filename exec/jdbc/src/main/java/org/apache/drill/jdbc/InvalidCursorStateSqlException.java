@@ -17,7 +17,7 @@
  */
 package org.apache.drill.jdbc;
 
-import java.sql.ResultSet;
+import java.sql.ResultSet;  // (for Javadoc reference(s))
 
 
 /**

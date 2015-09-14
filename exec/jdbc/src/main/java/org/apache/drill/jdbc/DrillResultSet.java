@@ -103,10 +103,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code byte} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert
+   *   to convert to {@code byte}
    */
   @Override
-  byte getByte(int columnIndex) throws SQLException;
+  byte getByte(int columnIndex) throws SQLConversionOverflowException,
+                                       SQLException;
 
   /**
    * {@inheritDoc}
@@ -130,10 +131,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code short} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert
+   *   to convert to {@code short}
    */
   @Override
-  short getShort(int columnIndex) throws SQLException;
+  short getShort(int columnIndex) throws SQLConversionOverflowException,
+                                         SQLException;
 
   /**
    * {@inheritDoc}
@@ -157,10 +159,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code int} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert to int
+   *   to convert to {@code int}
    */
   @Override
-  int getInt(int columnIndex) throws SQLException;
+  int getInt(int columnIndex) throws SQLConversionOverflowException,
+                                     SQLException;
 
   /**
    * {@inheritDoc}
@@ -184,10 +187,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code long} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert
+   *   to convert to {@code long}
    */
   @Override
-  long getLong(int columnIndex) throws SQLException;
+  long getLong(int columnIndex) throws SQLConversionOverflowException,
+                                       SQLException;
 
   /**
    * {@inheritDoc}
@@ -211,10 +215,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code float} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert
+   *   to convert to {@code float}
    */
   @Override
-  float getFloat(int columnIndex) throws SQLException;
+  float getFloat(int columnIndex) throws SQLConversionOverflowException,
+                                         SQLException;
 
   /**
    * {@inheritDoc}
@@ -238,10 +243,11 @@ public interface DrillResultSet extends ResultSet  {
    *   value whose magnitude is outside the range of {@code double} values.
    * </p>
    * @throws  SQLConversionOverflowException  if a source value was too large
-   *   to convert
+   *   to convert to {@code double}
    */
   @Override
-  double getDouble(int columnIndex) throws SQLException;
+  double getDouble(int columnIndex) throws SQLConversionOverflowException,
+                                           SQLException;
 
   /**
    * {@inheritDoc}
@@ -295,7 +301,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  byte getByte(String columnLabel) throws SQLException;
+  byte getByte(String columnLabel) throws SQLConversionOverflowException,
+                                          SQLException;
 
   /**
    * {@inheritDoc}
@@ -305,7 +312,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  short getShort(String columnLabel) throws SQLException;
+  short getShort(String columnLabel) throws SQLConversionOverflowException,
+                                            SQLException;
 
   /**
    * {@inheritDoc}
@@ -315,7 +323,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  int getInt(String columnLabel) throws SQLException;
+  int getInt(String columnLabel) throws SQLConversionOverflowException,
+                                        SQLException;
 
   /**
    * {@inheritDoc}
@@ -325,7 +334,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  long getLong(String columnLabel) throws SQLException;
+  long getLong(String columnLabel) throws SQLConversionOverflowException,
+                                          SQLException;
 
   /**
    * {@inheritDoc}
@@ -335,7 +345,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  float getFloat(String columnLabel) throws SQLException;
+  float getFloat(String columnLabel) throws SQLConversionOverflowException,
+                                            SQLException;
 
   /**
    * {@inheritDoc}
@@ -345,7 +356,8 @@ public interface DrillResultSet extends ResultSet  {
    * </p>
    */
   @Override
-  double getDouble(String columnLabel) throws SQLException;
+  double getDouble(String columnLabel) throws SQLConversionOverflowException,
+                                              SQLException;
 
   /**
    * {@inheritDoc}
