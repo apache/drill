@@ -447,6 +447,36 @@
   </pluginRepositories>
 
   <profiles>
+    <profile>
+      <id>apache-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>aggregate-jar</goal>
+                </goals>
+                <inherited>false</inherited>
+                <configuration>
+                  <!-- Only inlcude the published interface in the java-doc. Unfortunately,
+                       the javadoc tool and in turn, the plugin does not support inclusion
+                       pattern and hence we have to rely on exclusion pattern. -->
+                  <excludePackageNames>org.apache.drill.jdbc.impl</excludePackageNames>
+                  <includeDependencySources>true</includeDependencySources>
+                  <dependencySourceIncludes>
+                    <dependencySourceInclude>org.apache.drill.exec:drill-jdbc</dependencySourceInclude>
+                  </dependencySourceIncludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <!-- mondrian data includes 10s of MBs of JSON file if you want to include 
       them run maven with -Pwith-mondrian-data -->
     <profile>
