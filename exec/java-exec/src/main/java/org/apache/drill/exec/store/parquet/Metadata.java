@@ -198,8 +198,7 @@ public class Metadata {
   private ParquetTableMetadata_v2 getParquetTableMetadata(String path) throws IOException {
     Path p = new Path(path);
     FileStatus fileStatus = fs.getFileStatus(p);
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     List<FileStatus> fileStatuses = getFileStatuses(fileStatus);
     logger.info("Took {} ms to get file statuses", watch.elapsed(TimeUnit.MILLISECONDS));
     watch.reset();
@@ -425,8 +424,7 @@ public class Metadata {
    * @throws IOException
    */
   private ParquetTableMetadataBase readBlockMeta(String path) throws IOException {
-    Stopwatch timer = new Stopwatch();
-    timer.start();
+    Stopwatch timer = Stopwatch.createStarted();
     Path p = new Path(path);
     ObjectMapper mapper = new ObjectMapper();
 

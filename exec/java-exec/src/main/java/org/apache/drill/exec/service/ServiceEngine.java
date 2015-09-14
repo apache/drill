@@ -21,7 +21,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.channel.EventLoopGroup;
 
-import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executor;
@@ -50,7 +49,6 @@ import org.apache.drill.exec.work.user.UserWorker;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Stopwatch;
-import com.google.common.io.Closeables;
 
 public class ServiceEngine implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ServiceEngine.class);
@@ -161,12 +159,16 @@ public class ServiceEngine implements AutoCloseable {
     return controller;
   }
 
-  private void submit(Executor p, final String name, final Closeable c) {
+  private void submit(Executor p, final String name, final AutoCloseable c) {
     p.execute(new Runnable() {
       @Override
       public void run() {
-        Stopwatch watch = new Stopwatch().start();
-        Closeables.closeQuietly(c);
+        Stopwatch watch = Stopwatch.createStarted();
+        try {
+          c.close();
+        } catch (Exception e) {
+          logger.warn("Failure while closing {}.", name, e);
+        }
         long elapsed = watch.elapsed(MILLISECONDS);
         if (elapsed > 500) {
           logger.info("closed " + name + " in " + elapsed + " ms");

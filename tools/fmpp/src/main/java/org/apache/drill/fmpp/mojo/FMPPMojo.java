@@ -22,7 +22,6 @@ import static java.lang.String.format;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -114,7 +113,7 @@ public class FMPPMojo extends AbstractMojo {
         throw new MojoFailureException("scope must be compile or test");
     }
 
-    final Stopwatch sw = new Stopwatch().start();
+    final Stopwatch sw = Stopwatch.createStarted();
     try {
       getLog().info(format("Freemarker generation:\n scope: %s,\n config: %s,\n templates: %s",
           scope, config.getAbsolutePath(), templatesPath));

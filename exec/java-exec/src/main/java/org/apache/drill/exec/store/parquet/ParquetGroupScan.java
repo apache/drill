@@ -108,7 +108,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
 
   private final List<ReadEntryWithPath> entries;
-  private final Stopwatch watch = new Stopwatch();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;

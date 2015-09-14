@@ -176,8 +176,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     writer.reset();
 
     int docCount = 0;
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
 
     try {
       while (docCount < BaseValueVector.INITIAL_VALUE_ALLOCATION && cursor.hasNext()) {

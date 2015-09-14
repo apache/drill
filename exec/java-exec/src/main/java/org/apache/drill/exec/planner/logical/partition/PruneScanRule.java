@@ -154,9 +154,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   protected void doOnMatch(RelOptRuleCall call, Filter filterRel, Project projectRel, TableScan scanRel) {
     final String pruningClassName = getClass().getName();
     logger.info("Beginning partition pruning, pruning class: {}", pruningClassName);
-    Stopwatch totalPruningTime = new Stopwatch();
-    totalPruningTime.start();
-
+    Stopwatch totalPruningTime = Stopwatch.createStarted();
 
     final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     PartitionDescriptor descriptor = getPartitionDescriptor(settings, scanRel);
@@ -196,7 +194,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     // stop watch to track how long we spend in different phases of pruning
-    Stopwatch miscTimer = new Stopwatch();
+    Stopwatch miscTimer = Stopwatch.createUnstarted();
 
     // track how long we spend building the filter tree
     miscTimer.start();

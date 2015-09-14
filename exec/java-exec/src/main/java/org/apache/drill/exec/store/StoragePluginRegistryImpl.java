@@ -379,8 +379,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
     @Override
     public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
 
       try {
         Set<String> currentPluginNames = Sets.newHashSet(plugins.names());

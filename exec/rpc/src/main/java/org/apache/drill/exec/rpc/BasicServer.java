@@ -217,7 +217,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   @Override
   public void close() throws IOException {
     try {
-      Stopwatch watch = new Stopwatch().start();
+      Stopwatch watch = Stopwatch.createStarted();
       // this takes 1s to complete
       // known issue: https://github.com/netty/netty/issues/2545
       eventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).get();

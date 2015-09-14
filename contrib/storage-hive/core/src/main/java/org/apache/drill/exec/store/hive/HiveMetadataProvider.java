@@ -62,7 +62,7 @@ public class HiveMetadataProvider {
   private final HiveConf hiveConf;
   private List<InputSplitWrapper> tableInputSplits;
 
-  private final Stopwatch watch = new Stopwatch();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
 
   public HiveMetadataProvider(final String userName, final HiveReadEntry hiveReadEntry, final HiveConf hiveConf) {
     this.hiveReadEntry = hiveReadEntry;
@@ -81,7 +81,7 @@ public class HiveMetadataProvider {
    * @throws IOException
    */
   public HiveStats getStats(final HiveReadEntry hiveReadEntry) throws IOException {
-    final Stopwatch timeGetStats = new Stopwatch().start();
+    final Stopwatch timeGetStats = Stopwatch.createStarted();
 
     final Table table = hiveReadEntry.getTable();
     try {
@@ -154,7 +154,7 @@ public class HiveMetadataProvider {
    * @return
    */
   public List<InputSplitWrapper> getInputSplits(final HiveReadEntry hiveReadEntry) {
-    final Stopwatch timeGetSplits = new Stopwatch().start();
+    final Stopwatch timeGetSplits = Stopwatch.createStarted();
     try {
       if (!isPartitionedTable) {
         return getTableInputSplits();
