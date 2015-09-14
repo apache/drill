@@ -31,6 +31,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.io.IOException;
 import java.net.BindException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -215,7 +216,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   @Override
   public void close() throws IOException {
     try {
-      eventLoopGroup.shutdownGracefully().get();
+      eventLoopGroup.shutdownGracefully(0, 2, TimeUnit.SECONDS).get();
     } catch (final InterruptedException | ExecutionException e) {
       logger.warn("Failure while shutting down {}. ", this.getClass().getName(), e);
 

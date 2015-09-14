@@ -168,16 +168,26 @@ public class WorkManager implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    try {
-      if (executor != null) {
-        executor.awaitTermination(1, TimeUnit.SECONDS);
-      }
-    } catch (final InterruptedException e) {
-      logger.warn("Executor interrupted while awaiting termination");
 
-      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
-      // interruption and respond to it if it wants to.
-      Thread.currentThread().interrupt();
+    if (executor != null) {
+      executor.shutdown(); // Disable new tasks from being submitted
+      try {
+        // Wait a while for existing tasks to terminate
+        if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+          executor.shutdownNow(); // Cancel currently executing tasks
+          // Wait a while for tasks to respond to being cancelled
+          if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+            logger.error("Pool did not terminate");
+          }
+        }
+      } catch (InterruptedException ie) {
+        logger.warn("Executor interrupted while awaiting termination");
+
+        // (Re-)Cancel if current thread also interrupted
+        executor.shutdownNow();
+        // Preserve interrupt status
+        Thread.currentThread().interrupt();
+      }
     }
 
     if (!runningFragments.isEmpty()) {
@@ -189,6 +199,10 @@ public class WorkManager implements AutoCloseable {
         }
       }
     }
+  }
+
+  private void shutdownAndAwaitTermination(long timeInSeconds) {
+
   }
 
   public DrillbitContext getContext() {
