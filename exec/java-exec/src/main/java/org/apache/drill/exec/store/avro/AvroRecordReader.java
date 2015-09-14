@@ -130,7 +130,7 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
 
     if (reader == null) {
       throw new IllegalStateException("Avro reader is not open.");

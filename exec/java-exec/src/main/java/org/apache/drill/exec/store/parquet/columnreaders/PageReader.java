@@ -131,7 +131,7 @@ final class PageReader {
 
   private void loadDictionaryIfExists(final ColumnReader<?> parentStatus,
       final ColumnChunkMetaData columnChunkMetaData, final FSDataInputStream f) throws IOException {
-    Stopwatch timer = new Stopwatch();
+    Stopwatch timer = Stopwatch.createUnstarted();
     if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
       f.seek(columnChunkMetaData.getDictionaryPageOffset());
       long start=f.getPos();
@@ -163,7 +163,7 @@ final class PageReader {
   }
 
   public void readPage(PageHeader pageHeader, int compressedSize, int uncompressedSize, DrillBuf dest) throws IOException {
-    Stopwatch timer = new Stopwatch();
+    Stopwatch timer = Stopwatch.createUnstarted();
     long timeToRead;
     long start=inputStream.getPos();
     if (parentColumnReader.columnChunkMetaData.getCodec() == CompressionCodecName.UNCOMPRESSED) {
@@ -203,7 +203,7 @@ final class PageReader {
    * @throws java.io.IOException
    */
   public boolean next() throws IOException {
-    Stopwatch timer = new Stopwatch();
+    Stopwatch timer = Stopwatch.createUnstarted();
     currentPageCount = -1;
     valuesRead = 0;
     valuesReadyToRead = 0;

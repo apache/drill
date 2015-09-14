@@ -151,7 +151,7 @@ public class TestBitRpc extends ExecTest {
 
   private class TimingOutcome implements RpcOutcomeListener<Ack> {
     private AtomicLong max;
-    private Stopwatch watch = new Stopwatch().start();
+    private Stopwatch watch = Stopwatch.createStarted();
 
     public TimingOutcome(AtomicLong max) {
       super();

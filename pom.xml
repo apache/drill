@@ -33,6 +33,7 @@
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.11</dep.junit.version>
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
+    <dep.guava.version>18.0</dep.guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
@@ -328,6 +329,7 @@
                     <exclude>javax.servlet:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
+                    <exclude>log4j:log4j</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -408,7 +410,10 @@
               -Ddrill.exec.sys.store.provider.local.write=false
               -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
               -Ddrill.test.query.printing.silent=true
+              -Ddrill.catastrophic_to_standard_out=true
               -XX:MaxPermSize=512M -XX:MaxDirectMemorySize=3072M
+              -Djava.net.preferIPv4Stack=true
+              -Djava.awt.headless=true
               -XX:+CMSClassUnloadingEnabled -ea</argLine>
             <forkCount>${forkCount}</forkCount>
             <reuseForks>true</reuseForks>
@@ -526,7 +531,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>14.0.1</version>
+      <version>${dep.guava.version}</version>
     </dependency>
 
     <dependency>

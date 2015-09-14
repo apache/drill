@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.List;
+
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -24,7 +27,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
-import com.google.common.io.Closeables;
+import com.google.common.collect.Lists;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -74,11 +77,15 @@ public class ControllerImpl implements Controller {
     handlerRegistry.registerCustomHandler(messageTypeId, handler, parser);
   }
 
-  public void close() {
-    Closeables.closeQuietly(server);
+  public void close() throws Exception {
+    List<AutoCloseable> closeables = Lists.newArrayList();
+    closeables.add(server);
+
     for (ControlConnectionManager bt : connectionRegistry) {
-      bt.close();
+      closeables.add(bt);
     }
+
+    AutoCloseables.close(closeables);
   }
 
 

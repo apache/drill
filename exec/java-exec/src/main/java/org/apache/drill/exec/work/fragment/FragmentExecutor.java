@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.DeferredException;
 import org.apache.drill.common.SerializedExecutor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
@@ -266,11 +267,7 @@ public class FragmentExecutor implements Runnable {
         fail(UserException.memoryError(e).build(logger));
       } else {
         // we have a heap out of memory error. The JVM in unstable, exit.
-        System.err.println("Node ran out of Heap memory, exiting.");
-        e.printStackTrace(System.err);
-        System.err.flush();
-        System.exit(-2);
-
+        CatastrophicFailure.exit(e, "Unable to handle out of memory condition in FragmentExecutor.", -2);
       }
     } catch (AssertionError | Exception e) {
       fail(e);

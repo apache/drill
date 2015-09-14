@@ -81,6 +81,8 @@ public class HBaseTestsSuite {
 
   @BeforeClass
   public static void initCluster() throws Exception {
+    GuavaPatcher.patch();
+
     if (initCount.get() == 0) {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {

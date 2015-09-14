@@ -49,7 +49,7 @@ public class JdbcTestQueryBase extends JdbcTestBase {
     boolean success = false;
     try (Connection conn = connect("jdbc:drill:zk=local")) {
       for (int x = 0; x < 1; x++) {
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         Statement s = conn.createStatement();
         ResultSet r = s.executeQuery(sql);
         System.out.println(String.format("QueryId: %s", r.unwrap(DrillResultSet.class).getQueryId()));

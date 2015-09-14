@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import java.io.Closeable;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -28,12 +28,11 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 
 /**
  * Manages a connection for each endpoint.
  */
-public class DataConnectionCreator implements Closeable {
+public class DataConnectionCreator implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionCreator.class);
 
   private volatile DataServer server;
@@ -75,9 +74,8 @@ public class DataConnectionCreator implements Closeable {
   }
 
   @Override
-  public void close() {
-    Closeables.closeQuietly(server);
-    dataAllocator.close();
+  public void close() throws Exception {
+    AutoCloseables.close(server, dataAllocator);
   }
 
 }

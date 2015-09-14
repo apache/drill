@@ -33,7 +33,6 @@ import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
 
 /**
@@ -125,8 +124,7 @@ public class FunctionInitializer {
     }
 
     URL u = Resources.getResource(c, path);
-    InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
-    try (InputStream is = supplier.getInput()) {
+    try (InputStream is = Resources.asByteSource(u).openStream()) {
       if (is == null) {
         throw new IOException(String.format(
             "Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(),
