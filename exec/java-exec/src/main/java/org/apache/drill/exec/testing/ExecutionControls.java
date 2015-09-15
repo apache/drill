@@ -80,7 +80,7 @@ public final class ExecutionControls {
      * @param ttl  the number of queries for which this option should be valid
      */
     public ControlsOptionValidator(final String name, final String def, final int ttl) {
-      super(name, OptionValue.Kind.STRING, OptionValue.createString(OptionType.SESSION, name, def));
+      super(name, OptionValue.Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
       assert ttl > 0;
       this.ttl = ttl;
     }

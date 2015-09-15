@@ -22,7 +22,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -37,9 +39,12 @@ import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
- * Only one instance of this class exists per drillbit.
+ * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
+ * persist between restarts.
  */
 public class SystemOptionManager extends BaseOptionManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
@@ -225,14 +230,13 @@ public class SystemOptionManager extends BaseOptionManager {
 
   @Override
   public void setOption(final OptionValue value) {
-    assert value.type == OptionType.SYSTEM;
+    checkArgument(value.type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
     final String name = value.name.toLowerCase();
     final OptionValidator validator;
     try {
       validator = getValidator(name);
     } catch (final IllegalArgumentException e) {
-      throw UserException.validationError()
-        .message(e.getMessage())
+      throw UserException.validationError(e)
         .build(logger);
     }
     validator.validate(value); // validate the option
@@ -241,6 +245,30 @@ public class SystemOptionManager extends BaseOptionManager {
       return; // if the option is not overridden, ignore setting option to default
     }
     options.put(name, value);
+  }
+
+  @Override
+  public void deleteOption(final String name, OptionType type) {
+    checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
+    try { // ensure option exists
+      getValidator(name);
+    } catch (final IllegalArgumentException e) {
+      throw UserException.validationError(e)
+        .build(logger);
+    }
+    options.delete(name.toLowerCase());
+  }
+
+  @Override
+  public void deleteAllOptions(OptionType type) {
+    checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
+    final Set<String> names = Sets.newHashSet();
+    for (final Map.Entry<String, OptionValue> entry : options) {
+      names.add(entry.getKey());
+    }
+    for (final String name : names) {
+      options.delete(name); // should be lowercase
+    }
   }
 
   @Override

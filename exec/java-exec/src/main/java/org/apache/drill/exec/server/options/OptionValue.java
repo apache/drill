@@ -24,14 +24,20 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
+/**
+ * An {@link OptionValue option value} is used by an {@link OptionManager} to store a run-time setting. This setting,
+ * for example, could affect a query in execution stage. Instances of this class are JSON serializable and can be stored
+ * in a {@link org.apache.drill.exec.store.sys.PStore persistent store} (see {@link SystemOptionManager#options}), or
+ * in memory (see {@link InMemoryOptionManager#options}).
+ */
 @JsonInclude(Include.NON_NULL)
 public class OptionValue implements Comparable<OptionValue> {
 
-  public static enum OptionType {
+  public enum OptionType {
     BOOT, SYSTEM, SESSION, QUERY
   }
 
-  public static enum Kind {
+  public enum Kind {
     BOOLEAN, LONG, STRING, DOUBLE
   }
 

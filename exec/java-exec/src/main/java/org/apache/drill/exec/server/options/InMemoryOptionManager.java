@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.options;
 
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
+
 import java.util.Map;
 
 /**
@@ -41,7 +43,7 @@ public abstract class InMemoryOptionManager extends FallbackOptionManager {
 
   @Override
   boolean setLocalOption(final OptionValue value) {
-    if (supportsOption(value)) {
+    if (supportsOptionType(value.type)) {
       options.put(value.name, value);
       return true;
     } else {
@@ -54,12 +56,32 @@ public abstract class InMemoryOptionManager extends FallbackOptionManager {
     return options.values();
   }
 
+  @Override
+  boolean deleteAllLocalOptions(final OptionType type) {
+    if (supportsOptionType(type)) {
+      options.clear();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @Override
+  boolean deleteLocalOption(final String name, final OptionType type) {
+    if (supportsOptionType(type)) {
+      options.remove(name);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /**
-   * Check to see if implementations of this manager support the given option value (e.g. check for option type).
+   * Check to see if implementations of this manager support the given option type.
    *
-   * @param value the option value
-   * @return true iff the option value is supported
+   * @param type option type
+   * @return true iff the type is supported
    */
-  abstract boolean supportsOption(OptionValue value);
+  abstract boolean supportsOptionType(OptionType type);
 
 }

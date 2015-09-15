@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.options;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import java.util.Map;
 
@@ -41,7 +42,7 @@ public class FragmentOptionManager extends InMemoryOptionManager {
   }
 
   @Override
-  boolean supportsOption(OptionValue value) {
+  boolean supportsOptionType(OptionType type) {
     throw new UnsupportedOperationException("FragmentOptionManager does not support the given option value.");
   }
 

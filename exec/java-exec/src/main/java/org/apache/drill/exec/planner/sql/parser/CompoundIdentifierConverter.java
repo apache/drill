@@ -26,14 +26,22 @@ import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlSetOption;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+/**
+ * Implementation of {@link SqlVisitor} that converts bracketed compound {@link SqlIdentifier} to bracket-less compound
+ * {@link SqlIdentifier} (also known as {@link DrillCompoundIdentifier}) to provide ease of use while querying complex
+ * types.
+ * <p/>
+ * For example, this visitor converts {@code a['b'][4]['c']} to {@code a.b[4].c}
+ */
 public class CompoundIdentifierConverter extends SqlShuttle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompoundIdentifierConverter.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompoundIdentifierConverter.class);
 
   private boolean enableComplex = true;
 
@@ -75,6 +83,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
       rewriteTypes = REWRITE_RULES.get(call.getClass());
     }
 
+    @Override
     public SqlNode result() {
       if (update) {
         return call.getOperator().createCall(
@@ -86,6 +95,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
       }
     }
 
+    @Override
     public SqlNode visitChild(
         SqlVisitor<SqlNode> visitor,
         SqlNode expr,
@@ -162,6 +172,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
     rules.put(SqlOrderBy.class, R(D, E, D, D));
     rules.put(SqlDropTable.class, R(D));
     rules.put(SqlRefreshMetadata.class, R(D));
+    rules.put(SqlSetOption.class, R(D, D, D));
     REWRITE_RULES = ImmutableMap.copyOf(rules);
   }
 
