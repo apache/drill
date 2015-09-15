@@ -86,7 +86,6 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
       this.bytebuf = pageReader.pageData;
-
       if (usingDictionary) {
         NullableVarBinaryVector.Mutator mutator =  castedVector.getMutator();
         Binary currDictValToWrite;
@@ -95,6 +94,11 @@ public class NullableFixedByteAlignedReaders {
           mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer(), 0,
               currDictValToWrite.length());
         }
+        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
+        int writerIndex = castedBaseVector.getBuffer().writerIndex();
+        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
         super.readField(recordsToReadInThisPass);
         // TODO - replace this with fixed binary type in drill
@@ -397,5 +401,5 @@ public class NullableFixedByteAlignedReaders {
       nullableIntervalVector.getMutator().set(index, 1, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
-
 }
+

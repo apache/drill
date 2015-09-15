@@ -80,15 +80,22 @@ public class ParquetFixedWidthDictionaryReaders {
 
       recordsReadInThisIteration = Math.min(pageReader.currentPageCount
           - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+      readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+      readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
       if (usingDictionary) {
         VarBinaryVector.Mutator mutator =  castedVector.getMutator();
         Binary currDictValToWrite = null;
         for (int i = 0; i < recordsReadInThisIteration; i++){
           currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-          mutator.setSafe(i, currDictValToWrite.toByteBuffer(), 0,
+          mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer(), 0,
               currDictValToWrite.length());
         }
+        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
+        int writerIndex = castedVector.getBuffer().writerIndex();
+        castedVector.getBuffer().setIndex(0, writerIndex + (int)readLength);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -97,7 +104,7 @@ public class ParquetFixedWidthDictionaryReaders {
       // now we need to write the lengths of each value
       int byteLength = dataTypeLengthInBits / 8;
       for (int i = 0; i < recordsToReadInThisPass; i++) {
-        castedVector.getMutator().setValueLengthSafe(i, byteLength);
+        castedVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
       }
     }
   }

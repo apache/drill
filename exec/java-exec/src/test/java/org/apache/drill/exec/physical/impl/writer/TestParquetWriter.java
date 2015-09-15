@@ -599,4 +599,62 @@ public class TestParquetWriter extends BaseTestQuery {
       deleteTableIfExists(outputFile);
     }
   }
+
+  /*
+  Test the reading of an int96 field. Impala encodes timestamps as int96 fields
+   */
+  @Test
+  public void testImpalaParquetInt96() throws Exception {
+    compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
+  Test the reading of a binary field where data is in dicationary _and_ non-dictionary encoded pages
+   */
+  @Test
+  public void testImpalaParquetVarBinary_DictChange() throws Exception {
+    compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+  }
+
+  /*
+     Test the conversion from int96 to impala timestamp
+   */
+  @Test
+  public void testImpalaParquetTimestampAsInt96() throws Exception {
+    compareParquetReadersColumnar("convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
+    Test a file with partitions and an int96 column. (Data generated using Hive)
+   */
+  @Test
+  public void testImpalaParquetInt96Partitioned() throws Exception {
+    compareParquetReadersColumnar("timestamp_field", "cp.`parquet/part1/hive_all_types.parquet`");
+  }
+
+  /*
+  Test the conversion from int96 to impala timestamp with hive data including nulls. Validate against old reader
+  */
+  @Test
+  public void testHiveParquetTimestampAsInt96_compare() throws Exception {
+    compareParquetReadersColumnar("convert_from(timestamp_field, 'TIMESTAMP_IMPALA')", "cp.`parquet/part1/hive_all_types.parquet`");
+  }
+
+  /*
+  Test the conversion from int96 to impala timestamp with hive data including nulls. Validate against expected values
+  */
+  @Test
+  @Ignore("relies on particular time zone")
+  public void testHiveParquetTimestampAsInt96_basic() throws Exception {
+    final String q = "SELECT cast(convert_from(timestamp_field, 'TIMESTAMP_IMPALA') as varchar(19))  as timestamp_field "
+            + "from cp.`parquet/part1/hive_all_types.parquet` ";
+
+    testBuilder()
+            .unOrdered()
+            .sqlQuery(q)
+            .baselineColumns("timestamp_field")
+            .baselineValues("2013-07-05 17:01:00")
+            .baselineValues((Object)null)
+            .go();
+  }
 }

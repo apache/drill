@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.io.Text;
+import org.codehaus.jackson.node.BinaryNode;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
@@ -253,7 +254,9 @@ public class DrillTestWrapper {
               }
             }
             else if (obj instanceof byte[]) {
-              obj = new String((byte[]) obj, "UTF-8");
+              // Borrowed from parquet-tools, allows printing of varbinary columns as readable strings
+              // and also matches the data output by 'parquet-tools cat'
+              obj= new BinaryNode((byte[]) obj).asText();
             }
           }
           combinedVectors.get(field).add(obj);
