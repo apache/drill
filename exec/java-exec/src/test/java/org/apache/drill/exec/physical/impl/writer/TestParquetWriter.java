@@ -599,4 +599,21 @@ public class TestParquetWriter extends BaseTestQuery {
       deleteTableIfExists(outputFile);
     }
   }
+
+  /*
+  Test the reading of an int96 field. Impala encodes timestamps as int96 fields
+   */
+  @Test
+  public void testImpalaParquetInt96() throws Exception {
+    compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
+  Test the reading of a binary field where data is in dicationary _and_ non-dictionary encoded pages
+   */
+  @Test
+  public void testImpalaParquetInt96_DictChange() throws Exception {
+    compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+  }
+
 }

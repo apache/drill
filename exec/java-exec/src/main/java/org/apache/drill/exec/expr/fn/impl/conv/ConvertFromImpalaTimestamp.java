@@ -27,7 +27,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 public class ConvertFromImpalaTimestamp {
 
-  @FunctionTemplate(name = "convert_fromIMPALA_TIMESTAMP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "convert_fromTIMESTAMP_IMPALA", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ImpalaTimestampConvertFrom implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
