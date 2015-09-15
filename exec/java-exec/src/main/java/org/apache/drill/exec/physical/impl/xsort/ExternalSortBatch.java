@@ -536,7 +536,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
     BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext.getAllocator());
-    boolean success = false;
+    boolean threw = true;
     logger.info("Merging and spilling to {}", outputFile);
     try {
       while ((count = copier.next(targetRecordCount)) > 0) {
@@ -547,19 +547,16 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
       injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
-      success = true;
+      threw = false;
     } catch (IOException e) {
       throw UserException.resourceError(e)
         .message("External Sort encountered an error while spilling to disk")
         .build(logger);
     } finally {
-      // make sure we properly release merged batch groups
-      for (BatchGroup group : batchGroupList) {
-        AutoCloseables.close(group, logger);
-      }
       hyperBatch.clear();
-
-      if (!success) {
+      cleanAfterMergeAndSpill(batchGroupList, threw);
+      if (threw) {
+        // we only need to cleanup newGroup if spill failed
         AutoCloseables.close(newGroup, logger);
       }
     }
@@ -569,6 +566,25 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     logger.debug("mergeAndSpill: final total size in memory = {}", totalSizeInMemory);
     logger.info("Completed spilling to {}", outputFile);
     return newGroup;
+  }
+
+  /**
+   * Make sure we cleanup properly after merge and spill.<br>If there was any error during the spilling,
+   * we cleanup the resources silently, otherwise we throw any exception we hit during the cleanup
+   *
+   * @param batchGroups spilled batch groups
+   * @param silently true to log any exception that happens during cleanup, false to throw it
+   */
+  private void cleanAfterMergeAndSpill(final List<BatchGroup> batchGroups, boolean silently) {
+      try {
+        AutoCloseables.close(batchGroups.toArray(new BatchGroup[batchGroups.size()]));
+      } catch (Exception e) {
+        if (silently) {
+          logger.warn("Error while cleaning up after merge and spill", e);
+        } else {
+          throw new RuntimeException("Error while cleaning up after merge and spill", e);
+        }
+      }
   }
 
   private void takeOwnership(VectorAccessible batch) {

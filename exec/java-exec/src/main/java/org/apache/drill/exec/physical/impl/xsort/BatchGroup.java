@@ -143,7 +143,7 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     currentContainer.zeroVectors();
     if (sv2 != null) {
       sv2.clear();
