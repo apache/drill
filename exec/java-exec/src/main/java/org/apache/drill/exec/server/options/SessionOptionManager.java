@@ -20,14 +20,23 @@ package org.apache.drill.exec.server.options;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * {@link OptionManager} that holds options within {@link org.apache.drill.exec.rpc.user.UserSession} context.
+ * {@link OptionManager} that holds options within {@link org.apache.drill.exec.rpc.user.UserSession} context. Options
+ * set at the session level only apply to queries that you run during the current Drill connection. Session level
+ * settings override system level settings.
+ *
+ * NOTE that currently, the effects of deleting a short lived option (see {@link OptionValidator#isShortLived}) are
+ * undefined. For example, we inject an exception (passed through an option), then try to delete the option, depending
+ * on where the exception was injected, the reset query could either succeed or the exception could actually be thrown
+ * in the reset query itself.
  */
 public class SessionOptionManager extends InMemoryOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
@@ -108,7 +117,7 @@ public class SessionOptionManager extends InMemoryOptionManager {
   }
 
   @Override
-  boolean supportsOption(OptionValue value) {
-    return value.type == OptionValue.OptionType.SESSION;
+  boolean supportsOptionType(OptionType type) {
+    return type == OptionType.SESSION;
   }
 }

@@ -24,6 +24,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class TypeValidators {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
 
@@ -179,6 +181,7 @@ public class TypeValidators {
 
     public TypeValidator(final String name, final Kind kind, final OptionValue defValue) {
       super(name);
+      checkArgument(defValue.type == OptionType.SYSTEM, "Default value must be SYSTEM type.");
       this.kind = kind;
       this.defaultValue = defValue;
     }
