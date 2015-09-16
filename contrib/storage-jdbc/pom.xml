@@ -30,7 +30,6 @@
 
   <dependencies>
 
-
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -72,5 +71,10 @@
     </dependency>    
   </dependencies>
 
+    <build>
+        <plugins>
+
+        </plugins>
+    </build>
   
 </project>
