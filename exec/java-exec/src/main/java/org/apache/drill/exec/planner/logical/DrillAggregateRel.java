@@ -21,6 +21,8 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -31,6 +33,7 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Aggregate;
@@ -80,6 +83,22 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
     }
 
     return builder.build();
+  }
+
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    for (AggregateCall aggCall : getAggCallList()) {
+      String name = aggCall.getAggregation().getName();
+      // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed
+      // to convert them to use sum and count. Here, we make the cost of the original functions high
+      // enough such that the planner does not choose them and instead chooses the rewritten functions.
+      if (name.equals("AVG") || name.equals("STDDEV_POP") || name.equals("STDDEV_SAMP")
+          || name.equals("VAR_POP") || name.equals("VAR_SAMP")) {
+        return ((DrillCostBase.DrillCostFactory)planner.getCostFactory()).makeHugeCost();
+      }
+    }
+
+    return computeLogicalAggCost(planner);
   }
 
   public static LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillImplementor implementor) {
