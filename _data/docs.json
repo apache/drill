@@ -722,8 +722,8 @@
             "next_title": "Configuration Options Introduction", 
             "next_url": "/docs/configuration-options-introduction/", 
             "parent": "Configure Drill", 
-            "previous_title": "Configuring Web UI and REST API Security", 
-            "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+            "previous_title": "Configuring Web Console and REST API Security", 
+            "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
             "relative_path": "_docs/configure-drill/080-configuration-options.md", 
             "title": "Configuration Options", 
             "url": "/docs/configuration-options/"
@@ -909,8 +909,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web UI and REST API Security", 
-                    "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "next_title": "Configuring Web Console and REST API Security", 
+                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
@@ -932,8 +932,8 @@
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
-                    "title": "Configuring Web UI and REST API Security", 
-                    "url": "/docs/configuring-web-ui-and-rest-api-security/"
+                    "title": "Configuring Web Console and REST API Security", 
+                    "url": "/docs/configuring-web-console-and-rest-api-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1031,8 +1031,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web UI and REST API Security", 
-                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "previous_title": "Configuring Web Console and REST API Security", 
+                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -1075,8 +1075,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting the Web UI", 
-            "previous_url": "/docs/starting-the-web-ui/", 
+            "previous_title": "Starting the Web Console", 
+            "previous_url": "/docs/starting-the-web-console/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -1427,8 +1427,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Configuring Web UI and REST API Security", 
-            "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+            "next_title": "Configuring Web Console and REST API Security", 
+            "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
             "parent": "Configure Drill", 
             "previous_title": "Configuring User Authentication", 
             "previous_url": "/docs/configuring-user-authentication/", 
@@ -1436,7 +1436,7 @@
             "title": "Configuring User Impersonation with Hive Authorization", 
             "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
         }, 
-        "Configuring Web UI and REST API Security": {
+        "Configuring Web Console and REST API Security": {
             "breadcrumbs": [
                 {
                     "title": "Configure Drill", 
@@ -1450,8 +1450,8 @@
             "previous_title": "Configuring User Impersonation with Hive Authorization", 
             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
             "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
-            "title": "Configuring Web UI and REST API Security", 
-            "url": "/docs/configuring-web-ui-and-rest-api-security/"
+            "title": "Configuring Web Console and REST API Security", 
+            "url": "/docs/configuring-web-console-and-rest-api-security/"
         }, 
         "Configuring a Multitenant Cluster": {
             "breadcrumbs": [
@@ -3741,8 +3741,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Starting the Web UI", 
-                            "next_url": "/docs/starting-the-web-ui/", 
+                            "next_title": "Starting the Web Console", 
+                            "next_url": "/docs/starting-the-web-console/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -3774,8 +3774,8 @@
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
                     "relative_path": "_docs/install/060-starting-the-web-ui.md", 
-                    "title": "Starting the Web UI", 
-                    "url": "/docs/starting-the-web-ui/"
+                    "title": "Starting the Web Console", 
+                    "url": "/docs/starting-the-web-console/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -3866,8 +3866,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Starting the Web UI", 
-                    "next_url": "/docs/starting-the-web-ui/", 
+                    "next_title": "Starting the Web Console", 
+                    "next_url": "/docs/starting-the-web-console/", 
                     "parent": "Installing Drill in Distributed Mode", 
                     "previous_title": "Installing Drill on the Cluster", 
                     "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -4828,7 +4828,7 @@
             "title": "MongoDB Plugin for Apache Drill", 
             "url": "/docs/mongodb-plugin-for-apache-drill/"
         }, 
-        "Monitoring and Canceling Queries in the Drill Web UI": {
+        "Monitoring and Canceling Queries in the Drill Web Console": {
             "breadcrumbs": [
                 {
                     "title": "Query Data", 
@@ -4842,8 +4842,8 @@
             "previous_title": "Querying System Tables", 
             "previous_url": "/docs/querying-system-tables/", 
             "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
-            "title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
+            "title": "Monitoring and Canceling Queries in the Drill Web Console", 
+            "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/"
         }, 
         "Nested Data Functions": {
             "breadcrumbs": [
@@ -6040,8 +6040,8 @@
             "next_title": "Performance Tuning Introduction", 
             "next_url": "/docs/performance-tuning-introduction/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web Console", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/", 
             "relative_path": "_docs/072-performance-tuning.md", 
             "title": "Performance Tuning", 
             "url": "/docs/performance-tuning/"
@@ -6599,8 +6599,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+                    "next_title": "Monitoring and Canceling Queries in the Drill Web Console", 
+                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
@@ -6622,8 +6622,8 @@
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
                     "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
+                    "title": "Monitoring and Canceling Queries in the Drill Web Console", 
+                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/"
                 }
             ], 
             "next_title": "Query Data Introduction", 
@@ -7230,8 +7230,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "next_title": "Monitoring and Canceling Queries in the Drill Web Console", 
+            "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/", 
             "parent": "Query Data", 
             "previous_title": "Querying the INFORMATION SCHEMA", 
             "previous_url": "/docs/querying-the-information-schema/", 
@@ -10143,8 +10143,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Starting the Web UI", 
-            "next_url": "/docs/starting-the-web-ui/", 
+            "next_title": "Starting the Web Console", 
+            "next_url": "/docs/starting-the-web-console/", 
             "parent": "Installing Drill in Distributed Mode", 
             "previous_title": "Installing Drill on the Cluster", 
             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -10194,7 +10194,7 @@
             "title": "Starting Drill on Windows", 
             "url": "/docs/starting-drill-on-windows/"
         }, 
-        "Starting the Web UI": {
+        "Starting the Web Console": {
             "breadcrumbs": [
                 {
                     "title": "Install Drill", 
@@ -10208,8 +10208,8 @@
             "previous_title": "Starting Drill in Distributed Mode", 
             "previous_url": "/docs/starting-drill-in-distributed-mode/", 
             "relative_path": "_docs/install/060-starting-the-web-ui.md", 
-            "title": "Starting the Web UI", 
-            "url": "/docs/starting-the-web-ui/"
+            "title": "Starting the Web Console", 
+            "url": "/docs/starting-the-web-console/"
         }, 
         "Storage Plugin Configuration": {
             "breadcrumbs": [
@@ -12068,8 +12068,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Starting the Web UI", 
-                            "next_url": "/docs/starting-the-web-ui/", 
+                            "next_title": "Starting the Web Console", 
+                            "next_url": "/docs/starting-the-web-console/", 
                             "parent": "Installing Drill in Distributed Mode", 
                             "previous_title": "Installing Drill on the Cluster", 
                             "previous_url": "/docs/installing-drill-on-the-cluster/", 
@@ -12101,8 +12101,8 @@
                     "previous_title": "Starting Drill in Distributed Mode", 
                     "previous_url": "/docs/starting-drill-in-distributed-mode/", 
                     "relative_path": "_docs/install/060-starting-the-web-ui.md", 
-                    "title": "Starting the Web UI", 
-                    "url": "/docs/starting-the-web-ui/"
+                    "title": "Starting the Web Console", 
+                    "url": "/docs/starting-the-web-console/"
                 }
             ], 
             "next_title": "Install Drill Introduction", 
@@ -12274,8 +12274,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Configuring Web UI and REST API Security", 
-                    "next_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "next_title": "Configuring Web Console and REST API Security", 
+                    "next_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "parent": "Configure Drill", 
                     "previous_title": "Configuring User Authentication", 
                     "previous_url": "/docs/configuring-user-authentication/", 
@@ -12297,8 +12297,8 @@
                     "previous_title": "Configuring User Impersonation with Hive Authorization", 
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/", 
                     "relative_path": "_docs/configure-drill/078-configuring-web-ui-and-rest-api-security.md", 
-                    "title": "Configuring Web UI and REST API Security", 
-                    "url": "/docs/configuring-web-ui-and-rest-api-security/"
+                    "title": "Configuring Web Console and REST API Security", 
+                    "url": "/docs/configuring-web-console-and-rest-api-security/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12396,8 +12396,8 @@
                     "next_title": "Configuration Options Introduction", 
                     "next_url": "/docs/configuration-options-introduction/", 
                     "parent": "Configure Drill", 
-                    "previous_title": "Configuring Web UI and REST API Security", 
-                    "previous_url": "/docs/configuring-web-ui-and-rest-api-security/", 
+                    "previous_title": "Configuring Web Console and REST API Security", 
+                    "previous_url": "/docs/configuring-web-console-and-rest-api-security/", 
                     "relative_path": "_docs/configure-drill/080-configuration-options.md", 
                     "title": "Configuration Options", 
                     "url": "/docs/configuration-options/"
@@ -12440,8 +12440,8 @@
             "next_title": "Configure Drill Introduction", 
             "next_url": "/docs/configure-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Starting the Web UI", 
-            "previous_url": "/docs/starting-the-web-ui/", 
+            "previous_title": "Starting the Web Console", 
+            "previous_url": "/docs/starting-the-web-console/", 
             "relative_path": "_docs/045-configure-drill.md", 
             "title": "Configure Drill", 
             "url": "/docs/configure-drill/"
@@ -13573,8 +13573,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+                    "next_title": "Monitoring and Canceling Queries in the Drill Web Console", 
+                    "next_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/", 
                     "parent": "Query Data", 
                     "previous_title": "Querying the INFORMATION SCHEMA", 
                     "previous_url": "/docs/querying-the-information-schema/", 
@@ -13596,8 +13596,8 @@
                     "previous_title": "Querying System Tables", 
                     "previous_url": "/docs/querying-system-tables/", 
                     "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md", 
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI", 
-                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/"
+                    "title": "Monitoring and Canceling Queries in the Drill Web Console", 
+                    "url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/"
                 }
             ], 
             "next_title": "Query Data Introduction", 
@@ -13952,8 +13952,8 @@
             "next_title": "Performance Tuning Introduction", 
             "next_url": "/docs/performance-tuning-introduction/", 
             "parent": "", 
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI", 
-            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/", 
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web Console", 
+            "previous_url": "/docs/monitoring-and-canceling-queries-in-the-drill-web-console/", 
             "relative_path": "_docs/072-performance-tuning.md", 
             "title": "Performance Tuning", 
             "url": "/docs/performance-tuning/"
