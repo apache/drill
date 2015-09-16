@@ -72,7 +72,14 @@ The following query uses the AVG() window function with the PARTITION BY clause 
 
 ## Types of Window Functions  
 
-Currently, Drill supports the following aggregate and ranking window functions:  
+Currently, Drill supports the following value, aggregate, and ranking window functions:  
+
+Value
+
+* FIRST_VALUE()
+* LAG()
+* LAST_VALUE()
+* LEAD() 
 
 Aggregate   
 
@@ -123,14 +130,18 @@ Any of the following functions used with the OVER clause to provide a window spe
 * AVG()
 * COUNT()
 * CUME_DIST()
+* DENSE_RANK()
+* FIRST_VALUE()
+* LAG()
+* LAST_VALUE()
+* LEAD()
 * MAX()
 * MIN()
-* SUM()
-* DENSE_RANK()
 * NTILE()
 * PERCENT_RANK()
 * RANK()
 * ROW_NUMBER()
+* SUM()
 
 OVER()  
 OVER() is a mandatory clause that defines a window within a query result set. OVER() is a subset of SELECT and a part of the aggregate definition. A window function computes a value for each row in the window.  

@@ -33,7 +33,10 @@ After generating the metadata cache, Drill performs the following tasks during t
 * Summarizes the information from the footers in a single metadata cache file.  
 * Stores the metadata cache file at each level that covers that particular level and all lower levels.
 
-At execution time, Drill reads the actual files. At planning time, Drill reads only the metadata file.
+At execution time, Drill reads the actual files. At planning time, Drill reads only the metadata file. 
+
+The first query that does not see the metadata file will gather the metadata, so the elapsed time of the first query will be very different from a subsequent 
+query. 
 
 ## Writing Parquet Files
 CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. To write Parquet data using the CTAS command, set the session store.format option as shown in the next section. Alternatively, configure the storage plugin to point to the directory containing the Parquet files.

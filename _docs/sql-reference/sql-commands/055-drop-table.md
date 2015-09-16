@@ -17,12 +17,12 @@ The DROP TABLE command supports the following syntax:
 
 ###Schema
 * You must identify the schema in which a table exists to successfully drop the table. You can identify the schema before dropping the table with the USE <schema_name> command (see [USE command]({{ site.baseurl }}/docs/use/)) or when you issue the DROP TABLE command. See [Example 1: Identifying a schema]({{ site.baseurl }}/docs/drop-table/#example-1:-identifying-a-schema).  
-* The schema must be mutable. For example, to drop a table from a schema named `dfs.sales`, the "`writable`" attribute for the sales workspace in the DFS storage plugin configuration must be set to `true`. See [Storage Plugin Attributes]({{ site.baseurl }}/docs/plugin-configuration-basics/#storage-plugin-attributes). 
+* The schema must be mutable. For example, to drop a table from a schema named `dfs.sales`, the `"writable"` attribute for the `"sales"` workspace in the DFS storage plugin configuration must be set to `true`. See [Storage Plugin Attributes]({{ site.baseurl }}/docs/plugin-configuration-basics/#storage-plugin-attributes). 
 
 ###File Type
-* The DROP TABLE command only works against file types that Drill can read. File types are identified as supported file formats, such as Parquet, JSON, or text. See [Querying a File System Introduction]({{ site.baseurl }}/docs/querying-a-file-system-introduction/) for a complete list of supported types. 
-* Text formats must be configured in the DFS storage plugin configuration. For example, to support CSV files, the “`format`” attribute in the configuration must include CSV as a value. See [Storage Plugin Attributes]({{ site.baseurl }}/docs/plugin-configuration-basics/#storage-plugin-attributes).
-* The directory on which you issue the DROP TABLE command must contain files of the same type. For example, if you have a workspace configured, such as `dfs.sales`, that points to a directory containing subdirectories, such as `/2012` and `/2013`, files in all of the directories must be of the same type in order to successfully issue the DROP TABLE command against the directory.  
+* The DROP TABLE command only works against file types that Drill can read. File types are identified as supported file formats, such as Parquet, JSON, or Text. See [Querying a File System Introduction]({{ site.baseurl }}/docs/querying-a-file-system-introduction/) for a complete list of supported file types. 
+* Text formats must be configured in the DFS storage plugin configuration. For example, to support CSV files, the `"formats"` attribute in the configuration must include `"csv"` as a value. See [Storage Plugin Attributes]({{ site.baseurl }}/docs/plugin-configuration-basics/#storage-plugin-attributes).
+* The directory on which you issue the DROP TABLE command must contain files of the same type. For example, if you have a workspace configured, such as `dfs.sales`, that points to a directory containing subdirectories, such as `/2012` and `/2013`, files in all of the directories must be of the same type to successfully issue the DROP TABLE command against the directory.  
 
 ###Permissions
 * A user must have the appropriate permissions on the file system to successfully issue the DROP TABLE command. Inadequate permissions result in a failed drop and can potentially remove a subset of the files in a directory.  
@@ -38,14 +38,14 @@ The DROP TABLE command supports the following syntax:
 * Concurrency occurs when two processes try to access and/or change data at the same time. Currently, Drill does not have a mechanism in place, such as read locks on files, to address concurrency issues. For example, if one user runs a query that references a table that another user simultaneously issues the DROP TABLE command against, there is no mechanism in place to prevent a collision of the two processes. In such a scenario, Drill may return partial query results or a system error to the user running the query when the table is dropped. 
 
 
-## Examples
+##Examples
 
 The following examples show results for several DROP TABLE scenarios.  
 
 ###Example 1:  Identifying a schema  
-This example shows you how to identify a schema with the USE and DROP TABLE commands to successfully drop a table named `donuts_json` in the “`donuts`” workspace configured within the DFS storage plugin configuration.  
+This example shows you how to identify a schema with the USE and DROP TABLE commands and successfully drop a table named `donuts_json` in the `"donuts"` workspace configured within the DFS storage plugin configuration.  
 
-The "`donuts`" workspace is configured within the following DFS configuration:  
+The `"donuts"` workspace is configured within the following DFS configuration:  
 
         {
          "type": "file",
@@ -64,7 +64,7 @@ The "`donuts`" workspace is configured within the following DFS configuration:
            }
          },
 
-Issuing the `USE dfs.donuts` command changes to the `dfs.donuts` schema before issuing the `DROP TABLE` command.
+Issuing the USE command changes the schema to the `dfs.donuts` schema before dropping the `donuts_json` table.
 
        0: jdbc:drill:zk=local> use dfs.donuts;
        +-------+-----------------------------------------+
@@ -82,7 +82,7 @@ Issuing the `USE dfs.donuts` command changes to the `dfs.donuts` schema before i
        +-------+------------------------------+
        1 row selected (0.094 seconds) 
 
-Alternatively, instead of issuing the `USE` command to change the schema, you can include the schema name when you drop the table.
+Alternatively, instead of issuing the USE command to change the schema, you can include the schema name when you drop the table.
 
        0: jdbc:drill:zk=local> drop table dfs.donuts.donuts_json;
        +-------+------------------------------+
@@ -92,7 +92,7 @@ Alternatively, instead of issuing the `USE` command to change the schema, you ca
        +-------+------------------------------+
        1 row selected (1.189 seconds)
 
-Drill returns the following error when the schema is not identified:
+If you do not identify the schema prior to issuing the DROP TABLE command, Drill returns the following error:
 
        0: jdbc:drill:zk=local> drop table donuts_json;
 
@@ -100,9 +100,9 @@ Drill returns the following error when the schema is not identified:
        [Error Id: 8c42cb6a-27eb-48fd-b42a-671a6fb58c14 on 10.250.56.218:31010] (state=,code=0)
        
 ###Example 2: Dropping a table created from a file
-In the following example, the `donuts_json` table is removed from the `/tmp` workspace using the `DROP TABLE` command. This example assumes that the steps in the [Complete CTAS Example]({{ site.baseurl }}/docs/create-table-as-ctas/#complete-ctas-example) were already completed. 
+In the following example, the `donuts_json` table is removed from the `/tmp` workspace using the DROP TABLE command. This example assumes that the steps in the [Complete CTAS Example]({{ site.baseurl }}/docs/create-table-as-ctas/#complete-ctas-example) were already completed. 
 
-Running an `ls` on the `/tmp` directory shows the `donuts_json` file.
+Running an `ls` on `/donuts_json` lists the files in the directory.
 
        $ pwd
        /tmp
@@ -116,7 +116,7 @@ Running an `ls` on the `/tmp` directory shows the `donuts_json` file.
          "name" : "Cake",
          "ppu" : 0.55
        }  
-Issuing `USE dfs.tmp` changes schema.  
+Issuing the USE command changes the schema to `dfs.tmp`.  
 
        0: jdbc:drill:zk=local> use dfs.tmp;
        +-------+-----------------------------------------+
@@ -126,7 +126,7 @@ Issuing `USE dfs.tmp` changes schema.
        +-------+-----------------------------------------+
        1 row selected (0.085 seconds)  
 
-Running the `DROP TABLE` command removes the table from the schema.
+Running the `DROP TABLE` command removes the table from the `dfs.tmp` schema.
        
        0: jdbc:drill:zk=local> drop table donuts_json;
        +-------+------------------------------+
@@ -137,13 +137,13 @@ Running the `DROP TABLE` command removes the table from the schema.
        1 row selected (0.107 seconds)  
 
 ###Example 3: Dropping a table created as a directory  
-When you create a table that writes files to a directory, you can issue the `DROP TABLE` command against the table to remove the directory. All files and subdirectories are deleted. For example, the following `CTAS` command writes Parquet data from the `nation.parquet` file, installed with Drill, to the `/tmp/name_key` directory.  
+When you create a table that writes files to a directory, you can issue the `DROP TABLE` command against the table to remove the directory. All files and subdirectories are deleted. For example, the following CTAS command writes Parquet data from the `nation.parquet` file, installed with Drill, to the `/tmp/name_key` directory.  
 
-Issue the `USE` command to change schema.  
+Issuing the USE command changes the schema to the `dfs` schema.  
               
        0: jdbc:drill:zk=local> USE dfs;
 
-Create a table using the `CTAS` command.
+Issuing the CTAS command creates a `tmp.name_key` table.
 
        0: jdbc:drill:zk=local> CREATE TABLE tmp.`name_key` (N_NAME, N_NATIONKEY) AS SELECT N_NATIONKEY, N_NAME FROM dfs.`/Users/drilluser/apache-drill-1.2.0/sample-data/nation.parquet`;
        +-----------+----------------------------+
@@ -151,9 +151,8 @@ Create a table using the `CTAS` command.
        +-----------+----------------------------+
        | 0_0       | 25                         |
        +-----------+----------------------------+
-       Query the directory to see the data.
 
-Query the directory to see the data. 
+Querying the directory shows the data. 
 
        0: jdbc:drill:zk=local> select * from tmp.`name_key`;
        +---------+-----------------+
@@ -187,7 +186,7 @@ Query the directory to see the data.
        +---------+-----------------+
        25 rows selected (0.183 seconds)
 
-Issue the `DROP TABLE` command against the directory to remove the directory and deletes all files and subdirectories that existed within the directory.
+Issuing the DROP TABLE command against the directory removes the directory and deletes all the files and subdirectories that existed within the directory.
 
        0: jdbc:drill:zk=local> drop table name_key;
        +-------+---------------------------+
@@ -198,7 +197,7 @@ Issue the `DROP TABLE` command against the directory to remove the directory and
        1 row selected (0.086 seconds)
 
 ###Example 4: Dropping a table that does not exist
-The following example shows the result of dropping a table that does not exist because it has already been dropped or it never existed. 
+The following example shows the result of dropping a table that does not exist because it was either already dropped or never existed. 
 
        0: jdbc:drill:zk=local> use use dfs.tmp;
        +-------+--------------------------------------+
@@ -214,7 +213,7 @@ The following example shows the result of dropping a table that does not exist b
        [Error Id: fc6bfe17-d009-421c-8063-d759d7ea2f4e on 10.250.56.218:31010] (state=,code=0)
 
 ###Example 5: Dropping a table without permissions 
-The following example shows the result of dropping a table without appropriate permissions in the file system.
+The following example shows the result of dropping a table without the appropriate permissions in the file system.
 
        0: jdbc:drill:zk=local> drop table name_key;
 
@@ -248,23 +247,16 @@ The following example shows the result of dropping a table and issuing a query a
 ###Example 7: Dropping a table with different file formats
 The following example shows the result of dropping a table when multiple file formats exists in the directory. In this scenario, the `sales_dir` table resides in the `dfs.sales` workspace and contains Parquet, CSV, and JSON files.
 
-Running `ls` on `sales_dir` shows that different file types exist in the directory.
+Running `ls` on `sales_dir` shows the different file types that exist in the directory.
 
        $ cd sales_dir/
        $ ls
        0_0_0.parquet	sales_a.csv	sales_b.json	sales_c.parquet
 
-Issuing the `DROP TABLE` command on the directory results in an error.
+Issuing the DROP TABLE command on the directory results in an error.
 
        0: jdbc:drill:zk=local> drop table dfs.sales.sales_dir;
 
        Error: VALIDATION ERROR: Table contains different file formats. 
        Drop Table is only supported for directories that contain homogeneous file formats consumable by Drill
        [Error Id: 062f68c9-f2cd-4033-9b3d-182146a96904 on 10.250.56.218:31010] (state=,code=0)
-
-
-
-
-        
-
-
