@@ -23,7 +23,7 @@ You must have a [defined workspace]({{ site.baseurl }}/docs/workspaces) before y
 
 To define a default input format for a workspace:
 
-  1. Navigate to the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui). The Drillbit process must be running on the node before you connect to the Drill Web UI.
+  1. Navigate to the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui). The Drillbit process must be running on the node before you connect to the Drill Web Console.
   2. Select **Storage** in the toolbar.
   3. Click **Update** next to the storage plugin configuration for which you want to define a default input format for a workspace.
   4. In the Configuration area, locate the workspace, and change the `defaultInputFormat` attribute to any of the supported file types.

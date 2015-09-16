@@ -28,7 +28,7 @@ The following table lists the clients, storage plugins, and types of queries tha
   <tr>
     <td>Clients</td>
     <td>SQLLine, ODBC, JDBC</td>
-    <td>Drill Web UI, REST API</td>
+    <td>Drill Web Console, REST API</td>
   </tr>
   <tr>
     <td>Storage Plugins</td>

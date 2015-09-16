@@ -214,7 +214,7 @@ Add the following required authorization parameters in hive-site.xml to configur
 
 ## Step 3: Modifying the Hive Storage Plugin  
 
-Modify the Hive storage plugin configuration in the Drill Web UI to include specific authorization settings. The Drillbit that you use to access the Web UI must be running.  
+Modify the Hive storage plugin configuration in the Drill Web Console to include specific authorization settings. The Drillbit that you use to access the Web Console must be running.  
 
 Complete the following steps to modify the Hive storage plugin:  
 

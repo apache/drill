@@ -35,7 +35,7 @@ See [Drill Query Execution]({{ site.baseurl }}/docs/drill-query-execution/).
 You can access Drill through the following interfaces:
 
   * [Drill shell]({{ site.baseurl }}/docs/configuring-the-drill-shell/)
-  * [Drill Web UI]({{ site.baseurl }}/docs/monitoring-and-canceling-queries-in-the-drill-web-ui)
+  * [Drill Web Console]({{ site.baseurl }}/docs/monitoring-and-canceling-queries-in-the-drill-web-ui)
   * [ODBC/JDBC]({{ site.baseurl }}/docs/interfaces-introduction/#using-odbc-to-access-apache-drill-from-bi-tools) 
   * C++ API
 

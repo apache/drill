@@ -2,7 +2,7 @@
 title: "Storage Plugin Registration"
 parent: "Connect a Data Source"
 ---
-You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web UI, you can view and reconfigure a storage plugin if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to do so. Go to `https://<IP address>:8047/storage`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. In Drill 1.1 and earlier, go to `http://<IP address>:8047/storage` to view and configure a storage plugin.
+You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web Console, you can view and reconfigure a storage plugin if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to do so. Go to `https://<IP address>:8047/storage`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. In Drill 1.1 and earlier, go to `http://<IP address>:8047/storage` to view and configure a storage plugin.
 
 The Drill installation registers the `cp`, `dfs`, `hbase`, `hive`, and `mongo` default storage plugin configurations.
 
@@ -26,9 +26,9 @@ To register a new storage plugin configuration, enter a storage name, click **CR
 
 ## Storage Plugin Configuration Persistance
 
-Drill saves storage plugin configurations in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. Enabling authorization to protect this data through the Web UI and REST API does not include protection for the data in the tmp directory or in ZooKeeper. 
+Drill saves storage plugin configurations in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. Enabling authorization to protect this data through the Web Console and REST API does not include protection for the data in the tmp directory or in ZooKeeper. 
 
 <!-- See Drill-3780 -->
 
-The storage plugin configuration persists after upgrading, so authorized users can see a configuration that you created in one version of Drill in the Drill Web UI of an upgraded version of Drill. To revert to the default storage plugins for a particular version, in embedded mode, delete the contents of this directory and restart the Drill shell.
+The storage plugin configuration persists after upgrading, so authorized users can see a configuration that you created in one version of Drill in the Drill Web Console of an upgraded version of Drill. To revert to the default storage plugins for a particular version, in embedded mode, delete the contents of this directory and restart the Drill shell.
 

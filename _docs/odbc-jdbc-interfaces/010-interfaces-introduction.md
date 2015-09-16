@@ -5,7 +5,7 @@ parent: "ODBC/JDBC Interfaces"
 You can connect to Apache Drill through the following interfaces:
 
   * Drill shell
-  * Drill Web UI
+  * Drill Web Console
   * [ODBC]({{ site.baseurl }}/docs/installing-the-odbc-driver/)*
   * [JDBC]({{ site.baseurl }}/docs/using-jdbc-with-squirrel-on-windows/)
   * C++ API

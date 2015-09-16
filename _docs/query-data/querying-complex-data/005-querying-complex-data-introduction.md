@@ -48,7 +48,7 @@ your own queries, you need to be aware of the basic data types in these files:
   * boolean values: true, false
 
 Check that you have the following configuration setting for JSON files in the
-Drill Web UI (`dfs` storage plugin configuration):
+Drill Web Console (`dfs` storage plugin configuration):
 
     "json" : {
       "type" : "json"

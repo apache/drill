@@ -1,16 +1,16 @@
 ---
-title: "Configuring Web UI and REST API Security"
+title: "Configuring Web Console and REST API Security"
 parent: "Configure Drill"
 ---
-Drill 1.2 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web UI and underlying REST API. As administrator, you can control the extent of access to the Web UI and REST API client applications. For example,
-you can limit the access of certain users to Web UI functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
+Drill 1.2 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
+you can limit the access of certain users to Web Console functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
 
-With Web UI security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web UI for storage plugin configuration information.
+With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information.
 
 ## HTTPS Support
-Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web UI and REST API. By default, the Web UI and REST API now support the HTTPS protocol.
+Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API now support the HTTPS protocol.
 
-By default, Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web UI; however, as administrator, you can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
+By default, Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console; however, as administrator, you can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
 
 ## Setting Up a Custom SSL Configuration
 
@@ -25,15 +25,15 @@ As cluster administrator, you can set the following SSL configuration parameters
 * javax.net.ssl.trustStorePassword  
   Password for accessing the trusted keystore file.
 
-## Prerequisites for Web UI and REST API Security
+## Prerequisites for Web Console and REST API Security
 
-You need to perform the following configuration tasks using Web UI and REST API security.  
+You need to perform the following configuration tasks using Web Console and REST API security.  
 
 * [User Authentication]({{site.baseurl}}/docs/configuring-user-authentication/)  
-* Set up Web UI administrators  
-  Optionally, you can set up Web UI administrator-user groups to facilitate management of multiple Web UI administrators.
+* Set up Web Console administrators  
+  Optionally, you can set up Web Console administrator-user groups to facilitate management of multiple Web Console administrators.
 
-## Setting up Web UI Administrators and Administrator-User Groups
+## Setting up Web Console Administrators and Administrator-User Groups
 
 Configure the following system options using the [ALTER SYSTEM]({{site.baseurl}}/docs/alter-system/) command:
 
@@ -42,11 +42,11 @@ Configure the following system options using the [ALTER SYSTEM]({{site.baseurl}}
 * security.admin.user_groups  
   Set the value of this option to a comma-separated list of administrators.
 
-Any user for whom you have configured Drill user authentication, but not set up as a Web UI administrator, has only user privileges to access the Web UI and REST API client applications.
+Any user for whom you have configured Drill user authentication, but not set up as a Web Console administrator, has only user privileges to access the Web Console and REST API client applications.
 
-## Web UI and REST API Privileges
+## Web Console and REST API Privileges
 
-The following table and subsections describe the privilege levels for accessing the REST API methods and corresponding Web UI functions:
+The following table and subsections describe the privilege levels for accessing the REST API methods and corresponding Web Console functions:
 
 * Administrator (ADMIN)  
 * User (USER)  
@@ -104,9 +104,9 @@ The following table and subsections describe the privilege levels for accessing 
 * ADMIN - can cancel the query.  
 * USER - cancel the query only if the query is launched by the user requesting the cancellation.
 
-## Starting the Web UI Using Authentication
+## Starting the Web Console Using Authentication
 
-The following example shows the sequence of steps you typically perform to access the Web UI when authentication is enabled on a Drill cluster.
+The following example shows the sequence of steps you typically perform to access the Web Console when authentication is enabled on a Drill cluster.
 
 1. Set the JVM library path to the location of the PAM `.so` file.  
    `export DRILLBIT_JAVA_OPTS=" -Djava.library.path=/root/ "`  
@@ -117,5 +117,5 @@ The following example shows the sequence of steps you typically perform to acces
 4. Open a browser, and go to `https://<IP address>:8047`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system.  
    The login screen appears:  
 
-   ![Web UI Login]({{ site.baseurl }}/docs/img/web-ui-login.png)
-5. [Start the Web UI]({{ site.baseurl }}/docs/starting-the-web-ui/).
+   ![Web Console Login]({{ site.baseurl }}/docs/img/web-ui-login.png)
+5. [Start the Web Console]({{ site.baseurl }}/docs/starting-the-web-ui/).

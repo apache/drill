@@ -32,7 +32,7 @@ the Drill shell, type:
 
 `0: jdbc:drill:> !quit`
 
-Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web UI.
+Examples in this tutorial use the Drill shell. You can also execute queries using the Drill Web Console.
 
 ### Enable the DECIMAL Data Type
 

@@ -7,9 +7,9 @@ cluster having multiple installations of Drill, Drill broadcasts the information
 to synchronize the storage plugin configurations. You do not need to
 restart any of the Drillbits when you add or update a storage plugin configuration.
 
-## Using the Drill Web UI
+## Using the Drill Web Console
 
-Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/), you can use the Drill Web UI to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web UI. In Drill 1.2 and later, to open the Drill Web UI, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
+Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/), you can use the Drill Web Console to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web Console. In Drill 1.2 and later, to open the Drill Web Console, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
 
 To create a name and new configuration:
 
@@ -150,7 +150,7 @@ If you need to add a storage plugin configuration to Drill and do not want to us
   The storage plugin configuration name. 
 
 * config  
-  The attribute settings as entered in the Web UI.
+  The attribute settings as entered in the Web Console.
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
@@ -163,7 +163,7 @@ The REST API is recommended for programmatically adding a storage plugin configu
 Currently, bootstrapping a storage plugin configuration works only when the first Drillbit in the cluster first starts up. The configuration is
 stored in ZooKeeper, preventing Drill from picking up the bootstrap-storage-plugins.json again.
 
-After cluster startup, you have to use the REST API or Drill Web UI to add a storage plugin configuration. Alternatively, you
+After cluster startup, you have to use the REST API or Drill Web Console to add a storage plugin configuration. Alternatively, you
 can modify the entry in ZooKeeper by uploading the json file for
 that plugin to the /drill directory of the zookeeper installation, or by just deleting the /drill directory if you do not have configuration properties to preserve.
 

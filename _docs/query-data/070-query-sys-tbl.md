@@ -83,7 +83,7 @@ Query the drillbits, version, options, boot, threads, and memory tables in the s
 The name of the node running the Drillbit service.
   * user_port  
 The user port address, used between nodes in a cluster for connecting to
-external clients and for the Drill Web UI.  
+external clients and for the Drill Web Console.  
   * control_port  
 The control port address, used between nodes for multi-node installation of
 Apache Drill.
@@ -211,7 +211,7 @@ otherwise, null.
 The name of the node running the Drillbit service.
   * user_port  
 The user port address, used between nodes in a cluster for connecting to
-external clients and for the Drill Web UI. 
+external clients and for the Drill Web Console. 
   * total_threads
 The peak thread count on the node.
   * busy_threads
@@ -233,7 +233,7 @@ The current number of live threads (daemon and non-daemon) on the node.
 The name of the node running the Drillbit service.
   * user_port  
 The user port address, used between nodes in a cluster for connecting to
-external clients and for the Drill Web UI.
+external clients and for the Drill Web Console.
   * heap_current
 The amount of memory being used on the heap, in bytes.
   * heap_max

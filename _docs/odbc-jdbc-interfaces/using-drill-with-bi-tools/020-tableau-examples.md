@@ -14,7 +14,7 @@ This section includes the following examples:
 
 The steps and results of these examples assume pre-configured schemas and
 source data. You define schemas by configuring storage plugins on the Storage
-tab of the [Drill Web UI]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox#storage-plugin-overview). Also, the examples assume you [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type) in Drill.  
+tab of the [Drill Web Console]({{ site.baseurl }}/docs/getting-to-know-the-drill-sandbox#storage-plugin-overview). Also, the examples assume you [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type) in Drill.  
 
 ## Example: Connect to a Hive Table in Tableau
 

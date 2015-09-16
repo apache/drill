@@ -8,7 +8,7 @@ If you experience performance issues in Drill, you can typically identify the so
 
 Drill has an optimizer and a parallelizer that work together to plan a query. Drill creates logical, physical, and execution plans based on the available statistics for an associated set of files or data sources. The number of running Drill nodes and configured runtime settings contribute to how Drill plans and executes a query.
  
-You can use [EXPLAIN commands]({{ site.baseurl }}/docs/explain-commands/) to view the logical and physical plans for a query, however you cannot view the execution plan. To see how Drill executed a query, you can view the query profile in the Drill Web UI at `<drill_node_ip_address>:8047`.
+You can use [EXPLAIN commands]({{ site.baseurl }}/docs/explain-commands/) to view the logical and physical plans for a query, however you cannot view the execution plan. To see how Drill executed a query, you can view the query profile in the Drill Web Console at `<drill_node_ip_address>:8047`.
 
 ### Logical Plan  
 
@@ -26,7 +26,7 @@ Drill transforms the physical plan into an execution tree of minor fragments tha
 
 You can run the EXPLAIN command to view the physical plan for a query with or without costing formation. See EXPLAIN for Physical Plans and Costing Information. Analyze the cost-based query plan to identify the types of operators that Drill plans to use for the query and how much memory they will require. 
 
-Read the text output from bottom to top to understand the sequence of operators planned to execute the query. You can also view a visual representation of the physical plan in the Profile view of the Drill Web UI. See Query Profiles. You can modify the detailed JSON output, and submit it back to Drill through the Drill Web UI.
+Read the text output from bottom to top to understand the sequence of operators planned to execute the query. You can also view a visual representation of the physical plan in the Profile view of the Drill Web Console. See Query Profiles. You can modify the detailed JSON output, and submit it back to Drill through the Drill Web Console.
 
 The physical plan shows the major fragments and specific operators with correlating MajorFragmentIDs and OperatorIDs. See Operators. Major fragments are an abstract concept that represent a phase of the query execution. Major fragments do not perform any query tasks.
  
@@ -58,7 +58,7 @@ If you view the plan with costing information, you can see where the majority of
          
 **Modifying and Submitting a Physical Plan to Drill**
 
-You can test the performance of a physical plan that Drill generates, modify the plan and then re-submit it to Drill. For example, you can modify the plan to change the join ordering of tables. You can also submit physical plans created outside of Drill through the Drill Web UI.
+You can test the performance of a physical plan that Drill generates, modify the plan and then re-submit it to Drill. For example, you can modify the plan to change the join ordering of tables. You can also submit physical plans created outside of Drill through the Drill Web Console.
  
 **Note:** Only advanced users who know about query planning should modify and re-submit a physical plan.
  
@@ -66,7 +66,7 @@ To modify and re-submit a physical plan to Drill, complete the following steps:
 
 1. Run EXPLAIN PLAN FOR `<query>` to see the physical plan for your query.  
 2. Copy the JSON output of the physical plan, and modify as needed.  
-3. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047`.  
+3. Navigate to the Drill Web Console at `<drill_node_ip_address>:8047`.  
 4. Select **Query** in the menu bar.  
 ![]({{ site.baseurl }}/docs/img/submit_plan.png)  
 
