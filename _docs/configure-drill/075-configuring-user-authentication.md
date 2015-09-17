@@ -8,11 +8,20 @@ If user impersonation is enabled, Drill executes the client requests as the auth
 
 When using PAM for authentication, each user that has permission to run Drill queries must exist in the list of users that resides on each Drill node in the cluster. The username (including uid) and password for each user must be identical across all of the Drill nodes. 
 
-If you use PAM with /etc/passwd for authentication, verify that the users with permission to start the Drill process are part of the shadow user group on all nodes in the cluster. This enables Drill to read the /etc/shadow file for authentication. 
+If you use PAM with /etc/passwd for authentication, verify that the users with permission to start the Drill process are part of the shadow user group on all nodes in the cluster. This enables Drill to read the /etc/shadow file for authentication.  
+
+## Administrator Privileges
+
+When authentication is enabled, only Drill users who are assigned Drill cluster administrator privileges can perform the following tasks:
+
+* Change a system-level option by issuing an ALTER SYSTEM command
+* Update a storage plugin configuration through the REST API or Web Console
+* View profiles of all queries that all users have run or are currently running in a cluster
+* Cancel running queries that were launched by any user in the cluster
 
 ## User Authentication Process
 
-When user authentication is configured, each user that accesses the Drillbit process through a client, such as SQLLine, must provide their username and password for access. 
+When user authentication is enabled, each user that accesses the Drillbit process through a client, such as SQLLine, must provide their username and password for access. 
 
 When launching SQLLine, a user must include the `–n` and `–p` parameters with their username and password in the SQLLine argument:  
        `sqlline –u jdbc:drill:zk=10.10.11.112:5181 –n bob –p bobdrill`

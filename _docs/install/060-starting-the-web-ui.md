@@ -9,15 +9,15 @@ If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/)
 
 ![Web Console]({{ site.baseurl }}/docs/img/web-ui.png)
 
-If user authentication is enabled, Drill 1.2 and later prompts you for a user name and password:
+If [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) is enabled, Drill 1.2 and later prompts you for a user name and password:
 
 ![Web Console Login]({{ site.baseurl }}/docs/img/web-ui-login.png)
 
-If an administrator logs in, all the Web Console controls appear: Query, Profiles, Storage, Metrics, Threads, and Options.
+If an [administrator]({{ site.baseurl }}/docs/configuring-user-authentication/#administrator-privileges) logs in, all the Web Console controls appear: Query, Profiles, Storage, Metrics, Threads, and Options.
 
 ![Web Console Admin View]({{ site.baseurl }}/docs/img/web-ui-admin-view.png)
 
-If a user, who is not an administrator, logs in, the Web Console controls are limited to Query, Metrics, Threads controls, and possibly, Profiles. An administrator can give users permission to access the Profiles control. Only administrators can see and use the Storage control for managing storage plugin configurations.
+If a user, who is not an administrator, logs in, the Web Console controls are limited to Query, Metrics, and Profiles. The Profiles page for a non-administrator user contains the profiles of all queries the user issued either through ODBC, JDBC, or the Web Console. The Profiles pages for administrators contains the profiles of all queries executed on a cluster. Only administrators can see and use the Storage control for managing storage plugin configurations.
 
 ![Web Console User View]({{ site.baseurl }}/docs/img/web-ui-user-view.png)
 

@@ -10,11 +10,11 @@ With Web Console security in place, users who do not have administrator privileg
 ## HTTPS Support
 Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API now support the HTTPS protocol.
 
-By default, Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console; however, as administrator, you can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
+By default, Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console. Because Drill uses a self-signed certificate, you see a warning in the browser when you go to `https://<node IP address>:8047`. The Chrome browser, for example, requires you to click `Advanced`, and then `Proceed to <address> (unsafe)`.  If you have a signed certificate by an authority, you can set up a custom SSL to avoid this warning. You can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
 
 ## Setting Up a Custom SSL Configuration
 
-As cluster administrator, you can set the following SSL configuration parameters at the JVM level through system properties, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
+As cluster administrator, you can set the following SSL configuration parameters at in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
 
 * javax.net.ssl.keyStore  
   Path to the application's certificate and private key in the Java keystore file.  
@@ -40,9 +40,9 @@ Configure the following system options using the [ALTER SYSTEM]({{site.baseurl}}
 * security.admin.users  
   Set the value of this option to a comma-separated list of user names who you want to give administrator privileges, such as changing system options.  
 * security.admin.user_groups  
-  Set the value of this option to a comma-separated list of administrators.
+  Set the value of this option to a comma-separated list of administrator groups.
 
-Any user for whom you have configured Drill user authentication, but not set up as a Web Console administrator, has only user privileges to access the Web Console and REST API client applications.
+Any user who is a member of any group listed in security.admin.user.groups is a Drill cluster administrator. Any user for whom you have configured Drill user authentication, but not set up as a Drill cluster administrator, has only user privileges to access the Web Console and REST API client applications.
 
 ## Web Console and REST API Privileges
 
@@ -103,19 +103,3 @@ The following table and subsections describe the privilege levels for accessing 
 
 * ADMIN - can cancel the query.  
 * USER - cancel the query only if the query is launched by the user requesting the cancellation.
-
-## Starting the Web Console Using Authentication
-
-The following example shows the sequence of steps you typically perform to access the Web Console when authentication is enabled on a Drill cluster.
-
-1. Set the JVM library path to the location of the PAM `.so` file.  
-   `export DRILLBIT_JAVA_OPTS=" -Djava.library.path=/root/ "`  
-2. Restart the Drillbit.  
-   `[root@centos64-30143 apache-drill-1.2.0-SNAPSHOT]# ./bin/drillbit.sh restart`  
-3. Start the Drill Shell, using  a user name and password.  
-   `bin/sqlline -u "jdbc:drill:zk=10.10.30.146:5181" -n joeadmin -p mypwd`  
-4. Open a browser, and go to `https://<IP address>:8047`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system.  
-   The login screen appears:  
-
-   ![Web Console Login]({{ site.baseurl }}/docs/img/web-ui-login.png)
-5. [Start the Web Console]({{ site.baseurl }}/docs/starting-the-web-console/).
