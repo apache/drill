@@ -29,7 +29,7 @@ Drill must be running in order to access the Web Console to configure a storage 
   1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
 
      The Drill shell needs to be running to access the Drill Web Console.
-  2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), select the **Storage** tab.
+  2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
   4. Under Disabled Storage Plugins, select **Update** to choose the `mongo` storage plugin configuration.
   5. In the Configuration window, take a look at the default configuration:
      

@@ -2,7 +2,7 @@
 title: "Storage Plugin Registration"
 parent: "Connect a Data Source"
 ---
-You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web Console, you can view and reconfigure a storage plugin if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to do so. Go to `https://<IP address>:8047/storage`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. In Drill 1.1 and earlier, go to `http://<IP address>:8047/storage` to view and configure a storage plugin.
+You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web Console, you can view and reconfigure a storage plugin if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. Go to `https://<IP address>:8047/storage`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. In Drill 1.1 and earlier, go to `http://<IP address>:8047/storage` to view and configure a storage plugin.
 
 The Drill installation registers the `cp`, `dfs`, `hbase`, `hive`, and `mongo` default storage plugin configurations.
 
@@ -22,7 +22,7 @@ In the [Drill sandbox]({{site.baseurl}}/docs/about-the-mapr-sandbox/), the `dfs`
 
 ## Registering a Storage Plugin Configuration
 
-To register a new storage plugin configuration, enter a storage name, click **CREATE**, provide a configuration in JSON format, and click **UPDATE**. In Drill 1.2 and later, updating a storage plugin configuration and other storage plugin tasks require [authorization]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) if security is enabled.
+To register a new storage plugin configuration, enter a storage name, click **CREATE**, provide a configuration in JSON format, and click **UPDATE**. In Drill 1.2 and later, updating a storage plugin configuration and other storage plugin tasks require [authorization]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) if security is enabled.
 
 ## Storage Plugin Configuration Persistance
 

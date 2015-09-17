@@ -9,7 +9,7 @@ restart any of the Drillbits when you add or update a storage plugin configurati
 
 ## Using the Drill Web Console
 
-Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/), you can use the Drill Web Console to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web Console. In Drill 1.2 and later, to open the Drill Web Console, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
+Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/), you can use the Drill Web Console to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web Console. In Drill 1.2 and later, to open the Drill Web Console, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
 
 To create a name and new configuration:
 

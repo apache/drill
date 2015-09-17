@@ -21,7 +21,7 @@ To register a remote Hive metastore with Drill:
 
 1. Issue the following command to start the Hive metastore service on the system specified in the `hive.metastore.uris`:
    `hive --service metastore`
-2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), select the **Storage** tab.
+2. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
 3. In the list of disabled storage plugins in the Drill Web Console, click **Update** next to `hive`. The Hive storage plugin configuration appears:
 
         {
@@ -58,7 +58,7 @@ installation directory>/lib` on the Drill node. For more information about stora
 To configure an embedded Hive metastore, complete the following
 steps:
 
-1. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-ui), and select the **Storage** tab.
+1. In the [Drill Web Console]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), and select the **Storage** tab.
 2. In the disabled storage plugin configurations section, click **Update** next to `hive`.
 3. In the configuration window, add the database configuration settings.
 

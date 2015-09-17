@@ -2,7 +2,7 @@
 title: "Monitoring and Canceling Queries in the Drill Web Console"
 parent: "Query Data"
 ---
-You can monitor and cancel queries from the Drill Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to do so. To access the Drill
+You can monitor and cancel queries from the Drill Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. To access the Drill
 Web Console, the Drillbit process must be running on the Drill node that you use to
 access the Drill Web Console.
 
