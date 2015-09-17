@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import com.univocity.parsers.common.TextParsingException;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
@@ -134,8 +135,11 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       }
       reader.finishBatch();
       return cnt;
-    }catch(IOException e){
-      throw new DrillRuntimeException(String.format("Failure while setting up text reader for file %s.  Happened at or shortly before byte position %d.", split.getPath(), reader.getPos()), e);
+    } catch (IOException | TextParsingException e) {
+      throw UserException.dataReadError(e)
+          .addContext("Failure while reading file %s. Happened at or shortly before byte position %d.",
+            split.getPath(), reader.getPos())
+          .build(logger);
     }
   }
 
