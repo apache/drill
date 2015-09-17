@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -30,7 +31,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 public class DrillHBaseTable extends DrillTable implements DrillHBaseConstants {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHBaseTable.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHBaseTable.class);
 
   private HTableDescriptor table;
 
@@ -39,7 +40,10 @@ public class DrillHBaseTable extends DrillTable implements DrillHBaseConstants {
     try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
       table = admin.getTableDescriptor(HBaseUtils.getBytes(scanSpec.getTableName()));
     } catch (IOException e) {
-      logger.warn("Failure while loading table names for database '{}'.", storageEngineName, e);
+      throw UserException.dataReadError()
+          .message("Failure while loading table %s in database %s.", scanSpec.getTableName(), storageEngineName)
+          .addContext("Message: ", e.getMessage())
+          .build(logger);
     }
   }
 

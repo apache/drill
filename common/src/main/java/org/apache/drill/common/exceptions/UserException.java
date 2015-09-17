@@ -420,6 +420,16 @@ public class UserException extends DrillRuntimeException {
     }
 
     /**
+     * add a string line to the bottom of the context
+     * @param value string line
+     * @return this builder
+     */
+    public Builder addContext(final String value, Object... args) {
+      context.add(String.format(value, args));
+      return this;
+    }
+
+    /**
      * add a string value to the bottom of the context
      *
      * @param name context name
