@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelShuttle;
-import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.drill.exec.planner.physical.Prel;
 
 /**
@@ -29,19 +26,4 @@ import org.apache.drill.exec.planner.physical.Prel;
 public interface PrelFinalizable {
   Prel finalizeRel();
 
-  /**
-   * A shuttle designed to finalize all RelNodes.
-   */
-  RelShuttle SHUTTLE = new RelShuttleImpl() {
-
-    @Override
-    public RelNode visit(RelNode other) {
-      if (other instanceof PrelFinalizable) {
-        return ((PrelFinalizable) other).finalizeRel();
-      } else {
-        return super.visit(other);
-      }
-    }
-
-  };
 }

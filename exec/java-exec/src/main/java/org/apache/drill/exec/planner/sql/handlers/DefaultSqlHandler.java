@@ -253,6 +253,21 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         topPreservedNameProj);
   }
 
+  /**
+   * A shuttle designed to finalize all RelNodes.
+   */
+  private static class PrelFinalizer extends RelShuttleImpl {
+
+    @Override
+    public RelNode visit(RelNode other) {
+      if (other instanceof PrelFinalizable) {
+        return ((PrelFinalizable) other).finalizeRel();
+      } else {
+        return super.visit(other);
+      }
+    }
+
+  }
 
   protected Prel convertToPrel(RelNode drel) throws RelConversionException, SqlUnsupportedException {
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
@@ -260,7 +275,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     Prel phyRelNode;
     try {
       final RelNode relNode = planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
-      phyRelNode = (Prel) relNode.accept(PrelFinalizable.SHUTTLE);
+      phyRelNode = (Prel) relNode.accept(new PrelFinalizer());
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
 
@@ -283,7 +298,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
       try {
         final RelNode relNode = planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
-        phyRelNode = (Prel) relNode.accept(PrelFinalizable.SHUTTLE);
+        phyRelNode = (Prel) relNode.accept(new PrelFinalizer());
       } catch (RelOptPlanner.CannotPlanException ex) {
         logger.error(ex.getMessage());
 
