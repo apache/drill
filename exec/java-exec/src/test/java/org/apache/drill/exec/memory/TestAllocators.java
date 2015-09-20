@@ -63,6 +63,29 @@ public class TestAllocators {
   private final static String planFile="/physical_allocator_test.json";
 
   @Test
+  public void testTransfer() throws Exception {
+    final Properties props = new Properties() {
+      {
+        put(ExecConstants.TOP_LEVEL_MAX_ALLOC, "1000000");
+        put(ExecConstants.ERROR_ON_MEMORY_LEAK, "true");
+      }
+    };
+    final DrillConfig config = DrillConfig.create(props);
+    BufferAllocator a = RootAllocatorFactory.newRoot(config);
+    BufferAllocator b = RootAllocatorFactory.newRoot(config);
+
+    DrillBuf buf1 = a.buffer(1_000_000);
+    DrillBuf buf2 = b.buffer(1_000);
+    b.takeOwnership(buf1);
+
+    buf1.release();
+    buf2.release();
+
+    a.close();
+    b.close();
+  }
+
+  @Test
   public void testAllocators() throws Exception {
     // Setup a drillbit (initializes a root allocator)
     final DrillConfig config = DrillConfig.create(TEST_CONFIGURATIONS);
