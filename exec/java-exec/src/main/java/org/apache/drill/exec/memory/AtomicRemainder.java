@@ -25,9 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * TODO: Fix this so that preallocation can never be released back to general pool until allocator is closed.
  */
 public class AtomicRemainder {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AtomicRemainder.class);
-
-  private static final boolean DEBUG = true;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AtomicRemainder.class);
 
   private final AtomicRemainder parent;
   private final AtomicLong availableShared;
@@ -66,7 +64,7 @@ public class AtomicRemainder {
   /**
    * Allow an allocator to constrain the remainder to a particular limit that is lower than the initTotal.
    * If limit is larger than initTotal, then the function will do nothing and the hasLimit flag will not be set.
-   * @param limit
+   * @param limit new remainder limit
    */
   public void setLimit(long limit) {
     if(limit<initTotal){
@@ -76,16 +74,17 @@ public class AtomicRemainder {
 
   }
   /**
-   * Automatically allocate memory. This is used when an actual allocation happened to be larger than requested. This
-   * memory has already been used up so it must be accurately accounted for in future allocations.
+   * Automatically allocate memory. This is used when an actual allocation happened to be larger than requested, or when
+   * a buffer has it's ownership passed to another allocator.<br>
+   * This memory has already been used up so it must be accurately accounted for in future allocations.
    *
-   * @param size
+   * @param size extra allocated memory that needs to be accounted for
    */
   public boolean forceGet(long size) {
     if (get(size, this.applyFragmentLimit)) {
       return true;
     } else {
-      availableShared.addAndGet(size);
+      availableShared.addAndGet(-size);
       if (parent != null) {
         parent.forceGet(size);
       }
@@ -108,13 +107,13 @@ public class AtomicRemainder {
           parent.returnAllocation(size);
         }
         StackTraceElement[] ste = (new Throwable()).getStackTrace();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (StackTraceElement s : ste) {
           sb.append(s.toString());
           sb.append("\n");
         }
-        logger.warn("No more memory. Fragment limit ("+this.limit +
-          " bytes) reached. Trying to allocate "+size+ " bytes. "+getUsed()+" bytes already allocated.\n"+sb.toString());
+        logger.warn("No more memory. Fragment limit ({} bytes) reached. Trying to allocate {} bytes. {} bytes " +
+          "already allocated.\n{}", limit, size, getUsed(), sb.toString());
         return false;
       }
 
@@ -122,8 +121,7 @@ public class AtomicRemainder {
       long outcome = availableShared.addAndGet(-size);
 //      assert outcome <= initShared;
       if (outcome < 0) {
-        long newAvailableShared = availableShared.addAndGet(size);
-        // assert newAvailableShared <= initShared;
+        availableShared.addAndGet(size);
         if (parent != null) {
           parent.returnAllocation(size);
         }
@@ -163,7 +161,9 @@ public class AtomicRemainder {
           // we failed to get space from available shared. Return allocations to initial state.
           availablePrivate.addAndGet(size);
           availableShared.addAndGet(additionalSpaceNeeded);
-          parent.returnAllocation(additionalSpaceNeeded);
+          if (parent != null) {
+            parent.returnAllocation(additionalSpaceNeeded);
+          }
           return false;
         }
       }
@@ -175,7 +175,7 @@ public class AtomicRemainder {
   /**
    * Return the memory accounting to the allocation pool. Make sure to first maintain hold of the preallocated memory.
    *
-   * @param size
+   * @param size amount of memory returned
    */
   public void returnAllocation(long size) {
     long privateSize = availablePrivate.get();
@@ -188,7 +188,6 @@ public class AtomicRemainder {
     if (parent != null) {
       parent.returnAllocation(sharedChange);
     }
-    assert getUsed() <= initTotal;
   }
 
   public void close() {
