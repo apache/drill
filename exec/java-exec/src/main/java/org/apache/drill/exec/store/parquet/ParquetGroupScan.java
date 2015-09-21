@@ -303,6 +303,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       return Types.optional(MinorType.FLOAT8);
     case BINARY:
     case FIXED_LEN_BYTE_ARRAY:
+    case INT96:
       return Types.optional(MinorType.VARBINARY);
     default:
       // Should never hit this

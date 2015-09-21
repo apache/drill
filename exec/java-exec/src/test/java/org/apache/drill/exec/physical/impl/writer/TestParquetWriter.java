@@ -612,8 +612,16 @@ public class TestParquetWriter extends BaseTestQuery {
   Test the reading of a binary field where data is in dicationary _and_ non-dictionary encoded pages
    */
   @Test
-  public void testImpalaParquetInt96_DictChange() throws Exception {
+  public void testImpalaParquetVarBinary_DictChange() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_dict_change.parquet`");
+  }
+
+  /*
+    Test a file with partitions and an int96 column. (Data generated using Hive)
+   */
+  @Test
+  public void testImpalaParquetInt96Partitioned() throws Exception {
+    compareParquetReadersColumnar("timestamp_field", "cp.`parquet/part1/hive_all_types.parquet`");
   }
 
 }

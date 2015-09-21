@@ -211,7 +211,11 @@ public class ColumnReaderFactory {
     ConvertedType convertedType = schemaElement.getConverted_type();
 
     if (! columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-      return new NullableFixedByteAlignedReaders.NullableFixedByteAlignedReader(parentReader, allocateSize, columnDescriptor, columnChunkMetaData, fixedLength, valueVec, schemaElement);
+      if (columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.INT96) {
+        return new NullableFixedByteAlignedReaders.NullableFixedBinaryReader(parentReader, allocateSize, columnDescriptor, columnChunkMetaData, true, (NullableVarBinaryVector) valueVec, schemaElement);
+      }else{
+        return new NullableFixedByteAlignedReaders.NullableFixedByteAlignedReader(parentReader, allocateSize, columnDescriptor, columnChunkMetaData, fixedLength, valueVec, schemaElement);
+      }
     } else {
       switch (columnDescriptor.getType()) {
         case INT32:
