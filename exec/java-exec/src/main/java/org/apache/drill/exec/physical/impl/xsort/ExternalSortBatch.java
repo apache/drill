@@ -536,7 +536,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
     BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext.getAllocator());
-    boolean threw = true;
+    boolean threw = true; // true if an exception is thrown in the try block below
     logger.info("Merging and spilling to {}", outputFile);
     try {
       while ((count = copier.next(targetRecordCount)) > 0) {
@@ -547,7 +547,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
       injector.injectChecked(context.getExecutionControls(), INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeOutputStream();
-      threw = false;
+      threw = false; // this should always be the last statement of this try block to make sure we cleanup properly
     } catch (IOException e) {
       throw UserException.resourceError(e)
         .message("External Sort encountered an error while spilling to disk")
