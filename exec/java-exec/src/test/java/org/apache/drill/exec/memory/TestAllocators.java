@@ -71,8 +71,8 @@ public class TestAllocators {
       }
     };
     final DrillConfig config = DrillConfig.create(props);
-    BufferAllocator a = new TopLevelAllocator(config);
-    BufferAllocator b = new TopLevelAllocator(config);
+    BufferAllocator a = RootAllocatorFactory.newRoot(config);
+    BufferAllocator b = RootAllocatorFactory.newRoot(config);
 
     DrillBuf buf1 = a.buffer(1_000_000);
     DrillBuf buf2 = b.buffer(1_000);
