@@ -400,4 +400,42 @@ public class TestAggregateFunctions extends BaseTestQuery {
 
   }
 
+  @Test // DRILL-3781
+  // GROUP BY System functions in schema table.
+  public void testGroupBySystemFuncSchemaTable() throws Exception {
+    final String query = "select count(*) as cnt from sys.version group by CURRENT_DATE";
+    final String[] expectedPlan = {"(?s)(StreamAgg|HashAgg)"};
+    final String[] excludedPatterns = {};
+
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+  }
+
+  @Test //DRILL-3781
+  // GROUP BY System functions in csv, parquet, json table.
+  public void testGroupBySystemFuncFileSystemTable() throws Exception {
+    final String query = String.format("select count(*) as cnt from dfs_test.`%s/nation/nation.tbl` group by CURRENT_DATE", TEST_RES_PATH);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(25l)
+        .build().run();
+
+    final String query2 = "select count(*) as cnt from cp.`tpch/nation.parquet` group by CURRENT_DATE";
+    testBuilder()
+        .sqlQuery(query2)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(25l)
+        .build().run();
+
+    final String query3 = "select count(*) as cnt from cp.`employee.json` group by CURRENT_DATE";
+    testBuilder()
+        .sqlQuery(query3)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(1155l)
+        .build().run();
+  }
+
 }
