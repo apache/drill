@@ -95,7 +95,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private final List<String> SPILL_DIRECTORIES;
   private final Iterator<String> dirs;
   private final RecordBatch incoming;
-  private final BufferAllocator copierAllocator;
+  private BufferAllocator copierAllocator;
 
   private BatchSchema schema;
   private SingleBatchSorter sorter;
@@ -203,7 +203,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (copier != null) {
         copier.close();
       }
-      copierAllocator.close();
+      if (copierAllocator != null) {
+        copierAllocator.close();
+      }
       super.close();
 
       if(mSorter != null) {
@@ -446,6 +448,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
         batchGroups.addAll(spilledBatchGroups);
         spilledBatchGroups = null; // no need to cleanup spilledBatchGroups, all it's batches are in batchGroups now
+
+        // release copierAllocator, we no longer need it now
+        copierAllocator.close();
+        copierAllocator = null;
+
         logger.warn("Starting to merge. {} batch groups. Current allocated memory: {}", batchGroups.size(), oContext.getAllocator().getAllocatedMemory());
         VectorContainer hyperBatch = constructHyperBatch(batchGroups);
         createCopier(hyperBatch, batchGroups, container, false);
@@ -615,11 +622,18 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SelectionVector2 sv2 = new SelectionVector2(oContext.getAllocator());
     if (!sv2.allocateNewSafe(incoming.getRecordCount())) {
       try {
-        spilledBatchGroups.addFirst(mergeAndSpill(batchGroups));
+        // Not being able to allocate sv2 means this operator's allocator reached it's maximum capacity.
+        // Spilling this.batchGroups won't help here as they are owned by another operator,
+        // but spilling spilledBatchGroups may free enough memory
+        final BatchGroup merged = mergeAndSpill(spilledBatchGroups);
+        if (merged != null) {
+          spilledBatchGroups.addFirst(merged);
+        } else {
+          throw new OutOfMemoryException("Unable to allocate sv2, and not enough batchGroups to spill");
+        }
       } catch (SchemaChangeException e) {
         throw new RuntimeException(e);
       }
-      batchesSinceLastSpill = 0;
       int waitTime = 1;
       while (true) {
         try {
