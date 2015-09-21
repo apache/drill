@@ -103,7 +103,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
     if(runningBatches >= Character.MAX_VALUE) {
-      final String errMsg = String.format("Tried to add more than %d number of batches.", Character.MAX_VALUE);
+      final String errMsg = String.format("Tried to add more than %d number of batches.", (int) Character.MAX_VALUE);
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
