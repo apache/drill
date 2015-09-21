@@ -264,6 +264,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
 
     int totalCount = 0;
+    int totalBatches = 0; // total number of batches received so far
 
     try{
       container.clear();
@@ -325,6 +326,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           int count = sv2.getCount();
           totalCount += count;
+          totalBatches++;
           sorter.setup(context, sv2, incoming);
           sorter.sort(sv2);
           RecordBatchData rbd = new RecordBatchData(incoming);
@@ -339,6 +341,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
                 // If we haven't spilled so far, do we have enough memory for MSorter if this turns out to be the last incoming batch?
                 (spillCount == 0 && !hasMemoryForInMemorySort(totalCount)) ||
+                // If we haven't spilled so far, make sure we don't exceed the maximum number of batches SV4 can address
+                (spillCount == 0 && totalBatches > Character.MAX_VALUE) ||
                 // current memory used is more than 95% of memory usage limit of this operator
                 (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
                 // current memory used is more than 95% of memory usage limit of this fragment
