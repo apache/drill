@@ -92,7 +92,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   private final int SPILL_BATCH_GROUP_SIZE;
   private final int SPILL_THRESHOLD;
-  private final List<String> SPILL_DIRECTORIES;
   private final Iterator<String> dirs;
   private final RecordBatch incoming;
   private BufferAllocator copierAllocator;
@@ -144,8 +143,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
     SPILL_BATCH_GROUP_SIZE = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE);
     SPILL_THRESHOLD = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD);
-    SPILL_DIRECTORIES = config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS);
-    dirs = Iterators.cycle(Lists.newArrayList(SPILL_DIRECTORIES));
+    dirs = Iterators.cycle(config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS));
     copierAllocator = oContext.getAllocator().getChildAllocator(
         context, PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION, true);
     FragmentHandle handle = context.getHandle();
@@ -271,8 +269,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     try{
       container.clear();
       outer: while (true) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
         IterOutcome upstream;
         if (first) {
           upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -282,7 +278,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         if (upstream == IterOutcome.OK && sorter == null) {
           upstream = IterOutcome.OK_NEW_SCHEMA;
         }
-//        logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
         switch (upstream) {
         case NONE:
           if (first) {
@@ -332,10 +327,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           int count = sv2.getCount();
           totalCount += count;
           sorter.setup(context, sv2, incoming);
-          Stopwatch w = new Stopwatch();
-          w.start();
           sorter.sort(sv2);
-//          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), count);
           RecordBatchData rbd = new RecordBatchData(incoming);
           boolean success = false;
           try {
@@ -373,8 +365,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 batchesSinceLastSpill = 0;
               }
             }
-            long t = w.elapsed(TimeUnit.MICROSECONDS);
-//          logger.debug("Took {} us to sort {} records", t, count);
             success = true;
           } finally {
             if (!success) {
@@ -405,8 +395,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         return IterOutcome.NONE;
       }
       if (spillCount == 0) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
 
         if (builder != null) {
           builder.clear();
@@ -438,8 +426,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         injector.injectUnchecked(context.getExecutionControls(), INTERRUPTION_AFTER_SORT);
         sv4 = mSorter.getSV4();
 
-        long t = watch.elapsed(TimeUnit.MICROSECONDS);
-//        logger.debug("Took {} us to sort {} records", t, sv4.getTotalCount());
         container.buildSchema(SelectionVectorMode.FOUR_BYTE);
       } else { // some batches were spilled
         final BatchGroup merged = mergeAndSpill(batchGroups);
@@ -449,7 +435,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         batchGroups.addAll(spilledBatchGroups);
         spilledBatchGroups = null; // no need to cleanup spilledBatchGroups, all it's batches are in batchGroups now
 
-        // release copierAllocator, we no longer need it now
+        // copierAllocator is no longer needed now. Closing it will free memory for this operator
         copierAllocator.close();
         copierAllocator = null;
 
@@ -789,9 +775,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         outputContainer.add(v);
       }
       copier.setup(context, allocator, batch, batchGroupList, outputContainer);
-    } catch (ClassTransformationException e) {
-      throw new RuntimeException(e);
-    } catch (IOException e) {
+    } catch (ClassTransformationException | IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -805,23 +789,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   @Override
   protected void killIncoming(boolean sendUpstream) {
     incoming.kill(sendUpstream);
-  }
-
-  private String getFileName(int spill) {
-     /*
-     * From the context, get the query id, major fragment id, minor fragment id. This will be used as the file name to
-     * which we will dump the incoming buffer data
-     */
-    FragmentHandle handle = context.getHandle();
-
-    String qid = QueryIdHelper.getQueryId(handle.getQueryId());
-
-    int majorFragmentId = handle.getMajorFragmentId();
-    int minorFragmentId = handle.getMinorFragmentId();
-
-    String fileName = String.format("%s//%s//major_fragment_%s//minor_fragment_%s//operator_%s//%s", dirs.next(), qid, majorFragmentId, minorFragmentId, popConfig.getOperatorId(), spill);
-
-    return fileName;
   }
 
 }
