@@ -29,9 +29,6 @@ public class DrillPathFilter extends Utils.OutputFileUtils.OutputFilesFilter {
     if (path.getName().startsWith(DrillFileSystem.DOT_FILE_PREFIX)) {
       return false;
     }
-    if (path.getName().startsWith(".")) {
-      return false;
-    }
     return super.accept(path);
   }
 }
