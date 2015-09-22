@@ -54,6 +54,16 @@ public class TestParquetMetadataCache extends BaseTestQuery {
     Assert.assertEquals(50, rowCount);
   }
 
+  @Test
+  public void testCacheWithSubschema() throws Exception {
+    String tableName = "nation_ctas_subschema";
+    test(String.format("create table dfs_test.tmp.`%s/t1` as select * from cp.`tpch/nation.parquet`", tableName));
+    test(String.format("refresh table metadata dfs_test.tmp.%s", tableName));
+    checkForMetadataFile(tableName);
+    int rowCount = testSql(String.format("select * from dfs_test.tmp.%s", tableName));
+    Assert.assertEquals(25, rowCount);
+  }
+
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
