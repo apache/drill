@@ -113,6 +113,8 @@ class JdbcRecordReader extends AbstractRecordReader {
 
         .put(java.sql.Types.BOOLEAN, MinorType.BIT)
 
+        .put(java.sql.Types.BIT, MinorType.BIT)
+
         .build();
   }
 
