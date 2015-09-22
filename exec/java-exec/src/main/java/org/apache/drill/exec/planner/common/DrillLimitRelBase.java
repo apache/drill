@@ -36,11 +36,21 @@ import org.apache.calcite.rex.RexNode;
 public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNode {
   protected RexNode offset;
   protected RexNode fetch;
+  private boolean pushDown;  // whether limit has been pushed past its child.
+                             // Limit is special in that when it's pushed down, the original LIMIT still remains.
+                             // Once the limit is pushed down, this flag will be TRUE for the original LIMIT
+                             // and be FALSE for the pushed down LIMIT.
+                             // This flag will prevent optimization rules to fire in a loop.
 
   public DrillLimitRelBase(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
+    this(cluster, traitSet, child, offset, fetch, false);
+  }
+
+  public DrillLimitRelBase(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch, boolean pushDown) {
     super(cluster, traitSet, child);
     this.offset = offset;
     this.fetch = fetch;
+    this.pushDown = pushDown;
   }
 
   public RexNode getOffset() {
@@ -57,9 +67,7 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
       return super.computeSelfCost(planner).multiplyBy(.1);
     }
 
-    int off = offset != null ? RexLiteral.intValue(offset) : 0 ;
-    int f = fetch != null ? RexLiteral.intValue(fetch) : 0 ;
-    double numRows = off + f;
+    double numRows = getRows();
     double cpuCost = DrillCostBase.COMPARE_CPU_COST * numRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(numRows, cpuCost, 0, 0);
@@ -71,6 +79,22 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
     pw.itemIf("offset", offset, offset != null);
     pw.itemIf("fetch", fetch, fetch != null);
     return pw;
+  }
+
+  @Override
+  public double getRows() {
+    int off = offset != null ? RexLiteral.intValue(offset) : 0 ;
+
+    if (fetch == null) {
+      return getInput().getRows() - off;
+    } else {
+      int f = RexLiteral.intValue(fetch);
+      return off + f;
+    }
+  }
+
+  public boolean isPushDown() {
+    return this.pushDown;
   }
 
 }
