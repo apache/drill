@@ -38,9 +38,13 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     super(cluster, traitSet, child, offset, fetch);
   }
 
+  public LimitPrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch, boolean pushDown) {
+    super(cluster, traitSet, child, offset, fetch, pushDown);
+  }
+
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new LimitPrel(getCluster(), traitSet, sole(inputs), offset, fetch);
+    return new LimitPrel(getCluster(), traitSet, sole(inputs), offset, fetch, isPushDown());
   }
 
   @Override
