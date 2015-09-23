@@ -105,13 +105,26 @@ Chaining is a system-wide setting that applies to all views. Currently, Drill do
 Complete the following steps on each Drillbit node to enable user impersonation, and set the maximum number of chained user hops that Drill allows:
 
 1. Navigate to `<drill_installation_directory>/conf/` and edit `drill-override.conf`.
-2. Under `drill.exe`, add the following:
+2. Under `drill.exec`, add the following:
 
           drill.exec.impersonation: {
                 enabled: true,
                  max_chained_user_hops: 3
           }
 
+       Alternatively, you can nest impersonation within the `drill.exec` block, as shown in the following example: 
+
+              drill.exec: {
+                   cluster-id: "cluster_name",
+                   zk.connect: "<hostname>:<port>,<hostname>:<port>,<hostname>:<port>",
+                   sys.store.provider.zk.blobroot: "hdfs://",
+                   impersonation: {
+                     enabled: true,
+                     max_chained_user_hops: 3
+                   }
+                 }
+
+ 
 3. Verify that enabled is set to `‘true’`.
 4. Set the maximum number of chained user hops that you want Drill to allow.
 5. Restart the Drillbit process on each Drill node.

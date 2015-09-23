@@ -120,7 +120,7 @@ Use SQL to query the sample `JSON` and `Parquet` files in the `sample-data` dire
 A sample JSON file, [`employee.json`]({{site.baseurl}}/docs/querying-json-files/), contains fictitious employee data. To view the data in the `employee.json` file, submit the following SQL query
 to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storage-plugin-registration/) configuration to point to the file.
     
-`0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;`
+``0: jdbc:drill:zk=local> SELECT * FROM cp.`employee.json` LIMIT 3;``
 
 The query output is:
 
