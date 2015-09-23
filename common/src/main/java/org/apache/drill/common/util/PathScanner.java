@@ -130,10 +130,11 @@ public class PathScanner {
    *           to scan for (relative to specified class loaders' classpath roots)
    * @param  returnRootPathname  whether to collect classpath root portion of
    *           URL for each resource instead of full URL of each resource
-   * @param  classLoaders  set of class loaders in which to look up resource;
-   *           none (empty array) to specify to use current thread's context
-   *           class loader and {@link Reflections}'s class loader
-   * @return  ...; empty set if none
+   * @param  classLoaders  not currently used (was: "set of class loaders in
+   *           which to look up resource; none (empty array) to specify to use
+   *           current thread's context class loader and {@link Reflections}'s
+   *           class loader")
+   * @returns  ...; empty set if none
    */
   public static Set<URL> forResource(final String resourcePathname,
                                      final boolean returnRootPathname,
@@ -142,7 +143,7 @@ public class PathScanner {
                  resourcePathname);
     final Set<URL> resultUrlSet = Sets.newHashSet();
 
-    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    final ClassLoader classLoader = PathScanner.class.getClassLoader();
     try {
       final Enumeration<URL> resourceUrls =
           classLoader.getResources(resourcePathname);
