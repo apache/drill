@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.schema.SchemaPlus;
@@ -92,13 +93,23 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
     }
 
     @Override
-    public Table getTable(String name) {
-      return tables.get(name);
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          return tables.get(name);
+        }
+      });
     }
 
     @Override
     public Set<String> getTableNames() {
-      return tables.keySet();
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          return tables.keySet();
+        }
+      });
     }
 
     @Override

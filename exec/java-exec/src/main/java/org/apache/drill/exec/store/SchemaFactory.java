@@ -19,8 +19,6 @@ package org.apache.drill.exec.store;
 
 import org.apache.calcite.schema.SchemaPlus;
 
-import org.apache.drill.exec.ops.QueryContext;
-
 import java.io.IOException;
 
 /**

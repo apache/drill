@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.calcite.schema.Table;
 
@@ -44,13 +45,24 @@ public class HiveDatabaseSchema extends AbstractSchema{
   }
 
   @Override
-  public Table getTable(String tableName) {
-    return hiveSchema.getDrillTable(this.name, tableName);
+  public Table getTable(final String tableName) {
+    final String schemaName = this.name;
+    return safeGetTable(new SafeTableGetter() {
+      @Override
+      public Table safeGetTable() {
+       return hiveSchema.getDrillTable(schemaName, tableName);
+      }
+    });
   }
 
   @Override
   public Set<String> getTableNames() {
-    return tables;
+    return safeGetTableNames(new SafeTableNamesGetter() {
+      @Override
+      public Set<String> safeGetTableNames() {
+        return tables;
+      }
+    });
   }
 
   @Override

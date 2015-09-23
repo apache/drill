@@ -22,6 +22,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
@@ -29,7 +36,10 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 
@@ -42,6 +52,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   protected final List<String> schemaPath;
   protected final String name;
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
+
+  protected static ExecutorService executor = Executors.newCachedThreadPool();
 
   public AbstractSchema(List<String> parentSchemaPath, String name) {
     schemaPath = Lists.newArrayList();
@@ -165,13 +177,65 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   @Override
-  public Table getTable(String name){
+  public Table getTable(String name) {
+    return getDefaultTable();
+  }
+
+  public final Table getDefaultTable() {
     return null;
+  }
+
+  protected final Table safeGetTable(final SafeTableGetter getter) {
+    final Callable<Table> getTableJob = new Callable<Table>() {
+      @Override
+      public Table call() {
+        return getter.safeGetTable();
+      }
+    };
+
+    final Future<Table> reqeustTable = executor.submit(getTableJob);
+    try {
+      return reqeustTable.get(ExecConstants.DATA_STORAGE_RESPONSE_TIME, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      throw UserException.connectionError()
+          .message(String.format(this.getName() + " does not respond in [%s] seconds",
+              ExecConstants.DATA_STORAGE_RESPONSE_TIME))
+          .build(logger);
+    } catch (InterruptedException | ExecutionException e) {
+      logger.error("Failure to get the table");
+      throw new DrillRuntimeException(e);
+    }
   }
 
   @Override
   public Set<String> getTableNames() {
+    return getDefaultTableNames();
+  }
+
+  public final Set<String> getDefaultTableNames() {
     return Collections.emptySet();
+  }
+
+  protected final Set<String> safeGetTableNames(final SafeTableNamesGetter getter) {
+    final Callable<Set<String>> getTableListJob = new Callable<Set<String>> () {
+      @Override
+      public Set<String> call() {
+        return getter.safeGetTableNames();
+      }
+    };
+
+    final Future<Set<String>> reqeustTableList = executor.submit(getTableListJob);
+    try {
+      return reqeustTableList.get(ExecConstants.DATA_STORAGE_RESPONSE_TIME, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      throw UserException.connectionError()
+          .message(String.format(this.getName() + " does not respond in [%s] seconds",
+              ExecConstants.DATA_STORAGE_RESPONSE_TIME))
+          .build(logger);
+    } catch (InterruptedException | ExecutionException e) {
+      logger.error("Failure to get the table");
+      throw new DrillRuntimeException(e);
+    }
   }
 
   @Override
@@ -193,5 +257,13 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     throw UserException.unsupportedError()
         .message("Dropping tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
+  }
+
+  protected interface SafeTableNamesGetter {
+    public Set<String> safeGetTableNames();
+  }
+
+  public interface SafeTableGetter {
+    public Table safeGetTable();
   }
 }

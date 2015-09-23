@@ -26,11 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -82,9 +82,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
    * This class defines a namespace for {@link org.apache.drill.exec.store.sys.SystemTable}s
    */
   private class SystemSchema extends AbstractSchema {
-
     private final Set<String> tableNames;
-
     public SystemSchema() {
       super(ImmutableList.<String>of(), SYS_SCHEMA_NAME);
       Set<String> names = Sets.newHashSet();
@@ -96,24 +94,34 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
     @Override
     public Set<String> getTableNames() {
-      return tableNames;
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          return tableNames;
+        }
+      });
     }
 
     @Override
-    public DrillTable getTable(String name) {
-      for (SystemTable table : SystemTable.values()) {
-        if (table.getTableName().equalsIgnoreCase(name)) {
-          return new StaticDrillTable(SystemTablePlugin.this.name, SystemTablePlugin.this, table,
-            new PojoDataType(table.getPojoClass()));
+    public Table getTable(final String tableName) {
+      final SystemTablePlugin self = SystemTablePlugin.this;
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          for (SystemTable table : SystemTable.values()) {
+            if (table.getTableName().equalsIgnoreCase(tableName)) {
+              return new StaticDrillTable(self.name, self, table,
+                  new PojoDataType(table.getPojoClass()));
+            }
+          }
+          return null;
         }
-      }
-      return null;
+      });
     }
 
     @Override
     public String getTypeName() {
       return SystemTablePluginConfig.NAME;
     }
-
   }
 }

@@ -257,6 +257,8 @@ public interface ExecConstants {
   public static final String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   public static final BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE, false);
 
+  public static final int DATA_STORAGE_RESPONSE_TIME = 1 * 60;
+
   /**
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
    * such as changing system options.

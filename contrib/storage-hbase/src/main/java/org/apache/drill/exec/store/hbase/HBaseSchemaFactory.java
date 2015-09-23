@@ -20,11 +20,12 @@ package org.apache.drill.exec.store.hbase;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
@@ -40,20 +41,19 @@ public class HBaseSchemaFactory implements SchemaFactory {
   final String schemaName;
   final HBaseStoragePlugin plugin;
 
-  public HBaseSchemaFactory(HBaseStoragePlugin plugin, String name) throws IOException {
+  public HBaseSchemaFactory(HBaseStoragePlugin plugin, String name, DrillbitContext context) throws IOException {
     this.plugin = plugin;
     this.schemaName = name;
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     HBaseSchema schema = new HBaseSchema(schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
   }
 
   class HBaseSchema extends AbstractSchema {
-
     public HBaseSchema(String name) {
       super(ImmutableList.<String>of(), name);
     }
@@ -72,24 +72,34 @@ public class HBaseSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public Table getTable(String name) {
-      HBaseScanSpec scanSpec = new HBaseScanSpec(name);
-      return new DrillHBaseTable(schemaName, plugin, scanSpec);
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          HBaseScanSpec scanSpec = new HBaseScanSpec(name);
+          return new DrillHBaseTable(schemaName, plugin, scanSpec);
+        }
+      });
     }
 
     @Override
     public Set<String> getTableNames() {
-      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
-        HTableDescriptor[] tables = admin.listTables();
-        Set<String> tableNames = Sets.newHashSet();
-        for (HTableDescriptor table : tables) {
-          tableNames.add(new String(table.getName()));
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
+            HTableDescriptor[] tables = admin.listTables();
+            Set<String> tableNames = Sets.newHashSet();
+            for (HTableDescriptor table : tables) {
+              tableNames.add(new String(table.getName()));
+            }
+            return tableNames;
+          } catch (Exception e) {
+            logger.warn("Failure while loading table names for database '{}'.", schemaName, e.getCause());
+            return Collections.emptySet();
+          }
         }
-        return tableNames;
-      } catch (Exception e) {
-        logger.warn("Failure while loading table names for database '{}'.", schemaName, e.getCause());
-        return Collections.emptySet();
-      }
+      });
     }
 
     @Override
