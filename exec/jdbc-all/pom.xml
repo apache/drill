@@ -305,7 +305,6 @@
               <exclude>com.twitter:*</exclude>
               <exclude>javax.inject:*</exclude>
               <exclude>com.beust:*</exclude>
-              <exclude>org.codehaus.jackson:*</exclude>
               <exclude>jline:*</exclude>
               <exclude>io.netty:netty:jar:3.7.0.Final</exclude>
               <exclude>org.xerial.snappy:*</exclude>
