@@ -57,4 +57,14 @@ public class Utilities {
         .setTimeZone(timeZone)
         .build();
   }
+
+  /**
+   * Read the manifest file and get the Drill version number
+   * @return
+   */
+  public static String getDrillVersion() {
+      String v = Utilities.class.getPackage().getImplementationVersion();
+      return v;
+  }
+
 }
