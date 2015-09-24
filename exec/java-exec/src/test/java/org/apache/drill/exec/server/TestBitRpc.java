@@ -88,7 +88,7 @@ public class TestBitRpc extends ExecTest {
     DataResponseHandler drp = new BitComTestHandler();
     DataServer server = new DataServer(c, workBus, drp);
 
-    port = server.bind(port, false);
+    port = server.bind(port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
     DataConnectionManager manager = new DataConnectionManager(ep, c2);
     DataTunnel tunnel = new DataTunnel(manager);
