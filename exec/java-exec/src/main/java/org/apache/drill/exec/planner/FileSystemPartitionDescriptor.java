@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.util.BitSets;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -95,7 +96,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
     for (PartitionLocation partitionLocation: partitions) {
       for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
         if (partitionLocation.getPartitionValue(partitionColumnIndex) == null) {
-          ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setNull(record);
+          throw new DrillRuntimeException("Value for directory cannot be null");
         } else {
           byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(Charsets.UTF_8);
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setSafe(record, bytes, 0, bytes.length);

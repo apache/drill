@@ -497,7 +497,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
       Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.exists(metaPath)) {
+      if (fs.exists(metaPath) && fileSet != null) {
         parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString()));
       } else {
         fileStatuses = Lists.newArrayList();

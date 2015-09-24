@@ -206,7 +206,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
       // TODO: we only check the first file for directory reading.  This is because
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
-          return new FormatSelection(plugin.getConfig(), selection);
+          return new FormatSelection(plugin.getConfig(), selection.minusDirectories(fs));
         }
       }
       return super.isReadable(fs, selection);
