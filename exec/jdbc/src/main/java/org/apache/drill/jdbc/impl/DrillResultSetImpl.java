@@ -545,7 +545,9 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public int getRow() throws SQLException {
     throwIfClosed();
-    return super.getRow();
+    // Map Avatica's erroneous zero-based row numbers to 1-based, and return 0
+    // after end, per JDBC:
+    return isAfterLast() ? 0 : 1 + super.getRow();
   }
 
   @Override
