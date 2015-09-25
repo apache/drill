@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -110,6 +111,25 @@ public class TestHivePartitionPruning extends HiveTestBase {
 
     // Check and make sure that Filter is not present in the plan
     assertFalse(plan.contains("Filter"));
+  }
+
+  @Test
+  public void pruneDataTypeSupportNativeReaders() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+      final String query = "EXPLAIN PLAN FOR " +
+          "SELECT * FROM hive.readtest_parquet WHERE boolean_part = true";
+
+      final String plan = getPlanInString(query, OPTIQ_FORMAT);
+
+      // Check and make sure that Filter is not present in the plan
+      assertFalse(plan.contains("Filter"));
+
+      // Make sure the plan contains the Hive scan utilizing native parquet reader
+      assertTrue(plan.contains("groupscan=[HiveDrillNativeParquetScan"));
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
   }
 
   @Test // DRILL-3579

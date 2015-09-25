@@ -19,17 +19,22 @@ package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputSplit;
@@ -45,21 +50,18 @@ import com.google.common.io.ByteStreams;
 
 @JsonTypeName("hive-sub-scan")
 public class HiveSubScan extends AbstractBase implements SubScan {
+  protected HiveReadEntry hiveReadEntry;
+
+  @JsonIgnore
+  protected List<InputSplit> inputSplits = Lists.newArrayList();
+  @JsonIgnore
+  protected Table table;
+  @JsonIgnore
+  protected List<Partition> partitions;
 
   private List<String> splits;
-
-  private HiveReadEntry hiveReadEntry;
-
   private List<String> splitClasses;
-
-  private List<SchemaPath> columns;
-
-  @JsonIgnore
-  private List<InputSplit> inputSplits = Lists.newArrayList();
-  @JsonIgnore
-  private Table table;
-  @JsonIgnore
-  private List<Partition> partitions;
+  protected List<SchemaPath> columns;
 
   @JsonCreator
   public HiveSubScan(@JsonProperty("userName") String userName,

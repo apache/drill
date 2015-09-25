@@ -34,6 +34,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
         .baselineValues("hive.default", "partition_pruning_test")
         .baselineValues("hive.default", "readtest")
+        .baselineValues("hive.default", "readtest_parquet")
         .baselineValues("hive.default", "empty_table")
         .baselineValues("hive.default", "infoschematest")
         .baselineValues("hive.default", "hiveview")

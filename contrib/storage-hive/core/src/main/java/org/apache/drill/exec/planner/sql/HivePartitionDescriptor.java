@@ -106,8 +106,8 @@ public class HivePartitionDescriptor extends AbstractPartitionDescriptor {
     }
 
     HiveReadEntry newReadEntry = new HiveReadEntry(origReadEntry.table, newPartitions, origReadEntry.hiveConfigOverride);
-    HiveScan newScan = new HiveScan(hiveScan.getUserName(), newReadEntry, hiveScan.storagePlugin, hiveScan.columns);
-    return newScan;
+
+    return hiveScan.clone(newReadEntry);
   }
 
   @Override

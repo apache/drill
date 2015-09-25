@@ -18,9 +18,12 @@
 package org.apache.drill.exec.hive;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.hadoop.fs.FileSystem;
 import org.joda.time.DateTime;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -28,6 +31,11 @@ import java.sql.Date;
 import java.sql.Timestamp;
 
 public class TestHiveStorage extends HiveTestBase {
+  @BeforeClass
+  public static void setupOptions() throws Exception {
+    test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
   @Test
   public void hiveReadWithDb() throws Exception {
     test("select * from hive.kv");
@@ -48,7 +56,7 @@ public class TestHiveStorage extends HiveTestBase {
         .unOrdered()
         .baselineColumns("col1")
         .baselineValues("binaryfield")
-        .baselineValues(new Object[] { null })
+        .baselineValues(new Object[]{null})
         .go();
   }
 
@@ -59,105 +67,205 @@ public class TestHiveStorage extends HiveTestBase {
    */
   @Test
   public void readAllSupportedHiveDataTypes() throws Exception {
-      try {
-          // enable decimal type
-          test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+    testBuilder().sqlQuery("SELECT * FROM hive.readtest")
+        .unOrdered()
+        .baselineColumns(
+            "binary_field",
+            "boolean_field",
+            "tinyint_field",
+            "decimal0_field",
+            "decimal9_field",
+            "decimal18_field",
+            "decimal28_field",
+            "decimal38_field",
+            "double_field",
+            "float_field",
+            "int_field",
+            "bigint_field",
+            "smallint_field",
+            "string_field",
+            "varchar_field",
+            "timestamp_field",
+            "date_field",
+            "binary_part",
+            "boolean_part",
+            "tinyint_part",
+            "decimal0_part",
+            "decimal9_part",
+            "decimal18_part",
+            "decimal28_part",
+            "decimal38_part",
+            "double_part",
+            "float_part",
+            "int_part",
+            "bigint_part",
+            "smallint_part",
+            "string_part",
+            "varchar_part",
+            "timestamp_part",
+            "date_part")
+        .baselineValues(
+            "binaryfield",
+            false,
+            34,
+            new BigDecimal("66"),
+            new BigDecimal("2347.92"),
+            new BigDecimal("2758725827.99990"),
+            new BigDecimal("29375892739852.8"),
+            new BigDecimal("89853749534593985.783"),
+            8.345d,
+            4.67f,
+            123456,
+            234235L,
+            3455,
+            "stringfield",
+            "varcharfield",
+            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            "binary",
+            true,
+            64,
+            new BigDecimal("37"),
+            new BigDecimal("36.90"),
+            new BigDecimal("3289379872.94565"),
+            new BigDecimal("39579334534534.4"),
+            new BigDecimal("363945093845093890.900"),
+            8.345d,
+            4.67f,
+            123456,
+            234235L,
+            3455,
+            "string",
+            "varchar",
+            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+            new DateTime(Date.valueOf("2013-07-05").getTime()))
+        .baselineValues( // All fields are null, but partition fields have non-null values
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            "binary",
+            true,
+            64,
+            new BigDecimal("37"),
+            new BigDecimal("36.90"),
+            new BigDecimal("3289379872.94565"),
+            new BigDecimal("39579334534534.4"),
+            new BigDecimal("363945093845093890.900"),
+            8.345d,
+            4.67f,
+            123456,
+            234235L,
+            3455,
+            "string",
+            "varchar",
+            new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+            new DateTime(Date.valueOf("2013-07-05").getTime()))
+        .go();
+  }
 
-          testBuilder().sqlQuery("SELECT * FROM hive.readtest")
-              .unOrdered()
-              .baselineColumns(
-                  "binary_field",
-                  "boolean_field",
-                  "tinyint_field",
-                  "decimal0_field",
-                  "decimal9_field",
-                  "decimal18_field",
-                  "decimal28_field",
-                  "decimal38_field",
-                  "double_field",
-                  "float_field",
-                  "int_field",
-                  "bigint_field",
-                  "smallint_field",
-                  "string_field",
-                  "varchar_field",
-                  "timestamp_field",
-                  "date_field",
-                  "binary_part",
-                  "boolean_part",
-                  "tinyint_part",
-                  "decimal0_part",
-                  "decimal9_part",
-                  "decimal18_part",
-                  "decimal28_part",
-                  "decimal38_part",
-                  "double_part",
-                  "float_part",
-                  "int_part",
-                  "bigint_part",
-                  "smallint_part",
-                  "string_part",
-                  "varchar_part",
-                  "timestamp_part",
-                  "date_part")
-              .baselineValues(
-                  "binaryfield",
-                  false,
-                  34,
-                  new BigDecimal("66"),
-                  new BigDecimal("2347.92"),
-                  new BigDecimal("2758725827.99990"),
-                  new BigDecimal("29375892739852.8"),
-                  new BigDecimal("89853749534593985.783"),
-                  8.345d,
-                  4.67f,
-                  123456,
-                  234235L,
-                  3455,
-                  "stringfield",
-                  "varcharfield",
-                  new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-                  new DateTime(Date.valueOf("2013-07-05").getTime()),
-                  "binary",
-                  true,
-                  64,
-                  new BigDecimal("37"),
-                  new BigDecimal("36.90"),
-                  new BigDecimal("3289379872.94565"),
-                  new BigDecimal("39579334534534.4"),
-                  new BigDecimal("363945093845093890.900"),
-                  8.345d,
-                  4.67f,
-                  123456,
-                  234235L,
-                  3455,
-                  "string",
-                  "varchar",
-                  new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-                  new DateTime(Date.valueOf("2013-07-05").getTime()))
-              .baselineValues( // All fields are null, but partition fields have non-null values
-                  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                  "binary",
-                  true,
-                  64,
-                  new BigDecimal("37"),
-                  new BigDecimal("36.90"),
-                  new BigDecimal("3289379872.94565"),
-                  new BigDecimal("39579334534534.4"),
-                  new BigDecimal("363945093845093890.900"),
-                  8.345d,
-                  4.67f,
-                  123456,
-                  234235L,
-                  3455,
-                  "string",
-                  "varchar",
-                  new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-                  new DateTime(Date.valueOf("2013-07-05").getTime()))
-              .go();
-      } finally {
-          test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
-      }
+  /**
+   * Test to ensure Drill reads the all supported types through native Parquet readers.
+   * NOTE: As part of Hive 1.2 upgrade, make sure this test and {@link #readAllSupportedHiveDataTypes()} are merged
+   * into one test.
+   */
+  @Test
+  public void readAllSupportedHiveDataTypesNativeParquet() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+      final String query = "SELECT * FROM hive.readtest_parquet";
+
+      // Make sure the plan has Hive scan with native parquet reader
+      testPhysicalPlan(query, "hive-drill-native-parquet-scan");
+
+      testBuilder().sqlQuery(query)
+          .unOrdered()
+          .baselineColumns(
+              "boolean_field",
+              "tinyint_field",
+              "decimal0_field",
+              "decimal9_field",
+              "decimal18_field",
+              "decimal28_field",
+              "decimal38_field",
+              "double_field",
+              "float_field",
+              "int_field",
+              "bigint_field",
+              "smallint_field",
+              "string_field",
+              "varchar_field",
+              "timestamp_field",
+              "binary_part",
+              "boolean_part",
+              "tinyint_part",
+              "decimal0_part",
+              "decimal9_part",
+              "decimal18_part",
+              "decimal28_part",
+              "decimal38_part",
+              "double_part",
+              "float_part",
+              "int_part",
+              "bigint_part",
+              "smallint_part",
+              "string_part",
+              "varchar_part",
+              "timestamp_part",
+              "date_part")
+          .baselineValues(
+              false,
+              34,
+              new BigDecimal("66"),
+              new BigDecimal("2347.92"),
+              new BigDecimal("2758725827.99990"),
+              new BigDecimal("29375892739852.8"),
+              new BigDecimal("89853749534593985.783"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "stringfield",
+              "varcharfield",
+              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+              "binary",
+              true,
+              64,
+              new BigDecimal("37"),
+              new BigDecimal("36.90"),
+              new BigDecimal("3289379872.94565"),
+              new BigDecimal("39579334534534.4"),
+              new BigDecimal("363945093845093890.900"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "string",
+              "varchar",
+              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+              new DateTime(Date.valueOf("2013-07-05").getTime()))
+          .baselineValues( // All fields are null, but partition fields have non-null values
+              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+              "binary",
+              true,
+              64,
+              new BigDecimal("37"),
+              new BigDecimal("36.90"),
+              new BigDecimal("3289379872.94565"),
+              new BigDecimal("39579334534534.4"),
+              new BigDecimal("363945093845093890.900"),
+              8.345d,
+              4.67f,
+              123456,
+              234235L,
+              3455,
+              "string",
+              "varchar",
+              new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+              new DateTime(Date.valueOf("2013-07-05").getTime()))
+          .go();
+    } finally {
+        test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
   }
 
   @Test
@@ -190,8 +298,8 @@ public class TestHiveStorage extends HiveTestBase {
 
   @Test // DRILL-745
   public void queryingHiveAvroTable() throws Exception {
-    testBuilder()
-        .sqlQuery("SELECT * FROM hive.db1.avro ORDER BY key DESC LIMIT 1")
+      testBuilder()
+          .sqlQuery("SELECT * FROM hive.db1.avro ORDER BY key DESC LIMIT 1")
         .unOrdered()
         .baselineColumns("key", "value")
         .baselineValues(5, " key_5")
@@ -217,5 +325,10 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineColumns("cnt")
         .baselineValues(1L)
         .go();
+  }
+
+  @AfterClass
+  public static void shutdownOptions() throws Exception {
+    test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 }

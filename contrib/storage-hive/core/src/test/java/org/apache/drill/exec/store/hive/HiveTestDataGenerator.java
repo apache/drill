@@ -253,7 +253,7 @@ public class HiveTestDataGenerator {
 
     // Load data into table 'readtest'
     executeQuery(hiveDriver,
-        String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.readtest PARTITION (" +
+        String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE default.readtest PARTITION (" +
         "  binary_part='binary', " +
         "  boolean_part='true', " +
         "  tinyint_part='64', " +
@@ -293,6 +293,112 @@ public class HiveTestDataGenerator {
         "mapType MAP<STRING,INT>, " +
         "structType STRUCT<sint:INT,sboolean:BOOLEAN,sstring:STRING>, " +
         "uniontypeType UNIONTYPE<int, double, array<string>>)"
+    );
+
+    /**
+     * Create a PARQUET table with all supported types. In Hive 1.0.0, Hive Parquet format doesn't support BINARY and
+     * DATE types. Once the Hive storage plugin is upgraded to Hive 1.2 convert the DDL following this comment into
+     * following one line.
+     *
+     * executeQuery(hiveDriver, "CREATE TABLE readtest_parquet STORED AS parquet AS SELECT * FROM readtest");
+     */
+    executeQuery(hiveDriver,
+        "CREATE TABLE readtest_parquet (" +
+            "  boolean_field BOOLEAN, " +
+            "  tinyint_field TINYINT," +
+            "  decimal0_field DECIMAL," +
+            "  decimal9_field DECIMAL(6, 2)," +
+            "  decimal18_field DECIMAL(15, 5)," +
+            "  decimal28_field DECIMAL(23, 1)," +
+            "  decimal38_field DECIMAL(30, 3)," +
+            "  double_field DOUBLE," +
+            "  float_field FLOAT," +
+            "  int_field INT," +
+            "  bigint_field BIGINT," +
+            "  smallint_field SMALLINT," +
+            "  string_field STRING," +
+            "  varchar_field VARCHAR(50)," +
+            "  timestamp_field TIMESTAMP" +
+            ") PARTITIONED BY (" +
+            "  binary_part BINARY," +
+            "  boolean_part BOOLEAN," +
+            "  tinyint_part TINYINT," +
+            "  decimal0_part DECIMAL," +
+            "  decimal9_part DECIMAL(6, 2)," +
+            "  decimal18_part DECIMAL(15, 5)," +
+            "  decimal28_part DECIMAL(23, 1)," +
+            "  decimal38_part DECIMAL(30, 3)," +
+            "  double_part DOUBLE," +
+            "  float_part FLOAT," +
+            "  int_part INT," +
+            "  bigint_part BIGINT," +
+            "  smallint_part SMALLINT," +
+            "  string_part STRING," +
+            "  varchar_part VARCHAR(50)," +
+            "  timestamp_part TIMESTAMP," +
+            "  date_part DATE" +
+            ") STORED AS parquet "
+    );
+
+    executeQuery(hiveDriver, "INSERT OVERWRITE TABLE readtest_parquet " +
+        "PARTITION (" +
+        "  binary_part='binary', " +
+        "  boolean_part='true', " +
+        "  tinyint_part='64', " +
+        "  decimal0_part='36.9', " +
+        "  decimal9_part='36.9', " +
+        "  decimal18_part='3289379872.945645', " +
+        "  decimal28_part='39579334534534.35345', " +
+        "  decimal38_part='363945093845093890.9', " +
+        "  double_part='8.345', " +
+        "  float_part='4.67', " +
+        "  int_part='123456', " +
+        "  bigint_part='234235', " +
+        "  smallint_part='3455', " +
+        "  string_part='string', " +
+        "  varchar_part='varchar', " +
+        "  timestamp_part='2013-07-05 17:01:00', " +
+        "  date_part='2013-07-05'" +
+        ") " +
+        " SELECT " +
+        "  boolean_field," +
+        "  tinyint_field," +
+        "  decimal0_field," +
+        "  decimal9_field," +
+        "  decimal18_field," +
+        "  decimal28_field," +
+        "  decimal38_field," +
+        "  double_field," +
+        "  float_field," +
+        "  int_field," +
+        "  bigint_field," +
+        "  smallint_field," +
+        "  string_field," +
+        "  varchar_field," +
+        "  timestamp_field" +
+        " FROM readtest WHERE boolean_part = true");
+
+    // Add a second partition to table 'readtest_parquet' which contains the same values as the first partition except
+    // for boolean_part partition column
+    executeQuery(hiveDriver,
+        "ALTER TABLE readtest_parquet ADD PARTITION ( " +
+            "  binary_part='binary', " +
+            "  boolean_part='false', " +
+            "  tinyint_part='64', " +
+            "  decimal0_part='36.9', " +
+            "  decimal9_part='36.9', " +
+            "  decimal18_part='3289379872.945645', " +
+            "  decimal28_part='39579334534534.35345', " +
+            "  decimal38_part='363945093845093890.9', " +
+            "  double_part='8.345', " +
+            "  float_part='4.67', " +
+            "  int_part='123456', " +
+            "  bigint_part='234235', " +
+            "  smallint_part='3455', " +
+            "  string_part='string', " +
+            "  varchar_part='varchar', " +
+            "  timestamp_part='2013-07-05 17:01:00', " +
+            "  date_part='2013-07-05')"
     );
 
     // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA

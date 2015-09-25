@@ -104,7 +104,7 @@ public class DrillHiveTable extends DrillTable{
         return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
 
       case BINARY:
-        return typeFactory.createSqlType(SqlTypeName.BINARY);
+        return typeFactory.createSqlType(SqlTypeName.VARBINARY);
 
       case DECIMAL: {
         DecimalTypeInfo decimalTypeInfo = (DecimalTypeInfo)pTypeInfo;

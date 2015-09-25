@@ -69,10 +69,12 @@ import org.apache.hadoop.security.UserGroupInformation;
 public class HiveScan extends AbstractGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScan.class);
 
+  protected static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR = 100;
+
   @JsonProperty("hive-table")
   public HiveReadEntry hiveReadEntry;
   @JsonIgnore
-  private List<InputSplit> inputSplits = Lists.newArrayList();
+  protected List<InputSplit> inputSplits = Lists.newArrayList();
   @JsonIgnore
   public HiveStoragePlugin storagePlugin;
   @JsonProperty("storage-plugin")
@@ -121,7 +123,7 @@ public class HiveScan extends AbstractGroupScan {
     this.storagePluginName = storagePlugin.getName();
   }
 
-  private HiveScan(final HiveScan that) {
+  public HiveScan(final HiveScan that) {
     super(that);
     this.columns = that.columns;
     this.endpoints = that.endpoints;
@@ -132,6 +134,10 @@ public class HiveScan extends AbstractGroupScan {
     this.storagePlugin = that.storagePlugin;
     this.storagePluginName = that.storagePluginName;
     this.rowCount = that.rowCount;
+  }
+
+  public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
+    return new HiveScan(getUserName(), hiveReadEntry, storagePlugin, columns);
   }
 
   public List<SchemaPath> getColumns() {
@@ -312,6 +318,15 @@ public class HiveScan extends AbstractGroupScan {
         // having a rowCount of 0 can mean the statistics were never computed
         estRowCount = data/1024;
       }
+
+      // Hive's native reader is neither memory efficient nor fast. If the rowcount is below
+      // HIVE_SERDE_SCAN_OVERHEAD_FACTOR, make sure it is at least HIVE_SERDE_SCAN_OVERHEAD_FACTOR to enable the planner
+      // to choose HiveDrillNativeParquetScan. Due to the project on top of HiveDrillNativeParquetScan, we end up
+      // choosing the HiveScan instead of HiveDrillNativeParquetScan if the cost is too low.
+      if (estRowCount <= HIVE_SERDE_SCAN_OVERHEAD_FACTOR) {
+        estRowCount = HIVE_SERDE_SCAN_OVERHEAD_FACTOR;
+      }
+
       logger.debug("estimated row count = {}, stats row count = {}", estRowCount, rowCount);
       return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
     } catch (final IOException e) {
@@ -356,5 +371,10 @@ public class HiveScan extends AbstractGroupScan {
       return false;
     }
     return true;
+  }
+
+  @JsonIgnore
+  public boolean isNativeReader() {
+    return false;
   }
 }
