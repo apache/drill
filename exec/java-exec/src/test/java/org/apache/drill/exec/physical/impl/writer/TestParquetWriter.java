@@ -617,6 +617,14 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   /*
+     Test the conversion from int96 to impala timestamp
+   */
+  @Test
+  public void testImpalaParquetTimestampAsInt96() throws Exception {
+    compareParquetReadersColumnar("convert_from(field_impala_ts, 'TIMESTAMP_IMPALA')", "cp.`parquet/int96_impala_1.parquet`");
+  }
+
+  /*
     Test a file with partitions and an int96 column. (Data generated using Hive)
    */
   @Test
