@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.data;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -84,8 +85,8 @@ public class DataClientConnection extends RemoteConnection{
     return true;
   }
 
-  public void shutdownIfClient() {
-    Closeables.closeQuietly(client);
+  public void shutdownIfClient() throws IOException {
+    Closeables.close(client, true);
   }
 
 }

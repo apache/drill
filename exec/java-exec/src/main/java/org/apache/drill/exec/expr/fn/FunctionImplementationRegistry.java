@@ -45,7 +45,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   private OptionManager optionManager = null;
 
   public FunctionImplementationRegistry(DrillConfig config){
-    Stopwatch w = new Stopwatch().start();
+    Stopwatch w = Stopwatch.createStarted();
 
     logger.debug("Generating function registry.");
     drillFuncRegistry = new DrillFunctionRegistry(config);

@@ -127,8 +127,7 @@ public class TestParquetPhysicalPlan extends ExecTest {
     try(DrillClient client = new DrillClient(config);) {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
       client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
       System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
       client.close();

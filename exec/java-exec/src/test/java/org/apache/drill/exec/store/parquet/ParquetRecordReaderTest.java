@@ -291,7 +291,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     TestFileGenerator.populateFieldInfoMap(props);
     final ParquetResultListener resultListener =
         new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
     testWithListener(type, planText, resultListener);
     resultListener.getResults();
     // batchLoader.clear();
@@ -641,8 +641,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
           new DirectCodecFactory(dfsConfig, allocator), f.getParquetMetadata(), columns);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
-      final Stopwatch watch = new Stopwatch();
-      watch.start();
+      final Stopwatch watch = Stopwatch.createStarted();
 
       int rowCount = 0;
       while ((rowCount = rr.next()) > 0) {

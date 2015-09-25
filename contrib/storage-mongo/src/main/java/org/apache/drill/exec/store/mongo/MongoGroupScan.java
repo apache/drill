@@ -107,7 +107,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private Map<String, List<ChunkInfo>> chunksInverseMapping;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private boolean filterPushedDown = false;
 

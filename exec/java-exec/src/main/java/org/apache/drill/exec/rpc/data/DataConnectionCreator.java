@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.data;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -66,8 +67,8 @@ public class DataConnectionCreator implements Closeable {
     return new DataTunnel(newManager);
   }
 
-  public void close() {
-    Closeables.closeQuietly(server);
+  public void close() throws IOException {
+    Closeables.close(server, true);
   }
 
 }

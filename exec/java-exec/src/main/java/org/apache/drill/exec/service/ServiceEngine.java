@@ -84,8 +84,8 @@ public class ServiceEngine implements Closeable{
 
   @Override
   public void close() throws IOException {
-    Closeables.closeQuietly(userServer);
-    Closeables.closeQuietly(dataPool);
-    Closeables.closeQuietly(controller);
+    Closeables.close(userServer, true);
+    Closeables.close(dataPool, true);
+    Closeables.close(controller, true);
   }
 }

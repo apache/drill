@@ -279,7 +279,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   public void close() throws IOException {
-    Closeables.closeQuietly(authenticator);
+    Closeables.close(authenticator, true);
     super.close();
   }
 }

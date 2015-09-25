@@ -77,8 +77,7 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     int recordCount = newContainer.getRecordCount();
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(recordCount, newContainer, false);
     VectorAccessibleSerializable outputBatch = new VectorAccessibleSerializable(batch, allocator);
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     outputBatch.writeToStream(outputStream);
     newContainer.zeroVectors();
     logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
@@ -92,8 +91,7 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
       inputStream = fs.open(path);
     }
     VectorAccessibleSerializable vas = new VectorAccessibleSerializable(allocator);
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     vas.readFromStream(inputStream);
     VectorContainer c =  vas.get();
 //    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());

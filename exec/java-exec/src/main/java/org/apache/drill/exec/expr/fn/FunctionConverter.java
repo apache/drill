@@ -52,8 +52,8 @@ import org.mortbay.util.IO;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
+import com.google.common.io.ByteSource;
 
 /**
  * Converts FunctionCalls to Java Expressions.
@@ -74,8 +74,8 @@ public class FunctionConverter {
     }
 
     URL u = Resources.getResource(c, path);
-    InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
-    try (InputStream is = supplier.getInput()) {
+    ByteSource byteSource = Resources.asByteSource(u);
+    try (InputStream is = byteSource.openStream()) {
       if (is == null) {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }
@@ -330,8 +330,8 @@ public class FunctionConverter {
     path = path.replace(".", FileUtils.separator);
     path = "/" + path + ".java";
     URL u = Resources.getResource(c, path);
-    InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
-    try (InputStream is = supplier.getInput()) {
+    ByteSource byteSource = Resources.asByteSource(u);
+    try (InputStream is = byteSource.openStream()) {
       if (is == null) {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }

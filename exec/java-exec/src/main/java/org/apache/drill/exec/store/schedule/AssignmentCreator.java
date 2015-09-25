@@ -106,8 +106,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return the minor fragment id to work units mapping
    */
   private ListMultimap<Integer, T> getMappings() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     maxWork = (int) Math.ceil(units.size() / ((float) incomingEndpoints.size()));
     LinkedList<WorkEndpointListPair<T>> workList = getWorkList();
     LinkedList<WorkEndpointListPair<T>> unassignedWorkList;
@@ -179,8 +178,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return the list of WorkEndpointListPairs
    */
   private LinkedList<WorkEndpointListPair<T>> getWorkList() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     LinkedList<WorkEndpointListPair<T>> workList = Lists.newLinkedList();
     for (T work : units) {
       List<Map.Entry<DrillbitEndpoint,Long>> entries = Lists.newArrayList();
@@ -236,8 +234,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return
    */
   private Map<DrillbitEndpoint,FragIteratorWrapper> getEndpointIterators() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     Map<DrillbitEndpoint,FragIteratorWrapper> map = Maps.newLinkedHashMap();
     Map<DrillbitEndpoint,List<Integer>> mmap = Maps.newLinkedHashMap();
     for (int i = 0; i < incomingEndpoints.size(); i++) {

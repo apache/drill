@@ -187,7 +187,7 @@ public class QuerySubmitter {
         System.out.println("Invalid format type: " + format);
         return -1;
     }
-    Stopwatch watch = new Stopwatch();
+    Stopwatch watch = Stopwatch.createUnstarted();
     for (String query : queries) {
       listener = new PrintingResultsListener(client.getConfig(), outputFormat, width);
       watch.start();

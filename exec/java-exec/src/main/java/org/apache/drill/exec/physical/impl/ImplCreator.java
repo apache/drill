@@ -72,8 +72,7 @@ public class ImplCreator {
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
     }
     final ImplCreator creator = new ImplCreator();
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
 
     try {
       final RootExec rootExec = creator.getRootExec(root, context);
