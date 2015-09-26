@@ -81,8 +81,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private MessageType schema;
   private Map<String, String> extraMetaData = new HashMap<>();
   private int blockSize;
-  private int pageSize = 1024 * 1024;
-  private int dictionaryPageSize = pageSize;
+  private int pageSize;
+  private int dictionaryPageSize;
   private boolean enableDictionary = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
@@ -121,6 +121,8 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     blockSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_BLOCK_SIZE));
+    pageSize = Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_PAGE_SIZE));
+    dictionaryPageSize= Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_DICT_PAGE_SIZE));
     String codecName = writerOptions.get(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).toLowerCase();
     switch(codecName) {
     case "snappy":

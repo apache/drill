@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import parquet.format.FileMetaData;
 import parquet.format.SchemaElement;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.ParquetFileWriter;
+import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
@@ -273,9 +275,20 @@ public class ParquetRecordReader extends AbstractRecordReader {
       final ArrayList<VarLengthColumn> varLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
       boolean fieldFixedLength;
+      // the column chunk meta-data is not guaranteed to be in the same order as the columns in the schema
+      // a map is constructed for fast access to the correct columnChunkMetadata to correspond
+      // to an element in the schema
+      Map<String, Integer> columnChunkMetadataPositionsInList = new HashMap();
+      BlockMetaData rowGroupMetadata = footer.getBlocks().get(rowGroupIndex);
+
+      int colChunkIndex = 0;
+      for (ColumnChunkMetaData colChunk : rowGroupMetadata.getColumns()) {
+        columnChunkMetadataPositionsInList.put(Arrays.toString(colChunk.getPath().toArray()), colChunkIndex);
+        colChunkIndex++;
+      }
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
-        columnChunkMetaData = footer.getBlocks().get(rowGroupIndex).getColumns().get(i);
+        columnChunkMetaData = rowGroupMetadata.getColumns().get(columnChunkMetadataPositionsInList.get(Arrays.toString(column.getPath())));
         schemaElement = schemaElements.get(column.getPath()[0]);
         MajorType type = ParquetToDrillTypeConverter.toMajorType(column.getType(), schemaElement.getType_length(),
             getDataMode(column), schemaElement, fragmentContext.getOptions());

@@ -114,6 +114,10 @@ public interface ExecConstants {
   public static final OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
   public static final String PARQUET_BLOCK_SIZE = "store.parquet.block-size";
   public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
+  public static final String PARQUET_PAGE_SIZE = "store.parquet.page-size";
+  public static final OptionValidator PARQUET_PAGE_SIZE_VALIDATOR = new LongValidator(PARQUET_PAGE_SIZE, 1024*1024);
+  public static final String PARQUET_DICT_PAGE_SIZE = "store.parquet.dictionary.page-size";
+  public static final OptionValidator PARQUET_DICT_PAGE_SIZE_VALIDATOR = new LongValidator(PARQUET_DICT_PAGE_SIZE, 1024*1024);
   public static final String PARQUET_WRITER_COMPRESSION_TYPE = "store.parquet.compression";
   public static final OptionValidator PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR = new EnumeratedStringValidator(
       PARQUET_WRITER_COMPRESSION_TYPE, "snappy", "snappy", "gzip", "none");
