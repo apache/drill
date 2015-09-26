@@ -80,6 +80,8 @@ public class ParquetFixedWidthDictionaryReaders {
 
       recordsReadInThisIteration = Math.min(pageReader.currentPageCount
           - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+      readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+      readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
       if (usingDictionary) {
         VarBinaryVector.Mutator mutator =  castedVector.getMutator();

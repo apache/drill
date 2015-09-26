@@ -21,17 +21,19 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.DateHolder;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 public class ConvertFromImpalaTimestamp {
+
 
   @FunctionTemplate(name = "convert_fromTIMESTAMP_IMPALA", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ImpalaTimestampConvertFrom implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
     @Output TimeStampHolder out;
+
 
     @Override
     public void setup() { }
@@ -43,8 +45,16 @@ public class ConvertFromImpalaTimestamp {
       in.buffer.readerIndex(in.start);
       long nanosOfDay = in.buffer.readLong();
       int julianDay = in.buffer.readInt();
-      // Need to subtract half of a day because julian days are recorded as starting at noon
-      out.value = org.joda.time.DateTimeUtils.fromJulianDay(julianDay - 0.5 + nanosOfDay / (24.0 * 3600 * 1000000000));
+      /* We use the same implementation as org.joda.time.DateTimeUtils.fromJulianDay but avoid rounding errors
+         Note we need to subtract half of a day because julian days are recorded as starting at noon.
+         From Joda :
+              public static final long fromJulianDay(double julianDay) {
+                484            double epochDay = julianDay - 2440587.5d;
+                485            return (long) (epochDay * 86400000d);
+                486        }
+      */
+      long dateTime = (julianDay - 2440588)*86400000L + (nanosOfDay / 1000000);
+      out.value = new org.joda.time.DateTime((long) dateTime, org.joda.time.chrono.JulianChronology.getInstance()).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
     }
   }
 }
