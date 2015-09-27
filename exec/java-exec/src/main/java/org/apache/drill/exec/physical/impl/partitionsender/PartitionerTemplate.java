@@ -230,7 +230,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     private final OperatorStats stats;
 
     private boolean isLast = false;
-    private volatile boolean terminated = false;
+    private volatile boolean terminated = false; // true if receiver finished receiving batches
     private boolean dropAll = false;
     private int recordCount;
     private int totalRecords;
@@ -281,10 +281,7 @@ public abstract class PartitionerTemplate implements Partitioner {
 
       // We need to send the last batch when
       //   1. we are actually done processing the incoming RecordBatches and no more input available
-      //   2. receiver wants to terminate (possible in case of queries involving limit clause). Even when receiver wants
-      //      to terminate we need to send at least one batch with "isLastBatch" set to true, so that receiver knows
-      //      sender has acknowledged the terminate request. After sending the last batch, all further batches are
-      //      dropped.
+      //   2. receiver wants to terminate (possible in case of queries involving limit clause).
       //   3. Partitioner thread is interrupted due to cancellation of fragment.
       final boolean isLastBatch = isLast || terminated || Thread.currentThread().isInterrupted();
 
@@ -299,7 +296,9 @@ public abstract class PartitionerTemplate implements Partitioner {
         }
       }
 
-      FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLastBatch,
+      // no need to send last batch if the receiver already terminated.
+      if (!terminated) {
+        FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLastBatch,
           handle.getQueryId(),
           handle.getMajorFragmentId(),
           handle.getMinorFragmentId(),
@@ -307,14 +306,14 @@ public abstract class PartitionerTemplate implements Partitioner {
           oppositeMinorFragmentId,
           getWritableBatch());
 
-      updateStats(writableBatch);
-      stats.startWait();
-      try {
-        tunnel.sendRecordBatch(writableBatch);
-      } finally {
-        stats.stopWait();
+        updateStats(writableBatch);
+        stats.startWait();
+        try {
+          tunnel.sendRecordBatch(writableBatch);
+        } finally {
+          stats.stopWait();
+        }
       }
-
       // If the current batch is the last batch, then set a flag to ignore any requests to flush the data
       // This is possible when the receiver is terminated, but we still get data from input operator
       if (isLastBatch) {
