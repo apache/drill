@@ -534,14 +534,11 @@ public class TestUnionAll extends BaseTestQuery{
         + "order by n_regionkey";
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
-                ".*Scan.*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
-                ".*Scan"};
-    final String[] excludedPlan = {"Filter.*\n.*UnionAll"};
+    final String[] expectedPlan = {".*Filter.*\n" +
+            ".*UnionAll.*\n" +
+            ".*Scan.*columns=\\[`n_regionkey`\\].*\n" +
+            ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -568,22 +565,19 @@ public class TestUnionAll extends BaseTestQuery{
         "where n_nationkey in (1, 2)";
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*Project.*\n" +
-            ".*HashJoin.*\n" +
-                ".*SelectionVectorRemover.*\n" +
-                    ".*Filter.*\n" +
-                        ".*Project.*\n" +
-                            ".*Scan.*\n" +
-                ".*Scan.*\n" +
-        ".*Project.*\n" +
-            ".*HashJoin.*\n" +
-                ".*SelectionVectorRemover.*\n" +
-                    ".*Filter.*\n" +
-                        ".*Project.*\n" +
-                            ".*Scan.*\n" +
-                ".*Scan"};
-    final String[] excludedPlan = {"Filter.*\n.*UnionAll"};
+    final String[] expectedPlan = {"Filter.*\n" +
+        ".*UnionAll.*\n" +
+            ".*Project.*\n" +
+                ".*HashJoin.*\n" +
+                    ".*Project.*\n" +
+                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`r_regionkey`\\].*\n" +
+            ".*Project.*\n" +
+                ".*HashJoin.*\n" +
+                    ".*Project.*\n" +
+                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -609,17 +603,14 @@ public class TestUnionAll extends BaseTestQuery{
         "where ct < 100", root, root);
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
-                ".*StreamAgg.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
+    final String[] expectedPlan = {"Filter.*\n" +
+        ".*UnionAll.*\n" +
+            ".*StreamAgg.*\n" +
                 ".*Project.*\n" +
-                    ".*Scan"};
-    final String[] excludedPlan = {"Filter.*\n.*UnionAll"};
+                    ".*Scan.*columns=\\[`columns`\\[0\\]\\].*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`columns`\\[0\\]\\].*"};
+    final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
     // Validate the result
@@ -640,11 +631,13 @@ public class TestUnionAll extends BaseTestQuery{
         "union all select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*Project.*\n" +
-            ".*Scan.*columns=\\[`n_nationkey`, `n_name`\\].*\n" +
-        ".*Project.*\n" +
-            ".*Scan.*columns=\\[`r_regionkey`, `r_name`\\]"};
+    final String[] expectedPlan = {"Project\\(n_nationkey=\\[\\$0\\], n_name=\\[\\$1\\]\\).*\n" +
+        ".*UnionAll.*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`r_regionkey`, `r_name`, `r_comment`\\].*"
+    };
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -665,9 +658,12 @@ public class TestUnionAll extends BaseTestQuery{
         "union all select r_regionkey, r_name, r_comment  from cp.`tpch/region.parquet`)";
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
-        ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+    final String[] expectedPlan = {"Project\\(n_nationkey=\\[\\$0\\]\\).*\n" +
+        ".*UnionAll.*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`r_regionkey`, `r_name`, `r_comment`\\].*"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -691,9 +687,9 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n" +
         ".*Project.*\n" +
-            ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan.*columns=\\[`r_regionkey`\\].*"};
+            ".*Scan.*columns=\\[`r_regionkey`, `r_name`, `r_comment`\\].*"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -719,9 +715,9 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n." +
         ".*Project.*\n" +
-            ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan.*columns=\\[`columns`\\[0\\]\\]"};
+            ".*Scan.*columns=\\[`columns`\\[0\\], `columns`\\[1\\], `columns`\\[2\\]\\]"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -745,9 +741,9 @@ public class TestUnionAll extends BaseTestQuery{
     // Validate the plan
     final String[] expectedPlan = {"UnionAll.*\n." +
         "*Project.*\n" +
-            ".*Scan.*columns=\\[`n_comment`, `n_nationkey`, `n_name`\\].*\n" +
+            ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
         ".*Project.*\n" +
-            ".*Scan.*columns=\\[`r_comment`, `r_regionkey`, `r_name`\\]"};
+            ".*Scan.*columns=\\[`r_regionkey`, `r_name`, `r_comment`\\]"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -770,13 +766,12 @@ public class TestUnionAll extends BaseTestQuery{
         "where n_nationkey > 0 and n_nationkey < 4";
 
     // Validate the plan
-    final String[] expectedPlan = {"UnionAll.*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
-                ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
-        ".*SelectionVectorRemover.*\n" +
-            ".*Filter.*\n" +
-                ".*Scan.*columns=\\[`r_regionkey`\\]"};
+    final String[] expectedPlan = {"Filter.*\n" +
+        ".*UnionAll.*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`n_nationkey`, `n_name`, `n_comment`\\].*\n" +
+            ".*Project.*\n" +
+                ".*Scan.*columns=\\[`r_regionkey`, `r_name`, `r_comment`\\]"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
@@ -787,6 +782,120 @@ public class TestUnionAll extends BaseTestQuery{
         .csvBaselineFile("testframework/testUnionAllQueries/testProjectFiltertPushDownOverUnionAll.tsv")
         .baselineTypes(TypeProtos.MinorType.INT)
         .baselineColumns("n_nationkey")
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-3257 (Simplified Query from TPC-DS query 74)
+  public void testUnionAllInWith() throws Exception {
+    final String query1 = "WITH year_total \n" +
+        "     AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c\n" +
+        "         UNION ALL \n" +
+        "         SELECT c.r_regionkey    customer_id, \n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c) \n" +
+        "SELECT count(t_s_secyear.customer_id) as ct \n" +
+        "FROM   year_total t_s_firstyear, \n" +
+        "       year_total t_s_secyear, \n" +
+        "       year_total t_w_firstyear, \n" +
+        "       year_total t_w_secyear \n" +
+        "WHERE  t_s_secyear.customer_id = t_s_firstyear.customer_id \n" +
+        "       AND t_s_firstyear.customer_id = t_w_secyear.customer_id \n" +
+        "       AND t_s_firstyear.customer_id = t_w_firstyear.customer_id \n" +
+        "       AND CASE \n" +
+        "             WHEN t_w_firstyear.year_total > 0 THEN t_w_secyear.year_total \n" +
+        "             ELSE NULL \n" +
+        "           END > -1";
+
+    final String query2 = "WITH year_total \n" +
+        "     AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c\n" +
+        "         UNION ALL \n" +
+        "         SELECT c.r_regionkey    customer_id, \n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c) \n" +
+        "SELECT count(t_w_firstyear.customer_id) as ct \n" +
+        "FROM   year_total t_w_firstyear, \n" +
+        "       year_total t_w_secyear \n" +
+        "WHERE  t_w_firstyear.year_total = t_w_secyear.year_total \n" +
+        " AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
+
+    final String query3 = "WITH year_total_1\n" +
+        "             AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/region.parquet` c\n" +
+        "                 UNION ALL \n" +
+        "                 SELECT c.r_regionkey    customer_id, \n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/region.parquet` c) \n" +
+        "             , year_total_2\n" +
+        "             AS (SELECT c.n_nationkey    customer_id,\n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/nation.parquet` c\n" +
+        "                 UNION ALL \n" +
+        "                 SELECT c.n_nationkey    customer_id, \n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/nation.parquet` c) \n" +
+        "        SELECT count(t_w_firstyear.customer_id) as ct\n" +
+        "        FROM   year_total_1 t_w_firstyear,\n" +
+        "               year_total_2 t_w_secyear\n" +
+        "        WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
+        "           AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
+
+    final String query4 = "WITH year_total_1\n" +
+        "             AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/region.parquet` c\n" +
+        "                 UNION ALL \n" +
+        "                 SELECT c.n_nationkey    customer_id, \n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/nation.parquet` c), \n" +
+        "             year_total_2\n" +
+        "             AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/region.parquet` c\n" +
+        "                 UNION ALL \n" +
+        "                 SELECT c.n_nationkey    customer_id, \n" +
+        "                        1 year_total\n" +
+        "                 FROM   cp.`tpch/nation.parquet` c) \n" +
+        "        SELECT count(t_w_firstyear.customer_id) as ct \n" +
+        "        FROM   year_total_1 t_w_firstyear,\n" +
+        "               year_total_2 t_w_secyear\n" +
+        "        WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
+        "         AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
+
+    testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 80)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 100)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query3)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 500)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query4)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 900)
         .build()
         .run();
   }
