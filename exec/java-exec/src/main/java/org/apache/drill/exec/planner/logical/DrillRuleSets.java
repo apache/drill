@@ -116,7 +116,8 @@ public class DrillRuleSets {
        Filter push-down related rules
        */
       DrillPushFilterPastProjectRule.INSTANCE,
-      FilterSetOpTransposeRule.INSTANCE,
+      // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
+      //FilterSetOpTransposeRule.INSTANCE,
       FilterAggregateTransposeRule.INSTANCE,
 
       FilterMergeRule.INSTANCE,
@@ -133,7 +134,8 @@ public class DrillRuleSets {
       DrillPushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
       DrillPushProjIntoScan.INSTANCE,
-      DrillProjectSetOpTransposeRule.INSTANCE,
+      // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
+      //DrillProjectSetOpTransposeRule.INSTANCE,
       ProjectWindowTransposeRule.INSTANCE,
 
       /*
