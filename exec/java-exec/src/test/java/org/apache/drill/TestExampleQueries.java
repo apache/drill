@@ -27,10 +27,15 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(90_000 /* ms */);
 
   @Test // see DRILL-2328
   public void testConcatOnNull() throws Exception {

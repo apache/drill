@@ -46,7 +46,9 @@ import static org.junit.Assert.assertNull;
  * any particular order of execution. We ignore the results.
  */
 public class TestTpchDistributedConcurrent extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(120000); // Longer timeout than usual.
+  // Longer timeout than usual:
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(180_000 /* ms */);
 
   /*
    * Valid test names taken from TestTpchDistributed. Fuller path prefixes are
