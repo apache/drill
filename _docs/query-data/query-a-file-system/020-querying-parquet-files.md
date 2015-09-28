@@ -5,7 +5,7 @@ parent: "Querying a File System"
 
 Drill 1.2 and later extends SQL for performant querying of a large number, thousands or more, of Parquet files. By running the following command, you trigger the generation of metadata files in the directory of Parquet files and its subdirectories:
 
-    REFRESH TABLE METADATA <path to table>
+`REFRESH TABLE METADATA <path to table>`
 
 You need to run the command on a file or directory only once during the session. Subsequent queries return results quickly because Drill refers to the metadata saved in the cache, as described in [Reading Parquet Files]({{site.baseurl}}/docs/parquet-format/#reading-parquet-files). 
 
