@@ -81,7 +81,7 @@ You do not assign a data type to every column name in a CREATE TABLE statement t
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)    
 * [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)   
-  Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)  
+  Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  
 * Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)   
 
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to cast the data. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
@@ -132,7 +132,7 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
   Casts data from one data type to another.
 * CONVERT_TO and CONVERT_FROM functions
-  Converts data, including binary data, from one data type to another using ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)  
+  Converts data, including binary data, from one data type to another using ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  
 * [TO_CHAR]({{ site.baseurl }}/docs/data-type-conversion/#to_char)  
   Converts a TIMESTAMP, INTERVALDAY/INTERVALYEAR, INTEGER, DOUBLE, or DECIMAL to a string.
 * [TO_DATE]({{ site.baseurl }}/docs/data-type-conversion/#to_date)  
@@ -190,7 +190,7 @@ If your FIXEDBINARY or VARBINARY data is in a format other than UTF-8, or big-en
 
 \* Used to cast binary UTF-8 data coming to/from sources such as HBase. The CAST function does not support all representations of FIXEDBINARY and VARBINARY. Only the UTF-8 format is supported. 
 
-## CONVERT_TO and CONVERT_FROM Data Types
+## Data Types for CONVERT_TO and CONVERT_FROM Functions
 
 The [CONVERT_TO function]({{site.baseurl}}/docs/data-type-conversion/#convert_to-and-convert_from) converts data to bytes from the input type. The [CONVERT_FROM function]({{site.baseurl}}/docs/data-type-conversion/#convert_to-and-convert_from) converts data from bytes to the input type. For example, the following CONVERT_TO function converts an integer to bytes using big endian encoding:
 
@@ -220,10 +220,13 @@ DATE_EPOCH| bytes(8)| DATE
 TIME_EPOCH_BE| bytes(8)| TIME  
 TIME_EPOCH| bytes(8)| TIME  
 TIMESTAMP_EPOCH| bytes(8)| DATE/TIME
+TIMESTAMP_IMPALA*| bytes(8)| INT96
 UTF8| bytes| VARCHAR  
 UTF16| bytes| VAR16CHAR  
 UINT8| bytes(8)| UINT8  
 UINT8_BE| bytes(8)| UINT8
+
+\* In Drill 1.2 and later, use the TIMESTAMP_IMPALA type with the CONVERT_FROM function to decode a timestamp from Hive or Impala, as shown in the section, ["About INT96 Support"]({{site.baseurl}}/drill/docs/parquet-format/#about-int96-support).
 
 This table includes types such as INT, for converting little endian-encoded data and types such as INT_BE for converting big endian-encoded data to Drill internal types. You need to convert binary representations, such as data in HBase, to a Drill internal format as you query the data. If you are unsure that the size of the source and destination INT or BIGINT you are converting is the same, use CAST to convert these data types to/from binary.  
 

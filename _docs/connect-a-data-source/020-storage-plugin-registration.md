@@ -2,7 +2,7 @@
 title: "Storage Plugin Registration"
 parent: "Connect a Data Source"
 ---
-You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web Console, you can view and reconfigure a storage plugin if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to do so. Go to `https://<IP address>:8047/storage`, where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. In Drill 1.1 and earlier, go to `http://<IP address>:8047/storage` to view and configure a storage plugin.
+You connect Drill to a file system, Hive, HBase, or other data source through a storage plugin. On the Storage tab of the Drill Web Console, you can view and reconfigure a storage plugin. If [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is not enabled (the default), go to `http://<IP address>:8047/storage` to view and configure a storage plugin. IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system. If HTTPS support is enabled and you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view and configure a storage plugin, go to `https://<IP address>:8047/storage`. 
 
 The Drill installation registers the `cp`, `dfs`, `hbase`, `hive`, and `mongo` default storage plugin configurations.
 

@@ -25,4 +25,4 @@ statements is Parquet. Using a configuration option, you can modify Drill to sto
 
 ## Query Profile Data Storage Configuration
 
-To enjoy a problem-free Drill Web Console experience, you need to [configure the ZooKeeper PStore]({{site.baseurl}}/docs/persistent-configuration-storage/#configuring-zookeeper-pstore).
+To avoid problems working with the Web Console, you need to [configure the ZooKeeper PStore]({{site.baseurl}}/docs/persistent-configuration-storage/#configuring-zookeeper-pstore).

@@ -48,25 +48,25 @@ To read or write Parquet data, you need to include the Parquet format in the sto
 
 Use the `store.format` option to set the CTAS output format of a Parquet row group at the session or system level.
 
-Use the ALTER command to set the `store.format` option.
-         
-        ALTER SESSION SET `store.format` = 'parquet';
-        ALTER SYSTEM SET `store.format` = 'parquet';
+Use the ALTER command to set the `store.format` option.  
+
+``ALTER SESSION SET `store.format` = 'parquet';``  
+``ALTER SYSTEM SET `store.format` = 'parquet';``  
         
 ### Configuring the Size of Parquet Files
 Configuring the size of Parquet files by setting the `store.parquet.block-size` can improve write performance. The block size is the size of MFS, HDFS, or the file system. 
 
 The larger the block size, the more memory Drill needs for buffering data. Parquet files that contain a single block maximize the amount of data Drill stores contiguously on disk. Given a single row group per file, Drill stores the entire Parquet file onto the block, avoiding network I/O.
 
-To maximize performance, set the target size of a Parquet row group to the number of bytes less than or equal to the block size of MFS, HDFS, or the file system by using the `store.parquet.block-size`:         
-        
-        ALTER SESSION SET `store.parquet.block-size` = 536870912;         
-        ALTER SYSTEM SET `store.parquet.block-size` = 536870912  
+To maximize performance, set the target size of a Parquet row group to the number of bytes less than or equal to the block size of MFS, HDFS, or the file system by using the `store.parquet.block-size`:  
+
+``ALTER SESSION SET `store.parquet.block-size` = 536870912;``  
+``ALTER SYSTEM SET `store.parquet.block-size` = 536870912``  
 
 The default block size is 536870912 bytes.
 
 ### Type Mapping
-The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function] ({{ site.baseurl }}/docs/data-type-conversion/#cast) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
+The high correlation between Parquet and SQL data types makes reading Parquet files effortless in Drill. Writing to Parquet files takes more work than reading. Because SQL does not support all Parquet data types, to prevent Drill from inferring a type other than one you want, use the [cast function]({{ site.baseurl }}/docs/data-type-conversion/#cast) Drill offers more liberal casting capabilities than SQL for Parquet conversions if the Parquet data is of a logical type. 
 
 The following general process converts a file from JSON to Parquet:
 
@@ -145,7 +145,16 @@ The first table in this section maps SQL data types to Parquet data types, limit
 | FLOAT    | FLOAT        | 4-byte single precision floating point number |
 | DOUBLE   | DOUBLE       | 8-byte double precision floating point number |
 | INTEGER  | INT32        | 4-byte signed integer                         |
-| None     | INT96        | 12-byte signed int                            |
+| None*    | INT96        | 12-byte signed int                            |
+
+\* Drill 1.2 and later supports reading the Parquet INT96 type.
+
+## About INT96 Support
+Drill 1.2 and later supports reading the Parquet INT96 type. For example, to decode a timestamp from Hive or Impala, which is of type INT96, use the CONVERT_FROM function and the [TIMESTAMP_IMPALA]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) type argument:
+
+``SELECT CONVERT_FROM(timestamp_field, 'TIMESTAMP_IMPALA') as timestamp_field FROM `dfs.file_with_timestamp.parquet`;``
+
+Because INT96 is supported for reads only, you cannot use the TIMESTAMP_IMPALA as a data type argument with CONVERT_TO.
 
 ### SQL Types to Parquet Logical Types
 Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:

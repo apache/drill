@@ -117,7 +117,7 @@ steps:
 [Start Drill]({{site.baseurl}}/docs/installing-drill-in-embedded-mode/) and complete the following steps to query the HBase tables you created.
 
 1. Use the HBase storage plugin configuration.  
-    `USE HBase;`  
+    `USE hbase;`  
 2. Issue the following query to see the data in the students table:  
     `SELECT * FROM students;`  
     
@@ -206,7 +206,7 @@ The trivial example in the previous section queried little endian-encoded data i
 
 ## Querying Big Endian-Encoded Data
 
-Drill optimizes scans of HBase tables when you use the ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types) on big endian-encoded data. Drill provides the \*\_BE encoded types for use with CONVERT_TO and CONVERT_FROM to take advantage of these optimizations. Here are a few examples of the \*\_BE types.
+Drill optimizes scans of HBase tables when you use the ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) on big endian-encoded data. Drill provides the \*\_BE encoded types for use with CONVERT_TO and CONVERT_FROM to take advantage of these optimizations. Here are a few examples of the \*\_BE types.
 
 * DATE_EPOCH_BE  
 * TIME_EPOCH_BE  
@@ -233,10 +233,10 @@ To query HBase data:
 
 1. Connect the data source to Drill using the [HBase storage plugin]({{site.baseurl}}/docs/hbase-storage-plugin/).  
 
-    `USE HBase;`
+    `USE hbase;`
 
 2. Determine the encoding of the HBase data you want to query. Ask the person in charge of creating the data.  
-3. Based on the encoding type of the data, use the ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types) to convert HBase binary representations to an SQL type as you query the data.  
+3. Based on the encoding type of the data, use the ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) to convert HBase binary representations to an SQL type as you query the data.  
     For example, use CONVERT_FROM in your Drill query to convert a big endian-encoded row key to an SQL BIGINT type:  
 
     `SELECT CONVERT_FROM(BYTE_SUBSTR(row_key, 1, 8),'BIGINT_BE’) FROM my_hbase_table;`

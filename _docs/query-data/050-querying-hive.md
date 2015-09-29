@@ -10,7 +10,7 @@ To create a Hive table and query it with Drill, complete the following steps:
 
   1. Issue the following command to start the Hive shell:
   
-        hive
+      `hive`
   2. Issue the following command from the Hive shell create a table schema:
   
         hive> create table customers(FirstName string, LastName string, Company string, Address string, City string, County string, State string, Zip string, Phone string, Fax string, Email string, Web string) row format delimited fields terminated by ',' stored as textfile;
@@ -42,3 +42,8 @@ To create a Hive table and query it with Drill, complete the following steps:
         10 rows selected (1.5 seconds)
         0: jdbc:drill:schema=hiveremote>
 
+## Optimizing Reads of Parquet-Backed Tables
+
+Use the `store.hive.optimize_scan_with_native_readers` option to optimize reads of Parquet-backed external tables from Hive. When set to TRUE, this option uses Drill native readers instead of the Hive Serde interface, resulting in more performant queries of Parquet-backed external tables. (Drill 1.2 and later)
+
+Set the `store.hive.optimize_scan_with_native_readers` option as described in the section, ["Planning and Execution Options"]({{site.baseurl}}/docs/planning-and-execution-options/).

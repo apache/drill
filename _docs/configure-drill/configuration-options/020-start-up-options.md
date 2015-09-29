@@ -45,6 +45,8 @@ override.conf` file located in Drill’s` /conf` directory.
 
 The summary of start-up options, also known as boot options, lists default values. The following descriptions provide more detail on key options that are frequently reconfigured:
 
+* drill.exec.http.ssl_enabled  
+  Available in Drill 1.2. Enables or disables [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support). Settings are TRUE and FALSE, respectively. The default is FALSE.  
 * drill.exec.sys.store.provider.class  
   Defines the persistent storage (PStore) provider. The [PStore]({{ site.baseurl }}/docs/persistent-configuration-storage) holds configuration and profile data.  
 * drill.exec.buffer.size  

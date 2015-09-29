@@ -8,9 +8,13 @@ you can limit the access of certain users to Web Console functionality, such as 
 With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information.
 
 ## HTTPS Support
-Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API now support the HTTPS protocol.
+Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
 
-By default, Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console. Because Drill uses a self-signed certificate, you see a warning in the browser when you go to `https://<node IP address>:8047`. The Chrome browser, for example, requires you to click `Advanced`, and then `Proceed to <address> (unsafe)`.  If you have a signed certificate by an authority, you can set up a custom SSL to avoid this warning. You can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
+`drill.exec.http.ssl_enabled`
+
+By default this start-up option is set to FALSE.
+
+Drill generates a self-signed certificate that works with SSL for HTTPS access to the Web Console. Because Drill uses a self-signed certificate, you see a warning in the browser when you go to `https://<node IP address>:8047`. The Chrome browser, for example, requires you to click `Advanced`, and then `Proceed to <address> (unsafe)`. If you have a signed certificate by an authority, you can set up a custom SSL to avoid this warning. You can set up SSL to specify the keystore or truststore, or both, for your organization, as described in the next section.
 
 ## Setting Up a Custom SSL Configuration
 

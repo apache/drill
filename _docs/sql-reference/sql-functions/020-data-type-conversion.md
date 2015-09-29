@@ -31,7 +31,7 @@ Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting bina
 
 See the following tables for information about the data types to use for casting:
 
-* [CONVERT_TO and CONVERT_FROM Data Types]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types)
+* [CONVERT_TO and CONVERT_FROM Data Types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)
 * [Supported Data Types for Casting]({{ site.baseurl }}/docs/supported-data-types)
 * [Explicit Type Casting Maps]({{ site.baseurl }}/docs/supported-data-types/#explicit-type-casting-maps)
 
@@ -147,14 +147,14 @@ The CONVERT_TO and CONVERT_FROM functions convert binary data to/from Drill inte
 
 *column* is the name of a column Drill reads.
 
-*type* is one of the encoding types listed in the [CONVERT_TO/FROM Data Types]({{ site.baseurl }}/docs/data-types#convert_to-and-convert_from-data-types) table. 
+*type* is one of the encoding types listed in the [CONVERT_TO/FROM data types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) table. 
 
 
 ### CONVERT_TO and CONVERT_FROM Usage Notes
 
 CONVERT_FROM and CONVERT_TO methods transform a known binary representation/encoding to a Drill internal format. Use CONVERT_TO and CONVERT_FROM instead of the CAST function for converting binary data types. CONVERT_TO/FROM functions work for data in a binary representation and are more efficient to use than CAST. 
 
-Drill can optimize scans of HBase tables when you use the \*\_BE encoded types shown in section  ["CONVERT_TO and CONVERT_FROM Data Types"]({{ site.baseurl }}/docs/supported-data-types/#convert_to-and-convert_from-data-types) on big endian-encoded data. You need to use the HBase storage plugin and query data as described in ["Querying Hbase"]({{ site.baseurl }}/docs/querying-hbase). To write Parquet binary data, convert SQL data *to* binary data and store the data in a Parquet table while creating a table as a selection (CTAS).
+Drill can optimize scans of HBase tables when you use the \*\_BE encoded types shown in section  ["Data Types for CONVERT_TO and CONVERT_FROM Functions"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) on big endian-encoded data. You need to use the HBase storage plugin and query data as described in ["Querying Hbase"]({{ site.baseurl }}/docs/querying-hbase). To write Parquet binary data, convert SQL data *to* binary data and store the data in a Parquet table while creating a table as a selection (CTAS).
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
@@ -178,7 +178,7 @@ This example shows how to use the CONVERT_FROM function to convert HBase data to
     +-------------+---------------------+---------------------------------------------------------------------------+
     4 rows selected (1.335 seconds)
 
-You use the CONVERT_FROM function to decode the binary data, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types). JSON supports strings. To convert bytes to strings, use the UTF8 type:
+You use the CONVERT_FROM function to decode the binary data, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions). JSON supports strings. To convert bytes to strings, use the UTF8 type:
 
     SELECT CONVERT_FROM(row_key, 'UTF8') AS studentid, 
            CONVERT_FROM(students.account.name, 'UTF8') AS name, 
@@ -265,7 +265,7 @@ This example assumes you are working in the Drill Sandbox. You modify the `dfs` 
 
 ### Convert the Binary HBase Students Table to JSON Data
 
-First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from-data-types) as the file format because the data you are converting from and then to consists of strings.
+First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CTAS) statement to convert from a selected file of a different format, HBase in this example, to the storage format. You then convert the JSON file to Parquet using a similar procedure. Set the storage format to Parquet, and use a CTAS statement to convert to Parquet from JSON. In each case, you [select UTF8]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) as the file format because the data you are converting from and then to consists of strings.
 
 1. Start Drill on the Drill Sandbox and set the default storage format from Parquet to JSON.
 

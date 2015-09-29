@@ -9,16 +9,23 @@ restart any of the Drillbits when you add or update a storage plugin configurati
 
 ## Using the Drill Web Console
 
-Assuming you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/), you can use the Drill Web Console to update or add a new storage plugin configuration. The Drill shell needs to be running to access the Drill Web Console. In Drill 1.2 and later, to open the Drill Web Console, launch a web browser, and go to: `https://<IP address or host name>:8047` of any Drillbit in the cluster. In Drill 1.1 and earlier, use `http` instead of `https`. Select the Storage tab to view, update, or add a new storage plugin configuration. 
+You can use the Drill Web Console to update or add a new storage plugin configuration. The Drill shell needs to be running to start the Web Console. 
 
 To create a name and new configuration:
 
-1. Enter a name in **New Storage Plugin**.
+1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
+2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
+   The storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.  
+3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
-name. Names are case-sensitive.
-2. Click **Create**.  
-3. In Configuration, it is recommended that you modify a copy of an existing configuration if possible. Reconfigure attributes of the storage plugin using JSON formatting. The Storage Plugin Attributes table in the next section describes attributes typically reconfigured by users. 
-4. Click **Create**.
+name. Names are case-sensitive.  
+     ![sandbox plugin]({{ site.baseurl }}/docs/img/storage_plugin_config.png)
+
+    {% include startnote.html %}The URL differs depending on your installation and configuration.{% include endnote.html %}  
+4. Click **Create**.  
+5. In Configuration, use JSON formatting to modify a copy of an existing configuration if possible.  
+   Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
+6. Click **Create**.
 
 ## Storage Plugin Attributes
 The following graphic shows key attributes of a typical `dfs`-based storage plugin configuration:  
