@@ -1,0 +1,220 @@
+package org.apache.drill.exec.store.solr;
+
+import org.apache.drill.common.expression.BooleanOperator;
+import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
+import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.visitors.ExprVisitor;
+
+import com.google.common.collect.ImmutableMap;
+
+public class SolrAggrFunctionProcessor implements
+    ExprVisitor<Boolean, LogicalExpression, RuntimeException> {
+
+  @Override
+  public Boolean visitFunctionCall(FunctionCall call, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Boolean visitIfExpression(IfExpression ifExpr, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Boolean visitBooleanOperator(BooleanOperator call,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Boolean visitSchemaPath(SchemaPath path, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Boolean visitIntConstant(IntExpression intExpr, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitFloatConstant(FloatExpression fExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitLongConstant(LongExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDateConstant(DateExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitTimeConstant(TimeExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitTimeStampConstant(TimeStampExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal9Constant(Decimal9Expression decExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal18Constant(Decimal18Expression decExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal28Constant(Decimal28Expression decExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal38Constant(Decimal38Expression decExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitDoubleConstant(DoubleExpression dExpr,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitBooleanConstant(BooleanExpression e,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitQuotedStringConstant(QuotedString e,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitNullConstant(TypedNullConstant e, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitNullExpression(NullExpression e, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitUnknown(LogicalExpression e, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitCastExpression(CastExpression e, LogicalExpression value)
+      throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Boolean visitConvertExpression(ConvertExpression e,
+      LogicalExpression value) throws RuntimeException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  private static final ImmutableMap<String, String> AGGR_FUNCTIONS_TRANSPOSE_MAP;
+  static {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    AGGR_FUNCTIONS_TRANSPOSE_MAP = builder
+        // aggr functions
+        .put("sum", "sum").put("count", "count").put("min", "min")
+        .put("max", "max").put("avg", "avg").put("is null", "is null")
+        // scalar functions
+        .build();
+  }
+}

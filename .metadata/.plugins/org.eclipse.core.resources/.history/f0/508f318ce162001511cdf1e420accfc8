@@ -1,0 +1,17 @@
+{
+  "storage":{
+    solr : {
+      type:"solr",
+      enabled: true,
+      solrServer: "",
+      solrCoreViewWorkspace:"",
+      solrStorageProperties:{
+      	"solrSchemaUrl":"http://{0}/servlets/collection?type=GETSCHEMAFIELDS&corename={1}",
+      	"createViews":false,
+      	"rowStart":0,
+      	"maxPageSize":1000000
+      }
+    }
+  }
+}
+drill.exec.storage.packages += org.apache.drill.exec.store.solr

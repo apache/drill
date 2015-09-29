@@ -21,9 +21,8 @@ import java.util.LinkedList;
 
 public class SolrFilterParam extends LinkedList<String> {
 
-  public SolrFilterParam(String filterName, String operator, String filterValue) {
+  public SolrFilterParam(String filterName, String filterValue) {
     add(filterName);
-    add(operator);
     add(filterValue);
   }
 

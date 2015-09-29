@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -42,17 +44,18 @@ import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
-import org.joda.time.DateTime;
+import org.apache.solr.client.solrj.io.Tuple;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -63,52 +66,70 @@ public class SolrRecordReader extends AbstractRecordReader {
   protected List<ValueVector> vectors = Lists.newArrayList();
   protected String solrServerUrl;
   protected SolrClient solrClient;
+  protected SolrSubScan solrSubScan;
   protected List<SolrScanSpec> scanList;
   protected SolrClientAPIExec solrClientApiExec;
   protected OutputMutator outputMutator;
-  // protected List<Tuple> resultTuple;
-  protected SolrDocumentList solrDocList;
-  protected Iterator<SolrDocument> resultIter;
+  // protected SolrDocumentList solrDocList;
+  // protected Iterator<SolrDocument> resultIter;
   protected List<String> fields;
   private MajorType.Builder t;
   private Map<String, CVSchemaField> schemaFieldMap;
 
+  private List<Tuple> solrDocsTuple;
+
+  protected Iterator<Tuple> resultIter;
+
   public SolrRecordReader(FragmentContext context, SolrSubScan config) {
     fc = context;
-    solrServerUrl = config.getSolrPlugin().getSolrStorageConfig()
+    solrSubScan = config;
+
+    solrServerUrl = solrSubScan.getSolrPlugin().getSolrStorageConfig()
         .getSolrServer();
-    scanList = config.getScanList();
-    solrClientApiExec = config.getSolrPlugin().getSolrClientApiExec();
-    solrClient = config.getSolrPlugin().getSolrClient();
+    scanList = solrSubScan.getScanList();
+    solrClientApiExec = solrSubScan.getSolrPlugin().getSolrClientApiExec();
+    solrClient = solrSubScan.getSolrPlugin().getSolrClient();
+
     String solrCoreName = scanList.get(0).getSolrCoreName();
     List<SchemaPath> colums = config.getColumns();
     SolrFilterParam filters = config.getSolrScanSpec().getFilter();
+
+    Integer solrDocFetchCount = solrSubScan.getSolrScanSpec()
+        .getSolrDocFetchCount();
+    CVSchema oCVSchema = config.getSolrScanSpec().getCvSchema(); // solr core
+                                                                 // schema
+    if (oCVSchema.getSchemaFields() != null) {
+      schemaFieldMap = new HashMap<String, CVSchemaField>(oCVSchema
+          .getSchemaFields().size());
+      this.fields = Lists.newArrayListWithCapacity(oCVSchema.getSchemaFields()
+          .size());
+      for (CVSchemaField cvSchemaField : oCVSchema.getSchemaFields()) {
+        if (!cvSchemaField.isSkipdelete()) {
+          schemaFieldMap.put(cvSchemaField.getFieldName(), cvSchemaField);
+          this.fields.add(cvSchemaField.getFieldName());
+        }
+      }
+    }
+
     StringBuilder sb = new StringBuilder();
+
     if (filters != null) {
       for (String filter : filters) {
         sb.append(filter);
       }
     }
+
     setColumns(colums);
-    Map<String, String> solrParams = new HashMap<String, String>();
-    solrParams.put("q", "*:*");
-    solrParams.put("rows", String.valueOf(Integer.MAX_VALUE));
-    solrParams.put("qt", "/select");
 
-    solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,
-        this.fields, sb); // solr docs
-    CVSchema oCVSchema = solrClientApiExec.getSchemaForCore(solrCoreName,
-        solrServerUrl); // solr core schema
-    if (oCVSchema.getFields() != null) {
-      schemaFieldMap = new HashMap<String, CVSchemaField>(oCVSchema.getFields()
-          .size());
-      for (CVSchemaField cvSchemaField : oCVSchema.getFields()) {
-        schemaFieldMap.put(cvSchemaField.getName(), cvSchemaField);
-      }
-    }
+    solrDocsTuple = solrClientApiExec.getSolrStreamResponse(solrServerUrl,
+        solrClient, solrCoreName, this.fields, sb, oCVSchema.getUniqueKey());
+    resultIter = solrDocsTuple.iterator();
+    logger.info("SolrRecordReader:: solrDocsTuple:: " + solrDocsTuple.size());
 
-    resultIter = solrDocList.iterator();
-    logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
+    // solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName,
+    // this.fields, solrDocFetchCount, sb); // solr docs
+    // resultIter = solrDocList.iterator();
+    // logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
 
   }
 
@@ -117,7 +138,7 @@ public class SolrRecordReader extends AbstractRecordReader {
       Collection<SchemaPath> projectedColumns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (!isStarQuery()) {
-      logger.debug(" This is not a start query, restring response to ");
+      logger.debug(" This is not a star query, restricting response to ");
       fields = Lists.newArrayListWithExpectedSize(projectedColumns.size());
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
@@ -133,57 +154,62 @@ public class SolrRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
-    logger.info("SolrRecordReader :: setup");
-    if (!solrDocList.isEmpty()) {
-      SolrDocument solrDocument = solrDocList.get(0);
-      Collection<String> fieldNames = solrDocument.getFieldNames();
+    logger.debug("SolrRecordReader :: setup");
+    if (!solrDocsTuple.isEmpty()) {
+      Tuple solrDocTuple = solrDocsTuple.get(0);
+      // SolrDocument solrDocument = solrDocList.get(0);
+      // Collection<String> fieldNames = solrDocument.getFieldNames();
+      Map<String, String> fieldNames = solrDocTuple.getMap();
       try {
-        for (String field : fieldNames) {
+        for (String field : /* fieldNames */fieldNames.keySet()) {
           MaterializedField m_field = null;
           CVSchemaField cvSchemaField = schemaFieldMap.get(field);
-          if (cvSchemaField != null) {
-            logger.debug(" column field name ::" + cvSchemaField.getName()
-                + " type " + cvSchemaField.getType());
-            switch (cvSchemaField.getType()) {
-            case "string":
-              t = MajorType.newBuilder().setMinorType(
-                  TypeProtos.MinorType.VARCHAR);
-              m_field = MaterializedField.create(field, t.build());
-              vectors
-                  .add(output.addField(m_field, NullableVarCharVector.class));
-              break;
-            case "double":
-              t = MajorType.newBuilder().setMinorType(
-                  TypeProtos.MinorType.BIGINT);
-              m_field = MaterializedField.create(field, t.build());
-              vectors.add(output.addField(m_field, NullableBigIntVector.class));
-              break;
-            case "int":
-              t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT);
-              m_field = MaterializedField.create(field, t.build());
-              vectors.add(output.addField(m_field, NullableIntVector.class));
-              break;
-            case "float":
-              t = MajorType.newBuilder().setMinorType(
-                  TypeProtos.MinorType.FLOAT8);
-              m_field = MaterializedField.create(field, t.build());
-              vectors.add(output.addField(m_field, Float8Vector.class));
-              break;
-            case "timestamp":
-              t = MajorType.newBuilder().setMinorType(
-                  TypeProtos.MinorType.TIMESTAMP);
-              m_field = MaterializedField.create(field, t.build());
-              vectors.add(output.addField(m_field, TimeStampVector.class));
-              break;
-            default:
-              t = MajorType.newBuilder().setMinorType(
-                  TypeProtos.MinorType.VARCHAR);
-              m_field = MaterializedField.create(field, t.build());
-              vectors
-                  .add(output.addField(m_field, NullableVarCharVector.class));
-              break;
-            }
+          Preconditions.checkNotNull(cvSchemaField);
+
+          switch (cvSchemaField.getType()) {
+          case "string":
+            t = MajorType.newBuilder().setMinorType(
+                TypeProtos.MinorType.VARCHAR);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.add(output.addField(m_field, NullableVarCharVector.class));
+            break;
+          case "long":
+          case "tlong":
+          case "rounded1024":
+          case "double":
+            t = MajorType.newBuilder()
+                .setMinorType(TypeProtos.MinorType.BIGINT);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.add(output.addField(m_field, NullableBigIntVector.class));
+            break;
+          case "int":
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.add(output.addField(m_field, NullableIntVector.class));
+            break;
+          case "float":
+            t = MajorType.newBuilder()
+                .setMinorType(TypeProtos.MinorType.FLOAT8);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.add(output.addField(m_field, Float8Vector.class));
+            break;
+          case "date":
+          case "tdate":
+          case "timestamp":
+            t = MajorType.newBuilder().setMinorType(
+                TypeProtos.MinorType.TIMESTAMP);
+            m_field = MaterializedField.create(field, t.build());
+            vectors
+                .add(output.addField(m_field, NullableTimeStampVector.class));
+            break;
+          default:
+            t = MajorType.newBuilder().setMinorType(
+                TypeProtos.MinorType.VARCHAR);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.add(output.addField(m_field, NullableVarCharVector.class));
+            break;
           }
+
         }
         this.outputMutator = output;
       } catch (SchemaChangeException e) {
@@ -193,66 +219,78 @@ public class SolrRecordReader extends AbstractRecordReader {
     }
   }
 
-  // @Override
-  // public void allocate(Map<Key, ValueVector> vectorMap)
-  // throws OutOfMemoryException {
-  // logger.info("SolrRecordReader :: allocate");
-  // int prec = 0;
-  // try {
-  // for (ValueVector vv : vectorMap.values()) {
-  // if (vv.getClass().equals(NullableVarCharVector.class)) {
-  // NullableVarCharVector v = (NullableVarCharVector) vv;
-  // if(prec > 0) {
-  // AllocationHelper.allocate(v, 65536, prec);
-  // } else {
-  // AllocationHelper.allocate(v, 65536, 2000);
-  // }
-  // }
-  // }
-  // } catch (NullPointerException e) {
-  // throw new OutOfMemoryException();
-  // }
-  // }
-
   @Override
   public int next() {
     int counter = 0;
-    logger.info("SolrRecordReader :: next");
+    logger.debug("SolrRecordReader :: next");
     try {
-      while (counter <= solrDocList.getNumFound() && resultIter.hasNext()) {
-        SolrDocument solrDocument = resultIter.next();
+      while (counter <= /* solrDocList.getNumFound() */solrDocsTuple.size()
+          && resultIter.hasNext()) {
+        Tuple solrDocument = resultIter.next();
+        // SolrDocument solrDocument = resultIter.next();
         for (ValueVector vv : vectors) {
           String solrField = vv.getField().getPath().toString()
               .replaceAll("`", ""); // re-think ??
           Object fieldValue = solrDocument.get(solrField);
           String fieldValueStr = null;
+          byte[] record = null;
+          // Preconditions.checkNotNull(fieldValue);
           if (fieldValue != null) {
             fieldValueStr = fieldValue.toString();
-          }
-          byte[] record = fieldValueStr.getBytes(Charsets.UTF_8);
-          if (vv.getClass().equals(NullableVarCharVector.class)) {
-            NullableVarCharVector v = (NullableVarCharVector) vv;
-            v.getMutator().setSafe(counter, record, 0, record.length);
-            v.getMutator().setValueLengthSafe(counter, record.length);
-          } else if (vv.getClass().equals(VarCharVector.class)) {
-            VarCharVector v = (VarCharVector) vv;
-            v.getMutator().setSafe(counter, record, 0, record.length);
-            v.getMutator().setValueLengthSafe(counter, record.length);
-          } else if (vv.getClass().equals(NullableBigIntVector.class)) {
-            NullableBigIntVector v = (NullableBigIntVector) vv;
-            v.getMutator().setSafe(counter, Long.parseLong(fieldValueStr));
-          } else if (vv.getClass().equals(NullableIntVector.class)) {
-            NullableIntVector v = (NullableIntVector) vv;
-            v.getMutator().setSafe(counter, Integer.parseInt(fieldValueStr));
-          } else if (vv.getClass().equals(DateVector.class)) {
-            DateVector v = (DateVector) vv;
-            long dtime = DateTime.parse(fieldValueStr).toDate().getTime();
-            v.getMutator().setSafe(counter, dtime);
+            record = fieldValueStr.getBytes(Charsets.UTF_8);
+            if (vv.getClass().equals(NullableVarCharVector.class)) {
+              NullableVarCharVector v = (NullableVarCharVector) vv;
+              v.getMutator().setSafe(counter, record, 0, record.length);
+              v.getMutator().setValueLengthSafe(counter, record.length);
+            } else if (vv.getClass().equals(VarCharVector.class)) {
+              VarCharVector v = (VarCharVector) vv;
+              v.getMutator().setSafe(counter, record, 0, record.length);
+              v.getMutator().setValueLengthSafe(counter, record.length);
+            } else if (vv.getClass().equals(NullableBigIntVector.class)) {
+              NullableBigIntVector v = (NullableBigIntVector) vv;
+              v.getMutator().setSafe(counter, Long.parseLong(fieldValueStr));
+            } else if (vv.getClass().equals(NullableIntVector.class)) {
+              NullableIntVector v = (NullableIntVector) vv;
+              v.getMutator().setSafe(counter, Integer.parseInt(fieldValueStr));
+            } else if (vv.getClass().equals(DateVector.class)) {
+              DateVector v = (DateVector) vv;
+              SimpleDateFormat dateParser = new SimpleDateFormat(
+                  "EEE MMM dd kk:mm:ss z yyyy");
+              long dtime = 0l;
+              try {
+                dtime = dateParser.parse(fieldValueStr).getTime();
+              } catch (Exception e) {
+                logger.trace(" Unable to format the date recieved..."
+                    + e.getMessage());
+              }
+              v.getMutator().setSafe(counter, dtime);
+            } else if (vv.getClass().equals(NullableTimeStampVector.class)) {
+              NullableTimeStampVector v = (NullableTimeStampVector) vv;
+              DateTimeFormatter dtf = DateTimeFormat
+                  .forPattern("EEE MMM dd kk:mm:ss z yyyy");
+              SimpleDateFormat dateParser = new SimpleDateFormat(
+                  "EEE MMM dd kk:mm:ss z yyyy");
+              // Format for output
+              SimpleDateFormat dateFormatter = new SimpleDateFormat(
+                  "yyyyMMdd'T'HHmmss'Z'"); // ISO_8601
+
+              long dtime = 0l;
+              try {
+                // Thu Sep 17 16:57:17 IST 2015
+                dtime = dateParser.parse(fieldValueStr).getTime();
+                // dtime = dtf.parseMillis(fieldValueStr);
+              } catch (Exception e) {
+                logger.debug("Unable to format the date recieved..."
+                    + e.getMessage());
+              }
+              v.getMutator().setSafe(counter, dtime);
+            }
           } else {
             NullableVarCharVector v = (NullableVarCharVector) vv;
-            v.getMutator().setSafe(counter, record, 0, record.length);
-            v.getMutator().setValueLengthSafe(counter, record.length);
+            v.getMutator().setSafe(counter, record, 0, 0);
+            v.getMutator().setValueLengthSafe(counter, 0);
           }
+
         }
         counter++;
       }
@@ -269,8 +307,13 @@ public class SolrRecordReader extends AbstractRecordReader {
   }
 
   @Override
+  public void allocate(Map<MaterializedField.Key, ValueVector> vectorMap)
+      throws OutOfMemoryException {
+    super.allocate(vectorMap);
+  }
+
+  @Override
   public void cleanup() {
-    // TODO Auto-generated method stub
 
   }
 

@@ -1,0 +1,15 @@
+package org.apache.drill.exec.store.solr;
+
+import java.util.LinkedList;
+
+public class SolrAggrParam extends LinkedList<String> {
+
+  public SolrAggrParam(String aggrFuncName, String schemaFieldName) {
+    add(aggrFuncName);
+    add(schemaFieldName);
+  }
+
+  public SolrAggrParam() {
+    super();
+  }
+}

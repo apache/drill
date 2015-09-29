@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.drill.common.expression.BooleanOperator;
@@ -42,14 +43,13 @@ public class SolrQueryBuilder extends
       LogicalExpression conditionExp) {
     this.groupScan = solrGroupScan;
     this.le = conditionExp;
-    logger.info("SolrQueryBuilder :: constructor");
+    logger.debug("SolrQueryBuilder :: constructor");
   }
 
   public SolrScanSpec parseTree() {
-    logger.info("SolrQueryBuilder :: parseTree");
+    logger.debug("SolrQueryBuilder :: parseTree");
     SolrScanSpec parsedSpec = le.accept(this, null);
     if (parsedSpec != null) {
-      logger.info("parsedSpec : " + parsedSpec);
       parsedSpec = mergeScanSpecs("booleanAnd",
           this.groupScan.getSolrScanSpec(), parsedSpec);
     }
@@ -63,16 +63,13 @@ public class SolrQueryBuilder extends
     switch (functionName) {
     case "booleanAnd":
       if (leftScanSpec.getFilter() != null && rightScanSpec.getFilter() != null) {
-        logger.info("mergeScanSpecs : 1");
         solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
         solrFilter.add(" AND ");
         solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
 
       } else if (leftScanSpec.getFilter() != null) {
-        logger.info("mergeScanSpecs : 2");
         solrFilter = leftScanSpec.getFilter();
       } else {
-        logger.info("mergeScanSpecs : 3");
         solrFilter = rightScanSpec.getFilter();
       }
       break;
@@ -81,8 +78,11 @@ public class SolrQueryBuilder extends
       solrFilter.add(" OR ");
       solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
     }
-    return new SolrScanSpec(groupScan.getSolrScanSpec().getSolrCoreName(),
-        solrFilter);
+    SolrScanSpec solrScanSpec = new SolrScanSpec(groupScan.getSolrScanSpec()
+        .getSolrCoreName(), solrFilter);
+    solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
+
+    return solrScanSpec;
   }
 
   @Override
@@ -108,11 +108,11 @@ public class SolrQueryBuilder extends
 
   @Override
   public SolrScanSpec visitBooleanOperator(BooleanOperator op, Void valueArg) {
-    logger.info("SolrQueryBuilder :: visitBooleanOperator");
+    logger.debug("SolrQueryBuilder :: visitBooleanOperator");
     List<LogicalExpression> args = op.args;
     String functionName = op.getName();
     SolrScanSpec nodeScanSpec = null;
-    logger.info("functionName :: " + functionName);
+    logger.debug("functionName :: " + functionName);
     for (int i = 0; i < args.size(); ++i) {
       logger.info(" args " + args.get(i));
       switch (functionName) {
@@ -132,20 +132,18 @@ public class SolrQueryBuilder extends
         break;
       }
     }
-    logger.info("nodeScanSpec :: " + nodeScanSpec);
     return nodeScanSpec;
   }
 
   @Override
   public SolrScanSpec visitFunctionCall(FunctionCall call, Void valueArg)
       throws RuntimeException {
-    logger.info("SolrQueryBuilder :: visitFunctionCall");
+    logger.debug("SolrQueryBuilder :: visitFunctionCall");
     SolrScanSpec nodeScanSpec = null;
     String functionName = call.getName();
     ImmutableList<LogicalExpression> args = call.args;
     LogicalExpression nameVal = call.args.get(0);
     LogicalExpression valueVal = null;
-    StringBuilder strBuilder = new StringBuilder();
     if (call.args.size() >= 2) {
       valueVal = call.args.get(1);
     }
@@ -179,14 +177,10 @@ public class SolrQueryBuilder extends
         break;
       }
     }
-    logger.info("functionName:" + functionName);
-    logger.info("Name Val:" + nameVal.toString());
-    logger.info("Value Val:" + valueVal.toString());
 
     if (nodeScanSpec == null) {
       allExpressionsConverted = false;
     }
-
     return nodeScanSpec;
 
   }
@@ -199,36 +193,45 @@ public class SolrQueryBuilder extends
     String operator = null;
     switch (functionName) {
     case "equal":
-      operator = ":";
+      operator = ":{0}";
       break;
     case "not_equal":
       break;
     case "greater_than_or_equal_to":
+      operator = "[{0} TO *]";
       break;
     case "greater_than":
-      break;
+
     case "less_than_or_equal_to":
-      break;
+
     case "less_than":
-      break;
+
     case "isnull":
     case "isNull":
     case "is null":
-      break;
+
     case "isnotnull":
     case "isNotNull":
     case "is not null":
+    default:
+      allExpressionsConverted = false;
       break;
     }
     if (operator != null) {
-      SolrFilterParam filterParam = new SolrFilterParam(fieldName, operator,
+      fieldValue = MessageFormat.format(operator, fieldValue.toString());
+      SolrFilterParam filterParam = new SolrFilterParam(fieldName,
           fieldValue.toString());
 
-      return new SolrScanSpec(this.groupScan.getSolrScanSpec()
-          .getSolrCoreName(), filterParam);
+      SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan
+          .getSolrScanSpec().getSolrCoreName(), filterParam);
+      solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
+      return solrScanSpec;
     }
-    logger.info("createSolrScanSpec :: fieldName " + fieldName
+    logger.debug("createSolrScanSpec :: fieldName " + fieldName
         + " :: functionName " + functionName);
-    return new SolrScanSpec(this.groupScan.getSolrScanSpec().getSolrCoreName());
+    SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan
+        .getSolrScanSpec().getSolrCoreName());
+    solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
+    return solrScanSpec;
   }
 }

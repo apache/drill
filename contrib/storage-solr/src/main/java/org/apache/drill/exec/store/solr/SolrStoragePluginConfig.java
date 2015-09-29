@@ -31,19 +31,37 @@ public class SolrStoragePluginConfig extends StoragePluginConfig {
 
   @JsonProperty
   private String solrServer = "";
+  @JsonProperty
+  private String solrCoreViewWorkspace = "";
+  @JsonProperty
+  private SolrStorageProperties solrStorageProperties = new SolrStorageProperties();
 
   @JsonCreator
-  public SolrStoragePluginConfig(@JsonProperty("solrServer") String solrServer) {
+  public SolrStoragePluginConfig(
+      @JsonProperty("solrServer") String solrServer,
+      @JsonProperty("solrCoreViewWorkspace") String solrCoreViewWorkspace,
+      @JsonProperty("solrStorageProperties") SolrStorageProperties solrStorageProperties) {
     logger
         .debug("Initializing SOLR StoragePlugin configuration with solr server :: "
             + solrServer);
     this.solrServer = solrServer;
-
+    this.solrCoreViewWorkspace = solrCoreViewWorkspace;
+    this.solrStorageProperties = solrStorageProperties;
   }
 
   @JsonProperty("solrServer")
   public String getSolrServer() {
     return this.solrServer;
+  }
+
+  @JsonProperty("solrCoreViewWorkspace")
+  public String getSolrCoreViewWorkspace() {
+    return solrCoreViewWorkspace;
+  }
+
+  @JsonProperty("solrStorageProperties")
+  public SolrStorageProperties getSolrStorageProperties() {
+    return solrStorageProperties;
   }
 
   @Override

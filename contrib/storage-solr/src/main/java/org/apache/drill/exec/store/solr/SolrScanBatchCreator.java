@@ -43,7 +43,7 @@ public class SolrScanBatchCreator implements BatchCreator<SolrSubScan> {
       SolrSubScan solrSubScan, List<RecordBatch> children)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.info("SolrScanBatchCreator :: CloseableRecordBatch");
+    logger.debug("SolrScanBatchCreator :: CloseableRecordBatch");
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     List<SchemaPath> columns = null;
@@ -52,7 +52,12 @@ public class SolrScanBatchCreator implements BatchCreator<SolrSubScan> {
         logger.info("solrSubScan :: " + solrSubScan.getColumns());
         columns = GroupScan.ALL_COLUMNS;
       }
-      readers.add(new SolrRecordReader(context, solrSubScan));
+      boolean isAggregateQuery = solrSubScan.getSolrScanSpec()
+          .isAggregateQuery();
+      if (isAggregateQuery)
+        readers.add(new SolrAggrReader(context, solrSubScan));
+      else
+        readers.add(new SolrRecordReader(context, solrSubScan));
     } catch (Exception e) {
       logger.info("SolrScanBatchCreator creation failed for subScan:  "
           + solrSubScan + ".");

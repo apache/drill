@@ -44,6 +44,7 @@ public class SolrGroupScan extends AbstractGroupScan {
   protected SolrScanSpec solrScanSpec;
   protected List<SolrScanSpec> scanList = Lists.newArrayList();
   protected List<SchemaPath> columns;
+
   static final Logger logger = LoggerFactory.getLogger(SolrGroupScan.class);
 
   public SolrGroupScan(SolrGroupScan that) {
@@ -70,7 +71,7 @@ public class SolrGroupScan extends AbstractGroupScan {
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    logger.info("SolrGroupScan :: clone :: " + columns);
+    logger.debug("SolrGroupScan :: clone :: " + columns);
     SolrGroupScan clone = new SolrGroupScan(this);
     clone.columns = columns;
     return clone;
@@ -80,14 +81,14 @@ public class SolrGroupScan extends AbstractGroupScan {
   public void applyAssignments(List<DrillbitEndpoint> endpoints)
       throws PhysicalOperatorSetupException {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: applyAssignments");
+    logger.debug("SolrGroupScan :: applyAssignments");
   }
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: getSpecificScan :: " + columns);
+    logger.debug("SolrGroupScan :: getSpecificScan :: " + columns);
     return new SolrSubScan(this);
 
   }
@@ -95,7 +96,7 @@ public class SolrGroupScan extends AbstractGroupScan {
   @Override
   public int getMaxParallelizationWidth() {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: getMaxParallelizationWidth");
+    logger.debug("SolrGroupScan :: getMaxParallelizationWidth");
     return -1;
   }
 
@@ -116,7 +117,7 @@ public class SolrGroupScan extends AbstractGroupScan {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.info("SolrGroupScan :: getNewWithChildren");
+    logger.debug("SolrGroupScan :: getNewWithChildren");
     Preconditions.checkArgument(children.isEmpty());
     return new SolrGroupScan(this);
   }

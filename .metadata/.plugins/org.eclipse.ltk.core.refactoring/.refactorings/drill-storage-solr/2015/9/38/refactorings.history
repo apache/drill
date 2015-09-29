@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;drill-storage-solr&apos;&#x0D;&#x0A;- Original project: &apos;drill-storage-solr&apos;&#x0D;&#x0A;- Original element: &apos;org.apache.drill.exec.store.solr.SolrAggrParam.java&apos;" description="Delete element" element1="/src\/main\/java&lt;org.apache.drill.exec.store.solr{SolrAggrParam.java" elements="1" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1442330989755" subPackages="false" version="1.0"/>
+</session>

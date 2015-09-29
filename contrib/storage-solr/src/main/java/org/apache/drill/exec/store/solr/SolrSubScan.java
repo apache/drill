@@ -65,7 +65,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
       @JsonProperty("columns") List<SchemaPath> columns)
       throws ExecutionSetupException {
     super(userName);
-    logger.info("SolrSubScan : constructor11 ::" + columns);
+    logger.debug("SolrSubScan : constructor11 ::" + columns);
     this.solrPlugin = (SolrStoragePlugin) registry.getPlugin(pluginConfig);
     this.solrPluginConfig = pluginConfig;
     this.columns = columns;
@@ -81,7 +81,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
     this.solrPlugin = plugin;
     this.solrPluginConfig = pluginConfig;
     this.scanList = scanList;
-    logger.info("SolrSubScan : constructor ::" + userName);
+    logger.debug("SolrSubScan : constructor ::" + userName);
   }
 
   @Override
@@ -93,7 +93,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
       throws ExecutionSetupException {
-    logger.info("SolrSubScan : getNewWithChildren ::");
+    logger.debug("SolrSubScan : getNewWithChildren ::");
     return new SolrSubScan(solrPlugin, null, solrPluginConfig, scanList,
         columns);
   }

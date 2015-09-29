@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -95,9 +96,11 @@ public class SolrClientAPIExec {
     return coreList;
   }
 
-  public CVSchema getSchemaForCore(String coreName, String solrServerUrl) {
-    String schemaUrl = "{0}{1}/schema/fields";
-    schemaUrl = MessageFormat.format(schemaUrl, solrServerUrl, coreName);
+  public CVSchema getSchemaForCore(String coreName, String solrServerUrl,
+      String schemaUrl) {
+    coreName = coreName.replaceAll("`", "");
+    schemaUrl = MessageFormat.format(schemaUrl, coreName);
+    logger.debug("getting schema information from :: " + schemaUrl);
     HttpClient client = new DefaultHttpClient();
     HttpGet request = new HttpGet(schemaUrl);
     CVSchema oCVSchema = null;
@@ -123,26 +126,27 @@ public class SolrClientAPIExec {
   }
 
   public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
-      List<String> fields, StringBuilder filters) {
+      List<String> fields, Integer solrDocFectCount, StringBuilder filters) {
+    solrCoreName = solrCoreName.replaceAll("`", "");
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
     SolrDocumentList sList = null;
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
-        .setQuery("*:*").setRows(Integer.MAX_VALUE);
+        .setQuery("*:*").setRows(solrDocFectCount);
 
     if (fields != null) {
       String fieldStr = Joiner.on(",").join(fields);
       solrQuery.setParam("fl", fieldStr);
-      logger.debug("response field list.." + fieldStr);
+      logger.debug("response field list [" + fieldStr + " ]");
     }
     if (filters.length() > 0) {
       solrQuery.setParam("fq", filters.toString());
-      logger.debug("filter query.." + filters.toString());
+      logger.debug("filter query [ " + filters.toString() + " ]");
     }
     try {
-      logger.debug("setting solrquery..");
+      logger.info("setting up solrquery..");
       QueryResponse rsp = solrClient.query(solrQuery);
-      logger.debug("response recieved from " + solrServer + " core "
-          + solrCoreName);
+      logger.info("response recieved from [ " + solrServer + " ] core [ "
+          + solrCoreName + " ]");
       sList = rsp.getResults();
     } catch (SolrServerException | IOException e) {
       logger.debug("error occured while fetching results from solr server "
@@ -151,10 +155,51 @@ public class SolrClientAPIExec {
     return sList;
   }
 
-  public List<Tuple> getSolrResponse(String solrServer, SolrClient solrClient,
-      String solrCoreName, Map<String, String> solrParams) {
+  public QueryResponse getSolrFieldStats(String solrServer,
+      String solrCoreName, List<String> fields, StringBuilder filters) {
+
+    solrCoreName = solrCoreName.replaceAll("`", "");
+    SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
+    SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
+        .setQuery("*:*").setRows(0);
+    solrQuery.setGetFieldStatistics(true);
+    solrQuery.setGetFieldStatistics("szkb");
+    solrQuery.setGetFieldStatistics("cistate");
+    if (filters.length() > 0) {
+      solrQuery.setParam("fq", filters.toString());
+      logger.info("filter query [ " + filters.toString() + " ]");
+    }
+    logger.info("setting up solrquery..");
+    try {
+      QueryResponse rsp = solrClient.query(solrQuery);
+      logger.info("response recieved from [ " + solrServer + " ] core [ "
+          + solrCoreName + " ]");
+      return rsp;
+    } catch (SolrServerException | IOException e) {
+      logger.debug("error occured while fetching results from solr server "
+          + e.getMessage());
+    }
+    return null;
+  }
+
+  public List<Tuple> getSolrStreamResponse(String solrServer,
+      SolrClient solrClient, String solrCoreName, List<String> fields,
+      StringBuilder filters, String uniqueKey) {
+
+    Map<String, String> solrParams = new HashMap<String, String>();
+    solrParams.put("q", uniqueKey + ":*");
+
+    solrParams.put("sort", uniqueKey + " desc ");
+    solrParams.put("fl", Joiner.on(",").join(fields));
+    solrParams.put("qt", "/export");
+    if (filters.length() > 0) {
+      solrParams.put("fq", filters.toString());
+      logger.info("filter query [ " + filters.toString() + " ]");
+    }
+
     logger.info("sending request to solr server " + solrServer + " on core "
         + solrCoreName);
+    solrServer = solrServer + solrCoreName;
     SolrStream solrStream = new SolrStream(solrServer, solrParams);
     List<Tuple> resultTuple = Lists.newArrayList();
     try {
@@ -183,33 +228,43 @@ public class SolrClientAPIExec {
     return resultTuple;
   }
 
-  public void createSolrView(String solrCoreName, String solrServerUrl,
-      String solrCoreViewWorkspace) throws ClientProtocolException, IOException {
-    CVSchema oCVSchema = getSchemaForCore(solrCoreName, solrServerUrl);
-    List<CVSchemaField> schemaFieldList = oCVSchema.getFields();
+  public void createSolrView(String solrCoreName, String solrCoreViewWorkspace,
+      CVSchema oCVSchema) throws ClientProtocolException, IOException {
+
+    List<CVSchemaField> schemaFieldList = oCVSchema.getSchemaFields();
     List<String> fieldNames = Lists.newArrayList(schemaFieldList.size());
     String createViewSql = "CREATE OR REPLACE VIEW {0}.{1} as SELECT {2} from solr.{3}";
     for (CVSchemaField cvSchemaField : schemaFieldList) {
-      fieldNames.add(cvSchemaField.getName());
+      if (!cvSchemaField.isSkipdelete())
+        fieldNames.add("`" + cvSchemaField.getFieldName() + "`");
     }
-    String fieldStr = Joiner.on(",").join(fieldNames);
-    int lastIdxOf = solrCoreName.lastIndexOf("_");
-    String viewName = solrCoreName.toLowerCase() + "view";
-    if (lastIdxOf > -1) {
-      viewName = solrCoreName.substring(0, lastIdxOf).toLowerCase() + "view";
+    if (!fieldNames.isEmpty()) {
+      String fieldStr = Joiner.on(",").join(fieldNames);
+      int lastIdxOf = solrCoreName.lastIndexOf("_");
+      String viewName = solrCoreName.toLowerCase() + "view";
+      if (lastIdxOf > -1) {
+        viewName = solrCoreName.substring(0, lastIdxOf).toLowerCase()
+            .replaceAll("_", "");
+      }
+
+      createViewSql = MessageFormat.format(createViewSql,
+          solrCoreViewWorkspace, viewName, fieldStr, solrCoreName);
+      logger.debug("create solr view with sql command :: " + createViewSql);
+      String drillWebUI = "http://localhost:8047/query";
+      HttpClient client = HttpClientBuilder.create().build();
+      HttpPost httpPost = new HttpPost(drillWebUI);
+      List<BasicNameValuePair> urlParameters = new ArrayList<BasicNameValuePair>();
+      urlParameters.add(new BasicNameValuePair("queryType", "SQL"));
+      urlParameters.add(new BasicNameValuePair("query", createViewSql));
+      httpPost.setEntity(new UrlEncodedFormEntity(urlParameters));
+      HttpResponse response = client.execute(httpPost);
+      logger.debug("Response Code after executing create view command : "
+          + response.getStatusLine().getStatusCode());
+    } else {
+      logger
+          .debug("No DataSource specific fields are found. Not going create a view for solr core [ "
+              + solrCoreName + " ]");
     }
-    createViewSql = MessageFormat.format(createViewSql, solrCoreViewWorkspace,
-        viewName, fieldStr, solrCoreName);
-    logger.debug("create solr view with sql command :: " + createViewSql);
-    String drillWebUI = "http://localhost:8047/query";
-    HttpClient client = HttpClientBuilder.create().build();
-    HttpPost httpPost = new HttpPost(drillWebUI);
-    List<BasicNameValuePair> urlParameters = new ArrayList<BasicNameValuePair>();
-    urlParameters.add(new BasicNameValuePair("queryType", "SQL"));
-    urlParameters.add(new BasicNameValuePair("query", createViewSql));
-    httpPost.setEntity(new UrlEncodedFormEntity(urlParameters));
-    HttpResponse response = client.execute(httpPost);
-    logger.debug("Response Code after executing create view command : "
-        + response.getStatusLine().getStatusCode());
+
   }
 }
