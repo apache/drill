@@ -20,29 +20,29 @@ create table person (
   float_field     FLOAT,
   real_field      REAL,
 
-  time_field      TIME      NOT NUll,
-  timestamp_field TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  date_field      DATE      NOT NULL
+  time_field      TIME,
+  timestamp_field TIMESTAMP,
+  date_field      DATE
 );
 
 insert into person (person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, numeric_field,
-                    boolean_field, double_field, float_field, real_field, time_field, date_field)
+                    boolean_field, double_field, float_field, real_field, time_field, timestamp_field, date_field)
   values (1, 'first_name_1', 'last_name_1', '1401 John F Kennedy Blvd', 'Philadelphia', 'PA', 19107,
-          '{ a : 5, b : 6 }', 123456, 1, 10.01, false, 1.0, 1.1, 111.00, TIME(CURRENT_TIME), DATE(CURRENT_DATE));
+          '{ a : 5, b : 6 }', 123456, 1, 10.01, false, 1.0, 1.1, 111.00, '13:00:01', '2012-02-29 13:00:01', '2012-02-29');
 
 insert into person (person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, numeric_field,
-                    boolean_field, double_field, float_field, real_field, time_field, date_field)
+                    boolean_field, double_field, float_field, real_field, time_field, timestamp_field, date_field)
   values (2, 'first_name_2', 'last_name_2', 'One Ferry Building', 'San Francisco', 'CA', 94111,
-          '{ foo : "abc" }', 95949, 2, 20.02, true, 2.0, 2.1, 222.00, TIME(CURRENT_TIME), DATE(CURRENT_DATE));
+          '{ foo : "abc" }', 95949, 2, 20.02, true, 2.0, 2.1, 222.00, '23:59:59', '1999-09-09 23:59:59', '1999-09-09');
 
 insert into person (person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, numeric_field,
-                    boolean_field, double_field, float_field, real_field, time_field, date_field)
+                    boolean_field, double_field, float_field, real_field, time_field, timestamp_field, date_field)
   values (3, 'first_name_3', 'last_name_3', '176 Bowery', 'New York', 'NY', 10012,
-          '{ z : [ 1, 2, 3 ] }', 45456, 3, 30.04, true, 3.0, 3.1, 333.00, TIME(CURRENT_TIME), DATE(CURRENT_DATE));
+          '{ z : [ 1, 2, 3 ] }', 45456, 3, 30.04, true, 3.0, 3.1, 333.00, '11:34:21', '2011-10-30 11:34:21', '2011-10-30');
 
 insert into person (person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, numeric_field,
-                    boolean_field, double_field, float_field, real_field, time_field, date_field)
+                    boolean_field, double_field, float_field, real_field, time_field, timestamp_field, date_field)
   values (4, NULL, NULL, '2 15th St NW', 'Washington', 'DC', 20007,
-          '{ z : { a : 1, b : 2, c : 3 } }', -67, 4, 40.04, false, 4.0, 4.1, 444.00, TIME(CURRENT_TIME), DATE(CURRENT_DATE));
+          '{ z : { a : 1, b : 2, c : 3 } }', -67, 4, 40.04, false, 4.0, 4.1, 444.00, '16:00:01', '2015-06-01 16:00:01', '2015-06-01');
 
-insert into person (person_id, time_field, date_field) values (5, TIME(CURRENT_TIME), DATE(CURRENT_DATE));
+insert into person (person_id) values (5);

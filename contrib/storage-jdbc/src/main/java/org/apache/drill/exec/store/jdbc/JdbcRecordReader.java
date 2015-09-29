@@ -26,6 +26,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import javax.sql.DataSource;
 
@@ -366,13 +368,15 @@ class JdbcRecordReader extends AbstractRecordReader {
 
   private class DateCopier extends Copier<NullableDateVector.Mutator> {
 
+    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
     public DateCopier(int columnIndex, ResultSet result, NullableDateVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
     @Override
     void copy(int index) throws SQLException {
-      Date date = result.getDate(columnIndex);
+      Date date = result.getDate(columnIndex, calendar);
       if (date != null) {
         mutator.setSafe(index, date.getTime());
       }
@@ -382,13 +386,15 @@ class JdbcRecordReader extends AbstractRecordReader {
 
   private class TimeCopier extends Copier<NullableTimeVector.Mutator> {
 
+    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
     public TimeCopier(int columnIndex, ResultSet result, NullableTimeVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
     @Override
     void copy(int index) throws SQLException {
-      Time time = result.getTime(columnIndex);
+      Time time = result.getTime(columnIndex, calendar);
       if (time != null) {
         mutator.setSafe(index, (int) time.getTime());
       }
@@ -397,7 +403,10 @@ class JdbcRecordReader extends AbstractRecordReader {
 
   }
 
+
   private class TimeStampCopier extends Copier<NullableTimeStampVector.Mutator> {
+
+    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
     public TimeStampCopier(int columnIndex, ResultSet result, NullableTimeStampVector.Mutator mutator) {
       super(columnIndex, result, mutator);
@@ -405,7 +414,7 @@ class JdbcRecordReader extends AbstractRecordReader {
 
     @Override
     void copy(int index) throws SQLException {
-      Timestamp stamp = result.getTimestamp(columnIndex);
+      Timestamp stamp = result.getTimestamp(columnIndex, calendar);
       if (stamp != null) {
         mutator.setSafe(index, stamp.getTime());
       }

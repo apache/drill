@@ -10,7 +10,7 @@
           type    : "jdbc",
           enabled : true,
           driver  : "com.mysql.jdbc.Driver",
-          url     : "jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}?user=root&password=root"
+          url     : "jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}?user=root&password=root&useJDBCCompliantTimezoneShift=true"
       }
   }
 }
