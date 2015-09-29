@@ -89,6 +89,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    final int idx = offsetVector.getAccessor().get(valueCount);
+    return offsetVector.getBufferSizeFor(valueCount + 1) + idx;
+  }
+
+  @Override
   public int getValueCapacity(){
     return Math.max(offsetVector.getValueCapacity() - 1, 0);
   }
@@ -302,6 +312,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     try {
       final int requestedSize = (int)curAllocationSize;
       data = allocator.buffer(requestedSize);
+      allocationSizeInBytes = requestedSize;
       offsetVector.allocateNew();
     } catch (OutOfMemoryRuntimeException e) {
       clear();

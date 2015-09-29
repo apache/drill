@@ -38,7 +38,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
@@ -52,6 +52,15 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   public VectorContainer( OperatorContext oContext) {
     this.oContext = oContext;
+  }
+
+  /**
+   * Get the OperatorContext.
+   *
+   * @return the OperatorContext; may be null
+   */
+  public OperatorContext getOperatorContext() {
+    return oContext;
   }
 
   public boolean isSchemaChanged() {
@@ -79,7 +88,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   public <T extends ValueVector> T addOrGet(final MaterializedField field, final SchemaChangeCallBack callBack) {
     final TypedFieldId id = getValueVectorId(field.getPath());
     final ValueVector vector;
-    final Class clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
+    final Class<?> clazz = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
     if (id != null) {
       vector = getValueAccessorById(id.getFieldIds()).getValueVector();
       if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
@@ -205,7 +214,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     schema = null;
     schemaChanged = true;
     int i = 0;
-    for (VectorWrapper w : wrappers){
+    for (VectorWrapper<?> w : wrappers){
       if (!w.isHyper() && old == w.getValueVector()) {
         w.clear();
         wrappers.set(i, new SimpleVectorWrapper<ValueVector>(newVector));

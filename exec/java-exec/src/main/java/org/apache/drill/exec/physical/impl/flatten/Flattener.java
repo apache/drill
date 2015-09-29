@@ -27,13 +27,24 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 public interface Flattener {
+  public void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
 
-  public abstract void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
-  public abstract int flattenRecords(int recordCount, int firstOutputIndex);
+  public interface Monitor {
+    /**
+     * Get the required buffer size for the specified number of records.
+     * {@see ValueVector#getBufferSizeFor(int)} for the meaning of this.
+     *
+     * @param recordCount the number of records processed so far
+     * @return the buffer size the vectors report as being in use
+     */
+    public int getBufferSizeFor(int recordCount);
+  };
+
+  public int flattenRecords(int recordCount, int firstOutputIndex, Monitor monitor);
+
   public void setFlattenField(RepeatedValueVector repeatedColumn);
   public RepeatedValueVector getFlattenField();
   public void resetGroupIndex();
 
-  public static TemplateClassDefinition<Flattener> TEMPLATE_DEFINITION = new TemplateClassDefinition<Flattener>(Flattener.class, FlattenTemplate.class);
-
+  public static final TemplateClassDefinition<Flattener> TEMPLATE_DEFINITION = new TemplateClassDefinition<Flattener>(Flattener.class, FlattenTemplate.class);
 }

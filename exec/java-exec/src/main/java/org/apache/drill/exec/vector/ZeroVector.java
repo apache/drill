@@ -118,6 +118,11 @@ public class ZeroVector implements ValueVector {
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    return 0;
+  }
+
+  @Override
   public DrillBuf[] getBuffers(boolean clear) {
     return new DrillBuf[0];
   }

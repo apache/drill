@@ -103,6 +103,16 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    return values.getBufferSizeFor(valueCount)
+        + bits.getBufferSizeFor(valueCount);
+  }
+
+  @Override
   public DrillBuf getBuffer() {
     return values.getBuffer();
   }

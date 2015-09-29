@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -102,8 +101,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    final Iterable<ValueVector> container = this;
-    for (ValueVector v : container) {
+    for (final ValueVector v : (Iterable<ValueVector>) this) {
       v.setInitialCapacity(numRecords);
     }
   }
@@ -119,6 +117,20 @@ public class MapVector extends AbstractMapVector {
     }
 
     return (int) buffer;
+  }
+
+  @Override
+  public int getBufferSizeFor(final int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    long bufferSize = 0;
+    for (final ValueVector v : (Iterable<ValueVector>) this) {
+      bufferSize += v.getBufferSizeFor(valueCount);
+    }
+
+    return (int) bufferSize;
   }
 
   @Override
@@ -295,7 +307,7 @@ public class MapVector extends AbstractMapVector {
 
     @Override
     public Object getObject(int index) {
-      Map<String, Object> vv = new JsonStringHashMap();
+      Map<String, Object> vv = new JsonStringHashMap<>();
       for (String child:getChildFieldNames()) {
         ValueVector v = getChild(child);
         if (v != null) {
