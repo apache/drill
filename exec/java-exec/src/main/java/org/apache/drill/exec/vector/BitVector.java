@@ -62,6 +62,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return getSizeFromCount(valueCount);
   }
 
+  @Override
+  public int getBufferSizeFor(final int valueCount) {
+    return getSizeFromCount(valueCount);
+  }
+
   private int getSizeFromCount(int valueCount) {
     return (int) Math.ceil(valueCount / 8.0);
   }

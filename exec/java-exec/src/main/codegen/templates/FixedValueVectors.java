@@ -60,6 +60,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+    return valueCount * ${type.width};
+  }
+
+  @Override
   public int getValueCapacity(){
     return (int) (data.capacity() *1.0 / ${type.width});
   }

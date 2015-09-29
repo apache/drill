@@ -329,6 +329,11 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    return delegate.getBufferSizeFor(valueCount);
+  }
+
+  @Override
   public void close() {
     delegate.close();
   }

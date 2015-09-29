@@ -51,18 +51,6 @@ public class TopLevelAllocator implements BufferAllocator {
   private final DrillBuf empty;
   private final DrillConfig config;
 
-  /* TODO(cwestin) remove
-  @Deprecated
-  TopLevelAllocator() {
-    this(DrillConfig.getMaxDirectMemory());
-  }
-
-  @Deprecated
-  TopLevelAllocator(long maximumAllocation) {
-    this(null, maximumAllocation, true);
-  }
-  */
-
   private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
     MAXIMUM_DIRECT_MEMORY = maximumAllocation;
     this.config=(config!=null) ? config : DrillConfig.create();

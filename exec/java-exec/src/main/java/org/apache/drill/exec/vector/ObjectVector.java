@@ -32,10 +32,9 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-public class ObjectVector extends BaseValueVector{
-
-  private Accessor accessor = new Accessor();
-  private Mutator mutator = new Mutator();
+public class ObjectVector extends BaseValueVector {
+  private final Accessor accessor = new Accessor();
+  private final Mutator mutator = new Mutator();
   private int maxCount = 0;
   private int count = 0;
   private int allocationSize = 4096;
@@ -126,6 +125,11 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    throw new UnsupportedOperationException("ObjectVector does not support this");
+  }
+
+  @Override
   public void close() {
     clear();
   }
@@ -193,7 +197,6 @@ public class ObjectVector extends BaseValueVector{
   }
 
   public final class Accessor extends BaseAccessor {
-
     @Override
     public Object getObject(int index) {
       int listOffset = index / allocationSize;

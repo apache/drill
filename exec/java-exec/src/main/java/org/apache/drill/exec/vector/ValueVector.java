@@ -56,7 +56,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
  * </blockquote>
  */
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
-
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
    * @throws OutOfMemoryRuntimeException Thrown if no memory can be allocated.
@@ -140,6 +139,19 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   int getBufferSize();
 
   /**
+   * Returns the number of bytes that is used by this vector if it holds the given number
+   * of values. The result will be the same as if Mutator.setValueCount() were called, followed
+   * by calling getBufferSize(), but without any of the closing side-effects that setValueCount()
+   * implies wrt finishing off the population of a vector. Some operations might wish to use
+   * this to determine how much memory has been used by a vector so far, even though it is
+   * not finished being populated.
+   *
+   * @param valueCount the number of values to assume this vector contains
+   * @return the buffer size if this vector is holding valueCount values
+   */
+  int getBufferSizeFor(int valueCount);
+
+  /**
    * Return the underlying buffers associated with this vector. Note that this doesn't impact the reference counts for
    * this buffer so it only should be used for in-context access. Also note that this buffer changes regularly thus
    * external classes shouldn't hold a reference to it (unless they change it).
@@ -206,5 +218,4 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
     @Deprecated
     void generateTestData(int values);
   }
-
 }
