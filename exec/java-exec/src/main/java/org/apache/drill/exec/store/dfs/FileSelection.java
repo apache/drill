@@ -72,7 +72,7 @@ public class FileSelection {
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
     init(fs);
     for (FileStatus p : statuses) {
-      if (p.isDir()) {
+      if (p.isDirectory()) {
         return true;
       }
     }
@@ -83,7 +83,7 @@ public class FileSelection {
     init(fs);
     List<FileStatus> newList = Lists.newArrayList();
     for (FileStatus p : statuses) {
-      if (p.isDir()) {
+      if (p.isDirectory()) {
         List<FileStatus> statuses = fs.list(true, p.getPath());
         for (FileStatus s : statuses) {
           newList.add(s);
