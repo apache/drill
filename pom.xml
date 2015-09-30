@@ -35,6 +35,7 @@
     <dep.slf4j.version>1.7.6</dep.slf4j.version>
     <forkCount>2</forkCount>
     <parquet.version>1.6.0rc3-drill-r0.3</parquet.version>
+    <sqlline.version>1.1.9-drill-r7</sqlline.version>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.0.0 or vendor specific variants of the
@@ -1221,7 +1222,7 @@
           <dependency>
             <groupId>sqlline</groupId>
             <artifactId>sqlline</artifactId>
-            <version>1.1.9-drill-r7</version>
+            <version>${sqlline.version}</version>
           </dependency>
 
           <dependency>
@@ -1583,7 +1584,7 @@
           <dependency>
             <groupId>sqlline</groupId>
             <artifactId>sqlline</artifactId>
-            <version>1.1.9-drill-r5</version>
+            <version>${sqlline.version}</version>
           </dependency>
           <!-- Test Dependencies -->
           <dependency>
