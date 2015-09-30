@@ -488,8 +488,13 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     List<FileStatus> fileStatuses = null;
     if (entries.size() == 1) {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
-      Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.exists(metaPath)) {
+      Path metaPath = null;
+      if (fs.isDirectory(p)) {
+        // Using the metadata file makes sense when querying a directory; otherwise
+        // if querying a single file we can look up the metadata directly from the file
+        metaPath = new Path(p, Metadata.METADATA_FILENAME);
+      }
+      if (metaPath != null && fs.exists(metaPath)) {
         parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString());
       } else {
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString());
