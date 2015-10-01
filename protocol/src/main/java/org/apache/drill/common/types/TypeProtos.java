@@ -317,6 +317,10 @@ public final class TypeProtos {
      * <code>GENERIC_OBJECT = 41;</code>
      */
     GENERIC_OBJECT(36, 41),
+    /**
+     * <code>UNION = 42;</code>
+     */
+    UNION(37, 42),
     ;
 
     /**
@@ -606,6 +610,10 @@ public final class TypeProtos {
      * <code>GENERIC_OBJECT = 41;</code>
      */
     public static final int GENERIC_OBJECT_VALUE = 41;
+    /**
+     * <code>UNION = 42;</code>
+     */
+    public static final int UNION_VALUE = 42;
 
 
     public final int getNumber() { return value; }
@@ -649,6 +657,7 @@ public final class TypeProtos {
         case 39: return INTERVALDAY;
         case 40: return LIST;
         case 41: return GENERIC_OBJECT;
+        case 42: return UNION;
         default: return null;
       }
     }
@@ -1780,7 +1789,7 @@ public final class TypeProtos {
       "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo" +
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
-      "imeZone\030\006 \001(\005*\212\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
+      "imeZone\030\006 \001(\005*\225\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
       "\003MAP\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT" +
       "\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL1" +
       "8\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPA" +
@@ -1793,9 +1802,10 @@ public final class TypeProtos {
       "\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENS" +
       "E\020!\022\022\n\016DECIMAL38DENSE\020\"\022\010\n\004NULL\020%\022\020\n\014INT" +
       "ERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020(\022\022" +
-      "\n\016GENERIC_OBJECT\020)*4\n\010DataMode\022\014\n\010OPTION" +
-      "AL\020\000\022\014\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002B-\n\035org." +
-      "apache.drill.common.typesB\nTypeProtosH\001"
+      "\n\016GENERIC_OBJECT\020)\022\t\n\005UNION\020**4\n\010DataMod" +
+      "e\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED\020\001\022\014\n\010REPEATE" +
+      "D\020\002B-\n\035org.apache.drill.common.typesB\nTy",
+      "peProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

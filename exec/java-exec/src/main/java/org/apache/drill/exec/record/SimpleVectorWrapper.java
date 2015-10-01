@@ -19,11 +19,15 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.MinorType;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.impl.UnionVector;
 
 public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleVectorWrapper.class);
@@ -103,6 +107,13 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
     }
     PathSegment seg = expectedPath.getRootSegment();
 
+    if (v instanceof UnionVector) {
+      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+      builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
+      builder.finalType(Types.optional(TypeProtos.MinorType.UNION));
+      builder.intermediateType(Types.optional(TypeProtos.MinorType.UNION));
+      return builder.build();
+    } else
     if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;

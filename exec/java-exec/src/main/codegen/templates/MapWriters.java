@@ -52,9 +52,18 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   private final Map<String, FieldWriter> fields = Maps.newHashMap();
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
 
-  public ${mode}MapWriter(${containerClass} container, FieldWriter parent) {
+  private final boolean unionEnabled;
+  private final boolean unionInternalMap;
+
+  public ${mode}MapWriter(${containerClass} container, FieldWriter parent, boolean unionEnabled, boolean unionInternalMap) {
     super(parent);
     this.container = container;
+    this.unionEnabled = unionEnabled;
+    this.unionInternalMap = unionInternalMap;
+  }
+
+  public ${mode}MapWriter(${containerClass} container, FieldWriter parent) {
+    this(container, parent, false, false);
   }
 
   @Override
@@ -70,10 +79,15 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   @Override
   public MapWriter map(String name) {
       FieldWriter writer = fields.get(name.toLowerCase());
-    if(writer == null) {
-      int vectorCount = container.size();
-      MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
-      writer = new SingleMapWriter(vector, this);
+    if(writer == null){
+      int vectorCount=container.size();
+      if(!unionEnabled || unionInternalMap){
+        MapVector vector=container.addOrGet(name,MapVector.TYPE,MapVector.class);
+        writer=new SingleMapWriter(vector,this);
+      } else {
+        UnionVector vector = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
+        writer = new UnionWriter(vector);
+      }
       if(vectorCount != container.size()) {
         writer.allocate();
       }
@@ -108,8 +122,16 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   @Override
   public ListWriter list(String name) {
     FieldWriter writer = fields.get(name.toLowerCase());
+    int vectorCount = container.size();
     if(writer == null) {
-      writer = new SingleListWriter(name, container, this);
+      if (!unionEnabled){
+        writer = new SingleListWriter(name,container,this);
+      } else{
+        writer = new UnionWriter(container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class));
+      }
+      if (container.size() > vectorCount) {
+        writer.allocate();
+      }
       writer.setPosition(${index});
       fields.put(name.toLowerCase(), writer);
     }
@@ -191,9 +213,17 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   </#if>
     FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null) {
-      final ${vectName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
+      ValueVector vector;
+      if (unionEnabled){
+        UnionVector v = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
+        writer = new UnionWriter(v);
+        vector = v;
+      } else {
+        ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
+        writer = new ${vectName}WriterImpl(v, this);
+        vector = v;
+      }
       vector.allocateNewSafe();
-      writer = new ${vectName}WriterImpl(vector, this);
       writer.setPosition(${index});
       fields.put(name.toLowerCase(), writer);
     }

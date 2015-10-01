@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
 import com.sun.codemodel.JBlock;
@@ -114,6 +115,9 @@ public class GetSetVectorHelper {
 
     JInvocation setMethod = vector.invoke("getMutator").invoke(setMethodName).arg(indexVariable);
 
+    if (type.getMinorType() == MinorType.UNION) {
+      return setMethod.arg(in.getHolder());
+    }
     switch(type.getMode()){
     case OPTIONAL:
       setMethod = setMethod.arg(in.f("isSet"));

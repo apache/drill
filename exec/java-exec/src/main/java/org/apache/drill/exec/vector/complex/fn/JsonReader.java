@@ -275,83 +275,86 @@ public class JsonReader extends BaseJsonProcessor {
   private void writeData(MapWriter map, FieldSelection selection, boolean moveForward) throws IOException {
     //
     map.start();
-    outside: while (true) {
+    try {
+      outside:
+      while (true) {
 
-      JsonToken t;
-      if(moveForward){
-        t = parser.nextToken();
-      }else{
-        t = parser.getCurrentToken();
-        moveForward = true;
-      }
-
-      if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
-        return;
-      }
-
-      assert t == JsonToken.FIELD_NAME : String.format("Expected FIELD_NAME but got %s.", t.name());
-
-      final String fieldName = parser.getText();
-      this.currentFieldName = fieldName;
-      FieldSelection childSelection = selection.getChild(fieldName);
-      if (childSelection.isNeverValid()) {
-        consumeEntireNextValue();
-        continue outside;
-      }
-
-      switch (parser.nextToken()) {
-      case START_ARRAY:
-        writeData(map.list(fieldName));
-        break;
-      case START_OBJECT:
-        if (!writeMapDataIfTyped(map, fieldName)) {
-          writeData(map.map(fieldName), childSelection, false);
+        JsonToken t;
+        if (moveForward) {
+          t = parser.nextToken();
+        } else {
+          t = parser.getCurrentToken();
+          moveForward = true;
         }
-        break;
-      case END_OBJECT:
-        break outside;
 
-      case VALUE_FALSE: {
-        map.bit(fieldName).writeBit(0);
-        atLeastOneWrite = true;
-        break;
-      }
-      case VALUE_TRUE: {
-        map.bit(fieldName).writeBit(1);
-        atLeastOneWrite = true;
-        break;
-      }
-      case VALUE_NULL:
-        // do nothing as we don't have a type.
-        break;
-      case VALUE_NUMBER_FLOAT:
-        map.float8(fieldName).writeFloat8(parser.getDoubleValue());
-        atLeastOneWrite = true;
-        break;
-      case VALUE_NUMBER_INT:
-        if (this.readNumbersAsDouble) {
+        if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
+          return;
+        }
+
+        assert t == JsonToken.FIELD_NAME : String.format("Expected FIELD_NAME but got %s.", t.name());
+
+        final String fieldName = parser.getText();
+        this.currentFieldName = fieldName;
+        FieldSelection childSelection = selection.getChild(fieldName);
+        if (childSelection.isNeverValid()) {
+          consumeEntireNextValue();
+          continue outside;
+        }
+
+        switch (parser.nextToken()) {
+        case START_ARRAY:
+          writeData(map.list(fieldName));
+          break;
+        case START_OBJECT:
+          if (!writeMapDataIfTyped(map, fieldName)) {
+            writeData(map.map(fieldName), childSelection, false);
+          }
+          break;
+        case END_OBJECT:
+          break outside;
+
+        case VALUE_FALSE: {
+          map.bit(fieldName).writeBit(0);
+          atLeastOneWrite = true;
+          break;
+        }
+        case VALUE_TRUE: {
+          map.bit(fieldName).writeBit(1);
+          atLeastOneWrite = true;
+          break;
+        }
+        case VALUE_NULL:
+          // do nothing as we don't have a type.
+          break;
+        case VALUE_NUMBER_FLOAT:
           map.float8(fieldName).writeFloat8(parser.getDoubleValue());
-        }
-        else {
-          map.bigInt(fieldName).writeBigInt(parser.getLongValue());
-        }
-        atLeastOneWrite = true;
-        break;
-      case VALUE_STRING:
-        handleString(parser, map, fieldName);
-        atLeastOneWrite = true;
-        break;
+          atLeastOneWrite = true;
+          break;
+        case VALUE_NUMBER_INT:
+          if (this.readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(parser.getDoubleValue());
+          } else {
+            map.bigInt(fieldName).writeBigInt(parser.getLongValue());
+          }
+          atLeastOneWrite = true;
+          break;
+        case VALUE_STRING:
+          handleString(parser, map, fieldName);
+          atLeastOneWrite = true;
+          break;
 
-      default:
-        throw
-          getExceptionWithContext(
-            UserException.dataReadError(), currentFieldName, null)
-          .message("Unexpected token %s", parser.getCurrentToken())
-          .build(logger);
+        default:
+          throw
+                  getExceptionWithContext(
+                          UserException.dataReadError(), currentFieldName, null)
+                          .message("Unexpected token %s", parser.getCurrentToken())
+                          .build(logger);
+        }
+
       }
-
+    } finally {
+      map.end();
     }
-    map.end();
 
   }
 
@@ -463,8 +466,8 @@ public class JsonReader extends BaseJsonProcessor {
     writer.varChar().writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()), workingBuffer.getBuf());
   }
 
-  private void writeData(ListWriter list) {
-    list.start();
+  private void writeData(ListWriter list) throws IOException {
+    list.startList();
     outside: while (true) {
       try {
       switch (parser.nextToken()) {
@@ -523,12 +526,12 @@ public class JsonReader extends BaseJsonProcessor {
       throw getExceptionWithContext(e, this.currentFieldName, null).build(logger);
     }
     }
-    list.end();
+    list.endList();
 
   }
 
   private void writeDataAllText(ListWriter list) throws IOException {
-    list.start();
+    list.startList();
     outside: while (true) {
 
       switch (parser.nextToken()) {
@@ -562,7 +565,7 @@ public class JsonReader extends BaseJsonProcessor {
           .build(logger);
       }
     }
-    list.end();
+    list.endList();
 
   }
 

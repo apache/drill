@@ -98,4 +98,8 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     return null;
   }
 
+  public VectorContainer getContainer() {
+    return container;
+  }
+
 }

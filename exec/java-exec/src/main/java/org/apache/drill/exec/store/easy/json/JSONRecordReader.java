@@ -59,6 +59,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
+  private final boolean unionEnabled;
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -108,6 +109,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     // only enable all text mode if we aren't using embedded content mode.
     this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
     this.readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val;
+    this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
     setColumns(columns);
   }
 
@@ -118,7 +120,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
       }
 
-      this.writer = new VectorContainerWriter(output);
+      this.writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
         this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer());
       } else {

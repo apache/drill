@@ -104,6 +104,7 @@ public class TestJsonReader extends BaseTestQuery {
         .baselineValues(listOf(testVal))
         .go();
 
+    test("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`");
     testBuilder()
         .sqlQuery("select flatten(config) as flat from cp.`/store/json/null_list_v2.json`")
         .ordered()
@@ -377,5 +378,108 @@ public class TestJsonReader extends BaseTestQuery {
     assertEquals("[4,5,6]", vw.getValueVector().getAccessor().getObject(2).toString());
   }
 
+  @Test
+  public void testSelectStarWithUnionType() throws Exception {
+    try {
+      String query = "select * from cp.`jsoninput/union/a.json`";
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("field1", "field2")
+              .baselineValues(
+                      1L, 1.2
+              )
+              .baselineValues(
+                      listOf(2L), 1.2
+              )
+              .baselineValues(
+                      mapOf("inner1", 3L, "inner2", 4L), listOf(3L, 4.0, "5")
+              )
+              .baselineValues(
+                      mapOf("inner1", 3L,
+                              "inner2", listOf(
+                                      mapOf(
+                                              "innerInner1", 1L,
+                                              "innerInner2",
+                                              listOf(
+                                                      3L,
+                                                      "a"
+                                              )
+                                      )
+                              )
+                      ),
+                      listOf(
+                              mapOf("inner3", 7L),
+                              4.0,
+                              "5",
+                              mapOf("inner4", 9L),
+                              listOf(
+                                      mapOf(
+                                              "inner5", 10L,
+                                              "inner6", 11L
+                                      ),
+                                      mapOf(
+                                              "inner5", 12L,
+                                              "inner7", 13L
+                                      )
+                              )
+                      )
+              ).go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
+  @Test
+  public void testSelectFromListWithCase() throws Exception {
+    String query = "select a from (select case when typeOf(field2) = type('list') then asBigInt(field2[4][1].inner7) end a from cp.`jsoninput/union/a.json`) where a is not null";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("a")
+              .baselineValues(13L)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
+  @Test
+  public void testTypeCase() throws Exception {
+    String query = "select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("f1")
+              .baselineValues(1L)
+              .baselineValues(2L)
+              .baselineValues(3L)
+              .baselineValues(3L)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
+  @Test
+  public void testSumWithTypeCase() throws Exception {
+    String query = "select sum(f1) sum_f1 from (select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t)";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("sum_f1")
+              .baselineValues(9L)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
 
 }
