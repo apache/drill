@@ -15,8 +15,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
@@ -28,15 +29,19 @@
 
   <name>contrib/jdbc-storage-plugin</name>
 
+  <properties>
+    <mysql.connector.version>5.1.36</mysql.connector.version>
+    <derby.database.name>drill_derby_test</derby.database.name>
+    <mysql.database.name>drill_mysql_test</mysql.database.name>
+  </properties>
+
   <dependencies>
-
-
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -69,8 +74,200 @@
       <artifactId>derbynet</artifactId>
       <version>10.11.1.1</version>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql.connector.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
-  
+  <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.18.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
+        <executions>
+          <execution>
+            <id>reserve-network-port</id>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <portNames>
+                <portName>derby.reserved.port</portName>
+                <portName>mysql.reserved.port</portName>
+              </portNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.8</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.jcabi</groupId>
+                  <artifactId>mysql-dist</artifactId>
+                  <version>5.6.14</version>
+                  <classifier>${mysql.classifier}</classifier>
+                  <type>zip</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/mysql-dist</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.btmatthews.maven.plugins.inmemdb</groupId>
+        <artifactId>inmemdb-maven-plugin</artifactId>
+        <version>1.4.3</version>
+        <configuration>
+          <monitorKey>inmemdb</monitorKey>
+          <monitorPort>11527</monitorPort>
+        </configuration>
+        <executions>
+          <execution>
+            <id>run</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>pre-integration-test</phase>
+            <configuration>
+              <daemon>true</daemon>
+              <type>derby</type>
+              <database>${derby.database.name}</database>
+              <username>root</username>
+              <password>root</password>
+              <port>${derby.reserved.port}</port>
+              <sources>
+                <script>
+                  <sourceFile>src/test/resources/derby-test-data.sql</sourceFile>
+                </script>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <phase>post-integration-test</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.jcabi</groupId>
+        <artifactId>jcabi-mysql-maven-plugin</artifactId>
+        <version>0.8.2</version>
+        <executions>
+          <execution>
+            <id>mysql-test</id>
+            <goals>
+              <goal>classify</goal>
+              <goal>start</goal>
+              <goal>stop</goal>
+            </goals>
+            <configuration>
+              <port>${mysql.reserved.port}</port>
+              <data>${project.build.directory}/mysql-data</data>
+              <clearexistingdata>true</clearexistingdata>
+              <dbname>${mysql.database.name}</dbname>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>sql-maven-plugin</artifactId>
+        <version>1.5</version>
+        <dependencies>
+          <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.connector.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <driver>com.mysql.jdbc.Driver</driver>
+          <username>root</username>
+          <password>root</password>
+          <url>jdbc:mysql://localhost:${mysql.reserved.port}/${mysql.database.name}</url>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-tables</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <orderFile>ascending</orderFile>
+              <fileset>
+                <basedir>${basedir}/src/test/resources</basedir>
+                <includes>
+                  <include>mysql-test-data.sql</include>
+                </includes>
+              </fileset>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <derby.port>${derby.reserved.port}</derby.port>
+              <mysql.port>${mysql.reserved.port}</mysql.port>
+              <mysql.name>${mysql.database.name}</mysql.name>
+            </systemPropertyVariables>
+            <includes>
+              <include>**/*IT.java</include>
+            </includes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
