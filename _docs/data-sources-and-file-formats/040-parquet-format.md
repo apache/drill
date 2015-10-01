@@ -137,15 +137,15 @@ For more examples of and information about using Parquet data, see ["Evolving Pa
 ### SQL Data Types to Parquet
 The first table in this section maps SQL data types to Parquet data types, limited intentionally by Parquet creators to minimize the impact on disk storage:
 
-| SQL Type | Parquet Type | Description                                   |
-|----------|--------------|-----------------------------------------------|
-| BIGINT   | INT64        | 8-byte signed integer                         |
-| BOOLEAN  | BOOLEAN      | TRUE (1) or FALSE (0)                         |
-| N/A      | BYTE_ARRAY   | Arbitrarily long byte array                   |
-| FLOAT    | FLOAT        | 4-byte single precision floating point number |
-| DOUBLE   | DOUBLE       | 8-byte double precision floating point number |
-| INTEGER  | INT32        | 4-byte signed integer                         |
-| None*    | INT96        | 12-byte signed int                            |
+| SQL Type          | Parquet Type | Description                                   |
+|-------------------|--------------|-----------------------------------------------|
+| BIGINT            | INT64        | 8-byte signed integer                         |
+| BOOLEAN           | BOOLEAN      | TRUE (1) or FALSE (0)                         |
+| N/A               | BYTE_ARRAY   | Arbitrarily long byte array                   |
+| FLOAT             | FLOAT        | 4-byte single precision floating point number |
+| DOUBLE            | DOUBLE       | 8-byte double precision floating point number |
+| INTEGER           | INT32        | 4-byte signed integer                         |
+| VARBINARY(12)*    | INT96        | 12-byte signed int                            |
 
 \* Drill 1.2 and later supports reading the Parquet INT96 type.
 
@@ -155,6 +155,12 @@ Drill 1.2 and later supports reading the Parquet INT96 type. For example, to dec
 ``SELECT CONVERT_FROM(timestamp_field, 'TIMESTAMP_IMPALA') as timestamp_field FROM `dfs.file_with_timestamp.parquet`;``
 
 Because INT96 is supported for reads only, you cannot use the TIMESTAMP_IMPALA as a data type argument with CONVERT_TO.
+
+You can convert a SQL TIMESTAMP to VARBINARY using the CAST function, but the resultant VARBINARY is not the same as the INT96. For example, create a Drill table after reading an INT96 and converting some data to a timestamp.
+
+`CREATE TABLE t2(c1) AS SELECT CONVERT_FROM(created_ts, 'TIMESTAMP_IMPALA') FROM t1 ORDER BY 1 LIMIT 1;`
+
+t1.created_ts is an INT96 (or Hive/Impala timestamp) , t2.created_ts is a SQL timestamp. These types are not comparable--you cannot use a condition like t1.created_ts = t2.created_ts.
 
 ### SQL Types to Parquet Logical Types
 Parquet also supports logical types, fully described on the [Apache Parquet site](https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md). Embedded types, JSON and BSON, annotate a binary primitive type representing a JSON or BSON document. The logical types and their mapping to SQL types are:

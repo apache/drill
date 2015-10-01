@@ -15,7 +15,7 @@ To create a name and new configuration:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
 2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
-   The storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.  
+   The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.  
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  

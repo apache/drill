@@ -16,7 +16,7 @@ The following table lists the commands that you can run on the Drill command lin
 | !brief        | Set verbose mode off.                                                                                                                 |
 | !close        | Close the current connection to the database.                                                                                         |
 | !closeall     | Close all current open connections.                                                                                                   |
-| !connect      | Open a new connection to the database.                                                                                                |
+| !connect      | Open a new connection to the database. Use this command to hide the password when starting Drill in authentication mode.              |
 | !help         | Print a summary of command usage.                                                                                                     |
 | !history      | Display the command history.                                                                                                          |
 | !list         | List the current connections.                                                                                                         |
@@ -31,6 +31,14 @@ The following table lists the commands that you can run on the Drill command lin
 | !set          | Set the given variable. See [The Set Command Variables]({{site.baseurl}}/docs/configuring-the-drill-shell#the-set-command-variables). |
 | !tables       | List all the tables in the database.                                                                                                  |
 | !verbose      | Show unabbreviated error messages.                                                                                                    |
+
+## Example of Hiding the Password When Starting Drill
+
+When starting Drill in authentication mode, you can use the **!connect** command as shown in the section, ["User Authentication Process"]({{site.baseurl}}/docs/configuring-user-authentication/#user-authentication-process), instead of the **sqlline**, **drill-embedded**, or **drill-distributed** commands. For example, after running the sqlline script, you enter this command to connect to Drill:
+
+`sqlline> !connect jdbc:drill:zk=localhost:2181`  
+
+When prompted you enter a user name and password, which is hidden as you type it.
 
 ## Examples of Configuring the Drill Shell
 
