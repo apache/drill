@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -69,7 +70,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 public class HiveScan extends AbstractGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScan.class);
 
-  protected static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR = 100;
+  private static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN = 20;
 
   @JsonProperty("hive-table")
   public HiveReadEntry hiveReadEntry;
@@ -319,19 +320,27 @@ public class HiveScan extends AbstractGroupScan {
         estRowCount = data/1024;
       }
 
-      // Hive's native reader is neither memory efficient nor fast. If the rowcount is below
-      // HIVE_SERDE_SCAN_OVERHEAD_FACTOR, make sure it is at least HIVE_SERDE_SCAN_OVERHEAD_FACTOR to enable the planner
-      // to choose HiveDrillNativeParquetScan. Due to the project on top of HiveDrillNativeParquetScan, we end up
-      // choosing the HiveScan instead of HiveDrillNativeParquetScan if the cost is too low.
-      if (estRowCount <= HIVE_SERDE_SCAN_OVERHEAD_FACTOR) {
-        estRowCount = HIVE_SERDE_SCAN_OVERHEAD_FACTOR;
-      }
+      // Hive's native reader is neither memory efficient nor fast. Increase the CPU cost
+      // by a factor to let the planner choose HiveDrillNativeScan over HiveScan with SerDes.
+      float cpuCost = 1 * getSerDeOverheadFactor();
 
       logger.debug("estimated row count = {}, stats row count = {}", estRowCount, rowCount);
-      return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
+      return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, cpuCost, data);
     } catch (final IOException e) {
       throw new DrillRuntimeException(e);
     }
+  }
+
+  protected int getSerDeOverheadFactor() {
+    final int projectedColumnCount;
+    if (AbstractRecordReader.isStarQuery(columns)) {
+      Table hiveTable = hiveReadEntry.getTable();
+      projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
+    } else {
+      projectedColumnCount = columns.size();
+    }
+
+    return projectedColumnCount * HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN;
   }
 
   @Override

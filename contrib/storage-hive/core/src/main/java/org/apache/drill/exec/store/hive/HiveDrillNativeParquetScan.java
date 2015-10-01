@@ -60,12 +60,13 @@ public class HiveDrillNativeParquetScan extends HiveScan {
   public ScanStats getScanStats() {
     final ScanStats nativeHiveScanStats = super.getScanStats();
 
-    // As Drill's native parquet record reader is faster and memory efficient divide the costs by a factor.
+    // As Drill's native parquet record reader is faster and memory efficient. Divide the CPU cost
+    // by a factor to let the planner choose HiveDrillNativeScan over HiveScan with SerDes.
     return new ScanStats(
         nativeHiveScanStats.getGroupScanProperty(),
-        nativeHiveScanStats.getRecordCount()/HIVE_SERDE_SCAN_OVERHEAD_FACTOR,
-        nativeHiveScanStats.getCpuCost()/HIVE_SERDE_SCAN_OVERHEAD_FACTOR,
-        nativeHiveScanStats.getDiskCost()/HIVE_SERDE_SCAN_OVERHEAD_FACTOR);
+        nativeHiveScanStats.getRecordCount(),
+        nativeHiveScanStats.getCpuCost()/getSerDeOverheadFactor(),
+        nativeHiveScanStats.getDiskCost());
   }
 
   @Override
