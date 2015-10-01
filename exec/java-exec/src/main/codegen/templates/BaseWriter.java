@@ -57,8 +57,8 @@ package org.apache.drill.exec.vector.complex.writer;
   }
 
   public interface ListWriter extends BaseWriter {
-    void start();
-    void end();
+    void startList();
+    void endList();
     MapWriter map();
     ListWriter list();
     void copyReader(FieldReader reader);
