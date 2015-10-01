@@ -5,7 +5,7 @@ parent: "Storage Plugin Configuration"
 You can define one or more workspaces in a [storage plugin configuration]({{site.baseurl}}/docs/plugin-configuration-basics/). The workspace defines the location of files in subdirectories of a local or distributed file system. Drill searches the workspace to locate data when
 you run a query. A hidden default workspace, `dfs.default`, points to the root of the file system.
 
-The following DFS storage plugin configuration shows some examples of defined workspaces:
+The following `dfs` storage plugin configuration shows some examples of defined workspaces:
 
        {
          "type": "file",
@@ -54,7 +54,7 @@ location of the data:
 ##Overriding `dfs.default`
 
 You may want to override the hidden default workspace in scenarios where users do not have permissions to access the root directory. 
-Add the following workspace entry to the DFS storage plugin configuration to override the default workspace:
+Add the following workspace entry to the `dfs` storage plugin configuration to override the default workspace:
 
     "default": {
       "location": "</directory/path>",

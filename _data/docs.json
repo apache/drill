@@ -599,8 +599,8 @@
             "next_title": "Query Plans and Tuning", 
             "next_url": "/docs/query-plans-and-tuning/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "Optimizing Parquet Reading", 
+            "previous_url": "/docs/optimizing-parquet-reading/", 
             "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
             "title": "Choosing a Storage Format", 
             "url": "/docs/choosing-a-storage-format/"
@@ -5625,6 +5625,23 @@
             "title": "Operators", 
             "url": "/docs/operators/"
         }, 
+        "Optimizing Parquet Reading": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Choosing a Storage Format", 
+            "next_url": "/docs/choosing-a-storage-format/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
+            "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
+            "title": "Optimizing Parquet Reading", 
+            "url": "/docs/optimizing-parquet-reading/"
+        }, 
         "PARTITION BY Clause": {
             "breadcrumbs": [
                 {
@@ -5671,8 +5688,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Choosing a Storage Format", 
-            "next_url": "/docs/choosing-a-storage-format/", 
+            "next_title": "Optimizing Parquet Reading", 
+            "next_url": "/docs/optimizing-parquet-reading/", 
             "parent": "Performance Tuning", 
             "previous_title": "Performance Tuning Introduction", 
             "previous_url": "/docs/performance-tuning-introduction/", 
@@ -5725,8 +5742,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Optimizing Parquet Reading", 
+                    "next_url": "/docs/optimizing-parquet-reading/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning Introduction", 
                     "previous_url": "/docs/performance-tuning-introduction/", 
@@ -5742,11 +5759,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Plans and Tuning", 
-                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Partition Pruning", 
                     "previous_url": "/docs/partition-pruning/", 
+                    "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
+                    "title": "Optimizing Parquet Reading", 
+                    "url": "/docs/optimizing-parquet-reading/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning", 
+                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Optimizing Parquet Reading", 
+                    "previous_url": "/docs/optimizing-parquet-reading/", 
                     "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
                     "title": "Choosing a Storage Format", 
                     "url": "/docs/choosing-a-storage-format/"
@@ -13637,8 +13671,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Optimizing Parquet Reading", 
+                    "next_url": "/docs/optimizing-parquet-reading/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning Introduction", 
                     "previous_url": "/docs/performance-tuning-introduction/", 
@@ -13654,11 +13688,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Plans and Tuning", 
-                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Partition Pruning", 
                     "previous_url": "/docs/partition-pruning/", 
+                    "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
+                    "title": "Optimizing Parquet Reading", 
+                    "url": "/docs/optimizing-parquet-reading/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning", 
+                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Optimizing Parquet Reading", 
+                    "previous_url": "/docs/optimizing-parquet-reading/", 
                     "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
                     "title": "Choosing a Storage Format", 
                     "url": "/docs/choosing-a-storage-format/"

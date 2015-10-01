@@ -18,7 +18,7 @@ Drill generates a self-signed certificate that works with SSL for HTTPS access t
 
 ## Setting Up a Custom SSL Configuration
 
-As cluster administrator, you can set the following SSL configuration parameters at in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
+As cluster administrator, you can set the following SSL configuration parameters in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
 
 * javax.net.ssl.keyStore  
   Path to the application's certificate and private key in the Java keystore file.  
@@ -29,11 +29,12 @@ As cluster administrator, you can set the following SSL configuration parameters
 * javax.net.ssl.trustStorePassword  
   Password for accessing the trusted keystore file.
 
+<!-- 
 ## Prerequisites for Web Console and REST API Security
 
 You need to perform the following configuration tasks using Web Console and REST API security.  
 
-* [User Authentication]({{site.baseurl}}/docs/configuring-user-authentication/)  
+* Configure [user authentication]({{site.baseurl}}/docs/configuring-user-authentication/)  
 * Set up Web Console administrators  
   Optionally, you can set up Web Console administrator-user groups to facilitate management of multiple Web Console administrators.
 
@@ -62,7 +63,7 @@ The following table and subsections describe the privilege levels for accessing 
 | getStatsJSON             | /stats.json                  | GET          | application/json | Returns Drillbit stats such as ports and max direct memory in json format.                                                                                                                                                                                  | ALL                                                                                                           |
 | getStatus                | /status                      | GET          | text/html        | Returns Running!                                                                                                                                                                                                                                            | ALL                                                                                                           |
 | getSystemOptionsJSON     | /options.json                | GET          | application/json | Returns list of options. Each option consists of name-value-type-kind (for example: (boot system datatype).                                                                                                                                                 | ALL                                                                                                           |
-| getSystemOptions         | /options                     | GET          | text/html        | Returns a HTML table where each row is a form containing the option details that allows option values to be modified.                                                                                                                                       | ALL                                                                                                           |
+| getSystemOptions         | /options                     | GET          | text/html        | Returns an HTML table where each row is a form containing the option details that allows option values to be modified.                                                                                                                                      | ALL                                                                                                           |
 | updateSystemOption       | /option/{optionName}         | POST         | text/html        | Updates the options and calls getSystemOptions. So again an option list is displayed.                                                                                                                                                                       | ADMIN                                                                                                         |
 | getStoragePluginsJSON    | /storage.json                | GET          | application/json | Returns a list of storage plugin wrappers each containing name-config (instance of StoragePluginConfig) and enabled.                                                                                                                                        | ADMIN                                                                                                         |
 | getStoragePlugins        | /storage                     | GET          | text/html        | Returns an HTML page with two sections: The first section contains a table of rows that are forms containing the plugin button for the update page and a button to disable the plugin. The second section is the same except the button enables the plugin. | ADMIN                                                                                                         |
@@ -83,6 +84,7 @@ The following table and subsections describe the privilege levels for accessing 
 | submitQuery              | /query                       | POST         | text/html        | Returns results from submitQueryJSON populated in a HTML table.                                                                                                                                                                                             | ALL                                                                                                           |
 | getMetrics               | /metrics                     | GET          | text/html        | Returns a page that fetches metric info from resource, status, and metrics.                                                                                                                                                                                 | ALL                                                                                                           |
 | getThreads               | /threads                     | GET          | text/html        | Returns a page that fetches metric information from resource, status, and threads.                                                                                                                                                                          | ALL                                                                                                           |
+
 ### GET /profiles.json
 
 * ADMIN - gets all profiles on the system.  
@@ -106,4 +108,4 @@ The following table and subsections describe the privilege levels for accessing 
 ### GET /profiles/cancel/{queryid}
 
 * ADMIN - can cancel the query.  
-* USER - cancel the query only if the query is launched by the user requesting the cancellation.
+* USER - cancel the query only if the query is launched by the user requesting the cancellation. -->

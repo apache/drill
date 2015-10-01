@@ -39,6 +39,22 @@ In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/d
 
 Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes. 
 
+### Using Quotation Marks
+CSV files typically enclose text fields in double quotation marks, and Drill treats the double quotation mark in CSV files as a special character accordingly. By default, Drill treats double quotation marks as a special character in TSV files also. If you want Drill *not* to treat double quotation marks as a special character, configure the storage plugin to set the `quote` attribute to the unicode null `"\u0000"`. For example:
+
+       . . .
+       "tsv": {
+       "type": "text",
+       "extensions": [
+         "tsv"
+       ],
+       "quote": "\u0000",    <-- set this to null 
+       "delimiter": "\t"
+     },
+     . . .
+
+As mentioned previously, set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default).
+
 ## Examples of Querying Text Files
 The examples in this section show the results of querying CSV files that use and do not use a header, include comments, and use an escape character:
 

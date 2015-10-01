@@ -34,7 +34,7 @@ The following table lists the commands that you can run on the Drill command lin
 
 ## Example of Hiding the Password When Starting Drill
 
-When starting Drill in authentication mode, you can use the **!connect** command as shown in the section, ["User Authentication Process"]({{site.baseurl}}/docs/configuring-user-authentication/#user-authentication-process), instead of the **sqlline**, **drill-embedded**, or **drill-distributed** commands. For example, after running the sqlline script, you enter this command to connect to Drill:
+When starting Drill in authentication mode, you can use the **!connect** command as shown in the section, ["User Authentication Process"]({{site.baseurl}}/docs/configuring-user-authentication/#user-authentication-process), instead of using a command such as **sqlline**, **drill-embedded**, or **drill-conf** commands. For example, after running the sqlline script, you enter this command to connect to Drill:
 
 `sqlline> !connect jdbc:drill:zk=localhost:2181`  
 

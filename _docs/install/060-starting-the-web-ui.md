@@ -13,7 +13,7 @@ In Drill 1.1 and earlier, to open the Drill Web Console, launch a web browser, a
 
 where IP address is the host name or IP address of one of the installed Drillbits in a distributed system or `localhost` in an embedded system.
 
-## Drill 1.2 and Later
+<!-- ## Drill 1.2 and Later
 
 In Drill 1.2 and later, to open the Drill Web Console, launch a web browser, and go to one of the following URLs depending on the configuration of HTTPS support:
 
@@ -36,6 +36,6 @@ If an [administrator]({{ site.baseurl }}/docs/configuring-user-authentication/#a
 
 If a user, who is not an administrator, logs in, the Web Console controls are limited to Query, Metrics, and Profiles. The Profiles tab for a non-administrator user contains the profiles of all queries the user issued either through ODBC, JDBC, or the Web Console. 
 
-![Web Console User View]({{ site.baseurl }}/docs/img/web-ui-user-view.png)
+![Web Console User View]({{ site.baseurl }}/docs/img/web-ui-user-view.png) -->
 
 
