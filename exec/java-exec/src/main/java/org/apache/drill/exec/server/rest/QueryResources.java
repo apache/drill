@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
@@ -69,7 +69,8 @@ public class QueryResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
     try {
-      final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(query, queryType));
+      String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
+      final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
       return new Viewable("/rest/query/result.ftl", new TabularResult(result));
     } catch(Exception | Error e) {
       logger.error("Query from Web UI Failed", e);
