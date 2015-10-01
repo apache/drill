@@ -171,13 +171,13 @@ public class StorageResources {
       StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
       return createOrUpdatePluginJSON(new PluginConfigWrapper(name, config));
     } catch (JsonMappingException e) {
-      logger.debug("Error in JSON mapping: " + storagePluginConfig);
+      logger.debug("Error in JSON mapping: {}", storagePluginConfig, e);
       return message("error (invalid JSON mapping)");
     } catch (JsonParseException e) {
-      logger.debug("Error parsing JSON: " + storagePluginConfig);
+      logger.debug("Error parsing JSON: {}", storagePluginConfig, e);
       return message("error (unable to parse JSON)");
     } catch (IOException e) {
-      logger.debug("Failed to read: " + storagePluginConfig);
+      logger.debug("Failed to read: {}", storagePluginConfig, e);
       return message("error (unable to read)");
     }
   }
