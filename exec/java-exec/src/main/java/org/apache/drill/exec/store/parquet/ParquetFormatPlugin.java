@@ -47,6 +47,8 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
+import org.apache.drill.exec.store.parquet.Metadata.ParquetFileMetadata;
+import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadata_v1;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -206,10 +208,31 @@ public class ParquetFormatPlugin implements FormatPlugin{
       // TODO: we only check the first file for directory reading.  This is because
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
-          return new FormatSelection(plugin.getConfig(), selection.minusDirectories(fs));
+          return new FormatSelection(plugin.getConfig(), expandSelection(fs, selection));
         }
       }
       return super.isReadable(fs, selection);
+    }
+
+    private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
+      if (metaDataFileExists(fs, selection.getFirstPath(fs))) {
+        ParquetTableMetadata_v1 metadata = Metadata.getParquetTableMetadata(fs, getMetadataPath(selection.getFirstPath(fs)).toString());
+        List<String> fileNames = Lists.newArrayList();
+        for (ParquetFileMetadata file : metadata.files) {
+          fileNames.add(file.path);
+        }
+        return new FileSelection(fileNames, true);
+      } else {
+        return selection.minusDirectories(fs);
+      }
+    }
+
+    private Path getMetadataPath(FileStatus dir) {
+      return new Path(dir.getPath(), Metadata.METADATA_FILENAME);
+    }
+
+    private boolean metaDataFileExists(FileSystem fs, FileStatus dir) throws IOException {
+      return fs.exists(getMetadataPath(dir));
     }
 
     boolean isDirReadable(DrillFileSystem fs, FileStatus dir) {
@@ -219,7 +242,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
           return true;
         } else {
 
-          if (fs.exists(new Path(dir.getPath(), Metadata.METADATA_FILENAME))) {
+          if (metaDataFileExists(fs, dir)) {
             return true;
           }
           PathFilter filter = new DrillPathFilter();
