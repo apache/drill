@@ -114,6 +114,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   private final DrillFileSystem fs;
   private final String selectionRoot;
 
+  private boolean usedMetadataCache = false;
   private List<EndpointAffinity> endpointAffinities;
   private List<SchemaPath> columns;
   private ListMultimap<Integer, RowGroupInfo> mappings;
@@ -199,6 +200,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.columnTypeMap = that.columnTypeMap == null ? null : new HashMap(that.columnTypeMap);
     this.partitionValueMap = that.partitionValueMap == null ? null : new HashMap(that.partitionValueMap);
     this.fileSet = that.fileSet == null ? null : new HashSet(that.fileSet);
+    this.usedMetadataCache = that.usedMetadataCache;
   }
 
 
@@ -490,25 +492,33 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(entries.get(0).getPath()));
       Path metaPath = null;
       if (fs.isDirectory(p)) {
-        // Using the metadata file makes sense when querying a directory; otherwise
-        // if querying a single file we can look up the metadata directly from the file
+//         Using the metadata file makes sense when querying a directory; otherwise
+//         if querying a single file we can look up the metadata directly from the file
         metaPath = new Path(p, Metadata.METADATA_FILENAME);
       }
       if (metaPath != null && fs.exists(metaPath)) {
+        usedMetadataCache = true;
         parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString());
       } else {
+        usedMetadataCache = false;
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString());
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
       Path metaPath = new Path(p, Metadata.METADATA_FILENAME);
-      if (fs.exists(metaPath) && fileSet != null) {
-        parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString()));
+      if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
+        usedMetadataCache = true;
+        if (fileSet != null) {
+          parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString()));
+        } else {
+          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString());
+        }
       } else {
         fileStatuses = Lists.newArrayList();
         for (ReadEntryWithPath entry : entries) {
           getFiles(entry.getPath(), fileStatuses);
         }
+        usedMetadataCache = false;
         parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses);
       }
     }
@@ -716,6 +726,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return "ParquetGroupScan [entries=" + entries
         + ", selectionRoot=" + selectionRoot
         + ", numFiles=" + getEntries().size()
+        + ", usedMetadataFile=" + usedMetadataCache
         + ", columns=" + columns + "]";
   }
 

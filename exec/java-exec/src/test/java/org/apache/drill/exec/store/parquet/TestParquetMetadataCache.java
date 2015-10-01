@@ -34,7 +34,7 @@ import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestParquetMetadataCache extends BaseTestQuery {
+public class TestParquetMetadataCache extends PlanTestBase {
   private static final String WORKING_PATH = TestTools.getWorkingPath();
   private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
   private static final String tableName = "parquetTable";
@@ -71,10 +71,13 @@ public class TestParquetMetadataCache extends BaseTestQuery {
     String tableName = "nation_ctas";
     test("use dfs_test.tmp");
     test(String.format("create table `%s/t1` as select * from cp.`tpch/nation.parquet`", tableName));
+    test(String.format("create table `%s/t2` as select * from cp.`tpch/nation.parquet`", tableName));
     test(String.format("refresh table metadata %s", tableName));
     checkForMetadataFile(tableName);
-    int rowCount = testSql(String.format("select * from %s", tableName));
-    Assert.assertEquals(25, rowCount);
+    String query = String.format("select * from %s", tableName);
+    int rowCount = testSql(query);
+    Assert.assertEquals(50, rowCount);
+    testPlanMatchingPatterns(query, new String[] { "usedMetadataFile=true" }, new String[]{});
   }
 
   @Test
