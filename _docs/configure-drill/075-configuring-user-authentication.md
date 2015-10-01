@@ -23,10 +23,30 @@ When authentication is enabled, only Drill users who are assigned Drill cluster 
 
 When user authentication is enabled, each user that accesses the Drillbit process through a client, such as SQLLine, must provide their username and password for access. 
 
-When launching SQLLine, a user must include the `–n` and `–p` parameters with their username and password in the SQLLine argument:  
+A user can include the `–n` and `–p` parameters with their username and password when launching SQLLine, as shown in the following example:  
        `sqlline –u jdbc:drill:zk=10.10.11.112:5181 –n bob –p bobdrill`
 
- When a user connects to Drill from a BI tool, such as Tableau, the MapR Drill ODBC driver prompts the user for their username and password:
+Alternatively, a user can launch SQLLine and then issue the `!connect` command to hide the password, as shown in the following procedure:  
+
+1. Start SQLLine, by running the sqlline script. On Linux, for example:  
+
+              bobsmachine:~$ /etc/drill/bin/sqlline
+              apache drill 1.2.0
+              "a drill in the hand is better than two in the bush"  
+
+2. At the sqlline prompt, enter the `!connect` command followed by `jdbc:drill:zk=zk=<zk name>[:<port>][,<zk name2>[:<port>]... ]`. For example:
+3. 
+              sqlline> !connect jdbc:drill:zk=localhost:2181
+              scan complete in 1385ms
+3. At the prompts, enter a user name and password.
+4. 
+              Enter username for jdbc:drill:zk=localhost:2181: bob
+              Enter password for jdbc:drill:zk=localhost:2181: *************
+       
+       The password is hidden as it is typed.
+
+  
+When a user connects to Drill from a BI tool, such as Tableau, the MapR Drill ODBC driver prompts the user for their username and password:
 
 ![ODBC Driver]({{site.baseurl}}/docs/img/UserAuth_ODBC_Driver.png)
 
