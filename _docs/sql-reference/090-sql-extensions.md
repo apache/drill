@@ -2,19 +2,11 @@
 title: "SQL Extensions"
 parent: "SQL Reference"
 ---
-Drill extends SQL to generating Parquet metadata, to work with Hadoop-scale data, and to explore smaller-scale data in ways not possible with SQL. Using intuitive SQL extensions you work with self-describing data and complex data types. Extensions to SQL include capabilities for exploring self-describing data, such as files and HBase, directly in the native format.
+Drill extends SQL to explore smaller-scale data in ways not possible with SQL. Using intuitive SQL extensions you work with self-describing data and complex data types. Extensions to SQL include capabilities for exploring self-describing data, such as files and HBase, directly in the native format.
 
 Drill provides language support for pointing to [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction) interfaces that Drill uses to interact with data sources. Use the name of a storage plugin to specify a file system *database* as a prefix in queries when you refer to objects across databases. Query files, including compressed .gz files, and [directories]({{ site.baseurl }}/docs/querying-directories), as you would query an SQL table. You can query multiple files in a directory.
 
 Drill extends the SELECT statement for reading complex, multi-structured data. The extended CREATE TABLE AS provides the capability to write data of complex/multi-structured data types. Drill extends the [lexical rules](http://drill.apache.org/docs/lexical-structure) for working with files and directories, such as using back ticks for including file names, directory names, and reserved words in queries. Drill syntax supports using the file system as a persistent store for query profiles and diagnostic information.
-
-## Extension for Generating Parquet Metadata
-
-To speed querying of Parquet files, you can [generate metadata]({{site.baseurl}}/docs/querying-parquet-files/) in Drill 1.2 and later. Running the following command triggers the generation of metadata files in a directory of Parquet files and its subdirectories:
-
-`REFRESH TABLE METADATA <path to table>`
-
-Drill takes advantage of metadata, such as the Hive metadata store, and generates a [metadata cache]({{site.baseurl}}/docs/parquet-format/#caching-metadata). Using metadata can improve performance of queries on a large number of files. 
 
 ## Extensions for Hive- and HBase-related Data Sources
 

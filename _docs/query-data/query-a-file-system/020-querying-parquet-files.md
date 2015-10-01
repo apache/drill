@@ -3,27 +3,6 @@ title: "Querying Parquet Files"
 parent: "Querying a File System"
 ---
 
-Drill 1.2 and later extends SQL for performant querying of a large number, thousands or more, of Parquet files. By running the following command, you trigger the generation of metadata files in the directory of Parquet files and its subdirectories:
-
-`REFRESH TABLE METADATA <path to table>`
-
-You need to run the command on a file or directory only once during the session. Subsequent queries return results quickly because Drill refers to the metadata saved in the cache, as described in [Reading Parquet Files]({{site.baseurl}}/docs/parquet-format/#reading-parquet-files). 
-
-You can query nested directories from any level. For example, you can query a sub-sub-directory of Parquet files because Drill stores a metadata cache of information at each level that covers that particular level and all lower levels. 
-
-## Example of Generating Parquet Metadata
-
-```
-0: jdbc:drill:schema=dfs> REFRESH TABLE METADATA t1;
-+-------+----------------------------------------------+
-|  ok   |                   summary                    |
-+-------+----------------------------------------------+
-| true  | Successfully updated metadata for table t1.  |
-+-------+----------------------------------------------+
-1 row selected (0.445 seconds)
-```
-
-## Sample Parquet Files  
 The Drill installation includes a `sample-data` directory with Parquet files
 that you can query. Use SQL to query the `region.parquet` and
 `nation.parquet` files in the `sample-data` directory.

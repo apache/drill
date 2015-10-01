@@ -9,7 +9,7 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments. 
 
-## What's New in Apache Drill 1.2
+<!-- ## What's New in Apache Drill 1.2
 
 This release of Drill fixes [many issues]() and introduces a number of enhancements, including the following ones:
 
@@ -18,10 +18,9 @@ This release of Drill fixes [many issues]() and introduces a number of enhanceme
   * [LEAD and LEAD]({{site.baseurl}}/docs/value-window-functions/#lag-lead)  
   * [FIRST_VALUE and LAST_VALUE]({{site.baseurl}}/docs/value-window-functions/#first_value-last_value)  
 * [Security]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web Console and REST API operations  
-* Performance improvements for [querying HBase]({{site.baseurl}}/docs/querying-hbase/#querying-big-endian-encoded-data), which includes leveraging [ordered byte encoding]({{site.baseurl}}/docs/querying-hbase/#leveraging-hbase-ordered-byte-encoding).
-* Parquet metadata caching for performantly reading large numbers of Parquet files
-* [Optimized reads]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables) of Parquet-backed, Hive tables
-* Read support for the [Parquet INT96 type]({{site.baseurl}}/docs/parquet-format/#about-int96-support) and a new TIMESTAMP_IMPALA type used with the [CONVERT_FROM]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) function decodes a timestamp from Hive or Impala.  
+* Performance improvements for [querying HBase]({{site.baseurl}}/docs/querying-hbase/#querying-big-endian-encoded-data), which includes leveraging [ordered byte encoding]({{site.baseurl}}/docs/querying-hbase/#leveraging-hbase-ordered-byte-encoding)  
+* [Optimized reads]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables) of Parquet-backed, Hive tables  
+* Read support for the [Parquet INT96 type]({{site.baseurl}}/docs/parquet-format/#about-int96-support) and a new TIMESTAMP_IMPALA type used with the [CONVERT_FROM]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) function decodes a timestamp from Hive or Impala.   -->
 
 ## What's New in Apache Drill 1.1
 
