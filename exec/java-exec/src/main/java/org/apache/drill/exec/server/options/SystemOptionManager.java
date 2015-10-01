@@ -191,12 +191,14 @@ public class SystemOptionManager extends BaseOptionManager {
    *
    * @param name name of the option
    * @return the associated validator
-   * @throws IllegalArgumentException - if the validator is not found
+   * @throws UserException - if the validator is not found
    */
   public static OptionValidator getValidator(final String name) {
     final OptionValidator validator = VALIDATORS.get(name);
     if (validator == null) {
-      throw new IllegalArgumentException("Unknown option: " + name);
+      throw UserException.validationError()
+          .message(String.format("The option '%s' does not exist.", name))
+          .build(logger);
     }
     return validator;
   }
@@ -232,13 +234,8 @@ public class SystemOptionManager extends BaseOptionManager {
   public void setOption(final OptionValue value) {
     checkArgument(value.type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
     final String name = value.name.toLowerCase();
-    final OptionValidator validator;
-    try {
-      validator = getValidator(name);
-    } catch (final IllegalArgumentException e) {
-      throw UserException.validationError(e)
-        .build(logger);
-    }
+    final OptionValidator validator = getValidator(name);
+
     validator.validate(value); // validate the option
 
     if (options.get(name) == null && value.equals(validator.getDefault())) {
@@ -250,12 +247,8 @@ public class SystemOptionManager extends BaseOptionManager {
   @Override
   public void deleteOption(final String name, OptionType type) {
     checkArgument(type == OptionType.SYSTEM, "OptionType must be SYSTEM.");
-    try { // ensure option exists
-      getValidator(name);
-    } catch (final IllegalArgumentException e) {
-      throw UserException.validationError(e)
-        .build(logger);
-    }
+
+    getValidator(name); // ensure option exists
     options.delete(name.toLowerCase());
   }
 

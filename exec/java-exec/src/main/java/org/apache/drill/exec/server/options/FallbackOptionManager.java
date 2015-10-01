@@ -20,7 +20,6 @@ package org.apache.drill.exec.server.options;
 import java.util.Iterator;
 
 import com.google.common.collect.Iterables;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 
 /**
@@ -33,7 +32,7 @@ import org.apache.drill.exec.server.options.OptionValue.OptionType;
  * manager. {@link QueryOptionManager} uses {@link SessionOptionManager} as the fall back manager.
  */
 public abstract class FallbackOptionManager extends BaseOptionManager {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
   protected final OptionManager fallback;
 
@@ -109,13 +108,8 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
 
   @Override
   public void setOption(OptionValue value) {
-    final OptionValidator validator;
-    try {
-      validator = SystemOptionManager.getValidator(value.name);
-    } catch (final IllegalArgumentException e) {
-      throw UserException.validationError(e)
-        .build(logger);
-    }
+    final OptionValidator validator = SystemOptionManager.getValidator(value.name);
+
     validator.validate(value); // validate the option
 
     // fallback if unable to set locally
@@ -126,12 +120,7 @@ public abstract class FallbackOptionManager extends BaseOptionManager {
 
   @Override
   public void deleteOption(final String name, final OptionType type) {
-    try {
-      SystemOptionManager.getValidator(name); // ensure the option exists
-    } catch (final IllegalArgumentException e) {
-      throw UserException.validationError(e)
-        .build(logger);
-    }
+    SystemOptionManager.getValidator(name); // ensure the option exists
 
     // fallback if unable to delete locally
     if (!deleteLocalOption(name, type)) {
