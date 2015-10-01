@@ -47,6 +47,10 @@ public class JsonWriter {
 
   }
 
+  public JsonWriter(JsonOutput gen) {
+    this.gen = gen;
+  }
+
   public void write(FieldReader reader) throws JsonGenerationException, IOException{
     writeValue(reader);
     gen.flush();
@@ -109,7 +113,11 @@ public class JsonWriter {
 
       case LIST:
         // this is a pseudo class, doesn't actually contain the real reader so we have to drop down.
-        writeValue(reader.reader());
+        gen.writeStartArray();
+        while (reader.next()) {
+          writeValue(reader.reader());
+        }
+        gen.writeEndArray();
         break;
       case MAP:
         gen.writeStartObject();
@@ -125,6 +133,7 @@ public class JsonWriter {
         gen.writeEndObject();
         break;
       case NULL:
+      case LATE:
         gen.writeUntypedNull();
         break;
 

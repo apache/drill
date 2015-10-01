@@ -46,7 +46,7 @@ public class MappifyUtility {
       throw new DrillRuntimeException("kvgen function only supports Simple maps as input");
     }
     BaseWriter.ListWriter listWriter = writer.rootAsList();
-    listWriter.start();
+    listWriter.startList();
     BaseWriter.MapWriter mapWriter = listWriter.map();
 
     // Iterate over the fields in the map
@@ -79,7 +79,7 @@ public class MappifyUtility {
 
       mapWriter.end();
     }
-    listWriter.end();
+    listWriter.endList();
 
     return buffer;
   }

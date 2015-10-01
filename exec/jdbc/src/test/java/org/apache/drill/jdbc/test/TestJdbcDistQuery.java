@@ -70,7 +70,6 @@ public class TestJdbcDistQuery extends JdbcTestBase {
         + "from dfs_test.`%s/../../sample-data/regionsSF/`", WORKING_PATH));
   }
 
-
   @Test
   public void testSimpleQueryMultiFile() throws Exception{
     testQuery(String.format("select R_REGIONKEY, R_NAME "

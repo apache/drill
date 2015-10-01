@@ -36,6 +36,7 @@ public class CastFunctions {
   private static Map<String, String> CAST_FUNC_REPLACEMENT_FROM_NULLABLE = new HashMap<>();
 
   static {
+    TYPE2FUNC.put(MinorType.UNION, "castUNION");
     TYPE2FUNC.put(MinorType.BIGINT, "castBIGINT");
     TYPE2FUNC.put(MinorType.INT, "castINT");
     TYPE2FUNC.put(MinorType.BIT, "castBIT");

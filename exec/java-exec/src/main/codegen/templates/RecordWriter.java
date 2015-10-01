@@ -62,6 +62,7 @@ public interface RecordWriter {
 
   /** Add the field value given in <code>valueHolder</code> at the given column number <code>fieldId</code>. */
   public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader);
+  public FieldConverter getNewUnionConverter(int fieldId, String fieldName, FieldReader reader);
   public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader);
   public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader);
 

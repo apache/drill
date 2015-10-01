@@ -181,7 +181,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
 
   <#if mode == "Repeated">
 
-  public void start() {
+  public void startList() {
     final RepeatedListVector list = (RepeatedListVector) container;
     final RepeatedListVector.RepeatedMutator mutator = list.getMutator();
 
@@ -202,7 +202,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     }
   }
 
-  public void end() {
+  public void endList() {
     // noop, we initialize state at start rather than end.
   }
   <#else>
@@ -214,11 +214,11 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     }
   }
 
-  public void start() {
+  public void startList() {
     // noop
   }
 
-  public void end() {
+  public void endList() {
     // noop
   }
   </#if>

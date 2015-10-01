@@ -31,6 +31,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.complex.impl.UnionReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
@@ -118,6 +119,9 @@ public class EventBasedRecordWriter {
   }
 
   public static FieldConverter getConverter(RecordWriter recordWriter, int fieldId, String fieldName, FieldReader reader) {
+    if (reader instanceof UnionReader) {
+      return recordWriter.getNewUnionConverter(fieldId, fieldName, reader);
+    }
     switch (reader.getType().getMinorType()) {
       case MAP:
         switch (reader.getType().getMode()) {

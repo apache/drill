@@ -55,6 +55,11 @@ public abstract class AbstractRecordWriter implements RecordWriter {
   }
 
   @Override
+  public FieldConverter getNewUnionConverter(int fieldId, String fieldName, FieldReader reader) {
+    throw new UnsupportedOperationException("Doesn't support writing Union type'");
+  }
+
+  @Override
   public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
     throw new UnsupportedOperationException("Doesn't support writing RepeatedMap");
   }

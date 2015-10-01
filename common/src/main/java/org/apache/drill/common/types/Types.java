@@ -143,6 +143,7 @@ public class Types {
       case MAP:             return "MAP";
       case LATE:            return "ANY";
       case NULL:            return "NULL";
+      case UNION:           return "UNION";
 
       // Internal types not actually used at level of SQL types(?):
 
@@ -228,6 +229,8 @@ public class Types {
       return java.sql.Types.VARBINARY;
     case VARCHAR:
       return java.sql.Types.VARCHAR;
+    case UNION:
+      return java.sql.Types.OTHER;
     default:
       // TODO:  This isn't really an unsupported-operation/-type case; this
       //   is an unexpected, code-out-of-sync-with-itself case, so use an
@@ -290,6 +293,7 @@ public class Types {
           case LATE:
           case LIST:
           case MAP:
+          case UNION:
           case NULL:
           case TIMETZ:      // SQL TIME WITH TIME ZONE
           case TIMESTAMPTZ: // SQL TIMESTAMP WITH TIME ZONE
@@ -340,6 +344,7 @@ public class Types {
     case VARBINARY:
     case VAR16CHAR:
     case VARCHAR:
+    case UNION:
       return false;
     default:
       return true;
