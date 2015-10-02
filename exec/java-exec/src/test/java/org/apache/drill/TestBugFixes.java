@@ -111,4 +111,37 @@ public class TestBugFixes extends BaseTestQuery {
     test("select * from cp.`tpch/nation.parquet` n left outer join cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and r.r_name not like '%ASIA' order by r.r_name;");
   }
 
+  @Test
+  public void testDRILL2361_AggColumnAliasWithDots() throws Exception {
+    testBuilder()
+      .sqlQuery("select count(*) as `test.alias` from cp.`employee.json`")
+      .unOrdered()
+      .baselineColumns("`test.alias`")
+      .baselineValues(1155L)
+      .build().run();
+  }
+
+  @Test
+  public void testDRILL2361_SortColumnAliasWithDots() throws Exception {
+    testBuilder()
+            .sqlQuery("select o_custkey as `x.y.z` from cp.`tpch/orders.parquet` where o_orderkey < 5 order by `x.y.z`")
+            .unOrdered()
+            .baselineColumns("`x.y.z`")
+            .baselineValues(370)
+            .baselineValues(781)
+            .baselineValues(1234)
+            .baselineValues(1369)
+            .build().run();
+  }
+
+  @Test
+  public void testDRILL2361_JoinColumnAliasWithDots() throws Exception {
+    testBuilder()
+            .sqlQuery("select count(*) as cnt from (select o_custkey as `x.y` from cp.`tpch/orders.parquet`) o inner join cp.`tpch/customer.parquet` c on o.`x.y` = c.c_custkey")
+            .unOrdered()
+            .baselineColumns("cnt")
+            .baselineValues(15000L)
+            .build().run();
+  }
+
 }

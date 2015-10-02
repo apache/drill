@@ -107,7 +107,7 @@ public class FieldReference extends SchemaPath {
         JsonProcessingException {
       String ref = this._parseString(jp, ctxt);
       ref = ref.replace("`", "");
-      return new FieldReference(ref, ExpressionPosition.UNKNOWN);
+      return new FieldReference(ref, ExpressionPosition.UNKNOWN, false);
     }
 
   }

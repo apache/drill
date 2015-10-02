@@ -127,13 +127,13 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
     final List<String> fields = getRowType().getFieldNames();
 
     for (int group : BitSets.toIter(groupSet)) {
-      FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
+      FieldReference fr = FieldReference.getWithQuotedRef(childFields.get(group));
       keys.add(new NamedExpression(fr, fr));
     }
 
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       int aggExprOrdinal = groupSet.cardinality() + aggCall.i;
-      FieldReference ref = new FieldReference(fields.get(aggExprOrdinal));
+      FieldReference ref = FieldReference.getWithQuotedRef(fields.get(aggExprOrdinal));
       LogicalExpression expr = toDrill(aggCall.e, childFields);
       NamedExpression ne = new NamedExpression(expr, ref);
       aggExprs.add(ne);
@@ -169,7 +169,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
-      args.add(new FieldReference(fn.get(i)));
+      args.add(FieldReference.getWithQuotedRef(fn.get(i)));
     }
 
     // for count(1).

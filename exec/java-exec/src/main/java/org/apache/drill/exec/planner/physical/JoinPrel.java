@@ -144,8 +144,8 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel{
         }
 
       }
-      conditions.add(new JoinCondition(comp1.getKind().toString(), new FieldReference(leftFields.get(pair.left)),
-          new FieldReference(rightFields.get(pair.right))));
+      conditions.add(new JoinCondition(comp1.getKind().toString(), FieldReference.getWithQuotedRef(leftFields.get(pair.left)),
+          FieldReference.getWithQuotedRef(rightFields.get(pair.right))));
     }
 
   }
