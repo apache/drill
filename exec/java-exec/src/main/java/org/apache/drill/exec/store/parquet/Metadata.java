@@ -345,7 +345,9 @@ public class Metadata {
     SimpleModule serializer = new SimpleModule("ParquetFileMetadataSerializer")
             .addSerializer(ParquetFilePath.class, new ParquetFilePathSerializer(Path.getPathWithoutSchemeAndAuthority(p).toString()));
     mapper.registerModule(serializer);
-    FSDataOutputStream os = fs.create(new Path(p, METADATA_FILENAME));
+    Path filePath = new Path(p, METADATA_FILENAME);
+    FSDataOutputStream os = fs.create(filePath);
+    fs.setPermission(filePath, new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE));
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadata);
     os.flush();
     os.close();
