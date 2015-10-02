@@ -41,6 +41,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.SchemaPath.De;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -348,6 +349,9 @@ public class Metadata {
     Path filePath = new Path(p, METADATA_FILENAME);
     FSDataOutputStream os = fs.create(filePath);
     fs.setPermission(filePath, new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE));
+    FileStatus dirStatus = fs.getFileStatus(p);
+    fs.setPermission(p, dirStatus.getPermission());
+    fs.setOwner(filePath, dirStatus.getOwner(), dirStatus.getGroup());
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadata);
     os.flush();
     os.close();
