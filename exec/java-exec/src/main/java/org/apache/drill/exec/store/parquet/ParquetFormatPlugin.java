@@ -216,12 +216,13 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
       if (metaDataFileExists(fs, selection.getFirstPath(fs))) {
-        ParquetTableMetadata_v1 metadata = Metadata.getParquetTableMetadata(fs, getMetadataPath(selection.getFirstPath(fs)).toString());
+        String root = Path.getPathWithoutSchemeAndAuthority(selection.getFirstPath(fs).getPath()).toString();
+        ParquetTableMetadata_v1 metadata = Metadata.readBlockMeta(fs, root);
         List<String> fileNames = Lists.newArrayList();
         for (ParquetFileMetadata file : metadata.files) {
-          fileNames.add(file.path);
+          fileNames.add(file.path.fullPath);
         }
-        return new FileSelection(fileNames, true);
+        return new FileSelection(fileNames, root, true);
       } else {
         return selection.minusDirectories(fs);
       }

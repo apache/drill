@@ -21,11 +21,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,13 +41,14 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.SchemaPath.De;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import parquet.column.statistics.Statistics;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.BlockMetaData;
@@ -123,7 +132,7 @@ public class Metadata {
    */
   private ParquetTableMetadata_v1 createMetaFilesRecursively(final String path) throws IOException {
     List<ParquetFileMetadata> metaDataList = Lists.newArrayList();
-    List<String> directoryList = Lists.newArrayList();
+    List<ParquetFilePath> directoryList = Lists.newArrayList();
     Path p = new Path(path);
     FileStatus fileStatus = fs.getFileStatus(p);
     assert fileStatus.isDirectory() : "Expected directory";
@@ -135,7 +144,7 @@ public class Metadata {
         ParquetTableMetadata_v1 subTableMetadata = createMetaFilesRecursively(file.getPath().toString());
         metaDataList.addAll(subTableMetadata.files);
         directoryList.addAll(subTableMetadata.directories);
-        directoryList.add(file.getPath().toString());
+        directoryList.add(new ParquetFilePath(file.getPath()));
       } else {
         childFiles.add(file);
       }
@@ -144,7 +153,7 @@ public class Metadata {
       metaDataList.addAll(getParquetFileMetadata(childFiles));
     }
     ParquetTableMetadata_v1 parquetTableMetadata = new ParquetTableMetadata_v1(metaDataList, directoryList);
-    writeFile(parquetTableMetadata, new Path(p, METADATA_FILENAME));
+    writeFile(parquetTableMetadata, p);
     return parquetTableMetadata;
   }
 
@@ -172,7 +181,7 @@ public class Metadata {
    */
   private ParquetTableMetadata_v1 getParquetTableMetadata(List<FileStatus> fileStatuses) throws IOException {
     List<ParquetFileMetadata> fileMetadataList = getParquetFileMetadata(fileStatuses);
-    return new ParquetTableMetadata_v1(fileMetadataList, new ArrayList<String>());
+    return new ParquetTableMetadata_v1(fileMetadataList, new ArrayList<ParquetFilePath>());
   }
 
   /**
@@ -333,10 +342,55 @@ public class Metadata {
     jsonFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
     jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
     ObjectMapper mapper = new ObjectMapper(jsonFactory);
-    FSDataOutputStream os = fs.create(p);
+    SimpleModule serializer = new SimpleModule("ParquetFileMetadataSerializer")
+            .addSerializer(ParquetFilePath.class, new ParquetFilePathSerializer(Path.getPathWithoutSchemeAndAuthority(p).toString()));
+    mapper.registerModule(serializer);
+    FSDataOutputStream os = fs.create(new Path(p, METADATA_FILENAME));
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadata);
     os.flush();
     os.close();
+  }
+
+  /**
+   * Serialier for ParquetFilePath. Writes the path relative to the root path
+   */
+  private static class ParquetFilePathSerializer extends StdSerializer<ParquetFilePath> {
+    private String rootPath;
+
+    ParquetFilePathSerializer(String rootPath) {
+      super(ParquetFilePath.class);
+      this.rootPath = rootPath;
+    }
+
+    @Override
+    public void serialize(ParquetFilePath parquetFilePath, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonGenerationException {
+      Preconditions.checkState(parquetFilePath.fullPath.startsWith(rootPath), String.format("Path %s is not a subpath of %s", parquetFilePath.fullPath, rootPath));
+      String relativePath = parquetFilePath.fullPath.replaceFirst(rootPath, "");
+      while (relativePath.charAt(0) == '/') {
+        relativePath = relativePath.substring(1);
+      }
+      jsonGenerator.writeString(relativePath);
+    }
+  }
+
+  /**
+   * Deserializer for ParquetFilePath. The full path is constructed from the relative path and resolving relative to the
+   * root path.
+   */
+  private static class ParquetFilePathDeserializer extends StdDeserializer<ParquetFilePath> {
+    private String rootPath;
+
+    ParquetFilePathDeserializer(String rootPath) {
+      super(ParquetFilePath.class);
+      this.rootPath = rootPath;
+    }
+
+    @Override
+    public ParquetFilePath deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+      String relativePath = jsonParser.getText();
+      String fullPath = Path.getPathWithoutSchemeAndAuthority(new Path(rootPath, relativePath)).toString();
+      return new ParquetFilePath(fullPath);
+    }
   }
 
   /**
@@ -350,6 +404,7 @@ public class Metadata {
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule module = new SimpleModule();
     module.addDeserializer(SchemaPath.class, new De());
+    module.addDeserializer(ParquetFilePath.class, new ParquetFilePathDeserializer(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString()));
     mapper.registerModule(module);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     FSDataInputStream is = fs.open(p);
@@ -374,8 +429,8 @@ public class Metadata {
     if (directoryStatus.getModificationTime() > metaFileModifyTime) {
       return true;
     }
-    for (String directory : tableMetadata.directories) {
-      directoryStatus = fs.getFileStatus(new Path(directory));
+    for (ParquetFilePath directory : tableMetadata.directories) {
+      directoryStatus = fs.getFileStatus(new Path(directory.fullPath));
       if (directoryStatus.getModificationTime() > metaFileModifyTime) {
         return true;
       }
@@ -396,15 +451,20 @@ public class Metadata {
     @JsonProperty
     List<ParquetFileMetadata> files;
     @JsonProperty
-    List<String> directories;
+    List<ParquetFilePath> directories;
 
     public ParquetTableMetadata_v1() {
       super();
     }
 
-    public ParquetTableMetadata_v1(List<ParquetFileMetadata> files, List<String> directories) {
+    public ParquetTableMetadata_v1(List<ParquetFileMetadata> files, List<ParquetFilePath> directories) {
       this.files = files;
       this.directories = directories;
+    }
+
+    public ParquetTableMetadata_v1(List<ParquetFileMetadata> files) {
+      this.files = files;
+      this.directories = new ArrayList<ParquetFilePath>();
     }
   }
 
@@ -413,7 +473,10 @@ public class Metadata {
    */
   public static class ParquetFileMetadata {
     @JsonProperty
-    public String path;
+    /**
+     * The path of the file relative to the directory which contains the metadata file
+     */
+    public ParquetFilePath path;
     @JsonProperty
     public Long length;
     @JsonProperty
@@ -424,7 +487,7 @@ public class Metadata {
     }
 
     public ParquetFileMetadata(String path, Long length, List<RowGroupMetadata> rowGroups) {
-      this.path = path;
+      this.path = new ParquetFilePath(path);
       this.length = length;
       this.rowGroups = rowGroups;
     }
@@ -432,6 +495,21 @@ public class Metadata {
     @Override
     public String toString() {
       return String.format("path: %s rowGroups: %s", path, rowGroups);
+    }
+  }
+
+  /**
+   * A holder for the string that represents a file's path
+   */
+  public static class ParquetFilePath {
+    public String fullPath;
+
+    public ParquetFilePath(String fullPath) {
+      this.fullPath = fullPath;
+    }
+
+    public ParquetFilePath(Path fullPath) {
+      this.fullPath = Path.getPathWithoutSchemeAndAuthority(fullPath).toString();
     }
   }
 

@@ -68,6 +68,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   @Test
   public void testCache() throws Exception {
+    System.out.println(getDfsTestTmpSchemaLocation());
     String tableName = "nation_ctas";
     test("use dfs_test.tmp");
     test(String.format("create table `%s/t1` as select * from cp.`tpch/nation.parquet`", tableName));
@@ -78,6 +79,24 @@ public class TestParquetMetadataCache extends PlanTestBase {
     int rowCount = testSql(query);
     Assert.assertEquals(50, rowCount);
     testPlanMatchingPatterns(query, new String[] { "usedCache=true" }, new String[]{});
+  }
+
+  @Test
+  public void testMove() throws Exception {
+    System.out.println(getDfsTestTmpSchemaLocation());
+    String tableName = "nation_move";
+    String newTableName = "nation_moved";
+    test("use dfs_test.tmp");
+    test(String.format("create table `%s/t1` as select * from cp.`tpch/nation.parquet`", tableName));
+    test(String.format("create table `%s/t2` as select * from cp.`tpch/nation.parquet`", tableName));
+    test(String.format("refresh table metadata %s", tableName));
+    checkForMetadataFile(tableName);
+    File srcFile = new File(getDfsTestTmpSchemaLocation() + Path.SEPARATOR + tableName);
+    File dstFile = new File(getDfsTestTmpSchemaLocation() + Path.SEPARATOR + newTableName);
+    FileUtils.moveDirectory(srcFile, dstFile);
+    Assert.assertFalse(srcFile.exists());
+    int rowCount = testSql(String.format("select * from %s", newTableName));
+    System.out.println(getDfsTestTmpSchemaLocation());
   }
 
   @Test

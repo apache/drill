@@ -526,7 +526,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     if (fileSet == null) {
       fileSet = Sets.newHashSet();
       for (ParquetFileMetadata file : parquetTableMetadata.files) {
-        fileSet.add(file.path);
+        fileSet.add(file.path.fullPath);
       }
     }
 
@@ -540,7 +540,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     for (ParquetFileMetadata file : parquetTableMetadata.files) {
       int rgIndex = 0;
       for (RowGroupMetadata rg : file.rowGroups) {
-        RowGroupInfo rowGroupInfo = new RowGroupInfo(file.path, rg.start, rg.length, rgIndex);
+        RowGroupInfo rowGroupInfo = new RowGroupInfo(file.path.fullPath, rg.start, rg.length, rgIndex);
         EndpointByteMap endpointByteMap = new EndpointByteMapImpl();
         for (String host : rg.hostAffinity.keySet()) {
           if (hostEndpointMap.containsKey(host)) {
@@ -583,10 +583,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           }
           boolean partitionColumn = checkForPartitionColumn(column, first);
           if (partitionColumn) {
-            Map<SchemaPath,Object> map = partitionValueMap.get(file.path);
+            Map<SchemaPath,Object> map = partitionValueMap.get(file.path.fullPath);
             if (map == null) {
               map = Maps.newHashMap();
-              partitionValueMap.put(file.path, map);
+              partitionValueMap.put(file.path.fullPath, map);
             }
             Object value = map.get(schemaPath);
             Object currentValue = column.max;
@@ -614,7 +614,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         newFileMetadataList.add(file);
       }
     }
-    return new ParquetTableMetadata_v1(newFileMetadataList, new ArrayList<String>());
+    return new ParquetTableMetadata_v1(newFileMetadataList);
   }
 
   /**
