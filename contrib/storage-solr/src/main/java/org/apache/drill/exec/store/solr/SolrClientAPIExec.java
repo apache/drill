@@ -43,7 +43,6 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.client.solrj.io.stream.SolrStream;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
@@ -182,9 +181,9 @@ public class SolrClientAPIExec {
     return null;
   }
 
-  public List<Tuple> getSolrStreamResponse(String solrServer,
+  public SolrStream getSolrStreamResponse(String solrServer,
       SolrClient solrClient, String solrCoreName, List<String> fields,
-      StringBuilder filters, String uniqueKey) {
+      StringBuilder filters, String uniqueKey, Integer solrDocFetchCount) {
 
     Map<String, String> solrParams = new HashMap<String, String>();
     solrParams.put("q", uniqueKey + ":*");
@@ -192,6 +191,8 @@ public class SolrClientAPIExec {
     solrParams.put("sort", uniqueKey + " desc ");
     solrParams.put("fl", Joiner.on(",").join(fields));
     solrParams.put("qt", "/export");
+    if (solrDocFetchCount >= 0)
+      solrParams.put("rows", solrDocFetchCount.toString());
     if (filters.length() > 0) {
       solrParams.put("fq", filters.toString());
       logger.info("filter query [ " + filters.toString() + " ]");
@@ -201,31 +202,9 @@ public class SolrClientAPIExec {
         + solrCoreName);
     solrServer = solrServer + solrCoreName;
     SolrStream solrStream = new SolrStream(solrServer, solrParams);
-    List<Tuple> resultTuple = Lists.newArrayList();
-    try {
-      solrStream.open();
 
-      Tuple tuple = null;
-      while (true) {
-        tuple = solrStream.read();
-        if (tuple.EOF) {
-          break;
-        }
-        resultTuple.add(tuple);
-      }
-    } catch (Exception e) {
-      logger.info("error occured while fetching results from solr server "
-          + e.getMessage());
-    } finally {
-      try {
-        solrStream.close();
-      } catch (IOException e) {
-        logger.debug("error occured while fetching results from solr server "
-            + e.getMessage());
-      }
+    return solrStream;
 
-    }
-    return resultTuple;
   }
 
   public void createSolrView(String solrCoreName, String solrCoreViewWorkspace,

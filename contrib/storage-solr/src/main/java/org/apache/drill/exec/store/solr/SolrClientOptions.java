@@ -19,14 +19,16 @@ package org.apache.drill.exec.store.solr;
 
 public class SolrClientOptions {
   private String solrServer;
-  
+
   public SolrClientOptions(String solrServer) {
-    this.solrServer=solrServer;
+    this.solrServer = solrServer;
   }
-  public SolrClientOptions(SolrStoragePluginConfig solrStoragePlugin){
-    this.solrServer=solrStoragePlugin.getSolrServer();
+
+  public SolrClientOptions(SolrStoragePluginConfig solrStoragePlugin) {
+    this.solrServer = solrStoragePlugin.getSolrServer();
   }
-  public String getSolrServer(){
+
+  public String getSolrServer() {
     return this.solrServer;
   }
 }

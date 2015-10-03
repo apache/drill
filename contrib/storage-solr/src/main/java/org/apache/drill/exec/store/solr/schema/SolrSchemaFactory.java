@@ -51,7 +51,6 @@ public class SolrSchemaFactory implements SchemaFactory {
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent)
       throws IOException {
-    logger.info("registering schema....");
     List<String> schemaPath = Lists.newArrayList();
     schemaPath.add(SolrStoragePluginConfig.NAME);
     SolrSchema schema = new SolrSchema(schemaPath, "root", solrStorage);

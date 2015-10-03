@@ -56,8 +56,6 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
     this.solrClient = new HttpSolrClient(solrStorageConfig.getSolrServer());
     solrClientApiExec = new SolrClientAPIExec(solrClient);
     this.schemaFactory = new SolrSchemaFactory(this, name);
-    // createORReplaceViews();
-    logger.info("solr storage plugin name :: " + name);
   }
 
   public SolrClientAPIExec getSolrClientApiExec() {
@@ -109,12 +107,11 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    logger.trace("SolrStoragePlugin :: getOptimizerRules");
-    return ImmutableSet.of(SolrQueryFilterRule.FILTER_ON_SCAN
-    /*
-     * SolrQueryFilterRule.AGG_PUSH_DOWN, SolrQueryFilterRule.FILTER_ON_PROJECT,
-     * 
-     * SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT
-     */);
+    return ImmutableSet.of(/*
+                            * SolrQueryFilterRule.FILTER_ON_SCAN,
+                            * SolrQueryFilterRule.FILTER_ON_PROJECT,
+                            */
+    SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT
+    /* SolrQueryFilterRule.AGG_PUSH_DOWN */);
   }
 }

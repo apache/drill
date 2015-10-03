@@ -54,7 +54,6 @@ public class SolrGroupScan extends AbstractGroupScan {
     this.solrScanSpec = that.solrScanSpec;
     this.columns = that.columns;
     this.scanList.add(this.solrScanSpec);
-    logger.info("SolrGroupScan :: default constructor :: ");
   }
 
   public SolrGroupScan(String userName, SolrStoragePlugin solrStoragePlugin,
@@ -65,13 +64,11 @@ public class SolrGroupScan extends AbstractGroupScan {
     this.solrScanSpec = scanSpec;
     this.columns = columns;
     this.scanList.add(this.solrScanSpec);
-    logger.info("SolrGroupScan :: param constructor :: " + columns);
 
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    logger.debug("SolrGroupScan :: clone :: " + columns);
     SolrGroupScan clone = new SolrGroupScan(this);
     clone.columns = columns;
     return clone;
@@ -80,15 +77,17 @@ public class SolrGroupScan extends AbstractGroupScan {
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints)
       throws PhysicalOperatorSetupException {
-    // TODO Auto-generated method stub
-    logger.debug("SolrGroupScan :: applyAssignments");
+    // TODO write the distribution logic
+  }
+
+  public void setColumns(List<SchemaPath> columns) {
+    this.columns = columns;
   }
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.debug("SolrGroupScan :: getSpecificScan :: " + columns);
     return new SolrSubScan(this);
 
   }
@@ -96,7 +95,6 @@ public class SolrGroupScan extends AbstractGroupScan {
   @Override
   public int getMaxParallelizationWidth() {
     // TODO Auto-generated method stub
-    logger.debug("SolrGroupScan :: getMaxParallelizationWidth");
     return -1;
   }
 
@@ -117,7 +115,6 @@ public class SolrGroupScan extends AbstractGroupScan {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
       throws ExecutionSetupException {
     // TODO Auto-generated method stub
-    logger.debug("SolrGroupScan :: getNewWithChildren");
     Preconditions.checkArgument(children.isEmpty());
     return new SolrGroupScan(this);
   }
@@ -135,6 +132,13 @@ public class SolrGroupScan extends AbstractGroupScan {
   @JsonIgnore
   public SolrStoragePlugin getSolrPlugin() {
     return solrPlugin;
+  }
+
+  @Override
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    // this.columns = columns;
+    return true;
   }
 
   public List<SchemaPath> getColumns() {

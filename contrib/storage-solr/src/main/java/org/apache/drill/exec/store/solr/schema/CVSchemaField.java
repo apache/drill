@@ -21,9 +21,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class CVSchemaField {
 
-  private String name;
+  private String fieldName;
   private String type;
-  private boolean uniqueKey;
+  private boolean skipdelete;
+  private boolean docValues;
+
   @JsonIgnore
   private boolean indexed;
   @JsonIgnore
@@ -34,8 +36,6 @@ public class CVSchemaField {
   private boolean termVectors;
   @JsonIgnore
   private boolean omitPositions;
-  @JsonIgnore
-  private boolean skipdelete;
   @JsonIgnore
   private boolean omitNorms;
   @JsonIgnore
@@ -55,14 +55,6 @@ public class CVSchemaField {
     this.type = type;
   }
 
-  public boolean isUniqueKey() {
-    return uniqueKey;
-  }
-
-  public void setUniqueKey(boolean uniqueKey) {
-    this.uniqueKey = uniqueKey;
-  }
-
   public boolean isIndexed() {
     return indexed;
   }
@@ -79,12 +71,12 @@ public class CVSchemaField {
     this.stored = stored;
   }
 
-  public String getName() {
-    return name;
+  public String getFieldName() {
+    return fieldName;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setFieldName(String fieldName) {
+    this.fieldName = fieldName;
   }
 
   public boolean isMultiValued() {
@@ -133,6 +125,14 @@ public class CVSchemaField {
 
   public void setRequired(boolean required) {
     this.required = required;
+  }
+
+  public boolean isDocValues() {
+    return docValues;
+  }
+
+  public void setDocValues(boolean docValues) {
+    this.docValues = docValues;
   }
 
   public boolean isOmitTermFreqAndPositions() {

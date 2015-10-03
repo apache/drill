@@ -62,13 +62,13 @@ public class SolrDataType extends RecordDataType {
         } else if (solrFieldType.equals("date")
             || solrFieldType.equals("tdate")
             || solrFieldType.equals("timestamp")) {
-          types.add(SqlTypeName.DATE);
+          types.add(SqlTypeName.TIMESTAMP);
         } else if (solrFieldType.equals("float")
             || solrFieldType.equals("tfloat")) {
           types.add(SqlTypeName.DECIMAL);
         } else {
           logger
-              .info(String
+              .trace(String
                   .format(
                       "PojoDataType doesn't yet support conversions from type [%s] for field [%s].Defaulting to varchar.",
                       solrFieldType, cvSchemaField.getFieldName()));
@@ -77,8 +77,6 @@ public class SolrDataType extends RecordDataType {
       }
 
     }
-    logger.debug("Total number of datasource specific columns added is: "
-        + names.size());
   }
 
   @Override

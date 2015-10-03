@@ -17,15 +17,9 @@
  */
 package org.apache.drill.exec.store.solr;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import java.nio.ByteOrder;
-
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
-import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -48,11 +42,8 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.expression.visitors.AggregateChecker;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -63,11 +54,7 @@ public class SolrCompareFunctionProcessor implements
   private boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
-  public static final AggregateChecker INSTANCE = new AggregateChecker();
 
-  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors) {
-    return e.accept(INSTANCE, errors);
-  }
   public static boolean isCompareFunction(String functionName) {
     return COMPARE_FUNCTIONS_TRANSPOSE_MAP.keySet().contains(functionName);
   }
@@ -275,6 +262,7 @@ public class SolrCompareFunctionProcessor implements
         .put("less_than_or_equal_to", "greater_than_or_equal_to")
         .put("less_than", "greater_than").build();
   }
+
   @Override
   public Boolean visitFunctionCall(FunctionCall call, LogicalExpression value)
       throws RuntimeException {
