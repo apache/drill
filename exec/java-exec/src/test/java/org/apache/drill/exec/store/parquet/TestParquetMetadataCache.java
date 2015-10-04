@@ -63,7 +63,8 @@ public class TestParquetMetadataCache extends PlanTestBase {
     int actualRowCount = testSql(query);
     assertEquals(expectedRowCount, actualRowCount);
     String numFilesPattern = "numFiles=" + expectedNumFiles;
-    PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern}, new String[] {"Filter"});
+    String usedMetaPattern = "usedMetadataFile=true";
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern}, new String[] {"Filter"});
   }
 
   @Test
