@@ -24,6 +24,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -53,6 +55,7 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
     private int precision;
     private int scale;
     private int timeZone;
+    private List<MinorType> subType;
 
     public MajorType()
     {
@@ -139,6 +142,19 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
         return this;
     }
 
+    // subType
+
+    public List<MinorType> getSubTypeList()
+    {
+        return subType;
+    }
+
+    public MajorType setSubTypeList(List<MinorType> subType)
+    {
+        this.subType = subType;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -211,6 +227,11 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
                 case 6:
                     message.timeZone = input.readInt32();
                     break;
+                case 7:
+                    if(message.subType == null)
+                        message.subType = new ArrayList<MinorType>();
+                    message.subType.add(MinorType.valueOf(input.readEnum()));
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -237,6 +258,15 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
 
         if(message.timeZone != 0)
             output.writeInt32(6, message.timeZone, false);
+
+        if(message.subType != null)
+        {
+            for(MinorType subType : message.subType)
+            {
+                if(subType != null)
+                    output.writeEnum(7, subType.number, true);
+            }
+        }
     }
 
     public String getFieldName(int number)
@@ -249,6 +279,7 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
             case 4: return "precision";
             case 5: return "scale";
             case 6: return "timeZone";
+            case 7: return "subType";
             default: return null;
         }
     }
@@ -268,6 +299,7 @@ public final class MajorType implements Externalizable, Message<MajorType>, Sche
         __fieldMap.put("precision", 4);
         __fieldMap.put("scale", 5);
         __fieldMap.put("timeZone", 6);
+        __fieldMap.put("subType", 7);
     }
     
 }

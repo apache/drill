@@ -55,12 +55,18 @@ public class FunctionGenerationHelper {
         null_high ? COMPARE_TO_NULLS_HIGH : COMPARE_TO_NULLS_LOW;
 
     if (   ! isComparableType(left.getMajorType() )
-        || ! isComparableType(right.getMajorType() ) ) {
+        || ! isComparableType(right.getMajorType() )
+        || isUnionType(left.getMajorType())
+        || isUnionType(right.getMajorType()) ) {
       throw new UnsupportedOperationException(
           formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
     }
     return getFunctionExpression(comparator_name, Types.required(MinorType.INT),
                                  registry, left, right);
+  }
+
+  private static boolean isUnionType(MajorType majorType) {
+    return majorType.getMinorType() == MinorType.UNION;
   }
 
   /**
@@ -127,7 +133,7 @@ public class FunctionGenerationHelper {
 
   private static String formatCanNotCompareMsg(MajorType left, MajorType right) {
     StringBuilder sb = new StringBuilder();
-    sb.append("Map, Array or repeated scalar type should not be used in group by, order by or in a comparison operator. Drill does not support compare between ");
+    sb.append("Map, Array, Union or repeated scalar type should not be used in group by, order by or in a comparison operator. Drill does not support compare between ");
 
     appendType(left, sb);
     sb.append(" and ");

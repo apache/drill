@@ -60,6 +60,9 @@ public class UnionVector implements ValueVector {
   private State state = State.INIT;
   private int singleType = 0;
   private ValueVector singleVector;
+  private MajorType majorType;
+
+  private final CallBack callBack;
 
   private enum State {
     INIT, SINGLE, MULTI
@@ -72,6 +75,8 @@ public class UnionVector implements ValueVector {
     internalMapWriter = new SingleMapWriter(internalMap, null, true, true);
     this.typeVector = internalMap.addOrGet("types", Types.required(MinorType.UINT1), UInt1Vector.class);
     this.field.addChild(internalMap.getField().clone());
+    this.majorType = Types.optional(MinorType.UNION);
+    this.callBack = callBack;
   }
 
   private void updateState(ValueVector v) {
@@ -82,6 +87,17 @@ public class UnionVector implements ValueVector {
     } else {
       state = State.MULTI;
       singleVector = null;
+    }
+  }
+
+  public List<MinorType> getSubTypes() {
+    return majorType.getSubTypeList();
+  }
+
+  private void addSubType(MinorType type) {
+    majorType =  MajorType.newBuilder(this.majorType).addSubType(type).build();
+    if (callBack != null) {
+      callBack.doWork();
     }
   }
 
@@ -100,6 +116,7 @@ public class UnionVector implements ValueVector {
       int vectorCount = internalMap.size();
       mapVector = internalMap.addOrGet("map", Types.optional(MinorType.MAP), MapVector.class);
       updateState(mapVector);
+      addSubType(MinorType.MAP);
       if (internalMap.size() > vectorCount) {
         mapVector.allocateNew();
       }
@@ -119,6 +136,7 @@ public class UnionVector implements ValueVector {
       int vectorCount = internalMap.size();
       ${uncappedName}Vector = internalMap.addOrGet("${uncappedName}", Types.optional(MinorType.${name?upper_case}), Nullable${name}Vector.class);
       updateState(${uncappedName}Vector);
+      addSubType(MinorType.${name?upper_case});
       if (internalMap.size() > vectorCount) {
         ${uncappedName}Vector.allocateNew();
       }
@@ -135,6 +153,7 @@ public class UnionVector implements ValueVector {
       int vectorCount = internalMap.size();
       listVector = internalMap.addOrGet("list", Types.optional(MinorType.LIST), ListVector.class);
       updateState(listVector);
+      addSubType(MinorType.LIST);
       if (internalMap.size() > vectorCount) {
         listVector.allocateNew();
       }
@@ -210,6 +229,7 @@ public class UnionVector implements ValueVector {
   public void transferTo(UnionVector target) {
     internalMap.makeTransferPair(target.internalMap).transfer();
     target.valueCount = valueCount;
+    target.majorType = majorType;
   }
 
   public void copyFrom(int inIndex, int outIndex, UnionVector from) {
@@ -298,6 +318,20 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
+  public int getBufferSizeFor(final int valueCount) {
+    if (valueCount == 0) {
+      return 0;
+    }
+
+    long bufferSize = 0;
+    for (final ValueVector v : (Iterable<ValueVector>) this) {
+      bufferSize += v.getBufferSizeFor(valueCount);
+    }
+
+    return (int) bufferSize;
+  }
+
+  @Override
   public DrillBuf[] getBuffers(boolean clear) {
     return internalMap.getBuffers(clear);
   }
@@ -311,7 +345,9 @@ public class UnionVector implements ValueVector {
 
   @Override
   public Iterator<ValueVector> iterator() {
-    return null;
+    List<ValueVector> vectors = Lists.newArrayList(internalMap.iterator());
+    vectors.add(typeVector);
+    return vectors.iterator();
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {

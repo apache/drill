@@ -34,6 +34,13 @@ public class Types {
   public static final MajorType REQUIRED_BIT = required(MinorType.BIT);
   public static final MajorType OPTIONAL_BIT = optional(MinorType.BIT);
 
+  public static boolean isUnion(MajorType toType) {
+    if (toType.getMinorType() == MinorType.UNION) {
+      return true;
+    }
+    return false;
+  }
+
   public static enum Comparability {
     UNKNOWN, NONE, EQUAL, ORDERED;
   }

@@ -23,6 +23,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -86,13 +87,14 @@ public class UnionFunctions {
     @Param
     FieldReader input;
     @Output
-    IntHolder out;
+    NullableIntHolder out;
 
     public void setup() {}
 
     public void eval() {
 
       out.value = input.isSet() ? input.getType().getMinorType().getNumber() : 0;
+      out.isSet = 1;
 
     }
   }
