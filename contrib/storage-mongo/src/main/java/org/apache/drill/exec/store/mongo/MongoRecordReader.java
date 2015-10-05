@@ -70,6 +70,7 @@ public class MongoRecordReader extends AbstractRecordReader {
 
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
+  private boolean unionEnabled;
 
   public MongoRecordReader(
       MongoSubScan.MongoSubScanSpec subScanSpec,
@@ -140,12 +141,13 @@ public class MongoRecordReader extends AbstractRecordReader {
     MongoClient client = plugin.getClient(addresses);
     MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
     collection = db.getCollection(subScanSpec.getCollectionName());
+    this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = context;
-    this.writer = new VectorContainerWriter(output);
+    this.writer = new VectorContainerWriter(output, unionEnabled);
     this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false, readNumbersAsDouble);
 
   }

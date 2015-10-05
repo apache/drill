@@ -47,6 +47,8 @@ public final class SchemaTypeProtos
                     output.writeInt32(5, message.getScale(), false);
                 if(message.hasTimeZone())
                     output.writeInt32(6, message.getTimeZone(), false);
+                for(org.apache.drill.common.types.TypeProtos.MinorType subType : message.getSubTypeList())
+                    output.writeEnum(7, subType.getNumber(), true);
             }
             public boolean isInitialized(org.apache.drill.common.types.TypeProtos.MajorType message)
             {
@@ -104,6 +106,9 @@ public final class SchemaTypeProtos
                         case 6:
                             builder.setTimeZone(input.readInt32());
                             break;
+                        case 7:
+                            builder.addSubType(org.apache.drill.common.types.TypeProtos.MinorType.valueOf(input.readEnum()));
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -150,6 +155,7 @@ public final class SchemaTypeProtos
                 case 4: return "precision";
                 case 5: return "scale";
                 case 6: return "timeZone";
+                case 7: return "subType";
                 default: return null;
             }
         }
@@ -167,6 +173,7 @@ public final class SchemaTypeProtos
             fieldMap.put("precision", 4);
             fieldMap.put("scale", 5);
             fieldMap.put("timeZone", 6);
+            fieldMap.put("subType", 7);
         }
     }
 

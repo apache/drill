@@ -49,7 +49,21 @@ public class UnionFunctions {
   <#if !minor.class?starts_with("Decimal")>
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "as${name}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "is${name?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  public static class UnionIs${name} implements DrillSimpleFunc {
+
+    @Param UnionHolder in;
+    @Output BitHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.${name?upper_case} ? 1 : 0;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @FunctionTemplate(name = "as${name?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class CastUnion${name} implements DrillSimpleFunc {
 
     @Param UnionHolder in;

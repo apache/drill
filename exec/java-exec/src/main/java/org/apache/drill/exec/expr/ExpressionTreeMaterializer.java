@@ -17,9 +17,16 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -30,7 +37,9 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.LogicalExpressionBase;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -136,7 +145,7 @@ public class ExpressionTreeMaterializer {
     List<LogicalExpression> castArgs = Lists.newArrayList();
     castArgs.add(fromExpr);  //input_expr
 
-    if (!Types.isFixedWidthType(toType)) {
+    if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
 
       /* We are implicitly casting to VARCHAR so we don't have a max length,
        * using an arbitrary value. We trim down the size of the stored bytes
@@ -241,6 +250,10 @@ public class ExpressionTreeMaterializer {
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
+      if (hasUnionInput(call)) {
+        return rewriteUnionFunction(call, functionLookupContext);
+      }
+
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
 
@@ -314,6 +327,74 @@ public class ExpressionTreeMaterializer {
       return NullExpression.INSTANCE;
     }
 
+    private boolean hasUnionInput(FunctionCall call) {
+      for (LogicalExpression arg : call.args) {
+        if (arg.getMajorType().getMinorType() == MinorType.UNION) {
+          if (!call.getName().toLowerCase().startsWith("as") && !call.getName().toLowerCase().startsWith("is") && !call.getName().toLowerCase().startsWith("typeof")) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    private LogicalExpression rewriteUnionFunction(FunctionCall call, FunctionLookupContext functionLookupContext) {
+      LogicalExpression[] args = new LogicalExpression[call.args.size()];
+      call.args.toArray(args);
+
+      for (int i = 0; i < args.length; i++) {
+        LogicalExpression arg = call.args.get(i);
+        MajorType majorType = arg.getMajorType();
+
+        if (majorType.getMinorType() != MinorType.UNION) {
+          continue;
+        }
+
+        List<MinorType> subTypes = majorType.getSubTypeList();
+        Preconditions.checkState(subTypes.size() > 0, "Union type has no subtypes");
+
+        Queue<IfCondition> ifConditions = Lists.newLinkedList();
+
+        for (MinorType minorType : subTypes) {
+          LogicalExpression ifCondition = getIsTypeExpressionForType(minorType, arg.accept(new CloneVisitor(), null));
+          args[i] = getUnionCastExpressionForType(minorType, arg.accept(new CloneVisitor(), null));
+
+          List<LogicalExpression> newArgs = Lists.newArrayList();
+          for (LogicalExpression e : args) {
+            newArgs.add(e.accept(new CloneVisitor(), null));
+          }
+
+          LogicalExpression thenExpression = new FunctionCall(call.getName(), newArgs, call.getPosition());
+          IfExpression.IfCondition condition = new IfCondition(ifCondition, thenExpression);
+          ifConditions.add(condition);
+        }
+
+        LogicalExpression ifExpression = ifConditions.poll().expression;
+
+        while (!ifConditions.isEmpty()) {
+          ifExpression = IfExpression.newBuilder().setIfCondition(ifConditions.poll()).setElse(ifExpression).build();
+        }
+
+        args[i] = ifExpression;
+        return ifExpression.accept(this, functionLookupContext);
+      }
+      throw new UnsupportedOperationException("Did not find any Union input types");
+    }
+
+    private LogicalExpression getUnionCastExpressionForType(MinorType type, LogicalExpression arg) {
+      String castFuncName = String.format("as%s", type.toString());
+      List<LogicalExpression> args = Lists.newArrayList();
+      args.add(arg);
+      return new FunctionCall(castFuncName, args, ExpressionPosition.UNKNOWN);
+    }
+
+    private LogicalExpression getIsTypeExpressionForType(MinorType type, LogicalExpression arg) {
+      String isFuncName = String.format("is%s", type.toString());
+      List<LogicalExpression> args = Lists.newArrayList();
+      args.add(arg);
+      return new FunctionCall(isFuncName, args, ExpressionPosition.UNKNOWN);
+    }
+
     @Override
     public LogicalExpression visitIfExpression(IfExpression ifExpr, FunctionLookupContext functionLookupContext) {
       IfExpression.IfCondition conditions = ifExpr.ifCondition;
@@ -328,19 +409,35 @@ public class ExpressionTreeMaterializer {
       if (unionTypeEnabled) {
         if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
-          MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType((Arrays.asList(thenType, elseType)));
-          if (leastRestrictive != thenType) {
+          MinorType leastRestrictive = MinorType.UNION;
+          MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
+          if (thenType == MinorType.UNION) {
+            for (MinorType subType : conditions.expression.getMajorType().getSubTypeList()) {
+              builder.addSubType(subType);
+            }
+          } else {
+            builder.addSubType(thenType);
+          }
+          if (elseType == MinorType.UNION) {
+            for (MinorType subType : newElseExpr.getMajorType().getSubTypeList()) {
+              builder.addSubType(subType);
+            }
+          } else {
+            builder.addSubType(elseType);
+          }
+          MajorType unionType = builder.build();
+//          if (leastRestrictive != thenType) {
             // Implicitly cast the then expression
             conditions = new IfExpression.IfCondition(newCondition,
-                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
-          } else if (leastRestrictive != elseType) {
+                    addCastExpression(conditions.expression, unionType, functionLookupContext, errorCollector));
+//          } if (leastRestrictive != elseType) {
             // Implicitly cast the else expression
-            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
-          } else {
-            conditions = new IfExpression.IfCondition(newCondition,
-                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
-            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
-          }
+            newElseExpr = addCastExpression(newElseExpr, unionType, functionLookupContext, errorCollector);
+//          } else {
+//            conditions = new IfExpression.IfCondition(newCondition,
+//                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
+//            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
+//          }
         }
 
       } else {
