@@ -311,11 +311,7 @@ supports the creation of metadata in the file system.
     +----------+-------------------+-----------+----------+--------+----------+-------------+
     1 row selected
 
-Once the users get an idea on what data is available by exploring it directly
-from file system , views can be used as a way to take the data in downstream
-tools like Tableau, Microstrategy etc for downstream analysis and
-visualization. For these tools, a view appears simply as a “table” with
-selectable “columns” in it.
+Once the users know what data is available by exploring it directly from the file system, views can be used as a way to read the data into downstream tools such as Tableau and MicroStrategy for analysis and visualization. For these tools, a view appears simply as a “table” with selectable “columns” in it.
 
 ## Query Across Data Sources
 

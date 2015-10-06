@@ -17,8 +17,6 @@ OS = 8G
 
 If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Yarn 20G.
 
-{% include startnote.html %}Drill will execute queries within Yarn soon.{% include endnote.html %} [DRILL-142](https://issues.apache.org/jira/browse/DRILL-142)
-
 YARN consists of two main services:
 
 * ResourceManager  

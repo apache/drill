@@ -3,9 +3,9 @@ title: "SQL Window Functions Introduction"
 parent: "SQL Window Functions"
 ---
 
-Window functions operate on a set of rows and return a single value for each row from the underlying query. The term window describes the set of rows on which the function operates. A window function uses values from the rows in a window to calculate the returned values. 
+Window functions operate on a set of rows and return a single value for each row from the underlying query. The term window describes the set of rows on which the function operates. A window function uses values from the rows in a window to calculate the returned values.  
 
-When you use a window function in a query, you specify a window using the OVER() clause. The OVER() clause differentiates window functions from other analytical and reporting functions. 
+When you use a window function in a query, define the window using the OVER() clause. The OVER() clause (window definition) differentiates window functions from other analytical and reporting functions. A query can include multiple window functions with the same or different window definitions. 
 
 The OVER() clause has the following capabilities:  
 
@@ -74,29 +74,29 @@ The following query uses the AVG() window function with the PARTITION BY clause 
 
 Currently, Drill supports the following value, aggregate, and ranking window functions:  
 
-Value
+[Value]({{site.baseurl}}/docs/value-window-functions/)
 
-* FIRST_VALUE()
-* LAG()
-* LAST_VALUE()
-* LEAD() 
+* [FIRST_VALUE()]({{site.baseurl}}/docs/value-window-functions/#first_value-|-last_value)
+* [LAG()]({{site.baseurl}}/docs/value-window-functions/#lag-|-lead)
+* [LAST_VALUE()]({{site.baseurl}}/docs/value-window-functions/#first_value-|-last_value)
+* [LEAD()]({{site.baseurl}}/docs/value-window-functions/#lag-|-lead) 
 
-Aggregate   
+[Aggregate]({{site.baseurl}}/docs/aggregate-window-functions/)   
 
-* AVG()
-* COUNT()
-* MAX()
-* MIN()
-* SUM()
+* [AVG()]({{site.baseurl}}/docs/aggregate-window-functions/)
+* [COUNT()]({{site.baseurl}}/docs/aggregate-window-functions/)
+* [MAX()]({{site.baseurl}}/docs/aggregate-window-functions/)
+* [MIN()]({{site.baseurl}}/docs/aggregate-window-functions/)
+* [SUM()]({{site.baseurl}}/docs/aggregate-window-functions/)
 
-Ranking  
+[Ranking]({{site.baseurl}}/docs/ranking-window-functions/)  
 
-* CUME_DIST()
-* DENSE_RANK()
-* NTILE()
-* PERCENT_RANK()
-* RANK()
-* ROW_NUMBER()
+* [CUME_DIST()]({{site.baseurl}}/docs/ranking-window-functions/)
+* [DENSE_RANK()]({{site.baseurl}}/docs/ranking-window-functions/)
+* [NTILE()]({{site.baseurl}}/docs/ranking-window-functions/)
+* [PERCENT_RANK()]({{site.baseurl}}/docs/ranking-window-functions/)
+* [RANK()]({{site.baseurl}}/docs/ranking-window-functions/)
+* [ROW_NUMBER()]({{site.baseurl}}/docs/ranking-window-functions/)
 
 All of the ranking functions depend on the sort ordering specified by the ORDER BY clause of the associated window definition. Rows that are not distinct in the ordering are called peers. The ranking functions are defined so that they give the same answer for any two peer rows.  
 
