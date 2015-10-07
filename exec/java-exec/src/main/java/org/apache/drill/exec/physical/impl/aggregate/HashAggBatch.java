@@ -256,7 +256,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     cg.setMappingSet(UpdateAggrValuesMapping);
 
     for (LogicalExpression aggr : aggrExprs) {
-      HoldingContainer hc = cg.addExpr(aggr);
+      HoldingContainer hc = cg.addExpr(aggr, true);
     }
   }
 

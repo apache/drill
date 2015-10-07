@@ -18,14 +18,17 @@
 package org.apache.drill.exec.expr;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import com.google.common.collect.Maps;
-import com.sun.codemodel.JOp;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -51,10 +54,13 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
@@ -78,6 +84,8 @@ import com.sun.codemodel.JVar;
  * Visitor that generates code for eval
  */
 public class EvaluationVisitor {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EvaluationVisitor.class);
+
 
   private final FunctionImplementationRegistry registry;
 
@@ -94,7 +102,59 @@ public class EvaluationVisitor {
     } else {
       constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
     }
-    return e.accept(new ConstantFilter(constantBoundaries), generator);
+    return e.accept(new CSEFilter(constantBoundaries), generator);
+  }
+
+  private class ExpressionHolder {
+    private LogicalExpression expression;
+    private GeneratorMapping mapping;
+    private MappingSet mappingSet;
+
+    ExpressionHolder(LogicalExpression expression, MappingSet mappingSet) {
+      this.expression = expression;
+      this.mapping = mappingSet.getCurrentMapping();
+      this.mappingSet = mappingSet;
+    }
+
+    @Override
+    public int hashCode() {
+      return expression.accept(new HashVisitor(), null);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof ExpressionHolder)) {
+        return false;
+      }
+      ExpressionHolder that = (ExpressionHolder) obj;
+      return this.mappingSet == that.mappingSet && this.mapping == that.mapping && expression.accept(new EqualityVisitor(), that.expression);
+    }
+  }
+
+  Map<ExpressionHolder,HoldingContainer> previousExpressions = Maps.newHashMap();
+
+  Stack<Map<ExpressionHolder,HoldingContainer>> mapStack = new Stack();
+
+  void newScope() {
+    mapStack.push(previousExpressions);
+    previousExpressions = new HashMap(previousExpressions);
+  }
+
+  void leaveScope() {
+    previousExpressions.clear();
+    previousExpressions = mapStack.pop();
+  }
+
+  private HoldingContainer getPrevious(LogicalExpression expression, MappingSet mappingSet) {
+    HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mappingSet));
+    if (previous != null) {
+      logger.debug("Found previously evaluated expression: {}", ExpressionStringBuilder.toString(expression));
+    }
+    return previous;
+  }
+
+  private void put(LogicalExpression expression, HoldingContainer hc, MappingSet mappingSet) {
+    previousExpressions.put(new ExpressionHolder(expression, mappingSet), hc);
   }
 
   private class EvalVisitor extends AbstractExprVisitor<HoldingContainer, ClassGenerator<?>, RuntimeException> {
@@ -731,6 +791,261 @@ public class EvaluationVisitor {
       return out;
     }
 
+  }
+
+  private class CSEFilter extends ConstantFilter {
+
+    public CSEFilter(Set<LogicalExpression> constantBoundaries) {
+      super(constantBoundaries);
+    }
+
+    @Override
+    public HoldingContainer visitFunctionCall(FunctionCall call, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(call, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitFunctionCall(call, generator);
+        put(call, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holder, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(holder, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitFunctionHolderExpression(holder, generator);
+        put(holder, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitIfExpression(IfExpression ifExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(ifExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitIfExpression(ifExpr, generator);
+        put(ifExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitBooleanOperator(BooleanOperator call, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(call, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitBooleanOperator(call, generator);
+        put(call, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitSchemaPath(SchemaPath path, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(path, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitSchemaPath(path, generator);
+        put(path, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitIntConstant(IntExpression intExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(intExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitIntConstant(intExpr, generator);
+        put(intExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitFloatConstant(FloatExpression fExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(fExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitFloatConstant(fExpr, generator);
+        put(fExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitLongConstant(LongExpression longExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(longExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitLongConstant(longExpr, generator);
+        put(longExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDateConstant(DateExpression dateExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(dateExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDateConstant(dateExpr, generator);
+        put(dateExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitTimeConstant(TimeExpression timeExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(timeExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitTimeConstant(timeExpr, generator);
+        put(timeExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitTimeStampConstant(TimeStampExpression timeStampExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(timeStampExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitTimeStampConstant(timeStampExpr, generator);
+        put(timeStampExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression intervalYearExpression, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(intervalYearExpression, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitIntervalYearConstant(intervalYearExpression, generator);
+        put(intervalYearExpression, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitIntervalDayConstant(IntervalDayExpression intervalDayExpression, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(intervalDayExpression, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitIntervalDayConstant(intervalDayExpression, generator);
+        put(intervalDayExpression, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDecimal9Constant(Decimal9Expression decExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(decExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDecimal9Constant(decExpr, generator);
+        put(decExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDecimal18Constant(Decimal18Expression decExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(decExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDecimal18Constant(decExpr, generator);
+        put(decExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDecimal28Constant(Decimal28Expression decExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(decExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDecimal28Constant(decExpr, generator);
+        put(decExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDecimal38Constant(Decimal38Expression decExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(decExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDecimal38Constant(decExpr, generator);
+        put(decExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitDoubleConstant(DoubleExpression dExpr, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(dExpr, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitDoubleConstant(dExpr, generator);
+        put(dExpr, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitBooleanConstant(BooleanExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitBooleanConstant(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitQuotedStringConstant(QuotedString e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitQuotedStringConstant(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitNullConstant(TypedNullConstant e, ClassGenerator<?> generator) throws RuntimeException {
+      return super.visitNullConstant(e, generator);
+    }
+
+    @Override
+    public HoldingContainer visitNullExpression(NullExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitNullExpression(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitUnknown(LogicalExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (e instanceof ValueVectorReadExpression) {
+        HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+        if (hc == null) {
+          hc = super.visitUnknown(e, generator);
+          put(e, hc, generator.getMappingSet());
+        }
+        return hc;
+      }
+      return super.visitUnknown(e, generator);
+    }
+
+    @Override
+    public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitCastExpression(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
+    public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitConvertExpression(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
   }
 
   private class ConstantFilter extends EvalVisitor {

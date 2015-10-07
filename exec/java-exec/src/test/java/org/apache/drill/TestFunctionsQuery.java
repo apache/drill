@@ -251,6 +251,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .go();
   }
 
+  @Ignore("DRILL-3909")
   @Test
   public void testRoundWithScaleDecimalFunction() throws Exception {
     String query = "SELECT " +
