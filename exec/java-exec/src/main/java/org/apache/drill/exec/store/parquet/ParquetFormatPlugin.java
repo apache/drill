@@ -223,7 +223,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
         }
         return new FileSelection(fileNames, true);
       } else {
-        return selection.minusDirectories(fs);
+        // don't expand yet; ParquetGroupScan's metadata gathering operation
+        // does that.
+        return selection;
       }
     }
 
