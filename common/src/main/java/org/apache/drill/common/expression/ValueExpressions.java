@@ -641,6 +641,10 @@ public class ValueExpressions {
       super(value, pos);
     }
 
+    public String getString() {
+      return value;
+    }
+
     @Override
     protected String parseValue(String s) {
       return s;

@@ -147,7 +147,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
-    cg.addExpr(new ReturnValueExpression(expr));
+    cg.addExpr(new ReturnValueExpression(expr), false, true);
 
     for (final VectorWrapper<?> vw : incoming) {
       for (final ValueVector vv : vw.getValueVectors()) {
@@ -181,7 +181,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
 
-    cg.addExpr(new ReturnValueExpression(expr));
+    cg.addExpr(new ReturnValueExpression(expr), false, true);
 
     for (final VectorWrapper<?> v : incoming) {
       final TransferPair pair = v.getValueVector().makeTransferPair(container.addOrGet(v.getField(), callBack));

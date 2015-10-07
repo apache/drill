@@ -324,4 +324,9 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     return null;
   }
 
+  @Override
+  public Void visitUnknown(LogicalExpression e, StringBuilder sb) {
+    sb.append(e.toString());
+    return null;
+  }
 }

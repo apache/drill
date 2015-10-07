@@ -44,6 +44,7 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.HashVisitor;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
@@ -352,7 +353,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               allocationVectors.add(vv);
               final TypedFieldId fid = container.getValueVectorId(outputField.getPath());
               final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
-              final HoldingContainer hc = cg.addExpr(write);
+              final HoldingContainer hc = cg.addExpr(write, false, true);
             }
           }
           continue;
@@ -415,7 +416,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
         ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
-        cg.addExpr(expr);
+        cg.addExpr(expr, false, true);
       } else {
         // need to do evaluation.
         final ValueVector vector = container.addOrGet(outputField, callBack);
@@ -423,7 +424,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final TypedFieldId fid = container.getValueVectorId(outputField.getPath());
         final boolean useSetSafe = !(vector instanceof FixedWidthVector);
         final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
-        final HoldingContainer hc = cg.addExpr(write);
+        final HoldingContainer hc = cg.addExpr(write, false, true);
 
         // We cannot do multiple transfers from the same vector. However we still need to instantiate the output vector.
         if (expr instanceof ValueVectorReadExpression) {

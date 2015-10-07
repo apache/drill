@@ -87,4 +87,9 @@ public class ValueVectorReadExpression implements LogicalExpression{
     return 0; // TODO
   }
 
+  @Override
+  public String toString() {
+    return "ValueVectorReadExpression [fieldId=" + fieldId + "]";
+  }
+
 }

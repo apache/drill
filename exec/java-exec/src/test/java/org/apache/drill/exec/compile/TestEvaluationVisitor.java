@@ -68,7 +68,7 @@ public class TestEvaluationVisitor {
         .build();
     ValueVectorWriteExpression e2 = new ValueVectorWriteExpression(outId, e, true);
 
-    v.addExpr(e2,  g.getRoot());
+    v.addExpr(e2,  g.getRoot(), false);
     System.out.println(g.generateAndGet());
   }
 
