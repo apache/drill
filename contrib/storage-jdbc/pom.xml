@@ -163,6 +163,7 @@
         <configuration>
           <monitorKey>inmemdb</monitorKey>
           <monitorPort>11527</monitorPort>
+          <skip>${skipTests}</skip>
         </configuration>
         <executions>
           <execution>
