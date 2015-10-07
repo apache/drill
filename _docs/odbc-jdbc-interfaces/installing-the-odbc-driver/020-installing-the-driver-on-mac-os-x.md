@@ -31,7 +31,7 @@ To install the driver, you need Administrator privileges on the computer.
 
 Click the following link to download the driver:  
 
-[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.1.0.1000/MapRDrillODBC.dmg)
+[MapR Drill ODBC Driver for Mac](http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.0.1000/MapRDrillODBC.dmg)
 
 ----------
 
