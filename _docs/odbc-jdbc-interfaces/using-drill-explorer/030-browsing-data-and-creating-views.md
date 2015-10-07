@@ -34,7 +34,7 @@ The following example defines and saves a view of a few columns of `nation.parqu
 3. In the **Schemas** section on the **Browse** tab, navigate to the `/sample-data/nation.parquet` in the `dfs.default` schema. 
 4. On the **SQL** tab, in the **View Definition SQL** field, enter a query, as described in the [Specifying Column Names](). For example, modify the SELECT statement as follows:
 
-        SELECT N_NAME, N_REGIONKEY FROM `dfs.default`.`./Users/drilluser/drill/apache-drill-1.0.0/sample-data/nation.parquet` WHERE N_REGIONKEY IN (2, 4)
+        SELECT N_NAME, N_REGIONKEY FROM `dfs.default`.`./Users/drilluser/drill/sample-data/nation.parquet` WHERE N_REGIONKEY IN (2, 4)
    Do not put a semicolon at the end of the SQL statement.  
 5. Click **Preview**.
    ![nation parquet]({{ site.baseurl }}/docs/img/odbc-define-view.png) 

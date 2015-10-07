@@ -15,7 +15,7 @@ This release of Drill fixes [many issues]() and introduces a number of enhanceme
 
 * A number of new [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)  
   * [NTILE]({{site.baseurl}}/docs/ranking-window-functions/#ntile)  
-  * [LEAD and LEAD]({{site.baseurl}}/docs/value-window-functions/#lag-lead)  
+  * [LAG and LEAD]({{site.baseurl}}/docs/value-window-functions/#lag-lead)  
   * [FIRST_VALUE and LAST_VALUE]({{site.baseurl}}/docs/value-window-functions/#first_value-last_value)  
 * [Security]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web Console and REST API operations  
 * Performance improvements for [querying HBase]({{site.baseurl}}/docs/querying-hbase/#querying-big-endian-encoded-data), which includes leveraging [ordered byte encoding]({{site.baseurl}}/docs/querying-hbase/#leveraging-hbase-ordered-byte-encoding)  

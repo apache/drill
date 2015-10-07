@@ -7,7 +7,7 @@ The MapR Drill ODBC driver installer automatically installs the TDC file if the 
 **To install the MapRDrillODBC.TDC file manually:**
 
 1. Click **Start**, and locate the Install Tableau TDC File app that the MapR Drill ODBC Driver installer installed.   
-   For example, on Windows 8.1 in Apps, the Install Tableau TDC File appears under MaprDrill ODBC Driver 1.0:
+   For example, on Windows 8.1 in Apps, the Install Tableau TDC File appears under MaprDrill ODBC Driver:
    ![]({{ site.baseurl }}/docs/img/odbc-mapr-drill-apps.png)
 
 2. Click **Install Tableau TDC File**. 

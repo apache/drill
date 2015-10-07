@@ -25,8 +25,8 @@ To test the ODBC connection on a Linux cluster, follow these steps:
 
 1. [Start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/). For example, to start Drill in local mode on a linux cluster:  
 
-        [root@centos23 drill-1.0.0]# bin/drill-localhost
-        apache drill 1.0.0 
+        [root@centos23 drill-1.2.0]# bin/drill-localhost
+        apache drill 1.2.0 
         "the only truly happy people are children, the creative minority and drill users"
 
 2. In the `samples` directory of the driver manager installation, run `iodbctest` or `iodbctestw`.  
@@ -58,7 +58,7 @@ To test the ODBC connection on a Linux cluster, follow these steps:
         DSN=<DSN Name>;ConnectionType=ZooKeeper;ZKQuorum=<Server1:Port1>,<Server2:Port2>;ZKClusterID=<Cluster Name>`
 
      The output of a successful test is:  
-     `Driver: 1.0.0.1001 (MapR Drill ODBC Driver)  
+     `Driver: 1.2.0.1001 (MapR Drill ODBC Driver)  
      SQL> `  
      After the `SQL>` prompt appears, type `quit;`, and go to the Drill shell to run commands. Do not attempt to run SQL commands from this prompt.
 

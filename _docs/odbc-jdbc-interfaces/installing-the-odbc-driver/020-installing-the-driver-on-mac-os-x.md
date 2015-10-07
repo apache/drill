@@ -56,7 +56,7 @@ To check the version of the driver you installed, use the following command on t
 
     $ pkgutil --info mapr.drillodbc
     package-id: mapr.drillodbc
-    version: 1.0.0
+    version: 1.2.0
     volume: /
     location: 
     install-time: 1433465518

@@ -50,7 +50,12 @@ If you select ZooKeeper Quorum, provide values for the following properties:
  Check the `drill-override.conf` file for the cluster name.
 ![]({{ site.baseurl }}/docs/img/odbc-configure3.png)
 
-[Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/), [logging options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options), and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/) sections describe the options at the bottom of this dialog.
+The [Advanced Properties]({{site.baseurl}}/docs/odbc-configuration-reference/) section describes the advanced properties.
+
+Select the Disable Async option to disable the asynchronous ODBC connection and enable a synchronous ODBC connection for performance reasons. By default the ODBC connection is asynchronous (Disable Asynch is not checked). A change in state occurs during driver initialization and is propagated to all driver DSNs.
+
+
+[Logging Options]({{site.baseurl}}/docs/odbc-configuration-reference/#logging-options) and [Drill Explorer]({{site.baseurl}}/docs/drill-explorer-introduction/) sections describe the options at the bottom of this dialog.
 
 ### Next Step
 

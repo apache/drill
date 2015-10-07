@@ -158,6 +158,7 @@ file. This configures the driver to work with your ODBC driver manager. The foll
 
     . . .
     [Driver]
+    DisableAsync=0
     DriverManagerEncoding=UTF-32
     ErrorMessagesPath=/opt/mapr/drillodbc/ErrorMessages
     LogLevel=0
@@ -176,15 +177,17 @@ file. This configures the driver to work with your ODBC driver manager. The foll
 
 To configure the MapR Drill ODBC Driver in the `mapr.drillodbc.ini` configuration file, complete the following steps:
 
-  1. Open the `mapr.drillodbc.ini` configuration file in a text editor.
-  2. Edit the DriverManagerEncoding setting if necessary. The value is typically UTF-16 or UTF-32, but depends on the driver manager used. iODBC uses UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager documentation for the correct setting.
-  3. Edit the `ODBCInstLib` setting. The value is the name of the `ODBCInst` shared library for the ODBC driver manager that you use. The configuration file defaults to the shared library for `iODBC`. In Linux, the shared library name for iODBC is `libiodbcinst.so`. 
+  1. Open the `mapr.drillodbc.ini` configuration file in a text editor.  
+  2. Edit the DisableAsync setting if you want to enable a synchronous ODBC connection for performance reasons. Change the default 0 to 1 to disable the asynchronous and enable the synchronous connection.  
+     A change in state occurs during driver initialization and is propagated to all driver DSNs.  
+  3. Edit the DriverManagerEncoding setting if necessary. The value is typically UTF-16 or UTF-32, but depends on the driver manager used. iODBC uses UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager documentation for the correct setting.  
+  4. Edit the `ODBCInstLib` setting. The value is the name of the `ODBCInst` shared library for the ODBC driver manager that you use. The configuration file defaults to the shared library for `iODBC`. In Linux, the shared library name for iODBC is `libiodbcinst.so`.  
      
      Specify an absolute or relative filename for the library. If you use
 the relative file name, include the path to the library in the library path
 environment variable. The library path environment variable is named
-`LD_LIBRARY_PATH`. 
-  4. Save the `mapr.drillodbc.ini` configuration file.
+`LD_LIBRARY_PATH`.  
+  5. Save the `mapr.drillodbc.ini` configuration file.
 
 ### Next Step
 
