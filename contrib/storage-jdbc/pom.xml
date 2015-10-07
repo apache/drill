@@ -181,7 +181,7 @@
               <port>${derby.reserved.port}</port>
               <sources>
                 <script>
-                  <sourceFile>src/test/resources/derby-test-data.sql</sourceFile>
+                    <sourceFile>${basedir}/src/test/resources/derby-test-data.sql</sourceFile>
                 </script>
               </sources>
             </configuration>
