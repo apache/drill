@@ -46,9 +46,7 @@ To compare, you can run a query using the AVG() function as a standard set funct
 
 The query returns one row with the average of all the values in the specified column instead of returning values for each row.  
 
-You can also include the optional PARTITION BY and ORDER BY clauses in a query. The PARTITION BY clause subdivides the window into partitions. The ORDER BY clause defines the logical order of the rows within each partition of the result set.  
-
-Window functions are applied to the rows within each partition and sorted according to the order specification.  
+You can also include the optional PARTITION BY and ORDER BY clauses in a query. The PARTITION BY clause subdivides the window into partitions. The ORDER BY clause defines the logical order of the rows within each partition of the result set. Window functions are applied to the rows within each partition and sorted according to the order specification.  
 
 The following query uses the AVG() window function with the PARTITION BY clause to determine the average car sales for each dealer in Q1:  
 
@@ -67,7 +65,26 @@ The following query uses the AVG() window function with the PARTITION BY clause 
        | Abel Kim        | 3          | 12369  | 12368     |
        | May Stout       | 3          | 9308   | 12368     |
        +-----------------+------------+--------+-----------+
-       10 rows selected (0.215 seconds)
+       10 rows selected (0.215 seconds)  
+
+The following query uses the AVG() and ROW_NUM() window functions to determine the average car sales for each dealer in Q1 and assign a row number to each row in a partition:  
+
+       select dealer_id, sales, emp_name,row_number() over (partition by dealer_id order by sales) as `row`,avg(sales) over (partition by dealer_id) as avgsales from q1_sales;
+       +------------+--------+-----------------+------+---------------+
+       | dealer_id  | sales  |    emp_name     | row  |      avgsales |
+       +------------+--------+-----------------+------+---------------+
+       | 1          | 8227   | Raphael Hull    | 1    | 14356         |
+       | 1          | 9710   | Jack Salazar    | 2    | 14356         |
+       | 1          | 19745  | Ferris Brown    | 3    | 14356         |
+       | 1          | 19745  | Noel Meyer      | 4    | 14356         |
+       | 2          | 9308   | Haviva Montoya  | 1    | 13924         |
+       | 2          | 16233  | Beverly Lang    | 2    | 13924         |
+       | 2          | 16233  | Kameko French   | 3    | 13924         |
+       | 3          | 9308   | May Stout       | 1    | 12368         |
+       | 3          | 12369  | Abel Kim        | 2    | 12368         |
+       | 3          | 15427  | Ursa George     | 3    | 12368         |
+       +------------+--------+-----------------+------+---------------+
+       10 rows selected (0.37 seconds)  
 
 
 ## Types of Window Functions  
@@ -190,4 +207,5 @@ The following delimiters define the frame:
 * Window functions precede ORDER BY.  
 * Drill processes window functions after the WHERE, GROUP BY, and HAVING clauses.  
 * Including the OVER() clause after an aggregate set function turns the function into an aggregate window function. 
-* You can use window functions to aggregate over any number of rows in the window frame. 
+* You can use window functions to aggregate over any number of rows in the window frame.
+* If you want to run a window function on the result set returned by the FLATTEN clause, use FLATTEN in a subquery. For example: ``select x, y, a, sum(x) over() from  ( select x , y, flatten(z) as a from `complex.json`); ``
