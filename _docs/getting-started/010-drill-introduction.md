@@ -13,14 +13,21 @@ with existing Apache Hive and Apache HBase deployments.
 
 This release of Drill fixes [many issues]() and introduces a number of enhancements, including the following ones:
 
+* Partition pruning improvements
+* [Native file readers for Parquet]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables)
 * A number of new [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)  
-  * [NTILE]({{site.baseurl}}/docs/ranking-window-functions/#ntile)  
-  * [LAG and LEAD]({{site.baseurl}}/docs/value-window-functions/#lag-lead)  
-  * [FIRST_VALUE and LAST_VALUE]({{site.baseurl}}/docs/value-window-functions/#first_value-last_value)  
-* [Security]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web Console and REST API operations  
+  * NTILE  
+  * LAG and LEAD  
+  * FIRST_VALUE and LAST_VALUE  
+* [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) for Web Console operations  
 * Performance improvements for [querying HBase]({{site.baseurl}}/docs/querying-hbase/#querying-big-endian-encoded-data), which includes leveraging [ordered byte encoding]({{site.baseurl}}/docs/querying-hbase/#leveraging-hbase-ordered-byte-encoding)  
 * [Optimized reads]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables) of Parquet-backed, Hive tables  
-* Read support for the [Parquet INT96 type]({{site.baseurl}}/docs/parquet-format/#about-int96-support) and a new TIMESTAMP_IMPALA type used with the [CONVERT_FROM]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) function decodes a timestamp from Hive or Impala.   -->
+* Read support for the [Parquet INT96 type]({{site.baseurl}}/docs/parquet-format/#about-int96-support) and a new TIMESTAMP_IMPALA type used with the [CONVERT_FROM]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) function decodes a timestamp from Hive or Impala.  
+* [Parquet metadata caching]({{site.baseurl}}/docs/optimizing-parquet-metadata-reading/) to improve query performance on a large number of files
+* DROP TABLE command  
+* Improved correlated subqueries  
+* Union Distinct  
+* Improved LIMIT processing   -->
 
 ## What's New in Apache Drill 1.1
 
