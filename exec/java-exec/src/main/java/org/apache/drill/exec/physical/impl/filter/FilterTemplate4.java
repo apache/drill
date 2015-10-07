@@ -21,6 +21,7 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.SkippingRecordLogger;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -33,7 +34,7 @@ public abstract class FilterTemplate4 implements Filterer {
   private TransferPair[] transfers;
 
   @Override
-  public void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, TransferPair[] transfers)
+  public void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, TransferPair[] transfers, SkippingRecordLogger skipRecordLogging)
       throws SchemaChangeException {
     this.transfers = transfers;
     this.outgoingSelectionVector = outgoing.getSelectionVector4();

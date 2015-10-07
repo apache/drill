@@ -86,6 +86,14 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     this.initializer = initializer;
   }
 
+  public FunctionAttributes getFunctionAttributes() {
+    return attributes;
+  }
+
+  public FunctionInitializer getInitializer() {
+    return initializer;
+  }
+
   protected String meth(String methodName) {
     return meth(methodName, true);
   }

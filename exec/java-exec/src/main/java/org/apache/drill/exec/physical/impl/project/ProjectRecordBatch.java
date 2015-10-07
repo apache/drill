@@ -18,10 +18,17 @@
 package org.apache.drill.exec.physical.impl.project;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JPrimitiveType;
+import com.sun.codemodel.JType;
+import com.sun.codemodel.JVar;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -52,10 +59,13 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
+import org.apache.drill.exec.expr.fn.DrillSimpleFuncHolderError;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.SkippingRecordLogger;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -63,6 +73,11 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.schema.Record;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -86,6 +101,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private static final String EMPTY_STRING = "";
   private boolean first = true;
 
+  private SelectionVector2 sv2 = null;
+  private final SkippingRecordLogger skipRecordLogging;
+
   private class ClassifierResult {
     public boolean isStar = false;
     public List<String> outputNames;
@@ -105,8 +123,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
   }
 
-  public ProjectRecordBatch(final Project pop, final RecordBatch incoming, final FragmentContext context) throws OutOfMemoryException {
+  public ProjectRecordBatch(final Project pop, final RecordBatch incoming, final FragmentContext context) throws ExecutionSetupException, OutOfMemoryException {
     super(pop, context, incoming);
+    this.skipRecordLogging = SkippingRecordLogger.createLogger(context, incoming);
   }
 
   @Override
@@ -114,13 +133,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     return recordCount;
   }
 
-
   @Override
   protected void killIncoming(final boolean sendUpstream) {
     super.killIncoming(sendUpstream);
     hasRemainder = false;
   }
-
 
   @Override
   public IterOutcome innerNext() {
@@ -173,6 +190,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     final int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
+    final int skippedRecords = isSkipRecord() ? skipRecordLogging.getNumSkippedRecordAndClear() : 0;
     if (outputRecords < incomingRecordCount) {
       setValueCount(outputRecords);
       hasRemainder = true;
@@ -185,6 +203,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
       this.recordCount = outputRecords;
     }
+    this.recordCount -= skippedRecords;
+
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
     if (complexWriters != null) {
@@ -201,6 +221,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       return;
     }
     final int projRecords = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
+    final int skippedRecords = isSkipRecord() ? skipRecordLogging.getNumSkippedRecordAndClear() : 0;
     if (projRecords < remainingRecordCount) {
       setValueCount(projRecords);
       this.recordCount = projRecords;
@@ -214,6 +235,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
       this.recordCount = remainingRecordCount;
     }
+    this.recordCount -= skippedRecords;
+
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
     if (complexWriters != null) {
@@ -306,7 +329,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     final ClassifierResult result = new ClassifierResult();
     final boolean classify = isClassificationNeeded(exprs);
 
-    for (int i = 0; i < exprs.size(); i++) {
+    // Error Code Usage
+    final JType typeArrayList = cg.getModel().ref(ArrayList.class);
+    final JVar errorCodeList = cg.declareClassField(DrillSimpleFuncHolderError.DRILL_ERROR_CODE_ARRAY, typeArrayList);
+    cg.getSetupBlock().assign(errorCodeList, JExpr._new(typeArrayList));
+
+    final JVar errorCodeJVar = cg.declareClassField(
+        DrillSimpleFuncHolderError.DRILL_ERROR_CODE_INDEX, JPrimitiveType.parse(cg.getModel(), "int"));
+
+    for (int i = 0, errorCodeIndex = 0; i < exprs.size(); i++) {
       final NamedExpression namedExpression = exprs.get(i);
       result.clear();
 
@@ -319,6 +350,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           if (value != null && value.intValue() == 1) {
             int k = 0;
             for (final VectorWrapper<?> wrapper : incoming) {
+              if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+                continue;
+              }
               final ValueVector vvIn = wrapper.getValueVector();
               if (k > result.outputNames.size()-1) {
                 assert false;
@@ -335,6 +369,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           } else if (value != null && value.intValue() > 1) { // subsequent wildcards should do a copy of incoming valuevectors
             int k = 0;
             for (final VectorWrapper<?> wrapper : incoming) {
+              if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+                continue;
+              }
               final ValueVector vvIn = wrapper.getValueVector();
               final SchemaPath originalPath = vvIn.getField().getPath();
               if (k > result.outputNames.size()-1) {
@@ -345,7 +382,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
                 continue;
               }
 
-              final LogicalExpression expr = ExpressionTreeMaterializer.materialize(originalPath, incoming, collector, context.getFunctionRegistry() );
+              LogicalExpression expr = ExpressionTreeMaterializer.materialize(originalPath, incoming, collector, context.getFunctionRegistry() );
               if (collector.hasErrors()) {
                 throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
               }
@@ -369,7 +406,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
 
       String outputName = getRef(namedExpression).getRootSegment().getPath();
-      if (result != null && result.outputNames != null && result.outputNames.size() > 0) {
+      if (result != null
+          && result.outputNames != null
+              && result.outputNames.size() > 0
+                  && !outputName.startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
         boolean isMatched = false;
         for (int j = 0; j < result.outputNames.size(); j++) {
           if (!result.outputNames.get(j).equals(EMPTY_STRING)) {
@@ -384,17 +424,22 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
       }
 
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming,
-              collector, context.getFunctionRegistry(), true, unionTypeEnabled);
+      LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming,
+          collector, context.getFunctionRegistry(), true, unionTypeEnabled);
       final MaterializedField outputField = MaterializedField.create(outputName, expr.getMajorType());
       if (collector.hasErrors()) {
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
+      if(isSkipRecord()) {
+        expr = DrillSimpleFuncHolderError.wrapError(expr);
+      }
+
       // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-      if (expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
+      if (expr instanceof ValueVectorReadExpression
+          && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
           && !((ValueVectorReadExpression) expr).hasReadPath()
-          && !isAnyWildcard
+          && (!isAnyWildcard || outputName.startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX))
           && !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldIds()[0])) {
 
         final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
@@ -427,8 +472,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         final TypedFieldId fid = container.getValueVectorId(outputField.getPath());
         final boolean useSetSafe = !(vector instanceof FixedWidthVector);
         final ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, useSetSafe);
-        final HoldingContainer hc = cg.addExpr(write, false);
 
+
+        if(isSkipRecord()) {
+          cg.getEvalBlock().assign(errorCodeJVar, JExpr.lit(errorCodeIndex++));
+          cg.getSetupBlock().add(errorCodeList.invoke("add").arg(JExpr.newArray(JPrimitiveType.parse(cg.getModel(), "int"), 1)));
+          skipRecordLogging.addExpr(org.apache.commons.lang3.tuple.Pair.of(i, namedExpression.getExpr().toString()));
+        }
+
+        final HoldingContainer hc = cg.addExpr(write, false);
         // We cannot do multiple transfers from the same vector. However we still need to instantiate the output vector.
         if (expr instanceof ValueVectorReadExpression) {
           final ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
@@ -442,14 +494,24 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
 
+    if(isSkipRecord()) {
+      sv2 = new SelectionVector2(oContext.getAllocator());
+    }
+
     try {
+      cg.getEvalBlock()._return(errorCodeList);
       this.projector = context.getImplementationClass(cg.getCodeGenerator());
-      projector.setup(context, incoming, this, transfers);
+      projector.setup(context, incoming, this, transfers, this.skipRecordLogging);
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
     if (container.isSchemaChanged()) {
-      container.buildSchema(SelectionVectorMode.NONE);
+      if(isSkipRecord()) {
+        container.buildSchema(SelectionVectorMode.TWO_BYTE);
+      } else {
+        container.buildSchema(SelectionVectorMode.NONE);
+      }
+
       return true;
     } else {
       return false;
@@ -592,6 +654,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       final String prefix = components[0];
       result.outputNames = Lists.newArrayList();
       for(final VectorWrapper<?> wrapper : incoming) {
+        if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+          continue;
+        }
         final ValueVector vvIn = wrapper.getValueVector();
         final String name = vvIn.getField().getPath().getRootSegment().getPath();
 
@@ -612,6 +677,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
 
         for (final VectorWrapper<?> wrapper : incoming) {
+          if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+            continue;
+          }
           final ValueVector vvIn = wrapper.getValueVector();
           final String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
           // get the prefix of the name
@@ -635,6 +703,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         result.outputNames = Lists.newArrayList();
         if (exprContainsStar) {
           for (final VectorWrapper<?> wrapper : incoming) {
+            if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+              continue;
+            }
             final ValueVector vvIn = wrapper.getValueVector();
             final String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
             if (refContainsStar) {
@@ -658,6 +729,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     else if(exprIsStar) {
       result.outputNames = Lists.newArrayList();
       for (final VectorWrapper<?> wrapper : incoming) {
+        if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+          continue;
+        }
         final ValueVector vvIn = wrapper.getValueVector();
         final String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
         addToResultMaps(incomingName, result, true); // allow dups since this is likely top-level project
@@ -679,6 +753,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
 
       for (final VectorWrapper<?> wrapper : incoming) {
+        if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+          continue;
+        }
         final ValueVector vvIn = wrapper.getValueVector();
         final String name = vvIn.getField().getPath().getRootSegment().getPath();
         final String[] components = name.split(StarColumnHelper.PREFIX_DELIMITER, 2);
@@ -716,6 +793,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
       result.outputNames = Lists.newArrayList();
       for (final VectorWrapper<?> wrapper : incoming) {
+        if(wrapper.getValueVector().getField().getPath().getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+          continue;
+        }
         final ValueVector vvIn = wrapper.getValueVector();
         final String incomingName = vvIn.getField().getPath().getRootSegment().getPath();
         if (expr.getPath().equalsIgnoreCase(incomingName)) {  // case insensitive matching of field name.
@@ -724,5 +804,32 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
       }
     }
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    if(!isSkipRecord()) {
+      throw new IllegalStateException("Selection vector would not be associated with " + this.getClass()
+          + " unless Skip Record is enabled");
+    }
+
+    return sv2;
+  }
+
+  @Override
+  public void close() {
+    if (sv2 != null) {
+      sv2.clear();
+    }
+
+    if(skipRecordLogging != null) {
+      skipRecordLogging.flush();
+    }
+
+    super.close();
+  }
+
+  private boolean isSkipRecord() {
+    return context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD);
   }
 }

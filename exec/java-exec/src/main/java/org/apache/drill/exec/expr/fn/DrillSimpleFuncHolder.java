@@ -19,7 +19,9 @@ package org.apache.drill.exec.expr.fn;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JOp;
+import com.sun.codemodel.JTryBlock;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -128,8 +130,7 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     }
 
     // add the subblock after the out declaration.
-    g.getEvalBlock().add(topSub);
-
+    exceptionHandling(g, topSub);
 
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), returnValue.name, JExpr._new(g.getHolderType(returnValueType)));
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
@@ -144,5 +145,9 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", registeredNames[0]));
 
     return out;
+  }
+
+  public void exceptionHandling(ClassGenerator<?> g, JBlock topSub) {
+    g.getEvalBlock().add(topSub);
   }
 }

@@ -126,6 +126,7 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
       ExecConstants.ENABLE_SKIP_INVALID_RECORD,
+      ExecConstants.ROOT_SKIP_INVALID_RECORD_DFS,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,

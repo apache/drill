@@ -20,9 +20,9 @@ package org.apache.drill.exec.physical.impl.filter;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -32,6 +32,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.SkippingRecordLogger;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -44,15 +45,18 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 
-public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
+public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
 
   private SelectionVector2 sv2;
   private SelectionVector4 sv4;
   private Filterer filter;
 
-  public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
+  private SkippingRecordLogger skipRecordLogging;
+
+  public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException, OutOfMemoryException {
     super(pop, context, incoming);
+    this.skipRecordLogging = SkippingRecordLogger.createLogger(context, incoming);
   }
 
   @Override
@@ -80,7 +84,6 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     container.zeroVectors();
     int recordCount = incoming.getRecordCount();
     filter.filterBatch(recordCount);
-
     return IterOutcome.OK;
   }
 
@@ -91,6 +94,10 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     }
     if (sv4 != null) {
       sv4.clear();
+    }
+
+    if(skipRecordLogging != null) {
+      skipRecordLogging.flush();
     }
     super.close();
   }
@@ -132,6 +139,11 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
         throw new UnsupportedOperationException();
     }
 
+    if(isSkipRecord()) {
+      skipRecordLogging.addExpr(org.apache.commons.lang3.tuple.Pair.of(0,
+          popConfig.getExpr().toString()));
+    }
+
     if (container.isSchemaChanged()) {
       container.buildSchema(SelectionVectorMode.TWO_BYTE);
       return true;
@@ -165,7 +177,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     try {
       final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
       final Filterer filter = context.getImplementationClass(cg);
-      filter.setup(context, incoming, this, tx);
+      filter.setup(context, incoming, this, tx, skipRecordLogging);
       return filter;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
@@ -194,10 +206,14 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     try {
       final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
       final Filterer filter = context.getImplementationClass(cg);
-      filter.setup(context, incoming, this, tx);
+      filter.setup(context, incoming, this, tx, skipRecordLogging);
       return filter;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
+  }
+
+  private boolean isSkipRecord() {
+    return context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD);
   }
 }

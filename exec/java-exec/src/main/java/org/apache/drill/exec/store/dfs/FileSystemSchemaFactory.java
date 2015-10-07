@@ -67,6 +67,13 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     schema.setPlus(plusOfThis);
   }
 
+  public WorkspaceSchemaFactory getSkipRecordWorkspace() {
+    for(WorkspaceSchemaFactory workspaceSchemaFactory : factories) {
+      System.out.println(workspaceSchemaFactory.toString());
+    }
+    throw new UnsupportedOperationException();
+  }
+
   public class FileSystemSchema extends AbstractSchema {
 
     private final WorkspaceSchema defaultSchema;

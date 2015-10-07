@@ -130,7 +130,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   protected final Planner planner;
   private Pointer<String> textPlan;
   private final long targetSliceSize;
-  private boolean isRemoveVirColumns = true;
+  private boolean isRemoveVirColumns = false;
 
   public DefaultSqlHandler(SqlHandlerConfig config) {
     this(config, null);

@@ -36,40 +36,20 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
   }
 
   @Test
-  public void testP() throws Exception {
-    test("explain plan for select a from cp.`tpch/region.parquet`");
-  }
-
-  @Test
   public void testCastFailAtSomeRecords_Project() throws Exception {
     String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
-    String query = String.format("select * \n" +
+    String query = String.format("select cast(columns[0] as Integer) as col0, cast(columns[1] as Integer) as col1 \n" +
         "from dfs_test.tmp.`%s`", root);
 
-    String queryLog = String.format("select `Row_Number` \n" +
-        "from dfs.`/Users/hyichu/Desktop/skip`");
-
-    test(query);
-
-    /*
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
-        .baselineColumns("c0", "c1")
+        .baselineColumns("col0", "col1")
         .baselineValues(2, 2)
         .baselineValues(3, 3)
         .baselineValues(4, 4)
         .build()
         .run();
-
-    testBuilder()
-        .sqlQuery(queryLog)
-        .unOrdered()
-        .baselineColumns("Row_Number")
-        .baselineValues(0l)
-        .baselineValues(1l)
-        .build()
-        .run();*/
   }
 
   @Test
@@ -78,7 +58,6 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
     String query = String.format("select cast(columns[0] as integer) as c0, cast(columns[1] as integer) as c1 \n" +
             "from dfs_test.`%s` \n" +
             "where columns[0] > 1", root);
-  //  test("alter session set `exec.enable_skip_invalid_record` = true");
 
     testBuilder()
         .sqlQuery(query)
@@ -93,38 +72,24 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
 
   @Test
   public void testCTAS_CastFailAtSomeRecords_Project() throws Exception {
-      String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
-      String query = String.format("select cast(columns[0] as integer) c0, cast(columns[1] as integer) c1 \n" +
-                "from dfs_test.`%s`", root);
+    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
+    String query = String.format("select cast(columns[0] as integer) c0, cast(columns[1] as integer) c1 \n" +
+        "from dfs_test.`%s`", root);
 
-      testBuilder()
-                .sqlQuery(query)
-                .unOrdered()
-                .baselineColumns("c0", "c1")
-                .baselineValues(2, 2)
-                .baselineValues(3, 3)
-                .baselineValues(4, 4)
-                .build()
-                .run();
-  }
-
-  @Test
-  public void testParquet() throws Exception {
-    String query = String.format("select * \n" +
-        "from cp.`tpch/region.parquet`");
-
-    String q = "select * from dfs.root.`/Users/hyichu/Desktop/skip`";
-
-    test(query);
-    /*
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("c0", "c1")
         .baselineValues(2, 2)
+        .baselineValues(3, 3)
+        .baselineValues(4, 4)
         .build()
         .run();
-    */
+  }
+
+  @Test
+  public void testStar() throws Exception {
+    test("select * from cp.`tpch/region.parquet`");
   }
 
   @AfterClass

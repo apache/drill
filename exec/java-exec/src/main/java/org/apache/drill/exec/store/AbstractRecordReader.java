@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
@@ -78,8 +79,24 @@ public abstract class AbstractRecordReader implements RecordReader {
     logger.debug("columns to read : {}", columns);
   }
 
+  protected Collection<SchemaPath> getVirtualColumns() {
+    List<SchemaPath> schemaPaths = Lists.newArrayList();
+    for(SchemaPath schemaPath : columns) {
+      if(schemaPath.getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+        schemaPaths.add(schemaPath);
+      }
+    }
+    return schemaPaths;
+  }
+
   protected Collection<SchemaPath> getColumns() {
-    return columns;
+    List<SchemaPath> schemaPaths = Lists.newArrayList();
+    for(SchemaPath schemaPath : columns) {
+      if(!schemaPath.getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+        schemaPaths.add(schemaPath);
+      }
+    }
+    return schemaPaths;
   }
 
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projected) {
@@ -126,13 +143,12 @@ public abstract class AbstractRecordReader implements RecordReader {
   @Override
   public final List<Pair<String, String>> getReaderContext() {
     final List<Pair<String, String>> recordContext = Lists.newArrayList();
-
     for(Pair<String, ? extends Function<RecordReader, String>> pair : addReaderContextField()) {
       String key = pair.getKey();
 
       boolean isMatch = false;
       Pattern p = Pattern.compile("\\$" + key + "[0-9]+");
-      for(SchemaPath schemaPath : getColumns()) {
+      for(SchemaPath schemaPath : getVirtualColumns()) {
         Matcher m = p.matcher(schemaPath.getRootSegment().getPath());
         if(m.matches()) {
           recordContext.add(Pair.of(schemaPath.getRootSegment().getPath(), pair.getValue().apply(this)));
