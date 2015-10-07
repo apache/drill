@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -151,4 +153,12 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     return true;
   }
 
+  @Override
+  public List<String> getVirtualColumns() {
+    List<String> vCols = Lists.newArrayList();
+    for(Pair<String, ?> pair: JSONRecordReader.RECORD_CONTEXT) {
+      vCols.add(pair.getKey());
+    }
+    return vCols;
+  }
 }

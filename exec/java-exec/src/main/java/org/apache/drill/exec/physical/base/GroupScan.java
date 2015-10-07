@@ -92,6 +92,11 @@ public interface GroupScan extends Scan, HasAffinity{
   public boolean supportsPartitionFilterPushdown();
 
   /**
+   * Get the record context from the GroupScan
+   */
+  List<String> getRecordContextInScan();
+
+  /**
    * Returns a list of columns that can be used for partition pruning
    *
    */

@@ -56,9 +56,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     disabledOperators.add("CARDINALITY");
   }
 
-  private UnsupportedOperatorCollector unsupportedOperatorCollector;
+  protected UnsupportedOperatorCollector unsupportedOperatorCollector;
 
-  private UnsupportedOperatorsVisitor(QueryContext context) {
+  protected UnsupportedOperatorsVisitor(QueryContext context) {
     this.context = context;
     this.unsupportedOperatorCollector = new UnsupportedOperatorCollector();
   }

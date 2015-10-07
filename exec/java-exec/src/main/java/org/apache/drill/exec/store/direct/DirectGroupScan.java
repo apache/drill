@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.direct;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -78,4 +79,8 @@ public class DirectGroupScan extends AbstractGroupScan{
     return this;
   }
 
+  @Override
+  public List<String> getRecordContextInScan() {
+    return ImmutableList.of();
+  }
 }

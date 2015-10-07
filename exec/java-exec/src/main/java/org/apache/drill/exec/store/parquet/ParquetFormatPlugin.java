@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -49,7 +51,9 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -273,5 +277,14 @@ public class ParquetFormatPlugin implements FormatPlugin{
         return false;
       }
     }
+  }
+
+  @Override
+  public List<String> getVirtualColumns() {
+    List<String> vCols = Lists.newArrayList();
+    for(Pair<String, ?> pair: ParquetRecordReader.RECORD_CONTEXT) {
+      vCols.add(pair.getKey());
+    }
+    return vCols;
   }
 }

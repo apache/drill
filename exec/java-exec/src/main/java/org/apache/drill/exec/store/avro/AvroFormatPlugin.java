@@ -117,4 +117,8 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     }
   }
 
+  @Override
+  public List<String> getVirtualColumns() {
+    return ImmutableList.of();
+  }
 }

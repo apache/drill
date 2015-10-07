@@ -20,9 +20,15 @@ package org.apache.drill.exec.store;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.PathSegment;
+import com.google.common.collect.Maps;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -112,4 +118,31 @@ public abstract class AbstractRecordReader implements RecordReader {
     return GroupScan.ALL_COLUMNS;
   }
 
+  @Override
+  public <T extends RecordReader> List<Pair<String, ? extends Function<T, String>>> addReaderContextField() {
+    return Lists.newArrayList();
+  }
+
+  @Override
+  public final List<Pair<String, String>> getReaderContext() {
+    final List<Pair<String, String>> recordContext = Lists.newArrayList();
+
+    for(Pair<String, ? extends Function<RecordReader, String>> pair : addReaderContextField()) {
+      String key = pair.getKey();
+
+      boolean isMatch = false;
+      Pattern p = Pattern.compile("\\$" + key + "[0-9]+");
+      for(SchemaPath schemaPath : getColumns()) {
+        Matcher m = p.matcher(schemaPath.getRootSegment().getPath());
+        if(m.matches()) {
+          recordContext.add(Pair.of(schemaPath.getRootSegment().getPath(), pair.getValue().apply(this)));
+          isMatch = true;
+          break;
+        }
+      }
+      assert isMatch;
+    }
+
+    return recordContext;
+  }
 }

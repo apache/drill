@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -264,4 +266,12 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     return true;
   }
 
+  @Override
+  public List<String> getVirtualColumns() {
+    List<String> virtualCols = Lists.newArrayList();
+    for(Pair<String, ?> pair : CompliantTextRecordReader.RECORD_CONTEXT) {
+      virtualCols.add(pair.getKey());
+    }
+    return virtualCols;
+  }
 }

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -125,5 +126,10 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   @JsonIgnore
   public boolean isFilterPushedDown() {
     return isFilterPushedDown;
+  }
+
+  @Override
+  public List<String> getRecordContextInScan() {
+    return ImmutableList.of();
   }
 }

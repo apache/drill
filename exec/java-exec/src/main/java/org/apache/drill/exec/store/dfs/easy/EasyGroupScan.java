@@ -20,7 +20,11 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Function;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -36,6 +40,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.BlockMapBuilder;
@@ -273,4 +278,8 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     return formatPlugin.supportsPushDown();
   }
 
+  @Override
+  public List<String> getRecordContextInScan() {
+    return formatPlugin.getVirtualColumns();
+  }
 }

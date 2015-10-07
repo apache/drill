@@ -17,17 +17,20 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.univocity.parsers.common.TextParsingException;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,6 +39,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.util.CallBack;
@@ -67,6 +71,47 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   private DrillFileSystem dfs;
   // operator context for OutputMutator
   private OperatorContext oContext;
+
+  public static final List<Pair<String, ? extends Function<CompliantTextRecordReader, String>>> RECORD_CONTEXT
+      = Lists.newArrayList();
+  static {
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.FILE_NAME,
+            new Function<CompliantTextRecordReader, String>() {
+              @Override
+              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
+                return compliantTextRecordReader.split.getPath().toUri().getPath();
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            "Off_set",
+            new Function<CompliantTextRecordReader, String>() {
+              @Override
+              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
+                return "" + compliantTextRecordReader.split.getStart();
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.ROW_NUMBER,
+            new Function<CompliantTextRecordReader, String>() {
+              @Override
+              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
+                return "";
+              }
+            }));
+  }
+
+  public static final Map<String, Pair<String, ? extends Function<CompliantTextRecordReader, String>>> mappedRoles
+      = Maps.uniqueIndex(RECORD_CONTEXT,
+          new Function<Pair<String, ? extends Function<CompliantTextRecordReader, String>>, String>() {
+            public String apply(Pair<String, ? extends Function<CompliantTextRecordReader, String>> p) {
+              return p.getKey(); // or something else
+            }});
 
   public CompliantTextRecordReader(FileSplit split, DrillFileSystem dfs, FragmentContext context, TextParsingSettings settings, List<SchemaPath> columns) {
     this.split = split;
@@ -276,7 +321,10 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       }
       fieldVectorMap.clear();
     }
-
   }
 
+  @Override
+  public List<Pair<String, ? extends Function<CompliantTextRecordReader, String>>> addReaderContextField() {
+    return RECORD_CONTEXT;
+  }
 }

@@ -59,5 +59,5 @@ public interface FormatPlugin {
   public Configuration getFsConf();
   public DrillbitContext getContext();
   public String getName();
-
+  List<String> getVirtualColumns();
 }

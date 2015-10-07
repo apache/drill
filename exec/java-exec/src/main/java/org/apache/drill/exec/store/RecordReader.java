@@ -17,13 +17,18 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.schema.Record;
 import org.apache.drill.exec.vector.ValueVector;
 
 public interface RecordReader extends AutoCloseable {
@@ -50,4 +55,8 @@ public interface RecordReader extends AutoCloseable {
    * @return The number of additional records added to the output.
    */
   int next();
+
+  List<Pair<String, String>> getReaderContext();
+
+  <T extends RecordReader> List<Pair<String, ? extends Function<T, String>>> addReaderContextField();
 }

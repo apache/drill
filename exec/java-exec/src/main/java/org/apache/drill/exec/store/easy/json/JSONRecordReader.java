@@ -20,8 +20,12 @@ package org.apache.drill.exec.store.easy.json;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +35,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
@@ -62,6 +67,39 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
+
+  public static final List<Pair<String, ? extends Function<JSONRecordReader, String>>> RECORD_CONTEXT
+          = Lists.newArrayList();
+  static {
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.FILE_NAME,
+            new Function<JSONRecordReader, String>() {
+              @Override
+              public String apply(JSONRecordReader jSONRecordReader) {
+                return jSONRecordReader.hadoopPath.toUri().getPath();
+              }
+            }));
+
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.ROW_NUMBER,
+            new Function<JSONRecordReader, String>() {
+              @Override
+              public String apply(JSONRecordReader jSONRecordReader) {
+                return "";
+              }
+            }));
+  }
+
+  public static final Map<String, Pair<String, ? extends Function<JSONRecordReader, String>>> mappedRoles
+      = Maps.uniqueIndex(RECORD_CONTEXT,
+          new Function<Pair<String, ? extends Function<JSONRecordReader, String>>, String>() {
+            public String apply(Pair<String, ? extends Function<JSONRecordReader, String>> p) {
+              return p.getKey(); // or something else
+            }
+          });
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -224,6 +262,11 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   private void updateRunningCount() {
     runningRecordCount += recordCount;
+  }
+
+  @Override
+  public List<Pair<String, ? extends Function<JSONRecordReader, String>>> addReaderContextField() {
+    return RECORD_CONTEXT;
   }
 
   @Override

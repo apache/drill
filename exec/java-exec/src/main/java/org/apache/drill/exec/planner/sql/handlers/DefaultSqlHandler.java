@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.hep.HepMatchOrder;
@@ -34,30 +36,35 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
-import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
-import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.TypedSqlNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanPropertiesBuilder;
@@ -70,22 +77,21 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
-import org.apache.drill.exec.planner.logical.DrillJoinRel;
-import org.apache.drill.exec.planner.logical.DrillMergeProjectRule;
+import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
-import org.apache.drill.exec.planner.logical.DrillPushProjectPastFilterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
-import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
-import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ProjectPrel;
+import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.SelectionVectorRemoverPrel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
@@ -101,8 +107,10 @@ import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
+import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitorForSkipRecord;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -122,6 +130,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   protected final Planner planner;
   private Pointer<String> textPlan;
   private final long targetSliceSize;
+  private boolean isRemoveVirColumns = true;
 
   public DefaultSqlHandler(SqlHandlerConfig config) {
     this(config, null);
@@ -249,10 +258,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @throws SqlUnsupportedException
    */
   protected DrillRel convertToDrel(RelNode relNode, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
-    final DrillRel convertedRelNode = convertToDrel(relNode);
+    DrillRel convertedRelNode = convertToDrel(relNode);
+
+    if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+      convertedRelNode = addVirtualCoumnsForSkippingRecords(convertedRelNode);
+    }
 
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
-    DrillRel topPreservedNameProj = addRenamedProject(convertedRelNode, validatedRowType);
+    DrillRel topPreservedNameProj;
+    if(isRemoveVirColumns) {
+      topPreservedNameProj = convertedRelNode;
+    } else {
+      topPreservedNameProj = addRenamedProject(convertedRelNode, validatedRowType);
+    }
+
     return new DrillScreenRel(topPreservedNameProj.getCluster(), topPreservedNameProj.getTraitSet(),
         topPreservedNameProj);
   }
@@ -407,6 +426,36 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
 
+
+    /* 9.)
+     * If the skip_record_functionality is enabled,
+     * ensure there is a SelectionVectorRemoverPrel following after Project
+     */
+    if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+      phyRelNode = (Prel) phyRelNode.accept(new RelShuttleImpl() {
+        @Override
+        public RelNode visit(RelNode other) {
+          if(other instanceof ScreenPrel || other instanceof SelectionVectorRemoverPrel) {
+            return visitChildren(other);
+          } else {
+            other = visitChildren(other);
+
+            final List<RelNode> newChildren = Lists.newArrayList();
+            for(RelNode child : other.getInputs()) {
+              if(child instanceof ProjectPrel) {
+                newChildren.add(new SelectionVectorRemoverPrel((Prel) child));
+              } else {
+                newChildren.add(child);
+              }
+            }
+
+            other = other.copy(other.getTraitSet(), newChildren);
+            return other;
+          }
+        }
+      });
+    }
+
     return phyRelNode;
   }
 
@@ -453,7 +502,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     SqlNode sqlNodeValidated = typedSqlNode.getSqlNode();
 
     // Check if the unsupported functionality is used
-    UnsupportedOperatorsVisitor visitor = UnsupportedOperatorsVisitor.createVisitor(context);
+    final UnsupportedOperatorsVisitor visitor;
+    if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+      visitor = UnsupportedOperatorsVisitorForSkipRecord.createVisitor(context);
+    } else {
+      visitor = UnsupportedOperatorsVisitor.createVisitor(context);
+    }
+
     try {
       sqlNodeValidated.accept(visitor);
     } catch (UnsupportedOperationException ex) {
@@ -514,7 +569,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     List<RexNode> projections = Lists.newArrayList();
     int projectCount = t.getFieldList().size();
 
-    for (int i =0; i < projectCount; i++) {
+    for (int i = 0; i < projectCount; i++) {
       projections.add(b.makeInputRef(rel, i));
     }
 
@@ -608,6 +663,39 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return calciteOptimizedPlan;
   }
 
+  private DrillRel addVirtualCoumnsForSkippingRecords(DrillRel drillRel) {
+    // Identify the range of virtual columns:
+    // [rangeVirtualCols[0], rangeVirtualCols[1])
+    drillRel = (DrillRel) drillRel.accept(new RecordContextVisitor());
+
+    final List<RelDataTypeField> inFields = drillRel.getRowType().getFieldList();
+    final List<RexNode> newExprs = Lists.newArrayList();
+    final List<RelDataTypeField> newFields = Lists.newArrayList();
+
+    for(int i = 0; i < inFields.size(); ++i) {
+      final RelDataTypeField inField = inFields.get(i);
+      if(!inField.getName().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
+        newExprs.add(new RexInputRef(i, inField.getType()));
+
+        final RelDataTypeField newField
+            = new RelDataTypeFieldImpl(inField.getName(), newFields.size(), inField.getType());
+        newFields.add(newField);
+      }
+    }
+
+    if(isRemoveVirColumns) {
+      return drillRel;
+    }
+
+    // Remove all virtual columns
+    return DrillProjectRel.create(
+        drillRel.getCluster(),
+        drillRel.getTraitSet(),
+        drillRel,
+        newExprs,
+        new RelRecordType(newFields));
+  }
+
   public static class MetaDataProviderModifier extends RelShuttleImpl {
     private final RelMetadataProvider metadataProvider;
 
@@ -658,6 +746,4 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       return this.validatedRowType;
     }
   }
-
-
 }

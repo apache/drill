@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -127,5 +128,10 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   public List<SchemaPath> getPartitionColumns() {
     return Lists.newArrayList();
+  }
+
+  @Override
+  public List<String> getRecordContextInScan() {
+    return ImmutableList.of();
   }
 }

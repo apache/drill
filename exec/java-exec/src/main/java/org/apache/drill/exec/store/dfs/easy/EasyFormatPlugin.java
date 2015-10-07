@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -264,4 +265,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public abstract int getReaderOperatorType();
   public abstract int getWriterOperatorType();
 
+  @Override
+  public List<String> getVirtualColumns() {
+    return ImmutableList.of();
+  }
 }

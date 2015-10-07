@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -159,4 +160,8 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
     return plugin;
   }
 
+  @Override
+  public List<String> getRecordContextInScan() {
+    return ImmutableList.of();
+  }
 }

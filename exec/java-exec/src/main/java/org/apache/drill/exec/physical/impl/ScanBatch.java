@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -47,6 +48,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -58,6 +60,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.vector.VarCharVector;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -78,6 +81,8 @@ public class ScanBatch implements CloseableRecordBatch {
   private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
   private RecordReader currentReader;
+  private int rowNumber = 1;
+  private Map<String, VarCharVector> recordContext;
   private BatchSchema schema;
   private final Mutator mutator = new Mutator();
   private Iterator<String[]> partitionColumns;
@@ -128,6 +133,10 @@ public class ScanBatch implements CloseableRecordBatch {
     partitionColumnDesignator = labelValue == null ? "dir" : labelValue.string_val;
 
     addPartitionVectors();
+
+    if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+      addRecordContextVectors();
+    }
   }
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
@@ -221,6 +230,8 @@ public class ScanBatch implements CloseableRecordBatch {
 
           currentReader.close();
           currentReader = readers.next();
+          rowNumber = 1;
+
           partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
           currentReader.setup(oContext, mutator);
           try {
@@ -251,6 +262,10 @@ public class ScanBatch implements CloseableRecordBatch {
       // this is a slight misuse of this metric but it will allow Readers to report how many records they generated.
       final boolean isNewSchema = mutator.isNewSchema();
       oContext.getStats().batchReceived(0, getRecordCount(), isNewSchema);
+
+      if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+        populateRecordContextVectors();
+      }
 
       if (isNewSchema) {
         container.buildSchema(SelectionVectorMode.NONE);
@@ -307,6 +322,48 @@ public class ScanBatch implements CloseableRecordBatch {
         AllocationHelper.allocate(v, recordCount, 0);
         v.getMutator().setValueCount(recordCount);
       }
+    }
+  }
+
+  private void addRecordContextVectors() throws ExecutionSetupException {
+    recordContext = Maps.newHashMap();
+    try {
+      for(Pair<String, String> entry : currentReader.getReaderContext()) {
+        final String key = entry.getKey();
+        final MaterializedField field =
+            MaterializedField.create(SchemaPath.getSimplePath(key),
+        Types.required(MinorType.VARCHAR));
+        final VarCharVector v = mutator.addField(field, VarCharVector.class);
+        recordContext.put(key, v);
+      }
+    } catch(SchemaChangeException e) {
+      throw new ExecutionSetupException(e);
+    }
+  }
+
+  private void populateRecordContextVectors() {
+    for(Pair<String, String> entry : currentReader.getReaderContext()) {
+      final String key = entry.getKey();
+      final VarCharVector v = recordContext.get(key);
+
+      if(key.startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX + RecordContextVisitor.ROW_NUMBER)) {
+        final int bytesPerValue = String.valueOf(rowNumber + recordCount).getBytes().length;
+        AllocationHelper.allocate(v, recordCount, bytesPerValue);
+
+        for (int j = 0; j < recordCount; ++j, ++rowNumber) {
+          final byte[] bytes = String.valueOf(rowNumber).getBytes();
+          v.getMutator().setSafe(j, bytes, 0, bytes.length);
+        }
+      } else {
+        final String val = entry.getValue();
+        final int bytesPerValue = val.getBytes().length;
+        AllocationHelper.allocate(v, recordCount, bytesPerValue);
+        final byte[] bytes = val.getBytes();
+        for (int j = 0; j < recordCount; ++j) {
+          v.getMutator().setSafe(j, bytes, 0, bytes.length);
+        }
+      }
+      v.getMutator().setValueCount(recordCount);
     }
   }
 

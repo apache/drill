@@ -20,11 +20,15 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,6 +44,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -113,6 +118,48 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
+  public static final List<Pair<String, ? extends Function<ParquetRecordReader, String>>> RECORD_CONTEXT
+      = Lists.newArrayList();
+
+  static {
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.FILE_NAME,
+            new Function<ParquetRecordReader, String>() {
+              @Override
+              public String apply(ParquetRecordReader parquetRecordReader) {
+                return parquetRecordReader.hadoopPath.toUri().getPath();
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+            Pair.of(
+            "RowGroup",
+            new Function<ParquetRecordReader, String>() {
+              @Override
+              public String apply(ParquetRecordReader parquetRecordReader) {
+                return String.valueOf(parquetRecordReader.rowGroupIndex);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+            Pair.of(
+            RecordContextVisitor.ROW_NUMBER,
+            new Function<ParquetRecordReader, String>() {
+              @Override
+              public String apply(ParquetRecordReader parquetRecordReader) {
+                return "";
+              }
+            }));
+  }
+
+  public static final Map<String, Pair<String, ? extends Function<ParquetRecordReader, String>>> mappedRoles
+      = Maps.uniqueIndex(RECORD_CONTEXT,
+      new Function<Pair<String, ? extends Function<ParquetRecordReader, String>>, String>() {
+        public String apply(Pair<String, ? extends Function<ParquetRecordReader, String>> p) {
+          return p.getKey(); // or something else
+        }
+      });
 
   public ParquetRecordReader(FragmentContext fragmentContext,
       String path,
@@ -519,4 +566,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
     return DEFAULT_COLS_TO_READ;
   }
 
+  @Override
+  public List<Pair<String, ? extends Function<ParquetRecordReader, String>>> addReaderContextField() {
+    return RECORD_CONTEXT;
+  }
 }
