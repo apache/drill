@@ -28,24 +28,25 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_point", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "st_point", scope = FunctionTemplate.FunctionScope.SIMPLE,
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 public class STPointFunc implements DrillSimpleFunc {
-    @Param
-    Float8Holder lonParam;
+  @Param
+  Float8Holder lonParam;
 
-    @Param
-    Float8Holder latParam;
+  @Param
+  Float8Holder latParam;
 
-    @Output
-    VarBinaryHolder out;
+  @Output
+  VarBinaryHolder out;
 
-    @Inject
-    DrillBuf buffer;
+  @Inject
+  DrillBuf buffer;
 
-    public void setup() {
-    }
+  public void setup() {
+  }
 
-    public void eval() {
+  public void eval() {
 
     double lon = lonParam.value;
     double lat = latParam.value;
@@ -54,7 +55,7 @@ public class STPointFunc implements DrillSimpleFunc {
         new com.esri.core.geometry.Point(lon, lat), com.esri.core.geometry.SpatialReference.create(4326));
 
     java.nio.ByteBuffer pointBytes = point.asBinary();
-    out.buffer =  buffer;
+    out.buffer = buffer;
     out.start = 0;
     out.end = pointBytes.remaining();
     buffer.setBytes(0, pointBytes);

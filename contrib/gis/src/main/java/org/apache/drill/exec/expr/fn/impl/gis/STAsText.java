@@ -28,7 +28,8 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_astext", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "st_astext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 public class STAsText implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;
@@ -44,7 +45,7 @@ public class STAsText implements DrillSimpleFunc {
 
   public void eval() {
     com.esri.core.geometry.ogc.OGCGeometry geom1 = com.esri.core.geometry.ogc.OGCGeometry
-       .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end));
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end));
     String geomWKT = geom1.asText();
     out.buffer = buffer;
     out.start = 0;
