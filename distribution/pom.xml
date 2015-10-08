@@ -167,6 +167,11 @@
           <artifactId>drill-storage-hive-core</artifactId>
           <version>${project.version}</version>
         </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-gis</artifactId>
+          <version>${project.version}</version>
+        </dependency>
       </dependencies>
     </profile>
 
