@@ -23,7 +23,14 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
 
 public class TestMergeJoinAdvanced extends BaseTestQuery {
 
@@ -95,5 +102,100 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
       setSessionOption(ExecConstants.SLICE_TARGET, String.valueOf(ExecConstants.SLICE_TARGET_DEFAULT));
       setSessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, String.valueOf(ExecConstants.MAX_WIDTH_PER_NODE.getDefault().num_val));
     }
+  }
+
+  private static void generateData(final BufferedWriter leftWriter, final BufferedWriter rightWriter,
+                             final long left, final long right) throws IOException {
+    for (int i=0; i < left; ++i) {
+      leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10000, i));
+    }
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10001, 10001));
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10002, 10002));
+
+    for (int i=0; i < right; ++i) {
+      rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10000, i));
+    }
+    rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10004, 10004));
+    rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10005, 10005));
+    rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10006, 10006));
+
+    leftWriter.close();
+    rightWriter.close();
+  }
+
+  private static void testMultipleBatchJoin(final long right, final long left,
+                                            final String joinType, final long expected) throws Exception {
+    final String leftSide = BaseTestQuery.getTempDir("merge-join-left.json");
+    final String rightSide = BaseTestQuery.getTempDir("merge-join-right.json");
+    final BufferedWriter leftWriter = new BufferedWriter(new FileWriter(new File(leftSide)));
+    final BufferedWriter rightWriter = new BufferedWriter(new FileWriter(new File(rightSide)));
+    generateData(leftWriter, rightWriter, left, right);
+    final String query1 = String.format("select count(*) c1 from dfs_test.`%s` L %s join dfs_test.`%s` R on L.k=R.k1",
+      leftSide, joinType, rightSide);
+    testBuilder()
+      .sqlQuery(query1)
+      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .unOrdered()
+      .baselineColumns("c1")
+      .baselineValues(expected)
+      .go();
+  }
+
+  @Test
+  public void testMergeInnerJoinLargeRight() throws Exception {
+    testMultipleBatchJoin(1000l, 5000l, "inner", 5000l * 1000l);
+  }
+
+  @Test
+  public void testMergeLeftJoinLargeRight() throws Exception {
+    testMultipleBatchJoin(1000l, 5000l, "left", 5000l * 1000l +2l);
+  }
+
+  @Test
+  public void testMergeRightJoinLargeRight() throws Exception {
+    testMultipleBatchJoin(1000l, 5000l, "right", 5000l*1000l +3l);
+  }
+
+  @Test
+  public void testMergeInnerJoinLargeLeft() throws Exception {
+    testMultipleBatchJoin(5000l, 1000l, "inner", 5000l*1000l);
+  }
+
+  @Test
+  public void testMergeLeftJoinLargeLeft() throws Exception {
+    testMultipleBatchJoin(5000l, 1000l, "left", 5000l*1000l + 2l);
+  }
+
+  @Test
+  public void testMergeRightJoinLargeLeft() throws Exception {
+    testMultipleBatchJoin(5000l, 1000l, "right", 5000l*1000l + 3l);
+  }
+
+  // Following tests can take some time.
+  @Test
+  @Ignore
+  public void testMergeInnerJoinRandomized() throws Exception {
+    final Random r = new Random();
+    final long right = r.nextInt(10001) + 1l;
+    final long left = r.nextInt(10001) + 1l;
+    testMultipleBatchJoin(left, right, "inner", left*right);
+  }
+
+  @Test
+  @Ignore
+  public void testMergeLeftJoinRandomized() throws Exception {
+    final Random r = new Random();
+    final long right = r.nextInt(10001) + 1l;
+    final long left = r.nextInt(10001) + 1l;
+    testMultipleBatchJoin(left, right, "left", left*right + 2l);
+  }
+
+  @Test
+  @Ignore
+  public void testMergeRightJoinRandomized() throws Exception {
+    final Random r = new Random();
+    final long right = r.nextInt(10001) + 1l;
+    final long left = r.nextInt(10001) + 1l;
+    testMultipleBatchJoin(left, right, "right", left * right + 3l);
   }
 }

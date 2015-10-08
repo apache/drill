@@ -159,4 +159,19 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     vectors = (T[]) ArrayUtils.add(vectors, vv);
   }
 
+  /**
+   * Transfer vectors to destination HyperVectorWrapper.
+   * Both this and destination must be of same type and have same number of vectors.
+   * @param destination destination HyperVectorWrapper.
+   */
+  public void transfer(VectorWrapper<?> destination) {
+    Preconditions.checkArgument(destination instanceof HyperVectorWrapper);
+    Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
+    Preconditions.checkArgument(vectors.length == ((HyperVectorWrapper)destination).vectors.length);
+
+    ValueVector[] destionationVectors = ((HyperVectorWrapper)destination).vectors;
+    for (int i = 0; i < vectors.length; ++i) {
+      vectors[i].makeTransferPair(destionationVectors[i]).transfer();
+    }
+  }
 }
