@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
@@ -80,6 +81,25 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     add(vv, releasable);
   }
 
+  /**
+   * Transfer vectors from containerIn to this.
+   */
+  void transferIn(VectorContainer containerIn) {
+    Preconditions.checkArgument(this.wrappers.size() == containerIn.wrappers.size());
+    for (int i = 0; i < this.wrappers.size(); ++i) {
+      containerIn.wrappers.get(i).transfer(this.wrappers.get(i));
+    }
+  }
+
+  /**
+   * Transfer vectors from this to containerOut
+   */
+  void transferOut(VectorContainer containerOut) {
+    Preconditions.checkArgument(this.wrappers.size() == containerOut.wrappers.size());
+    for (int i = 0; i < this.wrappers.size(); ++i) {
+      this.wrappers.get(i).transfer(containerOut.wrappers.get(i));
+    }
+  }
 
   public <T extends ValueVector> T addOrGet(MaterializedField field) {
     return addOrGet(field, null);
@@ -97,6 +117,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
         return (T) newVector;
       }
     } else {
+
       vector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
       add(vector);
     }

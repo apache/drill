@@ -32,6 +32,7 @@ public interface JoinWorker {
   public void setupJoin(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException;
   public boolean doJoin(JoinStatus status);
 
-  public static TemplateClassDefinition<JoinWorker> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(JoinWorker.class, JoinTemplate.class);
+  public static TemplateClassDefinition<JoinWorker> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(
+    JoinWorker.class, JoinTemplate.class);
 
 }

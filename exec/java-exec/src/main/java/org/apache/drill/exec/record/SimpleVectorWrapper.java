@@ -33,32 +33,32 @@ import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
-import java.util.ArrayList;
 import java.util.List;
+import com.google.common.base.Preconditions;
 
 public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleVectorWrapper.class);
 
-  private T v;
+  private T vector;
 
   public SimpleVectorWrapper(T v) {
-    this.v = v;
+    this.vector = v;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Class<T> getVectorClass() {
-    return (Class<T>) v.getClass();
+    return (Class<T>) vector.getClass();
   }
 
   @Override
   public MaterializedField getField() {
-    return v.getField();
+    return vector.getField();
   }
 
   @Override
   public T getValueVector() {
-    return v;
+    return vector;
   }
 
   @Override
@@ -74,14 +74,14 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
   @SuppressWarnings("unchecked")
   @Override
   public VectorWrapper<T> cloneAndTransfer() {
-    TransferPair tp = v.getTransferPair();
+    TransferPair tp = vector.getTransferPair();
     tp.transfer();
     return new SimpleVectorWrapper<T>((T) tp.getTo());
   }
 
   @Override
   public void clear() {
-    v.clear();
+    vector.clear();
   }
 
   public static <T extends ValueVector> SimpleVectorWrapper<T> create(T v) {
@@ -95,7 +95,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
       return this;
     }
 
-    ValueVector vector = v;
+    ValueVector vector = this.vector;
     for (int i = 1; i < ids.length; i++) {
       final AbstractMapVector mapLike = AbstractMapVector.class.cast(vector);
       if (mapLike == null) {
@@ -109,15 +109,15 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
-    if (!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) {
+    if (!expectedPath.getRootSegment().segmentEquals(vector.getField().getPath().getRootSegment())) {
       return null;
     }
     PathSegment seg = expectedPath.getRootSegment();
 
-    if (v instanceof UnionVector) {
+    if (vector instanceof UnionVector) {
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
       builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
-      List<MinorType> minorTypes = ((UnionVector) v).getSubTypes();
+      List<MinorType> minorTypes = ((UnionVector) vector).getSubTypes();
       MajorType.Builder majorTypeBuilder = MajorType.newBuilder().setMinorType(MinorType.UNION);
       for (MinorType type : minorTypes) {
         majorTypeBuilder.addSubType(type);
@@ -128,28 +128,28 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
         builder.finalType(majorType);
         return builder.build();
       } else {
-        return ((UnionVector) v).getFieldIdIfMatches(builder, false, seg.getChild());
+        return ((UnionVector) vector).getFieldIdIfMatches(builder, false, seg.getChild());
       }
-    } else if (v instanceof ListVector) {
-      ListVector list = (ListVector) v;
+    } else if (vector instanceof ListVector) {
+      ListVector list = (ListVector) vector;
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(v.getField().getType());
+      builder.intermediateType(vector.getField().getType());
       builder.addId(id);
       return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
     } else
-    if (v instanceof AbstractContainerVector) {
+    if (vector instanceof AbstractContainerVector) {
       // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) v;
+      AbstractContainerVector c = (AbstractContainerVector) vector;
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(v.getField().getType());
+      builder.intermediateType(vector.getField().getType());
       builder.addId(id);
       return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
 
     } else {
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(v.getField().getType());
+      builder.intermediateType(vector.getField().getType());
       builder.addId(id);
-      builder.finalType(v.getField().getType());
+      builder.finalType(vector.getField().getType());
       if (seg.isLastPath()) {
         return builder.build();
       } else {
@@ -157,7 +157,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
         if (child.isArray() && child.isLastPath()) {
           builder.remainder(child);
           builder.withIndex();
-          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+          builder.finalType(vector.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
           return builder.build();
         } else {
           return null;
@@ -165,6 +165,12 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
       }
     }
+  }
+
+  public void transfer(VectorWrapper<?> destination) {
+    Preconditions.checkArgument(destination instanceof SimpleVectorWrapper);
+    Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
+    vector.makeTransferPair(((SimpleVectorWrapper)destination).vector).transfer();
   }
 
 }
