@@ -110,16 +110,19 @@ public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
      *    / (count(x) - 1)
      */
     final SqlParserPos pos = SqlParserPos.ZERO;
+
+    // cast the argument to double
+    final SqlNode castHighArg = CastHighOp.createCall(pos, arg);
     final SqlNode argSquared =
-        SqlStdOperatorTable.MULTIPLY.createCall(pos, arg, arg);
+        SqlStdOperatorTable.MULTIPLY.createCall(pos, castHighArg, castHighArg);
     final SqlNode sumArgSquared =
         SqlStdOperatorTable.SUM.createCall(pos, argSquared);
     final SqlNode sum =
-        SqlStdOperatorTable.SUM.createCall(pos, arg);
+        SqlStdOperatorTable.SUM.createCall(pos, castHighArg);
     final SqlNode sumSquared =
         SqlStdOperatorTable.MULTIPLY.createCall(pos, sum, sum);
     final SqlNode count =
-        SqlStdOperatorTable.COUNT.createCall(pos, arg);
+        SqlStdOperatorTable.COUNT.createCall(pos, castHighArg);
     final SqlNode avgSumSquared =
         SqlStdOperatorTable.DIVIDE.createCall(
             pos, sumSquared, count);

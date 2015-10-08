@@ -484,7 +484,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$1\\), SUM\\(\\$0\\), COUNT\\(\\$0\\)",
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(varianceQuery, expectedPlan2, excludedPatterns2);
@@ -856,4 +856,21 @@ public class TestWindowFunctions extends BaseTestQuery {
         .run();
   }
 
+  @Test
+  public void testStatisticalWindowFunctions() throws Exception {
+    final String sqlWindowFunctionQuery = "select " +
+        "stddev_samp(employee_id) over (partition by 1) c1, " +
+        "stddev_pop(employee_id) over (partition by 1) c2, " +
+        "var_samp(employee_id) over (partition by 1) c3, " +
+        "var_pop(employee_id) over (partition by 1) c4 from " +
+        "cp.`employee.json` limit 1";
+
+    testBuilder()
+        .sqlQuery(sqlWindowFunctionQuery)
+        .unOrdered()
+        .baselineColumns("c1", "c2", "c3", "c4")
+        .baselineValues(333.56708470261117d, 333.4226520980038d, 111266.99999699896d, 111170.66493206649d)
+        .build()
+        .run();
+  }
 }
