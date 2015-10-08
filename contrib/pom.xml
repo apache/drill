@@ -38,5 +38,6 @@
     <module>storage-jdbc</module>
     <module>sqlline</module>
     <module>data</module>
+    <module>gis</module>
   </modules>
 </project>
