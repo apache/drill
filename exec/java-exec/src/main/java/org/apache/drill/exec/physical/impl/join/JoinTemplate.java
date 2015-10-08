@@ -26,52 +26,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.calcite.rel.core.JoinRelType;
 
 /**
- * This join template uses a merge join to combine two ordered streams into a single larger batch.  When joining
- * single values on each side, the values can be copied to the outgoing batch immediately.  The outgoing record batch
- * should be sent as needed (e.g. schema change or outgoing batch full).  When joining multiple values on one or
- * both sides, two passes over the vectors will be made; one to construct the selection vector, and another to
- * generate the outgoing batches once the duplicate value is no longer encountered.
- *
- * Given two tables ordered by 'col1':
- *
- *        t1                t2
- *  ---------------   ---------------
- *  | key | col2 |    | key | col2 |
- *  ---------------   ---------------
- *  |  1  | 'ab' |    |  1  | 'AB' |
- *  |  2  | 'cd' |    |  2  | 'CD' |
- *  |  2  | 'ef' |    |  4  | 'EF' |
- *  |  4  | 'gh' |    |  4  | 'GH' |
- *  |  4  | 'ij' |    |  5  | 'IJ' |
- *  ---------------   ---------------
- *
- * 'SELECT * FROM t1 INNER JOIN t2 on (t1.key == t2.key)' should generate the following:
- *
- * ---------------------------------
- * | t1.key | t2.key | col1 | col2 |
- * ---------------------------------
- * |   1    |   1    | 'ab' | 'AB' |
- * |   2    |   2    | 'cd' | 'CD' |
- * |   2    |   2    | 'ef' | 'CD' |
- * |   4    |   4    | 'gh' | 'EF' |
- * |   4    |   4    | 'gh' | 'GH' |
- * |   4    |   4    | 'ij' | 'EF' |
- * |   4    |   4    | 'ij' | 'GH' |
- * ---------------------------------
- *
- * In the simple match case, only one row from each table matches.  Additional cases should be considered:
- *   - a left join key matches multiple right join keys
- *   - duplicate keys which may span multiple record batches (on the left and/or right side)
- *   - one or both incoming record batches change schemas
- *
- * In the case where a left join key matches multiple right join keys:
- *   - add a reference to all of the right table's matching values to the SV4.
- *
- * A RecordBatchData object should be used to hold onto all batches which have not been sent.
- *
- * JoinStatus:
- *   - all state related to the join operation is stored in the JoinStatus object.
- *   - this is required since code may be regenerated before completion of an outgoing record batch.
+ * Merge Join implementation using RecordIterator.
  */
 public abstract class JoinTemplate implements JoinWorker {
 
@@ -87,125 +42,68 @@ public abstract class JoinTemplate implements JoinWorker {
    */
   public final boolean doJoin(final JoinStatus status) {
     while(!status.isOutgoingBatchFull()) {
-      // for each record
 
-      // validate input iterators (advancing to the next record batch if necessary)
-      if (!status.isRightPositionAllowed()) {
+      if (status.rightFinished()) {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          // we've hit the end of the right record batch; copy any remaining values from the left batch
-          while (status.isLeftPositionAllowed()) {
+          while (!status.leftFinished()) {
             if (status.isOutgoingBatchFull()) {
               return true;
             }
             doCopyLeft(status.getLeftPosition(), status.getOutPosition());
-
             status.incOutputPos();
             status.advanceLeft();
           }
         }
         return true;
       }
-      if (!status.isLeftPositionAllowed()) {
+      if (status.leftFinished()) {
         return true;
       }
 
-      int comparison = doCompare(status.getLeftPosition(), status.getRightPosition());
+      final int comparison = doCompare(status.getLeftPosition(), status.getRightPosition());
       switch (comparison) {
-
-      case -1:
-        // left key < right key
-        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
-          status.incOutputPos();
-        }
-        status.advanceLeft();
-        continue;
-
-      case 0:
-        // left key == right key
-
-        // check for repeating values on the left side
-        if (!status.isLeftRepeating() &&
-            status.isNextLeftPositionInCurrentBatch() &&
-            doCompareNextLeftKey(status.getLeftPosition()) == 0) {
-          // subsequent record(s) in the left batch have the same key
-          status.notifyLeftRepeating();
-        } else if (status.isLeftRepeating() &&
-                 status.isNextLeftPositionInCurrentBatch() &&
-                 doCompareNextLeftKey(status.getLeftPosition()) != 0) {
-          // this record marks the end of repeated keys
-          status.notifyLeftStoppedRepeating();
-        }
-
-        boolean crossedBatchBoundaries;
-        int initialRightPosition;
-        if (status.hasIntermediateData()) {
-          crossedBatchBoundaries = status.getCrossedBatchBoundaries();
-          initialRightPosition = status.getInitialRightPosition();
-          status.resetIntermediateData();
-        } else {
-          crossedBatchBoundaries = false;
-          initialRightPosition = status.getRightPosition();
-        }
-
-        do {
-          if (status.isOutgoingBatchFull()) {
-            status.setIntermediateData(initialRightPosition, crossedBatchBoundaries);
-            return true;
+        case -1:
+          // left key < right key
+          if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
+            doCopyLeft(status.getLeftPosition(), status.getOutPosition());
+            status.incOutputPos();
           }
-          // copy all equal right keys to the output record batch
-          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
+          status.advanceLeft();
+          continue;
 
+        case 0:
+          // left key == right key
+          // Mark current position in right iterator.
+          status.markRight();
+          // Copy all equal right keys to the output record batch
+          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
           doCopyRight(status.getRightPosition(), status.getOutPosition());
-
           status.incOutputPos();
-
-          // If the left key has duplicates and we're about to cross a boundary in the right batch, add the
-          // right table's record batch to the sv4 builder before calling next.  These records will need to be
-          // copied again for each duplicate left key.
-          if (status.isLeftRepeating() && !status.isRightPositionInCurrentBatch()) {
-            status.outputBatch.addRightToBatchBuilder();
-            crossedBatchBoundaries = true;
-          }
+          // Move to next position in right iterator.
           status.advanceRight();
-
-        } while ((!status.isLeftRepeating() || status.isRightPositionInCurrentBatch())
-                 && status.isRightPositionAllowed()
-                 && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
-
-        if (status.getRightPosition() > initialRightPosition &&
-            (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch())) {
-          // more than one matching result from right table; reset position in case of subsequent left match
-          status.setRightPosition(initialRightPosition);
-        }
-        status.advanceLeft();
-
-        if (status.isLeftRepeating() && status.isNextLeftPositionInCurrentBatch() &&
-          doCompareNextLeftKey(status.getLeftPosition()) != 0) {
-          // left no longer has duplicates.  switch back to incoming batch mode
-          status.setDefaultAdvanceMode();
-          status.notifyLeftStoppedRepeating();
-        } else if (status.isLeftRepeating() && crossedBatchBoundaries) {
-          try {
-            // build the right batches and
-            status.outputBatch.batchBuilder.build();
-            status.setSV4AdvanceMode();
-          } catch (SchemaChangeException e) {
-            status.ok = false;
+          while(!status.isOutgoingBatchFull() && !status.rightFinished()) {
+            final int comparision = doCompare(status.getLeftPosition(), status.getRightPosition());
+            if (comparision == 0) {
+              doCopyLeft(status.getLeftPosition(), status.getOutPosition());
+              doCopyRight(status.getRightPosition(), status.getOutPosition());
+              status.incOutputPos();
+              status.advanceRight();
+            } else {
+              break;
+            }
           }
-          // return to indicate recompile in right-sv4 mode
-          return true;
-        }
+          // TODO: Save delta.
+          status.resetRight();
+          status.advanceLeft();
+          continue;
+        case 1:
+          // left key > right key
+          // TODO: Use delta to move forward to next record.
+          status.advanceRight();
+          continue;
 
-        continue;
-
-      case 1:
-        // left key > right key
-        status.advanceRight();
-        continue;
-
-      default:
-        throw new IllegalStateException();
+        default:
+          throw new IllegalStateException();
       }
     }
 
@@ -215,9 +113,8 @@ public abstract class JoinTemplate implements JoinWorker {
   // Generated Methods
 
   public abstract void doSetup(@Named("context") FragmentContext context,
-      @Named("status") JoinStatus status,
-      @Named("outgoing") VectorContainer outgoing) throws SchemaChangeException;
-
+                               @Named("status") JoinStatus status,
+                               @Named("outgoing") VectorContainer outgoing) throws SchemaChangeException;
 
   /**
    * Copy the data to the new record batch (if it fits).
@@ -241,15 +138,5 @@ public abstract class JoinTemplate implements JoinWorker {
    *          1 if left is > right
    */
   protected abstract int doCompare(@Named("leftIndex") int leftIndex,
-      @Named("rightIndex") int rightIndex);
-
-
-  /**
-   * Compare the current left key to the next left key, if it's within the batch.
-   * @return  0 if both keys are equal,
-   *          1 if the keys are not equal, and
-   *         -1 if there are no more keys in this batch
-   */
-  protected abstract int doCompareNextLeftKey(@Named("leftIndex") int leftIndex);
-
+                                   @Named("rightIndex") int rightIndex);
 }

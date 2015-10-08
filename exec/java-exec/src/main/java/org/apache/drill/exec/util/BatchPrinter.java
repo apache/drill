@@ -40,21 +40,22 @@ public class BatchPrinter {
       numBatches = vw.getValueVectors().length;
     }
     int width = columns.size();
-        for (int j = 0; j < sv4.getCount(); j++) {
-          for (VectorWrapper vw : batch) {
-            Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(j & 65535);
-            if (o instanceof byte[]) {
-              String value = new String((byte[]) o);
-              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
-            } else {
-              String value = o.toString();
-              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
-            }
-          }
-          System.out.printf("|\n");
+    for (int j = 0; j < sv4.getCount(); j++) {
+      for (VectorWrapper vw : batch) {
+        Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(sv4.get(j) & 65535);
+        if (o instanceof byte[]) {
+          String value = new String((byte[]) o);
+          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+        } else {
+          String value = o.toString();
+          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
         }
+      }
       System.out.printf("|\n");
+    }
+    System.out.printf("|\n");
   }
+
   public static void printBatch(VectorAccessible batch) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
