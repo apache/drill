@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 public class ImplCreator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
+  private RootExec root = null;
   private final LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
 
   private ImplCreator() {}

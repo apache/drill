@@ -17,41 +17,29 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 
 public class ForemanException extends ExecutionSetupException {
   private static final long serialVersionUID = -6943409010231014085L;
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ForemanException.class);
-
-  public static ForemanException fromThrowable(String message, Throwable cause) {
-    Throwable t = cause instanceof InvocationTargetException
-        ? ((InvocationTargetException)cause).getTargetException() : cause;
-    if (t instanceof ForemanException) {
-      return ((ForemanException) t);
-    }
-    return new ForemanException(message, t);
-  }
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ForemanException.class);
 
   public ForemanException() {
-    super();
   }
 
-  public ForemanException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+  public ForemanException(final String message, final Throwable cause, final boolean enableSuppression,
+      final boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 
-  public ForemanException(String message, Throwable cause) {
+  public ForemanException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public ForemanException(String message) {
+  public ForemanException(final String message) {
     super(message);
   }
 
-  public ForemanException(Throwable cause) {
+  public ForemanException(final Throwable cause) {
     super(cause);
   }
-
 }

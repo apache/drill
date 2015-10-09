@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
 
+import org.apache.drill.common.DeferredException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
@@ -29,6 +30,8 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+
+import com.google.common.base.Supplier;
 
 public abstract class BaseRootExec implements RootExec {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRootExec.class);
@@ -59,6 +62,24 @@ public abstract class BaseRootExec implements RootExec {
 
   void setOperators(List<CloseableRecordBatch> operators) {
     this.operators = operators;
+
+    if (logger.isDebugEnabled()) {
+      final StringBuilder sb = new StringBuilder();
+      sb.append("BaseRootExec(");
+      sb.append(Integer.toString(System.identityHashCode(this)));
+      sb.append(") operators: ");
+      for(final CloseableRecordBatch crb : operators) {
+        sb.append(crb.getClass().getName());
+        sb.append(' ');
+        sb.append(Integer.toString(System.identityHashCode(crb)));
+        sb.append(", ");
+      }
+
+      // Cut off the last trailing comma and space
+      sb.setLength(sb.length() - 2);
+
+      logger.debug(sb.toString());
+    }
   }
 
   @Override
@@ -117,12 +138,24 @@ public abstract class BaseRootExec implements RootExec {
 
     // close all operators.
     if (operators != null) {
-      for (CloseableRecordBatch b : operators) {
-        try {
-          b.close();
-        } catch (Exception e) {
-          fragmentContext.fail(e);
+      final DeferredException df = new DeferredException(new Supplier<Exception>() {
+        @Override
+        public Exception get() {
+          return new RuntimeException("Error closing operators");
         }
+      });
+
+      for (final CloseableRecordBatch crb : operators) {
+        df.suppressingClose(crb);
+        if (logger.isDebugEnabled()) {
+          logger.debug(String.format("closed operator %d", System.identityHashCode(crb)));
+        }
+      }
+
+      try {
+        df.close();
+      } catch (Exception e) {
+        fragmentContext.fail(e);
       }
     }
   }

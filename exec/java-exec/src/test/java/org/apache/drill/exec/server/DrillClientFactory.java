@@ -18,12 +18,11 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.glassfish.hk2.api.Factory;
 
-public class DrillClientFactory implements Factory<DrillClient>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClientFactory.class);
-
-
+public class DrillClientFactory implements Factory<DrillClient> {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClientFactory.class);
 
   @Override
   public void dispose(DrillClient arg0) {
@@ -31,8 +30,10 @@ public class DrillClientFactory implements Factory<DrillClient>{
 
   @Override
   public DrillClient provide() {
-    return new DrillClient();
+    try {
+      return new DrillClient();
+    } catch(OutOfMemoryException e) {
+      throw new RuntimeException(e);
+    }
   }
-
-
 }

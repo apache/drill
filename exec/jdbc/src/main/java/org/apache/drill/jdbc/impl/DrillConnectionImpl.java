@@ -17,8 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.io.IOException;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -39,6 +37,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
@@ -50,7 +49,7 @@ import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillConnectionConfig;
 import org.apache.drill.jdbc.InvalidParameterSqlException;
 import org.apache.drill.jdbc.JdbcApiSqlException;
-
+import org.slf4j.Logger;
 
 /**
  * Drill's implementation of {@link Connection}.
@@ -133,6 +132,8 @@ class DrillConnectionImpl extends AvaticaConnection
         this.client = new DrillClient();
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
+    } catch (OutOfMemoryException e) {
+      throw new SQLException("Failure creating root allocator", e);
     } catch (RpcException e) {
       // (Include cause exception's text in wrapping exception's text so
       // it's more likely to get to user (e.g., via SQLLine), and use
@@ -369,24 +370,33 @@ class DrillConnectionImpl extends AvaticaConnection
     return factory;
   }
 
+  private static void closeOrWarn(final AutoCloseable autoCloseable, final String message, final Logger logger) {
+    if (autoCloseable == null) {
+      return;
+    }
+
+    try {
+      autoCloseable.close();
+    } catch(Exception e) {
+      logger.warn(message, e);
+    }
+  }
+
+  // TODO this should be an AutoCloseable, and this should be close()
   void cleanup() {
     // First close any open JDBC Statement objects, to close any open ResultSet
     // objects and release their buffers/vectors.
     openStatementsRegistry.close();
 
-    client.close();
-    allocator.close();
+    // TODO all of these should use DeferredException when it is available from DRILL-2245
+    closeOrWarn(client, "Exception while closing client.", logger);
+    closeOrWarn(allocator, "Exception while closing allocator.", logger);
+
     if (bit != null) {
       bit.close();
     }
 
-    if (serviceSet != null) {
-      try {
-        serviceSet.close();
-      } catch (IOException e) {
-        logger.warn("Exception while closing service set.", e);
-      }
-    }
+    closeOrWarn(serviceSet, "Exception while closing service set.", logger);
   }
 
   /**

@@ -28,6 +28,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -56,7 +57,7 @@ public class QueryTestUtil {
    * @throws RpcException if there is a problem setting up the client
    */
   public static DrillClient createClient(final DrillConfig drillConfig, final RemoteServiceSet remoteServiceSet,
-      final int maxWidth, final Properties props) throws RpcException {
+      final int maxWidth, final Properties props) throws RpcException, OutOfMemoryException {
     final DrillClient drillClient = new DrillClient(drillConfig, remoteServiceSet.getCoordinator());
     drillClient.connect(props);
 
