@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.DecimalMin.List;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -155,6 +156,9 @@ public abstract class AbstractContainerVector implements ValueVector {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
       return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+    } else if(v instanceof ListVector) {
+      ListVector list = (ListVector) v;
+      return list.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
     } else {
       if (seg.isNamed()) {
         if(addToBreadCrumb) {

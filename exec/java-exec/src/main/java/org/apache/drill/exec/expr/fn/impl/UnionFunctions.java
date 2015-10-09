@@ -24,6 +24,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
+import org.apache.drill.exec.expr.holders.NullableUInt1Holder;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -112,6 +113,24 @@ public class UnionFunctions {
     public void eval() {
       out.reader = in;
       out.isSet = in.isSet() ? 1 : 0;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @FunctionTemplate(name = "asList", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  public static class CastUnionList implements DrillSimpleFunc {
+
+    @Param UnionHolder in;
+    @Output UnionHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      if (in.isSet == 1) {
+        out.reader = in.reader;
+      } else {
+        out.isSet = 0;
+      }
     }
   }
 }

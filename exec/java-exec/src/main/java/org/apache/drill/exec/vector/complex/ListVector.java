@@ -21,6 +21,8 @@ package org.apache.drill.exec.vector.complex;
 import com.google.common.collect.ObjectArrays;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -28,8 +30,10 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.vector.AddOrGetResult;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -46,20 +50,22 @@ import java.util.List;
 
 public class ListVector extends BaseRepeatedValueVector {
 
-  UInt4Vector offsets;
-  protected final UInt1Vector bits;
-  Mutator mutator = new Mutator();
-  Accessor accessor = new Accessor();
-  UnionListWriter writer;
-  UnionListReader reader;
+  private UInt4Vector offsets;
+  private final UInt1Vector bits;
+  private Mutator mutator = new Mutator();
+  private Accessor accessor = new Accessor();
+  private UnionListWriter writer;
+  private UnionListReader reader;
+  private CallBack callBack;
 
   public ListVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
-    super(field, allocator, new UnionVector(field, allocator, callBack));
+    super(field, allocator);
     this.bits = new UInt1Vector(MaterializedField.create("$bits$", Types.required(MinorType.UINT1)), allocator);
     offsets = getOffsetVector();
     this.field.addChild(getDataVector().getField());
     this.writer = new UnionListWriter(this);
     this.reader = new UnionListReader(this);
+    this.callBack = callBack;
   }
 
   public UnionListWriter getWriter() {
@@ -87,8 +93,8 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public UnionVector getDataVector() {
-    return (UnionVector) vector;
+  public ValueVector getDataVector() {
+    return vector;
   }
 
   @Override
@@ -107,10 +113,12 @@ public class ListVector extends BaseRepeatedValueVector {
 
     public TransferImpl(MaterializedField field) {
       to = new ListVector(field, allocator, null);
+      to.addOrGetVector(new VectorDescriptor(vector.getField().getType()));
     }
 
     public TransferImpl(ListVector to) {
       this.to = to;
+      to.addOrGetVector(new VectorDescriptor(vector.getField().getType()));
     }
 
     @Override
@@ -182,6 +190,11 @@ public class ListVector extends BaseRepeatedValueVector {
             .addChild(bits.getMetadata())
             .addChild(vector.getMetadata());
   }
+  public <T extends ValueVector> AddOrGetResult<T> addOrGetVector(VectorDescriptor descriptor) {
+    AddOrGetResult<T> result = super.addOrGetVector(descriptor);
+    reader = new UnionListReader(this);
+    return result;
+  }
 
   @Override
   public int getBufferSize() {
@@ -232,20 +245,97 @@ public class ListVector extends BaseRepeatedValueVector {
     vector.load(vectorMetadata, buffer.slice(offsetLength + bitLength, vectorLength));
   }
 
+  public UnionVector promoteToUnion() {
+    MaterializedField newField = MaterializedField.create(getField().getPath(), Types.optional(MinorType.UNION));
+    UnionVector vector = new UnionVector(newField, allocator, null);
+    replaceDataVector(vector);
+    reader = new UnionListReader(this);
+    return vector;
+  }
+
+  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (seg == null) {
+      if (addToBreadCrumb) {
+        builder.intermediateType(this.getField().getType());
+      }
+      return builder.finalType(this.getField().getType()).build();
+    }
+
+    if (seg.isArray()) {
+      if (seg.isLastPath()) {
+        builder //
+                .withIndex() //
+                .listVector()
+                .finalType(getDataVector().getField().getType());
+
+        // remainder starts with the 1st array segment in SchemaPath.
+        // only set remainder when it's the only array segment.
+        if (addToBreadCrumb) {
+          addToBreadCrumb = false;
+          builder.remainder(seg);
+        }
+        return builder.build();
+      } else {
+        if (addToBreadCrumb) {
+          addToBreadCrumb = false;
+          builder.remainder(seg);
+        }
+      }
+    } else {
+      return null;
+    }
+
+    ValueVector v = getDataVector();
+    if (v instanceof AbstractContainerVector) {
+      // we're looking for a multi path.
+      AbstractContainerVector c = (AbstractContainerVector) v;
+      return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+    } else if (v instanceof ListVector) {
+      ListVector list = (ListVector) v;
+      return list.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+    } else {
+      if (seg.isNamed()) {
+        if(addToBreadCrumb) {
+          builder.intermediateType(v.getField().getType());
+        }
+        builder.finalType(v.getField().getType());
+      } else {
+        builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+      }
+
+      if (seg.isLastPath()) {
+        return builder.build();
+      } else {
+        PathSegment child = seg.getChild();
+        if (child.isLastPath() && child.isArray()) {
+          if (addToBreadCrumb) {
+            builder.remainder(child);
+          }
+          builder.withIndex();
+          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+          return builder.build();
+        } else {
+//          logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
+          return null;
+        }
+      }
+    }
+  }
+
   private int lastSet;
 
   public class Accessor extends BaseRepeatedAccessor {
 
     @Override
     public Object getObject(int index) {
-      if (bits.getAccessor().isNull(index)) {
+      if (isNull(index)) {
         return null;
       }
       final List<Object> vals = new JsonStringArrayList<>();
       final UInt4Vector.Accessor offsetsAccessor = offsets.getAccessor();
       final int start = offsetsAccessor.get(index);
       final int end = offsetsAccessor.get(index + 1);
-      final UnionVector.Accessor valuesAccessor = getDataVector().getAccessor();
+      final ValueVector.Accessor valuesAccessor = getDataVector().getAccessor();
       for(int i = start; i < end; i++) {
         vals.add(valuesAccessor.getObject(i));
       }

@@ -36,6 +36,7 @@ public interface BaseReader extends Positionable{
   void read(UnionHolder holder);
   void read(int index, UnionHolder holder);
   void copyAsValue(UnionWriter writer);
+  boolean isSet();
 
   public interface MapReader extends BaseReader, Iterable<String>{
     FieldReader reader(String name);

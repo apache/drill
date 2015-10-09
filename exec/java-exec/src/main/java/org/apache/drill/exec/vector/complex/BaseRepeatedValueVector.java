@@ -202,6 +202,11 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     return new AddOrGetResult<>((T)vector, created);
   }
 
+  protected void replaceDataVector(ValueVector v) {
+    vector.clear();
+    vector = v;
+  }
+
   public abstract class BaseRepeatedAccessor extends BaseValueVector.BaseAccessor implements RepeatedAccessor {
 
     @Override

@@ -206,6 +206,7 @@ public class TypeHelper {
     case MAP:
       switch (mode) {
       case REQUIRED:
+      case OPTIONAL:
         return SingleMapWriter.class;
       case REPEATED:
         return RepeatedMapWriter.class;
@@ -213,7 +214,8 @@ public class TypeHelper {
     case LIST:
       switch (mode) {
       case REQUIRED:
-        return SingleListWriter.class;
+      case OPTIONAL:
+        return UnionListWriter.class;
       case REPEATED:
         return RepeatedListWriter.class;
       }

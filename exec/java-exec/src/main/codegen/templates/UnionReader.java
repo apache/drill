@@ -157,6 +157,12 @@ public class UnionReader extends AbstractFieldReader {
   </#list></#list>
 
   @Override
+  public void copyAsValue(ListWriter writer) {
+    ComplexCopier copier = new ComplexCopier(this, (FieldWriter) writer);
+    copier.write();
+  }
+
+  @Override
   public void setPosition(int index) {
     super.setPosition(index);
     for (BaseReader reader : readers) {

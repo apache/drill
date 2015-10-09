@@ -19,23 +19,28 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 public class UnionListReader extends AbstractFieldReader {
 
   private ListVector vector;
-  private UnionVector data;
+  private ValueVector data;
   private UInt4Vector offsets;
-  private UnionReader reader;
 
   public UnionListReader(ListVector vector) {
     this.vector = vector;
     this.data = vector.getDataVector();
     this.offsets = vector.getOffsetVector();
-    this.reader = (UnionReader) data.getReader();
   }
 
   @Override
@@ -43,9 +48,10 @@ public class UnionListReader extends AbstractFieldReader {
     return true;
   }
 
-  @Override
+  MajorType type = Types.optional(MinorType.LIST);
+
   public MajorType getType() {
-    return reader.getType();
+    return type;
   }
 
   private int currentOffset;
@@ -60,7 +66,7 @@ public class UnionListReader extends AbstractFieldReader {
 
   @Override
   public FieldReader reader() {
-    return reader;
+    return data.getReader();
   }
 
   @Override
@@ -74,17 +80,22 @@ public class UnionListReader extends AbstractFieldReader {
     for (int i = -1; i < index; i++) {
       next();
     }
-    holder.reader = reader;
-    holder.isSet = reader.isSet() ? 1 : 0;
+    holder.reader = data.getReader();
+    holder.isSet = data.getReader().isSet() ? 1 : 0;
   }
 
   @Override
   public boolean next() {
     if (currentOffset + 1 < maxOffset) {
-      reader.setPosition(++currentOffset);
+      data.getReader().setPosition(++currentOffset);
       return true;
     } else {
       return false;
     }
+  }
+
+  public void copyAsValue(ListWriter writer) {
+    ComplexCopier copier = new ComplexCopier(this, (FieldWriter) writer);
+    copier.write();
   }
 }

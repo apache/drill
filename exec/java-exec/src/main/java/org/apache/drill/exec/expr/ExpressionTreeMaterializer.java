@@ -382,6 +382,9 @@ public class ExpressionTreeMaterializer {
     }
 
     private LogicalExpression getUnionCastExpressionForType(MinorType type, LogicalExpression arg) {
+      if (type == MinorType.UNION) {
+        return null;
+      }
       String castFuncName = String.format("as%s", type.toString());
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(arg);
@@ -406,6 +409,7 @@ public class ExpressionTreeMaterializer {
 
       MinorType thenType = conditions.expression.getMajorType().getMinorType();
       MinorType elseType = newElseExpr.getMajorType().getMinorType();
+      boolean hasUnion = thenType == MinorType.UNION || elseType == MinorType.UNION;
       if (unionTypeEnabled) {
         if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
@@ -426,18 +430,9 @@ public class ExpressionTreeMaterializer {
             builder.addSubType(elseType);
           }
           MajorType unionType = builder.build();
-//          if (leastRestrictive != thenType) {
-            // Implicitly cast the then expression
-            conditions = new IfExpression.IfCondition(newCondition,
-                    addCastExpression(conditions.expression, unionType, functionLookupContext, errorCollector));
-//          } if (leastRestrictive != elseType) {
-            // Implicitly cast the else expression
-            newElseExpr = addCastExpression(newElseExpr, unionType, functionLookupContext, errorCollector);
-//          } else {
-//            conditions = new IfExpression.IfCondition(newCondition,
-//                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
-//            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
-//          }
+          conditions = new IfExpression.IfCondition(newCondition,
+                  addCastExpression(conditions.expression, unionType, functionLookupContext, errorCollector));
+          newElseExpr = addCastExpression(newElseExpr, unionType, functionLookupContext, errorCollector);
         }
 
       } else {
@@ -492,7 +487,7 @@ public class ExpressionTreeMaterializer {
         }
       }
 
-      if (!unionTypeEnabled) {
+      if (!hasUnion) {
         // If the type of the IF expression is nullable, apply a convertToNullable*Holder function for "THEN"/"ELSE"
         // expressions whose type is not nullable.
         if (IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build().getMajorType().getMode()

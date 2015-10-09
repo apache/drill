@@ -75,13 +75,16 @@ public class BatchPrinter {
       }
       for (ValueVector vv : vectors) {
         Object o = vv.getAccessor().getObject(row);
+        String value;
+        if (o == null) {
+          value = "null";
+        } else
         if (o instanceof byte[]) {
-          String value = new String((byte[]) o);
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+          value = new String((byte[]) o);
         } else {
-          String value = o.toString();
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
+          value = o.toString();
         }
+        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
       }
       System.out.printf("|\n");
     }
