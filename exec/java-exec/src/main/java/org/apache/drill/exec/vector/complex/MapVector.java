@@ -22,6 +22,7 @@ import com.google.common.primitives.Ints;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.google.common.base.Preconditions;
 
 public class MapVector extends AbstractMapVector {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
 
   public final static MajorType TYPE = Types.required(MinorType.MAP);
 
@@ -112,7 +113,7 @@ public class MapVector extends AbstractMapVector {
       return 0;
     }
     long buffer = 0;
-    for (ValueVector v : (Iterable<ValueVector>)this) {
+    for (final ValueVector v : (Iterable<ValueVector>)this) {
       buffer += v.getBufferSize();
     }
 
@@ -149,7 +150,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public TransferPair makeTransferPair(ValueVector to) {
-    return new MapTransferPair(this, (MapVector)to);
+    return new MapTransferPair(this, (MapVector) to);
   }
 
   @Override
@@ -194,7 +195,7 @@ public class MapVector extends AbstractMapVector {
         // (This is similar to what happens in ScanBatch where the children cannot be added till they are
         // read). To take care of this, we ensure that the hashCode of the MaterializedField does not
         // include the hashCode of the children but is based only on MaterializedField$key.
-        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        final ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
         if (allocate && to.size() != preSize) {
           newVector.allocateNew();
         }
@@ -202,10 +203,9 @@ public class MapVector extends AbstractMapVector {
       }
     }
 
-
     @Override
     public void transfer() {
-      for (TransferPair p : pairs) {
+      for (final TransferPair p : pairs) {
         p.transfer();
       }
       to.valueCount = from.valueCount;
@@ -231,7 +231,6 @@ public class MapVector extends AbstractMapVector {
       }
       to.getMutator().setValueCount(length);
     }
-
   }
 
   @Override
@@ -329,7 +328,6 @@ public class MapVector extends AbstractMapVector {
     public int getValueCount() {
       return valueCount;
     }
-
   }
 
   public ValueVector getVectorById(int id) {
@@ -340,7 +338,7 @@ public class MapVector extends AbstractMapVector {
 
     @Override
     public void setValueCount(int valueCount) {
-      for (ValueVector v : getChildren()) {
+      for (final ValueVector v : getChildren()) {
         v.getMutator().setValueCount(valueCount);
       }
       MapVector.this.valueCount = valueCount;
@@ -355,17 +353,19 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void clear() {
-    valueCount = 0;
-    for (ValueVector v : getChildren()) {
+    for (final ValueVector v : getChildren()) {
       v.clear();
     }
+    valueCount = 0;
   }
 
   @Override
   public void close() {
-    for (final ValueVector v : getChildren()) {
+    final Collection<ValueVector> vectors = getChildren();
+    for (final ValueVector v : vectors) {
       v.close();
     }
+    vectors.clear();
     valueCount = 0;
 
     super.close();

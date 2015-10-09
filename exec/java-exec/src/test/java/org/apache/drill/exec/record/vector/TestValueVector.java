@@ -20,12 +20,13 @@ package org.apache.drill.exec.record.vector;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.SchemaPath;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.expr.holders.NullableUInt4Holder;
 import org.apache.drill.exec.expr.holders.NullableVar16CharHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.RepeatedFloat4Holder;
+import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
 import org.apache.drill.exec.expr.holders.RepeatedVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.UInt1Holder;
 import org.apache.drill.exec.expr.holders.UInt4Holder;
@@ -54,6 +56,7 @@ import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableUInt4Vector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -65,11 +68,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestValueVector extends ExecTest {
-  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
-  private final static byte[] STR1 = new String("AAAAA1").getBytes(Charset.forName("UTF-8"));
-  private final static byte[] STR2 = new String("BBBBBBBBB2").getBytes(Charset.forName("UTF-8"));
-  private final static byte[] STR3 = new String("CCCC3").getBytes(Charset.forName("UTF-8"));
+  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
 
   private DrillConfig drillConfig;
   private BufferAllocator allocator;
@@ -80,11 +81,15 @@ public class TestValueVector extends ExecTest {
     allocator = RootAllocatorFactory.newRoot(drillConfig);
   }
 
+  private final static Charset utf8Charset = Charset.forName("UTF-8");
+  private final static byte[] STR1 = new String("AAAAA1").getBytes(utf8Charset);
+  private final static byte[] STR2 = new String("BBBBBBBBB2").getBytes(utf8Charset);
+  private final static byte[] STR3 = new String("CCCC3").getBytes(utf8Charset);
+
   @After
-  public void terminate() {
+  public void terminate() throws Exception {
     allocator.close();
   }
-
 
   @Test(expected = OversizedAllocationException.class)
   public void testFixedVectorReallocation() {
@@ -172,11 +177,11 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testFixedType() {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
 
-    // Create a new value vector for 1024 integers
-    try (UInt4Vector vector = new UInt4Vector(field, allocator)) {
-      UInt4Vector.Mutator m = vector.getMutator();
+    // Create a new value vector for 1024 integers.
+    try (final UInt4Vector vector = new UInt4Vector(field, allocator)) {
+      final UInt4Vector.Mutator m = vector.getMutator();
       vector.allocateNew(1024);
 
       // Put and set a few values
@@ -185,33 +190,36 @@ public class TestValueVector extends ExecTest {
       m.setSafe(100, 102);
       m.setSafe(1022, 103);
       m.setSafe(1023, 104);
-      assertEquals(100, vector.getAccessor().get(0));
-      assertEquals(101, vector.getAccessor().get(1));
-      assertEquals(102, vector.getAccessor().get(100));
-      assertEquals(103, vector.getAccessor().get(1022));
-      assertEquals(104, vector.getAccessor().get(1023));
+
+      final UInt4Vector.Accessor accessor = vector.getAccessor();
+      assertEquals(100, accessor.get(0));
+      assertEquals(101, accessor.get(1));
+      assertEquals(102, accessor.get(100));
+      assertEquals(103, accessor.get(1022));
+      assertEquals(104, accessor.get(1023));
     }
   }
 
   @Test
   public void testNullableVarLen2() {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
-    // Create a new value vector for 1024 integers
-    try (NullableVarCharVector vector = new NullableVarCharVector(field, allocator)) {
-      NullableVarCharVector.Mutator m = vector.getMutator();
+    // Create a new value vector for 1024 integers.
+    try (final NullableVarCharVector vector = new NullableVarCharVector(field, allocator)) {
+      final NullableVarCharVector.Mutator m = vector.getMutator();
       vector.allocateNew(1024 * 10, 1024);
 
       m.set(0, STR1);
       m.set(1, STR2);
       m.set(2, STR3);
 
-      // Check the sample strings
-      assertArrayEquals(STR1, vector.getAccessor().get(0));
-      assertArrayEquals(STR2, vector.getAccessor().get(1));
-      assertArrayEquals(STR3, vector.getAccessor().get(2));
+      // Check the sample strings.
+      final NullableVarCharVector.Accessor accessor = vector.getAccessor();
+      assertArrayEquals(STR1, accessor.get(0));
+      assertArrayEquals(STR2, accessor.get(1));
+      assertArrayEquals(STR3, accessor.get(2));
 
-      // Ensure null value throws
+      // Ensure null value throws.
       boolean b = false;
       try {
         vector.getAccessor().get(3);
@@ -223,14 +231,185 @@ public class TestValueVector extends ExecTest {
     }
   }
 
+  private static DrillBuf combineBuffers(final BufferAllocator allocator, final DrillBuf[] buffers) {
+    // find the total size we'll need
+    int size = 0;
+    for(final DrillBuf buffer : buffers) {
+      size += buffer.readableBytes();
+    }
+
+    // create the new buffer
+    final DrillBuf newBuf = allocator.buffer(size);
+    final DrillBuf writeBuf = newBuf;
+    for(final DrillBuf buffer : buffers) {
+      final DrillBuf readBuf = (DrillBuf) buffer.slice();
+      final int nBytes = readBuf.readableBytes();
+      final byte[] bytes = new byte[nBytes];
+      readBuf.readBytes(bytes);
+      writeBuf.writeBytes(bytes);
+    }
+
+    return newBuf;
+  }
+
+  @Test
+  public void testRepeatedIntVector() {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedIntHolder.TYPE);
+
+    // Create a new value vector.
+    final RepeatedIntVector vector1 = new RepeatedIntVector(field, allocator);
+
+    // Populate the vector.
+    final int[] values = {2, 3, 5, 7, 11, 13, 17, 19, 23, 27}; // some tricksy primes
+    final int nRecords = 7;
+    final int nElements = values.length;
+    vector1.allocateNew(nRecords, nRecords * nElements);
+    final RepeatedIntVector.Mutator mutator = vector1.getMutator();
+    for(int recordIndex = 0; recordIndex < nRecords; ++recordIndex) {
+      mutator.startNewValue(recordIndex);
+      for(int elementIndex = 0; elementIndex < nElements; ++elementIndex) {
+        mutator.add(recordIndex, recordIndex * values[elementIndex]);
+      }
+    }
+    mutator.setValueCount(nRecords);
+
+    // Verify the contents.
+    final RepeatedIntVector.Accessor accessor1 = vector1.getAccessor();
+    assertEquals(nRecords, accessor1.getValueCount());
+    for(int recordIndex = 0; recordIndex < nRecords; ++recordIndex) {
+      for(int elementIndex = 0; elementIndex < nElements; ++elementIndex) {
+        final int value = accessor1.get(recordIndex, elementIndex);
+        assertEquals(recordIndex * values[elementIndex], value);
+      }
+    }
+
+/* TODO(cwestin)
+the interface to load has changed
+    // Serialize, reify, and verify.
+    final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final RepeatedIntVector vector2 = new RepeatedIntVector(field, allocator);
+    vector2.load(nRecords, nRecords * nElements, buffer1);
+
+    final RepeatedIntVector.Accessor accessor2 = vector2.getAccessor();
+    for(int recordIndex = 0; recordIndex < nRecords; ++recordIndex) {
+      for(int elementIndex = 0; elementIndex < nElements; ++elementIndex) {
+        final int value = accessor2.get(recordIndex, elementIndex);
+        assertEquals(accessor1.get(recordIndex,  elementIndex), value);
+      }
+    }
+*/
+
+    vector1.close();
+/* TODO(cwestin)
+    vector2.close();
+    buffer1.release();
+*/
+  }
+
+  @Test
+  public void testVarCharVectorLoad() {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+
+    // Create a new value vector for 1024 variable length strings.
+    final VarCharVector vector1 = new VarCharVector(field, allocator);
+    final VarCharVector.Mutator mutator = vector1.getMutator();
+    vector1.allocateNew(1024 * 10, 1024);
+
+    // Populate the vector.
+    final StringBuilder stringBuilder = new StringBuilder();
+    final int valueCount = 10;
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      mutator.setSafe(i, stringBuilder.toString().getBytes(utf8Charset));
+    }
+    mutator.setValueCount(valueCount);
+    assertEquals(valueCount, vector1.getAccessor().getValueCount());
+
+    // Combine the backing buffers so we can load them into a new vector.
+    final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final VarCharVector vector2 = new VarCharVector(field, allocator);
+    vector2.load(vector1.getMetadata(), buffer1);
+
+    // Check the contents of the new vector.
+    final VarCharVector.Accessor accessor = vector2.getAccessor();
+    stringBuilder.setLength(0);
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      final Object object = accessor.getObject(i);
+      assertEquals(stringBuilder.toString(), object.toString());
+    }
+
+    vector1.close();
+    vector2.close();
+    buffer1.release();
+  }
+
+  @Test
+  public void testNullableVarCharVectorLoad() {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
+
+    // Create a new value vector for 1024 nullable variable length strings.
+    final NullableVarCharVector vector1 = new NullableVarCharVector(field, allocator);
+    final NullableVarCharVector.Mutator mutator = vector1.getMutator();
+    vector1.allocateNew(1024 * 10, 1024);
+
+    // Populate the vector.
+    final StringBuilder stringBuilder = new StringBuilder();
+    final int valueCount = 10;
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      mutator.set(i, stringBuilder.toString().getBytes(utf8Charset));
+    }
+
+    // Check the contents.
+    final NullableVarCharVector.Accessor accessor1 = vector1.getAccessor();
+    stringBuilder.setLength(0);
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      final Object object = accessor1.getObject(i);
+      assertEquals(stringBuilder.toString(), object.toString());
+    }
+
+    mutator.setValueCount(valueCount);
+    assertEquals(valueCount, vector1.getAccessor().getValueCount());
+
+    // Still ok after setting value count?
+    stringBuilder.setLength(0);
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      final Object object = accessor1.getObject(i);
+      assertEquals(stringBuilder.toString(), object.toString());
+    }
+
+    // Combine into a single buffer so we can load it into a new vector.
+    final DrillBuf[] buffers1 = vector1.getBuffers(false);
+    final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
+    final NullableVarCharVector vector2 = new NullableVarCharVector(field, allocator);
+    vector2.load(vector1.getMetadata(), buffer1);
+
+    // Check the vector's contents.
+    final NullableVarCharVector.Accessor accessor2 = vector2.getAccessor();
+    stringBuilder.setLength(0);
+    for(int i = 0; i < valueCount; ++i) {
+      stringBuilder.append('x');
+      final Object object = accessor2.getObject(i);
+      assertEquals(stringBuilder.toString(), object.toString());
+    }
+
+    vector1.close();
+    vector2.close();
+    buffer1.release();
+  }
 
   @Test
   public void testNullableFixedType() {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableUInt4Holder.TYPE);
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableUInt4Holder.TYPE);
 
-    // Create a new value vector for 1024 integers
-    try (NullableUInt4Vector vector = new NullableUInt4Vector(field, allocator)) {
-      NullableUInt4Vector.Mutator m = vector.getMutator();
+    // Create a new value vector for 1024 integers.
+    try (final NullableUInt4Vector vector = new NullableUInt4Vector(field, allocator)) {
+      final NullableUInt4Vector.Mutator m = vector.getMutator();
       vector.allocateNew(1024);
 
       // Put and set a few values
@@ -239,17 +418,19 @@ public class TestValueVector extends ExecTest {
       m.set(100, 102);
       m.set(1022, 103);
       m.set(1023, 104);
-      assertEquals(100, vector.getAccessor().get(0));
-      assertEquals(101, vector.getAccessor().get(1));
-      assertEquals(102, vector.getAccessor().get(100));
-      assertEquals(103, vector.getAccessor().get(1022));
-      assertEquals(104, vector.getAccessor().get(1023));
+
+      final NullableUInt4Vector.Accessor accessor = vector.getAccessor();
+      assertEquals(100, accessor.get(0));
+      assertEquals(101, accessor.get(1));
+      assertEquals(102, accessor.get(100));
+      assertEquals(103, accessor.get(1022));
+      assertEquals(104, accessor.get(1023));
 
       // Ensure null values throw
       {
         boolean b = false;
         try {
-          vector.getAccessor().get(3);
+          accessor.get(3);
         } catch (IllegalStateException e) {
           b = true;
         } finally {
@@ -257,12 +438,11 @@ public class TestValueVector extends ExecTest {
         }
       }
 
-
       vector.allocateNew(2048);
       {
         boolean b = false;
         try {
-          vector.getAccessor().get(0);
+          accessor.get(0);
         } catch (IllegalStateException e) {
           b = true;
         } finally {
@@ -275,14 +455,13 @@ public class TestValueVector extends ExecTest {
       m.set(100, 102);
       m.set(1022, 103);
       m.set(1023, 104);
-      assertEquals(100, vector.getAccessor().get(0));
-      assertEquals(101, vector.getAccessor().get(1));
-      assertEquals(102, vector.getAccessor().get(100));
-      assertEquals(103, vector.getAccessor().get(1022));
-      assertEquals(104, vector.getAccessor().get(1023));
+      assertEquals(100, accessor.get(0));
+      assertEquals(101, accessor.get(1));
+      assertEquals(102, accessor.get(100));
+      assertEquals(103, accessor.get(1022));
+      assertEquals(104, accessor.get(1023));
 
-      // Ensure null values throw
-
+      // Ensure null values throw.
       {
         boolean b = false;
         try {
@@ -294,31 +473,32 @@ public class TestValueVector extends ExecTest {
         }
       }
     }
-
   }
 
   @Test
   public void testNullableFloat() {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
-    try (NullableFloat4Vector vector = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator)) {
-      NullableFloat4Vector.Mutator m = vector.getMutator();
+    try (final NullableFloat4Vector vector = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator)) {
+      final NullableFloat4Vector.Mutator m = vector.getMutator();
       vector.allocateNew(1024);
 
-      // Put and set a few values
+      // Put and set a few values.
       m.set(0, 100.1f);
       m.set(1, 101.2f);
       m.set(100, 102.3f);
       m.set(1022, 103.4f);
       m.set(1023, 104.5f);
-      assertEquals(100.1f, vector.getAccessor().get(0), 0);
-      assertEquals(101.2f, vector.getAccessor().get(1), 0);
-      assertEquals(102.3f, vector.getAccessor().get(100), 0);
-      assertEquals(103.4f, vector.getAccessor().get(1022), 0);
-      assertEquals(104.5f, vector.getAccessor().get(1023), 0);
 
-      // Ensure null values throw
+      final NullableFloat4Vector.Accessor accessor = vector.getAccessor();
+      assertEquals(100.1f, accessor.get(0), 0);
+      assertEquals(101.2f, accessor.get(1), 0);
+      assertEquals(102.3f, accessor.get(100), 0);
+      assertEquals(103.4f, accessor.get(1022), 0);
+      assertEquals(104.5f, accessor.get(1023), 0);
+
+      // Ensure null values throw.
       {
         boolean b = false;
         try {
@@ -334,7 +514,7 @@ public class TestValueVector extends ExecTest {
       {
         boolean b = false;
         try {
-          vector.getAccessor().get(0);
+          accessor.get(0);
         } catch (IllegalStateException e) {
           b = true;
         } finally {
@@ -346,11 +526,11 @@ public class TestValueVector extends ExecTest {
 
   @Test
   public void testBitVector() {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE);
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, BitHolder.TYPE);
 
     // Create a new value vector for 1024 integers
-    try (BitVector vector = new BitVector(field, allocator)) {
-      BitVector.Mutator m = vector.getMutator();
+    try (final BitVector vector = new BitVector(field, allocator)) {
+      final BitVector.Mutator m = vector.getMutator();
       vector.allocateNew(1024);
 
       // Put and set a few values
@@ -358,38 +538,39 @@ public class TestValueVector extends ExecTest {
       m.set(1, 0);
       m.set(100, 0);
       m.set(1022, 1);
-      assertEquals(1, vector.getAccessor().get(0));
-      assertEquals(0, vector.getAccessor().get(1));
-      assertEquals(0, vector.getAccessor().get(100));
-      assertEquals(1, vector.getAccessor().get(1022));
+
+      final BitVector.Accessor accessor = vector.getAccessor();
+      assertEquals(1, accessor.get(0));
+      assertEquals(0, accessor.get(1));
+      assertEquals(0, accessor.get(100));
+      assertEquals(1, accessor.get(1022));
 
       // test setting the same value twice
       m.set(0, 1);
       m.set(0, 1);
       m.set(1, 0);
       m.set(1, 0);
-      assertEquals(1, vector.getAccessor().get(0));
-      assertEquals(0, vector.getAccessor().get(1));
+      assertEquals(1, accessor.get(0));
+      assertEquals(0, accessor.get(1));
 
       // test toggling the values
       m.set(0, 0);
       m.set(1, 1);
-      assertEquals(0, vector.getAccessor().get(0));
-      assertEquals(1, vector.getAccessor().get(1));
+      assertEquals(0, accessor.get(0));
+      assertEquals(1, accessor.get(1));
 
       // Ensure unallocated space returns 0
-      assertEquals(0, vector.getAccessor().get(3));
+      assertEquals(0, accessor.get(3));
     }
   }
 
-
   @Test
-  public void testReAllocNullableFixedWidthVector() throws Exception {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
+  public void testReAllocNullableFixedWidthVector() {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableFloat4Holder.TYPE);
 
     // Create a new value vector for 1024 integers
-    try (NullableFloat4Vector vector = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator)) {
-      NullableFloat4Vector.Mutator m = vector.getMutator();
+    try (final NullableFloat4Vector vector = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator)) {
+      final NullableFloat4Vector.Mutator m = vector.getMutator();
       vector.allocateNew(1024);
 
       assertEquals(1024, vector.getValueCapacity());
@@ -405,11 +586,11 @@ public class TestValueVector extends ExecTest {
       // Check valueCapacity is more than initial allocation
       assertEquals(1024 * 2, vector.getValueCapacity());
 
-      assertEquals(100.1f, vector.getAccessor().get(0), 0);
-      assertEquals(102.3f, vector.getAccessor().get(100), 0);
-      assertEquals(104.5f, vector.getAccessor().get(1023), 0);
-      assertEquals(105.5f, vector.getAccessor().get(2000), 0);
-
+      final NullableFloat4Vector.Accessor accessor = vector.getAccessor();
+      assertEquals(100.1f, accessor.get(0), 0);
+      assertEquals(102.3f, accessor.get(100), 0);
+      assertEquals(104.5f, accessor.get(1023), 0);
+      assertEquals(105.5f, accessor.get(2000), 0);
 
       // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
       // as we don't call setSafe for null values, but we do call setValueCount when all values are inserted into the
@@ -419,12 +600,12 @@ public class TestValueVector extends ExecTest {
   }
 
   @Test
-  public void testReAllocNullableVariableWidthVector() throws Exception {
-    MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
+  public void testReAllocNullableVariableWidthVector() {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE);
 
     // Create a new value vector for 1024 integers
-    try (NullableVarCharVector vector = (NullableVarCharVector) TypeHelper.getNewVector(field, allocator)) {
-      NullableVarCharVector.Mutator m = vector.getMutator();
+    try (final NullableVarCharVector vector = (NullableVarCharVector) TypeHelper.getNewVector(field, allocator)) {
+      final NullableVarCharVector.Mutator m = vector.getMutator();
       vector.allocateNew();
 
       int initialCapacity = vector.getValueCapacity();
@@ -439,9 +620,10 @@ public class TestValueVector extends ExecTest {
       // Check valueCapacity is more than initial allocation
       assertEquals((initialCapacity + 1) * 2 - 1, vector.getValueCapacity());
 
-      assertArrayEquals(STR1, vector.getAccessor().get(0));
-      assertArrayEquals(STR2, vector.getAccessor().get(initialCapacity - 1));
-      assertArrayEquals(STR3, vector.getAccessor().get(initialCapacity + 200));
+      final NullableVarCharVector.Accessor accessor = vector.getAccessor();
+      assertArrayEquals(STR1, accessor.get(0));
+      assertArrayEquals(STR2, accessor.get(initialCapacity - 1));
+      assertArrayEquals(STR3, accessor.get(initialCapacity + 200));
 
       // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
       // as we don't call setSafe for null values, but we do call setValueCount when the current batch is processed.
