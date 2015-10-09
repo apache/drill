@@ -29,6 +29,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.impl.UnionVector;
 
@@ -125,6 +126,12 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
       builder.finalType(majorType);
       builder.intermediateType(majorType);
       return builder.build();
+    } else if (v instanceof ListVector) {
+      ListVector list = (ListVector) v;
+      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+      builder.intermediateType(v.getField().getType());
+      builder.addId(id);
+      return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
     } else
     if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.

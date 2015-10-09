@@ -26,20 +26,21 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
-  @Test
-  public void q() throws Exception {
-    testNoResult("use dfs.tmp");
-//    test("select 1 + cast(a as bigint) from t");
-//    test("select cast(1 as bigint) + case typeOf(a) when type('bigint') then asBigInt(a) when type('varchar') then cast(asVarChar(a) as bigint) end from t");
-//    test("select a from t where typeOf(a) = type('bigint')");
-    test("select a_b, typeOf(a_b) type from (select a + b as a_b from t3)");
-//    test("select sum(a) from t");
+  @After
+  public void reset() throws Exception {
+    String[] options = new String[] { ExecConstants.SLICE_TARGET, PlannerSettings.HASHJOIN.getOptionName(), PlannerSettings.HASHAGG.getOptionName(),
+            PlannerSettings.STREAMAGG.getOptionName(), PlannerSettings.MERGEJOIN.getOptionName(), PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR.getOptionName() };
+    for (String option : options) {
+      testNoResult(String.format("reset `%s`", option));
+    }
   }
 
   @Test // see DRILL-2328

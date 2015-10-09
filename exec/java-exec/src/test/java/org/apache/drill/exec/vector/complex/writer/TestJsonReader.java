@@ -482,4 +482,22 @@ public class TestJsonReader extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testUnionExpressionMaterialization() throws Exception {
+    String query = "select a + b c from cp.`jsoninput/union/b.json`";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("c")
+              .baselineValues(3L)
+              .baselineValues(7.0)
+              .baselineValues(11.0)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
 }

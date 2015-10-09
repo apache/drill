@@ -75,7 +75,7 @@ public class UnionVector implements ValueVector {
     internalMapWriter = new SingleMapWriter(internalMap, null, true, true);
     this.typeVector = internalMap.addOrGet("types", Types.required(MinorType.UINT1), UInt1Vector.class);
     this.field.addChild(internalMap.getField().clone());
-    this.majorType = Types.optional(MinorType.UNION);
+    this.majorType = field.getType();
     this.callBack = callBack;
   }
 
@@ -241,6 +241,11 @@ public class UnionVector implements ValueVector {
 
   public void copyFromSafe(int inIndex, int outIndex, UnionVector from) {
     copyFrom(inIndex, outIndex, from);
+  }
+
+  public void addVector(ValueVector v) {
+    internalMap.putChild(v.getField().getType().getMinorType().name().toLowerCase(), v);
+    addSubType(v.getField().getType().getMinorType());
   }
 
   private class TransferImpl implements TransferPair {

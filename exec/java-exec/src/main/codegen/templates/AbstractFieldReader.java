@@ -33,6 +33,10 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
     super();
   }
 
+  public boolean isSet() {
+    return true;
+  }
+
   <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean", 
           "Character", "DateTime", "Period", "Double", "Float",
           "Text", "String", "Byte", "Short", "byte[]"] as friendlyType>
@@ -57,9 +61,9 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   public void copyAsField(String name, MapWriter writer){
     fail("CopyAsField MapWriter");
   }
-  public void copyAsValue(ListWriter writer){
-    fail("CopyAsValueList");
-  }
+//  public void copyAsValue(ListWriter writer){
+//    fail("CopyAsValueList");
+//  }
   public void copyAsField(String name, ListWriter writer){
     fail("CopyAsFieldList");
   }

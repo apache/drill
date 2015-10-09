@@ -24,6 +24,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
+import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 
 abstract class AbstractBaseReader implements FieldReader{
@@ -87,5 +89,11 @@ abstract class AbstractBaseReader implements FieldReader{
   @Override
   public void copyAsValue(UnionWriter writer) {
     throw new IllegalStateException("The current reader doesn't support reading union type");
+  }
+
+  @Override
+  public void copyAsValue(ListWriter writer) {
+    ComplexCopier copier = new ComplexCopier(this, (FieldWriter)writer);
+    copier.write();
   }
 }

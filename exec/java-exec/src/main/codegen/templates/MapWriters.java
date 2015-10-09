@@ -85,8 +85,8 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
         MapVector vector=container.addOrGet(name,MapVector.TYPE,MapVector.class);
         writer=new SingleMapWriter(vector,this);
       } else {
-        UnionVector vector = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
-        writer = new UnionWriter(vector);
+        MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
+        writer = new PromotableWriter(vector, container);
       }
       if(vectorCount != container.size()) {
         writer.allocate();
@@ -127,7 +127,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
       if (!unionEnabled){
         writer = new SingleListWriter(name,container,this);
       } else{
-        writer = new UnionWriter(container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class));
+        writer = new PromotableWriter(container.addOrGet(name, Types.optional(MinorType.LIST), ListVector.class), container);
       }
       if (container.size() > vectorCount) {
         writer.allocate();
@@ -215,8 +215,8 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
     if(writer == null) {
       ValueVector vector;
       if (unionEnabled){
-        UnionVector v = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
-        writer = new UnionWriter(v);
+        ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
+        writer = new PromotableWriter(v, container);
         vector = v;
       } else {
         ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);

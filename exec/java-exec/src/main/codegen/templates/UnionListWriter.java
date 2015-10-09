@@ -34,9 +34,9 @@ package org.apache.drill.exec.vector.complex.impl;
 public class UnionListWriter extends AbstractFieldWriter {
 
   ListVector vector;
-  UnionVector data;
+//  UnionVector data;
   UInt4Vector offsets;
-  private UnionWriter writer;
+  private PromotableWriter writer;
   private boolean inMap = false;
   private String mapName;
   private int lastIndex = 0;
@@ -44,9 +44,13 @@ public class UnionListWriter extends AbstractFieldWriter {
   public UnionListWriter(ListVector vector) {
     super(null);
     this.vector = vector;
-    this.data = (UnionVector) vector.getDataVector();
-    this.writer = new UnionWriter(data);
+//    this.data = (UnionVector) vector.getDataVector();
+    this.writer = new PromotableWriter(vector.getDataVector(), vector);
     this.offsets = vector.getOffsetVector();
+  }
+
+  public UnionListWriter(ListVector vector, AbstractFieldWriter parent) {
+    this(vector);
   }
 
   @Override
@@ -115,7 +119,7 @@ public class UnionListWriter extends AbstractFieldWriter {
   public ListWriter list(String name) {
     final int nextOffset = offsets.getAccessor().get(idx() + 1);
     vector.getMutator().setNotNull(idx());
-    data.getMutator().setType(nextOffset, MinorType.MAP);
+//    data.getMutator().setType(nextOffset, MinorType.MAP);
     writer.setPosition(nextOffset);
     ListWriter listWriter = writer.list(name);
     return listWriter;
@@ -142,7 +146,7 @@ public class UnionListWriter extends AbstractFieldWriter {
     assert inMap;
     final int nextOffset = offsets.getAccessor().get(idx() + 1);
     vector.getMutator().setNotNull(idx());
-    data.getMutator().setType(nextOffset, MinorType.MAP);
+//    data.getMutator().setType(nextOffset, MinorType.MAP);
     offsets.getMutator().setSafe(idx() + 1, nextOffset);
     writer.setPosition(nextOffset);
   }
@@ -167,7 +171,7 @@ public class UnionListWriter extends AbstractFieldWriter {
     if (inMap) {
       final int nextOffset = offsets.getAccessor().get(idx() + 1);
       vector.getMutator().setNotNull(idx());
-      data.getMutator().setType(nextOffset, MinorType.MAP);
+//      data.getMutator().setType(nextOffset, MinorType.MAP);
       writer.setPosition(nextOffset);
       ${name}Writer ${uncappedName}Writer = writer.<#if uncappedName == "int">integer<#else>${uncappedName}</#if>(mapName);
       ${uncappedName}Writer.write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
