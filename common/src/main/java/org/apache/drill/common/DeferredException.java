@@ -18,6 +18,7 @@
 package org.apache.drill.common;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 
 /**
  * Collects one or more exceptions that may occur, using
@@ -30,8 +31,35 @@ import com.google.common.base.Preconditions;
  * <p>This class is thread safe.
  */
 public class DeferredException implements AutoCloseable {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeferredException.class);
+
   private Exception exception = null;
   private boolean isClosed = false;
+  private final Supplier<Exception> exceptionSupplier;
+
+  /**
+   * Constructor.
+   */
+  public DeferredException() {
+    this(null);
+  }
+
+  /**
+   * Constructor. This constructor accepts a Supplier that can be used
+   * to create the root exception iff any other exceptions are added. For
+   * example, in a series of resources closures in a close(), if any of
+   * the individual closures fails, the root exception should come from
+   * the current class, not from the first subordinate close() to fail.
+   * This can be used to provide an exception in that case which will be
+   * the root exception; the subordinate failed close() will be added to
+   * that exception as a suppressed exception.
+   *
+   * @param exceptionSupplier lazily supplies what will be the root exception
+   *   if any exceptions are added
+   */
+  public DeferredException(Supplier<Exception> exceptionSupplier) {
+    this.exceptionSupplier = exceptionSupplier;
+  }
 
   /**
    * Add an exception. If this is the first exception added, it will be the one
@@ -47,7 +75,15 @@ public class DeferredException implements AutoCloseable {
       Preconditions.checkState(!isClosed);
 
       if (this.exception == null) {
-        this.exception = exception;
+        if (exceptionSupplier == null) {
+          this.exception = exception;
+        } else {
+          this.exception = exceptionSupplier.get();
+          if (this.exception == null) {
+            this.exception = new RuntimeException("Missing root exception");
+          }
+          this.exception.addSuppressed(exception);
+        }
       } else {
         this.exception.addSuppressed(exception);
       }
@@ -93,7 +129,7 @@ public class DeferredException implements AutoCloseable {
    *
    * @throws Exception
    */
-  public synchronized void throwAndClear() throws Exception{
+  public synchronized void throwAndClear() throws Exception {
     final Exception e = getAndClear();
     if (e != null) {
       throw e;

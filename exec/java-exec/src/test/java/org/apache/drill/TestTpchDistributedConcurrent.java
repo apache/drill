@@ -201,6 +201,16 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
     // Stop the querySubmitter thread.
     querySubmitter.interrupt();
 
+    if (interruptedException != null) {
+      final StackTraceElement[] ste = interruptedException.getStackTrace();
+      final StringBuilder sb = new StringBuilder();
+      for(StackTraceElement s : ste) {
+        sb.append(s.toString());
+        sb.append('\n');
+      }
+      System.out.println("interruptedException: " + interruptedException.getMessage() +
+          " from \n" + sb.toString());
+    }
     assertNull("Query error caused interruption", interruptedException);
 
     final int nListeners = listeners.size();

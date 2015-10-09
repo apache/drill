@@ -31,12 +31,14 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -71,7 +73,7 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DrillClient implements Closeable, ConnectionThrottle {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
 
-  DrillConfig config;
+  private final DrillConfig config;
   private UserClient client;
   private UserProperties props = null;
   private volatile ClusterCoordinator clusterCoordinator;
@@ -85,35 +87,39 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private final boolean isDirectConnection; // true if the connection bypasses zookeeper and connects directly to a drillbit
   private EventLoopGroup eventLoopGroup;
 
-  public DrillClient() {
+  public DrillClient() throws OutOfMemoryException {
     this(DrillConfig.create(), false);
   }
 
-  public DrillClient(boolean isDirect) {
+  public DrillClient(boolean isDirect) throws OutOfMemoryException {
     this(DrillConfig.create(), isDirect);
   }
 
-  public DrillClient(String fileName) {
+  public DrillClient(String fileName) throws OutOfMemoryException {
     this(DrillConfig.create(fileName), false);
   }
 
-  public DrillClient(DrillConfig config) {
+  public DrillClient(DrillConfig config) throws OutOfMemoryException {
     this(config, null, false);
   }
 
-  public DrillClient(DrillConfig config, boolean isDirect) {
+  public DrillClient(DrillConfig config, boolean isDirect)
+      throws OutOfMemoryException {
     this(config, null, isDirect);
   }
 
-  public DrillClient(DrillConfig config, ClusterCoordinator coordinator) {
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator)
+    throws OutOfMemoryException {
     this(config, coordinator, null, false);
   }
 
-  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, boolean isDirect) {
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, boolean isDirect)
+    throws OutOfMemoryException {
     this(config, coordinator, null, isDirect);
   }
 
-  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator) {
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator)
+      throws OutOfMemoryException {
     this(config, coordinator, allocator, false);
   }
 
@@ -258,13 +264,16 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       this.client.close();
     }
     if (this.ownsAllocator && allocator != null) {
-      allocator.close();
+      DrillAutoCloseables.closeNoChecked(allocator);
     }
     if (ownsZkConnection) {
-      try {
-        this.clusterCoordinator.close();
-      } catch (IOException e) {
-        logger.warn("Error while closing Cluster Coordinator.", e);
+      if (clusterCoordinator != null) {
+        try {
+          clusterCoordinator.close();
+          clusterCoordinator = null;
+        } catch (IOException e) {
+          logger.warn("Error while closing Cluster Coordinator.", e);
+        }
       }
     }
     if (eventLoopGroup != null) {
@@ -383,6 +392,14 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       try {
         return future.get();
       } catch (Throwable t) {
+        /*
+         * Since we're not going to return the result to the caller
+         * to clean up, we have to do it.
+         */
+        for(final QueryDataBatch queryDataBatch : results) {
+          queryDataBatch.release();
+        }
+
         throw RpcException.mapException(t);
       }
     }
