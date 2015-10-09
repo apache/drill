@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.vector;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -91,10 +94,10 @@ public abstract class BaseValueVector implements ValueVector {
     protected BaseMutator() { }
 
     @Override
-    public void generateTestData(int values) { }
+    public void generateTestData(int values) {}
 
     //TODO: consider making mutator stateless(if possible) on another issue.
-    public void reset() { }
+    public void reset() {}
   }
 
   @Override
@@ -102,5 +105,14 @@ public abstract class BaseValueVector implements ValueVector {
     return Iterators.emptyIterator();
   }
 
+  public static boolean checkBufRefs(final ValueVector vv) {
+    for(final DrillBuf buffer : vv.getBuffers(false)) {
+      if (buffer.refCnt() <= 0) {
+        throw new IllegalStateException("zero refcount");
+      }
+    }
+
+    return true;
+  }
 }
 
