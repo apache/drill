@@ -216,12 +216,21 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
     private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
       if (metaDataFileExists(fs, selection.getFirstPath(fs))) {
-        ParquetTableMetadata_v1 metadata = Metadata.getParquetTableMetadata(fs, getMetadataPath(selection.getFirstPath(fs)).toString());
+        FileStatus metaRootDir = selection.getFirstPath(fs);
+        Path metaFilePath = getMetadataPath(metaRootDir);
+
+        // get the metadata for the directory by reading the metadata file
+        ParquetTableMetadata_v1 metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
         List<String> fileNames = Lists.newArrayList();
         for (ParquetFileMetadata file : metadata.files) {
           fileNames.add(file.path);
         }
-        return new FileSelection(fileNames, true);
+        // when creating the file selection, set the selection root in the form /a/b instead of
+        // file:/a/b.  The reason is that the file names above have been created in the form
+        // /a/b/c.parquet and the format of the selection root must match that of the file names
+        // otherwise downstream operations such as partition pruning can break.
+        Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
+        return new FileSelection(fileNames, metaRootPath.toString(), true);
       } else {
         // don't expand yet; ParquetGroupScan's metadata gathering operation
         // does that.
