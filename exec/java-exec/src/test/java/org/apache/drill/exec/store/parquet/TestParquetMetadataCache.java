@@ -51,7 +51,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
-  public void testPartitionPruningWithMetadataCache() throws Exception {
+  public void testPartitionPruningWithMetadataCache_1() throws Exception {
     test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName));
     checkForMetadataFile(tableName);
     String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/%s` " +
@@ -59,6 +59,23 @@ public class TestParquetMetadataCache extends PlanTestBase {
         getDfsTestTmpSchemaLocation(), tableName);
     int expectedRowCount = 10;
     int expectedNumFiles = 1;
+
+    int actualRowCount = testSql(query);
+    assertEquals(expectedRowCount, actualRowCount);
+    String numFilesPattern = "numFiles=" + expectedNumFiles;
+    String usedMetaPattern = "usedMetadataFile=true";
+    PlanTestBase.testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern}, new String[] {"Filter"});
+  }
+
+  @Test // DRILL-3917
+  public void testPartitionPruningWithMetadataCache_2() throws Exception {
+    test(String.format("refresh table metadata dfs_test.`%s/%s`", getDfsTestTmpSchemaLocation(), tableName));
+    checkForMetadataFile(tableName);
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/%s` " +
+            " where dir0=1994",
+        getDfsTestTmpSchemaLocation(), tableName);
+    int expectedRowCount = 40;
+    int expectedNumFiles = 4;
 
     int actualRowCount = testSql(query);
     assertEquals(expectedRowCount, actualRowCount);
