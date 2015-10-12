@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.drill.contrib.storage-hive</groupId>
     <artifactId>drill-contrib-storage-hive-parent</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-hive-exec-shaded</artifactId>
