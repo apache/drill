@@ -55,7 +55,7 @@
     {from: "VarBinary", to: "VarBinary", major: "SrcVarlenTargetVarlen"},
 
     {from: "Date", to: "TimeStamp", major: "Date"},
-    {from: "TimeStamp", to: "Date", major: "Date"},
+    {from: "TimeStamp", to: "Date", major: "Date", alias: "to_date"},
 
     {from: "VarChar", to: "Date", major: "VarCharDate", alias: "datetype"},
     {from: "VarChar", to: "TimeStamp", major: "VarCharDate", alias: "timestamptype"},
