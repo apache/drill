@@ -26,11 +26,14 @@ import java.util.List;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
+import org.apache.drill.exec.proto.UserBitShared.QueryData;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -57,26 +60,10 @@ public class TestMergingReceiver extends PopUnitTestBase {
       final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
       for (final QueryDataBatch b : results) {
-        count += b.getHeader().getRowCount();
-        for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
-          final List<Object> row = Lists.newArrayList();
-          batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (final VectorWrapper<?> vw : batchLoader) {
-            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
-          }
-          for (final Object cell : row) {
-            if (cell == null) {
-//              System.out.print("<null>    ");
-              continue;
-            }
-            final int len = cell.toString().length();
-//            System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i) {
-//              System.out.print(" ");
-            }
-          }
-//          System.out.println();
-        }
+        final QueryData queryData = b.getHeader();
+        final int rowCount = queryData.getRowCount();
+        count += rowCount;
+        batchLoader.load(queryData.getDef(), b.getData()); // loaded but not used, just to test
         b.release();
         batchLoader.clear();
       }
@@ -104,31 +91,25 @@ public class TestMergingReceiver extends PopUnitTestBase {
       // print the results
       Long lastBlueValue = null;
       for (final QueryDataBatch b : results) {
-        count += b.getHeader().getRowCount();
-        for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
-          final List<Object> row = Lists.newArrayList();
-          batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (final VectorWrapper vw : batchLoader) {
-            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
-            if (vw.getValueVector().getField().getAsSchemaPath().getRootSegment().getPath().equals("blue")) {
+        final QueryData queryData = b.getHeader();
+        final int batchRowCount = queryData.getRowCount();
+        count += batchRowCount;
+        batchLoader.load(queryData.getDef(), b.getData());
+        for (final VectorWrapper vw : batchLoader) {
+          final ValueVector vv = vw.getValueVector();
+          final ValueVector.Accessor va = vv.getAccessor();
+          final MaterializedField materializedField = vv.getField();
+          final int numValues = va.getValueCount();
+          for(int valueIdx = 0; valueIdx < numValues; ++valueIdx) {
+            if (materializedField.getAsSchemaPath().getRootSegment().getPath().equals("blue")) {
+              final long longValue = ((Long) va.getObject(valueIdx)).longValue();
               // check that order is ascending
-              if (((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() == 0) {
-                continue; // ignore initial 0's from sort
-              }
               if (lastBlueValue != null) {
-                assertTrue(((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() >= ((Long)lastBlueValue).longValue());
+                assertTrue(longValue >= lastBlueValue);
               }
-              lastBlueValue = (Long)vw.getValueVector().getAccessor().getObject(valueIdx);
+              lastBlueValue = longValue;
             }
           }
-          for (final Object cell : row) {
-            int len = cell.toString().length();
-//            System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i) {
-//              System.out.print(" ");
-            }
-          }
-//          System.out.println();
         }
         b.release();
         batchLoader.clear();
@@ -156,26 +137,9 @@ public class TestMergingReceiver extends PopUnitTestBase {
       final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       // print the results
       for (final QueryDataBatch b : results) {
-        count += b.getHeader().getRowCount();
-        for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
-          final List<Object> row = Lists.newArrayList();
-          batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (final VectorWrapper vw : batchLoader) {
-            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
-          }
-          for (final Object cell : row) {
-            if (cell == null) {
-//              System.out.print("<null>    ");
-              continue;
-            }
-            int len = cell.toString().length();
-//            System.out.print(cell + " ");
-            for (int i = 0; i < (30 - len); ++i) {
-//              System.out.print(" ");
-            }
-          }
-//          System.out.println();
-        }
+        final QueryData queryData = b.getHeader();
+        batchLoader.load(queryData.getDef(), b.getData()); // loaded but not used, for testing
+        count += queryData.getRowCount();
         b.release();
         batchLoader.clear();
       }

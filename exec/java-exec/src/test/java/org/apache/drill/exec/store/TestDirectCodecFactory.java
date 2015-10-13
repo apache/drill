@@ -46,7 +46,7 @@ public class TestDirectCodecFactory extends ExecTest {
     ON_HEAP, OFF_HEAP, DRILLBUF
   }
 
-  private void test(int size, CompressionCodecName codec, boolean useOnHeapCompression, Decompression decomp) {
+  private void test(int size, CompressionCodecName codec, boolean useOnHeapCompression, Decompression decomp) throws Exception {
     DrillBuf rawBuf = null;
     DrillBuf outBuf = null;
     try (final BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig);

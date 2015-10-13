@@ -29,7 +29,6 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -128,7 +127,5 @@ public class TestAgg extends ExecTest {
       throw exec.getContext().getFailureCause();
     }
     assertTrue(!exec.getContext().isFailed());
-
   }
-
 }
