@@ -19,8 +19,10 @@ package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.jar.Manifest;
 
 import com.google.common.io.Resources;
 
@@ -30,6 +32,7 @@ public class VersionIterator implements Iterator<Object>{
   public boolean beforeFirst = true;
 
   public static class VersionInfo {
+    public String version_number = "";
     public String commit_id = "Unknown";
     public String commit_message = "";
     public String commit_time = "";
@@ -38,6 +41,7 @@ public class VersionIterator implements Iterator<Object>{
 
     public VersionInfo(){
       try {
+        version_number = getDrillVersionFromManifest(); // get drill version (x.y.z)
         URL u = Resources.getResource("git.properties");
         if(u != null){
           Properties p = new Properties();
@@ -54,6 +58,7 @@ public class VersionIterator implements Iterator<Object>{
       }
     }
   }
+
   @Override
   public boolean hasNext() {
     return beforeFirst;
@@ -72,6 +77,34 @@ public class VersionIterator implements Iterator<Object>{
   public void remove() {
     throw new UnsupportedOperationException();
   }
+
+  /**
+   *
+   * @return version number x.y.z from Manifest file
+   */
+  private static String getDrillVersionFromManifest() {
+    String appName = "";
+    String appVersion = "";
+    try {
+      Enumeration<URL> resources = VersionInfo.class.getClassLoader()
+              .getResources("META-INF/MANIFEST.MF");
+      while (resources.hasMoreElements()) {
+        Manifest manifest = new Manifest(resources.nextElement().openStream());
+        // check that this is your manifest and do what you need or
+        // get the next one
+        appName = manifest.getMainAttributes()
+                .getValue("Implementation-Title");
+        if (appName != null && appName.toLowerCase().contains("drill")) {
+          appVersion = manifest.getMainAttributes()
+                  .getValue("Implementation-Version");
+        }
+      }
+    } catch (IOException except) {
+      appVersion = "";
+    }
+    return appVersion;
+  }
+
 
 
 }
