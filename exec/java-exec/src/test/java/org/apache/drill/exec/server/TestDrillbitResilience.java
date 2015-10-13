@@ -36,6 +36,7 @@ import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -119,7 +120,6 @@ public class TestDrillbitResilience extends DrillTest {
     }
 
     try {
-      @SuppressWarnings("resource")
       final Drillbit drillbit = Drillbit.start(zkHelper.getConfig(), remoteServiceSet);
       drillbits.put(name, drillbit);
     } catch (final DrillbitStartupException e) {
@@ -133,7 +133,6 @@ public class TestDrillbitResilience extends DrillTest {
    * @param name name of the drillbit
    */
   private static void stopDrillbit(final String name) {
-    @SuppressWarnings("resource")
     final Drillbit drillbit = drillbits.get(name);
     if (drillbit == null) {
       throw new IllegalStateException("No Drillbit named \"" + name + "\" found");
@@ -273,7 +272,7 @@ public class TestDrillbitResilience extends DrillTest {
 
           @Override
           public void cleanup() {
-            bufferAllocator.close();
+            DrillAutoCloseables.closeNoChecked(bufferAllocator);
           }
         };
 

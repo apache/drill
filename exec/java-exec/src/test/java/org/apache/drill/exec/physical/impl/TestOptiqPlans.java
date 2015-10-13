@@ -138,7 +138,7 @@ public class TestOptiqPlans extends ExecTest {
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
-            System.out.println(vv.getAccessor().getObject(i));
+            System.out.println(o);
           }
         }
         loader.clear();
@@ -167,7 +167,7 @@ public class TestOptiqPlans extends ExecTest {
           final ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             final Object o = vv.getAccessor().getObject(i);
-            System.out.println(vv.getAccessor().getObject(i));
+            System.out.println(o);
           }
         }
         loader.clear();
