@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.tools.RelConversionException;
 
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -94,7 +95,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     }
     List<RexNode> complexExprs = exprSplitter.getComplexExprs();
 
-    if (complexExprs.size() == 1) {
+    if (complexExprs.size() == 1 && findTopComplexFunc(project.getChildExps()).size() == 1) {
       return project;
     }
 
@@ -142,4 +143,25 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     }
     return (Prel) project.copy(project.getTraitSet(), originalInput, exprList, new RelRecordType(origRelDataTypes));
   }
+
+  /**
+   *  Find the list of expressions where Complex type function is at top level.
+   */
+  private List<RexNode> findTopComplexFunc(List<RexNode> exprs) {
+    final List<RexNode> topComplexFuncs = new ArrayList<>();
+
+    for (RexNode exp : exprs) {
+      if (exp instanceof RexCall) {
+        RexCall call = (RexCall) exp;
+        String functionName = call.getOperator().getName();
+
+        if (funcReg.isFunctionComplexOutput(functionName) ) {
+          topComplexFuncs.add(exp);
+        }
+      }
+    }
+
+    return topComplexFuncs;
+  }
+
 }

@@ -529,5 +529,23 @@ public class TestFlatten extends BaseTestQuery {
       .go();
   }
 
+  @Test
+  public void testFlattenWithScalarFunc() throws Exception {
+    final String query = "select flatten(t.l) + 1  as c1 from cp.`/jsoninput/input2.json` t";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues(5L)
+        .baselineValues(3L)
+        .baselineValues(5L)
+        .baselineValues(3L)
+        .baselineValues(5L)
+        .baselineValues(3L)
+        .go();
+
+  }
 
 }
+
