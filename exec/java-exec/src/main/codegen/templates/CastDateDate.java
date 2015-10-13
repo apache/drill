@@ -42,7 +42,13 @@ import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, costCategory=FunctionCostCategory.COMPLEX)
+@FunctionTemplate(
+        <#if type.to == "Date">
+        names = {"cast${type.to?upper_case}", "${type.alias}"}
+        <#elseif type.to == "TimeStamp">
+        name = "cast${type.to?upper_case}"
+        </#if>
+        , scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, costCategory=FunctionCostCategory.COMPLEX)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
