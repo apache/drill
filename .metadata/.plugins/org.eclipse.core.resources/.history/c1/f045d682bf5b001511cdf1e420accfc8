@@ -1,8 +1,0 @@
-package org.apache.drill.exec.store.solr;
-
-import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-
-public class SolrAggrQueryBuilder extends
-    AbstractExprVisitor<SolrScanSpec, Void, RuntimeException> {
-
-}
