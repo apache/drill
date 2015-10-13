@@ -94,6 +94,10 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     }
     List<RexNode> complexExprs = exprSplitter.getComplexExprs();
 
+    if (complexExprs.size() == 1) {
+      return project;
+    }
+
     ProjectPrel childProject;
 
     List<RexNode> allExprs = new ArrayList();
