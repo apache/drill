@@ -96,10 +96,7 @@ VirtualBox:
      ![drill query flow]({{ site.baseurl }}/docs/img/3_vbNetwork.png)
 7. Select **Network**.  
 
-    The correct setting depends on your network connectivity when you run the
-Sandbox. In general, if you are going to use a wired Ethernet connection,
-select **NAT Network**. If you are going to use a wireless
-network, select **Host-only Networks** and the **Host-Only Ethernet**. 
+    Verify that Adapter 1 is attached to **NAT**. This option should work for most scenarios. However, if you are going to use a wired Ethernet connection, you can select **NAT Network**. If you use ODBC or JDBC on a remote host, select **Bridged Adapter**. 
 
      ![drill query flow]({{ site.baseurl }}/docs/img/4_vbMaprSetting.png)
 8. Click **OK** to continue.
