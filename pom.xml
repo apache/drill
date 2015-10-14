@@ -42,7 +42,7 @@
       Apache Hive 1.0.0. If the version is changed, make sure the jars and their dependencies are updated.
     -->
     <hive.version>1.0.0</hive.version>
-    <hadoop.version>2.4.1</hadoop.version>
+    <hadoop.version>2.7.1</hadoop.version>
     <fmpp.version>0.9.14</fmpp.version>
   </properties>
 
@@ -1003,6 +1003,10 @@
             <version>${hadoop.version}</version>
             <exclusions>
               <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>              
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
@@ -1451,6 +1455,10 @@
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>              
               <exclusion>
                 <artifactId>commons-logging</artifactId>
                 <groupId>commons-logging</groupId>

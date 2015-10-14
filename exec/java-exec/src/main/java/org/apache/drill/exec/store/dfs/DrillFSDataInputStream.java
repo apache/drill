@@ -181,6 +181,11 @@ public class DrillFSDataInputStream extends FSDataInputStream {
     return underlyingIs.markSupported();
   }
 
+  @Override
+  public void unbuffer() {
+    underlyingIs.unbuffer();
+  }
+
   /**
    * We need to wrap the FSDataInputStream inside a InputStream, because read() method in InputStream is
    * overridden in FilterInputStream (super class of FSDataInputStream) as final, so we can not override in

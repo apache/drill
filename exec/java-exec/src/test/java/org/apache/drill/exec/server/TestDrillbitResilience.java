@@ -650,6 +650,7 @@ public class TestDrillbitResilience extends DrillTest {
 
   @Test // DRILL-2383: Cancellation TC 4: cancel after everything is completed and fetched
   @Repeat(count = NUM_RUNS)
+  @Ignore("DRILL-3967")
   public void cancelAfterEverythingIsCompleted() {
     final long before = countAllocatedMemory();
 
