@@ -9,12 +9,17 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments. 
 
-<!-- ## What's New in Apache Drill 1.2
+## What's New in Apache Drill 1.2
 
-This release of Drill fixes [many issues]() and introduces a number of enhancements, including the following ones:
+This release of Drill fixes [many issues]({{site.baseurl}}/docs/apache-drill-1-2-0-release-notes/) and introduces a number of enhancements, including the following ones:
 
+* Support for JDBC data sources, such as MySQL, through a [new JDBC Storage plugin](https://issues.apache.org/jira/browse/DRILL-3180)  
+* Improvements in the Drill JDBC driver including inclusion of
+Javadocs and better application dependency compatibility  
+* Enhancements to Avro file formats  
+  * [Support for complex data types](https://issues.apache.org/jira/browse/DRILL-3565), such as UNION and MAP  
+  * [Optimized Avro file processing](https://issues.apache.org/jira/browse/DRILL-3720) (block-wise)  
 * Partition pruning improvements
-* [Native file readers for Parquet]({{site.baseurl}}/docs/querying-hive/#optimizing-reads-of-parquet-backed-tables)
 * A number of new [SQL window functions]({{site.baseurl}}/docs/sql-window-functions)  
   * NTILE  
   * LAG and LEAD  
@@ -27,7 +32,7 @@ This release of Drill fixes [many issues]() and introduces a number of enhanceme
 * DROP TABLE command  
 * Improved correlated subqueries  
 * Union Distinct  
-* Improved LIMIT processing   -->
+* Improved LIMIT processing
 
 ## What's New in Apache Drill 1.1
 

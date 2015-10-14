@@ -226,7 +226,7 @@ UTF16| bytes| VAR16CHAR
 UINT8| bytes(8)| UINT8  
 UINT8_BE| bytes(8)| UINT8
 
-\* In Drill 1.2 and later, use the TIMESTAMP_IMPALA type with the CONVERT_FROM function to decode a timestamp from Hive or Impala, as shown in the section, ["About INT96 Support"]({{site.baseurl}}/drill/docs/parquet-format/#about-int96-support).
+\* In Drill 1.2 and later, use the TIMESTAMP_IMPALA type with the CONVERT_FROM function to decode a timestamp from Hive or Impala, as shown in the section, ["About INT96 Support"]({{site.baseurl}}/docs/parquet-format/#about-int96-support).
 
 This table includes types such as INT, for converting little endian-encoded data and types such as INT_BE for converting big endian-encoded data to Drill internal types. You need to convert binary representations, such as data in HBase, to a Drill internal format as you query the data. If you are unsure that the size of the source and destination INT or BIGINT you are converting is the same, use CAST to convert these data types to/from binary.  
 
