@@ -21,8 +21,8 @@ import java.util.List;
 
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.store.RecordDataType;
-import org.apache.drill.exec.store.solr.schema.CVSchema;
-import org.apache.drill.exec.store.solr.schema.CVSchemaField;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +31,12 @@ import com.google.common.collect.Lists;
 public class SolrDataType extends RecordDataType {
   private final List<SqlTypeName> types = Lists.newArrayList();
   private final List<String> names = Lists.newArrayList();
-  private final CVSchema cvSchema;
+  private final SolrSchemaPojo cvSchema;
   static final Logger logger = LoggerFactory.getLogger(SolrDataType.class);
 
-  public SolrDataType(CVSchema cvSchema) {
+  public SolrDataType(SolrSchemaPojo cvSchema) {
     this.cvSchema = cvSchema;
-    for (CVSchemaField cvSchemaField : cvSchema.getSchemaFields()) {
+    for (SolrSchemaField cvSchemaField : cvSchema.getSchemaFields()) {
       if (!cvSchemaField.isSkipdelete()) {// not
                                           // adding
                                           // cv

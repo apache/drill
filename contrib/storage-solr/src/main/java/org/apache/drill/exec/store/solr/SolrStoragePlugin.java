@@ -97,8 +97,6 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName,
       JSONOptions selection, List<SchemaPath> columns) throws IOException {
-    logger.trace("SolrStoragePlugin :: getPhysicalScan" + " userName : "
-        + userName + " columns ::" + columns + " selection " + selection);
     SolrScanSpec solrScanSpec = selection.getListWith(new ObjectMapper(),
         new TypeReference<SolrScanSpec>() {
         });
@@ -107,11 +105,14 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of(/*
-                            * SolrQueryFilterRule.FILTER_ON_SCAN,
-                            * SolrQueryFilterRule.FILTER_ON_PROJECT,
-                            */
+    return ImmutableSet.of(
+    /*
+     * SolrQueryFilterRule.FILTER_ON_SCAN,
+     * SolrQueryFilterRule.FILTER_ON_PROJECT,
+     */
     SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT
-    /* SolrQueryFilterRule.AGG_PUSH_DOWN */);
+    /*
+     * SolrQueryFilterRule.AGG_PUSH_DOWN
+     */);
   }
 }

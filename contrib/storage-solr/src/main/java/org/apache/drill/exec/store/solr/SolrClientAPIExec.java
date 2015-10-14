@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.exec.store.solr.schema.CVSchema;
-import org.apache.drill.exec.store.solr.schema.CVSchemaField;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaField;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -95,14 +95,14 @@ public class SolrClientAPIExec {
     return coreList;
   }
 
-  public CVSchema getSchemaForCore(String coreName, String solrServerUrl,
+  public SolrSchemaPojo getSchemaForCore(String coreName, String solrServerUrl,
       String schemaUrl) {
     coreName = coreName.replaceAll("`", "");
     schemaUrl = MessageFormat.format(schemaUrl, coreName);
     logger.debug("getting schema information from :: " + schemaUrl);
     HttpClient client = new DefaultHttpClient();
     HttpGet request = new HttpGet(schemaUrl);
-    CVSchema oCVSchema = null;
+    SolrSchemaPojo oCVSchema = null;
     request.setHeader("Content-Type", "application/json");
     try {
       HttpResponse response = client.execute(request);
@@ -116,7 +116,7 @@ public class SolrClientAPIExec {
       ObjectMapper mapper = new ObjectMapper();
       mapper
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-      oCVSchema = mapper.readValue(result.toString(), CVSchema.class);
+      oCVSchema = mapper.readValue(result.toString(), SolrSchemaPojo.class);
     } catch (Exception e) {
       logger.info("exception occured while fetching schema details..."
           + e.getMessage());
@@ -125,12 +125,13 @@ public class SolrClientAPIExec {
   }
 
   public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
-      List<String> fields, Integer solrDocFectCount, StringBuilder filters) {
+      String uniqueKey, List<String> fields, Integer solrDocFectCount,
+      StringBuilder filters) {
     solrCoreName = solrCoreName.replaceAll("`", "");
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
     SolrDocumentList sList = null;
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
-        .setQuery("*:*").setRows(solrDocFectCount);
+        .setQuery(uniqueKey + ":*").setRows(solrDocFectCount);
 
     if (fields != null) {
       String fieldStr = Joiner.on(",").join(fields);
@@ -142,7 +143,7 @@ public class SolrClientAPIExec {
       logger.debug("filter query [ " + filters.toString() + " ]");
     }
     try {
-      logger.info("setting up solrquery..");
+      logger.info("setting up solrquery with /select handler..");
       QueryResponse rsp = solrClient.query(solrQuery);
       logger.info("response recieved from [ " + solrServer + " ] core [ "
           + solrCoreName + " ]");
@@ -208,12 +209,12 @@ public class SolrClientAPIExec {
   }
 
   public void createSolrView(String solrCoreName, String solrCoreViewWorkspace,
-      CVSchema oCVSchema) throws ClientProtocolException, IOException {
+      SolrSchemaPojo oCVSchema) throws ClientProtocolException, IOException {
 
-    List<CVSchemaField> schemaFieldList = oCVSchema.getSchemaFields();
+    List<SolrSchemaField> schemaFieldList = oCVSchema.getSchemaFields();
     List<String> fieldNames = Lists.newArrayList(schemaFieldList.size());
     String createViewSql = "CREATE OR REPLACE VIEW {0}.{1} as SELECT {2} from solr.{3}";
-    for (CVSchemaField cvSchemaField : schemaFieldList) {
+    for (SolrSchemaField cvSchemaField : schemaFieldList) {
       if (!cvSchemaField.isSkipdelete())
         fieldNames.add("`" + cvSchemaField.getFieldName() + "`");
     }

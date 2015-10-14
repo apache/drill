@@ -26,6 +26,8 @@ public class SolrStorageProperties {
   private boolean createViews = false;
   @JsonProperty
   private int maxRowSize = 0;
+  @JsonProperty
+  private boolean useSolrStream = false;
 
   public void setMaxRowSize(int maxRowSize) {
     this.maxRowSize = maxRowSize;
@@ -45,6 +47,14 @@ public class SolrStorageProperties {
 
   public void setSolrSchemaUrl(String solrSchemaUrl) {
     this.solrSchemaUrl = solrSchemaUrl;
+  }
+
+  public boolean isUseSolrStream() {
+    return useSolrStream;
+  }
+
+  public void setUseSolrStream(boolean useSolrStream) {
+    this.useSolrStream = useSolrStream;
   }
 
 }

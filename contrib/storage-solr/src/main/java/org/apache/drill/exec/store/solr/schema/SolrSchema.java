@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.solr.schema;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,11 +25,14 @@ import java.util.Set;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.solr.SolrScanSpec;
 import org.apache.drill.exec.store.solr.SolrStoragePlugin;
 import org.apache.drill.exec.store.solr.SolrStoragePluginConfig;
+import org.apache.drill.exec.store.solr.SolrStorageProperties;
+import org.apache.drill.exec.store.solr.datatype.SolrDataType;
+import org.apache.drill.exec.store.sys.StaticDrillTable;
+import org.apache.http.client.ClientProtocolException;
 
 import com.google.common.collect.Maps;
 
@@ -39,6 +43,7 @@ public class SolrSchema extends AbstractSchema {
   private final Set<String> availableSolrCores;
   private String currentSchema = "root";
   private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+  private final Map<String, SolrSchemaPojo> schemaMap = Maps.newHashMap();
   private final SolrStoragePlugin solrStoragePlugin;
   private final List<String> schemaPath;
 
@@ -66,33 +71,97 @@ public class SolrSchema extends AbstractSchema {
 
   @Override
   public Table getTable(String coreName) {
-    logger.info("SolrSchema :: getTable");
+    logger.debug("SolrSchema :: getTable");
+    SolrSchemaPojo oCVSchema = null;
+    DrillTable drillTable = null;
     if (!availableSolrCores.contains(coreName)) { // table does not exist
       return null;
     }
-
     if (!drillTables.containsKey(coreName)) {
-      drillTables.put(coreName, this.getDrillTable(this.name, coreName));
-    }
+      if (schemaMap.containsKey(coreName)) {
+        logger.debug("schema found in cached map for core : " + coreName);
+        oCVSchema = schemaMap.get(coreName);
 
-    return drillTables.get(coreName);
+      } else {
+        String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig()
+            .getSolrServer();
+        String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig()
+            .getSolrStorageProperties().getSolrSchemaUrl();
+        oCVSchema = this.solrStoragePlugin.getSolrClientApiExec()
+            .getSchemaForCore(coreName, solrServerUrl, schemaUrl);
+
+        if (!schemaMap.containsKey(coreName)) {
+          schemaMap.put(coreName, oCVSchema);
+        }
+      }
+      SolrScanSpec scanSpec = new SolrScanSpec(coreName, oCVSchema);
+      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME,
+          solrStoragePlugin, scanSpec, new SolrDataType(scanSpec.getCvSchema()));
+
+      drillTables.put(coreName, drillTable);
+
+    } else {
+      drillTable = drillTables.get(coreName);
+    }
+    return drillTable;
   }
 
-  DrillTable getDrillTable(String dbName, String collectionName) {
-    logger.info("SolrSchema :: getDrillTable");
-    SolrScanSpec solrScanSpec = new SolrScanSpec(collectionName);
-    return new DynamicDrillTable(solrStoragePlugin,
-        SolrStoragePluginConfig.NAME, solrScanSpec);
+  DrillTable getDrillTable(String dbName, String coreName) {
+    logger.debug("SolrSchema :: getDrillTable");
+    if (!drillTables.containsKey(coreName)) { // table does not exist
+      return null;
+    }
+    return drillTables.get(coreName);
+
   }
 
   @Override
   public Set<String> getTableNames() {
-    logger.info("SolrSchema :: getTableNames");
+    logger.debug("SolrSchema :: getTableNames");
+    SolrStorageProperties solrStorageConfig = this.solrStoragePlugin
+        .getSolrStorageConfig().getSolrStorageProperties();
+    if (solrStorageConfig.isCreateViews())
+      createORReplaceViews();
     return availableSolrCores;
   }
 
   @Override
   public boolean showInInformationSchema() {
     return true;
+  }
+
+  private void createORReplaceViews() {
+    logger.debug("SolrStoragePlugin :: createORReplaceViews");
+
+    String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig()
+        .getSolrServer();
+    String solrCoreViewWorkspace = this.solrStoragePlugin
+        .getSolrStorageConfig().getSolrCoreViewWorkspace();
+    String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig()
+        .getSolrStorageProperties().getSolrSchemaUrl();
+    try {
+      if (!availableSolrCores.isEmpty()) {
+        for (String solrCoreName : availableSolrCores) {
+          SolrSchemaPojo oCVSchema = this.solrStoragePlugin.getSolrClientApiExec()
+              .getSchemaForCore(solrCoreName, solrServerUrl, schemaUrl);
+
+          this.solrStoragePlugin.getSolrClientApiExec().createSolrView(
+              solrCoreName, solrCoreViewWorkspace, oCVSchema);
+          if (!schemaMap.containsKey(solrCoreName)) {
+            schemaMap.put(solrCoreName, oCVSchema);
+          }
+        }
+
+      } else {
+        logger.debug("There is no cores in the current solr server : "
+            + solrServerUrl);
+      }
+
+    } catch (ClientProtocolException e) {
+      logger.debug("creating view failed : " + e.getMessage());
+    } catch (IOException e) {
+      logger.debug("creating view failed : " + e.getMessage());
+    }
+
   }
 }

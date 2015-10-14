@@ -23,6 +23,8 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
@@ -32,10 +34,12 @@ import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.planner.physical.PrelUtil.ProjectPushInfo;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.solr.schema.CVSchema;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,18 +78,45 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.debug("SolrQueryFilterRule :: onMatch:: Filter_On_Project");
-      final DrillProjectRel projectRel = (DrillProjectRel) call.rel(0);
-      final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+      final Project proj = (Project) call.rel(0);
+      final TableScan scan = (TableScan) call.rel(1);
 
-      for (RexNode node : projectRel.getChildExps()) {
-        logger.debug("columns are :: " + node.getKind() + " >> "
-            + node.getType());
+      try {
+        ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(),
+            proj.getProjects());
+        if (columnInfo == null || columnInfo.isStarQuery() //
+            || !scan.getTable().unwrap(DrillTable.class) //
+                .getGroupScan().canPushdownProjects(columnInfo.columns)) {
+          return;
+        }
+        SolrGroupScan solrGroupScan = (SolrGroupScan) scan.getTable()
+            .unwrap(DrillTable.class).getGroupScan();
+        solrGroupScan.setColumns(columnInfo.columns);
+        // DrillRel inputRel = null;
+        //
+        //
+        // final DrillScanRel newScan = new DrillScanRel(scan.getCluster(), scan
+        // .getTraitSet().plus(DrillRel.DRILL_LOGICAL), scan.getTable(),
+        // solrGroupScan, columnInfo.createNewRowType(proj.getInput()
+        // .getCluster().getTypeFactory()), columnInfo.columns);
+        //
+        // List<RexNode> newProjects = Lists.newArrayList();
+        // for (RexNode n : proj.getChildExps()) {
+        // newProjects.add(n.accept(columnInfo.getInputRewriter()));
+        // }
+        //
+        // final DrillProjectRel newProj = DrillProjectRel.create(
+        // proj.getCluster(), proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        // newScan, newProjects, proj.getRowType());
+        //
+        // inputRel = newProj != null ? newProj : newScan;
+        // if (inputRel != null) {
+        // call.transformTo(inputRel);
+        // }
+      } catch (Exception e) {
+
       }
-      for (RexNode node : projectRel.getProjects()) {
-        logger.debug("columns are1 :: " + node.getKind() + " >> "
-            + node.getType());
-      }
-      // TODO: optimize the solr query to return the exact field lists (fl)
+
     }
 
     @Override
@@ -140,7 +171,7 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
 
       String solrCoreName = solrGroupScan.getSolrScanSpec().getSolrCoreName();
       List<SolrAggrParam> aggrParamLst = solrScanSpec.getAggrParams();
-      CVSchema cvSchema = solrScanSpec.getCvSchema();
+      SolrSchemaPojo cvSchema = solrScanSpec.getCvSchema();
       SolrFilterParam filters = solrScanSpec.getFilter();
       SolrScanSpec newScanSpec = null;
       for (AggregateCall aggrCall : aggrCallList) {

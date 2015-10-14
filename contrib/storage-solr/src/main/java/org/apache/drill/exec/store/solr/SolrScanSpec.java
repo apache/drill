@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.solr;
 
 import java.util.List;
 
-import org.apache.drill.exec.store.solr.schema.CVSchema;
+import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,8 +29,9 @@ public class SolrScanSpec {
   private boolean isAggregateQuery = false;
   private SolrFilterParam filter;
   private List<SolrAggrParam> aggrParams;
-  private Integer solrDocFetchCount = Integer.MAX_VALUE;
-  private CVSchema cvSchema;
+  private Integer solrDocFetchCount = -1;
+  private SolrSchemaPojo cvSchema;
+  private List<String> responseFieldList;
 
   @JsonCreator
   public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName) {
@@ -45,7 +46,7 @@ public class SolrScanSpec {
 
   @JsonCreator
   public SolrScanSpec(@JsonProperty("solrCoreName") String solrCoreName,
-      @JsonProperty("solrCoreSchema") CVSchema cvSchema) {
+      @JsonProperty("solrCoreSchema") SolrSchemaPojo cvSchema) {
     this.solrCoreName = solrCoreName;
     this.cvSchema = cvSchema;
   }
@@ -71,7 +72,7 @@ public class SolrScanSpec {
     return filter;
   }
 
-  public CVSchema getCvSchema() {
+  public SolrSchemaPojo getCvSchema() {
     return cvSchema;
   }
 
@@ -95,7 +96,7 @@ public class SolrScanSpec {
     this.solrDocFetchCount = solrDocFetchCount;
   }
 
-  public void setCvSchema(CVSchema cvSchema) {
+  public void setCvSchema(SolrSchemaPojo cvSchema) {
     this.cvSchema = cvSchema;
   }
 
@@ -105,6 +106,14 @@ public class SolrScanSpec {
 
   public void setAggrParams(List<SolrAggrParam> aggrParams) {
     this.aggrParams = aggrParams;
+  }
+
+  public List<String> getResponseFieldList() {
+    return responseFieldList;
+  }
+
+  public void setResponseFieldList(List<String> responseFieldList) {
+    this.responseFieldList = responseFieldList;
   }
 
   @Override

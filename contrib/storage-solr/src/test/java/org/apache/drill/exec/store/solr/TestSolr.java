@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.solr;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.store.solr.SolrScanSpec;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -3,7 +3,12 @@
     solr : {
       type:"solr",
       enabled: true,
-      solrServer: ""
+      solrServer: "",
+      solrCoreViewWorkspace:"",
+      solrStorageProperties:{
+      	"solrSchemaUrl":"http://{0}/servlets/collection?type=GETSCHEMAFIELDS&corename={1}",
+      	"createViews":false
+      }
     }
   }
 }
