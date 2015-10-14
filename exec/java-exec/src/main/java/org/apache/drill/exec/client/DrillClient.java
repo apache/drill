@@ -378,10 +378,6 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     private void fail(Exception ex) {
       logger.debug("Submission failed.", ex);
-      final Throwable cause = ex.getCause();
-      if (cause != null) {
-        logger.debug("Submission failure cause.", ex.getCause());
-      }
       future.setException(ex);
       future.set(results);
     }

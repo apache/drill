@@ -84,7 +84,6 @@ public class DeferredException implements AutoCloseable {
           }
           this.exception.addSuppressed(exception);
         }
-        this.exception = exception;
       } else {
         this.exception.addSuppressed(exception);
       }
@@ -160,9 +159,6 @@ public class DeferredException implements AutoCloseable {
         autoCloseable.close();
       } catch(final Exception e) {
         addException(e);
-      } catch(final Error e) {
-        logger.warn("caught Error {}", e);
-        throw e;
       }
     }
   }

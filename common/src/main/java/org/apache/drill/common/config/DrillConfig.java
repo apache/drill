@@ -265,11 +265,6 @@ public final class DrillConfig extends NestedConfig{
     return this.root().render();
   }
 
-  public static void main(String[] args) {
-    //"-XX:MaxDirectMemorySize"
-    @SuppressWarnings("unused") final DrillConfig config = DrillConfig.create();
-  }
-
   public static long getMaxDirectMemory() {
     return MAX_DIRECT_MEMORY;
   }
