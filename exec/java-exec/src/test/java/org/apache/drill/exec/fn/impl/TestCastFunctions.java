@@ -52,4 +52,18 @@ public class TestCastFunctions extends BaseTestQuery {
       .build().run();
   }
 
+  @Test // DRILL-2808
+  public void testCastByConstantFolding() throws Exception {
+    final String query = "SELECT count(DISTINCT employee_id) as col1, " +
+        "count((to_number(date_diff(now(), cast(birth_date AS date)),'####'))) as col2 \n" +
+        "FROM cp.`employee.json`";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col1", "col2")
+        .baselineValues(1155l, 1155l)
+        .build()
+        .run();
+  }
 }
