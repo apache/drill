@@ -6,19 +6,18 @@ You can use the Qlik Sense BI tool with Apache Drill, the SQL query engine for B
  
 This document provides you with the procedures required to connect Qlik Sense Desktop and Qlik Sense Server to Apache Drill via ODBC.
 
-**Prerequisites**  
- 
-*  Apache Drill installed. See [Install Drill]({{site.baseurl}}/docs/install-drill/).  
-*  Qlik Sense installed. See [Qlik Sense](http://drill.apache.org/docs/install-drill/).
-
-
 To use Qlik Sense with Apache Drill, complete the following steps:
 
 1.     Install and configure the Drill ODBC driver.
 2.	Configure a connection in Qlik Sense.
 3.	Authenticate.
 4.	Select tables and load the data model.
-5.	Analyze data with Qlik Sense and Drill.
+5.	Analyze data with Qlik Sense and Drill.  
+
+**Prerequisites**  
+ 
+*  Apache Drill installed. See [Install Drill]({{site.baseurl}}/docs/install-drill/).  
+*  Qlik Sense installed. See [Qlik Sense](http://www.qlik.com/us/explore/products/sense).
 
 
 ----------
@@ -54,11 +53,11 @@ After providing the credentials and saving the connection, click **Select** in t
 
 ![]({{ site.baseurl }}/docs/img/step4_img1.png)  
 
-Based on the user’s credentials, security and filtration are applied accordingly. Different users may see a different number of tables and/or a different number of fields per table. For example, multiple types of users may use the same connection, but they may see a different number of tables and columns per table. For example, a manager may only see one table and a few fields in the table:    
+Based on the user’s credentials, security and filtration are applied accordingly. Different users may see a different number of tables and/or a different number of fields per table. For example, multiple types of users may use the same connection, but they may see a different number of tables and columns per table. For example, a manager may only see one table and a few fields in the table.    
 
 ![]({{ site.baseurl }}/docs/img/step4_img2.png)  
 
-While an Executive may have access to more tables and more fields per table:  
+While an Executive may have access to more tables and more fields per table.  
 
 ![]({{ site.baseurl }}/docs/img/step4_img3.png)
 
@@ -66,20 +65,20 @@ While an Executive may have access to more tables and more fields per table:
 
 ### Step 4: Select Tables and Load the Data Model  
 
-Explore the various tables available in Drill, and select the tables of interest. For each table selected, Qlik Sense shows a preview of the logic used for the table:  
+Explore the various tables available in Drill, and select the tables of interest. For each table selected, Qlik Sense shows a preview of the logic used for the table.  
 
 ![]({{ site.baseurl }}/docs/img/step5_img1.png)  
 
-Notice that the metadata information that comes with each table is also accessible through the same window:  
+Notice that the metadata information that comes with each table is also accessible through the same window.  
 
 ![]({{ site.baseurl }}/docs/img/step5_img2.png)  
 
-Click **Insert Script** to add a new table as part of the associative data model that the Qlik Sense application creates. There are two of ways in which you can make a new table part of the data model:
+Click **Insert Script** to add a new table as part of the associative data model that the Qlik Sense application creates. There are two of ways in which you can make a new table part of the data model.
 
 1. Load the data from the table into the memory of the Qlik Sense Server.  
 2. Keep the data at the source and only capture the new table as part of the data model (this is called Direct Discovery). In order to learn more about Direct Discovery, see [http://www.qlik.com/us/explore/resources/whitepapers/qlikview-and-big-data](http://www.qlik.com/us/explore/resources/whitepapers/qlikview-and-big-data).  
 
-{% include startnote.html %}After you select the tables that you want to include, verify that the top part of the script is set to the following, otherwise the load fails.{% include endnote.html %}  
+{% include startnote.html %}After you select the tables that you want to include, verify that the top part of the script is set to the following, otherwise the load fails:{% include endnote.html %}  
 
        SET DirectIdentifierQuoteChar="`"   
 
@@ -110,11 +109,11 @@ If you use Direct Discovery to build the application, the application becomes a 
 ### Summary 
 Together, Drill and Qlik Sense can provide a wide range of solutions that enable organizations to analyze all of their data and efficiently find solutions to various business problems.
  
-To continue exploring Qlik Sense and download Qlik Sense Desktop, visit:   
+To continue exploring Qlik Sense and download Qlik Sense Desktop, visit   
 [http://www.qlik.com/us/explore/products/sense](http://www.qlik.com/us/explore/products/sense)  
 
-For more information about Drill, visit:  
-[drill.apache.org](drill.apache.org)
+For more information about Drill, visit  
+[http://drill.apache.org/](http://drill.apache.org/)
 
 
   
