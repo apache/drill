@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.maprdb.binary;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
@@ -38,8 +37,6 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBPushFilterIntoScan.class);
-	
-//  public static final StoragePluginOptimizerRule INSTANCE = new MapRDBPushFilterIntoScan();
 
   private MapRDBPushFilterIntoScan(RelOptRuleOperand operand, String description) {
     super(operand, description);
@@ -53,7 +50,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       final FilterPrel filter = (FilterPrel) call.rel(0);
       final RexNode condition = filter.getCondition();
 
-      MapRDBGroupScan groupScan = (MapRDBGroupScan)scan.getGroupScan();
+      BinaryTableGroupScan groupScan = (BinaryTableGroupScan)scan.getGroupScan();
       if (groupScan.isFilterPushedDown()) {
         /*
          * The rule can get triggered again due to the transformed "scan => filter" sequence
@@ -70,7 +67,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
     @Override
     public boolean matches(RelOptRuleCall call) {
       final ScanPrel scan = (ScanPrel) call.rel(1);
-      if (scan.getGroupScan() instanceof MapRDBGroupScan) {
+      if (scan.getGroupScan() instanceof BinaryTableGroupScan) {
         return super.matches(call);
       }
       return false;
@@ -85,7 +82,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       final ProjectPrel project = (ProjectPrel) call.rel(1);
       final FilterPrel filter = (FilterPrel) call.rel(0);
 
-      MapRDBGroupScan groupScan = (MapRDBGroupScan)scan.getGroupScan();
+      BinaryTableGroupScan groupScan = (BinaryTableGroupScan)scan.getGroupScan();
       if (groupScan.isFilterPushedDown()) {
         /*
          * The rule can get triggered again due to the transformed "scan => filter" sequence
@@ -105,14 +102,14 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
     @Override
     public boolean matches(RelOptRuleCall call) {
       final ScanPrel scan = (ScanPrel) call.rel(2);
-      if (scan.getGroupScan() instanceof MapRDBGroupScan) {
+      if (scan.getGroupScan() instanceof BinaryTableGroupScan) {
         return super.matches(call);
       }
       return false;
     }
   };
 
-  protected void doPushFilterToScan(final RelOptRuleCall call, final FilterPrel filter, final ProjectPrel project, final ScanPrel scan, final MapRDBGroupScan groupScan, final RexNode condition) {
+  protected void doPushFilterToScan(final RelOptRuleCall call, final FilterPrel filter, final ProjectPrel project, final ScanPrel scan, final BinaryTableGroupScan groupScan, final RexNode condition) {
 
     final LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     final MapRDBFilterBuilder maprdbFilterBuilder = new MapRDBFilterBuilder(groupScan, conditionExp);
@@ -121,7 +118,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return; //no filter pushdown ==> No transformation.
     }
 
-    final MapRDBGroupScan newGroupsScan = new MapRDBGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
+    final BinaryTableGroupScan newGroupsScan = new BinaryTableGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
                                                               groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns());
     newGroupsScan.setFilterPushedDown(true);
 

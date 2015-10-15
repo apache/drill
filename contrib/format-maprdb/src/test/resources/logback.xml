@@ -28,7 +28,7 @@
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <!-- The property 'logback.log.dir' is defined in pom.xml --> 
-    <file>${logback.log.dir:-./target/surefire-reports}/hbase-tests-${bySecond}.log</file>
+    <file>${logback.log.dir:-./target/surefire-reports}/maprdb-tests-${bySecond}.log</file>
     <append>false</append>
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -40,6 +40,16 @@
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+
+  <logger name="com.mapr" additivity="false">
+    <level value="info" />
+    <appender-ref ref="FILE" />
+  </logger>
+
+  <logger name="com.mapr" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="SOCKET" />
+  </logger>
 
   <logger name="org.apache.drill" additivity="false">
     <level value="info" />

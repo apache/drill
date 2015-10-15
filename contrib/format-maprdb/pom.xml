@@ -15,79 +15,28 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
-    <artifactId>drill-contrib-parent</artifactId>
-    <groupId>org.apache.drill.contrib</groupId>
-    <version>1.5.0-SNAPSHOT</version>
+    <groupId>com.mapr</groupId>
+    <artifactId>mapr-release</artifactId>
+    <version>5.1.0-mapr-SNAPSHOT</version>
+    <relativePath/>
   </parent>
 
   <artifactId>drill-storage-maprdb</artifactId>
-
   <name>maprdb-storage-plugin</name>
+  <version>1.5.0-SNAPSHOT</version>
 
   <properties>
-    <hbase.TestSuite>**/HBaseTestsSuite.class</hbase.TestSuite>
+    <mapr.version>${project.parent.version}</mapr.version>
+    <drill.version>${project.version}</drill.version>
+    <hbase.version>0.98.12-mapr-1506</hbase.version>
+    <maprdb.TestSuite>**/MaprDBTestsSuite.class</maprdb.TestSuite>
   </properties>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.drill.exec</groupId>
-      <artifactId>drill-java-exec</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>drill-storage-hbase</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mapr.hadoop</groupId>
-      <artifactId>maprfs</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mapr.fs</groupId>
-      <artifactId>mapr-hbase</artifactId>
-      <version>4.1.0-mapr</version>
-    </dependency>
-
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.apache.drill.exec</groupId>
-      <artifactId>drill-java-exec</artifactId>
-      <classifier>tests</classifier>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-common</artifactId>
-      <classifier>tests</classifier>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>2.1.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <repositories>
-    <repository>
-      <id>mapr-releases</id>
-        <url>http://repository.mapr.com/nexus/content/repositories/releases</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
 
   <build>
     <plugins>
@@ -96,13 +45,9 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>
-            <include>${hbase.TestSuite}</include>
+            <include>${maprdb.TestSuite}</include>
           </includes>
           <systemProperties>
-            <property>
-              <name>hbase.test.root</name>
-              <value>${project.build.directory}/data</value>
-            </property>
             <property>
               <name>logback.log.dir</name>
               <value>${project.build.directory}/surefire-reports</value>
@@ -112,5 +57,181 @@
       </plugin>
     </plugins>
   </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr.fs</groupId>
+      <artifactId>mapr-hbase</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-server</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-json</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>asm</groupId>
+          <artifactId>asm</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>servlet-api-2.5</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr.db</groupId>
+      <artifactId>maprdb</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${drill.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j-over-slf4j</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-storage-hbase</artifactId>
+      <version>${drill.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j-over-slf4j</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hbase-client</artifactId>
+          <groupId>org.apache.hbase</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.huxhorn.lilith</groupId>
+      <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
+      <version>0.9.44</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mapr</groupId>
+      <artifactId>mapr-java-utils</artifactId>
+      <classifier>tests</classifier>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${drill.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${drill.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j-over-slf4j</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-storage-hbase</artifactId>
+      <version>${drill.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-server</artifactId>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api-2.5</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api</artifactId>
+          <groupId>javax.servlet</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+  </dependencies>
+
+  <repositories>
+    <repository>
+      <id>mapr-releases</id>
+      <url>http://repository.mapr.com/nexus/content/repositories/releases</url>
+      <snapshots><enabled>true</enabled></snapshots>
+      <releases><enabled>true</enabled></releases>
+    </repository>
+  </repositories>
 
 </project>

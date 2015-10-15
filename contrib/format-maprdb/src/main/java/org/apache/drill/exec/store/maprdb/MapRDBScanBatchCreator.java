@@ -26,7 +26,10 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.hbase.HBaseRecordReader;
-import org.apache.drill.exec.store.hbase.HBaseSubScan;
+import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
+import org.apache.drill.exec.store.maprdb.binary.BinaryTableGroupScan;
+import org.apache.drill.exec.store.maprdb.json.MaprDBJsonRecordReader;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import com.google.common.base.Preconditions;
@@ -39,16 +42,24 @@ public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
   public ScanBatch getBatch(FragmentContext context, MapRDBSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    for(HBaseSubScan.HBaseSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
+    Configuration conf = HBaseConfiguration.create();
+    for(MapRDBSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
       try {
-        readers.add(
-            new HBaseRecordReader(HBaseConfiguration.create(), scanSpec, subScan.getColumns(), context)
-        );
+        if (BinaryTableGroupScan.TABLE_BINARY.equals(subScan.getTableType())) {
+          readers.add(new HBaseRecordReader(conf, getHBaseSubScanSpec(scanSpec), subScan.getColumns(), context));
+        } else {
+          readers.add(new MaprDBJsonRecordReader(scanSpec, subScan.getColumns(), context));
+        }
       } catch (Exception e1) {
         throw new ExecutionSetupException(e1);
       }
     }
     return new ScanBatch(subScan, context, readers.iterator());
+  }
+
+  private HBaseSubScanSpec getHBaseSubScanSpec(MapRDBSubScanSpec scanSpec) {
+    return new HBaseSubScanSpec(scanSpec.getTableName(), scanSpec.getRegionServer(),
+        scanSpec.getStartRow(), scanSpec.getStopRow(), scanSpec.getSerializedFilter(), null);
   }
 
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.maprdb.binary;
 
 import java.util.Arrays;
 
@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 
 public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
 
-  final private MapRDBGroupScan groupScan;
+  final private BinaryTableGroupScan groupScan;
 
   final private LogicalExpression le;
 
@@ -52,7 +52,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
 
   private static Boolean nullComparatorSupported = null;
 
-  MapRDBFilterBuilder(MapRDBGroupScan groupScan, LogicalExpression le) {
+  MapRDBFilterBuilder(BinaryTableGroupScan groupScan, LogicalExpression le) {
     this.groupScan = groupScan;
     this.le = le;
   }
@@ -69,7 +69,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
       if (filter instanceof RowFilter &&
           ((RowFilter)filter).getOperator() != CompareOp.NOT_EQUAL &&
           ((RowFilter)filter).getComparator() instanceof BinaryComparator) {
-    	  filter = null;
+        parsedSpec = new HBaseScanSpec(parsedSpec.getTableName(), parsedSpec.getStartRow(), parsedSpec.getStopRow(), null);
       }
     }
     return parsedSpec;

@@ -17,14 +17,9 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -34,16 +29,14 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.hbase.HBaseSubScan;
-import org.apache.drill.exec.store.hbase.HBaseUtils;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.ParseFilter;
-import org.apache.hadoop.hbase.util.Bytes;
 
-import java.nio.charset.CharacterCodingException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 
 // Class containing information for reading a single HBase region
 @JsonTypeName("maprdb-sub-scan")
@@ -54,32 +47,36 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   public final StoragePluginConfig storage;
   @JsonIgnore
   private final FileSystemPlugin fsStoragePlugin;
-  private final List<HBaseSubScan.HBaseSubScanSpec> regionScanSpecList;
+  private final List<MapRDBSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
+  private final String tableType;
 
   @JsonCreator
   public MapRDBSubScan(@JacksonInject StoragePluginRegistry registry,
-                      @JsonProperty("userName") String userName,
-                      @JsonProperty("storage") StoragePluginConfig storage,
-                      @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScan.HBaseSubScanSpec> regionScanSpecList,
-                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+                       @JsonProperty("userName") String userName,
+                       @JsonProperty("storage") StoragePluginConfig storage,
+                       @JsonProperty("regionScanSpecList") List<MapRDBSubScanSpec> regionScanSpecList,
+                       @JsonProperty("columns") List<SchemaPath> columns,
+                       @JsonProperty("tableType") String tableType) throws ExecutionSetupException {
     super(userName);
     this.fsStoragePlugin = (FileSystemPlugin) registry.getPlugin(storage);
     this.regionScanSpecList = regionScanSpecList;
     this.storage = storage;
     this.columns = columns;
+    this.tableType = tableType;
   }
 
-    public MapRDBSubScan(String userName, FileSystemPlugin storagePlugin, StoragePluginConfig config,
-                         List<HBaseSubScan.HBaseSubScanSpec> hBaseSubScanSpecs, List<SchemaPath> columns) {
-        super(userName);
-        fsStoragePlugin = storagePlugin;
-        storage = config;
-        this.regionScanSpecList = hBaseSubScanSpecs;
-        this.columns = columns;
-    }
+  public MapRDBSubScan(String userName, FileSystemPlugin storagePlugin, StoragePluginConfig config,
+      List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, String tableType) {
+    super(userName);
+    fsStoragePlugin = storagePlugin;
+    storage = config;
+    this.regionScanSpecList = maprSubScanSpecs;
+    this.columns = columns;
+    this.tableType = tableType;
+  }
 
-    public List<HBaseSubScan.HBaseSubScanSpec> getRegionScanSpecList() {
+  public List<MapRDBSubScanSpec> getRegionScanSpecList() {
     return regionScanSpecList;
   }
 
@@ -100,7 +97,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MapRDBSubScan(getUserName(), fsStoragePlugin, storage, regionScanSpecList, columns);
+    return new MapRDBSubScan(getUserName(), fsStoragePlugin, storage, regionScanSpecList, columns, tableType);
   }
 
   @Override
@@ -108,121 +105,13 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
     return Iterators.emptyIterator();
   }
 
-  public static class HBaseSubScanSpec {
-
-    protected String tableName;
-    protected String regionServer;
-    protected byte[] startRow;
-    protected byte[] stopRow;
-    protected byte[] serializedFilter;
-
-    @JsonCreator
-    public HBaseSubScanSpec(@JsonProperty("tableName") String tableName,
-                            @JsonProperty("regionServer") String regionServer,
-                            @JsonProperty("startRow") byte[] startRow,
-                            @JsonProperty("stopRow") byte[] stopRow,
-                            @JsonProperty("serializedFilter") byte[] serializedFilter,
-                            @JsonProperty("filterString") String filterString) {
-      if (serializedFilter != null && filterString != null) {
-        throw new IllegalArgumentException("The parameters 'serializedFilter' or 'filterString' cannot be specified at the same time.");
-      }
-      this.tableName = tableName;
-      this.regionServer = regionServer;
-      this.startRow = startRow;
-      this.stopRow = stopRow;
-      if (serializedFilter != null) {
-        this.serializedFilter = serializedFilter;
-      } else {
-        this.serializedFilter = HBaseUtils.serializeFilter(parseFilterString(filterString));
-      }
-    }
-
-    static final ParseFilter PARSE_FILTER = new ParseFilter();
-
-    static Filter parseFilterString(String filterString) {
-      if (filterString == null) {
-        return null;
-      }
-      try {
-        return PARSE_FILTER.parseFilterString(filterString);
-      } catch (CharacterCodingException e) {
-        throw new DrillRuntimeException("Error parsing filter string: " + filterString, e);
-      }
-    }
-
-    /* package */ HBaseSubScanSpec() {
-      // empty constructor, to be used with builder pattern;
-    }
-
-    @JsonIgnore
-    private Filter scanFilter;
-    public Filter getScanFilter() {
-      if (scanFilter == null &&  serializedFilter != null) {
-          scanFilter = HBaseUtils.deserializeFilter(serializedFilter);
-      }
-      return scanFilter;
-    }
-
-    public String getTableName() {
-      return tableName;
-    }
-
-    public HBaseSubScanSpec setTableName(String tableName) {
-      this.tableName = tableName;
-      return this;
-    }
-
-    public String getRegionServer() {
-      return regionServer;
-    }
-
-    public HBaseSubScanSpec setRegionServer(String regionServer) {
-      this.regionServer = regionServer;
-      return this;
-    }
-
-    public byte[] getStartRow() {
-      return startRow;
-    }
-
-    public HBaseSubScanSpec setStartRow(byte[] startRow) {
-      this.startRow = startRow;
-      return this;
-    }
-
-    public byte[] getStopRow() {
-      return stopRow;
-    }
-
-    public HBaseSubScanSpec setStopRow(byte[] stopRow) {
-      this.stopRow = stopRow;
-      return this;
-    }
-
-    public byte[] getSerializedFilter() {
-      return serializedFilter;
-    }
-
-    public HBaseSubScanSpec setSerializedFilter(byte[] serializedFilter) {
-      this.serializedFilter = serializedFilter;
-      this.scanFilter = null;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return "HBaseScanSpec [tableName=" + tableName
-          + ", startRow=" + (startRow == null ? null : Bytes.toStringBinary(startRow))
-          + ", stopRow=" + (stopRow == null ? null : Bytes.toStringBinary(stopRow))
-          + ", filter=" + (getScanFilter() == null ? null : getScanFilter().toString())
-          + ", regionServer=" + regionServer + "]";
-    }
-
-  }
-
   @Override
   public int getOperatorType() {
     return 1001;
+  }
+
+  public String getTableType() {
+    return tableType;
   }
 
 }
