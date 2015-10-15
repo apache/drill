@@ -278,10 +278,8 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
                 false));
             break;
           case TIMESTAMP:
-            reducedValues.add(rexBuilder.makeLiteral(
-                new DateTime(((TimeStampHolder)output).value, DateTimeZone.UTC).toCalendar(null),
-                createCalciteTypeWithNullability(typeFactory, SqlTypeName.TIMESTAMP, newCall.getType().isNullable()),
-                false));
+            reducedValues.add(rexBuilder.makeTimestampLiteral(
+                new DateTime(((TimeStampHolder)output).value, DateTimeZone.UTC).toCalendar(null), 0));
             break;
           case INTERVALYEAR:
             reducedValues.add(rexBuilder.makeLiteral(
