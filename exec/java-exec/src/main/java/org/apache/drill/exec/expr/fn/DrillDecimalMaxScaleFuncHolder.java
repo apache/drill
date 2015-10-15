@@ -28,15 +28,11 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
-public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder{
+public class DrillDecimalMaxScaleFuncHolder extends DrillSimpleFuncHolder {
 
-
-    public DrillDecimalMaxScaleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-    String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-    Map<String, String> methods, List<String> imports, FunctionTemplate.FunctionCostCategory costCategory, Class<? extends DrillSimpleFunc> drillFuncClass) {
-        super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars,
-            methods, imports, costCategory, drillFuncClass);
-    }
+  public DrillDecimalMaxScaleFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
+    super(functionAttributes, initializer);
+  }
 
     @Override
     public MajorType getReturnType(List<LogicalExpression> args) {

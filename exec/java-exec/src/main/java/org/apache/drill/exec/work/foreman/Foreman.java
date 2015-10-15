@@ -351,14 +351,14 @@ public class Foreman implements Runnable {
 
   private void log(final LogicalPlan plan) {
     if (logger.isDebugEnabled()) {
-      logger.debug("Logical {}", plan.unparse(queryContext.getConfig()));
+      logger.debug("Logical {}", plan.unparse(queryContext.getLpPersistence()));
     }
   }
 
   private void log(final PhysicalPlan plan) {
     if (logger.isDebugEnabled()) {
       try {
-        final String planText = queryContext.getConfig().getMapper().writeValueAsString(plan);
+        final String planText = queryContext.getLpPersistence().getMapper().writeValueAsString(plan);
         logger.debug("Physical {}", planText);
       } catch (final IOException e) {
         logger.warn("Error while attempting to log physical plan.", e);
@@ -367,7 +367,7 @@ public class Foreman implements Runnable {
   }
 
   private void returnPhysical(final PhysicalPlan plan) throws ExecutionSetupException {
-    final String jsonPlan = plan.unparse(queryContext.getConfig().getMapper().writer());
+    final String jsonPlan = plan.unparse(queryContext.getLpPersistence().getMapper().writer());
     runPhysicalPlan(DirectPlan.createDirectPlan(queryContext, new PhysicalFromLogicalExplain(jsonPlan)));
   }
 
@@ -909,7 +909,7 @@ public class Foreman implements Runnable {
 
   private PhysicalPlan convert(final LogicalPlan plan) throws OptimizerException {
     if (logger.isDebugEnabled()) {
-      logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(queryContext.getConfig()));
+      logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(queryContext.getLpPersistence()));
     }
     return new BasicOptimizer(queryContext, initiatingClient).optimize(
         new BasicOptimizer.BasicOptimizationContext(queryContext), plan);

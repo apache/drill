@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
@@ -89,10 +90,6 @@ public class CodeCompiler {
     public GeneratedClassEntry(final Class<?> clazz) {
       this.clazz = clazz;
     }
-  }
-
-  public static CodeCompiler getTestCompiler(DrillConfig c) throws IOException{
-    return new CodeCompiler(c, new SystemOptionManager(c, new LocalPStoreProvider(c)).init());
   }
 
   /**

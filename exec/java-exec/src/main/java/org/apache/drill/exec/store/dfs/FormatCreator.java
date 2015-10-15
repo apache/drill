@@ -22,16 +22,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.ConstructorChecker;
-import org.apache.drill.common.util.PathScanner;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Maps;
-import org.apache.hadoop.conf.Configuration;
 
 public class FormatCreator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
@@ -41,13 +39,14 @@ public class FormatCreator {
   private static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class,
       Configuration.class, StoragePluginConfig.class);
 
-  static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, Configuration fsConf,
-      FileSystemConfig storageConfig) {
-    final DrillConfig config = context.getConfig();
+  static Map<String, FormatPlugin> getFormatPlugins(
+      DrillbitContext context,
+      Configuration fsConf,
+      FileSystemConfig storageConfig,
+      ScanResult classpathScan) {
     Map<String, FormatPlugin> plugins = Maps.newHashMap();
 
-    Collection<Class<? extends FormatPlugin>> pluginClasses =
-        PathScanner.scanForImplementations(FormatPlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
+    Collection<Class<? extends FormatPlugin>> pluginClasses = classpathScan.getImplementations(FormatPlugin.class);
 
     if (storageConfig.formats == null || storageConfig.formats.isEmpty()) {
 
@@ -73,7 +72,7 @@ public class FormatCreator {
             if (!FORMAT_BASED.check(c)) {
               continue;
             }
-            Class<? extends FormatPluginConfig> configClass = (Class<? extends FormatPluginConfig>) c.getParameterTypes()[4];
+            Class<?> configClass = c.getParameterTypes()[4];
             constructors.put(configClass, c);
           } catch (Exception e) {
             logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -112,6 +113,7 @@ public class PrintingResultsListener implements UserResultsListener {
   public int await() throws Exception {
     latch.await();
     if (exception != null) {
+      exception.addSuppressed(new DrillRuntimeException("Exception in executor threadpool"));
       throw exception;
     }
     return count.get();

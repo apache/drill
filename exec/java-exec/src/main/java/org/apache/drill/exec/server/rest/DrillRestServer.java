@@ -59,14 +59,14 @@ public class DrillRestServer extends ResourceConfig {
     register(GenericExceptionMapper.class);
 
     JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
-    provider.setMapper(workManager.getContext().getConfig().getMapper());
+    provider.setMapper(workManager.getContext().getLpPersistence().getMapper());
     register(provider);
 
     register(new AbstractBinder() {
       @Override
       protected void configure() {
         bind(workManager).to(WorkManager.class);
-        bind(workManager.getContext().getConfig().getMapper()).to(ObjectMapper.class);
+        bind(workManager.getContext().getLpPersistence().getMapper()).to(ObjectMapper.class);
         bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
       }

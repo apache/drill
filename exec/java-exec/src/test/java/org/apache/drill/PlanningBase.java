@@ -23,9 +23,12 @@ import java.net.URL;
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
 
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.jdbc.SimpleCalciteSchema;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -74,8 +77,9 @@ public class PlanningBase extends ExecTest{
     final String[] sqlStrings = sqlCommands.split(";");
     final LocalPStoreProvider provider = new LocalPStoreProvider(config);
     provider.start();
-
-    final SystemOptionManager systemOptions = new SystemOptionManager(config, provider);
+    final ScanResult scanResult = ClassPathScanner.fromPrescan(config);
+    final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
+    final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence , provider);
     systemOptions.init();
     final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
     final SessionOptionManager sessionOptions = (SessionOptionManager) userSession.getOptions();
@@ -94,6 +98,10 @@ public class PlanningBase extends ExecTest{
         result = systemOptions;
         dbContext.getPersistentStoreProvider();
         result = provider;
+        dbContext.getClasspathScan();
+        result = scanResult;
+        dbContext.getLpPersistence();
+        result = logicalPlanPersistence;
       }
     };
 
@@ -108,6 +116,8 @@ public class PlanningBase extends ExecTest{
       {
         context.getNewDefaultSchema();
         result = root;
+        context.getLpPersistence();
+        result = new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config));
         context.getStorage();
         result = registry;
         context.getFunctionRegistry();
@@ -130,6 +140,8 @@ public class PlanningBase extends ExecTest{
         result = allocator;
         context.getExecutionControls();
         result = executionControls;
+        dbContext.getLpPersistence();
+        result = logicalPlanPersistence;
       }
     };
 

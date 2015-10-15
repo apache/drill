@@ -57,7 +57,7 @@ public @interface FunctionTemplate {
   NullHandling nulls() default NullHandling.INTERNAL;
   boolean isBinaryCommutative() default false;
   boolean isRandom()  default false;
-
+  String desc() default "";
   FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
 
   public static enum NullHandling {

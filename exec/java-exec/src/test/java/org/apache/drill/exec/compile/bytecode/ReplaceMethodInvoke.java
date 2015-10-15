@@ -25,6 +25,8 @@ import java.net.URL;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.DrillCheckClassAdapter;
 import org.apache.drill.exec.compile.QueryClassLoader;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.objectweb.asm.ClassReader;
@@ -55,7 +57,7 @@ public class ReplaceMethodInvoke {
     check(output);
 
     final DrillConfig c = DrillConfig.forClient();
-    final SystemOptionManager m = new SystemOptionManager(c, new LocalPStoreProvider(c));
+    final SystemOptionManager m = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), new LocalPStoreProvider(c));
     m.init();
     try (QueryClassLoader ql = new QueryClassLoader(DrillConfig.create(), m)) {
       ql.injectByteCode("org.apache.drill.Pickle$OutgoingBatch", output);

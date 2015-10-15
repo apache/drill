@@ -18,10 +18,14 @@
 package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.junit.Test;
 
@@ -37,10 +41,14 @@ public class TestParsePhysicalPlan extends ExecTest {
   @Test
   public void parseSimplePlan() throws Exception{
     DrillConfig c = DrillConfig.create();
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    ObjectReader r = c.getMapper().reader(PhysicalPlan.class);
-    ObjectWriter writer = c.getMapper().writer();
+    ScanResult scanResult = ClassPathScanner.fromPrescan(c);
+    LogicalPlanPersistence lpp = new LogicalPlanPersistence(c, scanResult);
+
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, scanResult, lpp, CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), null);
+    ObjectReader r = lpp.getMapper().reader(PhysicalPlan.class);
+    ObjectWriter writer = lpp.getMapper().writer();
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
-    System.out.println(plan.unparse(writer));
+    String unparse = plan.unparse(writer);
+//    System.out.println(unparse);
   }
 }

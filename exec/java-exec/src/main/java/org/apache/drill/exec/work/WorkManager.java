@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.SelfCleaningRunnable;
 import org.apache.drill.common.concurrent.ExtendedLatch;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -122,8 +123,12 @@ public class WorkManager implements AutoCloseable {
     dataHandler = new DataResponseHandlerImpl(bee); // TODO only uses startFragmentPendingRemote()
   }
 
-  public void start(final DrillbitEndpoint endpoint, final Controller controller,
-      final DataConnectionCreator data, final ClusterCoordinator coord, final PStoreProvider provider) {
+  public void start(
+      final DrillbitEndpoint endpoint,
+      final Controller controller,
+      final DataConnectionCreator data,
+      final ClusterCoordinator coord,
+      final PStoreProvider provider) {
     dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, executor);
     statusThread.start();
 

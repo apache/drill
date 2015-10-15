@@ -37,6 +37,7 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.Hook;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.jdbc.ConnectionFactory;
 import org.apache.drill.jdbc.ConnectionInfo;
 import org.junit.Assert;
@@ -162,6 +163,7 @@ public class JdbcAssert {
     public ModelAndSchema(final Properties info, final ConnectionFactory factory) {
       this.info = info;
       this.adapter = new ConnectionFactoryAdapter() {
+        @Override
         public Connection createConnection() throws Exception {
           return factory.getConnection(new ConnectionInfo("jdbc:drill:zk=local", ModelAndSchema.this.info));
         }
@@ -307,6 +309,7 @@ public class JdbcAssert {
       Connection connection = null;
       Statement statement = null;
       final Hook.Closeable x = Hook.LOGICAL_PLAN.add(new Function<String, Void>() {
+        @Override
         public Void apply(String o) {
           plan0[0] = o;
           return null;
@@ -317,7 +320,7 @@ public class JdbcAssert {
         statement = connection.prepareStatement(sql);
         statement.close();
         final String plan = plan0[0].trim();
-        return LogicalPlan.parse(DrillConfig.create(), plan);
+        return LogicalPlan.parse(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(DrillConfig.create()), plan);
       } catch (Exception e) {
         throw new RuntimeException(e);
       } finally {

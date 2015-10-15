@@ -30,6 +30,8 @@ import com.google.common.io.Files;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
@@ -113,9 +115,12 @@ public class BaseTestQuery extends ExecTest {
 
   private int[] columnWidths = new int[] { 8 };
 
+  private static ScanResult classpathScan;
+
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
     config = DrillConfig.create(TEST_CONFIGURATIONS);
+    classpathScan = ClassPathScanner.fromPrescan(config);
     openClient();
   }
 
@@ -179,7 +184,7 @@ public class BaseTestQuery extends ExecTest {
 
     bits = new Drillbit[drillbitCount];
     for(int i = 0; i < drillbitCount; i++) {
-      bits[i] = new Drillbit(config, serviceSet);
+      bits[i] = new Drillbit(config, serviceSet, classpathScan);
       bits[i].run();
 
       final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();

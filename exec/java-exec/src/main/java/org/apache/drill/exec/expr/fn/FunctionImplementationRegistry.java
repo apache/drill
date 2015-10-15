@@ -26,16 +26,17 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.fn.CastFunctions;
-import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.resolver.FunctionResolver;
+import org.apache.drill.exec.server.options.OptionManager;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.server.options.OptionManager;
 
 public class FunctionImplementationRegistry implements FunctionLookupContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
@@ -44,14 +45,19 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
   private OptionManager optionManager = null;
 
+  @Deprecated @VisibleForTesting
   public FunctionImplementationRegistry(DrillConfig config){
+    this(config, ClassPathScanner.fromPrescan(config));
+  }
+
+  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan){
     Stopwatch w = new Stopwatch().start();
 
     logger.debug("Generating function registry.");
-    drillFuncRegistry = new DrillFunctionRegistry(config);
+    drillFuncRegistry = new DrillFunctionRegistry(classpathScan);
 
-    Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
-        PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
+    Set<Class<? extends PluggableFunctionRegistry>> registryClasses =
+        classpathScan.getImplementations(PluggableFunctionRegistry.class);
 
     for (Class<? extends PluggableFunctionRegistry> clazz : registryClasses) {
       for (Constructor<?> c : clazz.getConstructors()) {
@@ -75,8 +81,8 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
     logger.info("Function registry loaded.  {} functions loaded in {} ms.", drillFuncRegistry.size(), w.elapsed(TimeUnit.MILLISECONDS));
   }
 
-  public FunctionImplementationRegistry(DrillConfig config, OptionManager optionManager) {
-    this(config);
+  public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan, OptionManager optionManager) {
+    this(config, classpathScan);
     this.optionManager = optionManager;
   }
 

@@ -22,26 +22,30 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 public class CheckStorageConfig extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CheckStorageConfig.class);
 
   @Test
   public void ensureStorageEnginePickup() {
-    Collection<?> engines = PathScanner.scanForImplementations(StoragePluginConfig.class, Lists.newArrayList("org"));
+    DrillConfig config = DrillConfig.create();
+    ScanResult scan = ClassPathScanner.fromPrescan(config);
+    Collection<?> engines = scan.getImplementations(StoragePluginConfig.class);
     assertEquals(engines.size(), 1);
   }
 
   @Test
   public void checkPlanParsing() throws Exception{
-    LogicalPlan plan = LogicalPlan.parse(DrillConfig.create(), FileUtils.getResourceAsString("/storage_engine_plan.json"));
+    DrillConfig config = DrillConfig.create();
+    ScanResult scan = ClassPathScanner.fromPrescan(config);
+    LogicalPlan plan = LogicalPlan.parse(new LogicalPlanPersistence(config, scan), FileUtils.getResourceAsString("/storage_engine_plan.json"));
   }
 }

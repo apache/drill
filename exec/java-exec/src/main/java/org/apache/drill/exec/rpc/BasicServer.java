@@ -27,9 +27,14 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.Future;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +44,8 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 import com.google.protobuf.Internal.EnumLite;
+import com.google.common.base.Stopwatch;
+import com.google.common.io.Closeables;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -216,7 +223,14 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   @Override
   public void close() throws IOException {
     try {
-      eventLoopGroup.shutdownGracefully(0, 2, TimeUnit.SECONDS).get();
+      Stopwatch watch = new Stopwatch().start();
+      // this takes 1s to complete
+      // known issue: https://github.com/netty/netty/issues/2545
+      eventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).get();
+      long elapsed = watch.elapsed(MILLISECONDS);
+      if (elapsed > 500) {
+        logger.info("closed eventLoopGroup " + eventLoopGroup + " in " + elapsed + " ms");
+      }
     } catch (final InterruptedException | ExecutionException e) {
       logger.warn("Failure while shutting down {}. ", this.getClass().getName(), e);
 

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 public interface MongoTestConstants {
 
   public static final String LOCALHOST = "localhost";
+  // TODO: DRILL-3934: add some randomization to this as it fails when running concurrent builds
   public static final int CONFIG_SERVER_PORT = 27019;
   public static final int MONGOD_1_PORT = 27020;
   public static final int MONGOD_2_PORT = 27021;
