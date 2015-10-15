@@ -58,9 +58,11 @@ public class STGeomFromTextSrid implements DrillSimpleFunc {
     geom.setSpatialReference(com.esri.core.geometry.SpatialReference.create(srid));
 
     java.nio.ByteBuffer pointBytes = geom.asBinary();
-    out.buffer = buffer;
+
+    int outputSize = pointBytes.remaining();
+    out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
-    out.end = pointBytes.remaining();
+    out.end = outputSize;
     buffer.setBytes(0, pointBytes);
-  }
+    }
 }

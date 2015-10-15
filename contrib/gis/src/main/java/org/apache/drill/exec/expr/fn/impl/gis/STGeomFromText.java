@@ -52,9 +52,11 @@ public class STGeomFromText implements DrillSimpleFunc {
     geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
 
     java.nio.ByteBuffer pointBytes = geom.asBinary();
-    out.buffer = buffer;
+
+    int outputSize = pointBytes.remaining();
+    out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
-    out.end = pointBytes.remaining();
+    out.end = outputSize;
     buffer.setBytes(0, pointBytes);
   }
 }
