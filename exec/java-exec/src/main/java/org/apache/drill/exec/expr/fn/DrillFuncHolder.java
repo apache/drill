@@ -19,9 +19,9 @@ package org.apache.drill.exec.expr.fn;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -37,57 +37,67 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-
 public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolder.class);
 
+  private final FunctionAttributes attributes;
   protected final FunctionTemplate.FunctionScope scope;
   protected final FunctionTemplate.NullHandling nullHandling;
   protected final FunctionTemplate.FunctionCostCategory costCategory;
   protected final boolean isBinaryCommutative;
   protected final boolean isDeterministic;
   protected final String[] registeredNames;
-  protected final ImmutableList<String> imports;
   protected final WorkspaceReference[] workspaceVars;
   protected final ValueReference[] parameters;
   protected final ValueReference returnValue;
-  protected final ImmutableMap<String, String> methodMap;
+  private final FunctionInitializer initializer;
 
-  public DrillFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
-      WorkspaceReference[] workspaceVars, Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
+  public DrillFuncHolder(
+      FunctionAttributes attributes,
+      FunctionInitializer initializer) {
     super();
-    this.scope = scope;
-    this.nullHandling = nullHandling;
-    this.workspaceVars = workspaceVars;
-    this.isBinaryCommutative = isBinaryCommutative;
-    this.isDeterministic = ! isRandom;
-    this.registeredNames = registeredNames;
-    this.methodMap = ImmutableMap.copyOf(methods);
-    this.parameters = parameters;
-    this.returnValue = returnValue;
-    this.imports = ImmutableList.copyOf(imports);
-    this.costCategory = costCategory;
+    this.attributes = attributes;
+    this.scope = attributes.getScope();
+    this.nullHandling = attributes.getNullHandling();
+    this.costCategory = attributes.getCostCategory();
+    this.isBinaryCommutative = attributes.isBinaryCommutative();
+    this.isDeterministic = attributes.isDeterministic();
+    this.registeredNames = attributes.getRegisteredNames();
+    this.workspaceVars = attributes.getWorkspaceVars();
+    this.parameters = attributes.getParameters();
+    this.returnValue = attributes.getReturnValue();
+    this.initializer = initializer;
   }
 
-  public List<String> getImports() {
-    return imports;
+  protected String meth(String methodName) {
+    return meth(methodName, true);
+  }
+
+  protected String meth(String methodName, boolean required) {
+    String method = initializer.getMethod(methodName);
+    if (method == null) {
+      if (!required) {
+        return "";
+      }
+      throw UserException
+          .functionError()
+          .message("Failure while trying use function. No body found for required method %s.", methodName)
+          .addContext("FunctionClass", initializer.getClassName())
+          .build(logger);
+    }
+    return method;
   }
 
   @Override
@@ -115,16 +125,8 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return false;
   }
 
-  /**
-   * @deprecated - use isDeterministic method instead
-   */
-  @Deprecated
-  public boolean isRandom() {
-    return ! isDeterministic;
-  }
-
   public boolean isDeterministic() {
-    return isDeterministic;
+    return attributes.isDeterministic();
   }
 
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
@@ -271,19 +273,19 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   public NullHandling getNullHandling() {
-    return this.nullHandling;
+    return attributes.getNullHandling();
   }
 
   private boolean softCompare(MajorType a, MajorType b) {
-    return Types.softEquals(a, b, nullHandling == NullHandling.NULL_IF_NULL);
+    return Types.softEquals(a, b, getNullHandling() == NullHandling.NULL_IF_NULL);
   }
 
   public String[] getRegisteredNames() {
-    return registeredNames;
+    return attributes.getRegisteredNames();
   }
 
   public int getCostCategory() {
-    return this.costCategory.getValue();
+    return attributes.getCostCategory().getValue();
   }
 
   @Override

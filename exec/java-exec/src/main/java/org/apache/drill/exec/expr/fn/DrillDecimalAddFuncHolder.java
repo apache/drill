@@ -32,11 +32,8 @@ import org.apache.drill.exec.util.DecimalUtility;
 
 public class DrillDecimalAddFuncHolder extends DrillSimpleFuncHolder{
 
-
-  public DrillDecimalAddFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-                                        String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-                                        Map<String, String> methods, List<String> imports, FunctionTemplate.FunctionCostCategory costCategory, Class<? extends DrillSimpleFunc> drillFuncClass) {
-    super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, costCategory, drillFuncClass);
+  public DrillDecimalAddFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
+    super(functionAttributes, initializer);
   }
 
   /*

@@ -22,10 +22,11 @@ import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
@@ -53,12 +54,14 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
    * @param config
    */
   public HiveFunctionRegistry(DrillConfig config) {
-    Set<Class<? extends GenericUDF>> genericUDFClasses = PathScanner.scanForImplementations(GenericUDF.class, null);
+    // TODO: see if we can avoid this. We can't change the constructor right now.
+    ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
+    Set<Class<? extends GenericUDF>> genericUDFClasses = classpathScan.getImplementations(GenericUDF.class);
     for (Class<? extends GenericUDF> clazz : genericUDFClasses) {
       register(clazz, methodsGenericUDF);
     }
 
-    Set<Class<? extends UDF>> udfClasses = PathScanner.scanForImplementations(UDF.class, null);
+    Set<Class<? extends UDF>> udfClasses = classpathScan.getImplementations(UDF.class);
     for (Class<? extends UDF> clazz : udfClasses) {
       register(clazz, methodsUDF);
     }

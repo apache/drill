@@ -43,6 +43,7 @@
     -->
     <hive.version>1.0.0</hive.version>
     <hadoop.version>2.4.1</hadoop.version>
+    <fmpp.version>0.9.14</fmpp.version>
   </properties>
 
   <scm>
@@ -156,7 +157,6 @@
           </execution>
         </executions>
         <configuration>
-
           <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <exclude>**/*.log</exclude>
@@ -202,7 +202,7 @@
         <executions>
           <execution>
             <id>checkstyle-validation</id>
-            <phase>validate</phase>
+            <phase>verify</phase>
             <configuration>
               <includes>**/*.java</includes>
               <encoding>UTF-8</encoding>
@@ -281,7 +281,7 @@
         <executions>
           <execution>
             <id>validate_java_and_maven_version</id>
-            <phase>validate</phase>
+            <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
             </goals>
@@ -299,6 +299,7 @@
           </execution>
           <execution>
             <id>avoid_bad_dependencies</id>
+            <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
             </goals>
@@ -366,7 +367,7 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.10</version>
+          <version>0.11</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1885,6 +1886,7 @@
     </profile>
   </profiles>
   <modules>
+    <module>tools/fmpp</module>
     <module>protocol</module>
     <module>common</module>
     <module>exec</module>

@@ -17,14 +17,13 @@
 -->
 <configuration>
   <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
-
-  <appender name="SOCKET"
-    class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-    <Compressing>true</Compressing>
-    <ReconnectionDelay>10000</ReconnectionDelay>
-    <IncludeCallerData>true</IncludeCallerData>
-    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
-  </appender>
+<!--  <appender name="SOCKET" -->
+<!--    class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender"> -->
+<!--    <Compressing>true</Compressing> -->
+<!--    <ReconnectionDelay>10000</ReconnectionDelay> -->
+<!--    <IncludeCallerData>true</IncludeCallerData> -->
+<!--    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts> -->
+<!--  </appender> -->
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <!-- The property 'logback.log.dir' is defined in pom.xml -->
@@ -43,13 +42,13 @@
 
   <logger name="org.apache.drill" additivity="false">
     <level value="info" />
-    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </logger>
 
-  <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="SOCKET" />
-  </logger>
+<!--  <logger name="org.apache.drill" additivity="false"> -->
+<!--    <level value="debug" /> -->
+<!--    <appender-ref ref="SOCKET" /> -->
+<!--  </logger> -->
 
   <logger name="org.apache.hadoop" additivity="false">
     <level value="info" />
@@ -57,7 +56,7 @@
   </logger>
 
   <root>
-    <level value="error" />
+    <level value="info" />
     <appender-ref ref="STDOUT" />
   </root>
 

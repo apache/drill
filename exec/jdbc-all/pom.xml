@@ -135,17 +135,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-common</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-jdbc</artifactId>
       <version>${project.version}</version>

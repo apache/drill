@@ -17,13 +17,9 @@
  */
 package org.apache.drill.common.logical;
 
-import java.util.List;
+import java.util.Set;
 
-import org.apache.drill.common.config.CommonConstants;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.PathScanner;
-
-import com.google.common.base.Joiner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 
 
 public abstract class FormatPluginConfigBase implements FormatPluginConfig{
@@ -31,21 +27,14 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
 
 
   /**
-   * Use reflection to scan for implementations of {@see FormatPlugin}.
+   * scan for implementations of {@see FormatPlugin}.
    *
-   * @param config - Drill configuration object, used to find the packages to scan
+   * @param classpathScan - Drill configuration object, used to find the packages to scan
    * @return - list of classes that implement the interface.
    */
-  public synchronized static Class<?>[] getSubTypes(final DrillConfig config) {
-    final List<String> packages =
-        config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
-    final Class<?>[] pluginClasses =
-        PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
-    final String lineBrokenList =
-        pluginClasses.length == 0
-        ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
-    logger.debug("Found {} format plugin configuration classes: {}.",
-                 pluginClasses.length, lineBrokenList);
+  public static Set<Class<? extends FormatPluginConfig>> getSubTypes(final ScanResult classpathScan) {
+    final Set<Class<? extends FormatPluginConfig>> pluginClasses = classpathScan.getImplementations(FormatPluginConfig.class);
+    logger.debug("Found {} format plugin configuration classes: {}.", pluginClasses.size(), pluginClasses);
     return pluginClasses;
   }
 

@@ -36,6 +36,7 @@
 
   <module name="RegexpSingleline">
     <property name="format" value="\s+$"/>
+    <property name="message" value="A line of code cannot contain any trailing whitespace"/>
   </module>
 
 </module>

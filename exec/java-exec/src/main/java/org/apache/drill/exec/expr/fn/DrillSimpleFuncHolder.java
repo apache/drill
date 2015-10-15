@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.List;
-import java.util.Map;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -27,11 +26,8 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
-import com.google.common.base.Preconditions;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -39,32 +35,27 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
-public class DrillSimpleFuncHolder extends DrillFuncHolder{
+public class DrillSimpleFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
 
-  private final String setupBody;
-  private final String evalBody;
-  private final String resetBody;
-  private final String cleanupBody;
-  private final Class<? extends DrillSimpleFunc> drillFuncClass;
+  private final String drillFuncClass;
 
-  public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-      Map<String, String> methods, List<String> imports) {
-    this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault(), null);
+  public DrillSimpleFuncHolder(FunctionAttributes functionAttributes, FunctionInitializer initializer) {
+    super(functionAttributes, initializer);
+    drillFuncClass = checkNotNull(initializer.getClassName());
   }
 
-  public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-      Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory, Class<? extends DrillSimpleFunc> drillFuncClass) {
-    super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, costCategory);
-    setupBody = methods.get("setup");
-    evalBody = methods.get("eval");
-    resetBody = methods.get("reset");
-    cleanupBody = methods.get("cleanup");
-    Preconditions.checkNotNull(evalBody);
-
-    this.drillFuncClass = drillFuncClass;
+  private String setupBody() {
+    return meth("setup", false);
+  }
+  private String evalBody() {
+    return meth("eval");
+  }
+  private String resetBody() {
+    return meth("reset", false);
+  }
+  private String cleanupBody() {
+    return meth("cleanup", false);
   }
 
   @Override
@@ -73,10 +64,10 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder{
   }
 
   public DrillSimpleFunc createInterpreter() throws Exception {
-    Preconditions.checkArgument(this.drillFuncClass != null, "drillFuncClass should not be null!");
-    return drillFuncClass.newInstance();
+    return (DrillSimpleFunc)Class.forName(drillFuncClass).newInstance();
   }
 
+  @Override
   public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.
@@ -85,10 +76,10 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder{
         throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", parameters[i].name, this.getRegisteredNames()[0]));
       }
     }
-    generateBody(g, BlockType.SETUP, setupBody, inputVariables, workspaceJVars, true);
-    HoldingContainer c = generateEvalBody(g, inputVariables, evalBody, workspaceJVars);
-    generateBody(g, BlockType.RESET, resetBody, null, workspaceJVars, false);
-    generateBody(g, BlockType.CLEANUP, cleanupBody, null, workspaceJVars, false);
+    generateBody(g, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
+    HoldingContainer c = generateEvalBody(g, inputVariables, evalBody(), workspaceJVars);
+    generateBody(g, BlockType.RESET, resetBody(), null, workspaceJVars, false);
+    generateBody(g, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
     return c;
   }
 

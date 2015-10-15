@@ -21,6 +21,7 @@ import io.netty.channel.EventLoopGroup;
 
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
@@ -37,13 +38,15 @@ public class BootStrapContext implements AutoCloseable {
   private final EventLoopGroup loop2;
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
+  private final ScanResult classpathScan;
 
-  public BootStrapContext(DrillConfig config) {
+  public BootStrapContext(DrillConfig config, ScanResult classpathScan) {
     this.config = config;
-    loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
-    loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
-    metrics = DrillMetrics.getInstance();
-    allocator = RootAllocatorFactory.newRoot(config);
+    this.classpathScan = classpathScan;
+    this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
+    this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
+    this.metrics = DrillMetrics.getInstance();
+    this.allocator = RootAllocatorFactory.newRoot(config);
   }
 
   public DrillConfig getConfig() {
@@ -64,6 +67,10 @@ public class BootStrapContext implements AutoCloseable {
 
   public BufferAllocator getAllocator() {
     return allocator;
+  }
+
+  public ScanResult getClasspathScan() {
+    return classpathScan;
   }
 
   @Override

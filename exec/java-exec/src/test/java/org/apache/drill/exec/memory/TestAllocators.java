@@ -21,8 +21,6 @@ package org.apache.drill.exec.memory;
 
 import static org.junit.Assert.fail;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -38,8 +36,8 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl;
-import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -49,6 +47,8 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+
+import io.netty.buffer.DrillBuf;
 
 public class TestAllocators {
 
@@ -109,7 +109,7 @@ public class TestAllocators {
     FragmentContext fragmentContext2 = new FragmentContext(bitContext, pf2, null, functionRegistry);
 
     // Get a few physical operators. Easiest way is to read a physical plan.
-    PhysicalPlanReader planReader = new PhysicalPlanReader(config, config.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), storageRegistry);
+    PhysicalPlanReader planReader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(bitContext, storageRegistry);
     PhysicalPlan plan = planReader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8));
     List<PhysicalOperator> physicalOperators = plan.getSortedOperators();
     Iterator<PhysicalOperator> physicalOperatorIterator = physicalOperators.iterator();

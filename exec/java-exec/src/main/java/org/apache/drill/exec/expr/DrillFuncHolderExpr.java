@@ -60,7 +60,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
 
   @Override
   public boolean isRandom() {
-    return holder.isRandom();
+    return !holder.isDeterministic();
   }
 
   @Override

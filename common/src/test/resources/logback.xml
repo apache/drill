@@ -10,14 +10,12 @@
   OF ANY KIND, either express or implied. See the License for the specific
   language governing permissions and limitations under the License. -->
 <configuration>
-
-  <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-    <Compressing>true</Compressing>
-    <ReconnectionDelay>10000</ReconnectionDelay>
-    <IncludeCallerData>true</IncludeCallerData>
-    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
-  </appender>
-
+<!--  <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender"> -->
+<!--    <Compressing>true</Compressing> -->
+<!--    <ReconnectionDelay>10000</ReconnectionDelay> -->
+<!--    <IncludeCallerData>true</IncludeCallerData> -->
+<!--    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts> -->
+<!--  </appender> -->
  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -40,14 +38,14 @@
   -->
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
-    <appender-ref ref="SOCKET" />
+<!--    <appender-ref ref="SOCKET" /> -->
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->
   </logger>
 
   <root>
-    <level value="error" />
-    <appender-ref ref="SOCKET" />
+    <level value="info" />
+<!--    <appender-ref ref="SOCKET" /> -->
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->
   </root>

@@ -18,20 +18,16 @@
 package org.apache.drill.exec.server;
 
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
@@ -47,15 +43,12 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.AckSender;
 import org.apache.drill.exec.rpc.data.DataConnectionManager;
 import org.apache.drill.exec.rpc.data.DataResponseHandler;
-import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.apache.drill.exec.rpc.data.DataServer;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.Float8Vector;
@@ -67,14 +60,21 @@ import org.junit.Test;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+import mockit.Injectable;
+import mockit.NonStrictExpectations;
+
 public class TestBitRpc extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
 
   @Test
   public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus, @Injectable final FragmentManager fman, @Injectable final FragmentContext fcon) throws Exception {
 
-    final BootStrapContext c = new BootStrapContext(DrillConfig.create());
-    BootStrapContext c2 = new BootStrapContext(DrillConfig.create());
+    DrillConfig config1 = DrillConfig.create();
+    final BootStrapContext c = new BootStrapContext(config1, ClassPathScanner.fromPrescan(config1));
+    DrillConfig config2 = DrillConfig.create();
+    BootStrapContext c2 = new BootStrapContext(config2, ClassPathScanner.fromPrescan(config2));
 
     new NonStrictExpectations() {{
       workBus.getFragmentManagerIfExists((FragmentHandle) any); result = fman;

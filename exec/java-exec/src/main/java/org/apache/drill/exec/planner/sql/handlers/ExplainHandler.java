@@ -107,7 +107,7 @@ public class ExplainHandler extends DefaultSqlHandler {
       DrillImplementor implementor = new DrillImplementor(new DrillParseContext(context.getPlannerSettings()), ResultMode.LOGICAL);
       implementor.go( (DrillRel) node);
       LogicalPlan plan = implementor.getPlan();
-      this.json = plan.unparse(context.getConfig());
+      this.json = plan.unparse(context.getLpPersistence());
     }
   }
 
@@ -117,7 +117,7 @@ public class ExplainHandler extends DefaultSqlHandler {
 
     public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context) {
       this.text = PrelSequencer.printWithIds((Prel) node, level);
-      this.json = plan.unparse(context.getConfig().getMapper().writer());
+      this.json = plan.unparse(context.getLpPersistence().getMapper().writer());
     }
   }
 

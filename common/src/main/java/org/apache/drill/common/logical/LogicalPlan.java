@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -80,11 +81,11 @@ public class LogicalPlan {
     return storageEngineMap;
   }
 
-  public String toJsonString(DrillConfig config) throws JsonProcessingException {
+  public String toJsonString(LogicalPlanPersistence config) throws JsonProcessingException {
     return config.getMapper().writeValueAsString(this);
   }
 
-  public String toJsonStringSafe(DrillConfig config){
+  public String toJsonStringSafe(LogicalPlanPersistence config){
     try{
       return toJsonString(config);
     }catch(JsonProcessingException e){
@@ -94,7 +95,7 @@ public class LogicalPlan {
   }
 
   /** Parses a logical plan. */
-  public static LogicalPlan parse(DrillConfig config, String planString) {
+  public static LogicalPlan parse(LogicalPlanPersistence config, String planString) {
     ObjectMapper mapper = config.getMapper();
     try {
       LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
@@ -106,7 +107,7 @@ public class LogicalPlan {
   }
 
   /** Converts a logical plan to a string. (Opposite of {@link #parse}.) */
-  public String unparse(DrillConfig config) {
+  public String unparse(LogicalPlanPersistence config) {
     try {
       return config.getMapper().writeValueAsString(this);
     } catch (JsonProcessingException e) {

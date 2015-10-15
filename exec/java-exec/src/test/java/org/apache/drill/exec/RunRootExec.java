@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -45,7 +46,7 @@ public class RunRootExec {
   public static void main(String args[]) throws Exception {
     String path = args[0];
     int iterations = Integer.parseInt(args[1]);
-    Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet());
+    Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
     bit.run();
     DrillbitContext bitContext = bit.getContext();
     PhysicalPlanReader reader = bitContext.getPlanReader();

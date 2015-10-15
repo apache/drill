@@ -22,11 +22,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.drill.common.config.CommonConstants;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.util.PathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 
 public class OperatorCreatorRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorCreatorRegistry.class);
@@ -34,9 +33,9 @@ public class OperatorCreatorRegistry {
   private volatile Map<Class<?>, Constructor<?>> constructorRegistry = new HashMap<Class<?>, Constructor<?>>();
   private volatile Map<Class<?>, Object> instanceRegistry = new HashMap<Class<?>, Object>();
 
-  public OperatorCreatorRegistry(DrillConfig config) {
-    addImplementorsToMap(config, BatchCreator.class);
-    addImplementorsToMap(config, RootCreator.class);
+  public OperatorCreatorRegistry(ScanResult scanResult) {
+    addImplementorsToMap(scanResult, BatchCreator.class);
+    addImplementorsToMap(scanResult, RootCreator.class);
     logger.debug("Adding Operator Creator map: {}", constructorRegistry);
   }
 
@@ -61,9 +60,8 @@ public class OperatorCreatorRegistry {
     }
   }
 
-  private <T> void addImplementorsToMap(DrillConfig config, Class<T> baseInterface) {
-    Class<?>[] providerClasses = PathScanner.scanForImplementationsArr(baseInterface,
-        config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES));
+  private <T> void addImplementorsToMap(ScanResult scanResult, Class<T> baseInterface) {
+    Set<Class<? extends T>> providerClasses = scanResult.getImplementations(baseInterface);
     for (Class<?> c : providerClasses) {
       Class<?> operatorClass = c;
       boolean interfaceFound = false;

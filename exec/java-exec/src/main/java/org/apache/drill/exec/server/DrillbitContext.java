@@ -19,10 +19,14 @@ package org.apache.drill.exec.server;
 
 import io.netty.channel.EventLoopGroup;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -58,27 +62,33 @@ public class DrillbitContext {
   private final PStoreProvider provider;
   private final CodeCompiler compiler;
   private final ExecutorService executor;
+  private final LogicalPlanPersistence lpPersistence;
+  private final ScanResult classpathScan;
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord,
-      Controller controller, DataConnectionCreator connectionsPool, WorkEventBus workBus, PStoreProvider provider,
+  public DrillbitContext(
+      DrillbitEndpoint endpoint,
+      BootStrapContext context,
+      ClusterCoordinator coord,
+      Controller controller,
+      DataConnectionCreator connectionsPool,
+      WorkEventBus workBus,
+      PStoreProvider provider,
       ExecutorService executor) {
-    Preconditions.checkNotNull(endpoint);
-    Preconditions.checkNotNull(context);
-    Preconditions.checkNotNull(controller);
-    Preconditions.checkNotNull(connectionsPool);
+    this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
-    this.controller = controller;
-    this.context = context;
+    this.controller = checkNotNull(controller);
+    this.context = checkNotNull(context);
     this.coord = coord;
-    this.connectionsPool = connectionsPool;
-    this.endpoint = endpoint;
+    this.connectionsPool = checkNotNull(connectionsPool);
+    this.endpoint = checkNotNull(endpoint);
     this.provider = provider;
     this.executor = executor;
-    this.storagePlugins = new StoragePluginRegistry(this);
-    this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
-    this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
-    this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
-    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig(), systemOptions);
+    this.lpPersistence = new LogicalPlanPersistence(context.getConfig(), classpathScan);
+    this.storagePlugins = new StoragePluginRegistry(this); // TODO change constructor
+    this.reader = new PhysicalPlanReader(context.getConfig(), classpathScan, lpPersistence, endpoint, storagePlugins);
+    this.operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
+    this.systemOptions = new SystemOptionManager(lpPersistence, provider);
+    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig(), classpathScan, systemOptions);
     this.compiler = new CodeCompiler(context.getConfig(), systemOptions);
   }
 
@@ -160,6 +170,14 @@ public class DrillbitContext {
 
   public ExecutorService getExecutor() {
     return executor;
+  }
+
+  public LogicalPlanPersistence getLpPersistence() {
+    return lpPersistence;
+  }
+
+  public ScanResult getClasspathScan() {
+    return classpathScan;
   }
 
 }

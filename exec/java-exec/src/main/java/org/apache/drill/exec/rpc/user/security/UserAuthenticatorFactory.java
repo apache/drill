@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.google.common.base.Strings;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.PathScanner;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.DrillbitStartupException;
+import static org.apache.drill.exec.ExecConstants.USER_AUTHENTICATOR_IMPL;
 
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 
-import static org.apache.drill.exec.ExecConstants.USER_AUTHENTICATOR_IMPL;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.exception.DrillbitStartupException;
+
+import com.google.common.base.Strings;
 
 /**
  * Factory class which provides {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} implementation
@@ -45,7 +45,7 @@ public class UserAuthenticatorFactory {
    *
    * @throws DrillbitStartupException when no implementation found for given BOOT options.
    */
-  public static UserAuthenticator createAuthenticator(final DrillConfig config) throws DrillbitStartupException {
+  public static UserAuthenticator createAuthenticator(final DrillConfig config, ScanResult scan) throws DrillbitStartupException {
     final String authImplConfigured = config.getString(USER_AUTHENTICATOR_IMPL);
 
     if (Strings.isNullOrEmpty(authImplConfigured)) {
@@ -54,8 +54,7 @@ public class UserAuthenticatorFactory {
     }
 
     final Collection<Class<? extends UserAuthenticator>> authImpls =
-        PathScanner.scanForImplementations(UserAuthenticator.class,
-            config.getStringList(ExecConstants.USER_AUTHENTICATOR_IMPL_PACKAGES));
+        scan.getImplementations(UserAuthenticator.class);
 
     for(Class<? extends UserAuthenticator> clazz : authImpls) {
       final UserAuthenticatorTemplate template = clazz.getAnnotation(UserAuthenticatorTemplate.class);

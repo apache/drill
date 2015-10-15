@@ -20,21 +20,21 @@ package org.apache.drill.exec.server;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl;
+import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Properties;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_GROUP;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER_PASSWORD;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.PROCESS_USER;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
 
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.ADMIN_GROUP;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.ADMIN_USER;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.ADMIN_USER_PASSWORD;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.PROCESS_USER;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_1;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_2;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+import java.util.Properties;
 
 /**
  * Test setting system scoped options with user authentication enabled. (DRILL-3622)

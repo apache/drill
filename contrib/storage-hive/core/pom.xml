@@ -104,9 +104,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.googlecode.fmpp-maven-plugin</groupId>
-        <artifactId>fmpp-maven-plugin</artifactId>
-        <version>1.0</version>
+        <groupId>org.apache.drill.tools</groupId>
+        <artifactId>drill-fmpp-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.freemarker</groupId>
@@ -114,36 +114,17 @@
             <version>2.3.19</version>
           </dependency>
         </dependencies>
-        <configuration>
-          <cfgFile>src/main/codegen/config.fmpp</cfgFile>
-          <outputDirectory>target/generated-sources</outputDirectory>
-          <templateDirectory>src/main/codegen/templates</templateDirectory>
-        </configuration>
         <executions>
           <execution>
             <id>generate-fmpp-sources</id>
-            <phase>initialize</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>generate</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.5</version>
-        <executions>
-          <execution>
-            <id>add-fmpp-sources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
             <configuration>
-              <sources>
-                <source>${project.build.directory}/generated-sources</source>
-              </sources>
+              <config>src/main/codegen/config.fmpp</config>
+              <output>${project.build.directory}/generated-sources</output>
+              <templates>src/main/codegen/templates</templates>
             </configuration>
           </execution>
         </executions>

@@ -28,20 +28,4 @@ public interface CommonConstants {
   /** Override configuration file name.  (Classpath resource pathname.) */
   String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
 
-  /** Configuration pathname to list of names of packages to scan for logical
-   *  operator subclasses. */
-  String LOGICAL_OPERATOR_SCAN_PACKAGES = "drill.logical.operator.packages";
-
-  /** Configuration pathname to list of names of packages to scan for physical
-   *  operator subclasses. */
-  String PHYSICAL_OPERATOR_SCAN_PACKAGES = "drill.physical.operator.packages";
-
-  /** Configuration pathname to list of names of packages to scan for function
-   *  subclasses. */
-  String LOGICAL_FUNCTION_SCAN_PACKAGES = "drill.logical.function.packages";
-
-  /** Configuration pathname to list of packages to scan for storage plugin
-   *  configuration subclasses. */
-  String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
-
 }

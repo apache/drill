@@ -145,7 +145,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
       list = new OptionList();
     } else {
       try {
-        list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
+        list = dbContext.getLpPersistence().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
       } catch (final Exception e) {
         throw new ExecutionSetupException("Failure while reading plan options.", e);
       }
