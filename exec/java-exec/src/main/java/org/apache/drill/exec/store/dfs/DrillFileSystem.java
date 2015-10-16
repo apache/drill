@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.ops.OperatorStats;
@@ -48,8 +49,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.UnsupportedFileSystemException;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclStatus;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
@@ -687,6 +690,61 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   @Override
   public Path resolvePath(Path p) throws IOException {
     return underlyingFs.resolvePath(p);
+  }
+
+  @Override
+  public boolean truncate(final Path f, final long newLength) throws IOException {
+    return underlyingFs.truncate(f, newLength);
+  }
+
+  @Override
+  public RemoteIterator<FileStatus> listStatusIterator(final Path p) throws FileNotFoundException, IOException {
+    return underlyingFs.listStatusIterator(p);
+  }
+
+  @Override
+  public void access(final Path path, final FsAction mode) throws AccessControlException, FileNotFoundException, IOException {
+    underlyingFs.access(path, mode);
+  }
+
+  @Override
+  public FileChecksum getFileChecksum(final Path f, final long length) throws IOException {
+    return underlyingFs.getFileChecksum(f, length);
+  }
+
+  @Override
+  public void setXAttr(final Path path, final String name, final byte[] value) throws IOException {
+    underlyingFs.setXAttr(path, name, value);
+  }
+
+  @Override
+  public void setXAttr(final Path path, final String name, final byte[] value, final EnumSet<XAttrSetFlag> flag) throws IOException {
+    underlyingFs.setXAttr(path, name, value, flag);
+  }
+
+  @Override
+  public byte[] getXAttr(final Path path, final String name) throws IOException {
+    return underlyingFs.getXAttr(path, name);
+  }
+
+  @Override
+  public Map<String, byte[]> getXAttrs(final Path path) throws IOException {
+    return underlyingFs.getXAttrs(path);
+  }
+
+  @Override
+  public Map<String, byte[]> getXAttrs(final Path path, final List<String> names) throws IOException {
+    return underlyingFs.getXAttrs(path, names);
+  }
+
+  @Override
+  public List<String> listXAttrs(final Path path) throws IOException {
+    return underlyingFs.listXAttrs(path);
+  }
+
+  @Override
+  public void removeXAttr(final Path path, final String name) throws IOException {
+    underlyingFs.removeXAttr(path, name);
   }
 
   public List<FileStatus> list(boolean recursive, Path... paths) throws IOException {
