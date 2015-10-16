@@ -54,7 +54,7 @@ public class STGeomFromText implements DrillSimpleFunc {
     java.nio.ByteBuffer pointBytes = geom.asBinary();
 
     int outputSize = pointBytes.remaining();
-    out.buffer = buffer.reallocIfNeeded(outputSize);
+    buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
     out.end = outputSize;
     buffer.setBytes(0, pointBytes);
