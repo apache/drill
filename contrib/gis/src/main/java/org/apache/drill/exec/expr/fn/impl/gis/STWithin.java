@@ -51,9 +51,9 @@ public class STWithin implements DrillSimpleFunc {
     com.esri.core.geometry.ogc.OGCGeometry geom2;
 
     geom1 = com.esri.core.geometry.ogc.OGCGeometry
-        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end));
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end - geom1Param.start));
     geom2 = com.esri.core.geometry.ogc.OGCGeometry
-        .fromBinary(geom2Param.buffer.nioBuffer(geom2Param.start, geom2Param.end));
+        .fromBinary(geom2Param.buffer.nioBuffer(geom2Param.start, geom2Param.end - geom2Param.start));
 
     int isWithin = geom1.within(geom2) ? 1 : 0;
 
