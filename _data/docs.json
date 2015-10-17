@@ -1393,8 +1393,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "next_title": "Using Qlik Sense with Drill", 
+            "next_url": "/docs/using-qlik-sense-with-drill/", 
             "parent": "Using Drill with BI Tools", 
             "previous_title": "Using Tibco Spotfire Desktop with Drill", 
             "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
@@ -5491,8 +5491,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "next_title": "Using Qlik Sense with Drill", 
+                            "next_url": "/docs/using-qlik-sense-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Tibco Spotfire Desktop with Drill", 
                             "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
@@ -5512,11 +5512,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Server", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Configuring Tibco Spotfire Server with Drill", 
                             "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/055-using-qliksense-with-drill.md", 
+                            "title": "Using Qlik Sense with Drill", 
+                            "url": "/docs/using-qlik-sense-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Server", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Qlik Sense with Drill", 
+                            "previous_url": "/docs/using-qlik-sense-with-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                             "title": "Using Apache Drill with Tableau 9 Desktop", 
                             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -10970,8 +10991,8 @@
             "next_title": "Using Apache Drill with Tableau 9 Server", 
             "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
             "parent": "Using Drill with BI Tools", 
-            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
-            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
+            "previous_title": "Using Qlik Sense with Drill", 
+            "previous_url": "/docs/using-qlik-sense-with-drill/", 
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
             "title": "Using Apache Drill with Tableau 9 Desktop", 
             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -11199,8 +11220,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                    "next_title": "Using Qlik Sense with Drill", 
+                    "next_url": "/docs/using-qlik-sense-with-drill/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Using Tibco Spotfire Desktop with Drill", 
                     "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
@@ -11220,11 +11241,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Apache Drill with Tableau 9 Server", 
-                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                     "parent": "Using Drill with BI Tools", 
                     "previous_title": "Configuring Tibco Spotfire Server with Drill", 
                     "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
+                    "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/055-using-qliksense-with-drill.md", 
+                    "title": "Using Qlik Sense with Drill", 
+                    "url": "/docs/using-qlik-sense-with-drill/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Using Drill with BI Tools", 
+                            "url": "/docs/using-drill-with-bi-tools/"
+                        }, 
+                        {
+                            "title": "ODBC/JDBC Interfaces", 
+                            "url": "/docs/odbc-jdbc-interfaces/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Apache Drill with Tableau 9 Server", 
+                    "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                    "parent": "Using Drill with BI Tools", 
+                    "previous_title": "Using Qlik Sense with Drill", 
+                    "previous_url": "/docs/using-qlik-sense-with-drill/", 
                     "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                     "title": "Using Apache Drill with Tableau 9 Desktop", 
                     "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
@@ -11339,6 +11381,27 @@
             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/030-using-microstrategy-analytics-with-apache-drill.md", 
             "title": "Using MicroStrategy Analytics with Apache Drill", 
             "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
+        }, 
+        "Using Qlik Sense with Drill": {
+            "breadcrumbs": [
+                {
+                    "title": "Using Drill with BI Tools", 
+                    "url": "/docs/using-drill-with-bi-tools/"
+                }, 
+                {
+                    "title": "ODBC/JDBC Interfaces", 
+                    "url": "/docs/odbc-jdbc-interfaces/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+            "parent": "Using Drill with BI Tools", 
+            "previous_title": "Configuring Tibco Spotfire Server with Drill", 
+            "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
+            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/055-using-qliksense-with-drill.md", 
+            "title": "Using Qlik Sense with Drill", 
+            "url": "/docs/using-qlik-sense-with-drill/"
         }, 
         "Using SQL Functions, Clauses, and Joins": {
             "breadcrumbs": [
@@ -13203,8 +13266,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
+                            "next_title": "Using Qlik Sense with Drill", 
+                            "next_url": "/docs/using-qlik-sense-with-drill/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Using Tibco Spotfire Desktop with Drill", 
                             "previous_url": "/docs/using-tibco-spotfire-desktop-with-drill/", 
@@ -13224,11 +13287,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Apache Drill with Tableau 9 Server", 
-                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "next_title": "Using Apache Drill with Tableau 9 Desktop", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-desktop/", 
                             "parent": "Using Drill with BI Tools", 
                             "previous_title": "Configuring Tibco Spotfire Server with Drill", 
                             "previous_url": "/docs/configuring-tibco-spotfire-server-with-drill/", 
+                            "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/055-using-qliksense-with-drill.md", 
+                            "title": "Using Qlik Sense with Drill", 
+                            "url": "/docs/using-qlik-sense-with-drill/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Using Drill with BI Tools", 
+                                    "url": "/docs/using-drill-with-bi-tools/"
+                                }, 
+                                {
+                                    "title": "ODBC/JDBC Interfaces", 
+                                    "url": "/docs/odbc-jdbc-interfaces/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Apache Drill with Tableau 9 Server", 
+                            "next_url": "/docs/using-apache-drill-with-tableau-9-server/", 
+                            "parent": "Using Drill with BI Tools", 
+                            "previous_title": "Using Qlik Sense with Drill", 
+                            "previous_url": "/docs/using-qlik-sense-with-drill/", 
                             "relative_path": "_docs/odbc-jdbc-interfaces/using-drill-with-bi-tools/060-using-apache-drill-with-tableau-9-desktop.md", 
                             "title": "Using Apache Drill with Tableau 9 Desktop", 
                             "url": "/docs/using-apache-drill-with-tableau-9-desktop/"
