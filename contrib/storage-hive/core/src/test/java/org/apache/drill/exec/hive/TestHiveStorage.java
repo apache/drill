@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
+import static org.junit.Assert.assertFalse;
+
 public class TestHiveStorage extends HiveTestBase {
   @BeforeClass
   public static void setupOptions() throws Exception {
@@ -340,6 +342,30 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineColumns("cnt")
         .baselineValues(1L)
         .go();
+  }
+
+  @Test // DRILL-3938
+  public void readFromAlteredPartitionedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT key, `value`, newcol FROM hive.kv_parquet ORDER BY key LIMIT 1")
+        .unOrdered()
+        .baselineColumns("key", "value", "newcol")
+        .baselineValues(1, " key_1", null)
+        .go();
+  }
+
+  @Test // DRILL-3938
+  public void nativeReaderIsDisabledForAlteredPartitionedTable() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+      final String query = "EXPLAIN PLAN FOR SELECT key, `value`, newcol FROM hive.kv_parquet ORDER BY key LIMIT 1";
+
+      // Make sure the HiveScan in plan has no native parquet reader
+      final String planStr = getPlanInString(query, JSON_FORMAT);
+      assertFalse("Hive native is not expected in the plan", planStr.contains("hive-drill-native-parquet-scan"));
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
   }
 
   @AfterClass
