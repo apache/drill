@@ -18,6 +18,9 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,5 +75,25 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
         .baselineColumns("col1")
         .baselineValues(4l)
         .go();
+  }
+
+  @Test
+  public void testFix2967() throws Exception {
+    setSessionOption(PlannerSettings.BROADCAST.getOptionName(), "false");
+    setSessionOption(PlannerSettings.HASHJOIN.getOptionName(), "false");
+    setSessionOption(ExecConstants.SLICE_TARGET, "1");
+    setSessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, "23");
+
+    final String TEST_RES_PATH = TestTools.getWorkingPath() + "/src/test/resources";
+
+    try {
+      test("select * from dfs_test.`%s/join/j1` j1 left outer join dfs_test.`%s/join/j2` j2 on (j1.c_varchar = j2.c_varchar)",
+        TEST_RES_PATH, TEST_RES_PATH);
+    } finally {
+      setSessionOption(PlannerSettings.BROADCAST.getOptionName(), String.valueOf(PlannerSettings.BROADCAST.getDefault().bool_val));
+      setSessionOption(PlannerSettings.HASHJOIN.getOptionName(), String.valueOf(PlannerSettings.HASHJOIN.getDefault().bool_val));
+      setSessionOption(ExecConstants.SLICE_TARGET, String.valueOf(ExecConstants.SLICE_TARGET_DEFAULT));
+      setSessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, String.valueOf(ExecConstants.MAX_WIDTH_PER_NODE.getDefault().num_val));
+    }
   }
 }
