@@ -378,8 +378,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       leftExpr[i] =  materializeExpression(condition.getLeft(), lastLeftStatus, left, collector);
       rightExpr[i] = materializeExpression(condition.getRight(), lastRightStatus, right, collector);
     }
-    JoinUtils.addLeastRestrictiveCasts(leftExpr, left, rightExpr, right, context);
 
+    // if right side is empty, rightExpr will most likely default to NULLABLE INT which may cause the following
+    // call to throw an exception. In this case we can safely skip adding the casts
+    if (lastRightStatus != IterOutcome.NONE) {
+      JoinUtils.addLeastRestrictiveCasts(leftExpr, left, rightExpr, right, context);
+    }
     //generate doCompare() method
     /////////////////////////////////////////
     generateDoCompare(cg, incomingRecordBatch, leftExpr, incomingLeftRecordBatch, rightExpr,
@@ -561,4 +565,5 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
     return materializedExpr;
   }
+
 }
