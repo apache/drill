@@ -18,6 +18,9 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.ops.QueryContext;
@@ -87,6 +90,10 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     // Inspect the window functions
     if(sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
+
+      checkGrouping((sqlSelect));
+
+      checkRollupCubeGrpSets(sqlSelect);
 
       for(SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
         // If the window function is used with an alias,
@@ -303,6 +310,105 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     }
 
     return sqlCall.getOperator().acceptCall(this, sqlCall);
+  }
+
+  private void checkRollupCubeGrpSets(SqlSelect sqlSelect) {
+    final ExprFinder rollupCubeGrpSetsFinder = new ExprFinder(RollupCubeGrpSets);
+    sqlSelect.accept(rollupCubeGrpSetsFinder);
+    if (rollupCubeGrpSetsFinder.find()) {
+      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+          "Rollup, Cube, Grouping Sets are not supported in GROUP BY clause.\n" +
+              "See Apache Drill JIRA: DRILL-3962");
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  private void checkGrouping(SqlSelect sqlSelect) {
+    final ExprFinder groupingFinder = new ExprFinder(GroupingID);
+    sqlSelect.accept(groupingFinder);
+    if (groupingFinder.find()) {
+      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
+          "Grouping, Grouping_ID, Group_ID are not supported.\n" +
+              "See Apache Drill JIRA: DRILL-3962");
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  /**
+   * A function that replies true or false for a given expression.
+   *
+   * @see org.apache.calcite.rel.rules.PushProjector.OperatorExprCondition
+   */
+  private interface SqlNodeCondition {
+    /**
+     * Evaluates a condition for a given expression.
+     *
+     * @param sqlNode Expression
+     * @return result of evaluating the condition
+     */
+    boolean test(SqlNode sqlNode);
+  }
+
+  /**
+   * A condition that returns true if SqlNode has rollup, cube, grouping_sets.
+   * */
+  private final SqlNodeCondition RollupCubeGrpSets = new SqlNodeCondition() {
+    @Override
+    public boolean test(SqlNode sqlNode) {
+      if (sqlNode instanceof SqlCall) {
+        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
+        if (operator == SqlStdOperatorTable.ROLLUP
+            || operator == SqlStdOperatorTable.CUBE
+            || operator == SqlStdOperatorTable.GROUPING_SETS) {
+          return true;
+        }
+      }
+      return false;
+    }
+  };
+
+  /**
+   * A condition that returns true if SqlNode has Grouping, Grouping_ID, GROUP_ID.
+   */
+  private final SqlNodeCondition GroupingID = new SqlNodeCondition() {
+    @Override
+    public boolean test(SqlNode sqlNode) {
+      if (sqlNode instanceof SqlCall) {
+        final SqlOperator operator = ((SqlCall) sqlNode).getOperator();
+        if (operator == SqlStdOperatorTable.GROUPING
+            || operator == SqlStdOperatorTable.GROUPING_ID
+            || operator == SqlStdOperatorTable.GROUP_ID) {
+          return true;
+        }
+      }
+      return false;
+    }
+  };
+
+  /**
+   * A visitor to check if the given SqlNodeCondition is tested as true or not.
+   * If the condition is true, mark flag 'find' as true.
+   */
+  private static class ExprFinder extends SqlBasicVisitor<Void> {
+    private boolean find = false;
+    private final SqlNodeCondition condition;
+
+    public ExprFinder(SqlNodeCondition condition) {
+      this.find = false;
+      this.condition = condition;
+    }
+
+    public boolean find() {
+      return this.find;
+    }
+
+    @Override
+    public Void visit(SqlCall call) {
+      if (this.condition.test(call)) {
+        this.find = true;
+      }
+      return super.visit(call);
+    }
   }
 
   private boolean containsFlatten(SqlNode sqlNode) throws UnsupportedOperationException {

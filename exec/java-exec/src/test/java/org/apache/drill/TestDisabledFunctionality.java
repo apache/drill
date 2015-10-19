@@ -336,4 +336,82 @@ public class TestDisabledFunctionality extends BaseTestQuery{
     final String query = "select * from cp.`parquet/decimal_dictionary.parquet`";
     errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
   }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableRollup() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by rollup(n_regionkey, n_name)";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableCube() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by cube(n_regionkey, n_name)";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableGroupingSets() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by grouping sets(n_regionkey, n_name)";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableGrouping() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*), GROUPING(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableGrouping_ID() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*), GROUPING_ID(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableGroup_ID() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*), GROUP_ID() from cp.`tpch/nation.parquet` group by n_regionkey;";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  public void testDisableGroupingInFilter() throws Exception{
+    try {
+      final String query = "select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey HAVING GROUPING(n_regionkey) = 1";
+      test(query);
+    } catch(UserException ex) {
+      throwAsUnsupportedException(ex);
+      throw ex;
+    }
+  }
+
 }
