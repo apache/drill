@@ -48,6 +48,13 @@ public class TestCTASPartitionFilter extends PlanTestBase {
   }
 
   @Test
+  public void testDrill3965() throws Exception {
+    test("use dfs_test.tmp");
+    test("create table orders_auto_partition partition by(o_orderpriority) as select * from cp.`tpch/orders.parquet`");
+    test("explain plan for select count(*) from `orders_auto_partition/1_0_1.parquet` where o_orderpriority = '5-LOW'");
+  }
+
+  @Test
   public void withDistribution() throws Exception {
     test("alter session set `planner.slice_target` = 1");
     test("alter session set `store.partition.hash_distribute` = true");

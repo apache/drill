@@ -123,7 +123,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
     List<PartitionLocation> locations = new LinkedList<>();
     for (String file: fileLocations) {
-      locations.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
+      locations.add(new ParquetPartitionLocation(file));
     }
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
