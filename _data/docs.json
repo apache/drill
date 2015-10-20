@@ -1646,8 +1646,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "File System Storage Plugin", 
-                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -1667,32 +1667,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Workspaces", 
-                            "next_url": "/docs/workspaces/", 
+                            "next_title": "Drill Default Input Format", 
+                            "next_url": "/docs/drill-default-input-format/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Plugin Configuration Basics", 
                             "previous_url": "/docs/plugin-configuration-basics/", 
-                            "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
-                            "title": "File System Storage Plugin", 
-                            "url": "/docs/file-system-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "HBase Storage Plugin", 
-                            "next_url": "/docs/hbase-storage-plugin/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "File System Storage Plugin", 
-                            "previous_url": "/docs/file-system-storage-plugin/", 
                             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -1709,53 +1688,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Hive Storage Plugin", 
-                            "next_url": "/docs/hive-storage-plugin/", 
+                            "next_title": "File System Storage Plugin", 
+                            "next_url": "/docs/file-system-storage-plugin/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
-                            "title": "HBase Storage Plugin", 
-                            "url": "/docs/hbase-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Drill Default Input Format", 
-                            "next_url": "/docs/drill-default-input-format/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "HBase Storage Plugin", 
-                            "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
-                            "title": "Hive Storage Plugin", 
-                            "url": "/docs/hive-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "MongoDB Plugin for Apache Drill", 
-                            "next_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Hive Storage Plugin", 
-                            "previous_url": "/docs/hive-storage-plugin/", 
                             "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
@@ -1778,14 +1715,82 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "MapR-DB Format", 
-                    "next_url": "/docs/mapr-db-format/", 
+                    "next_title": "HBase Storage Plugin", 
+                    "next_url": "/docs/hbase-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
-                    "title": "MongoDB Plugin for Apache Drill", 
-                    "url": "/docs/mongodb-plugin-for-apache-drill/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/040-file-system-storage-plugin.md", 
+                    "title": "File System Storage Plugin", 
+                    "url": "/docs/file-system-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Hive Storage Plugin", 
+                    "next_url": "/docs/hive-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "File System Storage Plugin", 
+                    "previous_url": "/docs/file-system-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
+                    "title": "HBase Storage Plugin", 
+                    "url": "/docs/hbase-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "JDBC Storage Plugin", 
+                    "next_url": "/docs/jdbc-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "HBase Storage Plugin", 
+                    "previous_url": "/docs/hbase-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/070-hive-storage-plugin.md", 
+                    "title": "Hive Storage Plugin", 
+                    "url": "/docs/hive-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "MongoDB Storage Plugin", 
+                    "next_url": "/docs/mongodb-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Hive Storage Plugin", 
+                    "previous_url": "/docs/hive-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
+                    "title": "JDBC Storage Plugin", 
+                    "url": "/docs/jdbc-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "MapR-DB Format", 
+                    "next_url": "/docs/mapr-db-format/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "JDBC Storage Plugin", 
+                    "previous_url": "/docs/jdbc-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
+                    "title": "MongoDB Storage Plugin", 
+                    "url": "/docs/mongodb-storage-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1798,9 +1803,9 @@
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "MongoDB Plugin for Apache Drill", 
-                    "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
+                    "previous_title": "MongoDB Storage Plugin", 
+                    "previous_url": "/docs/mongodb-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }
@@ -2978,11 +2983,11 @@
                 }
             ], 
             "children": [], 
-            "next_title": "MongoDB Plugin for Apache Drill", 
-            "next_url": "/docs/mongodb-plugin-for-apache-drill/", 
+            "next_title": "File System Storage Plugin", 
+            "next_url": "/docs/file-system-storage-plugin/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "Hive Storage Plugin", 
-            "previous_url": "/docs/hive-storage-plugin/", 
+            "previous_title": "Workspaces", 
+            "previous_url": "/docs/workspaces/", 
             "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
             "title": "Drill Default Input Format", 
             "url": "/docs/drill-default-input-format/"
@@ -3243,21 +3248,17 @@
         "File System Storage Plugin": {
             "breadcrumbs": [
                 {
-                    "title": "Storage Plugin Configuration", 
-                    "url": "/docs/storage-plugin-configuration/"
-                }, 
-                {
                     "title": "Connect a Data Source", 
                     "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
-            "next_title": "Workspaces", 
-            "next_url": "/docs/workspaces/", 
-            "parent": "Storage Plugin Configuration", 
-            "previous_title": "Plugin Configuration Basics", 
-            "previous_url": "/docs/plugin-configuration-basics/", 
-            "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
+            "next_title": "HBase Storage Plugin", 
+            "next_url": "/docs/hbase-storage-plugin/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Drill Default Input Format", 
+            "previous_url": "/docs/drill-default-input-format/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/040-file-system-storage-plugin.md", 
             "title": "File System Storage Plugin", 
             "url": "/docs/file-system-storage-plugin/"
         }, 
@@ -3416,10 +3417,6 @@
         "HBase Storage Plugin": {
             "breadcrumbs": [
                 {
-                    "title": "Storage Plugin Configuration", 
-                    "url": "/docs/storage-plugin-configuration/"
-                }, 
-                {
                     "title": "Connect a Data Source", 
                     "url": "/docs/connect-a-data-source/"
                 }
@@ -3427,10 +3424,10 @@
             "children": [], 
             "next_title": "Hive Storage Plugin", 
             "next_url": "/docs/hive-storage-plugin/", 
-            "parent": "Storage Plugin Configuration", 
-            "previous_title": "Workspaces", 
-            "previous_url": "/docs/workspaces/", 
-            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "File System Storage Plugin", 
+            "previous_url": "/docs/file-system-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
             "title": "HBase Storage Plugin", 
             "url": "/docs/hbase-storage-plugin/"
         }, 
@@ -3458,21 +3455,17 @@
         "Hive Storage Plugin": {
             "breadcrumbs": [
                 {
-                    "title": "Storage Plugin Configuration", 
-                    "url": "/docs/storage-plugin-configuration/"
-                }, 
-                {
                     "title": "Connect a Data Source", 
                     "url": "/docs/connect-a-data-source/"
                 }
             ], 
             "children": [], 
-            "next_title": "Drill Default Input Format", 
-            "next_url": "/docs/drill-default-input-format/", 
-            "parent": "Storage Plugin Configuration", 
+            "next_title": "JDBC Storage Plugin", 
+            "next_url": "/docs/jdbc-storage-plugin/", 
+            "parent": "Connect a Data Source", 
             "previous_title": "HBase Storage Plugin", 
             "previous_url": "/docs/hbase-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
+            "relative_path": "_docs/connect-a-data-source/plugins/070-hive-storage-plugin.md", 
             "title": "Hive Storage Plugin", 
             "url": "/docs/hive-storage-plugin/"
         }, 
@@ -4312,6 +4305,23 @@
             "title": "Interfaces Introduction", 
             "url": "/docs/interfaces-introduction/"
         }, 
+        "JDBC Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "MongoDB Storage Plugin", 
+            "next_url": "/docs/mongodb-storage-plugin/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Hive Storage Plugin", 
+            "previous_url": "/docs/hive-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
+            "title": "JDBC Storage Plugin", 
+            "url": "/docs/jdbc-storage-plugin/"
+        }, 
         "JSON Data Model": {
             "breadcrumbs": [
                 {
@@ -4763,9 +4773,9 @@
             "next_title": "ODBC/JDBC Interfaces", 
             "next_url": "/docs/odbc-jdbc-interfaces/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "MongoDB Plugin for Apache Drill", 
-            "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-            "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
+            "previous_title": "MongoDB Storage Plugin", 
+            "previous_url": "/docs/mongodb-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
             "title": "MapR-DB Format", 
             "url": "/docs/mapr-db-format/"
         }, 
@@ -4828,7 +4838,7 @@
             "title": "Modifying Query Planning Options", 
             "url": "/docs/modifying-query-planning-options/"
         }, 
-        "MongoDB Plugin for Apache Drill": {
+        "MongoDB Storage Plugin": {
             "breadcrumbs": [
                 {
                     "title": "Connect a Data Source", 
@@ -4839,11 +4849,11 @@
             "next_title": "MapR-DB Format", 
             "next_url": "/docs/mapr-db-format/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "Drill Default Input Format", 
-            "previous_url": "/docs/drill-default-input-format/", 
-            "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
-            "title": "MongoDB Plugin for Apache Drill", 
-            "url": "/docs/mongodb-plugin-for-apache-drill/"
+            "previous_title": "JDBC Storage Plugin", 
+            "previous_url": "/docs/jdbc-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
+            "title": "MongoDB Storage Plugin", 
+            "url": "/docs/mongodb-storage-plugin/"
         }, 
         "Monitoring and Canceling Queries in the Drill Web Console": {
             "breadcrumbs": [
@@ -6270,8 +6280,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "File System Storage Plugin", 
-            "next_url": "/docs/file-system-storage-plugin/", 
+            "next_title": "Workspaces", 
+            "next_url": "/docs/workspaces/", 
             "parent": "Storage Plugin Configuration", 
             "previous_title": "Storage Plugin Configuration", 
             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -10320,8 +10330,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "File System Storage Plugin", 
-                    "next_url": "/docs/file-system-storage-plugin/", 
+                    "next_title": "Workspaces", 
+                    "next_url": "/docs/workspaces/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Storage Plugin Configuration", 
                     "previous_url": "/docs/storage-plugin-configuration/", 
@@ -10341,32 +10351,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Workspaces", 
-                    "next_url": "/docs/workspaces/", 
+                    "next_title": "Drill Default Input Format", 
+                    "next_url": "/docs/drill-default-input-format/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Plugin Configuration Basics", 
                     "previous_url": "/docs/plugin-configuration-basics/", 
-                    "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
-                    "title": "File System Storage Plugin", 
-                    "url": "/docs/file-system-storage-plugin/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Storage Plugin Configuration", 
-                            "url": "/docs/storage-plugin-configuration/"
-                        }, 
-                        {
-                            "title": "Connect a Data Source", 
-                            "url": "/docs/connect-a-data-source/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "HBase Storage Plugin", 
-                    "next_url": "/docs/hbase-storage-plugin/", 
-                    "parent": "Storage Plugin Configuration", 
-                    "previous_title": "File System Storage Plugin", 
-                    "previous_url": "/docs/file-system-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                     "title": "Workspaces", 
                     "url": "/docs/workspaces/"
@@ -10383,53 +10372,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Hive Storage Plugin", 
-                    "next_url": "/docs/hive-storage-plugin/", 
+                    "next_title": "File System Storage Plugin", 
+                    "next_url": "/docs/file-system-storage-plugin/", 
                     "parent": "Storage Plugin Configuration", 
                     "previous_title": "Workspaces", 
                     "previous_url": "/docs/workspaces/", 
-                    "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
-                    "title": "HBase Storage Plugin", 
-                    "url": "/docs/hbase-storage-plugin/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Storage Plugin Configuration", 
-                            "url": "/docs/storage-plugin-configuration/"
-                        }, 
-                        {
-                            "title": "Connect a Data Source", 
-                            "url": "/docs/connect-a-data-source/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Drill Default Input Format", 
-                    "next_url": "/docs/drill-default-input-format/", 
-                    "parent": "Storage Plugin Configuration", 
-                    "previous_title": "HBase Storage Plugin", 
-                    "previous_url": "/docs/hbase-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
-                    "title": "Hive Storage Plugin", 
-                    "url": "/docs/hive-storage-plugin/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Storage Plugin Configuration", 
-                            "url": "/docs/storage-plugin-configuration/"
-                        }, 
-                        {
-                            "title": "Connect a Data Source", 
-                            "url": "/docs/connect-a-data-source/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "MongoDB Plugin for Apache Drill", 
-                    "next_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "parent": "Storage Plugin Configuration", 
-                    "previous_title": "Hive Storage Plugin", 
-                    "previous_url": "/docs/hive-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                     "title": "Drill Default Input Format", 
                     "url": "/docs/drill-default-input-format/"
@@ -11592,11 +11539,11 @@
                 }
             ], 
             "children": [], 
-            "next_title": "HBase Storage Plugin", 
-            "next_url": "/docs/hbase-storage-plugin/", 
+            "next_title": "Drill Default Input Format", 
+            "next_url": "/docs/drill-default-input-format/", 
             "parent": "Storage Plugin Configuration", 
-            "previous_title": "File System Storage Plugin", 
-            "previous_url": "/docs/file-system-storage-plugin/", 
+            "previous_title": "Plugin Configuration Basics", 
+            "previous_url": "/docs/plugin-configuration-basics/", 
             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
             "title": "Workspaces", 
             "url": "/docs/workspaces/"
@@ -12634,8 +12581,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "File System Storage Plugin", 
-                            "next_url": "/docs/file-system-storage-plugin/", 
+                            "next_title": "Workspaces", 
+                            "next_url": "/docs/workspaces/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Storage Plugin Configuration", 
                             "previous_url": "/docs/storage-plugin-configuration/", 
@@ -12655,32 +12602,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Workspaces", 
-                            "next_url": "/docs/workspaces/", 
+                            "next_title": "Drill Default Input Format", 
+                            "next_url": "/docs/drill-default-input-format/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Plugin Configuration Basics", 
                             "previous_url": "/docs/plugin-configuration-basics/", 
-                            "relative_path": "_docs/connect-a-data-source/040-file-system-storage-plugin.md", 
-                            "title": "File System Storage Plugin", 
-                            "url": "/docs/file-system-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "HBase Storage Plugin", 
-                            "next_url": "/docs/hbase-storage-plugin/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "File System Storage Plugin", 
-                            "previous_url": "/docs/file-system-storage-plugin/", 
                             "relative_path": "_docs/connect-a-data-source/050-workspaces.md", 
                             "title": "Workspaces", 
                             "url": "/docs/workspaces/"
@@ -12697,53 +12623,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Hive Storage Plugin", 
-                            "next_url": "/docs/hive-storage-plugin/", 
+                            "next_title": "File System Storage Plugin", 
+                            "next_url": "/docs/file-system-storage-plugin/", 
                             "parent": "Storage Plugin Configuration", 
                             "previous_title": "Workspaces", 
                             "previous_url": "/docs/workspaces/", 
-                            "relative_path": "_docs/connect-a-data-source/060-hbase-storage-plugin.md", 
-                            "title": "HBase Storage Plugin", 
-                            "url": "/docs/hbase-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "Drill Default Input Format", 
-                            "next_url": "/docs/drill-default-input-format/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "HBase Storage Plugin", 
-                            "previous_url": "/docs/hbase-storage-plugin/", 
-                            "relative_path": "_docs/connect-a-data-source/070-hive-storage-plugin.md", 
-                            "title": "Hive Storage Plugin", 
-                            "url": "/docs/hive-storage-plugin/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Storage Plugin Configuration", 
-                                    "url": "/docs/storage-plugin-configuration/"
-                                }, 
-                                {
-                                    "title": "Connect a Data Source", 
-                                    "url": "/docs/connect-a-data-source/"
-                                }
-                            ], 
-                            "children": [], 
-                            "next_title": "MongoDB Plugin for Apache Drill", 
-                            "next_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                            "parent": "Storage Plugin Configuration", 
-                            "previous_title": "Hive Storage Plugin", 
-                            "previous_url": "/docs/hive-storage-plugin/", 
                             "relative_path": "_docs/connect-a-data-source/080-drill-default-input-format.md", 
                             "title": "Drill Default Input Format", 
                             "url": "/docs/drill-default-input-format/"
@@ -12766,14 +12650,82 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "MapR-DB Format", 
-                    "next_url": "/docs/mapr-db-format/", 
+                    "next_title": "HBase Storage Plugin", 
+                    "next_url": "/docs/hbase-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "Drill Default Input Format", 
                     "previous_url": "/docs/drill-default-input-format/", 
-                    "relative_path": "_docs/connect-a-data-source/090-mongodb-plugin-for-apache-drill.md", 
-                    "title": "MongoDB Plugin for Apache Drill", 
-                    "url": "/docs/mongodb-plugin-for-apache-drill/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/040-file-system-storage-plugin.md", 
+                    "title": "File System Storage Plugin", 
+                    "url": "/docs/file-system-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Hive Storage Plugin", 
+                    "next_url": "/docs/hive-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "File System Storage Plugin", 
+                    "previous_url": "/docs/file-system-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/060-hbase-storage-plugin.md", 
+                    "title": "HBase Storage Plugin", 
+                    "url": "/docs/hbase-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "JDBC Storage Plugin", 
+                    "next_url": "/docs/jdbc-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "HBase Storage Plugin", 
+                    "previous_url": "/docs/hbase-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/070-hive-storage-plugin.md", 
+                    "title": "Hive Storage Plugin", 
+                    "url": "/docs/hive-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "MongoDB Storage Plugin", 
+                    "next_url": "/docs/mongodb-storage-plugin/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "Hive Storage Plugin", 
+                    "previous_url": "/docs/hive-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
+                    "title": "JDBC Storage Plugin", 
+                    "url": "/docs/jdbc-storage-plugin/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "MapR-DB Format", 
+                    "next_url": "/docs/mapr-db-format/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "JDBC Storage Plugin", 
+                    "previous_url": "/docs/jdbc-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
+                    "title": "MongoDB Storage Plugin", 
+                    "url": "/docs/mongodb-storage-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12786,9 +12738,9 @@
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "MongoDB Plugin for Apache Drill", 
-                    "previous_url": "/docs/mongodb-plugin-for-apache-drill/", 
-                    "relative_path": "_docs/connect-a-data-source/100-mapr-db-format.md", 
+                    "previous_title": "MongoDB Storage Plugin", 
+                    "previous_url": "/docs/mongodb-storage-plugin/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
                 }

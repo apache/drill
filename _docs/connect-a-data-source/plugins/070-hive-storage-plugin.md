@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-parent: "Storage Plugin Configuration"
+parent: "Connect a Data Source"
 ---
 Drill 1.0 supports Hive 0.13. Drill 1.1 supports Hive 1.0. To access Hive tables
 using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits

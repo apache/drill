@@ -105,7 +105,7 @@ Drill performs the following actions, as shown in the complete [CTAS command exa
 ## Analyzing JSON
 
 Generally, you query JSON files using the following syntax, which includes a table alias. The alias is sometimes required for querying complex data. Because of the ambiguity between y.z where y could be a column or a table,
-Drill currently explicitly requires a table prefix for referencing a field
+Drill requires a table prefix for referencing a field
 inside another field (t.y.z).  This isn't required in the case y, y[z] or
 y[z].x because these references are not ambiguous. Observe the following guidelines:
 
@@ -240,7 +240,7 @@ Sum and group the ticket sales by date and sort in ascending order of total tick
     5 rows selected (0.252 seconds)
 
 ### Example: Access a Map Field in an Array
-To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."]({{ site.baseurl }}/docs/json-data-model#empty-array)
+To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."]({{ site.baseurl }}/docs/json-data-model#empty-array) 
 
     {
       "type": "FeatureCollection",
@@ -295,7 +295,14 @@ To access the second geometry coordinate of the first city lot in the San Franci
     +-------------------+
     1 row selected (0.19 seconds)
 
+More examples of workarounds for drilling down into the city lots data are presented in the following sections:
+
+* [Commas between records]({{site.baseurl}}/docs/json-data-model/#commas-between-records)
+* [Irregular data]({{site.baseurl}}/docs/json-data-model/#irregular-data)
+* [Varying types]({{site.baseurl}}/docs/json-data-model/#varying-types)
+
 More examples of drilling down into an array are shown in ["Selecting Nested Data for a Column"]({{ site.baseurl }}/docs/selecting-nested-data-for-a-column).
+
 
 ### Example: Flatten an Array of Maps using a Subquery
 By flattening the following JSON file, which contains an array of maps, you can evaluate the records of the flattened data.
@@ -366,7 +373,11 @@ Use dot notation, for example `t.birth.lastname` and `t.birth.bearer.max_hdl` to
 In most cases, you can use a workaround, presented in the following sections, to overcome the following limitations:
 
 * [Array at the root level]({{site.baseurl}}/docs/json-data-model/#array-at-the-root-level)
-* [Complex nested data]({{site.baseurl}}/docs/json-data-model/#complex-nested-data)
+* [Complex nested data]({{site.baseurl}}/docs/json-data-model/#complex-nested-da[ta)
+* [Commas between records]({{site.baseurl}}/docs/json-data-model/#commas-between-records)
+* [Irregular data]({{site.baseurl}}/docs/json-data-model/#irregular-data)
+* [Varying types]({{site.baseurl}}/docs/json-data-model/#varying-types)
+* [Misusing Dot Notation]({{site.baseurl}}/docs/json-data-model/#misusing-dot-notation)
 * [Empty array]({{site.baseurl}}/docs/json-data-model/#empty-array)
 * [Lengthy JSON objects]({{site.baseurl}}/docs/json-data-model/#lengthy-json-objects)
 * [Complex JSON objects]({{site.baseurl}}/docs/json-data-model/#complex-json-objects)
@@ -383,7 +394,7 @@ Workaround: Remove square brackets at the root of the object, as shown in the fo
 ### Complex nested data
 Drill cannot read some complex nested arrays unless you use a table alias.
 
-Workaround: To query n-level nested data, use the table alias to remove ambiguity; otherwise, column names such as user_info are parsed as table names by the SQL parser. The alias is not needed for data that is not nested, as shown in the following example:
+Workaround: To query n-level nested data, use the table alias to remove ambiguity; otherwise, column names such as user_info are parsed as table names by the SQL parser. The alias is not needed for data, such as dev_id, date, and time, that are not nested:
 
     {"dev_id": 0,
       "date":"07/26/2013",
@@ -405,15 +416,80 @@ Workaround: To query n-level nested data, use the table alias to remove ambiguit
     }
     . . .
 
-    SELECT dev_id, `date`, `time`, t.user_info.user_id, t.user_info.device, t.dev_info.prod_id
-    FROM dfs.`/Users/mypath/example.json` t;
+``SELECT dev_id, `date`, `time`, t.user_info.user_id, t.user_info.device, t.dev_info.prod_id
+FROM dfs.`/Users/mypath/example.json` t;``
+
+### Commas between records
+Continuing the example ["Accessing a Map Field in an Array"]({{site.baseurl}}/docs/json-data-model/#example-access-a-map-field-in-an-array), Drill cannot find data in multiple records separated by commas.
+
+Workaround: Delete commas between records. 
+
+After deleting the commas, the following query works:
+
+    SELECT 
+      lots.geometry.coordinates[0][0][0] longitude,
+      lots.geometry.coordinates[0][0][1] latitude,
+      lots.geometry.coordinates[0][0][2] altitude 
+    FROM dfs.`/Users/drilluser/citylots.json` lots LIMIT 1;
+
+    +-----------------------+---------------------+-----------+
+    |       longitude       |      latitude       | altitude  |
+    +-----------------------+---------------------+-----------+
+    | -122.422003528252475  | 37.808480096967251  | 0.0       |
+    +-----------------------+---------------------+-----------+
+    1 row selected (0.618 seconds)
+
+### Irregular data
+Data that lacks uniformity causes a problem. Continuing the example ["Accessing a Map Field in an Array"]({{site.baseurl}}/docs/json-data-model/#example-access-a-map-field-in-an-array), Drill cannot handle the intermixed Polygon shapes and
+MultiPolygon shapes.
+
+Workaround: None, per se, but if you avoid querying the multi-polygon lines (120 of them), Drill works fine on the entire remainder. For example:
+
+    WITH tbl AS (
+    SELECT
+      CAST(lots.geometry.coordinates[0][0][0] AS FLOAT) longitude, 
+      CAST(lots.geometry.coordinates[0][0][1] AS FLOAT) latitude, 
+      CAST(lots.geometry.coordinates[0][0][2] AS FLOAT) altitude 
+    FROM dfs./Users/drilluser/uniform.json` lots) 
+    SELECT 
+      AVG(longitude), 
+      AVG(latitude), 
+      MAX(altitude) 
+    FROM tbl;
+
+    +---------------------+--------------------+---------+
+    |       EXPR$0        |       EXPR$1       | EXPR$2  |
+    +---------------------+--------------------+---------+
+    | -122.4379846573301  | 37.75844260679518  | 0.0     |
+    +---------------------+--------------------+---------+
+    1 row selected (6.64 seconds)
+
+### Varying types
+Any attempt to query a list that has
+varying types fails. Continuing the example ["Accessing a Map Field in an Array"]({{site.baseurl}}/docs/json-data-model/#example-access-a-map-field-in-an-array), the city lots file has a list of lists of
+coordinates for shapes of type Polygon.  For shapes of MultiPolygon, this file has lists of lists
+of coordinates. Even a query that tries to filter away the
+MultiPolygons will fail.
+
+Workaround: None.
+
+### Misusing Dot Notation
+Drill accesses an object when you use dot notation in the SELECT statement sses only when the dot is *not* the first dot in the expression. Drill attempts to access the table that appears after the first dot. For example,  records in some-file have a geometry field that Drill successfully accesses given this query:
+
+``select geometry from  dfs.`some-file.json`;``
+
+The following query, however, causes an error because there is no table named geometry.
+
+``select geometry.x from dfs.`some-file.json`;``
+
+Workaround: Use a table alias. For example:
+
+``select tbl.geometry.x from dfs.`some-file.json` tbl;``
 
 ### Empty array
-Drill cannot read an empty array, shown in the following example, and attempting to do so causes an error.
+Drill cannot read some empty arrays.
 
-        { "a":[] }
-
-Workaround: Remove empty arrays.
+Workaround: Try removing empty arrays if you have a problem.
 
 For example, you cannot query the [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json) data unless you make the following modification.
 

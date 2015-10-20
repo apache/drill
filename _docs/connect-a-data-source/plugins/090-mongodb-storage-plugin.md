@@ -1,5 +1,5 @@
 ---
-title: "MongoDB Plugin for Apache Drill"
+title: "MongoDB Storage Plugin"
 parent: "Connect a Data Source"
 ---
 ## Overview

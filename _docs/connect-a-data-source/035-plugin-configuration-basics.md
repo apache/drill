@@ -15,7 +15,6 @@ To create a name and new configuration:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
 2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
-   The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.  
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  
@@ -26,6 +25,8 @@ name. Names are case-sensitive.
 5. In Configuration, use JSON formatting to modify a copy of an existing configuration if possible.  
    Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
 6. Click **Create**.
+
+<!-- Add to step 3 when the feature goes into 1.3: The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.   -->
 
 ## Storage Plugin Attributes
 The following graphic shows key attributes of a typical `dfs`-based storage plugin configuration:  
@@ -161,7 +162,7 @@ If you need to add a storage plugin configuration to Drill and do not want to us
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
-    curl -X POST -/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
+    curl -X POST -H "Content-Tpe: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
 
 For more information about the REST API, see this [Google doc](https://docs.google.com/document/d/1mRsuWk4Dpt6ts-jQ6ke3bB30PIwanRiCPfGxRwZEQME).
 

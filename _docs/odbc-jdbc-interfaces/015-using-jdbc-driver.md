@@ -91,7 +91,7 @@ For definitions of other URL components, see [Using the JDBC URL for a Random Dr
 
 ## Using the Drill Driver Class Name
 
-The class name for the JDBC driver is `org.apache.drill.jdbc.Driver`. 
+The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).
 
 ## Example of Connecting to Drill Programmatically
 
