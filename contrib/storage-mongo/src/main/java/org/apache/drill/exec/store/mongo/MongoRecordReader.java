@@ -102,6 +102,8 @@ public class MongoRecordReader extends AbstractRecordReader {
         this.fields.put(fieldName, Integer.valueOf(1));
       }
     } else {
+      // Tale all the fields including the _id
+      this.fields.remove(DrillMongoConstants.ID);
       transformed.add(AbstractRecordReader.STAR_COLUMN);
     }
     return transformed;
