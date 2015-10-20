@@ -107,7 +107,6 @@ public class MongoTestSuit implements MongoTestConstants {
       mongosTestFactory = new MongosSystemForTestFactory(mongosConfig,
           replicaSets, configServers, EMPLOYEE_DB, EMPINFO_COLLECTION,
           "employee_id");
-
       try {
         mongosTestFactory.start();
         mongoClient = (MongoClient) mongosTestFactory.getMongo();
@@ -115,6 +114,7 @@ public class MongoTestSuit implements MongoTestConstants {
         logger.error(" Error while starting shrded cluster. ", e);
         throw new Exception(" Error while starting shrded cluster. ", e);
       }
+      createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
     }
 
     private static IMongodConfig crateConfigServerConfig(int configServerPort,
@@ -194,7 +194,7 @@ public class MongoTestSuit implements MongoTestConstants {
         mongod.stop();
       }
       if (mongodExecutable != null) {
-        mongodExecutable.cleanup();
+        mongodExecutable.stop();
       }
     }
   }
@@ -211,6 +211,7 @@ public class MongoTestSuit implements MongoTestConstants {
       }
       TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
       TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
+      TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
     }
   }
 
@@ -232,7 +233,6 @@ public class MongoTestSuit implements MongoTestConstants {
   @AfterClass
   public static void tearDownCluster() throws Exception {
     if (mongoClient != null) {
-      mongoClient.dropDatabase(TEST_DB);
       mongoClient.dropDatabase(EMPLOYEE_DB);
       mongoClient.close();
     }

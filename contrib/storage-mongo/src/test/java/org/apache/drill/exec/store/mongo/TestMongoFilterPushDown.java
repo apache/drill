@@ -35,8 +35,6 @@ public class TestMongoFilterPushDown extends MongoTestBase {
     String queryString = String.format(
         TEST_FILTER_PUSH_DOWN_LESS_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
         EMPINFO_COLLECTION);
-    System.out.println("testFilterPushDownLessThanWithSingleField Query: "
-        + queryString);
     String expectedExpr = "\"$lt\" : 52.17";
     testHelper(queryString, expectedExpr, 9);
   }
@@ -46,8 +44,6 @@ public class TestMongoFilterPushDown extends MongoTestBase {
     String queryString = String.format(
         TEST_FILTER_PUSH_DOWN_GREATER_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
         EMPINFO_COLLECTION);
-    System.out.println("testFilterPushDownGreaterThanWithSingleField Query: "
-        + queryString);
     String expectedExpr = "\"$gt\" : 52.17";
     testHelper(queryString, expectedExpr, 9);
   }

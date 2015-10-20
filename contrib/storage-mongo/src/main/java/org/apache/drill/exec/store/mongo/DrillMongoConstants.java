@@ -42,4 +42,10 @@ public interface DrillMongoConstants {
   public static final String MIN = "min";
 
   public static final String MAX = "max";
+
+  public static final String PARTITIONED = "partitioned";
+
+  public static final String PRIMARY = "primary";
+
+  public static final String DATABASES = "databases";
 }

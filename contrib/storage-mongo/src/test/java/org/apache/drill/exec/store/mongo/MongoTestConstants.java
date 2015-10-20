@@ -32,11 +32,8 @@ public interface MongoTestConstants {
 
   public static final int MONGOS_PORT = 27017;
 
-  public static final String CONFIG_DB = "config";
-  public static final String ADMIN_DB = "admin";
-
-  public static final String TEST_DB = "testDB";
   public static final String EMPLOYEE_DB = "employee";
+  public static final String DONUTS_DB = "donuts";
 
   public static final String DONUTS_COLLECTION = "donuts";
   public static final String EMPINFO_COLLECTION = "empinfo";
@@ -70,4 +67,7 @@ public interface MongoTestConstants {
   public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE3 = "select `employee_id` from mongo.%s.`%s` where position_id = 16 and isFTE = true";
   public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE4 = "select `employee_id` from mongo.%s.`%s` where (position_id = 16 and isFTE = true) or last_name = 'Yonce'";
 
+  public static final String TEST_STAR_QUERY_UNSHARDED_DB = "select * from mongo.%s.`%s`";
+  public static final String TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER = "select t.name as name,t.topping.type as type from mongo.%s.`%s` t where t.sales >= 150";
+  public static final String TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER = "select t.topping.type as type,count(t.topping.type) as typeCount from mongo.%s.`%s` t group by t.topping.type order by typeCount";
 }

@@ -47,6 +47,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.slf4j.Logger;
@@ -59,6 +60,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -201,6 +203,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       projection = new Document();
       projection.put(HOST, select);
 
+      boolean hasChunks = false;
       while (iterator.hasNext()) {
         Document chunkObj = iterator.next();
         String shardName = (String) chunkObj.get(SHARD);
@@ -260,30 +263,62 @@ public class MongoGroupScan extends AbstractGroupScan implements
           chunkInfo.setMaxFilters(maxFilters);
           chunkList.add(chunkInfo);
         }
+        hasChunks = true;
+      }
+      // In a sharded environment, if a collection doesn't have any chunks, it is considered as an
+      // unsharded collection and it will be stored in the primary shard of that database.
+      if (!hasChunks) {
+        handleUnshardedCollection(getPrimaryShardInfo(client));
       }
     } else {
-      String chunkName = scanSpec.getDbName() + "."
-          + scanSpec.getCollectionName();
-      List<String> hosts = storagePluginConfig.getHosts();
-      Set<ServerAddress> addressList = getPreferredHosts(client, hosts);
-      if (addressList == null) {
-        addressList = Sets.newHashSet();
-        for (String host : hosts) {
-          addressList.add(new ServerAddress(host));
-        }
-      }
-      chunksMapping.put(chunkName, addressList);
-
-      String host = hosts.get(0);
-      ServerAddress address = new ServerAddress(host);
-      ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkName);
-      chunkInfo.setMinFilters(Collections.<String, Object> emptyMap());
-      chunkInfo.setMaxFilters(Collections.<String, Object> emptyMap());
-      List<ChunkInfo> chunksList = Lists.newArrayList();
-      chunksList.add(chunkInfo);
-      chunksInverseMapping.put(address.getHost(), chunksList);
+      handleUnshardedCollection(storagePluginConfig.getHosts());
     }
 
+  }
+
+  private void handleUnshardedCollection(List<String> hosts) {
+    String chunkName = Joiner.on('.').join(scanSpec.getDbName(), scanSpec.getCollectionName());
+    Set<ServerAddress> addressList = Sets.newHashSet();
+
+    for (String host : hosts) {
+      addressList.add(new ServerAddress(host));
+    }
+    chunksMapping.put(chunkName, addressList);
+
+    String host = hosts.get(0);
+    ServerAddress address = new ServerAddress(host);
+    ChunkInfo chunkInfo = new ChunkInfo(hosts, chunkName);
+    chunkInfo.setMinFilters(Collections.<String, Object> emptyMap());
+    chunkInfo.setMaxFilters(Collections.<String, Object> emptyMap());
+    List<ChunkInfo> chunksList = Lists.newArrayList();
+    chunksList.add(chunkInfo);
+    chunksInverseMapping.put(address.getHost(), chunksList);
+  }
+
+  private List<String> getPrimaryShardInfo(MongoClient client) {
+    MongoDatabase database = storagePlugin.getClient().getDatabase(CONFIG);
+    //Identify the primary shard of the queried database.
+    MongoCollection<Document> collection = database.getCollection(DATABASES);
+    Bson filter = new Document(ID, this.scanSpec.getDbName());
+    Bson projection = new Document(PRIMARY, select);
+    Document document = collection.find(filter).projection(projection).first();
+    Preconditions.checkNotNull(document);
+    String shardName = document.getString(PRIMARY);
+    Preconditions.checkNotNull(shardName);
+
+    //Identify the host(s) on which this shard resides.
+    MongoCollection<Document> shardsCol = database.getCollection(SHARDS);
+    filter = new Document(ID, shardName);
+    projection = new Document(HOST, select);
+    Document hostInfo = shardsCol.find(filter).projection(projection).first();
+    Preconditions.checkNotNull(hostInfo);
+    String hostEntry = hostInfo.getString(HOST);
+    Preconditions.checkNotNull(hostEntry);
+
+    String[] tagAndHost = StringUtils.split(hostEntry, '/');
+    String[] hosts = tagAndHost.length > 1 ? StringUtils.split(tagAndHost[1],
+        ',') : StringUtils.split(tagAndHost[0], ',');
+    return Lists.newArrayList(hosts);
   }
 
   @SuppressWarnings("unchecked")

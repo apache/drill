@@ -52,4 +52,24 @@ public class TestMongoQueries extends MongoTestBase {
     runMongoSQLVerifyCount(queryString, 5);
   }
 
+  @Test
+  public void testUnShardedDBInShardedCluster() throws Exception {
+    String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB,
+        DONUTS_DB, DONUTS_COLLECTION);
+    runMongoSQLVerifyCount(queryString, 5);
+  }
+
+  @Test
+  public void testUnShardedDBInShardedClusterWithProjectionAndFilter() throws Exception {
+    String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER,
+        DONUTS_DB, DONUTS_COLLECTION);
+    runMongoSQLVerifyCount(queryString, 2);
+  }
+
+  @Test
+  public void testUnShardedDBInShardedClusterWithGroupByProjectionAndFilter() throws Exception {
+    String queryString = String.format(TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER,
+        DONUTS_DB, DONUTS_COLLECTION);
+    runMongoSQLVerifyCount(queryString, 5);
+  }
 }
