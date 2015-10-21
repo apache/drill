@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -56,6 +57,8 @@ import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
@@ -73,7 +76,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
@@ -365,17 +368,28 @@ public class HiveUtilities {
   }
 
   /**
-   * Utility method which sets table or partition {@link InputFormat} class in given {@link JobConf} object. It gets
-   * the class name from given StorageDescriptor object.
-   *
+   * Utility method which sets table or partition {@link InputFormat} class in given {@link JobConf} object. First it
+   * tries to get the class name from given StorageDescriptor object. If it doesn't contain it tries to get it from
+   * StorageHandler class set in table properties. If not found throws an exception.
    * @param job {@link JobConf} instance where InputFormat class is set.
    * @param sd {@link StorageDescriptor} instance of currently reading partition or table (for non-partitioned tables).
+   * @param table Table object
    * @throws Exception
    */
-  public static void setInputFormatClass(final JobConf job, final StorageDescriptor sd)
+  public static void setInputFormatClass(final JobConf job, final StorageDescriptor sd, final Table table)
       throws Exception {
     final String inputFormatName = sd.getInputFormat();
-    job.setInputFormat((Class<? extends InputFormat>) Class.forName(inputFormatName));
+    if (Strings.isNullOrEmpty(inputFormatName)) {
+      final String storageHandlerClass = table.getParameters().get(META_TABLE_STORAGE);
+      if (Strings.isNullOrEmpty(storageHandlerClass)) {
+        throw new ExecutionSetupException("Unable to get Hive table InputFormat class. There is neither " +
+            "InputFormat class explicitly specified nor StorageHandler class");
+      }
+      final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
+      job.setInputFormat(storageHandler.getInputFormatClass());
+    } else {
+      job.setInputFormat((Class<? extends InputFormat>) Class.forName(inputFormatName));
+    }
   }
 
   /**

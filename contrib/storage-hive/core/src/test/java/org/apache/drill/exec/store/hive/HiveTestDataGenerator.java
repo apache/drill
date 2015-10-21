@@ -435,6 +435,14 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "INSERT INTO TABLE kv_parquet PARTITION(part1) SELECT key, value, key FROM default.kv");
     executeQuery(hiveDriver, "ALTER TABLE kv_parquet ADD COLUMNS (newcol string)");
 
+    // Create a StorageHandler based table (DRILL-3739)
+    executeQuery(hiveDriver, "CREATE TABLE kv_sh(key INT, value STRING) STORED BY " +
+        "'org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler'");
+    // Insert fails if the table directory already exists for tables with DefaultStorageHandlers. Its a known
+    // issue in Hive. So delete the table directory created as part of the CREATE TABLE
+    FileUtils.deleteQuietly(new File(whDir, "kv_sh"));
+    executeQuery(hiveDriver, "INSERT OVERWRITE TABLE kv_sh SELECT * FROM kv");
+
     ss.close();
   }
 

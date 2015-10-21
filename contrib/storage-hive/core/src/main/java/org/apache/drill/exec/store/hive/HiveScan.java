@@ -178,34 +178,27 @@ public class HiveScan extends AbstractGroupScan {
         splitInput(properties, table.getSd(), null);
       } else {
         for (final Partition partition : partitions) {
-          final Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+          final Properties properties = HiveUtilities.getPartitionMetadata(partition, table);
           splitInput(properties, partition.getSd(), partition);
         }
       }
-    } catch (ReflectiveOperationException | IOException e) {
+    } catch (final Exception e) {
       throw new ExecutionSetupException(e);
     }
   }
 
   /* Split the input given in StorageDescriptor */
   private void splitInput(final Properties properties, final StorageDescriptor sd, final Partition partition)
-      throws ReflectiveOperationException, IOException {
+      throws Exception {
     final JobConf job = new JobConf();
-    for (final Object obj : properties.keySet()) {
-      job.set((String) obj, (String) properties.get(obj));
-    }
-    for (final Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
-      job.set(entry.getKey(), entry.getValue());
-    }
-    InputFormat<?, ?> format = (InputFormat<?, ?>)
-        Class.forName(sd.getInputFormat()).getConstructor().newInstance();
-    job.setInputFormat(format.getClass());
+    HiveUtilities.addConfToJob(job, properties, hiveReadEntry.hiveConfigOverride);
+    HiveUtilities.setInputFormatClass(job, sd, hiveReadEntry.getTable());
     final Path path = new Path(sd.getLocation());
     final FileSystem fs = path.getFileSystem(job);
 
     if (fs.exists(path)) {
       FileInputFormat.addInputPath(job, path);
-      format = job.getInputFormat();
+      final InputFormat format = job.getInputFormat();
       for (final InputSplit split : format.getSplits(job, 1)) {
         inputSplits.add(split);
         partitionMap.put(split, partition);

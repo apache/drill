@@ -368,6 +368,17 @@ public class TestHiveStorage extends HiveTestBase {
     }
   }
 
+  @Test // DRILL-3739
+  public void readingFromStorageHandleBasedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM hive.kv_sh ORDER BY key LIMIT 2")
+        .ordered()
+        .baselineColumns("key", "value")
+        .baselineValues(1, " key_1")
+        .baselineValues(2, " key_2")
+        .go();
+  }
+
   @AfterClass
   public static void shutdownOptions() throws Exception {
     test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
