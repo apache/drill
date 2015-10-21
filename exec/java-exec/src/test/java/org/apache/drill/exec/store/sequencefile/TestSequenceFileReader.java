@@ -17,11 +17,24 @@
  */
 package org.apache.drill.exec.store.sequencefile;
 
+import java.io.DataOutputStream;
+import java.io.ByteArrayOutputStream;
+
 import org.junit.Test;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.hadoop.io.BytesWritable;
 
 public class TestSequenceFileReader extends BaseTestQuery {
+
+  public static String byteWritableString(String input) throws Exception {
+    final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    DataOutputStream out = new DataOutputStream(bout);
+    final BytesWritable writable = new BytesWritable(input.getBytes("UTF-8"));
+    writable.write(out);
+    return new String(bout.toByteArray());
+  }
+
   @Test
   public void testSequenceFileReader() throws Exception {
     String root = FileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString();
@@ -31,8 +44,8 @@ public class TestSequenceFileReader extends BaseTestQuery {
       .sqlQuery(query)
       .ordered()
       .baselineColumns("k", "v")
-      .baselineValues("key0", "value0")
-      .baselineValues("key1", "value1")
+      .baselineValues(byteWritableString("key0"), byteWritableString("value0"))
+      .baselineValues(byteWritableString("key1"), byteWritableString("value1"))
       .build().run();
   }
 }

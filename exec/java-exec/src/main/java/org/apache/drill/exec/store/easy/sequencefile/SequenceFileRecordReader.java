@@ -35,10 +35,10 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.SequenceFileAsBinaryInputFormat;
 
 
 public class SequenceFileRecordReader extends AbstractRecordReader {
@@ -66,7 +66,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
     columns.add(keySchema);
     columns.add(valueSchema);
     setColumns(columns);
-    SequenceFileInputFormat<BytesWritable, BytesWritable> inputFormat = new SequenceFileInputFormat();
+    SequenceFileAsBinaryInputFormat inputFormat = new SequenceFileAsBinaryInputFormat();
     this.split = split;
     JobConf jobConf = new JobConf(fsConf);
     jobConf.setInputFormat(inputFormat.getClass());
