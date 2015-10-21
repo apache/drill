@@ -38,6 +38,10 @@
         },
         "avro" : {
           type: "avro"
+        },
+        "sequencefile": {
+          type : "sequencefile",
+          extensions: [ "seq" ]
         }
       }
     },
@@ -65,6 +69,10 @@
         },
         "avro" : {
           type: "avro"
+        },
+        "sequencefile": {
+          type : "sequencefile",
+          extensions: [ "seq" ]
         }
       }
     }
