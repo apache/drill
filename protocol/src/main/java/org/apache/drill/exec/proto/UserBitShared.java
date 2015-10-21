@@ -487,6 +487,10 @@ public final class UserBitShared {
      * <code>AVRO_SUB_SCAN = 36;</code>
      */
     AVRO_SUB_SCAN(36, 36),
+    /**
+     * <code>SEQUENCEFILE_SUB_SCAN = 37;</code>
+     */
+    SEQUENCEFILE_SUB_SCAN(37, 37),
     ;
 
     /**
@@ -637,6 +641,10 @@ public final class UserBitShared {
      * <code>AVRO_SUB_SCAN = 36;</code>
      */
     public static final int AVRO_SUB_SCAN_VALUE = 36;
+    /**
+     * <code>SEQUENCEFILE_SUB_SCAN = 37;</code>
+     */
+    public static final int SEQUENCEFILE_SUB_SCAN_VALUE = 37;
 
 
     public final int getNumber() { return value; }
@@ -680,6 +688,7 @@ public final class UserBitShared {
         case 34: return WINDOW;
         case 35: return NESTED_LOOP_JOIN;
         case 36: return AVRO_SUB_SCAN;
+        case 37: return SEQUENCEFILE_SUB_SCAN;
         default: return null;
       }
     }
@@ -20840,7 +20849,7 @@ public final class UserBitShared {
       "\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013\n\007SEN" +
       "DING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNI" +
       "NG\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAI",
-      "LED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Co" +
+      "LED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\370\005\n\020Co" +
       "reOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BRO" +
       "ADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGR" +
       "EGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031" +
@@ -20859,8 +20868,9 @@ public final class UserBitShared {
       "A_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRO" +
       "DUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006" +
       "WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_S" +
-      "UB_SCAN\020$B.\n\033org.apache.drill.exec.proto",
-      "B\rUserBitSharedH\001"
+      "UB_SCAN\020$\022\031\n\025SEQUENCEFILE_SUB_SCAN\020%B.\n\033",
+      "org.apache.drill.exec.protoB\rUserBitShar" +
+      "edH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
