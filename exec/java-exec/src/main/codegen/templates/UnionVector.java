@@ -111,10 +111,12 @@ public class UnionVector implements ValueVector {
     return singleVector;
   }
 
+  private static final MajorType MAP_TYPE = Types.optional(MinorType.MAP);
+
   public MapVector getMap() {
     if (mapVector == null) {
       int vectorCount = internalMap.size();
-      mapVector = internalMap.addOrGet("map", Types.optional(MinorType.MAP), MapVector.class);
+      mapVector = internalMap.addOrGet("map", MAP_TYPE, MapVector.class);
       updateState(mapVector);
       addSubType(MinorType.MAP);
       if (internalMap.size() > vectorCount) {
@@ -130,11 +132,12 @@ public class UnionVector implements ValueVector {
   <#if !minor.class?starts_with("Decimal")>
 
   private Nullable${name}Vector ${uncappedName}Vector;
+  private static final MajorType ${name?upper_case}_TYPE = Types.optional(MinorType.${name?upper_case});
 
   public Nullable${name}Vector get${name}Vector() {
     if (${uncappedName}Vector == null) {
       int vectorCount = internalMap.size();
-      ${uncappedName}Vector = internalMap.addOrGet("${uncappedName}", Types.optional(MinorType.${name?upper_case}), Nullable${name}Vector.class);
+      ${uncappedName}Vector = internalMap.addOrGet("${uncappedName}", ${name?upper_case}_TYPE, Nullable${name}Vector.class);
       updateState(${uncappedName}Vector);
       addSubType(MinorType.${name?upper_case});
       if (internalMap.size() > vectorCount) {
@@ -148,10 +151,12 @@ public class UnionVector implements ValueVector {
 
   </#list></#list>
 
+  private static final MajorType LIST_TYPE = Types.optional(MinorType.LIST);
+
   public ListVector getList() {
     if (listVector == null) {
       int vectorCount = internalMap.size();
-      listVector = internalMap.addOrGet("list", Types.optional(MinorType.LIST), ListVector.class);
+      listVector = internalMap.addOrGet("list", LIST_TYPE, ListVector.class);
       updateState(listVector);
       addSubType(MinorType.LIST);
       if (internalMap.size() > vectorCount) {

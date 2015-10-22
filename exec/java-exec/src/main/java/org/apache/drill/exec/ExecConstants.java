@@ -244,7 +244,7 @@ public interface ExecConstants {
       Long.MAX_VALUE, 60 * 1000 * 5);
 
   public static final String ENABLE_VERBOSE_ERRORS_KEY = "exec.errors.verbose";
-  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY, false);
+  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY, true);
 
   public static final String ENABLE_NEW_TEXT_READER_KEY = "exec.storage.enable_new_text_reader";
   public static final OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY, true);

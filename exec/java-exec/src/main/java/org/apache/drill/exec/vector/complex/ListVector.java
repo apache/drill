@@ -39,6 +39,7 @@ import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
+import org.apache.drill.exec.vector.ZeroVector;
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.exec.vector.complex.impl.UnionListReader;
 import org.apache.drill.exec.vector.complex.impl.UnionListWriter;
@@ -80,7 +81,14 @@ public class ListVector extends BaseRepeatedValueVector {
   public void transferTo(ListVector target) {
     offsets.makeTransferPair(target.offsets).transfer();
     bits.makeTransferPair(target.bits).transfer();
+    if (target.getDataVector() instanceof ZeroVector) {
+      target.addOrGetVector(new VectorDescriptor(vector.getField().getType()));
+    }
     getDataVector().makeTransferPair(target.getDataVector()).transfer();
+  }
+
+  public void copyFromSafe(int inIndex, int outIndex, ListVector from) {
+    copyFrom(inIndex, outIndex, from);
   }
 
   public void copyFrom(int inIndex, int outIndex, ListVector from) {

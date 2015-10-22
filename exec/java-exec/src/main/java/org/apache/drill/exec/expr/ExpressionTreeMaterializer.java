@@ -19,10 +19,15 @@ package org.apache.drill.exec.expr;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -74,6 +79,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -145,6 +151,10 @@ public class ExpressionTreeMaterializer {
     List<LogicalExpression> castArgs = Lists.newArrayList();
     castArgs.add(fromExpr);  //input_expr
 
+    if (fromExpr.getMajorType().getMinorType() == MinorType.UNION && toType.getMinorType() == MinorType.UNION) {
+      return fromExpr;
+    }
+
     if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
 
       /* We are implicitly casting to VARCHAR so we don't have a max length,
@@ -196,7 +206,8 @@ public class ExpressionTreeMaterializer {
 
   private static class MaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
     private ExpressionValidator validator = new ExpressionValidator();
-    private final ErrorCollector errorCollector;
+    private ErrorCollector errorCollector;
+    private Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
     private final VectorAccessible batch;
     private final boolean allowComplexWriter;
     private final boolean unionTypeEnabled;
@@ -250,9 +261,9 @@ public class ExpressionTreeMaterializer {
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
-      if (hasUnionInput(call)) {
-        return rewriteUnionFunction(call, functionLookupContext);
-      }
+//      if (hasUnionInput(call)) {
+//        return rewriteUnionFunction(call, functionLookupContext);
+//      }
 
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
@@ -323,16 +334,29 @@ public class ExpressionTreeMaterializer {
         return matchedNonDrillFuncHolder.getExpr(call.getName(), extArgsWithCast, call.getPosition());
       }
 
+      if (hasUnionInput(call)) {
+        return rewriteUnionFunction(call, functionLookupContext);
+      }
+
       logFunctionResolutionError(errorCollector, call);
       return NullExpression.INSTANCE;
+    }
+
+    private static final Set<String> UNION_FUNCTIONS;
+
+    static {
+      UNION_FUNCTIONS = new HashSet<>();
+      for (MinorType t : MinorType.values()) {
+        UNION_FUNCTIONS.add("assert_" + t.name().toLowerCase());
+        UNION_FUNCTIONS.add("is_" + t.name().toLowerCase());
+      }
+      UNION_FUNCTIONS.add("typeof");
     }
 
     private boolean hasUnionInput(FunctionCall call) {
       for (LogicalExpression arg : call.args) {
         if (arg.getMajorType().getMinorType() == MinorType.UNION) {
-          if (!call.getName().toLowerCase().startsWith("as") && !call.getName().toLowerCase().startsWith("is") && !call.getName().toLowerCase().startsWith("typeof")) {
-            return true;
-          }
+          return true;
         }
       }
       return false;
@@ -364,7 +388,17 @@ public class ExpressionTreeMaterializer {
             newArgs.add(e.accept(new CloneVisitor(), null));
           }
 
-          LogicalExpression thenExpression = new FunctionCall(call.getName(), newArgs, call.getPosition());
+          errorCollectors.push(errorCollector);
+          errorCollector = new ErrorCollectorImpl();
+
+          LogicalExpression thenExpression = new FunctionCall(call.getName(), newArgs, call.getPosition()).accept(this, functionLookupContext);
+
+          if (errorCollector.hasErrors()) {
+            thenExpression = getExceptionFunction(errorCollector.toErrorString());
+          }
+
+          errorCollector = errorCollectors.pop();
+
           IfExpression.IfCondition condition = new IfCondition(ifCondition, thenExpression);
           ifConditions.add(condition);
         }
@@ -381,18 +415,29 @@ public class ExpressionTreeMaterializer {
       throw new UnsupportedOperationException("Did not find any Union input types");
     }
 
+    private LogicalExpression getExceptionFunction(String message) {
+      QuotedString msg = new QuotedString(message, ExpressionPosition.UNKNOWN);
+      List<LogicalExpression> args = Lists.newArrayList();
+      args.add(msg);
+      FunctionCall call = new FunctionCall(ExceptionFunction.EXCEPTION_FUNCTION_NAME, args, ExpressionPosition.UNKNOWN);
+      return call;
+    }
+
     private LogicalExpression getUnionCastExpressionForType(MinorType type, LogicalExpression arg) {
       if (type == MinorType.UNION) {
-        return null;
+        return arg;
       }
-      String castFuncName = String.format("as%s", type.toString());
+      if (type == MinorType.LIST || type == MinorType.MAP) {
+        return getExceptionFunction("Unable to cast union to " + type);
+      }
+      String castFuncName = String.format("assert_%s", type.toString());
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(arg);
       return new FunctionCall(castFuncName, args, ExpressionPosition.UNKNOWN);
     }
 
     private LogicalExpression getIsTypeExpressionForType(MinorType type, LogicalExpression arg) {
-      String isFuncName = String.format("is%s", type.toString());
+      String isFuncName = String.format("is_%s", type.toString());
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(arg);
       return new FunctionCall(isFuncName, args, ExpressionPosition.UNKNOWN);

@@ -39,8 +39,16 @@ public class UnionReader extends AbstractFieldReader {
     this.data = data;
   }
 
+  private static MajorType[] TYPES = new MajorType[43];
+
+  static {
+    for (MinorType minorType : MinorType.values()) {
+      TYPES[minorType.getNumber()] = Types.optional(minorType);
+    }
+  }
+
   public MajorType getType() {
-    return Types.required(MinorType.valueOf(data.getTypeValue(idx())));
+    return TYPES[data.getTypeValue(idx())];
   }
 
   public boolean isSet(){

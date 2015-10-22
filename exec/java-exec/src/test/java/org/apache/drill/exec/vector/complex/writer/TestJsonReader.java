@@ -433,14 +433,14 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSelectFromListWithCase() throws Exception {
-    String query = "select a from (select case when typeOf(field2) = type('list') then asBigInt(field2[4][1].inner7) end a from cp.`jsoninput/union/a.json`) where a is not null";
+    String query = "select a, typeOf(a) `type` from (select case when is_list(field2) then field2[4][1].inner7 end a from cp.`jsoninput/union/a.json`) where a is not null";
     try {
       testBuilder()
               .sqlQuery(query)
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-              .baselineColumns("a")
-              .baselineValues(13L)
+              .baselineColumns("a", "type")
+              .baselineValues(13L, "BIGINT")
               .go();
     } finally {
       testNoResult("alter session set `exec.enable_union_type` = false");
@@ -449,7 +449,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testTypeCase() throws Exception {
-    String query = "select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t";
+    String query = "select case when is_bigint(field1) then field1 when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t";
     try {
       testBuilder()
               .sqlQuery(query)
@@ -468,7 +468,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSumWithTypeCase() throws Exception {
-    String query = "select sum(f1) sum_f1 from (select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t)";
+    String query = "select sum(cast(f1 as bigint)) sum_f1 from (select case when is_bigint(field1) then field1 when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t)";
     try {
       testBuilder()
               .sqlQuery(query)

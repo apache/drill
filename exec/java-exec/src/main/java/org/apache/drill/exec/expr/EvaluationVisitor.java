@@ -413,7 +413,9 @@ public class EvaluationVisitor {
             if (out.isOptional()) {
               ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
             }
-            ifNoVal.assign(isNull,  JExpr.lit(1));
+            if (isNull != null) {
+              ifNoVal.assign(isNull, JExpr.lit(1));
+            }
             ifNoVal._break(label);
 
             expr = list.invoke("reader");
