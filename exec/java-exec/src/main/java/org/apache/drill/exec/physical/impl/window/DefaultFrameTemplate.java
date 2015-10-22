@@ -25,11 +25,9 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import javax.inject.Named;
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -44,6 +42,9 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
   private int frameLastRow;
 
+  // true when at least one window function needs to process all batches of a partition before passing any batch downstream
+  private boolean requireFullPartition;
+
   /**
    * current partition being processed.</p>
    * Can span over multiple batches, so we may need to keep it between calls to doWork()
@@ -51,8 +52,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private Partition partition;
 
   @Override
-  public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext)
-      throws SchemaChangeException {
+  public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
+                    final boolean requireFullPartition) throws SchemaChangeException {
     this.container = container;
     this.batches = batches;
 
@@ -62,6 +63,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
     outputCount = 0;
     partition = null;
+
+    this.requireFullPartition = requireFullPartition;
   }
 
   private void allocateOutgoing() {
@@ -108,6 +111,11 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
         // we have a pending window we need to handle from a previous call to doWork()
         logger.trace("we have a pending partition {}", partition);
+
+        if (!requireFullPartition) {
+          // we didn't compute the whole partition length in the previous partition, we need to update the length now
+          updatePartitionSize(partition, currentRow);
+        }
       } else {
         newPartition(current, currentRow);
       }
@@ -137,8 +145,9 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   private void newPartition(final WindowDataBatch current, final int currentRow) throws SchemaChangeException {
-    final long length = computePartitionSize(currentRow);
-    partition = new Partition(length);
+    partition = new Partition();
+    updatePartitionSize(partition, currentRow);
+
     setupPartition(current, container);
     copyFirstValueToInternal(currentRow);
   }
@@ -219,8 +228,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void processRow(final int row) throws DrillException {
     if (partition.isFrameDone()) {
       // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-      partition.newFrame(countPeers(row));
-      aggregatePeers(row);
+      final long peers = aggregatePeers(row);
+      partition.newFrame(peers);
     }
 
     outputRow(row, partition);
@@ -230,116 +239,86 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   /**
-   * @return number of rows that are part of the partition starting at row start of first batch
+   * updates partition's length after computing the number of rows for the current the partition starting at the specified
+   * row of the first batch. If !requiresFullPartition, this method will only count the rows in the current batch
    */
-  private long computePartitionSize(final int start) {
+  private void updatePartitionSize(final Partition partition, final int start) {
     logger.trace("compute partition size starting from {} on {} batches", start, batches.size());
 
     // current partition always starts from first batch
     final VectorAccessible first = getCurrent();
 
     long length = 0;
+    boolean lastBatch = false;
+    int row = start;
 
     // count all rows that are in the same partition of start
-    // keep increasing length until we find first row of next partition or we reach the very
-    // last batch
+    // keep increasing length until we find first row of next partition or we reach the very last batch
+
+    outer:
     for (WindowDataBatch batch : batches) {
       final int recordCount = batch.getRecordCount();
 
       // check first container from start row, and subsequent containers from first row
-      for (int row = (batch == first) ? start : 0; row < recordCount; row++, length++) {
+      for (; row < recordCount; row++, length++) {
         if (!isSamePartition(start, first, row, batch)) {
-          return length;
+          break outer;
         }
       }
-    }
 
-    return length;
-  }
-
-  /**
-   * Counts how many rows are peer with the first row of the current frame
-   * @param start first row of current frame
-   * @return number of peer rows
-   */
-  private int countPeers(final int start) {
-    // current frame always starts from first batch
-    final VectorAccessible first = getCurrent();
-
-    int length = 0;
-
-    // count all rows that are in the same frame of starting row
-    // keep increasing length until we find first non peer row we reach the very
-    // last batch
-    for (WindowDataBatch batch : batches) {
-      final int recordCount = batch.getRecordCount();
-
-      // for every remaining row in the partition, count it if it's a peer row
-      final long remaining = partition.getRemaining();
-      for (int row = (batch == first) ? start : 0; row < recordCount && length < remaining; row++, length++) {
-        if (!isPeer(start, first, row, batch)) {
-          return length;
-        }
+      if (!requireFullPartition) {
+        // we are only interested in the first batch's records
+        break;
       }
+
+      row = 0;
     }
 
-    return length;
+    if (!requireFullPartition) {
+      // this is the last batch of current partition if
+      lastBatch = row < outputCount                           // partition ends before the end of the batch
+        || batches.size() == 1                                // it's the last available batch
+        || !isSamePartition(start, first, 0, batches.get(1)); // next batch contains a different partition
+    }
+
+    partition.updateLength(length, !(requireFullPartition || lastBatch));
   }
 
   /**
    * aggregates all peer rows of current row
-   * @param currentRow starting row of the current frame
+   * @param start starting row of the current frame
+   * @return num peer rows for current row
    * @throws SchemaChangeException
    */
-  private void aggregatePeers(final int currentRow) throws SchemaChangeException {
-    logger.trace("aggregating {} rows starting from {}", partition.getPeers(), currentRow);
-    assert !partition.isFrameDone() : "frame is empty!";
+  private long aggregatePeers(final int start) throws SchemaChangeException {
+    logger.trace("aggregating rows starting from {}", start);
+
+    // current frame always starts from first batch
+    final VectorAccessible first = getCurrent();
+    VectorAccessible last = first;
+    long length = 0;
 
     // a single frame can include rows from multiple batches
     // start processing first batch and, if necessary, move to next batches
-    Iterator<WindowDataBatch> iterator = batches.iterator();
-    WindowDataBatch current = iterator.next();
-    setupEvaluatePeer(current, container);
+    for (WindowDataBatch batch : batches) {
+      setupEvaluatePeer(batch, container);
+      final int recordCount = batch.getRecordCount();
 
-    final int peers = partition.getPeers();
-    int row = currentRow;
-    for (int i = 0; i < peers; i++, row++) {
-      if (row >= current.getRecordCount()) {
-        // we reached the end of the current batch, move to the next one
-        current = iterator.next();
-        setupEvaluatePeer(current, container);
-        row = 0;
+      // for every remaining row in the partition, count it if it's a peer row
+      for (int row = (batch == first) ? start : 0; row < recordCount; row++, length++) {
+        if (!isPeer(start, first, row, batch)) {
+          break;
+        }
+
+        evaluatePeer(row);
+        last = batch;
+        frameLastRow = row;
       }
-
-      evaluatePeer(row);
     }
 
-    // last row of current frame
-    setupReadLastValue(current, container);
-    frameLastRow = row - 1;
-  }
+    setupReadLastValue(last, container);
 
-  @Override
-  public boolean canDoWork() {
-    // check if we can process a saved batch
-    if (batches.size() < 2) {
-      logger.trace("we don't have enough batches to proceed, fetch next batch");
-      return false;
-    }
-
-    final VectorAccessible current = getCurrent();
-    final int currentSize = current.getRecordCount();
-    final VectorAccessible last = batches.get(batches.size() - 1);
-    final int lastSize = last.getRecordCount();
-
-    if (!isSamePartition(currentSize - 1, current, lastSize - 1, last)
-        /*|| !isPeer(currentSize - 1, current, lastSize - 1, last)*/) {
-      logger.trace("partition changed, we are ready to process first saved batch");
-      return true;
-    } else {
-      logger.trace("partition didn't change, fetch next batch");
-      return false;
-    }
+    return length;
   }
 
   /**

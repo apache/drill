@@ -92,6 +92,28 @@ public abstract class WindowFunction {
 
   abstract void generateCode(final ClassGenerator<WindowFramer> cg);
 
+  /**
+   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @return true if this window function requires all batches of current partition to be available before processing
+   * the first batch
+   */
+  public boolean requiresFullPartition(final boolean hasOrderBy) {
+    return true;
+  }
+
+  /**
+   * @param numBatchesAvailable number of batches available for current partition
+   * @param hasOrderBy window definition contains an ORDER BY clause
+   * @param frameEndReached we found the last row of the first batch's frame
+   * @param partitionEndReached all batches of current partition are available
+   *
+   * @return true if this window function can process the first batch immediately
+   */
+  public boolean canDoWork(final int numBatchesAvailable, final boolean hasOrderBy, final boolean frameEndReached,
+                           final boolean partitionEndReached) {
+    return partitionEndReached;
+  }
+
   abstract boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
     throws SchemaChangeException;
 
@@ -128,6 +150,16 @@ public abstract class WindowFunction {
 
       cg.setMappingSet(mappingSet);
       cg.addExpr(writeAggregationToOutput);
+    }
+
+    @Override
+    public boolean requiresFullPartition(final boolean hasOrderBy) {
+      return !hasOrderBy;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (hasOrderBy && frameEndReached);
     }
   }
 
@@ -170,6 +202,21 @@ public abstract class WindowFunction {
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
       return true;
+    }
+
+    @Override
+    public boolean requiresFullPartition(final boolean hasOrderBy) {
+      // CUME_DIST, PERCENT_RANK and NTILE require the length of current partition before processing it's first batch
+      return type == Type.CUME_DIST || type == Type.PERCENT_RANK || type == Type.NTILE;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+
+      // for CUME_DIST, PERCENT_RANK and NTILE we need the full partition
+      // otherwise we can process the first batch immediately
+      return partitionEndReached || ! requiresFullPartition(hasOrderBy);
     }
   }
 
@@ -258,6 +305,16 @@ public abstract class WindowFunction {
       writeInputToLead = new ValueVectorWriteExpression(outputId, input, true);
       return true;
     }
+
+    @Override
+    public boolean requiresFullPartition(final boolean hasOrderBy) {
+      return false;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || numBatchesAvailable > 1;
+    }
   }
 
   static class Lag extends WindowFunction {
@@ -313,6 +370,17 @@ public abstract class WindowFunction {
         cg.addExpr(writeInputToLag);
       }
     }
+
+    @Override
+    public boolean requiresFullPartition(final boolean hasOrderBy) {
+      return false;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      return true;
+    }
   }
 
   static class LastValue extends WindowFunction {
@@ -357,6 +425,16 @@ public abstract class WindowFunction {
 
       cg.setMappingSet(mappingSet);
       cg.addExpr(writeSourceToLastValue);
+    }
+
+    @Override
+    public boolean requiresFullPartition(final boolean hasOrderBy) {
+      return !hasOrderBy;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      return partitionEndReached || (hasOrderBy && frameEndReached);
     }
   }
 
@@ -426,6 +504,17 @@ public abstract class WindowFunction {
         cg.setMappingSet(mappingSet);
         cg.addExpr(writeFirstValueToFirstValue);
       }
+    }
+
+    @Override
+    public boolean requiresFullPartition(boolean hasOrderBy) {
+      return false;
+    }
+
+    @Override
+    public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
+      assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      return true;
     }
   }
 }
