@@ -678,6 +678,7 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void testSchemaChange() throws Exception {
     File dir = new File("target/" + this.getClass());
     if ((!dir.exists() && !dir.mkdirs()) || (dir.exists() && !dir.isDirectory())) {

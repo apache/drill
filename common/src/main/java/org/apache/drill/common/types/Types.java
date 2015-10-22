@@ -35,10 +35,7 @@ public class Types {
   public static final MajorType OPTIONAL_BIT = optional(MinorType.BIT);
 
   public static boolean isUnion(MajorType toType) {
-    if (toType.getMinorType() == MinorType.UNION) {
-      return true;
-    }
-    return false;
+    return toType.getMinorType() == MinorType.UNION;
   }
 
   public static enum Comparability {
@@ -96,7 +93,7 @@ public class Types {
    *   {@code INFORMATION_SCHEMA.COLUMNS.TYPE_NAME} would list)
    */
   public static String getSqlTypeName(final MajorType type) {
-    if (type.getMode() == DataMode.REPEATED) {
+    if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
       return "ARRAY";
     }
 
@@ -169,7 +166,7 @@ public class Types {
    * Gets JDBC type code for given Drill RPC-/protobuf-level type.
    */
   public static int getJdbcTypeCode(final MajorType type) {
-    if (type.getMode() == DataMode.REPEATED) {
+    if (type.getMode() == DataMode.REPEATED || type.getMinorType() == MinorType.LIST) {
       return java.sql.Types.ARRAY;
     }
 

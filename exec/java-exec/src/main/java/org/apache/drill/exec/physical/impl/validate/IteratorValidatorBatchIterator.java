@@ -134,7 +134,6 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
         throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
       }
 
-//      BatchPrinter.printBatch(incoming);
       if (VALIDATE_VECTORS) {
         VectorValidator.validate(incoming);
       }

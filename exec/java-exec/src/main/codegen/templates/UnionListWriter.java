@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import java.lang.UnsupportedOperationException;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/UnionListWriter.java" />
 
@@ -33,9 +35,8 @@ package org.apache.drill.exec.vector.complex.impl;
 @SuppressWarnings("unused")
 public class UnionListWriter extends AbstractFieldWriter {
 
-  ListVector vector;
-//  UnionVector data;
-  UInt4Vector offsets;
+  private ListVector vector;
+  private UInt4Vector offsets;
   private PromotableWriter writer;
   private boolean inMap = false;
   private String mapName;
@@ -44,7 +45,6 @@ public class UnionListWriter extends AbstractFieldWriter {
   public UnionListWriter(ListVector vector) {
     super(null);
     this.vector = vector;
-//    this.data = (UnionVector) vector.getDataVector();
     this.writer = new PromotableWriter(vector.getDataVector(), vector);
     this.offsets = vector.getOffsetVector();
   }
@@ -93,7 +93,11 @@ public class UnionListWriter extends AbstractFieldWriter {
   public ${name}Writer <#if uncappedName == "int">integer<#else>${uncappedName}</#if>(String name) {
     assert inMap;
     mapName = name;
-    return this;
+    final int nextOffset = offsets.getAccessor().get(idx() + 1);
+    vector.getMutator().setNotNull(idx());
+    writer.setPosition(nextOffset);
+    ${name}Writer ${uncappedName}Writer = writer.<#if uncappedName == "int">integer<#else>${uncappedName}</#if>(name);
+    return ${uncappedName}Writer;
   }
 
   </#if>
@@ -119,7 +123,6 @@ public class UnionListWriter extends AbstractFieldWriter {
   public ListWriter list(String name) {
     final int nextOffset = offsets.getAccessor().get(idx() + 1);
     vector.getMutator().setNotNull(idx());
-//    data.getMutator().setType(nextOffset, MinorType.MAP);
     writer.setPosition(nextOffset);
     ListWriter listWriter = writer.list(name);
     return listWriter;
@@ -146,7 +149,6 @@ public class UnionListWriter extends AbstractFieldWriter {
     assert inMap;
     final int nextOffset = offsets.getAccessor().get(idx() + 1);
     vector.getMutator().setNotNull(idx());
-//    data.getMutator().setType(nextOffset, MinorType.MAP);
     offsets.getMutator().setSafe(idx() + 1, nextOffset);
     writer.setPosition(nextOffset);
   }
@@ -168,20 +170,12 @@ public class UnionListWriter extends AbstractFieldWriter {
 
   @Override
   public void write${name}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
-    if (inMap) {
-      final int nextOffset = offsets.getAccessor().get(idx() + 1);
-      vector.getMutator().setNotNull(idx());
-//      data.getMutator().setType(nextOffset, MinorType.MAP);
-      writer.setPosition(nextOffset);
-      ${name}Writer ${uncappedName}Writer = writer.<#if uncappedName == "int">integer<#else>${uncappedName}</#if>(mapName);
-      ${uncappedName}Writer.write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-    } else {
-      final int nextOffset = offsets.getAccessor().get(idx() + 1);
-      vector.getMutator().setNotNull(idx());
-      writer.setPosition(nextOffset);
-      writer.write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
-      offsets.getMutator().setSafe(idx() + 1, nextOffset + 1);
-    }
+    assert !inMap;
+    final int nextOffset = offsets.getAccessor().get(idx() + 1);
+    vector.getMutator().setNotNull(idx());
+    writer.setPosition(nextOffset);
+    writer.write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    offsets.getMutator().setSafe(idx() + 1, nextOffset + 1);
   }
 
   </#if>

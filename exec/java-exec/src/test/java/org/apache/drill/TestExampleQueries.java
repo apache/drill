@@ -34,15 +34,6 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
-  @After
-  public void reset() throws Exception {
-    String[] options = new String[] { ExecConstants.SLICE_TARGET, PlannerSettings.HASHJOIN.getOptionName(), PlannerSettings.HASHAGG.getOptionName(),
-            PlannerSettings.STREAMAGG.getOptionName(), PlannerSettings.MERGEJOIN.getOptionName(), PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR.getOptionName() };
-    for (String option : options) {
-      testNoResult(String.format("reset `%s`", option));
-    }
-  }
-
   @Test // see DRILL-2328
   public void testConcatOnNull() throws Exception {
     try {

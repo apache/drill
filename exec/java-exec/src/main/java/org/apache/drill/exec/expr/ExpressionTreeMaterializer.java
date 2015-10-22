@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.expr;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -39,7 +41,6 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.LogicalExpressionBase;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -62,6 +63,7 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
+import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -74,7 +76,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -109,6 +111,11 @@ public class ExpressionTreeMaterializer {
   }
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
+                                              boolean allowComplexWriterExpr) {
+    return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, false);
+  }
+
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
       boolean allowComplexWriterExpr, boolean unionTypeEnabled) {
     LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr, unionTypeEnabled), functionLookupContext);
 
@@ -139,11 +146,18 @@ public class ExpressionTreeMaterializer {
     return matchedConvertToNullableFuncHolder.getExpr(funcName, args, ExpressionPosition.UNKNOWN);
   }
 
-
   public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
+    return addCastExpression(fromExpr, toType, functionLookupContext, errorCollector, true);
+  }
+
+  public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector, boolean exactResolver) {
     String castFuncName = CastFunctions.getCastFunc(toType.getMinorType());
     List<LogicalExpression> castArgs = Lists.newArrayList();
     castArgs.add(fromExpr);  //input_expr
+
+    if (fromExpr.getMajorType().getMinorType() == MinorType.UNION && toType.getMinorType() == MinorType.UNION) {
+      return fromExpr;
+    }
 
     if (!Types.isFixedWidthType(toType) && !Types.isUnion(toType)) {
 
@@ -159,7 +173,12 @@ public class ExpressionTreeMaterializer {
       castArgs.add(new ValueExpressions.LongExpression(toType.getScale(), null));
     }
     FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-    FunctionResolver resolver = FunctionResolverFactory.getExactResolver(castCall);
+    FunctionResolver resolver;
+    if (exactResolver) {
+      resolver = FunctionResolverFactory.getExactResolver(castCall);
+    } else {
+      resolver = FunctionResolverFactory.getResolver(castCall);
+    }
     DrillFuncHolder matchedCastFuncHolder = functionLookupContext.findDrillFunction(resolver, castCall);
 
     if (matchedCastFuncHolder == null) {
@@ -194,12 +213,22 @@ public class ExpressionTreeMaterializer {
     errorCollector.addGeneralError(call.getPosition(), sb.toString());
   }
 
+
   private static class MaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
     private ExpressionValidator validator = new ExpressionValidator();
-    private final ErrorCollector errorCollector;
+    private ErrorCollector errorCollector;
+    private Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
     private final VectorAccessible batch;
     private final boolean allowComplexWriter;
+    /**
+     * If this is false, the materializer will not handle or create UnionTypes
+     * Once this code is more well tested, we will probably remove this flag
+     */
     private final boolean unionTypeEnabled;
+    /**
+     * Avoid revisiting portions of the tree that have already been materialized
+     */
+    private Set<LogicalExpression> materializedExpressions = Sets.newIdentityHashSet();
 
     public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
       this.batch = batch;
@@ -249,10 +278,6 @@ public class ExpressionTreeMaterializer {
 
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
-
-      if (hasUnionInput(call)) {
-        return rewriteUnionFunction(call, functionLookupContext);
-      }
 
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
@@ -323,21 +348,42 @@ public class ExpressionTreeMaterializer {
         return matchedNonDrillFuncHolder.getExpr(call.getName(), extArgsWithCast, call.getPosition());
       }
 
+      if (hasUnionInput(call)) {
+        return rewriteUnionFunction(call, functionLookupContext);
+      }
+
       logFunctionResolutionError(errorCollector, call);
       return NullExpression.INSTANCE;
+    }
+
+    private static final Set<String> UNION_FUNCTIONS;
+
+    static {
+      UNION_FUNCTIONS = new HashSet<>();
+      for (MinorType t : MinorType.values()) {
+        UNION_FUNCTIONS.add("assert_" + t.name().toLowerCase());
+        UNION_FUNCTIONS.add("is_" + t.name().toLowerCase());
+      }
+      UNION_FUNCTIONS.add("typeof");
     }
 
     private boolean hasUnionInput(FunctionCall call) {
       for (LogicalExpression arg : call.args) {
         if (arg.getMajorType().getMinorType() == MinorType.UNION) {
-          if (!call.getName().toLowerCase().startsWith("as") && !call.getName().toLowerCase().startsWith("is") && !call.getName().toLowerCase().startsWith("typeof")) {
-            return true;
-          }
+          return true;
         }
       }
       return false;
     }
 
+    /**
+     * Converts a function call with a Union type input into a case statement, where each branch of the case corresponds to
+     * one of the subtypes of the Union type. The function call is materialized in each of the branches, with the union input cast
+     * to the specific type corresponding to the branch of the case statement
+     * @param call
+     * @param functionLookupContext
+     * @return
+     */
     private LogicalExpression rewriteUnionFunction(FunctionCall call, FunctionLookupContext functionLookupContext) {
       LogicalExpression[] args = new LogicalExpression[call.args.size()];
       call.args.toArray(args);
@@ -357,14 +403,29 @@ public class ExpressionTreeMaterializer {
 
         for (MinorType minorType : subTypes) {
           LogicalExpression ifCondition = getIsTypeExpressionForType(minorType, arg.accept(new CloneVisitor(), null));
-          args[i] = getUnionCastExpressionForType(minorType, arg.accept(new CloneVisitor(), null));
+          args[i] = getUnionAssertFunctionForType(minorType, arg.accept(new CloneVisitor(), null));
 
           List<LogicalExpression> newArgs = Lists.newArrayList();
           for (LogicalExpression e : args) {
             newArgs.add(e.accept(new CloneVisitor(), null));
           }
 
-          LogicalExpression thenExpression = new FunctionCall(call.getName(), newArgs, call.getPosition());
+          // When expanding the expression tree to handle the different subtypes, we will not throw an exception if one
+          // of the branches fails to find a function match, since it is possible that code path will never occur in execution
+          // So instead of failing to materialize, we generate code to throw the exception during execution if that code
+          // path is hit.
+
+          errorCollectors.push(errorCollector);
+          errorCollector = new ErrorCollectorImpl();
+
+          LogicalExpression thenExpression = new FunctionCall(call.getName(), newArgs, call.getPosition()).accept(this, functionLookupContext);
+
+          if (errorCollector.hasErrors()) {
+            thenExpression = getExceptionFunction(errorCollector.toErrorString());
+          }
+
+          errorCollector = errorCollectors.pop();
+
           IfExpression.IfCondition condition = new IfCondition(ifCondition, thenExpression);
           ifConditions.add(condition);
         }
@@ -381,24 +442,51 @@ public class ExpressionTreeMaterializer {
       throw new UnsupportedOperationException("Did not find any Union input types");
     }
 
-    private LogicalExpression getUnionCastExpressionForType(MinorType type, LogicalExpression arg) {
-      if (type == MinorType.UNION) {
-        return null;
-      }
-      String castFuncName = String.format("as%s", type.toString());
+    /**
+     * Returns the function call whose purpose is to throw an Exception if that code is hit during execution
+     * @param message the exception message
+     * @return
+     */
+    private LogicalExpression getExceptionFunction(String message) {
+      QuotedString msg = new QuotedString(message, ExpressionPosition.UNKNOWN);
       List<LogicalExpression> args = Lists.newArrayList();
-      args.add(arg);
-      return new FunctionCall(castFuncName, args, ExpressionPosition.UNKNOWN);
+      args.add(msg);
+      FunctionCall call = new FunctionCall(ExceptionFunction.EXCEPTION_FUNCTION_NAME, args, ExpressionPosition.UNKNOWN);
+      return call;
     }
 
+    /**
+     * Returns the function which asserts that the current subtype of a union type is a specific type, and allows the materializer
+     * to bind to that specific type when doing function resolution
+     * @param type
+     * @param arg
+     * @return
+     */
+    private LogicalExpression getUnionAssertFunctionForType(MinorType type, LogicalExpression arg) {
+      if (type == MinorType.UNION) {
+        return arg;
+      }
+      if (type == MinorType.LIST || type == MinorType.MAP) {
+        return getExceptionFunction("Unable to cast union to " + type);
+      }
+      String castFuncName = String.format("assert_%s", type.toString());
+      Collections.singletonList(arg);
+      return new FunctionCall(castFuncName, Collections.singletonList(arg), ExpressionPosition.UNKNOWN);
+    }
+
+    /**
+     * Get the function that tests whether a union type is a specific type
+     * @param type
+     * @param arg
+     * @return
+     */
     private LogicalExpression getIsTypeExpressionForType(MinorType type, LogicalExpression arg) {
-      String isFuncName = String.format("is%s", type.toString());
+      String isFuncName = String.format("is_%s", type.toString());
       List<LogicalExpression> args = Lists.newArrayList();
       args.add(arg);
       return new FunctionCall(isFuncName, args, ExpressionPosition.UNKNOWN);
     }
 
-    @Override
     public LogicalExpression visitIfExpression(IfExpression ifExpr, FunctionLookupContext functionLookupContext) {
       IfExpression.IfCondition conditions = ifExpr.ifCondition;
       LogicalExpression newElseExpr = ifExpr.elseExpression.accept(this, functionLookupContext);
@@ -410,6 +498,7 @@ public class ExpressionTreeMaterializer {
       MinorType thenType = conditions.expression.getMajorType().getMinorType();
       MinorType elseType = newElseExpr.getMajorType().getMinorType();
       boolean hasUnion = thenType == MinorType.UNION || elseType == MinorType.UNION;
+      MajorType outputType = ifExpr.outputType;
       if (unionTypeEnabled) {
         if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
@@ -429,10 +518,10 @@ public class ExpressionTreeMaterializer {
           } else {
             builder.addSubType(elseType);
           }
-          MajorType unionType = builder.build();
+          outputType = builder.build();
           conditions = new IfExpression.IfCondition(newCondition,
-                  addCastExpression(conditions.expression, unionType, functionLookupContext, errorCollector));
-          newElseExpr = addCastExpression(newElseExpr, unionType, functionLookupContext, errorCollector);
+                  addCastExpression(conditions.expression, outputType, functionLookupContext, errorCollector, false));
+          newElseExpr = addCastExpression(newElseExpr, outputType, functionLookupContext, errorCollector, false);
         }
 
       } else {
@@ -505,7 +594,8 @@ public class ExpressionTreeMaterializer {
         }
       }
 
-      return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build());
+      LogicalExpression expr = validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).setOutputType(outputType).build());
+      return expr;
     }
 
     private LogicalExpression getConvertToNullableExpr(List<LogicalExpression> args, MinorType minorType,
@@ -663,7 +753,7 @@ public class ExpressionTreeMaterializer {
         String castFuncWithType = CastFunctions.getCastFunc(type.getMinorType());
 
         List<LogicalExpression> newArgs = Lists.newArrayList();
-        newArgs.add(e.getInput());  //input_expr
+        newArgs.add(input);  //input_expr
 
         //VarLen type
         if (!Types.isFixedWidthType(type)) {

@@ -130,6 +130,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   <#list fields as field>
     h.${field.name} = holder.${field.name};
   </#list>
+    h.isSet = isSet() ? 1 : 0;
   }
 </#if>
 

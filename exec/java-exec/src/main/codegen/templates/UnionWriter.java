@@ -63,28 +63,28 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   @Override
   public void start() {
     data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter(true).start();
+    getMapWriter().start();
   }
 
   @Override
   public void end() {
-    getMapWriter(false).end();
+    getMapWriter().end();
   }
 
   @Override
   public void startList() {
-    getListWriter(true).startList();
+    getListWriter().startList();
     data.getMutator().setType(idx(), MinorType.LIST);
   }
 
   @Override
   public void endList() {
-    getListWriter(true).endList();
+    getListWriter().endList();
   }
 
-  private MapWriter getMapWriter(boolean create) {
-    if (create && mapWriter == null) {
-      mapWriter = new SingleMapWriter(data.getMap(), null, true, false);
+  private MapWriter getMapWriter() {
+    if (mapWriter == null) {
+      mapWriter = new SingleMapWriter(data.getMap(), null, true);
       mapWriter.setPosition(idx());
       writers.add(mapWriter);
     }
@@ -93,11 +93,11 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   public MapWriter asMap() {
     data.getMutator().setType(idx(), MinorType.MAP);
-    return getMapWriter(true);
+    return getMapWriter();
   }
 
-  private ListWriter getListWriter(boolean create) {
-    if (create && listWriter == null) {
+  private ListWriter getListWriter() {
+    if (listWriter == null) {
       listWriter = new UnionListWriter(data.getList());
       listWriter.setPosition(idx());
       writers.add(listWriter);
@@ -107,7 +107,7 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   public ListWriter asList() {
     data.getMutator().setType(idx(), MinorType.LIST);
-    return getListWriter(true);
+    return getListWriter();
   }
 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
@@ -118,8 +118,8 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   private ${name}Writer ${name?uncap_first}Writer;
 
-  private ${name}Writer get${name}Writer(boolean create) {
-    if (create && ${uncappedName}Writer == null) {
+  private ${name}Writer get${name}Writer() {
+    if (${uncappedName}Writer == null) {
       ${uncappedName}Writer = new Nullable${name}WriterImpl(data.get${name}Vector(), null);
       ${uncappedName}Writer.setPosition(idx());
       writers.add(${uncappedName}Writer);
@@ -129,20 +129,20 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   public ${name}Writer as${name}() {
     data.getMutator().setType(idx(), MinorType.${name?upper_case});
-    return get${name}Writer(true);
+    return get${name}Writer();
   }
 
   @Override
   public void write(${name}Holder holder) {
     data.getMutator().setType(idx(), MinorType.${name?upper_case});
-    get${name}Writer(true).setPosition(idx());
-    get${name}Writer(true).write${name}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+    get${name}Writer().setPosition(idx());
+    get${name}Writer().write${name}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
   }
 
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     data.getMutator().setType(idx(), MinorType.${name?upper_case});
-    get${name}Writer(true).setPosition(idx());
-    get${name}Writer(true).write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
+    get${name}Writer().setPosition(idx());
+    get${name}Writer().write${name}(<#list fields as field>${field.name}<#if field_has_next>, </#if></#list>);
   }
   </#if>
 
@@ -154,29 +154,29 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   @Override
   public MapWriter map() {
     data.getMutator().setType(idx(), MinorType.LIST);
-    getListWriter(true).setPosition(idx());
-    return getListWriter(true).map();
+    getListWriter().setPosition(idx());
+    return getListWriter().map();
   }
 
   @Override
   public ListWriter list() {
     data.getMutator().setType(idx(), MinorType.LIST);
-    getListWriter(true).setPosition(idx());
-    return getListWriter(true).list();
+    getListWriter().setPosition(idx());
+    return getListWriter().list();
   }
 
   @Override
   public ListWriter list(String name) {
     data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter(true).setPosition(idx());
-    return getMapWriter(true).list(name);
+    getMapWriter().setPosition(idx());
+    return getMapWriter().list(name);
   }
 
   @Override
   public MapWriter map(String name) {
     data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter(true).setPosition(idx());
-    return getMapWriter(true).map(name);
+    getMapWriter().setPosition(idx());
+    return getMapWriter().map(name);
   }
 
   <#list vv.types as type><#list type.minor as minor>
@@ -188,15 +188,15 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   @Override
   public ${capName}Writer ${lowerName}(String name) {
     data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter(true).setPosition(idx());
-    return getMapWriter(true).${lowerName}(name);
+    getMapWriter().setPosition(idx());
+    return getMapWriter().${lowerName}(name);
   }
 
   @Override
   public ${capName}Writer ${lowerName}() {
     data.getMutator().setType(idx(), MinorType.LIST);
-    getListWriter(true).setPosition(idx());
-    return getListWriter(true).${lowerName}();
+    getListWriter().setPosition(idx());
+    return getListWriter().${lowerName}();
   }
   </#if>
   </#list></#list>

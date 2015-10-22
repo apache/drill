@@ -28,6 +28,7 @@ import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import java.lang.reflect.Constructor;
@@ -92,7 +93,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     try {
       Constructor constructor = null;
       for (Constructor c : writerClass.getConstructors()) {
-        if (c.getParameterTypes().length == 4) {
+        if (c.getParameterTypes().length == 3) {
           constructor = c;
         }
       }
@@ -100,7 +101,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
         constructor = writerClass.getConstructor(vectorClass, AbstractFieldWriter.class);
         writer = (FieldWriter) constructor.newInstance(vector, null);
       } else {
-        writer = (FieldWriter) constructor.newInstance(vector, null, true, false);
+        writer = (FieldWriter) constructor.newInstance(vector, null, true);
       }
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);

@@ -60,7 +60,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader{
 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   public void read(${name}Holder holder){
-    throw new UnsupportedOperationException("NullReader cannot read into non-nullable holder");
+    throw new UnsupportedOperationException("NullReader cannot write into non-nullable holder");
   }
 
   public void read(Nullable${name}Holder holder){

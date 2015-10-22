@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,6 +32,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
@@ -433,14 +435,16 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSelectFromListWithCase() throws Exception {
-    String query = "select a from (select case when typeOf(field2) = type('list') then asBigInt(field2[4][1].inner7) end a from cp.`jsoninput/union/a.json`) where a is not null";
+    String query = "select a, typeOf(a) `type` from " +
+            "(select case when is_list(field2) then field2[4][1].inner7 end a " +
+            "from cp.`jsoninput/union/a.json`) where a is not null";
     try {
       testBuilder()
               .sqlQuery(query)
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-              .baselineColumns("a")
-              .baselineValues(13L)
+              .baselineColumns("a", "type")
+              .baselineValues(13L, "BIGINT")
               .go();
     } finally {
       testNoResult("alter session set `exec.enable_union_type` = false");
@@ -449,7 +453,9 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testTypeCase() throws Exception {
-    String query = "select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t";
+    String query = "select case when is_bigint(field1) " +
+            "then field1 when is_list(field1) then field1[0] " +
+            "when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t";
     try {
       testBuilder()
               .sqlQuery(query)
@@ -468,7 +474,10 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSumWithTypeCase() throws Exception {
-    String query = "select sum(f1) sum_f1 from (select case typeOf(field1) when type('bigint') then asBigInt(field1) when type('list') then asBigInt(field1[0]) when type('map') then asBigInt(t.field1.inner1) end f1 from cp.`jsoninput/union/a.json` t)";
+    String query = "select sum(cast(f1 as bigint)) sum_f1 from " +
+            "(select case when is_bigint(field1) then field1 " +
+            "when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 " +
+            "from cp.`jsoninput/union/a.json` t)";
     try {
       testBuilder()
               .sqlQuery(query)
@@ -500,4 +509,62 @@ public class TestJsonReader extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testSumMultipleBatches() throws Exception {
+    String dfs_temp = getDfsTestTmpSchemaLocation();
+    System.out.println(dfs_temp);
+    File table_dir = new File(dfs_temp, "multi_batch");
+    table_dir.mkdir();
+    BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
+    for (int i = 0; i < 10000; i++) {
+      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
+      os.write("{ type : \"bigint\", data : 1 }\n".getBytes());
+    }
+    os.flush();
+    os.close();
+    String query = "select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs_test.tmp.multi_batch t";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("sum")
+              .baselineValues(20000L)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
+
+  @Test
+  public void testSumFilesWithDifferentSchema() throws Exception {
+    String dfs_temp = getDfsTestTmpSchemaLocation();
+    System.out.println(dfs_temp);
+    File table_dir = new File(dfs_temp, "multi_file");
+    table_dir.mkdir();
+    BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
+    for (int i = 0; i < 10000; i++) {
+      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
+    }
+    os.flush();
+    os.close();
+    os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")));
+    for (int i = 0; i < 10000; i++) {
+      os.write("{ type : \"bigint\", data : 1 }\n".getBytes());
+    }
+    os.flush();
+    os.close();
+    String query = "select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs_test.tmp.multi_file t";
+    try {
+      testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .baselineColumns("sum")
+              .baselineValues(20000L)
+              .go();
+    } finally {
+      testNoResult("alter session set `exec.enable_union_type` = false");
+    }
+  }
 }

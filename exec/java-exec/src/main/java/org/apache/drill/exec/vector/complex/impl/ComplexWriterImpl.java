@@ -126,7 +126,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     case INIT:
       MapVector map = (MapVector) container;
-      mapRoot = new SingleMapWriter(map, this, unionEnabled, false);
+      mapRoot = new SingleMapWriter(map, this, unionEnabled);
       mapRoot.setPosition(idx());
       mode = Mode.MAP;
       break;
@@ -147,7 +147,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     case INIT:
       MapVector map = container.addOrGet(name, Types.required(MinorType.MAP), MapVector.class);
-      mapRoot = new SingleMapWriter(map, this, unionEnabled, false);
+      mapRoot = new SingleMapWriter(map, this, unionEnabled);
       mapRoot.setPosition(idx());
       mode = Mode.MAP;
       break;

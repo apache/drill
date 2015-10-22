@@ -49,6 +49,9 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.List;
 
+/**
+ * Creates a deep copy of a LogicalExpression. Specifically, it creates new instances of the literal expressions
+ */
 public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,RuntimeException> {
   @Override
   public LogicalExpression visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {

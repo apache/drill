@@ -37,11 +37,13 @@ public class IfExpression extends LogicalExpressionBase {
 
   public final IfCondition ifCondition;
   public final LogicalExpression elseExpression;
+  public final MajorType outputType;
 
-  private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression) {
+  private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression, MajorType outputType) {
     super(pos);
     this.ifCondition = conditions;
     this.elseExpression = elseExpression;
+    this.outputType = outputType;
   }
 
   public static class IfCondition{
@@ -66,6 +68,7 @@ public class IfExpression extends LogicalExpressionBase {
     IfCondition conditions;
     private LogicalExpression elseExpression;
     private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
+    private MajorType outputType;
 
     public Builder setPosition(ExpressionPosition pos) {
       this.pos = pos;
@@ -82,18 +85,25 @@ public class IfExpression extends LogicalExpressionBase {
       return this;
     }
 
+    public Builder setOutputType(MajorType outputType) {
+      this.outputType = outputType;
+      return this;
+    }
+
     public IfExpression build(){
       Preconditions.checkNotNull(pos);
       Preconditions.checkNotNull(conditions);
-      return new IfExpression(pos, conditions, elseExpression);
+      return new IfExpression(pos, conditions, elseExpression, outputType);
     }
 
   }
 
   @Override
   public MajorType getMajorType() {
-    // If the return type of one of the "then" expression or "else" expression is nullable, return "if" expression
-    // type as nullable
+    if (outputType != null) {
+      return outputType;
+    }
+
     MajorType majorType = elseExpression.getMajorType();
     if (majorType.getMinorType() == MinorType.UNION) {
       Set<MinorType> subtypes = Sets.newHashSet();
