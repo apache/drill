@@ -50,7 +50,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   @Override
   public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax, List<SqlOperator> operatorList) {
-    if (syntax == SqlSyntax.FUNCTION) {
+    if (syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
 
       // add optiq.
       inner.lookupOperatorOverloads(opName, category, syntax, operatorList);

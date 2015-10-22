@@ -86,7 +86,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     void setPlus(SchemaPlus plusOfThis){
       for(WorkspaceSchema s : schemaMap.values()){
-        plusOfThis.add(s.getName(), s);
+        SchemaPlus schemaPlus = plusOfThis.add(s.getName(), s);
+//        schemaPlus.add(arg0, arg1);
       }
     }
 

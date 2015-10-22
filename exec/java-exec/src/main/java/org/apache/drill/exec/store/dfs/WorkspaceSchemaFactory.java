@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import static com.google.common.collect.Collections2.transform;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +33,13 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.Function;
+import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.TableMacro;
+import org.apache.calcite.schema.TranslatableTable;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -40,11 +51,13 @@ import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -152,8 +165,191 @@ public class WorkspaceSchemaFactory {
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
   }
 
-  public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<String, DrillTable> {
-    private final ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<>(this);
+  public static class WithOptionsTableMacro implements TableMacro {
+
+    private TableSignature sig;
+    private WorkspaceSchema schema;
+
+    public WithOptionsTableMacro(TableSignature sig, WorkspaceSchema schema) {
+      super();
+      this.sig = sig;
+      this.schema = schema;
+    }
+
+    private static class IntHolder {
+      private int val = 0;
+    }
+
+    @Override
+    public List<FunctionParameter> getParameters() {
+      final IntHolder i = new IntHolder();
+      return Lists.transform(sig.params, new com.google.common.base.Function<TableParamDef, FunctionParameter>() {
+        @Override
+        public FunctionParameter apply(final TableParamDef input) {
+          return new FunctionParameter() {
+            @Override
+            public int getOrdinal() {
+              return i.val ++;
+            }
+
+            @Override
+            public String getName() {
+              return input.name;
+            }
+
+            @Override
+            public RelDataType getType(RelDataTypeFactory typeFactory) {
+              return typeFactory.createJavaType(input.type);
+            }
+
+            @Override
+            public boolean isOptional() {
+              return false;
+            }
+          };
+        }
+      });
+    }
+
+    @Override
+    public TranslatableTable apply(List<Object> arguments) {
+      return schema.getDrillTable(new TableInstance(sig, arguments));
+    }
+
+  }
+
+  private static class TableInstance {
+    private final TableSignature sig;
+    private final List<Object> params;
+
+    public TableInstance(TableSignature sig, List<Object> params) {
+      super();
+      if (params.size() != sig.params.size()) {
+        throw new IllegalArgumentException(format(
+            "should have as many params (%d) as signature (%d)",
+            params.size(), sig.params.size()));
+      }
+      this.sig = sig;
+      this.params = params;
+    }
+
+    // eclipse generated
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((params == null) ? 0 : params.hashCode());
+      result = prime * result + ((sig == null) ? 0 : sig.hashCode());
+      return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      TableInstance other = (TableInstance) obj;
+      if (params == null) {
+        if (other.params != null)
+          return false;
+      } else if (!params.equals(other.params))
+        return false;
+      if (sig == null) {
+        if (other.sig != null)
+          return false;
+      } else if (!sig.equals(other.sig))
+        return false;
+      return true;
+    }
+
+  }
+  private static class TableParamDef {
+    private final String name;
+    private final Class<?> type;
+
+    public TableParamDef(String name, Class<?> type) {
+      this.name = name;
+      this.type = type;
+    }
+
+    // eclipse generated
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + ((type == null) ? 0 : type.hashCode());
+      return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      TableParamDef other = (TableParamDef) obj;
+      if (name == null) {
+        if (other.name != null)
+          return false;
+      } else if (!name.equals(other.name))
+        return false;
+      if (type == null) {
+        if (other.type != null)
+          return false;
+      } else if (!type.equals(other.type))
+        return false;
+      return true;
+    }
+  }
+  private static class TableSignature {
+    private final String name;
+    private final List<TableParamDef> params;
+
+    public TableSignature(String name, TableParamDef... params) {
+      super();
+      this.name = name;
+      this.params = Arrays.asList(params);
+    }
+
+    // eclipse generated
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + ((params == null) ? 0 : params.hashCode());
+      return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      TableSignature other = (TableSignature) obj;
+      if (name == null) {
+        if (other.name != null)
+          return false;
+      } else if (!name.equals(other.name))
+        return false;
+      if (params == null) {
+        if (other.params != null)
+          return false;
+      } else if (!params.equals(other.params))
+        return false;
+      return true;
+    }
+
+  }
+
+  public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<TableInstance, DrillTable> {
+    private final ExpandingConcurrentMap<TableInstance, DrillTable> tables = new ExpandingConcurrentMap<>(this);
     private final SchemaConfig schemaConfig;
     private final DrillFileSystem fs;
 
@@ -161,6 +357,10 @@ public class WorkspaceSchemaFactory {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
       this.fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), fsConf);
+    }
+
+    DrillTable getDrillTable(TableInstance key) {
+      return tables.get(key);
     }
 
     @Override
@@ -221,9 +421,44 @@ public class WorkspaceSchemaFactory {
       return viewSet;
     }
 
+    private Set<String> rawTableNames() {
+      return newHashSet(
+          transform(tables.keySet(), new com.google.common.base.Function<TableInstance, String>() {
+        @Override
+        public String apply(TableInstance input) {
+          return input.sig.name;
+        }
+      }));
+    }
+
     @Override
     public Set<String> getTableNames() {
-      return Sets.union(tables.keySet(), getViews());
+      System.out.println("getTableNames");
+      return Sets.union(rawTableNames(), getViews());
+    }
+
+    @Override
+    public Set<String> getFunctionNames() {
+      System.out.println("getFunctionNames");
+      return rawTableNames();
+    }
+
+    @Override
+    public List<Function> getFunctions(String name) {
+      System.out.println("getFunctions(" + name + ")");
+      List<TableSignature> sigs = Arrays.asList(
+          new TableSignature(name, new TableParamDef("delimiter", String.class)),
+          new TableSignature(name, new TableParamDef("delimiter", Integer.TYPE)),
+          new TableSignature(name, new TableParamDef("foo", Integer.TYPE), new TableParamDef("bar", Integer.TYPE)),
+          new TableSignature(name, new TableParamDef("foo", String.class))
+      );
+      return Lists.transform(sigs, new com.google.common.base.Function<TableSignature, Function>() {
+        @Override
+        public Function apply(TableSignature input) {
+          return new WithOptionsTableMacro(input, WorkspaceSchema.this);
+        }
+
+      });
     }
 
     private View getView(DotDrillFile f) throws IOException{
@@ -232,17 +467,19 @@ public class WorkspaceSchemaFactory {
     }
 
     @Override
-    public Table getTable(String name) {
+    public Table getTable(String tableName) {
+      System.out.println("getTable(" + tableName + ")");
+      TableInstance tableKey = new TableInstance(new TableSignature(tableName), ImmutableList.of());
       // first check existing tables.
-      if(tables.alreadyContainsKey(name)) {
-        return tables.get(name);
+      if(tables.alreadyContainsKey(tableKey)) {
+        return tables.get(tableKey);
       }
 
       // then look for files that start with this name and end in .drill.
       List<DotDrillFile> files = Collections.emptyList();
       try {
         try {
-          files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), name, DotDrillType.VIEW);
+          files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), tableName, DotDrillType.VIEW);
         } catch(AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());
@@ -251,7 +488,7 @@ public class WorkspaceSchemaFactory {
               .build(logger);
           }
         } catch(IOException e) {
-          logger.warn("Failure while trying to list view tables in workspace [{}]", name, getFullSchemaName(), e);
+          logger.warn("Failure while trying to list view tables in workspace [{}]", tableName, getFullSchemaName(), e);
         }
 
         for(DotDrillFile f : files) {
@@ -275,7 +512,7 @@ public class WorkspaceSchemaFactory {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
 
-      return tables.get(name);
+      return tables.get(tableKey);
     }
 
     @Override
@@ -313,19 +550,28 @@ public class WorkspaceSchemaFactory {
       return FileSystemConfig.NAME;
     }
 
+    private DrillTable isReadable(FormatMatcher m,  FileSelection fileSelection) throws IOException {
+      return m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+    }
+
     @Override
-    public DrillTable create(String key) {
+    public DrillTable create(TableInstance key) {
       try {
 
-        FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
+        FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key.sig.name);
         if (fileSelection == null) {
           return null;
         }
-
+        if (key.sig.params.size() > 0) {
+          TextFormatPlugin.TextFormatConfig fconfig = new TextFormatPlugin.TextFormatConfig();
+          fconfig.extensions = Arrays.asList();
+          fconfig.fieldDelimiter = ((String)key.params.get(0)).charAt(0);
+          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), new FormatSelection(fconfig, fileSelection));
+        }
         if (fileSelection.containsDirectories(fs)) {
           for (FormatMatcher m : dirMatchers) {
             try {
-              DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+              DrillTable table = isReadable(m, fileSelection);
               if (table != null) {
                 return table;
               }
@@ -335,9 +581,8 @@ public class WorkspaceSchemaFactory {
           }
           fileSelection = fileSelection.minusDirectories(fs);
         }
-
         for (FormatMatcher m : fileMatchers) {
-          DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+          DrillTable table = isReadable(m, fileSelection);
           if (table != null) {
             return table;
           }

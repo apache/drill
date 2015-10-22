@@ -39,6 +39,8 @@ import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -63,8 +65,11 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   private final Configuration fsConf;
   private final LogicalPlanPersistence lpPersistance;
 
+  private DrillbitContext context;
+
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
     this.config = config;
+    this.context = context;
     this.lpPersistance = context.getLpPersistence();
     try {
 
@@ -121,7 +126,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
     if (plugin == null) {
-      throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
+      plugin = FormatCreator.newFormatPlugin(context, fsConf, config, context.getClasspathScan(), formatSelection.getFormat());
     }
     return plugin.getGroupScan(userName, formatSelection.getSelection(), columns);
   }
@@ -141,6 +146,11 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     } else {
       return formatPluginsByConfig.get(config);
     }
+  }
+
+  // TODO: make this generic. Just for now restrict to text
+  public FormatPlugin newTextFormatPlugin(TextFormatConfig fpconfig) {
+    return new TextFormatPlugin(null, context, fsConf, config, fpconfig);
   }
 
   @Override

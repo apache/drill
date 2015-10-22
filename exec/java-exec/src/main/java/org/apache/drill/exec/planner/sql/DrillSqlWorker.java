@@ -89,7 +89,6 @@ public class DrillSqlWorker {
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
     int idMaxLength = (int)context.getPlannerSettings().getIdentifierMaxLength();
-
     FrameworkConfig config = Frameworks.newConfigBuilder() //
         .parserConfig(SqlParser.configBuilder()
             .setLex(Lex.MYSQL)

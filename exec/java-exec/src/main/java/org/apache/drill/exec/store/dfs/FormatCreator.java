@@ -39,6 +39,23 @@ public class FormatCreator {
   private static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class,
       Configuration.class, StoragePluginConfig.class);
 
+  private static Map<Class<?>, Constructor<?>> initConfigConstructors(Collection<Class<? extends FormatPlugin>> pluginClasses) {
+    Map<Class<?>, Constructor<?>> constructors = Maps.newHashMap();
+    for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
+      for (Constructor<?> c : pluginClass.getConstructors()) {
+        try {
+          if (!FORMAT_BASED.check(c)) {
+            continue;
+          }
+          Class<?> configClass = c.getParameterTypes()[4];
+          constructors.put(configClass, c);
+        } catch (Exception e) {
+          logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
+        }
+      }
+    }
+    return constructors;
+  }
   static Map<String, FormatPlugin> getFormatPlugins(
       DrillbitContext context,
       Configuration fsConf,
@@ -65,21 +82,7 @@ public class FormatCreator {
       }
 
     } else {
-      Map<Class<?>, Constructor<?>> constructors = Maps.newHashMap();
-      for (Class<? extends FormatPlugin> pluginClass: pluginClasses) {
-        for (Constructor<?> c : pluginClass.getConstructors()) {
-          try {
-            if (!FORMAT_BASED.check(c)) {
-              continue;
-            }
-            Class<?> configClass = c.getParameterTypes()[4];
-            constructors.put(configClass, c);
-          } catch (Exception e) {
-            logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
-          }
-        }
-      }
-
+      Map<Class<?>, Constructor<?>> constructors = initConfigConstructors(pluginClasses);
       for (Map.Entry<String, FormatPluginConfig> e : storageConfig.formats.entrySet()) {
         Constructor<?> c = constructors.get(e.getValue().getClass());
         if (c == null) {
@@ -96,6 +99,26 @@ public class FormatCreator {
     }
 
     return plugins;
+  }
+
+  static FormatPlugin newFormatPlugin(
+      DrillbitContext context,
+      Configuration fsConf,
+      FileSystemConfig storageConfig,
+      ScanResult classpathScan,
+      FormatPluginConfig fpconfig) {
+    Collection<Class<? extends FormatPlugin>> pluginClasses = classpathScan.getImplementations(FormatPlugin.class);
+    Map<Class<?>, Constructor<?>> constructors = initConfigConstructors(pluginClasses);
+    Constructor<?> c = constructors.get(fpconfig.getClass());
+    if (c == null) {
+      throw new RuntimeException("Unable to find constructor for storage config of type " + fpconfig.getClass().getName());
+    }
+    try {
+      return (FormatPlugin) c.newInstance(null, context, fsConf, storageConfig, fpconfig);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
+      throw new RuntimeException("Failure initializing storage config of type " + fpconfig.getClass().getName(), e1);
+    }
+
   }
 
 }

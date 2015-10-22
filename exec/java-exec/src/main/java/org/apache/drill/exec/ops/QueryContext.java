@@ -52,6 +52,8 @@ import org.apache.drill.exec.util.Utilities;
 
 import com.google.common.collect.Lists;
 
+import io.netty.buffer.DrillBuf;
+
 // TODO except for a couple of tests, this is only created by Foreman
 // TODO the many methods that just return drillbitContext.getXxx() should be replaced with getDrillbitContext()
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
@@ -87,7 +89,19 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
+//    boolean caseSensitive = false;
+//    CalciteCatalogReader catalogReader =
+//        new CalciteCatalogReader(
+//            getRootSchema(),
+//            caseSensitive,
+//            getNewDefaultSchema(),
+//            getTypeFactory());
     table = new DrillOperatorTable(getFunctionRegistry());
+//    table = new ChainedSqlOperatorTable(asList(
+//          SqlStdOperatorTable.instance(),
+//          catalogReader,
+//          new DrillOperatorTable(getFunctionRegistry())
+//        ));
 
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
