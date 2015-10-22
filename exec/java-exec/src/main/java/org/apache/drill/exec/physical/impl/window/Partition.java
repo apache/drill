@@ -18,18 +18,21 @@
 package org.apache.drill.exec.physical.impl.window;
 
 /**
- * Used internally to keep track of partitions and frames
+ * Used internally to keep track of partitions and frames.<br>
+ * A partition can be partial, which means we don't know "yet" the total number of records that are part of this partition.
+ * Even for partial partitions, we know the number of rows that are part of current frame
  */
 public class Partition {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Partition.class);
 
-  private final long length; // size of this partition
-  private long remaining;
+  private boolean partial; // true if we don't know yet the full length of this partition
+  private long length; // size of this partition (if partial is true, then this is a partial length of the partition)
+  private long remaining; // remaining non-processed rows in this partition
 
   private int peers; // remaining non-processed peers in current frame
 
   // we keep these attributes public because the generated code needs to access them
-  public int row_number;
+  public int row_number = 1;
   public int rank;
   public int dense_rank;
   public double percent_rank;
@@ -49,10 +52,15 @@ public class Partition {
     return peers;
   }
 
-  public Partition(long length) {
-    this.length = length;
-    remaining = length;
-    row_number = 1;
+  /**
+   * @param length number of rows in this partition
+   * @param partial if true, then length is not the full length of the partition but just the number of rows in the
+   *                current batch
+   */
+  public void updateLength(long length, boolean partial) {
+    this.length += length;
+    this.partial = partial;
+    remaining += length;
   }
 
   public void rowAggregated() {
@@ -72,7 +80,7 @@ public class Partition {
   }
 
   public boolean isDone() {
-    return remaining == 0;
+    return !partial && remaining == 0;
   }
 
   public int ntile(int numTiles) {

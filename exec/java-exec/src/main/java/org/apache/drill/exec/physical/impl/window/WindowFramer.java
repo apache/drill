@@ -21,15 +21,17 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 
+import javax.inject.Named;
 import java.util.List;
 
 public interface WindowFramer {
   TemplateClassDefinition<WindowFramer> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, DefaultFrameTemplate.class);
 
-  void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext operatorContext)
-    throws SchemaChangeException;
+  void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext operatorContext,
+             final boolean requireFullPartition) throws SchemaChangeException;
 
   /**
    * process the inner batch and write the aggregated values in the container
@@ -53,4 +55,28 @@ public interface WindowFramer {
   int getOutputCount();
 
   void cleanup();
+
+  /**
+   * compares two rows from different batches (can be the same), if they have the same value for the partition by
+   * expression
+   * @param b1Index index of first row
+   * @param b1 batch for first row
+   * @param b2Index index of second row
+   * @param b2 batch for second row
+   * @return true if the rows are in the same partition
+   */
+  boolean isSamePartition(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
+                                          @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
+
+  /**
+   * compares two rows from different batches (can be the same), if they have the same value for the order by
+   * expression
+   * @param b1Index index of first row
+   * @param b1 batch for first row
+   * @param b2Index index of second row
+   * @param b2 batch for second row
+   * @return true if the rows are in the same partition
+   */
+  boolean isPeer(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
+                                 @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
 }

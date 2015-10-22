@@ -55,7 +55,10 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
   private final RecordBatch incoming;
   private List<WindowDataBatch> batches;
+
   private WindowFramer framer;
+  private boolean hasOrderBy; // true if window definition contains an order-by clause
+  private final List<WindowFunction> functions = Lists.newArrayList();
 
   private boolean noMoreBatches;
   private BatchSchema schema;
@@ -113,7 +116,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     // keep saving incoming batches until the first unprocessed batch can be processed, or upstream == NONE
-    while (!noMoreBatches && !framer.canDoWork()) {
+    while (!noMoreBatches && !canDoWork()) {
       IterOutcome upstream = next(incoming);
       logger.trace("next(incoming) returned {}", upstream);
 
@@ -137,8 +140,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
         case OK:
           if (incoming.getRecordCount() > 0) {
             batches.add(new WindowDataBatch(incoming, oContext));
-          } else {
-            logger.trace("incoming has 0 records, it won't be added to batches");
           }
           break;
         default:
@@ -166,6 +167,34 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     return IterOutcome.OK;
+  }
+
+  /**
+   * @return true when all window functions are ready to process the current batch (it's the first batch currently
+   * held in memory)
+   */
+  private boolean canDoWork() {
+    if (batches.size() < 2) {
+      // we need at least 2 batches even when window functions only need one batch, so we can detect the end of the
+      // current partition
+      return false;
+    }
+
+    final VectorAccessible current = batches.get(0);
+    final int currentSize = current.getRecordCount();
+    final VectorAccessible last = batches.get(batches.size() - 1);
+    final int lastSize = last.getRecordCount();
+
+    final boolean partitionEndReached = !framer.isSamePartition(currentSize - 1, current, lastSize - 1, last);
+    final boolean frameEndReached = partitionEndReached || !framer.isPeer(currentSize - 1, current, lastSize - 1, last);
+
+    for (final WindowFunction function : functions) {
+      if (!function.canDoWork(batches.size(), hasOrderBy, frameEndReached, partitionEndReached)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @Override
@@ -203,9 +232,13 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     final List<LogicalExpression> keyExprs = Lists.newArrayList();
     final List<LogicalExpression> orderExprs = Lists.newArrayList();
-    final List<WindowFunction> functions = Lists.newArrayList();
+    boolean requireFullPartition = false;
 
     container.clear();
+
+    functions.clear();
+
+    hasOrderBy = popConfig.getOrderings().length > 0;
 
     // all existing vectors will be transferred to the outgoing container in framer.doWork()
     for (final VectorWrapper<?> wrapper : batch) {
@@ -224,6 +257,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       final WindowFunction winfun = WindowFunction.fromExpression(call);
       if (winfun.materialize(ne, container, context.getFunctionRegistry())) {
         functions.add(winfun);
+        requireFullPartition |= winfun.requiresFullPartition(hasOrderBy);
       }
     }
 
@@ -242,7 +276,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     final WindowFramer framer = generateFramer(keyExprs, orderExprs, functions);
-    framer.setup(batches, container, oContext);
+    framer.setup(batches, container, oContext, requireFullPartition);
 
     return framer;
   }
