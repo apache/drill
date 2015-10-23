@@ -1354,7 +1354,9 @@
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
         <hive.version>1.0.0-mapr-1504</hive.version>
-        <hadoop.version>2.5.1-mapr-1503</hadoop.version>
+        <hbase.version>0.98.9-mapr-1503-m7-4.1.0</hbase.version>
+        <hadoop.version>2.7.0-mapr-1506</hadoop.version>
+        <mapr.core.version>4.1.0-mapr</mapr.core.version>
       </properties>
       <dependencyManagement>
         <dependencies>
@@ -1548,12 +1550,12 @@
           <dependency>
             <groupId>com.mapr.fs</groupId>
             <artifactId>libprotodefs</artifactId>
-            <version>4.1.0-mapr</version>
+            <version>${mapr.core.version}</version>
           </dependency>
           <dependency>
             <groupId>com.mapr.fs</groupId>
             <artifactId>mapr-hbase</artifactId>
-            <version>4.1.0-mapr</version>
+            <version>${mapr.core.version}</version>
             <exclusions>
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -1588,7 +1590,7 @@
           <dependency>
             <groupId>com.mapr.hadoop</groupId>
             <artifactId>maprfs</artifactId>
-            <version>4.1.0-mapr</version>
+            <version>${mapr.core.version}</version>
           </dependency>
           <dependency>
             <groupId>xerces</groupId>
@@ -1649,7 +1651,7 @@
           <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
-            <version>0.98.9-mapr-1503-m7-4.1.0</version>
+            <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -1713,7 +1715,7 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
             <classifier>tests</classifier>
-            <version>0.98.9-mapr-1503-m7-4.1.0</version>
+            <version>${hbase.version}</version>
             <scope>test</scope>
             <exclusions>
               <exclusion>
