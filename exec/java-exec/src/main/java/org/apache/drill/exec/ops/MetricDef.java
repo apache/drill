@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.ops;
 
+/**
+ * Interface that defines a metric. For example, {@link org.apache.drill.exec.physical.impl.join.HashJoinBatch.Metric}.
+ */
 public interface MetricDef {
   public String name();
   public int metricId();

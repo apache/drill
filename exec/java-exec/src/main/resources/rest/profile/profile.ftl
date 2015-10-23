@@ -176,6 +176,20 @@
         <div class="panel-body">
           ${op.getContent()}
         </div>
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#${op.getId()}-metrics">
+                Operator Metrics
+              </a>
+            </h4>
+          </div>
+          <div id="${op.getId()}-metrics" class="panel-collapse collapse">
+            <div class="panel-body">
+              ${op.getMetricsTable()}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     </#list>
