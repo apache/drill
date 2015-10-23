@@ -128,7 +128,7 @@ public class TestAllocators {
     //Use some bogus operator type to create a new operator context.
     def = new OpProfileDef(physicalOperator1.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
         OperatorContext.getChildCount(physicalOperator1));
-    stats = fragmentContext1.getStats().getOperatorStats(def, fragmentContext1.getAllocator());
+    stats = fragmentContext1.getStats().newOperatorStats(def, fragmentContext1.getAllocator());
 
 
     // Add a couple of Operator Contexts
@@ -143,7 +143,7 @@ public class TestAllocators {
 
     def = new OpProfileDef(physicalOperator4.getOperatorId(), UserBitShared.CoreOperatorType.TEXT_WRITER_VALUE,
         OperatorContext.getChildCount(physicalOperator4));
-    stats = fragmentContext2.getStats().getOperatorStats(def, fragmentContext2.getAllocator());
+    stats = fragmentContext2.getStats().newOperatorStats(def, fragmentContext2.getAllocator());
     OperatorContext oContext22 = fragmentContext2.newOperatorContext(physicalOperator4, stats, true);
     DrillBuf b22=oContext22.getAllocator().buffer(2000000);
 
@@ -157,7 +157,7 @@ public class TestAllocators {
     // New fragment starts an operator that allocates an amount within the limit
     def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE,
         OperatorContext.getChildCount(physicalOperator5));
-    stats = fragmentContext3.getStats().getOperatorStats(def, fragmentContext3.getAllocator());
+    stats = fragmentContext3.getStats().newOperatorStats(def, fragmentContext3.getAllocator());
     OperatorContext oContext31 = fragmentContext3.newOperatorContext(physicalOperator5, stats, true);
 
     DrillBuf b31a = oContext31.getAllocator().buffer(200000);
