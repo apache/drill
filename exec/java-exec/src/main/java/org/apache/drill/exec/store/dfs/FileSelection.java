@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadata_v1;
@@ -92,6 +94,8 @@ public class FileSelection {
   }
 
   public FileSelection minusDirectories(DrillFileSystem fs) throws IOException {
+    Stopwatch timer = new Stopwatch();
+    timer.start();
     init(fs);
     List<FileStatus> newList = Lists.newArrayList();
     for (FileStatus p : statuses) {
@@ -104,6 +108,8 @@ public class FileSelection {
         newList.add(p);
       }
     }
+    logger.info("FileSelection.minusDirectories() took {} ms, numFiles: {}",
+        timer.elapsed(TimeUnit.MILLISECONDS), newList.size());
     return new FileSelection(newList, selectionRoot);
   }
 
@@ -127,12 +133,16 @@ public class FileSelection {
   }
 
   private void init(DrillFileSystem fs) throws IOException {
+    Stopwatch timer = new Stopwatch();
+    timer.start();
     if (files != null && statuses == null) {
       statuses = Lists.newArrayList();
       for (String p : files) {
         statuses.add(fs.getFileStatus(new Path(p)));
       }
     }
+    logger.info("FileSelection.init() took {} ms, numFiles: {}",
+        timer.elapsed(TimeUnit.MILLISECONDS), statuses == null ? 0 : statuses.size());
   }
 
   public List<FileStatus> getFileStatusList(DrillFileSystem fs) throws IOException {
