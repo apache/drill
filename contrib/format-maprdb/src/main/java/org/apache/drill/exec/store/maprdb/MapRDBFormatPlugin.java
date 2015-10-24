@@ -41,7 +41,7 @@ import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
 import org.apache.drill.exec.store.maprdb.binary.BinaryTableGroupScan;
-import org.apache.drill.exec.store.maprdb.binary.MapRDBPushFilterIntoScan;
+import org.apache.drill.exec.store.maprdb.json.JsonScanSpec;
 import org.apache.drill.exec.store.maprdb.json.JsonTableGroupScan;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -131,7 +131,7 @@ public class MapRDBFormatPlugin implements FormatPlugin {
     TableProperties props = maprfs.getTableProperties(new Path(tableName));
 
     if (props.getAttr().getJson()) {
-      MapRDBSubScanSpec scanSpec = new MapRDBSubScanSpec().setTableName(tableName);
+      JsonScanSpec scanSpec = new JsonScanSpec(tableName, null/*condition*/);
       return new JsonTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
     } else {
       HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);

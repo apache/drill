@@ -21,15 +21,20 @@ import static org.apache.drill.exec.store.maprdb.util.CommonFns.isNullOrEmpty;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -37,9 +42,10 @@ import org.apache.drill.exec.store.maprdb.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.maprdb.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.maprdb.MapRDBGroupScan;
 import org.apache.drill.exec.store.maprdb.MapRDBSubScan;
-import org.apache.drill.exec.store.maprdb.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.maprdb.MapRDBTableStats;
 import org.apache.drill.exec.store.maprdb.TabletFragmentInfo;
+import org.apache.drill.exec.store.maprdb.json.JsonScanSpec;
+import org.apache.drill.exec.store.maprdb.json.JsonSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
 import org.codehaus.jackson.annotate.JsonCreator;
 
@@ -61,11 +67,11 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
 
   private MapRDBTableStats tableStats;
 
-  private MapRDBSubScanSpec subscanSpec;
+  private JsonScanSpec scanSpec;
 
   @JsonCreator
   public JsonTableGroupScan(@JsonProperty("userName") final String userName,
-                            @JsonProperty("subscanSpec") MapRDBSubScanSpec subscanSpec,
+                            @JsonProperty("scanSpec") JsonScanSpec scanSpec,
                             @JsonProperty("storage") FileSystemConfig storagePluginConfig,
                             @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                             @JsonProperty("columns") List<SchemaPath> columns,
@@ -73,13 +79,13 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
     this (userName,
           (FileSystemPlugin) pluginRegistry.getPlugin(storagePluginConfig),
           (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
-          subscanSpec, columns);
+          scanSpec, columns);
   }
 
   public JsonTableGroupScan(String userName, FileSystemPlugin storagePlugin,
-      MapRDBFormatPlugin formatPlugin, MapRDBSubScanSpec subscanSpec, List<SchemaPath> columns) {
+                            MapRDBFormatPlugin formatPlugin, JsonScanSpec scanSpec, List<SchemaPath> columns) {
     super(storagePlugin, formatPlugin, columns, userName);
-    this.subscanSpec = subscanSpec;
+    this.scanSpec = scanSpec;
     init();
   }
 
@@ -89,7 +95,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
    */
   private JsonTableGroupScan(JsonTableGroupScan that) {
     super(that);
-    this.subscanSpec = that.subscanSpec;
+    this.scanSpec = that.scanSpec;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.tableStats = that.tableStats;
   }
@@ -105,40 +111,40 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
     logger.debug("Getting tablet locations");
     try {
       Configuration conf = new Configuration();
-      Table t = MapRDB.getTable(subscanSpec.getTableName());
-      TabletInfo[] tabletInfos = t.getTabletInfos();
-      tableStats = new MapRDBTableStats(conf, subscanSpec.getTableName());
+      Table t = MapRDB.getTable(scanSpec.getTableName());
+      TabletInfo[] tabletInfos = t.getTabletInfos(scanSpec.getCondition());
+      tableStats = new MapRDBTableStats(conf, scanSpec.getTableName());
 
       boolean foundStartRegion = false;
       regionsToScan = new TreeMap<TabletFragmentInfo, String>();
       for (TabletInfo tabletInfo : tabletInfos) {
         TabletInfoImpl tabletInfoImpl = (TabletInfoImpl) tabletInfo;
         if (!foundStartRegion 
-            && !isNullOrEmpty(subscanSpec.getStartRow())
-            && !tabletInfoImpl.containsRow(subscanSpec.getStartRow())) {
+            && !isNullOrEmpty(scanSpec.getStartRow())
+            && !tabletInfoImpl.containsRow(scanSpec.getStartRow())) {
           continue;
         }
         foundStartRegion = true;
         regionsToScan.put(new TabletFragmentInfo(tabletInfoImpl), tabletInfo.getLocations()[0]);
-        if (!isNullOrEmpty(subscanSpec.getStopRow())
-            && tabletInfoImpl.containsRow(subscanSpec.getStopRow())) {
+        if (!isNullOrEmpty(scanSpec.getStopRow())
+            && tabletInfoImpl.containsRow(scanSpec.getStopRow())) {
           break;
         }
       }
     } catch (Exception e) {
-      throw new DrillRuntimeException("Error getting region info for table: " + subscanSpec.getTableName(), e);
+      throw new DrillRuntimeException("Error getting region info for table: " + scanSpec.getTableName(), e);
     }
   }
 
-  protected MapRDBSubScanSpec getSubScanSpec(TabletFragmentInfo tfi) {
-    MapRDBSubScanSpec spec = subscanSpec;
-    MapRDBSubScanSpec subScanSpec = new MapRDBSubScanSpec(
+  protected JsonSubScanSpec getSubScanSpec(TabletFragmentInfo tfi) {
+    // XXX/TODO check filter/Condition
+    JsonScanSpec spec = scanSpec;
+    JsonSubScanSpec subScanSpec = new JsonSubScanSpec(
         spec.getTableName(),
         regionsToScan.get(tfi),
         (!isNullOrEmpty(spec.getStartRow()) && tfi.containsRow(spec.getStartRow())) ? spec.getStartRow() : tfi.getStartKey(),
         (!isNullOrEmpty(spec.getStopRow()) && tfi.containsRow(spec.getStopRow())) ? spec.getStopRow() : tfi.getEndKey(),
-        spec.getSerializedFilter(),
-        null);
+        spec.getCondition());
     return subScanSpec;
   }
 
@@ -154,7 +160,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
   @Override
   public ScanStats getScanStats() {
     //TODO: look at stats for this.
-    long rowCount = (long) ((subscanSpec.getSerializedFilter() != null ? .5 : 1) * tableStats.getNumRows());
+    long rowCount = (long) ((scanSpec.getSerializedFilter() != null ? .5 : 1) * tableStats.getNumRows());
     int avgColumnSize = 10;
     int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
@@ -169,18 +175,17 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
 
   @JsonIgnore
   public String getTableName() {
-    return subscanSpec.getTableName();
+    return scanSpec.getTableName();
   }
 
   @Override
   public String toString() {
     return "JsonTableGroupScan [ScanSpec="
-        + subscanSpec + ", columns="
+        + scanSpec + ", columns="
         + columns + "]";
   }
 
-  public MapRDBSubScanSpec getSubscanSpec() {
-    return subscanSpec;
+  public JsonScanSpec getScanSpec() {
+    return scanSpec;
   }
-
 }

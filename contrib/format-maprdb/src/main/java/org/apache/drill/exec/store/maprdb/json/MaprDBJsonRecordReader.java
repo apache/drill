@@ -63,6 +63,7 @@ import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;
 import com.mapr.db.exceptions.DBException;
 import com.mapr.db.impl.IdCodec;
+import com.mapr.db.ojai.DBDocumentReader;
 import com.mapr.db.ojai.DBDocumentReaderBase;
 import com.mapr.db.util.ByteBufs;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
@@ -80,9 +81,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private OperatorContext operatorContext;
   private VectorContainerWriter writer;
 
-  @SuppressWarnings("unused")
-  private boolean idOnly;
-
   private DrillBuf buffer;
 
   private DocumentStream<DBDocument> documentStream;
@@ -93,13 +91,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
     tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
-    condition = MapRDB.newCondition().and();
-    addKeyCondition(condition, Op.GREATER_OR_EQUAL, subScanSpec.getStartRow());
-    addKeyCondition(condition, Op.LESS, subScanSpec.getStopRow());
-    if (subScanSpec.getSerializedFilter() != null) {
-      condition.condition(com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter())));
-    }
-    condition.close().build();
+    condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
     setColumns(projectedColumns);
   }
 
@@ -122,20 +114,19 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   @Override
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
-    idOnly = true; // TODO: handle the case when only ID is requested.
     if (!isStarQuery()) {
       ArrayList<Object> projectedFieldsList = Lists.newArrayList();
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
           transformed.add(ID_PATH);
-          continue;
+          projectedFieldsList.add(ID_FIELD);
+        } else {
+          transformed.add(SchemaPath.getSimplePath(column.getRootSegment().getPath()));
+          projectedFieldsList.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
         }
-        idOnly = false;
-        projectedFieldsList.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
       }
       projectedFields = projectedFieldsList.toArray(new FieldPath[projectedFieldsList.size()]);
     } else {
-      idOnly = false;
       transformed.add(ID_PATH);
     }
 

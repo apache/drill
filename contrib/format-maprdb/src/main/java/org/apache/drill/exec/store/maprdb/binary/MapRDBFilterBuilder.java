@@ -52,7 +52,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
 
   private static Boolean nullComparatorSupported = null;
 
-  MapRDBFilterBuilder(BinaryTableGroupScan groupScan, LogicalExpression le) {
+  public MapRDBFilterBuilder(BinaryTableGroupScan groupScan, LogicalExpression le) {
     this.groupScan = groupScan;
     this.le = le;
   }
