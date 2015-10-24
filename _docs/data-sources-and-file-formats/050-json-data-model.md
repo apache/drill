@@ -372,7 +372,6 @@ Use dot notation, for example `t.birth.lastname` and `t.birth.bearer.max_hdl` to
 ## Limitations and Workarounds
 In most cases, you can use a workaround, presented in the following sections, to overcome the following limitations:
 
-* [Array at the root level]({{site.baseurl}}/docs/json-data-model/#array-at-the-root-level)
 * [Complex nested data]({{site.baseurl}}/docs/json-data-model/#complex-nested-da[ta)
 * [Commas between records]({{site.baseurl}}/docs/json-data-model/#commas-between-records)
 * [Irregular data]({{site.baseurl}}/docs/json-data-model/#irregular-data)
@@ -383,13 +382,6 @@ In most cases, you can use a workaround, presented in the following sections, to
 * [Complex JSON objects]({{site.baseurl}}/docs/json-data-model/#complex-json-objects)
 * [Schema changes]({{site.baseurl}}/docs/json-data-model/#schema-changes)
 * [Selecting all in a JSON directory query]({{site.baseurl}}/docs/json-data-model/#selecting-all-in-a-json-directory-query)
-
-### Array at the root level
-Drill cannot read an array at the root level, outside an object.
-
-Workaround: Remove square brackets at the root of the object, as shown in the following example.
-
-![drill query flow]({{ site.baseurl }}/docs/img/datasources-json-bracket.png)
 
 ### Complex nested data
 Drill cannot read some complex nested arrays unless you use a table alias.
@@ -474,7 +466,7 @@ MultiPolygons will fail.
 Workaround: None.
 
 ### Misusing Dot Notation
-Drill accesses an object when you use dot notation in the SELECT statement sses only when the dot is *not* the first dot in the expression. Drill attempts to access the table that appears after the first dot. For example,  records in some-file have a geometry field that Drill successfully accesses given this query:
+Drill accesses an object when you use dot notation in the SELECT statement only when the dot is *not* the first dot in the expression. Drill attempts to access the table that appears after the first dot. For example,  records in `some-file` have a geometry field that Drill successfully accesses given this query:
 
 ``select geometry from  dfs.`some-file.json`;``
 

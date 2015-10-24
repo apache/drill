@@ -198,7 +198,14 @@ The Drill default storage plugins support common file formats.
 
 ## Querying Compressed Files
 
-You can query compressed GZ files, such as JSON and CSV, as well as uncompressed files. The file extension specified in the `formats . . . extensions` property of the storage plugin configuration must precede the gz extension in the file name. For example, `proddata.json.gz` or `mydata.csv.gz` are valid file names to use in a query, as shown in the next example.
+You can query compressed JSON and CSV files. You can specify a file extension in the `formats . . . extensions` property of the storage plugin configuration to include the gz extension in the file name, or you can rename files, for example, `proddata.json.gz` or `mydata.csv.gz`, as shown in the next example. To change the `formats . . . extensions` property, you can copy the `dfs` storage plugin configuration to create a custom configuration. Using the following property in a configuration, Drill can read JSON in gzipped filed named `somefile.gz`:
+
+        "json": {
+          "type": "json",
+          "extensions": [
+            "gz"
+          ]
+        },
 
 ### Query the GZ File Directly
 
