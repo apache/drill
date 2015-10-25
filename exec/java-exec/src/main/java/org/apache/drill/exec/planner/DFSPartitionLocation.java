@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.hadoop.fs.Path;
+
 /**
  * Class defines a single partition in a DFS table.
  */
@@ -27,6 +29,10 @@ public class DFSPartitionLocation implements PartitionLocation {
   public DFSPartitionLocation(int max, String selectionRoot, String file) {
     this.file = file;
     this.dirs = new String[max];
+
+    // strip the scheme and authority if they exist
+    selectionRoot = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot)).toString();
+
     int start = file.indexOf(selectionRoot) + selectionRoot.length();
     String postPath = file.substring(start);
     if (postPath.length() == 0) {
