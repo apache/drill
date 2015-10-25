@@ -63,6 +63,8 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private boolean noMoreBatches;
   private BatchSchema schema;
 
+  private boolean shouldStop;
+
   public WindowFrameRecordBatch(WindowPOP popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
@@ -112,6 +114,21 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     // Short circuit if record batch has already sent all data and is done
     if (state == BatchState.DONE) {
+      return IterOutcome.NONE;
+    }
+
+    if (shouldStop) {
+      if (!noMoreBatches) {
+        IterOutcome upstream = next(incoming);
+        while (upstream == IterOutcome.OK || upstream == IterOutcome.OK_NEW_SCHEMA) {
+          // Clear the memory for the incoming batch
+          for (VectorWrapper<?> wrapper : incoming) {
+            wrapper.getValueVector().clear();
+          }
+          upstream = next(incoming);
+        }
+      }
+
       return IterOutcome.NONE;
     }
 
@@ -357,6 +374,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
   @Override
   protected void killIncoming(boolean sendUpstream) {
+    shouldStop = true;
     incoming.kill(sendUpstream);
   }
 
