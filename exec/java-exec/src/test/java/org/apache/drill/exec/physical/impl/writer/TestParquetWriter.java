@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 
@@ -656,5 +659,23 @@ public class TestParquetWriter extends BaseTestQuery {
             .baselineValues("2013-07-05 17:01:00")
             .baselineValues((Object)null)
             .go();
+  }
+
+  @Test
+  public void testSchemaChange() throws Exception {
+    File dir = new File("target/" + this.getClass());
+    if ((!dir.exists() && !dir.mkdirs()) || (dir.exists() && !dir.isDirectory())) {
+      throw new RuntimeException("can't create dir " + dir);
+    }
+    File input1 = new File(dir, "1.json");
+    File input2 = new File(dir, "2.json");
+    try (FileWriter fw = new FileWriter(input1)) {
+      fw.append("{\"a\":\"foo\"}\n");
+    }
+    try (FileWriter fw = new FileWriter(input2)) {
+      fw.append("{\"b\":\"foo\"}\n");
+    }
+    test("select * from " + "dfs.`" + dir.getAbsolutePath() + "`");
+    runTestAndValidate("*", "*", "dfs.`" + dir.getAbsolutePath() + "`", "schema_change_parquet");
   }
 }
