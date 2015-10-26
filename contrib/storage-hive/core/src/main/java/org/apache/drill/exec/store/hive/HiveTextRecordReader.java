@@ -48,7 +48,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
   private final int numCols;
 
   public HiveTextRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns, FragmentContext context) throws ExecutionSetupException {
-    super(table, partition, inputSplit, projectedColumns, context, null);
+    super(table, partition, inputSplit, projectedColumns, context, null, null);
     String d = table.getSd().getSerdeInfo().getParameters().get("field.delim");
     if (d != null) {
       delimiter = d.getBytes()[0];

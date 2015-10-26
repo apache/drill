@@ -25,11 +25,13 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputSplit;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
 
@@ -42,6 +44,8 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
     List<Partition> partitions = config.getPartitions();
     boolean hasPartitions = (partitions != null && partitions.size() > 0);
     int i = 0;
+    final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(config.getUserName(),
+      context.getQueryUserName());
 
     // Native hive text record reader doesn't handle all types currently. For now use HiveRecordReader which uses
     // Hive InputFormat and SerDe classes to read the data.
@@ -57,7 +61,7 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
       for (InputSplit split : splits) {
         readers.add(new HiveRecordReader(table,
             (hasPartitions ? partitions.get(i++) : null),
-            split, config.getColumns(), context, config.getHiveReadEntry().hiveConfigOverride));
+            split, config.getColumns(), context, config.getHiveReadEntry().hiveConfigOverride, proxyUgi));
       }
     //}
 
@@ -65,7 +69,7 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
     // output the schema
     if (readers.size() == 0) {
       readers.add(new HiveRecordReader(table, null, null, config.getColumns(), context,
-          config.getHiveReadEntry().hiveConfigOverride));
+          config.getHiveReadEntry().hiveConfigOverride, proxyUgi));
     }
 
     return new ScanBatch(config, context, readers.iterator());

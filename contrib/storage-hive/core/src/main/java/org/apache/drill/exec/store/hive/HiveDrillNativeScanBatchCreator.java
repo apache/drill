@@ -39,6 +39,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.DirectCodecFactory;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -150,7 +151,8 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, columns, context, hiveConfigOverride));
+      readers.add(new HiveRecordReader(table, null, null, columns, context, hiveConfigOverride,
+        ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
     return new ScanBatch(config, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);

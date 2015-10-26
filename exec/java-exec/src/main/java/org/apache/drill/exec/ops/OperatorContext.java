@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.ops;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.Callable;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public abstract class OperatorContext {
 
@@ -43,6 +46,17 @@ public abstract class OperatorContext {
   public abstract ExecutionControls getExecutionControls();
 
   public abstract DrillFileSystem newFileSystem(Configuration conf) throws IOException;
+
+  /**
+   * Run the callable as the given proxy user.
+   *
+   * @param proxyUgi proxy user group information
+   * @param callable callable to run
+   * @param <RESULT> result type
+   * @return Future<RESULT> future with the result of calling the callable
+   */
+  public abstract <RESULT> ListenableFuture<RESULT> runCallableAs(UserGroupInformation proxyUgi,
+                                                                  Callable<RESULT> callable);
 
   public static int getChildCount(PhysicalOperator popConfig) {
     Iterator<PhysicalOperator> iter = popConfig.iterator();
