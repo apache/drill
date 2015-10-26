@@ -18117,21 +18117,6 @@ public final class UserBitShared {
      * <code>optional int64 wait_nanos = 9;</code>
      */
     long getWaitNanos();
-
-    // optional string operator_name = 10;
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    boolean hasOperatorName();
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    java.lang.String getOperatorName();
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    com.google.protobuf.ByteString
-        getOperatorNameBytes();
   }
   /**
    * Protobuf type {@code exec.shared.OperatorProfile}
@@ -18228,11 +18213,6 @@ public final class UserBitShared {
             case 72: {
               bitField0_ |= 0x00000020;
               waitNanos_ = input.readInt64();
-              break;
-            }
-            case 82: {
-              bitField0_ |= 0x00000040;
-              operatorName_ = input.readBytes();
               break;
             }
           }
@@ -18449,49 +18429,6 @@ public final class UserBitShared {
       return waitNanos_;
     }
 
-    // optional string operator_name = 10;
-    public static final int OPERATOR_NAME_FIELD_NUMBER = 10;
-    private java.lang.Object operatorName_;
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    public boolean hasOperatorName() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
-    }
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    public java.lang.String getOperatorName() {
-      java.lang.Object ref = operatorName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          operatorName_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>optional string operator_name = 10;</code>
-     */
-    public com.google.protobuf.ByteString
-        getOperatorNameBytes() {
-      java.lang.Object ref = operatorName_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        operatorName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
     private void initFields() {
       inputProfile_ = java.util.Collections.emptyList();
       operatorId_ = 0;
@@ -18501,7 +18438,6 @@ public final class UserBitShared {
       peakLocalMemoryAllocated_ = 0L;
       metric_ = java.util.Collections.emptyList();
       waitNanos_ = 0L;
-      operatorName_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -18538,9 +18474,6 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeInt64(9, waitNanos_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        output.writeBytes(10, getOperatorNameBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -18582,10 +18515,6 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(9, waitNanos_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(10, getOperatorNameBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -18729,8 +18658,6 @@ public final class UserBitShared {
         }
         waitNanos_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000080);
-        operatorName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -18801,10 +18728,6 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000020;
         }
         result.waitNanos_ = waitNanos_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000040;
-        }
-        result.operatorName_ = operatorName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -18890,11 +18813,6 @@ public final class UserBitShared {
         }
         if (other.hasWaitNanos()) {
           setWaitNanos(other.getWaitNanos());
-        }
-        if (other.hasOperatorName()) {
-          bitField0_ |= 0x00000100;
-          operatorName_ = other.operatorName_;
-          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -19601,80 +19519,6 @@ public final class UserBitShared {
         return this;
       }
 
-      // optional string operator_name = 10;
-      private java.lang.Object operatorName_ = "";
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public boolean hasOperatorName() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
-      }
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public java.lang.String getOperatorName() {
-        java.lang.Object ref = operatorName_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          operatorName_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public com.google.protobuf.ByteString
-          getOperatorNameBytes() {
-        java.lang.Object ref = operatorName_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          operatorName_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public Builder setOperatorName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000100;
-        operatorName_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public Builder clearOperatorName() {
-        bitField0_ = (bitField0_ & ~0x00000100);
-        operatorName_ = getDefaultInstance().getOperatorName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string operator_name = 10;</code>
-       */
-      public Builder setOperatorNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000100;
-        operatorName_ = value;
-        onChanged();
-        return this;
-      }
-
       // @@protoc_insertion_point(builder_scope:exec.shared.OperatorProfile)
     }
 
@@ -20276,21 +20120,6 @@ public final class UserBitShared {
      * <code>optional double double_value = 3;</code>
      */
     double getDoubleValue();
-
-    // optional string metric_name = 4;
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    boolean hasMetricName();
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    java.lang.String getMetricName();
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    com.google.protobuf.ByteString
-        getMetricNameBytes();
   }
   /**
    * Protobuf type {@code exec.shared.MetricValue}
@@ -20356,11 +20185,6 @@ public final class UserBitShared {
             case 25: {
               bitField0_ |= 0x00000004;
               doubleValue_ = input.readDouble();
-              break;
-            }
-            case 34: {
-              bitField0_ |= 0x00000008;
-              metricName_ = input.readBytes();
               break;
             }
           }
@@ -20451,54 +20275,10 @@ public final class UserBitShared {
       return doubleValue_;
     }
 
-    // optional string metric_name = 4;
-    public static final int METRIC_NAME_FIELD_NUMBER = 4;
-    private java.lang.Object metricName_;
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    public boolean hasMetricName() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    public java.lang.String getMetricName() {
-      java.lang.Object ref = metricName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          metricName_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>optional string metric_name = 4;</code>
-     */
-    public com.google.protobuf.ByteString
-        getMetricNameBytes() {
-      java.lang.Object ref = metricName_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        metricName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
     private void initFields() {
       metricId_ = 0;
       longValue_ = 0L;
       doubleValue_ = 0D;
-      metricName_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -20521,9 +20301,6 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeDouble(3, doubleValue_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, getMetricNameBytes());
-      }
       getUnknownFields().writeTo(output);
     }
 
@@ -20544,10 +20321,6 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(3, doubleValue_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, getMetricNameBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -20671,8 +20444,6 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00000002);
         doubleValue_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000004);
-        metricName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -20713,10 +20484,6 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000004;
         }
         result.doubleValue_ = doubleValue_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.metricName_ = metricName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -20741,11 +20508,6 @@ public final class UserBitShared {
         }
         if (other.hasDoubleValue()) {
           setDoubleValue(other.getDoubleValue());
-        }
-        if (other.hasMetricName()) {
-          bitField0_ |= 0x00000008;
-          metricName_ = other.metricName_;
-          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -20869,80 +20631,6 @@ public final class UserBitShared {
       public Builder clearDoubleValue() {
         bitField0_ = (bitField0_ & ~0x00000004);
         doubleValue_ = 0D;
-        onChanged();
-        return this;
-      }
-
-      // optional string metric_name = 4;
-      private java.lang.Object metricName_ = "";
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public boolean hasMetricName() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public java.lang.String getMetricName() {
-        java.lang.Object ref = metricName_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          metricName_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public com.google.protobuf.ByteString
-          getMetricNameBytes() {
-        java.lang.Object ref = metricName_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          metricName_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public Builder setMetricName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000008;
-        metricName_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public Builder clearMetricName() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        metricName_ = getDefaultInstance().getMetricName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string metric_name = 4;</code>
-       */
-      public Builder setMetricNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000008;
-        metricName_ = value;
         onChanged();
         return this;
       }
@@ -21136,44 +20824,43 @@ public final class UserBitShared {
       "\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027" +
       "\n\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(" +
       "\0132\026.exec.DrillbitEndpoint\022\023\n\013last_update" +
-      "\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\226\002\n\017Operat" +
+      "\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017Operat" +
       "orProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec." +
       "shared.StreamProfile\022\023\n\013operator_id\030\003 \001(" +
       "\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_nanos\030" +
       "\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_loc" +
       "al_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(",
       "\0132\030.exec.shared.MetricValue\022\022\n\nwait_nano" +
-      "s\030\t \001(\003\022\025\n\roperator_name\030\n \001(\t\"B\n\rStream" +
-      "Profile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(" +
-      "\003\022\017\n\007schemas\030\003 \001(\003\"_\n\013MetricValue\022\021\n\tmet" +
-      "ric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014doub" +
-      "le_value\030\003 \001(\001\022\023\n\013metric_name\030\004 \001(\t*5\n\nR" +
-      "pcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001" +
-      "\022\010\n\004USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGI" +
-      "CAL\020\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013\n" +
-      "\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007R",
-      "UNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n" +
-      "\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005" +
-      "\n\020CoreOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n" +
-      "\020BROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_" +
-      "AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN" +
-      "\020\005\022\031\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007" +
-      "\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTIT" +
-      "ION_SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_R" +
-      "ECEIVER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022" +
-      "\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMI",
-      "NG_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERN" +
-      "AL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_S" +
-      "ORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIV" +
-      "E_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rM" +
-      "OCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DI" +
-      "RECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT" +
-      "_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_S" +
-      "CHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n" +
-      "\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!" +
-      "\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAV",
-      "RO_SUB_SCAN\020$B.\n\033org.apache.drill.exec.p" +
-      "rotoB\rUserBitSharedH\001"
+      "s\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(" +
+      "\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013M" +
+      "etricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_va" +
+      "lue\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\nRpcCh" +
+      "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004" +
+      "USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020" +
+      "\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013\n\007SEN" +
+      "DING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNI" +
+      "NG\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAI",
+      "LED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Co" +
+      "reOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BRO" +
+      "ADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGR" +
+      "EGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031" +
+      "\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020" +
+      "MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_" +
+      "SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEI" +
+      "VER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030S" +
+      "ELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_A" +
+      "GGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_S",
+      "ORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020" +
+      "\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SU" +
+      "B_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_" +
+      "SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT" +
+      "_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB" +
+      "_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEM" +
+      "A_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRO" +
+      "DUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006" +
+      "WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_S" +
+      "UB_SCAN\020$B.\n\033org.apache.drill.exec.proto",
+      "B\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -21281,7 +20968,7 @@ public final class UserBitShared {
           internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_OperatorProfile_descriptor,
-              new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", "OperatorName", });
+              new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", });
           internal_static_exec_shared_StreamProfile_descriptor =
             getDescriptor().getMessageTypes().get(17);
           internal_static_exec_shared_StreamProfile_fieldAccessorTable = new
@@ -21293,7 +20980,7 @@ public final class UserBitShared {
           internal_static_exec_shared_MetricValue_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MetricValue_descriptor,
-              new java.lang.String[] { "MetricId", "LongValue", "DoubleValue", "MetricName", });
+              new java.lang.String[] { "MetricId", "LongValue", "DoubleValue", });
           return null;
         }
       };

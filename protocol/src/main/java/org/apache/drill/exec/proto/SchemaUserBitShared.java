@@ -2293,8 +2293,6 @@ public final class SchemaUserBitShared
 
                 if(message.hasWaitNanos())
                     output.writeInt64(9, message.getWaitNanos(), false);
-                if(message.hasOperatorName())
-                    output.writeString(10, message.getOperatorName(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.OperatorProfile message)
             {
@@ -2360,9 +2358,6 @@ public final class SchemaUserBitShared
                         case 9:
                             builder.setWaitNanos(input.readInt64());
                             break;
-                        case 10:
-                            builder.setOperatorName(input.readString());
-                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -2411,7 +2406,6 @@ public final class SchemaUserBitShared
                 case 7: return "peakLocalMemoryAllocated";
                 case 8: return "metric";
                 case 9: return "waitNanos";
-                case 10: return "operatorName";
                 default: return null;
             }
         }
@@ -2431,7 +2425,6 @@ public final class SchemaUserBitShared
             fieldMap.put("peakLocalMemoryAllocated", 7);
             fieldMap.put("metric", 8);
             fieldMap.put("waitNanos", 9);
-            fieldMap.put("operatorName", 10);
         }
     }
 
@@ -2577,8 +2570,6 @@ public final class SchemaUserBitShared
                     output.writeInt64(2, message.getLongValue(), false);
                 if(message.hasDoubleValue())
                     output.writeDouble(3, message.getDoubleValue(), false);
-                if(message.hasMetricName())
-                    output.writeString(4, message.getMetricName(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.MetricValue message)
             {
@@ -2627,9 +2618,6 @@ public final class SchemaUserBitShared
                         case 3:
                             builder.setDoubleValue(input.readDouble());
                             break;
-                        case 4:
-                            builder.setMetricName(input.readString());
-                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -2673,7 +2661,6 @@ public final class SchemaUserBitShared
                 case 1: return "metricId";
                 case 2: return "longValue";
                 case 3: return "doubleValue";
-                case 4: return "metricName";
                 default: return null;
             }
         }
@@ -2688,7 +2675,6 @@ public final class SchemaUserBitShared
             fieldMap.put("metricId", 1);
             fieldMap.put("longValue", 2);
             fieldMap.put("doubleValue", 3);
-            fieldMap.put("metricName", 4);
         }
     }
 

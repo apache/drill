@@ -50,8 +50,8 @@ public class ScreenCreator implements RootCreator<Screen> {
     return new ScreenRoot(context, children.iterator().next(), config);
   }
 
-
   public static class ScreenRoot extends BaseRootExec {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final FragmentContext context;
     private final AccountingUserConnection userConnection;

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,26 +28,27 @@ import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBa
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 /**
- * Helper class to retrieve operator metric names.
+ * Registry of operator metrics.
  */
-public class OperatorMetricsMapping {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorToMetricsMapping.class);
+public class OperatorMetricRegistry {
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorMetricRegistry.class);
 
   // Mapping: operator type --> metric id --> metric name
   private static final String[][] OPERATOR_METRICS = new String[CoreOperatorType.values().length][];
 
   static {
-    addMetricNames(CoreOperatorType.SCREEN_VALUE, ScreenCreator.ScreenRoot.Metric.class);
-    addMetricNames(CoreOperatorType.SINGLE_SENDER_VALUE, SingleSenderCreator.SingleSenderRootExec.Metric.class);
-    addMetricNames(CoreOperatorType.BROADCAST_SENDER_VALUE, BroadcastSenderRootExec.Metric.class);
-    addMetricNames(CoreOperatorType.HASH_PARTITION_SENDER_VALUE, PartitionSenderRootExec.Metric.class);
-    addMetricNames(CoreOperatorType.MERGING_RECEIVER_VALUE, MergingRecordBatch.Metric.class);
-    addMetricNames(CoreOperatorType.UNORDERED_RECEIVER_VALUE, UnorderedReceiverBatch.Metric.class);
-    addMetricNames(CoreOperatorType.HASH_AGGREGATE_VALUE, HashAggTemplate.Metric.class);
-    addMetricNames(CoreOperatorType.HASH_JOIN_VALUE, HashJoinBatch.Metric.class);
+    register(CoreOperatorType.SCREEN_VALUE, ScreenCreator.ScreenRoot.Metric.class);
+    register(CoreOperatorType.SINGLE_SENDER_VALUE, SingleSenderCreator.SingleSenderRootExec.Metric.class);
+    register(CoreOperatorType.BROADCAST_SENDER_VALUE, BroadcastSenderRootExec.Metric.class);
+    register(CoreOperatorType.HASH_PARTITION_SENDER_VALUE, PartitionSenderRootExec.Metric.class);
+    register(CoreOperatorType.MERGING_RECEIVER_VALUE, MergingRecordBatch.Metric.class);
+    register(CoreOperatorType.UNORDERED_RECEIVER_VALUE, UnorderedReceiverBatch.Metric.class);
+    register(CoreOperatorType.HASH_AGGREGATE_VALUE, HashAggTemplate.Metric.class);
+    register(CoreOperatorType.HASH_JOIN_VALUE, HashJoinBatch.Metric.class);
   }
 
-  private static void addMetricNames(final int operatorType, final Class<? extends MetricDef> metricDef) {
+  private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {
+    // Currently registers a metric def that has enum constants
     final MetricDef[] enumConstants = metricDef.getEnumConstants();
     if (enumConstants != null) {
       final String[] names = new String[enumConstants.length];
@@ -59,13 +60,16 @@ public class OperatorMetricsMapping {
   }
 
   /**
-   * Given an operator type and a metric id, this method returns the metric name.
+   * Given an operator type, this method returns an array of metric names (indexable by metric id).
    *
    * @param operatorType the operator type
-   * @param metricId     metric id
-   * @return metric name if metric was registered, null otherwise
+   * @return metric names if operator was registered, null otherwise
    */
-  public static String getMetricName(final int operatorType, final int metricId) {
-    return OPERATOR_METRICS[operatorType] != null ? OPERATOR_METRICS[operatorType][metricId] : null;
+  public static String[] getMetricNames(final int operatorType) {
+    return OPERATOR_METRICS[operatorType];
+  }
+
+  // to prevent instantiation
+  private OperatorMetricRegistry() {
   }
 }

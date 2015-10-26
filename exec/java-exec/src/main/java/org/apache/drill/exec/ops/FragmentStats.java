@@ -55,6 +55,7 @@ public class FragmentStats {
 
   /**
    * Creates a new holder for operator statistics within this holder for fragment statistics.
+   *
    * @param profileDef operator profile definition
    * @param allocator the allocator being used
    * @return a new operator statistics holder

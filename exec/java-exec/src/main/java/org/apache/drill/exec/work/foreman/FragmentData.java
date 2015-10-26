@@ -17,13 +17,10 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import org.apache.drill.exec.ops.OperatorMetricsMapping;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
-import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 
@@ -67,31 +64,10 @@ public class FragmentData {
     return status.getProfile().getState();
   }
 
-  /**
-   * Gets the {@link MinorFragmentProfile} associated with this fragment data.
-   *
-   * @param addMetricNames if operator names and metric names should be added
-   * @return minor fragment profile
-   */
-  public MinorFragmentProfile getProfile(final boolean addMetricNames) {
-    final MinorFragmentProfile.Builder miBuilder = status.getProfile().toBuilder();
-    if (addMetricNames) {
-      for (int i = 0; i < miBuilder.getOperatorProfileCount(); i++) {
-        final OperatorProfile.Builder opBuilder = miBuilder.getOperatorProfileBuilder(i);
-        final int operatorType = opBuilder.getOperatorType();
-        opBuilder.setOperatorName(CoreOperatorType.valueOf(operatorType).name());
-        for (int j = 0; j < opBuilder.getMetricCount(); j++) {
-          final MetricValue.Builder meBuilder = opBuilder.getMetricBuilder(j);
-          final String metricName = OperatorMetricsMapping.getMetricName(operatorType, meBuilder.getMetricId());
-          if (metricName != null) {
-            meBuilder.setMetricName(metricName);
-          }
-          opBuilder.setMetric(j, meBuilder);
-        }
-        miBuilder.setOperatorProfile(i, opBuilder);
-      }
-    }
-    return miBuilder
+  public MinorFragmentProfile getProfile() {
+    return status
+        .getProfile()
+        .toBuilder()
         .setLastUpdate(lastStatusUpdate)
         .setLastProgress(lastProgress)
         .build();

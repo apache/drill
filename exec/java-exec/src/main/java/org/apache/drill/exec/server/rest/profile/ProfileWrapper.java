@@ -32,7 +32,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 /**
- * This class contains information presented in the query profile web UI.
+ * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
  */
 public class ProfileWrapper {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);

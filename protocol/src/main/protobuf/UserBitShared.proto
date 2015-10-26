@@ -230,7 +230,6 @@ message OperatorProfile {
   optional int64 peak_local_memory_allocated = 7;
   repeated MetricValue metric = 8;
   optional int64 wait_nanos = 9;
-  optional string operator_name = 10;
 }
 
 message StreamProfile {
@@ -243,7 +242,6 @@ message MetricValue {
   optional int32 metric_id = 1;
   optional int64 long_value = 2;
   optional double double_value = 3;
-  optional string metric_name = 4;
 }
 
 enum FragmentState {
