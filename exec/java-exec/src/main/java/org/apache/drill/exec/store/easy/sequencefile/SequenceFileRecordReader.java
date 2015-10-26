@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.easy.sequencefile;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -27,6 +28,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -55,10 +57,11 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
 
   private NullableVarBinaryVector keyVector;
   private NullableVarBinaryVector valueVector;
-  private FileSplit split;
+  private final FileSplit split;
   private org.apache.hadoop.mapred.RecordReader<BytesWritable, BytesWritable> reader;
-  private BytesWritable key = new BytesWritable();
-  private BytesWritable value = new BytesWritable();
+  private final BytesWritable key = new BytesWritable();
+  private final BytesWritable value = new BytesWritable();
+  private final Configuration fsConf;
 
   public SequenceFileRecordReader(final FileSplit split,
                                   final Configuration fsConf) {
@@ -66,17 +69,8 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
     columns.add(keySchema);
     columns.add(valueSchema);
     setColumns(columns);
-    SequenceFileAsBinaryInputFormat inputFormat = new SequenceFileAsBinaryInputFormat();
+    this.fsConf = fsConf;
     this.split = split;
-    JobConf jobConf = new JobConf(fsConf);
-    jobConf.setInputFormat(inputFormat.getClass());
-    try {
-      this.reader = inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
-    } catch (IOException ioe) {
-      throw new DrillRuntimeException(
-        String.format("Error in creating sequencefile reader for file: %s, start: %d, length: %d",
-          split.getPath(), split.getStart(), split.getLength()), ioe);
-    }
   }
 
   @Override
@@ -86,19 +80,29 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    MaterializedField keyField = MaterializedField.create(keySchema, KEY_TYPE);
-    MaterializedField valueField = MaterializedField.create(valueSchema, VALUE_TYPE);
+    final SequenceFileAsBinaryInputFormat inputFormat = new SequenceFileAsBinaryInputFormat();
+    final JobConf jobConf = new JobConf(fsConf);
+    jobConf.setInputFormat(inputFormat.getClass());
+    try {
+      this.reader = inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
+    } catch (IOException ioe) {
+      throw new ExecutionSetupException(
+        String.format("Error in creating sequencefile reader for file: %s, start: %d, length: %d",
+          split.getPath(), split.getStart(), split.getLength()), ioe);
+    }
+    final MaterializedField keyField = MaterializedField.create(keySchema, KEY_TYPE);
+    final MaterializedField valueField = MaterializedField.create(valueSchema, VALUE_TYPE);
     try {
       keyVector = output.addField(keyField, NullableVarBinaryVector.class);
       valueVector = output.addField(valueField, NullableVarBinaryVector.class);
-    } catch (Exception e) {
-      throw new DrillRuntimeException(String.format("Error in setting up sequencefile reader."), e);
+    } catch (SchemaChangeException sce) {
+      throw new ExecutionSetupException(String.format("Error in setting up sequencefile reader."), sce);
     }
   }
 
   @Override
   public int next() {
-    Stopwatch watch = new Stopwatch();
+    final Stopwatch watch = new Stopwatch();
     watch.start();
     if (keyVector != null) {
       keyVector.clear();
@@ -119,6 +123,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
       }
       keyVector.getMutator().setValueCount(recordCount);
       valueVector.getMutator().setValueCount(recordCount);
+      logger.debug("Read {} records in {} ms", recordCount, watch.elapsed(TimeUnit.MILLISECONDS));
       return recordCount;
     } catch (IOException ioe) {
       close();
