@@ -42,7 +42,7 @@
       Apache Hive 1.0.0. If the version is changed, make sure the jars and their dependencies are updated.
     -->
     <hive.version>1.0.0</hive.version>
-    <hadoop.version>2.4.1</hadoop.version>
+    <hadoop.version>2.7.1</hadoop.version>
   </properties>
 
   <scm>
