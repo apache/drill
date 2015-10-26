@@ -62,6 +62,7 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -145,7 +146,12 @@ public class DrillSqlWorker {
       injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
       sqlNode = planner.parse(sql);
     } catch (SqlParseException e) {
-      throw UserException.parseError(e).build(logger);
+      throw UserException
+        .parseError(e)
+        .addContext(
+            "while parsing SQL query:\n" +
+            formatSQLParsingError(sql, e.getPos()))
+        .build(logger);
     }
 
     AbstractSqlHandler handler;
@@ -190,5 +196,27 @@ public class DrillSqlWorker {
     } catch (IOException | RelConversionException e) {
       throw new QueryInputException("Failure handling SQL.", e);
     }
+  }
+
+  /**
+   *
+   * @param sql the SQL sent to the server
+   * @param pos the position of the error
+   * @return The sql with a ^ character under the error
+   */
+  static String formatSQLParsingError(String sql, SqlParserPos pos) {
+    StringBuilder sb = new StringBuilder();
+    String[] lines = sql.split("\n");
+    for (int i = 0; i < lines.length; i++) {
+      String line = lines[i];
+      sb.append(line).append("\n");
+      if (i == (pos.getLineNum() - 1)) {
+        for (int j = 0; j < pos.getColumnNum() - 1; j++) {
+          sb.append(" ");
+        }
+        sb.append("^\n");
+      }
+    }
+    return sb.toString();
   }
 }

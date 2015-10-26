@@ -122,6 +122,9 @@ public class BaseTestQuery extends ExecTest {
     config = DrillConfig.create(TEST_CONFIGURATIONS);
     classpathScan = ClassPathScanner.fromPrescan(config);
     openClient();
+    // turns on the verbose errors in tests
+    // sever side stacktraces are added to the message before sending back to the client
+    test("ALTER SESSION SET `exec.errors.verbose` = true");
   }
 
   protected static void updateTestCluster(int newDrillbitCount, DrillConfig newConfig) {
