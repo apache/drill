@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Set;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -83,8 +85,8 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-
 import org.joda.time.DateTimeUtils;
+
 import parquet.io.api.Binary;
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
@@ -97,6 +99,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+
 import parquet.schema.OriginalType;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 
@@ -325,6 +328,15 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     Object max = columnChunkMetaData.max;
     Object min = columnChunkMetaData.min;
     return max != null && max.equals(min);
+/*
+    if (max != null && min != null) {
+      if (max instanceof byte[] && min instanceof byte[]) {
+        return Arrays.equals((byte[])max, (byte[])min);
+      }
+      return max.equals(min);
+    }
+    return false;
+*/
   }
 
   @Override
@@ -411,8 +423,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
     case VARBINARY: {
       NullableVarBinaryVector varBinaryVector = (NullableVarBinaryVector) v;
-      Binary value = (Binary) partitionValueMap.get(f).get(column);
-      byte[] bytes = value.getBytes();
+      Object s = partitionValueMap.get(f).get(column);
+      byte[] bytes;
+      if (s instanceof Binary) {
+        bytes = ((Binary) s).getBytes();
+      } else if (s instanceof String) {
+        bytes = ((String) s).getBytes();
+      } else if (s instanceof byte[]) {
+        bytes = (byte[])s;
+      } else {
+        throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+      }
       varBinaryVector.getMutator().setSafe(index, bytes, 0, bytes.length);
       return;
     }
@@ -442,8 +463,17 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
     case VARCHAR: {
       NullableVarCharVector varCharVector = (NullableVarCharVector) v;
-      Binary value = (Binary) partitionValueMap.get(f).get(column);
-      byte[] bytes = value.getBytes();
+      Object s = partitionValueMap.get(f).get(column);
+      byte[] bytes;
+      if (s instanceof String) { // if the metadata was read from a JSON cache file it maybe a string type
+        bytes = ((String) s).getBytes();
+      } else if (s instanceof Binary) {
+        bytes = ((Binary) s).getBytes();
+      } else if (s instanceof byte[]) {
+        bytes = (byte[])s;
+      } else {
+        throw new UnsupportedOperationException("Unable to create column data for type: " + type);
+      }
       varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
       return;
     }
@@ -603,6 +633,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
             }
             Object value = map.get(schemaPath);
             Object currentValue = column.max;
+//            Object currentValue = column.getMax();
             if (value != null) {
               if (value != currentValue) {
                 columnTypeMap.remove(schemaPath);

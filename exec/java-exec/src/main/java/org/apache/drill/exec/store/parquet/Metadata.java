@@ -29,22 +29,24 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.SchemaPath.De;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import parquet.column.statistics.Statistics;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
+import parquet.io.api.Binary;
 import parquet.schema.GroupType;
 import parquet.schema.MessageType;
 import parquet.schema.OriginalType;
@@ -475,11 +477,12 @@ public class Metadata {
     @JsonProperty
     public OriginalType originalType;
     @JsonProperty
-    public Object max;
-    @JsonProperty
-    public Object min;
-    @JsonProperty
     public Long nulls;
+
+    // JsonProperty for these are associated with the getters and setters
+    public Object max;
+    public Object min;
+
 
     public ColumnMetadata() {
       super();
@@ -494,5 +497,40 @@ public class Metadata {
       this.min = min;
       this.nulls = nulls;
     }
+
+    @JsonProperty(value = "min")
+    public Object getMin() {
+      if (primitiveType == PrimitiveTypeName.BINARY && min != null) {
+         return new String(((Binary) min).getBytes());
+      }
+      return min;
+    }
+
+    @JsonProperty(value = "max")
+    public Object getMax() {
+      if (primitiveType == PrimitiveTypeName.BINARY && max != null) {
+        return new String(((Binary) max).getBytes());
+      }
+      return max;
+    }
+
+    /**
+     * setter used during deserialization of the 'min' field of the metadata cache file.
+     * @param min
+     */
+    @JsonProperty(value = "min")
+    public void setMin(Object min) {
+      this.min = min;
+     }
+
+    /**
+     * setter used during deserialization of the 'max' field of the metadata cache file.
+     * @param max
+     */
+    @JsonProperty(value = "max")
+    public void setMax(Object max) {
+      this.max = max;
+    }
+
   }
 }
