@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.calcite.schema.SchemaPlus;
 
@@ -46,7 +47,7 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   public HBaseStoragePlugin(HBaseStoragePluginConfig configuration, DrillbitContext context, String name)
       throws IOException {
     this.context = context;
-    this.schemaFactory = new HBaseSchemaFactory(this, name);
+    this.schemaFactory = new HBaseSchemaFactory(this, name, context);
     this.engineConfig = configuration;
     this.name = name;
   }

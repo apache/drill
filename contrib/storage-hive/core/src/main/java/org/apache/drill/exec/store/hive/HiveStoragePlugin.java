@@ -43,7 +43,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HiveStoragePlugin extends AbstractStoragePlugin {
-
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStoragePlugin.class);
 
   private final HiveStoragePluginConfig config;

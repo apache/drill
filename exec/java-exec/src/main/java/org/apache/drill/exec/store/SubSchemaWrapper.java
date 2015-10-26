@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
@@ -93,13 +94,23 @@ public class SubSchemaWrapper extends AbstractSchema {
   }
 
   @Override
-  public Table getTable(String name) {
-    return innerSchema.getTable(name);
+  public Table getTable(final String name) {
+    return safeGetTable(new SafeTableGetter() {
+      @Override
+      public Table safeGetTable() {
+        return innerSchema.getTable(name);
+      }
+    });
   }
 
   @Override
   public Set<String> getTableNames() {
-    return innerSchema.getTableNames();
+    return safeGetTableNames(new SafeTableNamesGetter() {
+      @Override
+      public Set<String> safeGetTableNames() {
+        return innerSchema.getTableNames();
+      }
+    });
   }
 
   @Override

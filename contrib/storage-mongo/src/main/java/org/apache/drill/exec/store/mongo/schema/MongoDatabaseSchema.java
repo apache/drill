@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.mongo.schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.Maps;
 import org.apache.calcite.schema.Table;
@@ -48,27 +48,35 @@ public class MongoDatabaseSchema extends AbstractSchema {
   }
 
   @Override
-  public Table getTable(String tableName) {
-    if (!tableNames.contains(tableName)) { // table does not exist
-      return null;
-    }
+  public Table getTable(final String tableName) {
+    final String schemaName = this.name;
+    return safeGetTable(new SafeTableGetter() {
+      @Override
+      public Table safeGetTable() {
+        if (!tableNames.contains(tableName)) { // table does not exist
+          return null;
+        }
 
-    if (! drillTables.containsKey(tableName)) {
-      drillTables.put(tableName, mongoSchema.getDrillTable(this.name, tableName));
-    }
-
-    return drillTables.get(tableName);
-
+        if (! drillTables.containsKey(tableName)) {
+          drillTables.put(tableName, mongoSchema.getDrillTable(schemaName, tableName));
+        }
+        return drillTables.get(tableName);
+      }
+    });
   }
 
   @Override
   public Set<String> getTableNames() {
-    return tableNames;
+    return safeGetTableNames(new SafeTableNamesGetter() {
+      @Override
+      public Set<String> safeGetTableNames() {
+        return tableNames;
+      }
+    });
   }
 
   @Override
   public String getTypeName() {
     return MongoStoragePluginConfig.NAME;
   }
-
 }

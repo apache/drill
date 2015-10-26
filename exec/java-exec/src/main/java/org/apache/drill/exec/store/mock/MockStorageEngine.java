@@ -63,6 +63,4 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   public StoragePluginConfig getConfig() {
     return configuration;
   }
-
-
 }

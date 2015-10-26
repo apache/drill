@@ -269,19 +269,27 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
     @Override
     public Set<String> getTableNames() {
-      return inner.getTableNames();
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          return inner.getTableNames();
+        }
+      });
     }
 
     @Override
-    public Table getTable(String name) {
-      Table table = inner.getTable(name);
-      if (table != null) {
-        return table;
-      }
-      return inner.getTable(name.toUpperCase());
-
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          Table table = inner.getTable(name);
+          if (table != null) {
+            return table;
+          }
+          return inner.getTable(name.toUpperCase());
+        }
+      });
     }
-
   }
 
   private class JdbcCatalogSchema extends AbstractSchema {
@@ -335,24 +343,33 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     @Override
-    public Table getTable(String name) {
-      Schema schema = getDefaultSchema();
-      if (schema != null) {
-        Table t = schema.getTable(name);
-        if (t != null) {
-          return t;
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          final Schema schema = getDefaultSchema();
+          if (schema != null) {
+            Table t = schema.getTable(name);
+            if (t != null) {
+              return t;
+            }
+            return schema.getTable(name.toUpperCase());
+          } else {
+            return null;
+          }
         }
-        return schema.getTable(name.toUpperCase());
-      } else {
-        return null;
-      }
+      });
     }
 
     @Override
     public Set<String> getTableNames() {
-      return defaultSchema.getTableNames();
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+            return defaultSchema.getTableNames();
+        }
+      });
     }
-
   }
 
   @Override

@@ -22,15 +22,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -46,7 +45,7 @@ import org.apache.hadoop.fs.Path;
 /**
  * This is the top level schema that responds to root level path requests. Also supports
  */
-public class FileSystemSchemaFactory implements SchemaFactory{
+public class FileSystemSchemaFactory implements SchemaFactory {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemSchemaFactory.class);
 
   public static final String DEFAULT_WS_NAME = "default";
@@ -68,7 +67,6 @@ public class FileSystemSchemaFactory implements SchemaFactory{
   }
 
   public class FileSystemSchema extends AbstractSchema {
-
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
 
@@ -115,8 +113,13 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
-    public Table getTable(String name) {
-      return defaultSchema.getTable(name);
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          return defaultSchema.getTable(name);
+        }
+      });
     }
 
     @Override
@@ -141,7 +144,12 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     @Override
     public Set<String> getTableNames() {
-      return defaultSchema.getTableNames();
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          return defaultSchema.getTableNames();
+        }
+      });
     }
 
     @Override

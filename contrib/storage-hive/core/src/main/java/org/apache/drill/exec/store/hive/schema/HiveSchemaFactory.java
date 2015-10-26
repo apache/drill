@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.calcite.schema.SchemaPlus;
 
+import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
@@ -163,19 +166,31 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public org.apache.calcite.schema.Table getTable(String name) {
-      if (defaultSchema == null) {
-        return super.getTable(name);
-      }
-      return defaultSchema.getTable(name);
+    public Table getTable(final String name) {
+      final AbstractSchema schema = this;
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          if (defaultSchema == null) {
+            return schema.getDefaultTable();
+          }
+          return defaultSchema.getTable(name);
+        }
+      });
     }
 
     @Override
     public Set<String> getTableNames() {
-      if (defaultSchema == null) {
-        return super.getTableNames();
-      }
-      return defaultSchema.getTableNames();
+      final AbstractSchema schema = this;
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          if (defaultSchema == null) {
+            return schema.getDefaultTableNames();
+          }
+          return defaultSchema.getTableNames();
+        }
+      });
     }
 
     DrillTable getDrillTable(String dbName, String t) {

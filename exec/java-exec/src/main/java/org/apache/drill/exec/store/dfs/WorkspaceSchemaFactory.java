@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
@@ -35,7 +36,6 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -221,7 +221,12 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public Set<String> getTableNames() {
-      return Sets.union(tables.keySet(), getViews());
+      return safeGetTableNames(new SafeTableNamesGetter() {
+        @Override
+        public Set<String> safeGetTableNames() {
+          return Sets.union(tables.keySet(), getViews());
+        }
+      });
     }
 
     private View getView(DotDrillFile f) throws IOException{
@@ -230,50 +235,55 @@ public class WorkspaceSchemaFactory {
     }
 
     @Override
-    public Table getTable(String name) {
-      // first check existing tables.
-      if(tables.alreadyContainsKey(name)) {
-        return tables.get(name);
-      }
-
-      // then look for files that start with this name and end in .drill.
-      List<DotDrillFile> files = Collections.EMPTY_LIST;
-      try {
-        try {
-          files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), name, DotDrillType.VIEW);
-        } catch(AccessControlException e) {
-          if (!schemaConfig.getIgnoreAuthErrors()) {
-            logger.debug(e.getMessage());
-            throw UserException.permissionError(e)
-              .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
-              .build(logger);
+    public Table getTable(final String name) {
+      return safeGetTable(new SafeTableGetter() {
+        @Override
+        public Table safeGetTable() {
+          // first check existing tables.
+          if(tables.alreadyContainsKey(name)) {
+            return tables.get(name);
           }
-        } catch(IOException e) {
-          logger.warn("Failure while trying to list view tables in workspace [{}]", name, getFullSchemaName(), e);
-        }
 
-        for(DotDrillFile f : files) {
-          switch(f.getType()) {
-          case VIEW:
+          // then look for files that start with this name and end in .drill.
+          List<DotDrillFile> files = Collections.EMPTY_LIST;
+          try {
             try {
-              return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
-            } catch (AccessControlException e) {
+              files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), name, DotDrillType.VIEW);
+            } catch(AccessControlException e) {
               if (!schemaConfig.getIgnoreAuthErrors()) {
                 logger.debug(e.getMessage());
                 throw UserException.permissionError(e)
-                  .message("Not authorized to read view [%s] in schema [%s]", name, getFullSchemaName())
-                  .build(logger);
+                    .message("Not authorized to list or query tables in schema [%s]", getFullSchemaName())
+                    .build(logger);
               }
-            } catch (IOException e) {
-              logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", name, getFullSchemaName(), e);
+            } catch(IOException e) {
+                logger.warn("Failure while trying to list view tables in workspace [{}]", name, getFullSchemaName(), e);
             }
-          }
-        }
-      } catch (UnsupportedOperationException e) {
-        logger.debug("The filesystem for this workspace does not support this operation.", e);
-      }
 
-      return tables.get(name);
+            for(DotDrillFile f : files) {
+              switch(f.getType()) {
+                case VIEW:
+                  try {
+                    return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
+                  } catch (AccessControlException e) {
+                    if (!schemaConfig.getIgnoreAuthErrors()) {
+                      logger.debug(e.getMessage());
+                      throw UserException.permissionError(e)
+                          .message("Not authorized to read view [%s] in schema [%s]", name, getFullSchemaName())
+                          .build(logger);
+                    }
+                  } catch (IOException e) {
+                    logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", name, getFullSchemaName(), e);
+                  }
+              }
+            }
+          } catch (UnsupportedOperationException e) {
+            logger.debug("The filesystem for this workspace does not support this operation.", e);
+          }
+
+          return tables.get(name);
+        }
+      });
     }
 
     @Override
