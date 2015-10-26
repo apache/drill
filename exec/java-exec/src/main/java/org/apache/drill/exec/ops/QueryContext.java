@@ -28,6 +28,7 @@ import org.apache.calcite.jdbc.SimpleCalciteSchema;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -194,6 +195,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
 
   public StoragePluginRegistry getStorage() {
     return drillbitContext.getStorage();
+  }
+
+  public LogicalPlanPersistence getLpPersistence() {
+    return drillbitContext.getLpPersistence();
   }
 
   public Collection<DrillbitEndpoint> getActiveEndpoints() {

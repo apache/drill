@@ -26,6 +26,7 @@ import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
@@ -80,7 +81,8 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
         if (b.getData() != null) {
           int rows = b.getHeader().getRowCount();
           count += rows;
-          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
+          DrillConfig config = DrillConfig.create();
+          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(config, ClassPathScanner.fromPrescan(config)).getAllocator());
           loader.load(b.getHeader().getDef(), b.getData());
           BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(
                   new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();

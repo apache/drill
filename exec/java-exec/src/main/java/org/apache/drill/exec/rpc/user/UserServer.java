@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -66,13 +67,14 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   final BufferAllocator alloc;
   final UserAuthenticator authenticator;
 
-  public UserServer(DrillConfig config, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
+  public UserServer(DrillConfig config, ScanResult classpathScan, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
       UserWorker worker) throws DrillbitStartupException {
     super(UserRpcConfig.getMapping(config), alloc.getUnderlyingAllocator(), eventLoopGroup);
     this.worker = worker;
     this.alloc = alloc;
+    // TODO: move this up
     if (config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
-      authenticator = UserAuthenticatorFactory.createAuthenticator(config);
+      authenticator = UserAuthenticatorFactory.createAuthenticator(config, classpathScan);
     } else {
       authenticator = null;
     }

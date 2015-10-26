@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
@@ -41,6 +43,7 @@ import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.zookeeper.Environment;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 
 /**
@@ -65,9 +68,11 @@ public class Drillbit implements AutoCloseable {
   public static Drillbit start(final DrillConfig config, final RemoteServiceSet remoteServiceSet)
       throws DrillbitStartupException {
     logger.debug("Starting new Drillbit.");
+    // TODO: allow passing as a parameter
+    ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
     Drillbit bit;
     try {
-      bit = new Drillbit(config, remoteServiceSet);
+      bit = new Drillbit(config, remoteServiceSet, classpathScan);
     } catch (final Exception ex) {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
@@ -166,11 +171,21 @@ public class Drillbit implements AutoCloseable {
   private final WebServer webServer;
   private RegistrationHandle registrationHandle;
 
-  public Drillbit(final DrillConfig config, final RemoteServiceSet serviceSet) throws Exception {
+  @VisibleForTesting
+  public Drillbit(
+      final DrillConfig config,
+      final RemoteServiceSet serviceSet) throws Exception {
+    this(config, serviceSet, ClassPathScanner.fromPrescan(config));
+  }
+
+  public Drillbit(
+      final DrillConfig config,
+      final RemoteServiceSet serviceSet,
+      final ScanResult classpathScan) throws Exception {
     final Stopwatch w = new Stopwatch().start();
     logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
-    context = new BootStrapContext(config);
+    context = new BootStrapContext(config, classpathScan);
     manager = new WorkManager(context);
     engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context,
         manager.getWorkBus(), manager.getDataHandler(), allowPortHunting);
@@ -220,7 +235,6 @@ public class Drillbit implements AutoCloseable {
     if (coord != null && registrationHandle != null) {
       coord.unregister(registrationHandle);
     }
-
     try {
       Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2);
     } catch (final InterruptedException e) {

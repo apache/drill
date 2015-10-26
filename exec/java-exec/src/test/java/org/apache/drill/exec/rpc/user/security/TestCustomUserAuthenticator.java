@@ -22,15 +22,16 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Properties;
 
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_1;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_2;
-import static org.apache.drill.exec.rpc.user.security.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;

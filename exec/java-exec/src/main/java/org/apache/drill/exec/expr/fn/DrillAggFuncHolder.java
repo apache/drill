@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 import java.util.Map;
 
@@ -44,35 +47,30 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-class DrillAggFuncHolder extends DrillFuncHolder{
+class DrillAggFuncHolder extends DrillFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAggFuncHolder.class);
 
-  private final String setup;
-  private final String reset;
-  private final String add;
-  private final String output;
-  private final String cleanup;
-
-  public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-      Map<String, String> methods, List<String> imports) {
-    this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault());
+  private String setup() {
+    return meth("setup");
+  }
+  private String reset() {
+    return meth("reset", false);
+  }
+  private String add() {
+    return meth("add");
+  }
+  private String output() {
+    return meth("output");
+  }
+  private String cleanup() {
+    return meth("cleanup", false);
   }
 
-  public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
-      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
-      Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
-    super(scope, nullHandling, isBinaryCommutative, isRandom,
-      registeredNames, parameters, returnValue, workspaceVars, methods, imports, costCategory);
-    Preconditions.checkArgument(nullHandling == NullHandling.INTERNAL, "An aggregation function is required to do its own null handling.");
-    setup = methods.get("setup");
-    reset = methods.get("reset");
-    add = methods.get("add");
-    output = methods.get("output");
-    cleanup = methods.get("cleanup");
-    Preconditions.checkNotNull(add);
-    Preconditions.checkNotNull(output);
-    Preconditions.checkNotNull(reset);
+  public DrillAggFuncHolder(
+      FunctionAttributes attributes,
+      FunctionInitializer initializer) {
+    super(attributes, initializer);
+    checkArgument(attributes.getNullHandling() == NullHandling.INTERNAL, "An aggregation function is required to do its own null handling.");
   }
 
   @Override
@@ -89,7 +87,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
     if (!g.getMappingSet().isHashAggMapping()) {  //Declare workspace vars for non-hash-aggregation.
         JVar[] workspaceJVars = declareWorkspaceVariables(g);
-        generateBody(g, BlockType.SETUP, setup, null, workspaceJVars, true);
+        generateBody(g, BlockType.SETUP, setup(), null, workspaceJVars, true);
         return workspaceJVars;
       } else {  //Declare workspace vars and workspace vectors for hash aggregation.
 
@@ -118,7 +116,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
         forLoop.test(ivar.lt(sizeVar));
         forLoop.update(ivar.assignPlus(JExpr.lit(1)));
 
-        JBlock subBlock = generateInitWorkspaceBlockHA(g, BlockType.SETUP, setup, workspaceJVars, ivar);
+        JBlock subBlock = generateInitWorkspaceBlockHA(g, BlockType.SETUP, setup(), workspaceJVars, ivar);
         forLoop.body().add(subBlock);
         return workspaceJVars;
       }
@@ -129,7 +127,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
 
   @Override
   public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
-    addProtectedBlock(g, g.getBlock(BlockType.EVAL), add, inputVariables, workspaceJVars, false);
+    addProtectedBlock(g, g.getBlock(BlockType.EVAL), add(), inputVariables, workspaceJVars, false);
   }
 
 
@@ -139,13 +137,13 @@ class DrillAggFuncHolder extends DrillFuncHolder{
     JBlock sub = new JBlock();
     g.getEvalBlock().add(sub);
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValue.type), returnValue.name, JExpr._new(g.getHolderType(returnValue.type)));
-    addProtectedBlock(g, sub, output, null, workspaceJVars, false);
+    addProtectedBlock(g, sub, output(), null, workspaceJVars, false);
     sub.assign(out.getHolder(), internalOutput);
         //hash aggregate uses workspace vectors. Initialization is done in "setup" and does not require "reset" block.
         if (!g.getMappingSet().isHashAggMapping()) {
-          generateBody(g, BlockType.RESET, reset, null, workspaceJVars, false);
+          generateBody(g, BlockType.RESET, reset(), null, workspaceJVars, false);
         }
-       generateBody(g, BlockType.CLEANUP, cleanup, null, workspaceJVars, false);
+       generateBody(g, BlockType.CLEANUP, cleanup(), null, workspaceJVars, false);
 
     return out;
   }

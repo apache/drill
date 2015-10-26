@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import org.apache.drill.common.JSONOptions.De;
 import org.apache.drill.common.JSONOptions.Se;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.LogicalPlanParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class JSONOptions {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T getWith(DrillConfig config, Class<T> c) {
+  public <T> T getWith(LogicalPlanPersistence lpPersistance, Class<T> c) {
     try {
       if (opaque != null) {
         final Class<?> opaqueClass = opaque.getClass();
@@ -88,7 +89,7 @@ public class JSONOptions {
       }
 
       //logger.debug("Read tree {}", root);
-      return config.getMapper().treeToValue(root, c);
+      return lpPersistance.getMapper().treeToValue(root, c);
     } catch (JsonProcessingException e) {
       throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound " +
         "json options to type of %s. Reference was originally located at line %d, column %d.",
@@ -96,7 +97,7 @@ public class JSONOptions {
     }
   }
 
-  public <T> T getListWith(DrillConfig config, TypeReference<T> t) throws IOException {
+  public <T> T getListWith(LogicalPlanPersistence config, TypeReference<T> t) throws IOException {
     return getListWith(config.getMapper(), t);
   }
 

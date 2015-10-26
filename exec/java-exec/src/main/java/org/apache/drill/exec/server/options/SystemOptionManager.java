@@ -26,7 +26,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -149,9 +149,9 @@ public class SystemOptionManager extends BaseOptionManager {
    */
   private PStore<OptionValue> options;
 
-  public SystemOptionManager(final DrillConfig config, final PStoreProvider provider) {
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PStoreProvider provider) {
     this.provider = provider;
-    this.config =  PStoreConfig.newJacksonBuilder(config.getMapper(), OptionValue.class)
+    this.config =  PStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
         .name("sys.options")
         .build();
   }

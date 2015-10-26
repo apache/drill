@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Map.Entry;
 
+import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.store.hbase.config.HBasePStoreProvider;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
@@ -41,7 +43,8 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
   @Test
   public void testTableProvider() throws IOException {
-    PStore<String> hbaseStore = provider.getStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase").build());
+    LogicalPlanPersistence lp = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(config);
+    PStore<String> hbaseStore = provider.getStore(PStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase").build());
     hbaseStore.put("", "v0");
     hbaseStore.put("k1", "v1");
     hbaseStore.put("k2", "v2");
@@ -60,7 +63,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
     }
     assertEquals(7, rowCount);
 
-    PStore<String> hbaseTestStore = provider.getStore(PStoreConfig.newJacksonBuilder(config.getMapper(), String.class).name("hbase.test").build());
+    PStore<String> hbaseTestStore = provider.getStore(PStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
     hbaseTestStore.put("k1", "v1");
     hbaseTestStore.put("k2", "v2");

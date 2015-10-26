@@ -18,9 +18,12 @@
 package org.apache.drill.exec.planner;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.coord.DrillbitEndpointSerDe;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -47,7 +50,7 @@ public class PhysicalPlanReader {
   private final ObjectReader operatorReader;
   private final ObjectReader logicalPlanReader;
 
-  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint,
+  public PhysicalPlanReader(DrillConfig config, ScanResult scanResult, LogicalPlanPersistence lpPersistance, final DrillbitEndpoint endpoint,
                             final StoragePluginRegistry pluginRegistry) {
 
     // Endpoint serializer/deserializer.
@@ -57,25 +60,20 @@ public class PhysicalPlanReader {
         .addSerializer(MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(MajorType.class, new MajorTypeSerDe.De());
 
-
-    mapper.registerModule(deserModule);
-    mapper.registerSubtypes(PhysicalOperatorUtil.getSubTypes(config));
+    ObjectMapper lpMapper = lpPersistance.getMapper();
+    lpMapper.registerModule(deserModule);
+    Set<Class<? extends PhysicalOperator>> subTypes = PhysicalOperatorUtil.getSubTypes(scanResult);
+    for (Class<? extends PhysicalOperator> subType : subTypes) {
+      lpMapper.registerSubtypes(subType);
+    }
     InjectableValues injectables = new InjectableValues.Std() //
             .addValue(StoragePluginRegistry.class, pluginRegistry) //
         .addValue(DrillbitEndpoint.class, endpoint); //
 
-    this.mapper = mapper;
+    this.mapper = lpMapper;
     this.physicalPlanReader = mapper.reader(PhysicalPlan.class).with(injectables);
     this.operatorReader = mapper.reader(PhysicalOperator.class).with(injectables);
     this.logicalPlanReader = mapper.reader(LogicalPlan.class).with(injectables);
-  }
-
-  // TODO - we do not want to storage engine registry generated here in production, this was created to keep old
-  // tests passing, this constructor should be removed and the tests should be updated to use the contstructor
-  // that takes a storage engine registry
-  @Deprecated
-  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint) {
-    this(config, mapper, endpoint, null);
   }
 
   public String writeJson(OptionList list) throws JsonProcessingException{

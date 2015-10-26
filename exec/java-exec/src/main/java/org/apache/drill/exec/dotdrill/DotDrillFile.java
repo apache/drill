@@ -18,6 +18,7 @@
 package org.apache.drill.exec.dotdrill;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 
@@ -67,10 +68,10 @@ public class DotDrillFile {
     return fileName.substring(0, fileName.lastIndexOf(type.getEnding()));
   }
 
-  public View getView(DrillConfig config) throws IOException {
+  public View getView(LogicalPlanPersistence lpPersistence) throws IOException {
     Preconditions.checkArgument(type == DotDrillType.VIEW);
     try(InputStream is = fs.open(status.getPath())){
-      return config.getMapper().readValue(is, View.class);
+      return lpPersistence.getMapper().readValue(is, View.class);
     }
   }
 }

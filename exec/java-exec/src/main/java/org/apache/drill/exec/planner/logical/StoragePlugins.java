@@ -25,7 +25,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,12 +46,14 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
 
   public static void main(String[] args) throws Exception{
     DrillConfig config = DrillConfig.create();
+    ScanResult scanResult = ClassPathScanner.fromPrescan(config);
+    LogicalPlanPersistence lpp = new LogicalPlanPersistence(config, scanResult);
     String data = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
-    StoragePlugins se = config.getMapper().readValue(data,  StoragePlugins.class);
+    StoragePlugins se = lpp.getMapper().readValue(data,  StoragePlugins.class);
     ByteArrayOutputStream os = new ByteArrayOutputStream();
-    config.getMapper().writeValue(System.out, se);
-    config.getMapper().writeValue(os, se);
-    se = config.getMapper().readValue(new ByteArrayInputStream(os.toByteArray()), StoragePlugins.class);
+    lpp.getMapper().writeValue(System.out, se);
+    lpp.getMapper().writeValue(os, se);
+    se = lpp.getMapper().readValue(new ByteArrayInputStream(os.toByteArray()), StoragePlugins.class);
     System.out.println(se);
   }
 

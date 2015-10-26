@@ -148,7 +148,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   protected void log(final String name, final PhysicalPlan plan, final Logger logger) throws JsonProcessingException {
     if (logger.isDebugEnabled()) {
-      String planText = plan.unparse(context.getConfig().getMapper().writer());
+      String planText = plan.unparse(context.getLpPersistence().getMapper().writer());
       logger.debug(name + " : \n" + planText);
     }
   }
@@ -248,7 +248,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final DrillRel convertedRelNode = convertToDrel(relNode);
 
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
-    DrillRel topPreservedNameProj = addRenamedProject((DrillRel) convertedRelNode, validatedRowType);
+    DrillRel topPreservedNameProj = addRenamedProject(convertedRelNode, validatedRowType);
     return new DrillScreenRel(topPreservedNameProj.getCluster(), topPreservedNameProj.getTraitSet(),
         topPreservedNameProj);
   }
@@ -339,12 +339,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     /*
      * 1.2) Break up all expressions with complex outputs into their own project operations
      */
-    phyRelNode = ((Prel) phyRelNode).accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
+    phyRelNode = phyRelNode.accept(new SplitUpComplexExpressions(planner.getTypeFactory(), context.getDrillOperatorTable(), context.getPlannerSettings().functionImplementationRegistry), null);
 
     /*
      * 1.3) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project
      */
-    phyRelNode = ((Prel) phyRelNode).accept(new RewriteProjectToFlatten(planner.getTypeFactory(), context.getDrillOperatorTable()), null);
+    phyRelNode = phyRelNode.accept(new RewriteProjectToFlatten(planner.getTypeFactory(), context.getDrillOperatorTable()), null);
 
     /*
      * 2.)

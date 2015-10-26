@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -34,12 +36,14 @@ import java.util.concurrent.TimeUnit;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.RuleSet;
-import org.apache.drill.common.config.DrillConfig;
+
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.util.PathScanner;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -57,6 +61,7 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
@@ -78,22 +83,23 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
   private final PStore<StoragePluginConfig> pluginSystemTable;
-  private final Object updateLock = new Object();
-  private volatile long lastUpdate = 0;
-  private static final long UPDATE_FREQUENCY = 2 * 60 * 1000;
+  private final LogicalPlanPersistence lpPersistence;
+  private final ScanResult classpathScan;
 
   public StoragePluginRegistry(DrillbitContext context) {
+    this.context = checkNotNull(context);
+    this.lpPersistence = checkNotNull(context.getLpPersistence());
+    this.classpathScan = checkNotNull(context.getClasspathScan());
     try {
-      this.context = context;
       this.pluginSystemTable = context //
           .getPersistentStoreProvider() //
           .getStore(PStoreConfig //
-              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
+              .newJacksonBuilder(lpPersistence.getMapper(), StoragePluginConfig.class) //
               .name("sys.storage_plugins") //
               .build());
     } catch (IOException | RuntimeException e) {
       logger.error("Failure while loading storage plugin registry.", e);
-      throw new RuntimeException("Faiure while reading and loading storage plugin configuration.", e);
+      throw new RuntimeException("Failure while reading and loading storage plugin configuration.", e);
     }
   }
 
@@ -103,11 +109,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   @SuppressWarnings("unchecked")
   public void init() throws DrillbitStartupException {
-    final DrillConfig config = context.getConfig();
     final Collection<Class<? extends StoragePlugin>> pluginClasses =
-        PathScanner.scanForImplementations(
-            StoragePlugin.class,
-            config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
+        classpathScan.getImplementations(StoragePlugin.class);
     final String lineBrokenList =
         pluginClasses.size() == 0
         ? "" : "\n\t- " + Joiner.on("\n\t- ").join(pluginClasses);
@@ -146,13 +149,13 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       if (!pluginSystemTable.iterator().hasNext()) {
         // bootstrap load the config since no plugins are stored.
         logger.info("No storage plugin instances configured in persistent store, loading bootstrap configuration.");
-        Collection<URL> urls = PathScanner.forResource(ExecConstants.BOOTSTRAP_STORAGE_PLUGINS_FILE, false, Resources.class.getClassLoader());
+        Collection<URL> urls = ClassPathScanner.forResource(ExecConstants.BOOTSTRAP_STORAGE_PLUGINS_FILE, false);
         if (urls != null && ! urls.isEmpty()) {
           logger.info("Loading the storage plugin configs from URLs {}.", urls);
           Map<String, URL> pluginURLMap = Maps.newHashMap();
           for (URL url :urls) {
             String pluginsData = Resources.toString(url, Charsets.UTF_8);
-            StoragePlugins plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
+            StoragePlugins plugins = lpPersistence.getMapper().readValue(pluginsData, StoragePlugins.class);
             for (Map.Entry<String, StoragePluginConfig> config : plugins) {
               if (!pluginSystemTable.putIfAbsent(config.getKey(), config.getValue())) {
                 logger.warn("Duplicate plugin instance '{}' defined in [{}, {}], ignoring the later one.",

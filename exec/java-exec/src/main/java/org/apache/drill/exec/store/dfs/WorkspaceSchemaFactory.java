@@ -28,14 +28,10 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.schema.Table;
-
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -55,13 +51,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.AccessControlException;
 
 public class WorkspaceSchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
@@ -72,21 +70,26 @@ public class WorkspaceSchemaFactory {
 
   private final WorkspaceConfig config;
   private final Configuration fsConf;
-  private final DrillConfig drillConfig;
   private final String storageEngineName;
   private final String schemaName;
   private final FileSystemPlugin plugin;
   private final ObjectMapper mapper;
+  private final LogicalPlanPersistence logicalPlanPersistence;
   private final Path wsPath;
 
-  public WorkspaceSchemaFactory(DrillConfig drillConfig, FileSystemPlugin plugin, String schemaName,
-      String storageEngineName, WorkspaceConfig config, List<FormatMatcher> formatMatchers)
+  public WorkspaceSchemaFactory(
+      FileSystemPlugin plugin,
+      String schemaName,
+      String storageEngineName,
+      WorkspaceConfig config,
+      List<FormatMatcher> formatMatchers,
+      LogicalPlanPersistence logicalPlanPersistence)
     throws ExecutionSetupException, IOException {
+    this.logicalPlanPersistence = logicalPlanPersistence;
     this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
-    this.drillConfig = drillConfig;
     this.config = config;
-    this.mapper = drillConfig.getMapper();
+    this.mapper = logicalPlanPersistence.getMapper();
     this.fileMatchers = Lists.newArrayList();
     this.dirMatchers = Lists.newArrayList();
     this.storageEngineName = storageEngineName;
@@ -226,7 +229,7 @@ public class WorkspaceSchemaFactory {
 
     private View getView(DotDrillFile f) throws IOException{
       assert f.getType() == DotDrillType.VIEW;
-      return f.getView(drillConfig);
+      return f.getView(logicalPlanPersistence);
     }
 
     @Override
@@ -237,7 +240,7 @@ public class WorkspaceSchemaFactory {
       }
 
       // then look for files that start with this name and end in .drill.
-      List<DotDrillFile> files = Collections.EMPTY_LIST;
+      List<DotDrillFile> files = Collections.emptyList();
       try {
         try {
           files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), name, DotDrillType.VIEW);

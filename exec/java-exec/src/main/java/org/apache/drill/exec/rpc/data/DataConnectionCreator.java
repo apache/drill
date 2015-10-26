@@ -66,6 +66,7 @@ public class DataConnectionCreator implements Closeable {
     return new DataTunnel(newManager);
   }
 
+  @Override
   public void close() {
     Closeables.closeQuietly(server);
   }

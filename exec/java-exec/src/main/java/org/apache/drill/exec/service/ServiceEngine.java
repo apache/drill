@@ -17,12 +17,18 @@
  */
 package org.apache.drill.exec.service;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.channel.EventLoopGroup;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -38,6 +44,7 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.user.UserWorker;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.io.Closeables;
 
 public class ServiceEngine implements Closeable{
@@ -54,7 +61,7 @@ public class ServiceEngine implements Closeable{
       WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) throws DrillbitStartupException {
     final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
         context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
-    this.userServer = new UserServer(context.getConfig(), context.getAllocator(), eventLoopGroup, userWorker);
+    this.userServer = new UserServer(context.getConfig(), context.getClasspathScan(), context.getAllocator(), eventLoopGroup, userWorker);
     this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
     this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
     this.config = context.getConfig();
@@ -82,10 +89,33 @@ public class ServiceEngine implements Closeable{
     return controller;
   }
 
+  private void submit(ExecutorService p, final String name, final Closeable c) {
+    p.submit(new Runnable() {
+      @Override
+      public void run() {
+        Stopwatch watch = new Stopwatch().start();
+        Closeables.closeQuietly(c);
+        long elapsed = watch.elapsed(MILLISECONDS);
+        if (elapsed > 500) {
+          logger.info("closed " + name + " in " + elapsed + " ms");
+        }
+      }
+    });
+  }
+
   @Override
   public void close() throws IOException {
-    Closeables.closeQuietly(userServer);
-    Closeables.closeQuietly(dataPool);
-    Closeables.closeQuietly(controller);
+    // this takes time so close them in parallel
+    // Ideally though we fix this netty bug: https://github.com/netty/netty/issues/2545
+    ExecutorService p = Executors.newFixedThreadPool(2);
+    submit(p, "userServer", userServer);
+    submit(p, "dataPool", dataPool);
+    submit(p, "controller", controller);
+    p.shutdown();
+    try {
+      p.awaitTermination(3, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 }

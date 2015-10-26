@@ -37,6 +37,7 @@ import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -309,8 +310,7 @@ public class TestOptiqPlans extends ExecTest {
 
     final StoragePluginRegistry reg = new StoragePluginRegistry(bitContext);
 
-    final PhysicalPlanReader reader = new PhysicalPlanReader(config, config.getMapper(),
-        CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), reg);
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(config, reg);
     final PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
     final FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);

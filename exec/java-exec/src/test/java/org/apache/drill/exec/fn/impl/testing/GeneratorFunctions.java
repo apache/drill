@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.fn.impl;
+package org.apache.drill.exec.fn.impl.testing;
 
 import java.util.Random;
 
@@ -61,7 +61,7 @@ public class GeneratorFunctions extends ExecTest {
     }
 
     public void eval() {
-      out.value = (long)(org.apache.drill.exec.fn.impl.GeneratorFunctions.random.nextGaussian() * range.value);
+      out.value = (long)(org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.random.nextGaussian() * range.value);
     }
   }
 
@@ -77,7 +77,7 @@ public class GeneratorFunctions extends ExecTest {
     }
 
     public void eval() {
-      out.value = (long)(org.apache.drill.exec.fn.impl.GeneratorFunctions.random.nextFloat() * (max.value - min.value) + min.value);
+      out.value = (long)(org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.random.nextFloat() * (max.value - min.value) + min.value);
     }
   }
 
@@ -93,7 +93,7 @@ public class GeneratorFunctions extends ExecTest {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.fn.impl.GeneratorFunctions.random.nextGaussian() * range.value;
+      out.value = org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.random.nextGaussian() * range.value;
     }
   }
 
@@ -109,7 +109,7 @@ public class GeneratorFunctions extends ExecTest {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.fn.impl.GeneratorFunctions.random.nextFloat() * (max.value - min.value) + min.value;
+      out.value = org.apache.drill.exec.fn.impl.testing.GeneratorFunctions.random.nextFloat() * (max.value - min.value) + min.value;
     }
   }
 }
