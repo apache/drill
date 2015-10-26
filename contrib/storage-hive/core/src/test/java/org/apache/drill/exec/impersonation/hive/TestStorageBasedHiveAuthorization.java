@@ -19,8 +19,6 @@ package org.apache.drill.exec.impersonation.hive;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -45,6 +43,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_ENABLE_
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
 
@@ -58,6 +57,8 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String g_voter_u1_700 = "voter_u1_700";
   private static final String g_voter_u2g1_750 = "voter_u2g1_750";
   private static final String g_voter_all_755 = "voter_all_755";
+
+  private static final String g_partitioned_student_u0_700 = "partitioned_student_u0_700";
 
   // DB whose warehouse directory has permissions 700 and owned by user0
   private static final String db_u0_only = "db_u0_only";
@@ -87,6 +88,20 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   private static final String query_v_student_u1g1_750 = String.format(
       "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u1g1_750);
 
+  // Create a view on "partitioned_student_u0_700". View is owned by user0:group0 and has permissions 750
+  private static final String v_partitioned_student_u0g0_750 = "v_partitioned_student_u0g0_750";
+
+  // Create a view on "v_partitioned_student_u0g0_750". View is owned by user1:group1 and has permissions 750
+  private static final String v_partitioned_student_u1g1_750 = "v_partitioned_student_u1g1_750";
+
+  private static final String query_v_partitioned_student_u0g0_750 = String.format(
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp",
+      v_partitioned_student_u0g0_750);
+
+  private static final String query_v_partitioned_student_u1g1_750 = String.format(
+      "SELECT rownum FROM %s.%s.%s ORDER BY rownum LIMIT 1", MINIDFS_STORAGE_PLUGIN_NAME, "tmp",
+      v_partitioned_student_u1g1_750);
+
   @BeforeClass
   public static void setup() throws Exception {
     startMiniDfsCluster(TestStorageBasedHiveAuthorization.class.getName());
@@ -106,6 +121,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     hiveConf.set(HIVE_METASTORE_AUTHORIZATION_MANAGER.varname, StorageBasedAuthorizationProvider.class.getName());
     hiveConf.set(HIVE_METASTORE_AUTHORIZATION_AUTH_READS.varname, "true");
     hiveConf.set(METASTORE_EXECUTE_SET_UGI.varname, "true");
+    hiveConf.set(DYNAMICPARTITIONINGMODE.varname, "nonstrict");
   }
 
   private static Map<String, String> getHivePluginConfig() {
@@ -139,6 +155,11 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     createTable(driver,
         db_general, g_voter_all_755, voterDef, voterData, org1Users[1], org1Groups[1], (short) 0755);
 
+    createPartitionedTable(driver,
+        db_general, g_partitioned_student_u0_700, partitionStudentDef,
+        "INSERT OVERWRITE TABLE %s.%s PARTITION(age) SELECT rownum, name, age, gpa, studentnum FROM %s.%s",
+        g_student_all_755, org1Users[0], org1Groups[0], (short) 0700);
+
     changeDBPermissions(db_general, (short) 0755, org1Users[0], org1Groups[0]);
 
     executeQuery(driver, "CREATE DATABASE " + db_u1g1_only);
@@ -168,6 +189,25 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     createView(org1Users[1], org1Groups[1], v_student_u1g1_750,
         String.format("SELECT rownum, name, age FROM %s.%s.%s",
             MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_student_u0g0_750));
+
+    createView(org1Users[0], org1Groups[0], v_partitioned_student_u0g0_750,
+        String.format("SELECT rownum, name, age, studentnum FROM %s.%s.%s",
+            hivePluginName, db_general, g_partitioned_student_u0_700));
+
+    createView(org1Users[1], org1Groups[1], v_partitioned_student_u1g1_750,
+        String.format("SELECT rownum, name, age FROM %s.%s.%s",
+            MINIDFS_STORAGE_PLUGIN_NAME, "tmp", v_partitioned_student_u0g0_750));
+  }
+
+  private static void createPartitionedTable(final Driver hiveDriver, final String db, final String tbl,
+      final String tblDef, final String loadTblDef, final String loadTbl, final String user, final String group,
+      final short permissions) throws Exception {
+    executeQuery(hiveDriver, String.format(tblDef, db, tbl));
+    executeQuery(hiveDriver, String.format(loadTblDef, db, tbl, db, loadTbl));
+
+    final Path p = getWhPathForHiveObject(db, tbl);
+    fs.setPermission(p, new FsPermission(permissions));
+    fs.setOwner(p, user, group);
   }
 
   private static void createTable(final Driver hiveDriver, final String db, final String tbl, final String tblDef,
@@ -215,7 +255,8 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             g_student_u0_700,
             g_student_u0g0_750,
             g_student_all_755,
-            g_voter_all_755
+            g_voter_all_755,
+            g_partitioned_student_u0_700
         ));
 
     showTablesHelper(db_u0_only,
@@ -279,6 +320,8 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_u0_700));
     test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_student_all_755));
     test(String.format("SELECT * FROM hive.%s.%s ORDER BY name DESC LIMIT 2", db_general, g_voter_all_755));
+
+    test(String.format("SELECT * FROM hive.%s.%s ORDER BY gpa DESC LIMIT 2", db_general, g_partitioned_student_u0_700));
   }
 
   // Try to read the table that "user0" has access to read in db_u0_only
@@ -362,6 +405,40 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void selectUser2_v_student_u1g1_750() throws Exception {
     queryViewHelper(org1Users[2], query_v_student_u1g1_750);
+  }
+
+  @Test
+  public void selectUser0_v_partitioned_student_u0g0_750() throws Exception {
+    queryViewHelper(org1Users[0], query_v_partitioned_student_u0g0_750);
+  }
+
+  @Test
+  public void selectUser1_v_partitioned_student_u0g0_750() throws Exception {
+    queryViewHelper(org1Users[1], query_v_partitioned_student_u0g0_750);
+  }
+
+  @Test
+  public void selectUser2_v_partitioned_student_u0g0_750() throws Exception {
+    updateClient(org1Users[2]);
+    errorMsgTestHelper(query_v_partitioned_student_u0g0_750,
+        "Not authorized to read view [v_partitioned_student_u0g0_750] in schema [miniDfsPlugin.tmp]");
+  }
+
+  @Test
+  public void selectUser0_v_partitioned_student_u1g1_750() throws Exception {
+    updateClient(org1Users[0]);
+    errorMsgTestHelper(query_v_partitioned_student_u1g1_750,
+        "Not authorized to read view [v_partitioned_student_u1g1_750] in schema [miniDfsPlugin.tmp]");
+  }
+
+  @Test
+  public void selectUser1_v_partitioned_student_u1g1_750() throws Exception {
+    queryViewHelper(org1Users[1], query_v_partitioned_student_u1g1_750);
+  }
+
+  @Test
+  public void selectUser2_v_partitioned_student_u1g1_750() throws Exception {
+    queryViewHelper(org1Users[2], query_v_partitioned_student_u1g1_750);
   }
 
   @AfterClass

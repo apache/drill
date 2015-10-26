@@ -21,7 +21,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -37,7 +40,6 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -57,6 +59,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public class HiveRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveRecordReader.class);
@@ -85,20 +88,22 @@ public class HiveRecordReader extends AbstractRecordReader {
   private Map<String, String> hiveConfigOverride;
   private FragmentContext fragmentContext;
   private String defaultPartitionValue;
+  private final UserGroupInformation proxyUgi;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-                          FragmentContext context, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+                          FragmentContext context, Map<String, String> hiveConfigOverride,
+                          UserGroupInformation proxyUgi) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
     this.empty = (inputSplit == null && partition == null);
     this.hiveConfigOverride = hiveConfigOverride;
     this.fragmentContext = context;
+    this.proxyUgi = proxyUgi;
     this.managedBuffer = fragmentContext.getManagedBuffer().reallocIfNeeded(256);
     setColumns(projectedColumns);
-    init();
   }
 
   private void init() throws ExecutionSetupException {
@@ -223,6 +228,26 @@ public class HiveRecordReader extends AbstractRecordReader {
   @Override
   public void setup(@SuppressWarnings("unused") OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
+    // initializes "reader"
+    final Callable<Void> readerInitializer = new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        init();
+        return null;
+      }
+    };
+
+    final ListenableFuture<Void> result = context.runCallableAs(proxyUgi, readerInitializer);
+    try {
+      result.get();
+    } catch (InterruptedException e) {
+      result.cancel(true);
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException e) {
+      throw ExecutionSetupException.fromThrowable(e.getMessage(), e);
+    }
     try {
       final OptionManager options = fragmentContext.getOptions();
       for (int i = 0; i < selectedColumnNames.size(); i++) {

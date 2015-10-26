@@ -18,7 +18,6 @@
 package org.apache.drill.exec.impersonation.hive;
 
 import org.apache.drill.TestBuilder;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
@@ -33,7 +32,6 @@ import org.apache.hadoop.hive.shims.ShimLoader;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
@@ -54,6 +52,9 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
       "(voter_id int,name varchar(30), age tinyint, registration string, " +
       "contributions double,voterzone smallint,create_time timestamp) " +
       "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
+  protected static final String partitionStudentDef = "CREATE TABLE %s.%s" +
+      "(rownum INT, name STRING, gpa FLOAT, studentnum BIGINT) " +
+      "partitioned by (age INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
 
   protected static void prepHiveConfAndData() throws Exception {
     hiveConf = new HiveConf();

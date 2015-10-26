@@ -206,10 +206,6 @@ public class WorkManager implements AutoCloseable {
     }
   }
 
-  private void shutdownAndAwaitTermination(long timeInSeconds) {
-
-  }
-
   public DrillbitContext getContext() {
     return dContext;
   }
