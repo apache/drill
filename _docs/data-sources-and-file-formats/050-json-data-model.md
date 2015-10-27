@@ -12,7 +12,7 @@ Semi-structured JSON data often consists of complex, nested elements having sche
 
 Using Drill you can natively query dynamic JSON data sets using SQL. Drill treats a JSON object as a SQL record. One object equals one row in a Drill table.
 
-You can also [query compressed .gz files]({{ site.baseurl }}/docs/querying-plain-text-files/#querying-compressed-files) having JSON as well as uncompressed .json files.
+You can also [query compressed .gz JSON files]({{ site.baseurl }}/docs/querying-plain-text-files/#querying-compressed-files).
 
 In addition to the examples presented later in this section, see ["How to Analyze Highly Dynamic Datasets with Apache Drill"](https://www.mapr.com/blog/how-analyze-highly-dynamic-datasets-apache-drill) for information about how to analyze a JSON data set.
 
@@ -70,7 +70,17 @@ Drill reads tuples defined in single objects, having no comma between objects. A
     { name: "Apples", desc: "Delicious" }
     { name: "Oranges", desc: "Florida Navel" }
 
-To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions.
+To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions. For example, you need to flatten the data to read all the names in this JSON file:
+
+     {"Fruits: [{"name":"Apples", "quantity":115},
+                {"name":"Oranges","quantity":199},
+                {"name":"Peaches", "quantity":116}
+               ]
+     }
+
+To flatten the data and read the names, use a subquery that flattens the complex nesting. Use table aliases, t and flatdata, to resolve ambiguities.
+
+     SELECT t.flatdata.name FROM (select flatten(Fruits) AS flatdata FROM dfs.`/Users/path/fruits.json`) t;
 
 ## Writing JSON
 You can write data from Drill to a JSON file. The following setup is required:

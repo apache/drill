@@ -37,7 +37,7 @@ Exceptions are the LSHIFT and RSHIFT functions, which take all types except FLOA
 | RADIANS      | FLOAT8        | Converts x degress to radians.                                            |
 | RAND         | FLOAT8        | Returns a random number from 0-1.                                         |
 | ROUND(x)     | Same as input | Rounds to the nearest integer.                                            |
-| ROUND(x, y)  | DECIMAL       | Rounds x to s decimal places.                                             |
+| ROUND(x, y)  | DECIMAL       | Rounds x to y decimal places.                                             |
 | RSHIFT(x, y) | Same as input | Shifts the binary x by y times to the right.                              |
 | SIGN(x)      | INT           | Returns the sign of x.                                                    |
 | SQRT(x)      | Same as input | Returns the square root of x.                                             |

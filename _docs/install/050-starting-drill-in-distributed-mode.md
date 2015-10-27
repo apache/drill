@@ -65,6 +65,17 @@ The following command starts the Drill shell in a cluster configured to run ZooK
 
 `bin/sqlline –u jdbc:drill:zk=cento23,zk=centos24,zk=centos26:5181`
 
+## Making a Direct Drillbit Connection
+
+If you want to connect directly to a Drillbit instead of using ZooKeeper to choose the Drillbit, replace `zk=<zk name>` with `drillbit=<node>` as shown in the following URL.
+
+`jdbc:drill:[schema=<storage plugin>;]drillbit=<node name>[:<port>][,<node name2>[:<port>]... `  
+  `]<directory>/<cluster ID>`
+
+where
+
+`drillbit=<node name>` specifies one or more host names or IP addresses of cluster nodes running Drill. 
+
 ## Exiting the Drill Shell
 
 To exit the Drill shell, issue the following command:
