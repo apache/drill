@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
@@ -36,6 +37,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNull;
 
 /**
  * Test queries involving direct impersonation and multilevel impersonation including join queries where each side is
@@ -63,6 +65,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     createNestedTestViewsOnLineItem();
     createNestedTestViewsOnOrders();
+    createRecordReadersData(org1Users[0], org1Groups[0]);
   }
 
   private static String getUserHome(String user) {
@@ -164,6 +167,16 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     createView(org2Users[4], org2Groups[4], (short)0755, "u4_orders", getWSSchema(org2Users[3]), "u3_orders");
   }
 
+  private static void createRecordReadersData(String user, String group) throws Exception {
+    // copy sequence file
+    updateClient(user);
+    Path localFile = new Path(FileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString());
+    Path dfsFile = new Path(getUserHome(user), "simple.seq");
+    fs.copyFromLocalFile(localFile, dfsFile);
+    fs.setOwner(dfsFile, user, group);
+    fs.setPermission(dfsFile, new FsPermission((short) 0750));
+  }
+
   private static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
       final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
     updateClient(viewOwner);
@@ -209,10 +222,9 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(), containsString("PERMISSION ERROR: " +
-            String.format("Not authorized to read table [lineitem] in schema [%s.user0_1]",
-                MINIDFS_STORAGE_PLUGIN_NAME)));
+      String.format("Not authorized to read table [lineitem] in schema [%s.user0_1]",
+        MINIDFS_STORAGE_PLUGIN_NAME)));
   }
-
 
   @Test
   public void testMultiLevelImpersonationEqualToMaxUserHops() throws Exception {
@@ -233,15 +245,15 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
-        containsString("Cannot issue token for view expansion as issuing the token exceeds the maximum allowed number " +
-            "of user hops (3) in chained impersonation"));
+      containsString("Cannot issue token for view expansion as issuing the token exceeds the maximum allowed number " +
+        "of user hops (3) in chained impersonation"));
   }
 
   @Test
   public void testMultiLevelImpersonationJoinEachSideReachesMaxUserHops() throws Exception {
     updateClient(org1Users[4]);
     test(String.format("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1;",
-        getWSSchema(org1Users[4]), getWSSchema(org2Users[3])));
+      getWSSchema(org1Users[4]), getWSSchema(org2Users[3])));
   }
 
   @Test
@@ -258,8 +270,36 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     assertNotNull("UserRemoteException is expected", ex);
     assertThat(ex.getMessage(),
-        containsString("Cannot issue token for view expansion as issuing the token exceeds the maximum allowed number " +
-            "of user hops (3) in chained impersonation"));
+      containsString("Cannot issue token for view expansion as issuing the token exceeds the maximum allowed number " +
+        "of user hops (3) in chained impersonation"));
+  }
+
+  @Test
+  public void testSequenceFileReaderWithImpersonation() throws Exception {
+    UserRemoteException ex = null;
+    final String query = String.format("select convert_from(t.binary_key, 'UTF8') as k, convert_from(t.binary_value, 'UTF8') as v " +
+      "from %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME, new Path(getUserHome(org1Users[0]), "simple.seq"));
+    try {
+      updateClient(org1Users[0]);
+      test(query);
+    } catch (UserRemoteException e) {
+      ex = e;
+    }
+    assertNull(ex);
+    try {
+      updateClient(org1Users[1]);
+      test(query);
+    } catch (UserRemoteException e) {
+      ex = e;
+    }
+    assertNull(ex);
+    try {
+      updateClient(org1Users[2]);
+      test(query);
+    } catch (UserRemoteException e) {
+      ex = e;
+    }
+    assertNotNull("UserRemoteException is expected", ex);
   }
 
   @AfterClass
