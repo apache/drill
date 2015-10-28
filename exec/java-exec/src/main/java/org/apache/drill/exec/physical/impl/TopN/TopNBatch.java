@@ -159,6 +159,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   @Override
   public IterOutcome innerNext() {
+    recordCount = 0;
     if (state == BatchState.DONE) {
       return IterOutcome.NONE;
     }
