@@ -76,7 +76,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   public JsonReader(DrillBuf managedBuf, List<SchemaPath> columns, boolean allTextMode, boolean skipOuterList, boolean readNumbersAsDouble) {
     super(managedBuf);
-    assert Preconditions.checkNotNull(columns).size() > 0 : "json record reader requires at least a column";
+    assert Preconditions.checkNotNull(columns).size() > 0 : "JSON record reader requires at least one column";
     this.selection = FieldSelection.getFieldSelection(columns);
     this.workingBuffer = new WorkingBuffer(managedBuf);
     this.skipOuterList = skipOuterList;
@@ -93,14 +93,14 @@ public class JsonReader extends BaseJsonProcessor {
     if (!atLeastOneWrite) {
       // if we had no columns, create one empty one so we can return some data for count purposes.
       SchemaPath sp = columns.get(0);
-      PathSegment root = sp.getRootSegment();
+      PathSegment fieldPath = sp.getRootSegment();
       BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
-      while (root.getChild() != null && !root.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
-        root = root.getChild();
+      while (fieldPath.getChild() != null && ! fieldPath.getChild().isArray()) {
+        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        fieldPath = fieldPath.getChild();
       }
       if (fieldWriter.isEmptyMap()) {
-        fieldWriter.integer(root.getNameSegment().getPath());
+        fieldWriter.integer(fieldPath.getNameSegment().getPath());
       }
     }
   }
