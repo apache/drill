@@ -18,10 +18,12 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +46,7 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -133,7 +136,13 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     familyVectorMap = new HashMap<String, MapVector>();
 
     try {
-      // Add Vectors to output in the order specified when creating reader
+      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
+          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
+          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
+      hTable = new HTable(hbaseConf, hbaseTableName);
+
+      // Add top-level column-family map vectors to output in the order specified
+      // when creating reader (order of first appearance in query).
       for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
           MaterializedField field = MaterializedField.create(column, ROW_KEY_TYPE);
@@ -142,10 +151,25 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
         }
       }
-      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
-          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
-          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-      hTable = new HTable(hbaseConf, hbaseTableName);
+
+      // Add map and child vectors for any HBase column families and/or HBase
+      // columns that are requested (in order to avoid later creation of dummy
+      // NullableIntVectors for them).
+      final Set<Map.Entry<byte[], NavigableSet<byte []>>> familiesEntries =
+          hbaseScan.getFamilyMap().entrySet();
+      for (Map.Entry<byte[], NavigableSet<byte []>> familyEntry : familiesEntries) {
+        final String familyName = new String(familyEntry.getKey(),
+                                             StandardCharsets.UTF_8);
+        final MapVector familyVector = getOrCreateFamilyVector(familyName, false);
+        final Set<byte []> children = familyEntry.getValue();
+        if (null != children) {
+          for (byte[] childNameBytes : children) {
+            final String childName = new String(childNameBytes,
+                                                StandardCharsets.UTF_8);
+            getOrCreateColumnVector(familyVector, childName);
+          }
+        }
+      }
       resultScanner = hTable.getScanner(hbaseScan);
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(e);

@@ -70,6 +70,11 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   }
 
   @Override
+  public boolean isEmptyMap() {
+    return 0 == container.size();
+  }
+
+  @Override
   public MaterializedField getField() {
       return container.getField();
   }

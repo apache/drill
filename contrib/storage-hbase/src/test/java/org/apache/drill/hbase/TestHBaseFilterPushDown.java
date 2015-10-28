@@ -18,6 +18,7 @@
 package org.apache.drill.hbase;
 
 import org.apache.drill.PlanTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHBaseFilterPushDown extends BaseHBaseTest {
@@ -517,7 +518,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  row_key > 'b4'";
 
-    runHBaseSQLVerifyCount(sql, 3);
+    runHBaseSQLVerifyCount(sql, 4);
 
     final String[] expectedPlan = {".*startRow=b4\\\\x00.*stopRow=,.*"};
     final String[] excludedPlan ={};
@@ -589,7 +590,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  (row_key >= 'b5' OR row_key <= 'a2') AND (t.f.c1 >= '1' OR t.f.c1 is null)";
 
-    runHBaseSQLVerifyCount(sql, 4);
+    runHBaseSQLVerifyCount(sql, 5);
 
     final String[] expectedPlan = {".*startRow=, stopRow=, filter=FilterList OR.*GREATER_OR_EQUAL, b5.*LESS_OR_EQUAL, a2.*"};
     final String[] excludedPlan ={};
@@ -623,7 +624,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  convert_from(row_key, 'UTF8') > 'b4'";
 
-    runHBaseSQLVerifyCount(sql, 3);
+    runHBaseSQLVerifyCount(sql, 4);
 
     final String[] expectedPlan = {".*startRow=b4\\\\x00, stopRow=,.*"};
     final String[] excludedPlan ={};
@@ -753,6 +754,27 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
 
+  }
+
+  @Test
+  public void testDummyColumnsAreAvoided() throws Exception {
+    setColumnWidth(10);
+    // Key aspects:
+    // - HBase columns c2 and c3 are referenced in the query
+    // - column c2 appears in rows in one region but not in rows in a second
+    //   region, and c3 appears only in the second region
+    // - a downstream operation (e.g., sorting) doesn't handle schema changes
+    final String sql = "SELECT\n"
+        + "  row_key, \n"
+        + "  t.f .c2, t.f .c3, \n"
+        + "  t.f2.c2, t.f2.c3 \n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` t\n"
+        + "WHERE\n"
+        + "  row_key = 'a3' OR row_key = 'b7' \n"
+        + "ORDER BY row_key";
+
+    runHBaseSQLVerifyCount(sql, 2);
   }
 
 }

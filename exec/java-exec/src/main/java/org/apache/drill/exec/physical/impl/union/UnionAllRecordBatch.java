@@ -103,7 +103,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   public IterOutcome innerNext() {
     try {
       IterOutcome upstream = unionAllInput.nextBatch();
-      logger.debug("Upstream of Union-All: ", upstream.toString());
+      logger.debug("Upstream of Union-All: {}", upstream);
       switch(upstream) {
         case NONE:
         case OUT_OF_MEMORY:
@@ -306,28 +306,36 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
           case OUT_OF_MEMORY:
             return iterLeft;
 
-          case NONE:
-            throw new SchemaChangeException("The left input of Union-All should not come from an empty data source");
-
           default:
-            throw new IllegalStateException(String.format("Unknown state %s.", iterLeft));
+            throw new IllegalStateException(
+                String.format("Unexpected state %s.", iterLeft));
         }
 
         IterOutcome iterRight = rightSide.nextBatch();
         switch(iterRight) {
           case OK_NEW_SCHEMA:
             // Unless there is no record batch on the left side of the inputs,
-            // always start processing from the left side
+            // always start processing from the left side.
             unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
-            inferOutputFields();
-            break;
 
-          case NONE:
-            // If the right input side comes from an empty data source,
-            // use the left input side's schema directly
-            unionAllRecordBatch.setCurrentRecordBatch(leftSide.getRecordBatch());
-            inferOutputFieldsFromLeftSide();
-            rightIsFinish = true;
+            // If the record count of the first batch from right input is zero,
+            // there are two possibilities:
+            // 1. The right side is an empty input (e.g., file).
+            // 2. There will be more records carried by later batches.
+            if (rightSide.getRecordBatch().getRecordCount() == 0) {
+              iterRight = rightSide.nextBatch();
+
+              if (iterRight == IterOutcome.NONE) {
+                // Case 1: The right side was an empty input.
+                inferOutputFieldsFromLeftSide();
+                rightIsFinish = true;
+              } else {
+                // Case 2: There are more records carried by the latter batches.
+                inferOutputFields();
+              }
+            } else {
+              inferOutputFields();
+            }
             break;
 
           case STOP:
@@ -335,7 +343,8 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
             return iterRight;
 
           default:
-            throw new IllegalStateException(String.format("Unknown state %s.", iterRight));
+            throw new IllegalStateException(
+                String.format("Unexpected state %s.", iterRight));
         }
 
         upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -387,7 +396,7 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
               return upstream;
 
             default:
-              throw new SchemaChangeException("Schema change detected in the left input of Union-All. This is not currently supported");
+              throw new IllegalStateException(String.format("Unknown state %s.", iterOutcome));
           }
         } else {
           IterOutcome iterOutcome = leftSide.nextBatch();

@@ -55,7 +55,11 @@ public class FieldReference extends SchemaPath {
 
   private void checkSimpleString(CharSequence value) {
     if (value.toString().contains(".")) {
-      throw new UnsupportedOperationException("Field references must be singular names.");
+      throw new UnsupportedOperationException(
+          String.format(
+              "Unhandled field reference \"%s\"; a field reference identifier"
+              + " must not have the form of a qualified name (i.e., with \".\").",
+              value));
     }
   }
 
