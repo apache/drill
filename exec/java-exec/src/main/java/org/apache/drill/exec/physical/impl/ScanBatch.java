@@ -371,7 +371,13 @@ public class ScanBatch implements CloseableRecordBatch {
     @Override
     public boolean isNewSchema() {
       // Check if top level schema has changed, second condition checks if one of the deeper map schema has changed
-      if (schemaChange || callBack.getSchemaChange()) {
+
+      // Note:  Callback's getSchemaChange() must get called in order
+      // to reset it and avoid false reports of schema changes in future.  (Be
+      // careful with short-circuit OR (||) operator.)
+
+      final boolean deeperSchemaChanged = callBack.getSchemaChange();
+      if (schemaChange || deeperSchemaChanged) {
         schemaChange = false;
         return true;
       }
