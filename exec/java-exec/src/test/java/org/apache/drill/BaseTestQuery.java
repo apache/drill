@@ -17,16 +17,18 @@
  */
 package org.apache.drill;
 
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.google.common.io.Files;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -43,6 +45,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -61,12 +64,8 @@ import org.junit.runner.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
-
-import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
@@ -278,9 +277,9 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static void runSQL(String sql) throws Exception {
-    final SilentListener listener = new SilentListener();
+    final AwaitableUserResultsListener listener = new AwaitableUserResultsListener(new SilentListener());
     testWithListener(QueryType.SQL, sql, listener);
-    listener.waitForCompletion();
+    listener.await();
   }
 
   protected static List<QueryDataBatch> testSqlWithResults(String sql) throws Exception{
@@ -433,21 +432,16 @@ public class BaseTestQuery extends ExecTest {
   }
 
   public static class SilentListener implements UserResultsListener {
-    private volatile UserException exception;
     private final AtomicInteger count = new AtomicInteger();
-    private final CountDownLatch latch = new CountDownLatch(1);
 
     @Override
     public void submissionFailed(UserException ex) {
-      exception = ex;
-      System.out.println("Query failed: " + ex.getMessage());
-      latch.countDown();
+      logger.debug("Query failed: " + ex.getMessage());
     }
 
     @Override
     public void queryCompleted(QueryState state) {
-      System.out.println("Query completed successfully with row count: " + count.get());
-      latch.countDown();
+      logger.debug("Query completed successfully with row count: " + count.get());
     }
 
     @Override
@@ -462,13 +456,6 @@ public class BaseTestQuery extends ExecTest {
     @Override
     public void queryIdArrived(QueryId queryId) {}
 
-    public int waitForCompletion() throws Exception {
-      latch.await();
-      if (exception != null) {
-        throw exception;
-      }
-      return count.get();
-    }
   }
 
   protected void setColumnWidth(int columnWidth) {

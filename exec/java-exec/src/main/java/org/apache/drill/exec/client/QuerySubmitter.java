@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.rpc.user.AwaitableUserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
@@ -148,8 +149,6 @@ public class QuerySubmitter {
 
   public int submitQuery(DrillClient client, String plan, String type, String format, int width) throws Exception {
 
-    PrintingResultsListener listener;
-
     String[] queries;
     QueryType queryType;
     type = type.toLowerCase();
@@ -189,7 +188,8 @@ public class QuerySubmitter {
     }
     Stopwatch watch = new Stopwatch();
     for (String query : queries) {
-      listener = new PrintingResultsListener(client.getConfig(), outputFormat, width);
+      AwaitableUserResultsListener listener =
+          new AwaitableUserResultsListener(new PrintingResultsListener(client.getConfig(), outputFormat, width));
       watch.start();
       client.runQuery(queryType, query, listener);
       int rows = listener.await();
