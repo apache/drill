@@ -124,6 +124,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   @Override
   public IterOutcome innerNext() {
+    recordCount = 0;
     if (hasRemainder) {
       handleRemainder();
       return IterOutcome.OK;
