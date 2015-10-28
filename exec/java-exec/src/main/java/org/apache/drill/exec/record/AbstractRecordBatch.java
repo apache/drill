@@ -65,12 +65,18 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   protected static enum BatchState {
-    BUILD_SCHEMA, // Need to build schema and return
-    FIRST, // This is still the first data batch
-    NOT_FIRST, // The first data batch has already been returned
-    STOP, // The query most likely failed, we need to propagate STOP to the root
-    OUT_OF_MEMORY, // Out of Memory while building the Schema...Ouch!
-    DONE // All work is done, no more data to be sent
+    /** Need to build schema and return. */
+    BUILD_SCHEMA,
+    /** This is still the first data batch. */
+    FIRST,
+    /** The first data batch has already been returned. */
+    NOT_FIRST,
+    /** The query most likely failed, we need to propagate STOP to the root. */
+    STOP,
+    /** Out of Memory while building the Schema...Ouch! */
+    OUT_OF_MEMORY,
+    /** All work is done, no more data to be sent. */
+    DONE
   }
 
   @Override

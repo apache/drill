@@ -20,16 +20,32 @@ package org.apache.drill.exec.vector;
 
 import org.apache.drill.exec.util.CallBack;
 
-public class SchemaChangeCallBack implements CallBack {
-  private boolean schemaChange = false;
 
-  public void doWork() {
-    schemaChange = true;
+public class SchemaChangeCallBack implements CallBack {
+  private boolean schemaChanged = false;
+
+  /**
+   * Constructs a schema-change callback with the schema-changed state set to
+   * {@code false}.
+   */
+  public SchemaChangeCallBack() {
   }
 
-  public boolean getSchemaChange() {
-    final boolean current = schemaChange;
-    schemaChange = false;
+  /**
+   * Sets the schema-changed state to {@code true}.
+   */
+  @Override
+  public void doWork() {
+    schemaChanged = true;
+  }
+
+  /**
+   * Returns the value of schema-changed state, <strong>resetting</strong> the
+   * schema-changed state to {@code false}.
+   */
+  public boolean getSchemaChangedAndReset() {
+    final boolean current = schemaChanged;
+    schemaChanged = false;
     return current;
   }
 }
