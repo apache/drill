@@ -68,10 +68,11 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
   public RecordReader getRecordReader(FragmentContext context,
                                       DrillFileSystem dfs,
                                       FileWork fileWork,
-                                      List<SchemaPath> columns) throws ExecutionSetupException {
+                                      List<SchemaPath> columns,
+                                      String userName) throws ExecutionSetupException {
     final Path path = dfs.makeQualified(new Path(fileWork.getPath()));
     final FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
-    return new SequenceFileRecordReader(split, dfs.getConf());
+    return new SequenceFileRecordReader(split, dfs, context.getQueryUserName(), userName);
   }
 
   @Override

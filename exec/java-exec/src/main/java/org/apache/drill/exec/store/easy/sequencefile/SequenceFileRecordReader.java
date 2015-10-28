@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.security.PrivilegedExceptionAction;
 
 import com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -34,13 +35,16 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileAsBinaryInputFormat;
+import org.apache.hadoop.security.UserGroupInformation;
 
 
 public class SequenceFileRecordReader extends AbstractRecordReader {
@@ -61,16 +65,22 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
   private org.apache.hadoop.mapred.RecordReader<BytesWritable, BytesWritable> reader;
   private final BytesWritable key = new BytesWritable();
   private final BytesWritable value = new BytesWritable();
-  private final Configuration fsConf;
+  private final DrillFileSystem dfs;
+  private final String queryUserName;
+  private final String opUserName;
 
   public SequenceFileRecordReader(final FileSplit split,
-                                  final Configuration fsConf) {
+                                  final DrillFileSystem dfs,
+                                  final String queryUserName,
+                                  final String opUserName) {
     final List<SchemaPath> columns = new ArrayList();
     columns.add(keySchema);
     columns.add(valueSchema);
     setColumns(columns);
-    this.fsConf = fsConf;
+    this.dfs = dfs;
     this.split = split;
+    this.queryUserName = queryUserName;
+    this.opUserName = opUserName;
   }
 
   @Override
@@ -78,18 +88,29 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
     return false;
   }
 
+  private org.apache.hadoop.mapred.RecordReader getRecordReader(final InputFormat inputFormat,
+                                                                final JobConf jobConf) throws ExecutionSetupException {
+    try {
+      final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
+      return ugi.doAs(new PrivilegedExceptionAction<org.apache.hadoop.mapred.RecordReader>() {
+        @Override
+        public org.apache.hadoop.mapred.RecordReader run() throws Exception {
+          return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
+        }
+      });
+    } catch (IOException | InterruptedException e) {
+      throw new ExecutionSetupException(
+        String.format("Error in creating sequencefile reader for file: %s, start: %d, length: %d",
+          split.getPath(), split.getStart(), split.getLength()), e);
+    }
+  }
+
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     final SequenceFileAsBinaryInputFormat inputFormat = new SequenceFileAsBinaryInputFormat();
-    final JobConf jobConf = new JobConf(fsConf);
+    final JobConf jobConf = new JobConf(dfs.getConf());
     jobConf.setInputFormat(inputFormat.getClass());
-    try {
-      this.reader = inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
-    } catch (IOException ioe) {
-      throw new ExecutionSetupException(
-        String.format("Error in creating sequencefile reader for file: %s, start: %d, length: %d",
-          split.getPath(), split.getStart(), split.getLength()), ioe);
-    }
+    this.reader = getRecordReader(inputFormat, jobConf);
     final MaterializedField keyField = MaterializedField.create(keySchema, KEY_TYPE);
     final MaterializedField valueField = MaterializedField.create(valueSchema, VALUE_TYPE);
     try {
