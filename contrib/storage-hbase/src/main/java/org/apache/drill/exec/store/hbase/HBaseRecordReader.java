@@ -44,6 +44,7 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -133,6 +134,11 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     familyVectorMap = new HashMap<String, MapVector>();
 
     try {
+      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
+          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
+          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
+      hTable = new HTable(hbaseConf, hbaseTableName);
+
       // Add Vectors to output in the order specified when creating reader
       for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
@@ -142,10 +148,12 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
         }
       }
-      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
-          hbaseTableName, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
-          hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-      hTable = new HTable(hbaseConf, hbaseTableName);
+      // Add vector for any column families not mentioned yet (in order to avoid
+      // creation of dummy NullableIntVectors for them).
+      for (HColumnDescriptor columnFamily :
+          hTable.getTableDescriptor().getColumnFamilies()) {
+        getOrCreateFamilyVector(columnFamily.getNameAsString(), false);
+      }
       resultScanner = hTable.getScanner(hbaseScan);
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(e);
