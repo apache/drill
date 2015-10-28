@@ -462,6 +462,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
   @Override
   public IterOutcome innerNext() {
+    recordCount = 0;
     container.zeroVectors();
 
     // if we got IterOutcome.NONE while getting partition vectors, and there are no batches on the queue, then we are

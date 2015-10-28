@@ -189,8 +189,8 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
         Preconditions.checkNotNull(vector, "vector cannot be null")
     );
     if (old != null && old != vector) {
-      logger.debug("Field [%s] mutated from [%s] to [%s]", name, old.getClass().getSimpleName(),
-          vector.getClass().getSimpleName());
+      logger.debug("Field [{}] mutated from [{}] to [{}]", name, old.getClass().getSimpleName(),
+                   vector.getClass().getSimpleName());
     }
   }
 

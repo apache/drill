@@ -47,6 +47,11 @@ public abstract class BaseValueVector implements ValueVector {
   }
 
   @Override
+  public String toString() {
+    return super.toString() + "[field = " + field + ", ...]";
+  }
+
+  @Override
   public void clear() {
     getMutator().reset();
   }

@@ -24,7 +24,7 @@ public class HBaseRecordReaderTest extends BaseHBaseTest {
   @Test
   public void testLocalDistributed() throws Exception {
     String planName = "/hbase/hbase_scan_screen_physical.json";
-    runHBasePhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 7);
+    runHBasePhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 8);
   }
 
   @Test

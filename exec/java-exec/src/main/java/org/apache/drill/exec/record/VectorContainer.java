@@ -54,6 +54,16 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     this.oContext = oContext;
   }
 
+  @Override
+  public String toString() {
+    return super.toString()
+        + "[recordCount = " + recordCount
+        + ", schemaChanged = " + schemaChanged
+        + ", schema = " + schema
+        + ", wrappers = " + wrappers
+        + ", ...]";
+  }
+
   /**
    * Get the OperatorContext.
    *
@@ -143,6 +153,9 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return vc;
   }
 
+  /**
+   * Sorts vectors into canonical order (by field name) in new VectorContainer.
+   */
   public static VectorContainer canonicalize(VectorContainer original) {
     VectorContainer vc = new VectorContainer();
     List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
@@ -307,6 +320,9 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     return recordCount;
   }
 
+  /**
+   * Clears the contained vectors.  (See {@link ValueVector#clear}).
+   */
   public void zeroVectors() {
     for (VectorWrapper<?> w : wrappers) {
       w.clear();

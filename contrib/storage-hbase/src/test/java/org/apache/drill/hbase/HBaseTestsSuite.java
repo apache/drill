@@ -161,12 +161,14 @@ public class HBaseTestsSuite {
   }
 
   private static void createTestTables() throws Exception {
+    // TODO(DRILL-3954):  Change number of regions from 1 to multiple for other
+    // tables and remaining problems not addressed by DRILL-2288 fixes.
     /*
      * We are seeing some issues with (Drill) Filter operator if a group scan span
      * multiple fragments. Hence the number of regions in the HBase table is set to 1.
      * Will revert to multiple region once the issue is resolved.
      */
-    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 1);
+    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 2);
     TestTableGenerator.generateHBaseDataset3(admin, TEST_TABLE_3, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyDate(admin, TEST_TABLE_COMPOSITE_DATE, 1);
     TestTableGenerator.generateHBaseDatasetCompositeKeyTime(admin, TEST_TABLE_COMPOSITE_TIME, 1);

@@ -38,6 +38,17 @@ package org.apache.drill.exec.vector.complex.writer;
 
     MaterializedField getField();
 
+    /**
+     * Whether this writer is a map writer and is empty (has no children).
+     * 
+     * <p>
+     *   Intended only for use in determining whether to add dummy vector to
+     *   avoid empty (zero-column) schema, as in JsonReader.
+     * </p>
+     * 
+     */
+    boolean isEmptyMap();
+
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
