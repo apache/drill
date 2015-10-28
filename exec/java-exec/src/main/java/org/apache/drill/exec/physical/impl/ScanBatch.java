@@ -332,19 +332,26 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private class Mutator implements OutputMutator {
-    private boolean schemaChange = true;
+    /** Whether schema has changed since last inquiry (via #isNewSchema}).  Is
+     *  true before first inquiry. */
+    private boolean schemaChanged = true;
 
+
+    @SuppressWarnings("unchecked")
     @Override
-    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
-      // Check if the field exists
+    public <T extends ValueVector> T addField(MaterializedField field,
+                                              Class<T> clazz) throws SchemaChangeException {
+      // Check if the field exists.
       ValueVector v = fieldVectorMap.get(field.key());
       if (v == null || v.getClass() != clazz) {
-        // Field does not exist add it to the map and the output container
+        // Field does not exist--add it to the map and the output container.
         v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
         if (!clazz.isAssignableFrom(v.getClass())) {
-          throw new SchemaChangeException(String.format(
-              "The class that was provided %s does not correspond to the expected vector type of %s.",
-              clazz.getSimpleName(), v.getClass().getSimpleName()));
+          throw new SchemaChangeException(
+              String.format(
+                  "The class that was provided, %s, does not correspond to the "
+                  + "expected vector type of %s.",
+                  clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
 
         final ValueVector old = fieldVectorMap.put(field.key(), v);
@@ -354,8 +361,8 @@ public class ScanBatch implements CloseableRecordBatch {
         }
 
         container.add(v);
-        // Adding new vectors to the container mark that the schema has changed
-        schemaChange = true;
+        // Added new vectors to the container--mark that the schema has changed.
+        schemaChanged = true;
       }
 
       return clazz.cast(v);
@@ -368,17 +375,21 @@ public class ScanBatch implements CloseableRecordBatch {
       }
     }
 
+    /**
+     * Reports whether schema has changed (field was added or re-added) since
+     * last call to {@link #isNewSchema}.  Returns true at first call.
+     */
     @Override
     public boolean isNewSchema() {
-      // Check if top level schema has changed, second condition checks if one of the deeper map schema has changed
+      // Check if top-level schema or any of the deeper map schemas has changed.
 
-      // Note:  Callback's getSchemaChange() must get called in order
+      // Note:  Callback's getSchemaChangedAndReset() must get called in order
       // to reset it and avoid false reports of schema changes in future.  (Be
       // careful with short-circuit OR (||) operator.)
 
-      final boolean deeperSchemaChanged = callBack.getSchemaChange();
-      if (schemaChange || deeperSchemaChanged) {
-        schemaChange = false;
+      final boolean deeperSchemaChanged = callBack.getSchemaChangedAndReset();
+      if (schemaChanged || deeperSchemaChanged) {
+        schemaChanged = false;
         return true;
       }
       return false;
@@ -417,6 +428,8 @@ public class ScanBatch implements CloseableRecordBatch {
 
   @Override
   public VectorContainer getOutgoingContainer() {
-    throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(
+        String.format("You should not call getOutgoingContainer() for class %s",
+                      this.getClass().getCanonicalName()));
   }
 }
