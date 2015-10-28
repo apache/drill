@@ -114,6 +114,14 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   @Override
+  public String toString() {
+    return super.toString()
+        + "[hadoopPath = " + hadoopPath
+        + ", recordCount = " + recordCount
+        + ", runningRecordCount = " + runningRecordCount + ", ...]";
+  }
+
+  @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
     try{
       if (hadoopPath != null) {

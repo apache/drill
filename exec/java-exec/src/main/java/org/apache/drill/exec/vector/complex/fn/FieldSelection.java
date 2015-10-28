@@ -59,6 +59,15 @@ class FieldSelection {
     this.mode = mode;
   }
 
+  @Override
+  public String toString() {
+    return
+        super.toString()
+        + "[mode = " + mode
+        + ", children = " + children
+        + ", childrenInsensitive = " + childrenInsensitive + "]";
+  }
+
   /**
    * Create a new tree that has all leaves fixed to support full depth validity.
    */

@@ -54,6 +54,16 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     this.oContext = oContext;
   }
 
+  @Override
+  public String toString() {
+    return super.toString()
+        + "[recordCount = " + recordCount
+        + ", schemaChanged = " + schemaChanged
+        + ", schema = " + schema
+        + ", wrappers = " + wrappers
+        + ", ...]";
+  }
+
   /**
    * Get the OperatorContext.
    *
