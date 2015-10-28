@@ -38,6 +38,9 @@ package org.apache.drill.exec.vector.complex.writer;
 
     MaterializedField getField();
 
+    /** Whether map is empty, if this is a map writer. */
+    boolean isEmptyMap();
+
     <#list vv.types as type><#list type.minor as minor>
     <#assign lowerName = minor.class?uncap_first />
     <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
