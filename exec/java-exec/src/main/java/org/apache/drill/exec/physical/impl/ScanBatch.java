@@ -67,9 +67,13 @@ public class ScanBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScanBatch.class);
 
-  private final Map<MaterializedField.Key, ValueVector> fieldVectorMap = Maps.newHashMap();
-
+  /** Main collection of fields' value vectors. */
   private final VectorContainer container = new VectorContainer();
+
+  /** Fields' value vectors indexed by fields' keys. */
+  private final Map<MaterializedField.Key, ValueVector> fieldVectorMap =
+      Maps.newHashMap();
+
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
@@ -85,8 +89,12 @@ public class ScanBatch implements CloseableRecordBatch {
   private boolean done = false;
   private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private boolean hasReadNonEmptyFile = false;
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, OperatorContext oContext,
-                   Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
+
+
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
+                   OperatorContext oContext, Iterator<RecordReader> readers,
+                   List<String[]> partitionColumns,
+                   List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext()) {
@@ -123,7 +131,8 @@ public class ScanBatch implements CloseableRecordBatch {
     addPartitionVectors();
   }
 
-  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers)
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context,
+                   Iterator<RecordReader> readers)
       throws ExecutionSetupException {
     this(subScanConfig, context,
         context.newOperatorContext(subScanConfig, false /* ScanBatch is not subject to fragment memory limit */),
@@ -186,7 +195,8 @@ public class ScanBatch implements CloseableRecordBatch {
             // We're on the last reader, and it has no (more) rows.
             currentReader.close();
             releaseAssets();
-            done = true;
+            done = true;  // have any future call to next() return NONE
+
             if (mutator.isNewSchema()) {
               // This last reader has a new schema (e.g., we have a zero-row
               // file or other source).  (Note that some sources have a non-
@@ -199,9 +209,10 @@ public class ScanBatch implements CloseableRecordBatch {
             }
             return IterOutcome.NONE;
           }
+          // At this point, the reader that hit its end is not the last reader.
 
           // If all the files we have read so far are just empty, the schema is not useful
-          if(!hasReadNonEmptyFile) {
+          if (! hasReadNonEmptyFile) {
             container.clear();
             for (ValueVector v : fieldVectorMap.values()) {
               v.clear();
@@ -228,6 +239,7 @@ public class ScanBatch implements CloseableRecordBatch {
           return IterOutcome.STOP;
         }
       }
+      // At this point, the current reader has read 1 or more rows.
 
       hasReadNonEmptyFile = true;
       populatePartitionVectors();
@@ -271,7 +283,7 @@ public class ScanBatch implements CloseableRecordBatch {
       for (int i : selectedPartitionColumns) {
         final MaterializedField field =
             MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i),
-                Types.optional(MinorType.VARCHAR));
+                                     Types.optional(MinorType.VARCHAR));
         final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
         partitionVectors.add(v);
       }
