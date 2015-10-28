@@ -179,8 +179,13 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return schema;
   }
 
+  public void resetRecordCount() {
+    valueCount = 0;
+  }
+
   public void clear() {
     container.clear();
+    resetRecordCount();
   }
 
   public void canonicalize() {
