@@ -23,16 +23,23 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
- * A record batch contains a set of field values for a particular range of records. In the case of a record batch
- * composed of ValueVectors, ideally a batch fits within L2 cache (~256k per core). The set of value vectors do not
- * change unless the next() IterOutcome is a *_NEW_SCHEMA type.
- *
- * A key thing to know is that the Iterator provided by record batch must align with the rank positions of the field ids
- * provided utilizing getValueVectorId();
+ * A record batch contains a set of field values for a particular range of
+ * records.
+ * <p>
+ *   In the case of a record batch composed of ValueVectors, ideally a batch
+ *   fits within L2 cache (~256kB per core).  The set of value vectors does
+ *   not change except during a call to {@link #next()} that returns
+ *   {@link IterOutcome#OK_NEW_SCHEMA} value.
+ * </p>
+ * <p>
+ *   A key thing to know is that the Iterator provided by a record batch must
+ *   align with the rank positions of the field IDs provided using
+ *   {@link getValueVectorId}.
+ * </p>
  */
 public interface RecordBatch extends VectorAccessible {
 
-  /* max batch size, limited by 2-byte-length in SV2 : 65536 = 2^16 */
+  /** max batch size, limited by 2-byte length in SV2: 65536 = 2^16 */
   public static final int MAX_BATCH_SIZE = 65536;
 
   /**
@@ -195,15 +202,9 @@ public interface RecordBatch extends VectorAccessible {
     OUT_OF_MEMORY
   }
 
-  public static enum SetupOutcome {
-    OK, OK_NEW_SCHEMA, FAILED
-  }
-
   /**
-   * Access the FragmentContext of the current query fragment. Useful for reporting failure information or other query
-   * level information.
-   *
-   * @return
+   * Gets the FragmentContext of the current query fragment.  Useful for
+   * reporting failure information or other query-level information.
    */
   public FragmentContext getContext();
 
@@ -218,18 +219,18 @@ public interface RecordBatch extends VectorAccessible {
    *   {@link #OK_NEW_SCHEMA}.
    * </p>
    */
+  @Override
   public BatchSchema getSchema();
 
   /**
-   * Provide the number of records that are within this record count
-   *
-   * @return
+   * Gets the number of records that are within this record.
    */
+  @Override
   public int getRecordCount();
 
   /**
-   * Inform child nodes that this query should be terminated. Child nodes should utilize the QueryContext to determine
-   * what has happened.
+   * Informs child nodes that this query should be terminated.  Child nodes
+   * should use the QueryContext to determine what has happened.
    */
   public void kill(boolean sendUpstream);
 
@@ -241,16 +242,19 @@ public interface RecordBatch extends VectorAccessible {
   public VectorContainer getOutgoingContainer();
 
   /**
-   * Get the value vector type and id for the given schema path. The TypedFieldId should store a fieldId which is the
-   * same as the ordinal position of the field within the Iterator provided this classes implementation of
-   * Iterable<ValueVector>.
+   * Gets the value vector type and ID for the given schema path.  The
+   * TypedFieldId should store a fieldId which is the same as the ordinal
+   * position of the field within the Iterator provided this class's
+   * implementation of Iterable<ValueVector>.
    *
    * @param path
    *          The path where the vector should be located.
    * @return The local field id associated with this vector. If no field matches this path, this will return a null
    *         TypedFieldId
    */
+  @Override
   public abstract TypedFieldId getValueVectorId(SchemaPath path);
+
   @Override
   public abstract VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
 
@@ -274,9 +278,8 @@ public interface RecordBatch extends VectorAccessible {
   public IterOutcome next();
 
   /**
-   * Get a writable version of this batch. Takes over owernship of existing buffers.
-   *
-   * @return
+   * Gets a writable version of this batch.  Takes over ownership of existing
+   * buffers.
    */
   public WritableBatch getWritableBatch();
 
