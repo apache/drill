@@ -50,8 +50,6 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
-import org.apache.drill.exec.store.parquet.Metadata.ParquetFileMetadata;
-import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadata_v1;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -225,10 +223,10 @@ public class ParquetFormatPlugin implements FormatPlugin{
         Path metaFilePath = getMetadataPath(metaRootDir);
 
         // get the metadata for the directory by reading the metadata file
-        ParquetTableMetadata_v1 metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
+        Metadata.ParquetTableMetadataBase metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
         List<String> fileNames = Lists.newArrayList();
-        for (ParquetFileMetadata file : metadata.files) {
-          fileNames.add(file.path);
+        for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
+          fileNames.add(file.getPath());
         }
         // when creating the file selection, set the selection root in the form /a/b instead of
         // file:/a/b.  The reason is that the file names above have been created in the form
