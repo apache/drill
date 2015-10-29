@@ -22,6 +22,7 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
+import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -86,14 +87,14 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     Map<String, WorkspaceConfig> workspaces = Maps.newHashMap();
 
     // create user directory (ex. "/user/user0_1", with ownership "user0_1:group0_1" and perms 755) for every user.
-    for(int i=0; i<org1Users.length; i++) {
+    for (int i = 0; i < org1Users.length; i++) {
       final String user = org1Users[i];
       final String group = org1Groups[i];
       createAndAddWorkspace(user, getUserHome(user), (short)0755, user, group, workspaces);
     }
 
     // create user directory (ex. "/user/user0_2", with ownership "user0_2:group0_2" and perms 755) for every user.
-    for(int i=0; i<org2Users.length; i++) {
+    for (int i = 0; i < org2Users.length; i++) {
       final String user = org2Users[i];
       final String group = org2Groups[i];
       createAndAddWorkspace(user, getUserHome(user), (short)0755, user, group, workspaces);
@@ -125,11 +126,11 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     // Create a view on top of u1_lineitem view
     // /user/user2_1    u2_lineitem    750    user2_1:group2_1
-    createView(org1Users[2], org1Groups[2], (short)0750, "u2_lineitem", getWSSchema(org1Users[1]), "u1_lineitem");
+    createView(org1Users[2], org1Groups[2], (short) 0750, "u2_lineitem", getWSSchema(org1Users[1]), "u1_lineitem");
 
     // Create a view on top of u2_lineitem view
     // /user/user2_1    u22_lineitem    750    user2_1:group2_1
-    createView(org1Users[2], org1Groups[2], (short)0750, "u22_lineitem", getWSSchema(org1Users[2]), "u2_lineitem");
+    createView(org1Users[2], org1Groups[2], (short) 0750, "u22_lineitem", getWSSchema(org1Users[2]), "u2_lineitem");
 
     // Create a view on top of u22_lineitem view
     // /user/user3_1    u3_lineitem    750    user3_1:group3_1
@@ -137,7 +138,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     // Create a view on top of u3_lineitem view
     // /user/user4_1    u4_lineitem    755    user4_1:group4_1
-    createView(org1Users[4], org1Groups[4], (short)0755, "u4_lineitem", getWSSchema(org1Users[3]), "u3_lineitem");
+    createView(org1Users[4], org1Groups[4], (short) 0755, "u4_lineitem", getWSSchema(org1Users[3]), "u3_lineitem");
   }
 
   private static void createNestedTestViewsOnOrders() throws Exception {
@@ -174,15 +175,21 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     Path dfsFile = new Path(getUserHome(user), "simple.seq");
     fs.copyFromLocalFile(localFile, dfsFile);
     fs.setOwner(dfsFile, user, group);
-    fs.setPermission(dfsFile, new FsPermission((short) 0750));
+    fs.setPermission(dfsFile, new FsPermission((short) 0700));
+
+    localFile = new Path(AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues());
+    dfsFile = new Path(getUserHome(user), "simple.avro");
+    fs.copyFromLocalFile(localFile, dfsFile);
+    fs.setOwner(dfsFile, user, group);
+    fs.setPermission(dfsFile, new FsPermission((short) 0700));
   }
 
   private static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
-      final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
+                                 final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
     updateClient(viewOwner);
     test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
     test(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s;",
-        getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
+      getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
 
     // Verify the view file created has the expected permissions and ownership
     Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
@@ -190,6 +197,15 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     assertEquals(viewGroup, status.getGroup());
     assertEquals(viewOwner, status.getOwner());
     assertEquals(viewPerms, status.getPermission().toShort());
+  }
+
+  private static void createView(final String viewOwner, final String viewGroup, final String viewName,
+                                   final String viewDef) throws Exception {
+    updateClient(viewOwner);
+    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
+    test("CREATE VIEW %s.%s.%s AS %s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
+    final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
+    fs.setOwner(viewFilePath, viewOwner, viewGroup);
   }
 
   @Test
@@ -239,7 +255,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     try {
       updateClient(org1Users[5]);
       test(String.format("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4])));
-    } catch(UserRemoteException e) {
+    } catch (UserRemoteException e) {
       ex = e;
     }
 
@@ -275,31 +291,30 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   }
 
   @Test
-  public void testSequenceFileReaderWithImpersonation() throws Exception {
-    UserRemoteException ex = null;
-    final String query = String.format("select convert_from(t.binary_key, 'UTF8') as k, convert_from(t.binary_value, 'UTF8') as v " +
-      "from %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME, new Path(getUserHome(org1Users[0]), "simple.seq"));
-    try {
-      updateClient(org1Users[0]);
-      test(query);
-    } catch (UserRemoteException e) {
-      ex = e;
-    }
-    assertNull(ex);
+  public void sequenceFileChainedImpersonationWithView() throws Exception {
+    // create a view named "simple_seq_view" on "simple.seq". View is owned by user0:group0 and has permissions 750
+    createView(org1Users[0], org1Groups[0], "simple_seq_view",
+      String.format("SELECT convert_from(t.binary_key, 'UTF8') as k FROM %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME,
+        new Path(getUserHome(org1Users[0]), "simple.seq")));
     try {
       updateClient(org1Users[1]);
-      test(query);
+      test("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
     } catch (UserRemoteException e) {
-      ex = e;
+      assertNull("This test should pass.", e);
     }
-    assertNull(ex);
+  }
+
+  @Test
+  public void avroChainedImpersonationWithView() throws Exception {
+    createView(org1Users[0], org1Groups[0], "simple_avro_view",
+      String.format("SELECT h_boolean, e_double FROM %s.`%s` t", MINIDFS_STORAGE_PLUGIN_NAME,
+        new Path(getUserHome(org1Users[0]), "simple.avro")));
     try {
-      updateClient(org1Users[2]);
-      test(query);
+      updateClient(org1Users[1]);
+      test("SELECT h_boolean FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
     } catch (UserRemoteException e) {
-      ex = e;
+      assertNull("This test should pass.", e);
     }
-    assertNotNull("UserRemoteException is expected", ex);
   }
 
   @AfterClass
