@@ -18,9 +18,9 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.junit.Test;
 
 public class TestCastFunctions extends BaseTestQuery {
@@ -76,6 +76,24 @@ public class TestCastFunctions extends BaseTestQuery {
         .ordered()
         .baselineColumns("col")
         .baselineValues(new DateTime(1969, 12, 31, 0, 0))
+        .build()
+        .run();
+  }
+
+  @Test // DRILL-3950
+  public void testCastTimesInterval() throws Exception {
+    final String query = "select cast(r_regionkey as Integer) * (INTERVAL '1' DAY) as col \n" +
+        "from cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col")
+        .baselineValues(Period.days(0))
+        .baselineValues(Period.days(1))
+        .baselineValues(Period.days(2))
+        .baselineValues(Period.days(3))
+        .baselineValues(Period.days(4))
         .build()
         .run();
   }
