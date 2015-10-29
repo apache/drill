@@ -87,6 +87,9 @@ public class HiveScan extends AbstractGroupScan {
   @JsonProperty("columns")
   public List<SchemaPath> columns;
 
+  @JsonProperty("numPartitions")
+  public final int numPartitions;
+
   @JsonIgnore
   List<List<InputSplit>> mappings;
 
@@ -104,6 +107,7 @@ public class HiveScan extends AbstractGroupScan {
                   @JsonProperty("hive-table") final HiveReadEntry hiveReadEntry,
                   @JsonProperty("storage-plugin") final String storagePluginName,
                   @JsonProperty("columns") final List<SchemaPath> columns,
+                  @JsonProperty("numPartitions") final int numPartitions,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
@@ -112,6 +116,7 @@ public class HiveScan extends AbstractGroupScan {
     this.columns = columns;
     getSplitsWithUGI();
     endpoints = storagePlugin.getContext().getBits();
+    this.numPartitions = numPartitions;
   }
 
   public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin storagePlugin, final List<SchemaPath> columns) throws ExecutionSetupException {
@@ -122,6 +127,8 @@ public class HiveScan extends AbstractGroupScan {
     getSplitsWithUGI();
     endpoints = storagePlugin.getContext().getBits();
     this.storagePluginName = storagePlugin.getName();
+    List<HivePartition> partitions = hiveReadEntry.getHivePartitionWrappers();
+    numPartitions = partitions == null ? 0 : partitions.size();
   }
 
   public HiveScan(final HiveScan that) {
@@ -135,6 +142,7 @@ public class HiveScan extends AbstractGroupScan {
     this.storagePlugin = that.storagePlugin;
     this.storagePluginName = that.storagePluginName;
     this.rowCount = that.rowCount;
+    this.numPartitions = that.numPartitions;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
@@ -355,10 +363,13 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
+    List<HivePartition> partitions = hiveReadEntry.getHivePartitionWrappers();
+    int numPartitions = partitions == null ? 0 : partitions.size();
     return "HiveScan [table=" + hiveReadEntry.getHiveTableWrapper()
         + ", inputSplits=" + inputSplits
         + ", columns=" + columns
-        + ", partitions= " + hiveReadEntry.getHivePartitionWrappers() +"]";
+        + ", numPartitions=" + numPartitions
+        + ", partitions= " + partitions +"]";
   }
 
   @Override
