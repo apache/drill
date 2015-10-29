@@ -59,6 +59,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
@@ -109,10 +110,12 @@ public class EvaluationVisitor {
   private class ExpressionHolder {
     private LogicalExpression expression;
     private GeneratorMapping mapping;
+    private MappingSet mappingSet;
 
-    ExpressionHolder(LogicalExpression expression, GeneratorMapping mapping) {
+    ExpressionHolder(LogicalExpression expression, MappingSet mappingSet) {
       this.expression = expression;
-      this.mapping = mapping;
+      this.mapping = mappingSet.getCurrentMapping();
+      this.mappingSet = mappingSet;
     }
 
     @Override
@@ -126,7 +129,7 @@ public class EvaluationVisitor {
         return false;
       }
       ExpressionHolder that = (ExpressionHolder) obj;
-      return this.mapping == that.mapping && expression.accept(new EqualityVisitor(), that.expression);
+      return this.mappingSet == that.mappingSet && this.mapping == that.mapping && expression.accept(new EqualityVisitor(), that.expression);
     }
   }
 
@@ -144,23 +147,23 @@ public class EvaluationVisitor {
     previousExpressions = mapStack.pop();
   }
 
-  private HoldingContainer getPrevious(LogicalExpression expression, GeneratorMapping mapping) {
+  private HoldingContainer getPrevious(LogicalExpression expression, MappingSet mappingSet) {
     if (!eliminateCommonExpressions) {
       return null;
     }
 
-    HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mapping));
+    HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mappingSet));
     if (previous != null) {
       logger.debug("Found previously evaluated expression: {}", ExpressionStringBuilder.toString(expression));
     }
     return previous;
   }
 
-  private void put(LogicalExpression expression, HoldingContainer hc, GeneratorMapping mapping) {
+  private void put(LogicalExpression expression, HoldingContainer hc, MappingSet mappingSet) {
     if (!eliminateCommonExpressions) {
       return;
     }
-    previousExpressions.put(new ExpressionHolder(expression, mapping), hc);
+    previousExpressions.put(new ExpressionHolder(expression, mappingSet), hc);
   }
 
   private class EvalVisitor extends AbstractExprVisitor<HoldingContainer, ClassGenerator<?>, RuntimeException> {
@@ -174,7 +177,7 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitBooleanOperator(BooleanOperator op,
         ClassGenerator<?> generator) throws RuntimeException {
-      HoldingContainer hc = getPrevious(op, generator.getMappingSet().getCurrentMapping());
+      HoldingContainer hc = getPrevious(op, generator.getMappingSet());
       if (hc != null) {
         return hc;
       }
@@ -185,7 +188,7 @@ public class EvaluationVisitor {
       } else {
         throw new UnsupportedOperationException("BooleanOperator can only be booleanAnd, booleanOr. You are using " + op.getName());
       }
-      put(op, hc, generator.getMappingSet().getCurrentMapping());
+      put(op, hc, generator.getMappingSet());
       return hc;
     }
 
@@ -193,7 +196,7 @@ public class EvaluationVisitor {
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holderExpr,
         ClassGenerator<?> generator) throws RuntimeException {
 
-      HoldingContainer hc = getPrevious(holderExpr, generator.getMappingSet().getCurrentMapping());
+      HoldingContainer hc = getPrevious(holderExpr, generator.getMappingSet());
       if (hc != null) {
         return hc;
       }
@@ -218,7 +221,7 @@ public class EvaluationVisitor {
       }
 
       HoldingContainer out = holder.renderEnd(generator, args, workspaceVars);
-      put(holderExpr, out, generator.getMappingSet().getCurrentMapping());
+      put(holderExpr, out, generator.getMappingSet());
       return out;
     }
 
@@ -226,7 +229,7 @@ public class EvaluationVisitor {
     public HoldingContainer visitIfExpression(IfExpression ifExpr, ClassGenerator<?> generator) throws RuntimeException {
       JBlock local = generator.getEvalBlock();
 
-      HoldingContainer output = getPrevious(ifExpr, generator.getMappingSet().getCurrentMapping());
+      HoldingContainer output = getPrevious(ifExpr, generator.getMappingSet());
       if (output != null) {
         return output;
       }
@@ -282,7 +285,7 @@ public class EvaluationVisitor {
         jc._else().assign(output.getHolder(), elseExpr.getHolder());
       }
       local.add(conditionalBlock);
-      put(ifExpr, output, generator.getMappingSet().getCurrentMapping());
+      put(ifExpr, output, generator.getMappingSet());
       return output;
     }
 
@@ -422,7 +425,7 @@ public class EvaluationVisitor {
     private HoldingContainer visitValueVectorReadExpression(ValueVectorReadExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
       // declare value vector
-      HoldingContainer hc = getPrevious(e, generator.getMappingSet().getCurrentMapping());
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
       if (hc != null) {
         return hc;
       }
@@ -540,7 +543,7 @@ public class EvaluationVisitor {
           }
 
           hc = new HoldingContainer(e.getMajorType(), complexReader, null, null, false, true);
-          put(e, hc, generator.getMappingSet().getCurrentMapping());
+          put(e, hc, generator.getMappingSet());
           return hc;
         } else {
           if (seg != null) {
@@ -552,7 +555,7 @@ public class EvaluationVisitor {
 
       }
 
-      put(e, out, generator.getMappingSet().getCurrentMapping());
+      put(e, out, generator.getMappingSet());
       return out;
     }
 
@@ -718,10 +721,10 @@ public class EvaluationVisitor {
       //    null    false    false
       //    null    null     null
       for (int i = 0; i < op.args.size(); i++) {
-        arg = getPrevious(op.args.get(i), generator.getMappingSet().getCurrentMapping());
+        arg = getPrevious(op.args.get(i), generator.getMappingSet());
         if (arg == null) {
           arg = op.args.get(i).accept(this, generator);
-          put(op.args.get(i), arg, generator.getMappingSet().getCurrentMapping());
+          put(op.args.get(i), arg, generator.getMappingSet());
         }
 
         JBlock earlyExit = null;
@@ -785,10 +788,10 @@ public class EvaluationVisitor {
       //    null    null     null
 
       for (int i = 0; i < op.args.size(); i++) {
-        arg = getPrevious(op.args.get(i), generator.getMappingSet().getCurrentMapping());
+        arg = getPrevious(op.args.get(i), generator.getMappingSet());
         if (arg == null) {
           arg = op.args.get(i).accept(this, generator);
-          put(op.args.get(i), arg, generator.getMappingSet().getCurrentMapping());
+          put(op.args.get(i), arg, generator.getMappingSet());
         }
 
         JBlock earlyExit = null;
