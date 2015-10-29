@@ -43,8 +43,9 @@ public class HiveDrillNativeParquetScan extends HiveScan {
                                     @JsonProperty("hive-table") HiveReadEntry hiveReadEntry,
                                     @JsonProperty("storage-plugin") String storagePluginName,
                                     @JsonProperty("columns") List<SchemaPath> columns,
+                                    @JsonProperty("numPartitions") final int numPartitions,
                                     @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
-    super(userName, hiveReadEntry, storagePluginName, columns, pluginRegistry);
+    super(userName, hiveReadEntry, storagePluginName, columns, numPartitions, pluginRegistry);
   }
 
   public HiveDrillNativeParquetScan(String userName, HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin,
@@ -105,6 +106,7 @@ public class HiveDrillNativeParquetScan extends HiveScan {
     return "HiveDrillNativeParquetScan [table=" + hiveReadEntry.getHiveTableWrapper()
         + ", inputSplits=" + inputSplits
         + ", columns=" + columns
+        + ", numPartitions=" + numPartitions
         + ", partitions= " + hiveReadEntry.getHivePartitionWrappers() +"]";
   }
 }
