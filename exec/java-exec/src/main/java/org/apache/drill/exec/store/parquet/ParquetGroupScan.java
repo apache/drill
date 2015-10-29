@@ -250,10 +250,13 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       * @return whether column is a potential partition column
       */
   private boolean checkForPartitionColumn(ColumnMetadata columnMetadata, boolean first) {
-    SchemaPath schemaPath = columnMetadata.name;
+    SchemaPath schemaPath = SchemaPath.getCompoundPath(columnMetadata.name);
+    Metadata.ColumnTypeMetadata columnTypeMetadata =
+        this.parquetTableMetadata.getColumnTypeInfo(columnMetadata.name);
     if (first) {
       if (hasSingleValue(columnMetadata)) {
-        columnTypeMap.put(schemaPath, getType(columnMetadata.primitiveType, columnMetadata.originalType));
+        columnTypeMap.put(schemaPath, getType(columnTypeMetadata.primitiveType,
+            columnTypeMetadata.originalType));
         return true;
       } else {
         return false;
@@ -266,7 +269,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
           columnTypeMap.remove(schemaPath);
           return false;
         }
-        if (!getType(columnMetadata.primitiveType, columnMetadata.originalType).equals(columnTypeMap.get(schemaPath))) {
+        if (!getType(columnTypeMetadata.primitiveType,
+            columnTypeMetadata.originalType).equals(columnTypeMap.get(schemaPath))) {
           columnTypeMap.remove(schemaPath);
           return false;
         }
@@ -325,18 +329,9 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   }
 
   private boolean hasSingleValue(ColumnMetadata columnChunkMetaData) {
-    Object max = columnChunkMetaData.max;
-    Object min = columnChunkMetaData.min;
-    return max != null && max.equals(min);
-/*
-    if (max != null && min != null) {
-      if (max instanceof byte[] && min instanceof byte[]) {
-        return Arrays.equals((byte[])max, (byte[])min);
-      }
-      return max.equals(min);
-    }
-    return false;
-*/
+    // ColumnMetadata will have a non-null value iff the minValue and the maxValue for the
+    // rowgroup are the same
+    return (columnChunkMetaData != null) && (columnChunkMetaData.mxValue != null);
   }
 
   @Override
@@ -605,7 +600,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       for (RowGroupMetadata rowGroup : file.rowGroups) {
         long rowCount = rowGroup.rowCount;
         for (ColumnMetadata column : rowGroup.columns) {
-          SchemaPath schemaPath = column.name;
+          SchemaPath schemaPath = SchemaPath.getCompoundPath(column.name);
           Long previousCount = columnValueCounts.get(schemaPath);
           if (previousCount != null) {
             if (previousCount != GroupScan.NO_COLUMN_STATS) {
@@ -632,7 +627,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
               partitionValueMap.put(file.path, map);
             }
             Object value = map.get(schemaPath);
-            Object currentValue = column.max;
+            Object currentValue = column.mxValue;
 //            Object currentValue = column.getMax();
             if (value != null) {
               if (value != currentValue) {
@@ -658,7 +653,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         newFileMetadataList.add(file);
       }
     }
-    return new ParquetTableMetadata_v1(newFileMetadataList, new ArrayList<String>());
+    return new ParquetTableMetadata_v1(parquetTableMetadata.columnTypeInfo, newFileMetadataList,
+        new ArrayList<String>());
   }
 
   /**

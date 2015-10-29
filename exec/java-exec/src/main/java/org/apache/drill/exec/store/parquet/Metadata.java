@@ -21,17 +21,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.SchemaPath.De;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.hadoop.fs.BlockLocation;
@@ -40,6 +47,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -54,6 +62,8 @@ import org.apache.parquet.schema.Type;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +71,8 @@ import java.util.concurrent.TimeUnit;
 public class Metadata {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Metadata.class);
 
-  public static final String METADATA_FILENAME = ".drill.parquet_metadata";
+  public static final String[] OLD_METADATA_FILENAMES = {".drill.parquet_metadata"};
+  public static final String METADATA_FILENAME = ".drill.parquet_metadata.v2";
 
   private final FileSystem fs;
 
@@ -125,6 +136,7 @@ public class Metadata {
   private ParquetTableMetadata_v1 createMetaFilesRecursively(final String path) throws IOException {
     List<ParquetFileMetadata> metaDataList = Lists.newArrayList();
     List<String> directoryList = Lists.newArrayList();
+    ConcurrentHashMap<ColumnTypeMetadata.Key, ColumnTypeMetadata> columnTypeInfoSet = new ConcurrentHashMap<>();
     Path p = new Path(path);
     FileStatus fileStatus = fs.getFileStatus(p);
     assert fileStatus.isDirectory() : "Expected directory";
@@ -137,14 +149,34 @@ public class Metadata {
         metaDataList.addAll(subTableMetadata.files);
         directoryList.addAll(subTableMetadata.directories);
         directoryList.add(file.getPath().toString());
+        // Merge the schema from the child level into the current level
+        //TODO: We need a merge method that merges two colums with the same name but different types
+        columnTypeInfoSet.putAll(subTableMetadata.columnTypeInfo);
       } else {
         childFiles.add(file);
       }
     }
+    ParquetTableMetadata_v1 parquetTableMetadata = new ParquetTableMetadata_v1();
     if (childFiles.size() > 0) {
-      metaDataList.addAll(getParquetFileMetadata(childFiles));
+      List<ParquetFileMetadata> childFilesMetadata =
+          getParquetFileMetadata(parquetTableMetadata, childFiles);
+      metaDataList.addAll(childFilesMetadata);
+      // Note that we do not need to merge the columnInfo at this point. The columnInfo is already added
+      // to the parquetTableMetadata.
     }
-    ParquetTableMetadata_v1 parquetTableMetadata = new ParquetTableMetadata_v1(metaDataList, directoryList);
+
+    parquetTableMetadata.directories = directoryList;
+    parquetTableMetadata.files = metaDataList;
+    //TODO: We need a merge method that merges two colums with the same name but different types
+    if (parquetTableMetadata.columnTypeInfo == null) {
+      parquetTableMetadata.columnTypeInfo = new ConcurrentHashMap<>();
+    }
+    parquetTableMetadata.columnTypeInfo.putAll(columnTypeInfoSet);
+
+    // delete old files
+    for(String oldname: OLD_METADATA_FILENAMES){
+      fs.delete(new Path(p, oldname), false);
+    }
     writeFile(parquetTableMetadata, new Path(p, METADATA_FILENAME));
     return parquetTableMetadata;
   }
@@ -175,9 +207,13 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private ParquetTableMetadata_v1 getParquetTableMetadata(List<FileStatus> fileStatuses) throws IOException {
-    List<ParquetFileMetadata> fileMetadataList = getParquetFileMetadata(fileStatuses);
-    return new ParquetTableMetadata_v1(fileMetadataList, new ArrayList<String>());
+  private ParquetTableMetadata_v1 getParquetTableMetadata(List<FileStatus> fileStatuses)
+      throws IOException {
+    ParquetTableMetadata_v1 tableMetadata = new ParquetTableMetadata_v1();
+    List<ParquetFileMetadata> fileMetadataList = getParquetFileMetadata(tableMetadata, fileStatuses);
+    tableMetadata.files = fileMetadataList;
+    tableMetadata.directories = new ArrayList<String>();
+    return tableMetadata;
   }
 
   /**
@@ -186,10 +222,11 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private List<ParquetFileMetadata> getParquetFileMetadata(List<FileStatus> fileStatuses) throws IOException {
+  private List<ParquetFileMetadata> getParquetFileMetadata(ParquetTableMetadata_v1 parquetTableMetadata_v1,
+      List<FileStatus> fileStatuses) throws IOException {
     List<TimedRunnable<ParquetFileMetadata>> gatherers = Lists.newArrayList();
     for (FileStatus file : fileStatuses) {
-      gatherers.add(new MetadataGatherer(file));
+      gatherers.add(new MetadataGatherer(parquetTableMetadata_v1, file));
     }
 
     List<ParquetFileMetadata> metaDataList = Lists.newArrayList();
@@ -221,14 +258,16 @@ public class Metadata {
   private class MetadataGatherer extends TimedRunnable<ParquetFileMetadata> {
 
     private FileStatus fileStatus;
+    private ParquetTableMetadata_v1 parquetTableMetadata;
 
-    public MetadataGatherer(FileStatus fileStatus) {
+    public MetadataGatherer(ParquetTableMetadata_v1 parquetTableMetadata, FileStatus fileStatus) {
       this.fileStatus = fileStatus;
+      this.parquetTableMetadata = parquetTableMetadata;
     }
 
     @Override
     protected ParquetFileMetadata runInner() throws Exception {
-      return getParquetFileMetadata(fileStatus);
+      return getParquetFileMetadata(parquetTableMetadata, fileStatus);
     }
 
     @Override
@@ -255,7 +294,8 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  private ParquetFileMetadata getParquetFileMetadata(FileStatus file) throws IOException {
+  private ParquetFileMetadata getParquetFileMetadata(ParquetTableMetadata_v1 parquetTableMetadata,
+      FileStatus file) throws IOException {
     ParquetMetadata metadata = ParquetFileReader.readFooter(fs.getConf(), file);
     MessageType schema = metadata.getFileMetaData().getSchema();
 
@@ -276,13 +316,27 @@ public class Metadata {
         boolean statsAvailable = (col.getStatistics() != null && !col.getStatistics().isEmpty());
 
         Statistics stats = col.getStatistics();
-        SchemaPath columnName = SchemaPath.getCompoundPath(col.getPath().toArray());
+        String[] columnName = col.getPath().toArray() ;
+        SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
+        ColumnTypeMetadata columnTypeMetadata =
+            new ColumnTypeMetadata(columnName, col.getType(), originalTypeMap.get(columnSchemaName));
+        if (parquetTableMetadata.columnTypeInfo == null) {
+          parquetTableMetadata.columnTypeInfo = new ConcurrentHashMap<>();
+        }
+        // Save the column schema info. We'll merge it into one list
+        parquetTableMetadata.columnTypeInfo
+            .put(new ColumnTypeMetadata.Key(columnTypeMetadata.name), columnTypeMetadata);
         if (statsAvailable) {
-          columnMetadata = new ColumnMetadata(columnName, col.getType(), originalTypeMap.get(columnName),
-              stats.genericGetMax(), stats.genericGetMin(), stats.getNumNulls());
+          // Write stats only if minVal==maxVal. Also, we then store only maxVal
+          Object mxValue = null;
+          if (stats.genericGetMax() != null && stats.genericGetMin() != null && stats.genericGetMax()
+              .equals(stats.genericGetMin())) {
+            mxValue = stats.genericGetMax();
+          }
+          columnMetadata =
+              new ColumnMetadata(columnTypeMetadata.name, col.getType(), mxValue, stats.getNumNulls());
         } else {
-          columnMetadata = new ColumnMetadata(columnName, col.getType(), originalTypeMap.get(columnName),
-              null, null, null);
+          columnMetadata = new ColumnMetadata(columnTypeMetadata.name, col.getType(), null, null);
         }
         columnMetadataList.add(columnMetadata);
         length += col.getTotalSize();
@@ -338,6 +392,9 @@ public class Metadata {
     jsonFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
     jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
     ObjectMapper mapper = new ObjectMapper(jsonFactory);
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(ColumnMetadata.class, new ColumnMetadata.Serializer());
+    mapper.registerModule(module);
     FSDataOutputStream os = fs.create(p);
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetTableMetadata);
     os.flush();
@@ -355,16 +412,18 @@ public class Metadata {
     timer.start();
     Path p = new Path(path);
     ObjectMapper mapper = new ObjectMapper();
-    SimpleModule module = new SimpleModule();
-    module.addDeserializer(SchemaPath.class, new De());
+    AfterburnerModule module = new AfterburnerModule();
+    module.addKeyDeserializer(ColumnTypeMetadata.Key.class, new ColumnTypeMetadata.Key.DeSerializer());
     mapper.registerModule(module);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     FSDataInputStream is = fs.open(p);
+
     ParquetTableMetadata_v1 parquetTableMetadata = mapper.readValue(is, ParquetTableMetadata_v1.class);
     logger.info("Took {} ms to read metadata from cache file", timer.elapsed(TimeUnit.MILLISECONDS));
     timer.stop();
     if (tableModified(parquetTableMetadata, p)) {
-      parquetTableMetadata = createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString());
+      parquetTableMetadata =
+          createMetaFilesRecursively(Path.getPathWithoutSchemeAndAuthority(p.getParent()).toString());
     }
     return parquetTableMetadata;
   }
@@ -400,8 +459,15 @@ public class Metadata {
   /**
    * Struct which contains the metadata for an entire parquet directory structure
    */
-  @JsonTypeName("v1")
+  @JsonTypeName("v2")
   public static class ParquetTableMetadata_v1 extends ParquetTableMetadataBase {
+    /*
+     ColumnTypeInfo is schema information from all the files and row groups, merged into
+     one. To get this info, we pass the ParquetTableMetadata object all the way dow to the
+     RowGroup and the column type is built there as it is read from the footer.
+     */
+    @JsonProperty
+    public ConcurrentHashMap<ColumnTypeMetadata.Key, ColumnTypeMetadata> columnTypeInfo;
     @JsonProperty
     List<ParquetFileMetadata> files;
     @JsonProperty
@@ -411,10 +477,17 @@ public class Metadata {
       super();
     }
 
-    public ParquetTableMetadata_v1(List<ParquetFileMetadata> files, List<String> directories) {
+    public ParquetTableMetadata_v1(ConcurrentHashMap<ColumnTypeMetadata.Key, ColumnTypeMetadata> columnTypeInfo,
+        List<ParquetFileMetadata> files, List<String> directories) {
       this.files = files;
       this.directories = directories;
+      this.columnTypeInfo = columnTypeInfo;
     }
+
+    public ColumnTypeMetadata getColumnTypeInfo(String[] name) {
+      return columnTypeInfo.get(new ColumnTypeMetadata.Key(name));
+    }
+
   }
 
   /**
@@ -473,71 +546,149 @@ public class Metadata {
     }
   }
 
+
+  public static class ColumnTypeMetadata {
+    @JsonProperty public String[] name;
+    @JsonProperty public PrimitiveTypeName primitiveType;
+    @JsonProperty public OriginalType originalType;
+
+    //@JsonIgnore private int hashCode = 0;
+
+    // Key to find by name only
+    @JsonIgnore private Key key;
+
+    public ColumnTypeMetadata() {
+      super();
+    }
+
+    public ColumnTypeMetadata(String[] name, PrimitiveTypeName primitiveType, OriginalType originalType) {
+      this.name = name;
+      this.primitiveType = primitiveType;
+      this.originalType = originalType;
+      this.key = new Key(name);
+    }
+
+    @JsonIgnore private Key key() {
+      return this.key;
+    }
+
+    private static class Key {
+      private String[] name;
+      private int hashCode = 0;
+
+      public Key(String[] name) {
+        this.name = name;
+      }
+
+      @Override public int hashCode() {
+        if (hashCode == 0) {
+          hashCode = Arrays.hashCode(name);
+        }
+        return hashCode;
+      }
+
+      @Override public boolean equals(Object obj) {
+        if (obj == null) {
+          return false;
+        }
+        if (getClass() != obj.getClass()) {
+          return false;
+        }
+        final Key other = (Key) obj;
+        return Arrays.equals(this.name, other.name);
+      }
+
+      @Override public String toString() {
+        String s = null;
+        for (String namePart : name) {
+          if (s != null) {
+            s += ".";
+            s += namePart;
+          } else {
+            s = namePart;
+          }
+        }
+        return s;
+      }
+
+      public static class DeSerializer extends KeyDeserializer {
+
+        public DeSerializer() {
+          super();
+        }
+
+        @Override
+        public Object deserializeKey(String key, com.fasterxml.jackson.databind.DeserializationContext ctxt)
+            throws IOException, com.fasterxml.jackson.core.JsonProcessingException {
+          return new Key(key.split("\\."));
+        }
+      }
+    }
+  }
+
+
   /**
    * A struct that contains the metadata for a column in a parquet file
    */
   public static class ColumnMetadata {
-    @JsonProperty
-    public SchemaPath name;
-    @JsonProperty
-    public PrimitiveTypeName primitiveType;
-    @JsonProperty
-    public OriginalType originalType;
+    // Use a string array for name instead of Schema Path to make serialization easier
+    @JsonProperty public String[] name;
     @JsonProperty
     public Long nulls;
 
-    // JsonProperty for these are associated with the getters and setters
-    public Object max;
-    public Object min;
+    public Object mxValue;
 
+    @JsonIgnore private PrimitiveTypeName primitiveType;
 
     public ColumnMetadata() {
       super();
     }
 
-    public ColumnMetadata(SchemaPath name, PrimitiveTypeName primitiveType, OriginalType originalType,
-                          Object max, Object min, Long nulls) {
+    public ColumnMetadata(String[] name, PrimitiveTypeName primitiveType, Object mxValue, Long nulls) {
       this.name = name;
-      this.primitiveType = primitiveType;
-      this.originalType = originalType;
-      this.max = max;
-      this.min = min;
+      this.mxValue = mxValue;
       this.nulls = nulls;
+      this.primitiveType=primitiveType;
     }
 
-    @JsonProperty(value = "min")
-    public Object getMin() {
-      if (primitiveType == PrimitiveTypeName.BINARY && min != null) {
-         return new String(((Binary) min).getBytes());
+    @JsonProperty(value = "mxValue")
+    public void setMax(Object mxValue) {
+      this.mxValue = mxValue;
+    }
+
+    public static class DeSerializer extends JsonDeserializer<ColumnMetadata> {
+      @Override public ColumnMetadata deserialize(JsonParser jp, DeserializationContext ctxt)
+          throws IOException, JsonProcessingException {
+        return null;
       }
-      return min;
     }
 
-    @JsonProperty(value = "max")
-    public Object getMax() {
-      if (primitiveType == PrimitiveTypeName.BINARY && max != null) {
-        return new String(((Binary) max).getBytes());
+    // WE use a custom serializer and write only non null values.
+    public static class Serializer extends JsonSerializer<ColumnMetadata> {
+      @Override public void serialize(ColumnMetadata value, JsonGenerator jgen, SerializerProvider provider)
+          throws IOException, JsonProcessingException {
+        jgen.writeStartObject();
+        jgen.writeArrayFieldStart("name");
+        for (String n : value.name) {
+          jgen.writeString(n);
+        }
+        jgen.writeEndArray();
+        if (value.mxValue != null) {
+          Object val;
+          if (value.primitiveType == PrimitiveTypeName.BINARY && value.mxValue != null) {
+            val = new String(((Binary) value.mxValue).getBytes());
+          } else {
+            val = value.mxValue;
+          }
+          jgen.writeObjectField("mxValue", val);
+        }
+        if (value.nulls != null) {
+          jgen.writeObjectField("nulls", value.nulls);
+        }
+        jgen.writeEndObject();
       }
-      return max;
-    }
-
-    /**
-     * setter used during deserialization of the 'min' field of the metadata cache file.
-     * @param min
-     */
-    @JsonProperty(value = "min")
-    public void setMin(Object min) {
-      this.min = min;
-     }
-
-    /**
-     * setter used during deserialization of the 'max' field of the metadata cache file.
-     * @param max
-     */
-    @JsonProperty(value = "max")
-    public void setMax(Object max) {
-      this.max = max;
     }
 
   }
 }
+
