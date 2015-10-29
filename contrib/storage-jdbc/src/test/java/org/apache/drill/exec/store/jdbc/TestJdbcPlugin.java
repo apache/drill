@@ -88,7 +88,7 @@ public class TestJdbcPlugin extends PlanTestBase {
     // we'll test data except for date, time and timestamps. Derby mangles these due to improper timezone support.
     testBuilder()
         .sqlQuery(
-            "select PERSONID, LASTNAME, FIRSTNAME, ADDRESS, CITY, CODE, DBL, FLT, REL, NUM, SM, BI, BOOL from testdb.`default`.PERSON")
+            "select PERSONID, LASTNAME, FIRSTNAME, ADDRESS, CITY, CODE, DBL, FLT, REL, NUM, SM, BI, BOOL from testdb.PERSON")
         .ordered()
         .baselineColumns("PERSONID", "LASTNAME", "FIRSTNAME", "ADDRESS", "CITY", "CODE", "DBL", "FLT", "REL",
             "NUM", "SM", "BI", "BOOL")
@@ -122,9 +122,9 @@ public class TestJdbcPlugin extends PlanTestBase {
   @Test
   public void pushdownJoinAndFilterPushDown() throws Exception {
     final String query = "select * from \n" +
-        "testdb.`default`.PERSON e\n" +
+        "testdb.PERSON e\n" +
         "INNER JOIN \n" +
-        "testdb.`default`.PERSON s\n" +
+        "testdb.PERSON s\n" +
         "ON e.FirstName = s.FirstName\n" +
         "WHERE e.LastName > 'hello'";
 
@@ -134,7 +134,7 @@ public class TestJdbcPlugin extends PlanTestBase {
   @Test
   public void pushdownAggregation() throws Exception {
     final String query = "select count(*) from \n" +
-        "testdb.`default`.PERSON";
+        "testdb.PERSON";
 
     testPlanMatchingPatterns(query, new String[] {}, new String[] { "Aggregate" });
   }
@@ -142,12 +142,12 @@ public class TestJdbcPlugin extends PlanTestBase {
   @Test
   public void pushdownDoubleJoinAndFilter() throws Exception {
     final String query = "select * from \n" +
-        "testdb.`default`.PERSON e\n" +
+        "testdb.PERSON e\n" +
         "INNER JOIN \n" +
-        "testdb.`default`.PERSON s\n" +
+        "testdb.PERSON s\n" +
         "ON e.PersonId = s.PersonId\n" +
         "INNER JOIN \n" +
-        "testdb.`default`.PERSON ed\n" +
+        "testdb.PERSON ed\n" +
         "ON e.PersonId = ed.PersonId\n" +
         "WHERE s.FirstName > 'abc' and ed.FirstName > 'efg'";
     testPlanMatchingPatterns(query, new String[] {}, new String[] { "Join", "Filter" });

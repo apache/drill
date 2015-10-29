@@ -234,6 +234,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   private class CapitalizingJdbcSchema extends AbstractSchema {
 
+    final Map<String, CapitalizingJdbcSchema> schemaMap = Maps.newHashMap();
     private final JdbcSchema inner;
 
     public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name, DataSource dataSource,
@@ -258,13 +259,21 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     @Override
-    public Schema getSubSchema(String name) {
-      return inner.getSubSchema(name);
+    public CapitalizingJdbcSchema getSubSchema(String name) {
+      return schemaMap.get(name);
+    }
+
+    void setHolder(SchemaPlus plusOfThis) {
+      for (String s : getSubSchemaNames()) {
+        CapitalizingJdbcSchema inner = getSubSchema(s);
+        SchemaPlus holder = plusOfThis.add(s, inner);
+        inner.setHolder(holder);
+      }
     }
 
     @Override
     public Set<String> getSubSchemaNames() {
-      return inner.getSubSchemaNames();
+      return schemaMap.keySet();
     }
 
     @Override
@@ -295,24 +304,73 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       try (Connection con = source.getConnection(); ResultSet set = con.getMetaData().getCatalogs()) {
         while (set.next()) {
           final String catalogName = set.getString(1);
-          CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), catalogName, source, dialect,
-              convention, catalogName, null);
+          CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
+              getSchemaPath(), catalogName, source, dialect, convention, catalogName, null);
           schemaMap.put(catalogName, schema);
         }
       } catch (SQLException e) {
         logger.warn("Failure while attempting to load JDBC schema.", e);
       }
 
-      // unable to read general catalog
+      // unable to read catalog list.
       if (schemaMap.isEmpty()) {
-        schemaMap.put("default", new CapitalizingJdbcSchema(ImmutableList.<String> of(), name, source, dialect,
-            convention,
-            null, null));
+
+        // try to add a list of schemas to the schema map.
+        boolean schemasAdded = addSchemas();
+
+        if (!schemasAdded) {
+          // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
+          schemaMap.put("default", new CapitalizingJdbcSchema(ImmutableList.<String> of(), name, source, dialect,
+              convention, null, null));
+        }
+      } else {
+        // We already have catalogs. Add schemas in this context of their catalogs.
+        addSchemas();
       }
 
       defaultSchema = schemaMap.values().iterator().next();
 
+
     }
+
+    void setHolder(SchemaPlus plusOfThis) {
+      for (String s : getSubSchemaNames()) {
+        CapitalizingJdbcSchema inner = getSubSchema(s);
+        SchemaPlus holder = plusOfThis.add(s, inner);
+        inner.setHolder(holder);
+      }
+    }
+
+    private boolean addSchemas() {
+      boolean added = false;
+      try (Connection con = source.getConnection(); ResultSet set = con.getMetaData().getSchemas()) {
+        while (set.next()) {
+          final String schemaName = set.getString(1);
+          final String catalogName = set.getString(2);
+
+          CapitalizingJdbcSchema parentSchema = schemaMap.get(catalogName);
+          if (parentSchema == null) {
+            CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), schemaName, source, dialect,
+                convention, catalogName, schemaName);
+
+            // if a catalog schema doesn't exist, we'll add this at the top level.
+            schemaMap.put(schemaName, schema);
+          } else {
+            CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(parentSchema.getSchemaPath(), schemaName,
+                source, dialect,
+                convention, catalogName, schemaName);
+            parentSchema.schemaMap.put(schemaName, schema);
+
+          }
+          added = true;
+        }
+      } catch (SQLException e) {
+        logger.warn("Failure while attempting to load JDBC schema.", e);
+      }
+
+      return added;
+    }
+
 
     @Override
     public String getTypeName() {
@@ -325,7 +383,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     @Override
-    public Schema getSubSchema(String name) {
+    public CapitalizingJdbcSchema getSubSchema(String name) {
       return schemaMap.get(name);
     }
 
@@ -358,8 +416,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
     JdbcCatalogSchema schema = new JdbcCatalogSchema(name);
-    parent.add(name, schema);
+    SchemaPlus holder = parent.add(name, schema);
+    schema.setHolder(holder);
   }
+
 
   @Override
   public JdbcStorageConfig getConfig() {

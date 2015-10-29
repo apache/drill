@@ -17,26 +17,29 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
+
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.*;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.Result;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
@@ -180,8 +183,14 @@ public abstract class RecordGenerator {
 
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
-      records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName,
-                                    table.getJdbcTableType().toString()));
+      Preconditions.checkNotNull(table, "Error. Table %s.%s provided is null.", schemaName, tableName);
+
+      // skip over unknown table types
+      if (table.getJdbcTableType() != null) {
+        records.add(new Records.Table(IS_CATALOG_NAME, schemaName, tableName,
+            table.getJdbcTableType().toString()));
+      }
+
       return false;
     }
   }
