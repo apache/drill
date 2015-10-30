@@ -123,6 +123,9 @@ public class BuildTimeScan {
     if (!basePath.endsWith("/")) {
       basePath = basePath + "/";
     }
+    if (!basePath.startsWith("/")) {
+      basePath = "/" + basePath;
+    }
     URL url = new URL("file:" + basePath);
     Set<URL> markedPaths = ClassPathScanner.getMarkedPaths();
     if (!markedPaths.contains(url)) {

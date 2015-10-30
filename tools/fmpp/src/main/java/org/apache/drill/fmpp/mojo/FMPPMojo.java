@@ -120,7 +120,7 @@ public class FMPPMojo extends AbstractMojo {
           scope, config.getAbsolutePath(), templatesPath));
       final File tmp = Files.createTempDirectory("freemarker-tmp").toFile();
       String tmpPath = tmp.getAbsolutePath();
-      final String tmpPathNormalized = tmpPath.endsWith("/") ? tmpPath : tmpPath + "/";
+      final String tmpPathNormalized = tmpPath.endsWith(File.separator) ? tmpPath : tmpPath + File.separator;
       Settings settings = new Settings(new File("."));
       settings.set("sourceRoot", templatesPath);
       settings.set("outputRoot", tmp.getAbsolutePath());
