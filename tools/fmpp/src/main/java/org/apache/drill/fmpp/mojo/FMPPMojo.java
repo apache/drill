@@ -137,6 +137,9 @@ public class FMPPMojo extends AbstractMojo {
             getLog().info(format("Freemarker generation took %dms", sw.elapsed(TimeUnit.MILLISECONDS)));
             sw.reset();
             Report report = moveIfChanged(tmp, tmpPathNormalized);
+            if (!tmp.delete()) {
+              throw new MojoFailureException(format("can not delete %s", tmp));
+            }
             getLog().info(format("Incremental output update took %dms", sw.elapsed(TimeUnit.MILLISECONDS)));
             getLog().info(format("new: %d", report.newFiles));
             getLog().info(format("changed: %d", report.changedFiles));
