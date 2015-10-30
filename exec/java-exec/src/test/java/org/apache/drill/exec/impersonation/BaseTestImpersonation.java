@@ -24,10 +24,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -37,6 +39,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.io.File;
 import java.util.Map;
 import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
 
 public class BaseTestImpersonation extends PlanTestBase {
   protected static final String MINIDFS_STORAGE_PLUGIN_NAME = "miniDfsPlugin";
@@ -151,5 +155,38 @@ public class BaseTestImpersonation extends PlanTestBase {
     if (miniDfsStoragePath != null) {
       FileUtils.deleteQuietly(new File(miniDfsStoragePath));
     }
+  }
+
+  // Return the user workspace for given user.
+  protected static String getWSSchema(String user) {
+    return MINIDFS_STORAGE_PLUGIN_NAME + "." + user;
+  }
+
+  protected static String getUserHome(String user) {
+    return "/user/" + user;
+  }
+
+  protected static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
+                                 final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
+    updateClient(viewOwner);
+    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
+    test(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s;",
+      getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
+
+    // Verify the view file created has the expected permissions and ownership
+    Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
+    FileStatus status = fs.getFileStatus(viewFilePath);
+    assertEquals(viewGroup, status.getGroup());
+    assertEquals(viewOwner, status.getOwner());
+    assertEquals(viewPerms, status.getPermission().toShort());
+  }
+
+  protected static void createView(final String viewOwner, final String viewGroup, final String viewName,
+                                 final String viewDef) throws Exception {
+    updateClient(viewOwner);
+    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
+    test("CREATE VIEW %s.%s.%s AS %s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
+    final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
+    fs.setOwner(viewFilePath, viewOwner, viewGroup);
   }
 }

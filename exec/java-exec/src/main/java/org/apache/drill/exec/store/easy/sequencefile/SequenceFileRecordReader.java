@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.security.PrivilegedExceptionAction;
 
 import com.google.common.base.Stopwatch;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -73,7 +73,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
                                   final DrillFileSystem dfs,
                                   final String queryUserName,
                                   final String opUserName) {
-    final List<SchemaPath> columns = new ArrayList();
+    final List<SchemaPath> columns = new ArrayList<>();
     columns.add(keySchema);
     columns.add(valueSchema);
     setColumns(columns);
@@ -88,13 +88,14 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
     return false;
   }
 
-  private org.apache.hadoop.mapred.RecordReader getRecordReader(final InputFormat inputFormat,
-                                                                final JobConf jobConf) throws ExecutionSetupException {
+  private org.apache.hadoop.mapred.RecordReader<BytesWritable, BytesWritable> getRecordReader(
+    final InputFormat<BytesWritable, BytesWritable> inputFormat,
+    final JobConf jobConf) throws ExecutionSetupException {
     try {
       final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
-      return ugi.doAs(new PrivilegedExceptionAction<org.apache.hadoop.mapred.RecordReader>() {
+      return ugi.doAs(new PrivilegedExceptionAction<org.apache.hadoop.mapred.RecordReader<BytesWritable, BytesWritable>>() {
         @Override
-        public org.apache.hadoop.mapred.RecordReader run() throws Exception {
+        public org.apache.hadoop.mapred.RecordReader<BytesWritable, BytesWritable> run() throws Exception {
           return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
         }
       });
@@ -110,14 +111,14 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
     final SequenceFileAsBinaryInputFormat inputFormat = new SequenceFileAsBinaryInputFormat();
     final JobConf jobConf = new JobConf(dfs.getConf());
     jobConf.setInputFormat(inputFormat.getClass());
-    this.reader = getRecordReader(inputFormat, jobConf);
+    reader = getRecordReader(inputFormat, jobConf);
     final MaterializedField keyField = MaterializedField.create(keySchema, KEY_TYPE);
     final MaterializedField valueField = MaterializedField.create(valueSchema, VALUE_TYPE);
     try {
       keyVector = output.addField(keyField, NullableVarBinaryVector.class);
       valueVector = output.addField(valueField, NullableVarBinaryVector.class);
     } catch (SchemaChangeException sce) {
-      throw new ExecutionSetupException(String.format("Error in setting up sequencefile reader."), sce);
+      throw new ExecutionSetupException("Error in setting up sequencefile reader.", sce);
     }
   }
 
@@ -148,8 +149,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
       return recordCount;
     } catch (IOException ioe) {
       close();
-      throw new DrillRuntimeException(String.format("Error parsing record from sequence file %s", split.getPath()),
-        ioe);
+      throw UserException.dataReadError(ioe).addContext("File Path", split.getPath().toString()).build(logger);
     }
   }
 

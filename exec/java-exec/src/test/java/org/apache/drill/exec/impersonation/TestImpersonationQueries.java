@@ -20,11 +20,8 @@ package org.apache.drill.exec.impersonation;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -35,7 +32,6 @@ import org.junit.Test;
 import java.util.Map;
 
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertNull;
@@ -67,15 +63,6 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     createNestedTestViewsOnLineItem();
     createNestedTestViewsOnOrders();
     createRecordReadersData(org1Users[0], org1Groups[0]);
-  }
-
-  private static String getUserHome(String user) {
-    return "/user/" + user;
-  }
-
-  // Return the user workspace for given user.
-  private static String getWSSchema(String user) {
-    return MINIDFS_STORAGE_PLUGIN_NAME + "." + user;
   }
 
   private static Map<String, WorkspaceConfig> createTestWorkspaces() throws Exception {
@@ -184,30 +171,6 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     fs.setPermission(dfsFile, new FsPermission((short) 0700));
   }
 
-  private static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
-                                 final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
-    updateClient(viewOwner);
-    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
-    test(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s;",
-      getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
-
-    // Verify the view file created has the expected permissions and ownership
-    Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
-    FileStatus status = fs.getFileStatus(viewFilePath);
-    assertEquals(viewGroup, status.getGroup());
-    assertEquals(viewOwner, status.getOwner());
-    assertEquals(viewPerms, status.getPermission().toShort());
-  }
-
-  private static void createView(final String viewOwner, final String viewGroup, final String viewName,
-                                   final String viewDef) throws Exception {
-    updateClient(viewOwner);
-    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
-    test("CREATE VIEW %s.%s.%s AS %s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
-    final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
-    fs.setOwner(viewFilePath, viewOwner, viewGroup);
-  }
-
   @Test
   public void testDirectImpersonation_HasUserReadPermissions() throws Exception {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user0_1". We
@@ -299,6 +262,14 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     try {
       updateClient(org1Users[1]);
       test("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
+    } catch (UserRemoteException e) {
+      assertNull("This test should pass.", e);
+    }
+    createView(org1Users[1], org1Groups[1], "simple_seq_view_2",
+      String.format("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view"));
+    try {
+      updateClient(org1Users[2]);
+      test("SELECT k FROM %s.%s.%s", MINIDFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
