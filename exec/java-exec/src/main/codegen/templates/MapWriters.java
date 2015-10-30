@@ -53,17 +53,15 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
 
   private final boolean unionEnabled;
-  private final boolean unionInternalMap;
 
-  public ${mode}MapWriter(${containerClass} container, FieldWriter parent, boolean unionEnabled, boolean unionInternalMap) {
+  public ${mode}MapWriter(${containerClass} container, FieldWriter parent, boolean unionEnabled) {
     super(parent);
     this.container = container;
     this.unionEnabled = unionEnabled;
-    this.unionInternalMap = unionInternalMap;
   }
 
   public ${mode}MapWriter(${containerClass} container, FieldWriter parent) {
-    this(container, parent, false, false);
+    this(container, parent, false);
   }
 
   @Override
@@ -81,11 +79,10 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
       FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null){
       int vectorCount=container.size();
-      if(!unionEnabled || unionInternalMap){
-        MapVector vector=container.addOrGet(name,MapVector.TYPE,MapVector.class);
-        writer=new SingleMapWriter(vector,this);
-      } else {
         MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
+      if(!unionEnabled){
+        writer = new SingleMapWriter(vector, this);
+      } else {
         writer = new PromotableWriter(vector, container);
       }
       if(vectorCount != container.size()) {

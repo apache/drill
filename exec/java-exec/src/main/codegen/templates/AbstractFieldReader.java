@@ -33,6 +33,10 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
     super();
   }
 
+  /**
+   * Returns true if the current value of the reader is not null
+   * @return
+   */
   public boolean isSet() {
     return true;
   }
@@ -61,9 +65,7 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   public void copyAsField(String name, MapWriter writer){
     fail("CopyAsField MapWriter");
   }
-//  public void copyAsValue(ListWriter writer){
-//    fail("CopyAsValueList");
-//  }
+
   public void copyAsField(String name, ListWriter writer){
     fail("CopyAsFieldList");
   }

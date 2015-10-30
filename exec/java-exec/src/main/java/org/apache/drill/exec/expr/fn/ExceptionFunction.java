@@ -23,12 +23,13 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 public class ExceptionFunction {
 
-  public static final String EXCEPTION_FUNCTION_NAME = "throwException";
+  public static final String EXCEPTION_FUNCTION_NAME = "__throwException";
 
   @FunctionTemplate(name = EXCEPTION_FUNCTION_NAME, isRandom = true,
           scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -41,9 +42,8 @@ public class ExceptionFunction {
     }
 
     public void eval() {
-      byte[] bytes = new byte[message.end - message.start];
-      message.buffer.getBytes(message.start, bytes, 0, message.end - message.start);
-      org.apache.drill.exec.expr.fn.ExceptionFunction.throwException(new String(bytes));
+      String msg = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(message.start, message.end, message.buffer);
+      org.apache.drill.exec.expr.fn.ExceptionFunction.throwException(msg);
     }
   }
 

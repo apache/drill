@@ -31,7 +31,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.impl.UnionVector;
+import org.apache.drill.exec.vector.complex.UnionVector;
 
 import java.util.ArrayList;
 import java.util.List;

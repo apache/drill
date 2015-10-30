@@ -173,7 +173,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
    *
    * Note that this method does not enforce any vector type check nor throws a schema change exception.
    */
-  public void putChild(String name, ValueVector vector) {
+  protected void putChild(String name, ValueVector vector) {
     putVector(name, vector);
     field.addChild(vector.getField());
   }

@@ -34,7 +34,6 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AddOrGetResult;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -43,7 +42,6 @@ import org.apache.drill.exec.vector.ZeroVector;
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.exec.vector.complex.impl.UnionListReader;
 import org.apache.drill.exec.vector.complex.impl.UnionListWriter;
-import org.apache.drill.exec.vector.complex.impl.UnionVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
@@ -96,8 +94,7 @@ public class ListVector extends BaseRepeatedValueVector {
     in.setPosition(inIndex);
     FieldWriter out = getWriter();
     out.setPosition(outIndex);
-    ComplexCopier copier = new ComplexCopier(in, out);
-    copier.write();
+    ComplexCopier.copy(in, out);
   }
 
   @Override
@@ -136,7 +133,10 @@ public class ListVector extends BaseRepeatedValueVector {
 
     @Override
     public void splitAndTransfer(int startIndex, int length) {
-
+      to.allocateNew();
+      for (int i = 0; i < length; i++) {
+        copyValueSafe(startIndex + i, i);
+      }
     }
 
     @Override
@@ -184,8 +184,10 @@ public class ListVector extends BaseRepeatedValueVector {
         clear();
       }
     }
-    offsets.zeroVector();
-    bits.zeroVector();
+    if (success) {
+      offsets.zeroVector();
+      bits.zeroVector();
+    }
     return success;
   }
 
@@ -262,72 +264,7 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg == null) {
-      if (addToBreadCrumb) {
-        builder.intermediateType(this.getField().getType());
-      }
-      return builder.finalType(this.getField().getType()).build();
-    }
-
-    if (seg.isArray()) {
-      if (seg.isLastPath()) {
-        builder //
-                .withIndex() //
-                .listVector()
-                .finalType(getDataVector().getField().getType());
-
-        // remainder starts with the 1st array segment in SchemaPath.
-        // only set remainder when it's the only array segment.
-        if (addToBreadCrumb) {
-          addToBreadCrumb = false;
-          builder.remainder(seg);
-        }
-        return builder.build();
-      } else {
-        if (addToBreadCrumb) {
-          addToBreadCrumb = false;
-          builder.remainder(seg);
-        }
-      }
-    } else {
-      return null;
-    }
-
-    ValueVector v = getDataVector();
-    if (v instanceof AbstractContainerVector) {
-      // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) v;
-      return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
-    } else if (v instanceof ListVector) {
-      ListVector list = (ListVector) v;
-      return list.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
-    } else {
-      if (seg.isNamed()) {
-        if(addToBreadCrumb) {
-          builder.intermediateType(v.getField().getType());
-        }
-        builder.finalType(v.getField().getType());
-      } else {
-        builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
-      }
-
-      if (seg.isLastPath()) {
-        return builder.build();
-      } else {
-        PathSegment child = seg.getChild();
-        if (child.isLastPath() && child.isArray()) {
-          if (addToBreadCrumb) {
-            builder.remainder(child);
-          }
-          builder.withIndex();
-          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
-          return builder.build();
-        } else {
-//          logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
-          return null;
-        }
-      }
-    }
+    return FieldIdUtil.getFieldIdIfMatches(this, builder, addToBreadCrumb, seg);
   }
 
   private int lastSet;

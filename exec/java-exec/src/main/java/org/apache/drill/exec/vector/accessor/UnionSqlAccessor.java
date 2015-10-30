@@ -20,7 +20,7 @@ package org.apache.drill.exec.vector.accessor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.vector.complex.impl.UnionVector;
+import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.exec.vector.complex.impl.UnionWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 

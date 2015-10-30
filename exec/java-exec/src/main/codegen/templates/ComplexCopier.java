@@ -32,19 +32,16 @@ package org.apache.drill.exec.vector.complex.impl;
 @SuppressWarnings("unused")
 public class ComplexCopier {
 
-  FieldReader in;
-  FieldWriter out;
-
-  public ComplexCopier(FieldReader in, FieldWriter out) {
-    this.in = in;
-    this.out = out;
+  /**
+   * Do a deep copy of the value in input into output
+   * @param in
+   * @param out
+   */
+  public static void copy(FieldReader input, FieldWriter output) {
+    writeValue(input, output);
   }
 
-  public void write() {
-    writeValue(in, out);
-  }
-
-  private void writeValue(FieldReader reader, FieldWriter writer) {
+  private static void writeValue(FieldReader reader, FieldWriter writer) {
     final DataMode m = reader.getType().getMode();
     final MinorType mt = reader.getType().getMinorType();
 
@@ -94,7 +91,7 @@ public class ComplexCopier {
     }
  }
 
-  private FieldWriter getMapWriterForReader(FieldReader reader, MapWriter writer, String name) {
+  private static FieldWriter getMapWriterForReader(FieldReader reader, MapWriter writer, String name) {
     switch (reader.getType().getMinorType()) {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
@@ -113,7 +110,7 @@ public class ComplexCopier {
     }
   }
 
-  private FieldWriter getListWriterForReader(FieldReader reader, ListWriter writer) {
+  private static FieldWriter getListWriterForReader(FieldReader reader, ListWriter writer) {
     switch (reader.getType().getMinorType()) {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />

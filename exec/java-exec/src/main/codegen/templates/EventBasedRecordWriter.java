@@ -119,10 +119,9 @@ public class EventBasedRecordWriter {
   }
 
   public static FieldConverter getConverter(RecordWriter recordWriter, int fieldId, String fieldName, FieldReader reader) {
-    if (reader instanceof UnionReader) {
-      return recordWriter.getNewUnionConverter(fieldId, fieldName, reader);
-    }
     switch (reader.getType().getMinorType()) {
+      case UNION:
+        return recordWriter.getNewUnionConverter(fieldId, fieldName, reader);
       case MAP:
         switch (reader.getType().getMode()) {
           case REQUIRED:
@@ -133,10 +132,7 @@ public class EventBasedRecordWriter {
         }
 
       case LIST:
-//        switch (reader.getType().getMode()) {
-//          case REPEATED:
-            return recordWriter.getNewRepeatedListConverter(fieldId, fieldName, reader);
-//        }
+        return recordWriter.getNewRepeatedListConverter(fieldId, fieldName, reader);
 
         <#list vv.types as type>
         <#list type.minor as minor>

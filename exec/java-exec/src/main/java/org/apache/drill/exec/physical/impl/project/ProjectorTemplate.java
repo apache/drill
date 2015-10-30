@@ -59,7 +59,6 @@ public abstract class ProjectorTemplate implements Projector {
       final int countN = recordCount;
       int i;
       for (i = startIndex; i < startIndex + countN; i++, firstOutputIndex++) {
-        ProjectRecordBatch.crap();
         doEval(i, firstOutputIndex);
       }
       if (i < startIndex + recordCount || startIndex > 0) {

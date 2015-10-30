@@ -93,7 +93,6 @@ abstract class AbstractBaseReader implements FieldReader{
 
   @Override
   public void copyAsValue(ListWriter writer) {
-    ComplexCopier copier = new ComplexCopier(this, (FieldWriter)writer);
-    copier.write();
+    ComplexCopier.copy(this, (FieldWriter)writer);
   }
 }

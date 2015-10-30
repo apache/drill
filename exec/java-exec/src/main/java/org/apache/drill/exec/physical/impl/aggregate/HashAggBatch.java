@@ -213,7 +213,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
 
       if (expr instanceof IfExpression) {
-        throw new SchemaChangeException("Union type not supported in aggregate functions");
+        throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);
       }
 
       if (collector.hasErrors()) {

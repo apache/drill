@@ -282,7 +282,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       final NamedExpression ne = popConfig.getExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
       if (expr instanceof IfExpression) {
-        throw new SchemaChangeException("Union type not supported in aggregate functions");
+        throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);
       }
       if (expr == null) {
         continue;

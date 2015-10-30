@@ -19,12 +19,12 @@
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 <@pp.dropOutputFile />
-<@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/UnionVector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/UnionVector.java" />
 
 
 <#include "/@includes/license.ftl" />
 
-package org.apache.drill.exec.vector.complex.impl;
+package org.apache.drill.exec.vector.complex;
 
 <#include "/@includes/vv_imports.ftl" />
 import java.util.Iterator;
@@ -37,6 +37,14 @@ import org.apache.drill.exec.util.CallBack;
 @SuppressWarnings("unused")
 
 
+/**
+ * A vector which can hold values of different types. It does so by using a MapVector which contains a vector for each
+ * primitive type that is stored. MapVector is used in order to take advantage of its serialization/deserialization methods,
+ * as well as the addOrGet method.
+ *
+ * For performance reasons, UnionVector stores a cached reference to each subtype vector, to avoid having to do the map lookup
+ * each time the vector is accessed.
+ */
 public class UnionVector implements ValueVector {
 
   private MaterializedField field;
@@ -46,48 +54,28 @@ public class UnionVector implements ValueVector {
   private int valueCount;
 
   private MapVector internalMap;
-  private SingleMapWriter internalMapWriter;
   private UInt1Vector typeVector;
 
   private MapVector mapVector;
   private ListVector listVector;
-  private NullableBigIntVector bigInt;
-  private NullableVarCharVector varChar;
 
   private FieldReader reader;
   private NullableBitVector bit;
 
-  private State state = State.INIT;
   private int singleType = 0;
   private ValueVector singleVector;
   private MajorType majorType;
 
   private final CallBack callBack;
 
-  private enum State {
-    INIT, SINGLE, MULTI
-  }
-
   public UnionVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     this.field = field.clone();
     this.allocator = allocator;
-    internalMap = new MapVector("internal", allocator, callBack);
-    internalMapWriter = new SingleMapWriter(internalMap, null, true, true);
+    this.internalMap = new MapVector("internal", allocator, callBack);
     this.typeVector = internalMap.addOrGet("types", Types.required(MinorType.UINT1), UInt1Vector.class);
     this.field.addChild(internalMap.getField().clone());
     this.majorType = field.getType();
     this.callBack = callBack;
-  }
-
-  private void updateState(ValueVector v) {
-    if (state == State.INIT) {
-      state = State.SINGLE;
-      singleVector = v;
-      singleType = v.getField().getType().getMinorType().getNumber();
-    } else {
-      state = State.MULTI;
-      singleVector = null;
-    }
   }
 
   public List<MinorType> getSubTypes() {
@@ -101,23 +89,12 @@ public class UnionVector implements ValueVector {
     }
   }
 
-  public boolean isSingleType() {
-    return state == State.SINGLE && singleType != MinorType.LIST_VALUE;
-  }
-
-  public ValueVector getSingleVector() {
-    assert state != State.MULTI : "Cannot get single vector when there are multiple types";
-    assert state != State.INIT : "Cannot get single vector when there are no types";
-    return singleVector;
-  }
-
   private static final MajorType MAP_TYPE = Types.optional(MinorType.MAP);
 
   public MapVector getMap() {
     if (mapVector == null) {
       int vectorCount = internalMap.size();
       mapVector = internalMap.addOrGet("map", MAP_TYPE, MapVector.class);
-      updateState(mapVector);
       addSubType(MinorType.MAP);
       if (internalMap.size() > vectorCount) {
         mapVector.allocateNew();
@@ -138,7 +115,6 @@ public class UnionVector implements ValueVector {
     if (${uncappedName}Vector == null) {
       int vectorCount = internalMap.size();
       ${uncappedName}Vector = internalMap.addOrGet("${uncappedName}", ${name?upper_case}_TYPE, Nullable${name}Vector.class);
-      updateState(${uncappedName}Vector);
       addSubType(MinorType.${name?upper_case});
       if (internalMap.size() > vectorCount) {
         ${uncappedName}Vector.allocateNew();
@@ -157,7 +133,6 @@ public class UnionVector implements ValueVector {
     if (listVector == null) {
       int vectorCount = internalMap.size();
       listVector = internalMap.addOrGet("list", LIST_TYPE, ListVector.class);
-      updateState(listVector);
       addSubType(MinorType.LIST);
       if (internalMap.size() > vectorCount) {
         listVector.allocateNew();
@@ -240,8 +215,7 @@ public class UnionVector implements ValueVector {
   public void copyFrom(int inIndex, int outIndex, UnionVector from) {
     from.getReader().setPosition(inIndex);
     getWriter().setPosition(outIndex);
-    ComplexCopier copier = new ComplexCopier(from.reader, mutator.writer);
-    copier.write();
+    ComplexCopier.copy(from.reader, mutator.writer);
   }
 
   public void copyFromSafe(int inIndex, int outIndex, UnionVector from) {
@@ -249,7 +223,9 @@ public class UnionVector implements ValueVector {
   }
 
   public void addVector(ValueVector v) {
-    internalMap.putChild(v.getField().getType().getMinorType().name().toLowerCase(), v);
+    String name = v.getField().getType().getMinorType().name().toLowerCase();
+    Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
+    internalMap.putChild(name, v);
     addSubType(v.getField().getType().getMinorType());
   }
 
@@ -427,9 +403,6 @@ public class UnionVector implements ValueVector {
       internalMap.getMutator().setValueCount(valueCount);
     }
 
-    public void set(int index, byte[] bytes) {
-    }
-
     public void setSafe(int index, UnionHolder holder) {
       FieldReader reader = holder.reader;
       if (writer == null) {
@@ -445,26 +418,34 @@ public class UnionVector implements ValueVector {
       case ${name?upper_case}:
         Nullable${name}Holder ${uncappedName}Holder = new Nullable${name}Holder();
         reader.read(${uncappedName}Holder);
-        if (holder.isSet == 1) {
-          writer.write${name}(<#list fields as field>${uncappedName}Holder.${field.name}<#if field_has_next>, </#if></#list>);
-        }
+        setSafe(index, ${uncappedName}Holder);
         break;
       </#if>
       </#list></#list>
       case MAP: {
-        ComplexCopier copier = new ComplexCopier(reader, writer);
-        copier.write();
+        ComplexCopier.copy(reader, writer);
         break;
       }
       case LIST: {
-        ComplexCopier copier = new ComplexCopier(reader, writer);
-        copier.write();
+        ComplexCopier.copy(reader, writer);
         break;
       }
       default:
         throw new UnsupportedOperationException();
       }
     }
+
+    <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
+    <#assign fields = minor.fields!type.fields />
+    <#assign uncappedName = name?uncap_first/>
+    <#if !minor.class?starts_with("Decimal")>
+    public void setSafe(int index, Nullable${name}Holder holder) {
+      setType(index, MinorType.${name?upper_case});
+      get${name}Vector().getMutator().setSafe(index, holder);
+    }
+
+    </#if>
+    </#list></#list>
 
     public void setType(int index, MinorType type) {
       typeVector.getMutator().setSafe(index, type.getNumber());

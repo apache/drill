@@ -84,7 +84,7 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   private MapWriter getMapWriter() {
     if (mapWriter == null) {
-      mapWriter = new SingleMapWriter(data.getMap(), null, true, false);
+      mapWriter = new SingleMapWriter(data.getMap(), null, true);
       mapWriter.setPosition(idx());
       writers.add(mapWriter);
     }

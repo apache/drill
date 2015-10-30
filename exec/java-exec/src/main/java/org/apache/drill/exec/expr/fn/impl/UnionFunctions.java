@@ -36,6 +36,9 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import javax.inject.Inject;
 
+/**
+ * The class contains additional functions for union types in addition to those in GUnionFunctions
+ */
 public class UnionFunctions {
 
   @FunctionTemplate(names = {"typeOf"},
@@ -85,7 +88,7 @@ public class UnionFunctions {
   }
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "asList", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "ASSERT_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class CastUnionList implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -95,6 +98,9 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
+        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.LIST) {
+          throw new UnsupportedOperationException("The input is not a LIST type");
+        }
         out.reader = in.reader;
       } else {
         out.isSet = 0;
@@ -103,7 +109,7 @@ public class UnionFunctions {
   }
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "is_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "IS_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class UnionIsList implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -121,7 +127,7 @@ public class UnionFunctions {
   }
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "asMap", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "ASSERT_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class CastUnionMap implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -131,6 +137,9 @@ public class UnionFunctions {
 
     public void eval() {
       if (in.isSet == 1) {
+        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.MAP) {
+          throw new UnsupportedOperationException("The input is not a MAP type");
+        }
         out.reader = in.reader;
       } else {
         out.isSet = 0;
@@ -139,7 +148,7 @@ public class UnionFunctions {
   }
 
   @SuppressWarnings("unused")
-  @FunctionTemplate(name = "is_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "IS_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class UnionIsMap implements DrillSimpleFunc {
 
     @Param UnionHolder in;
