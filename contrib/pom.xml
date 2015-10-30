@@ -39,5 +39,6 @@
     <module>sqlline</module>
     <module>data</module>
     <module>gis</module>
+    <module>fuzzysearch</module>
   </modules>
 </project>

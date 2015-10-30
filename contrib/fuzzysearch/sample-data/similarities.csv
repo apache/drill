@@ -1,0 +1,4 @@
+foo,foo,same
+foo,bar,different
+"Chilpéric II son of Childeric II","chilperic ii son of childeric ii",similar-lev-test
+"This is a sentence. It is made of words","This sentence is similar. It has almost the same words",similar-cosine-test
