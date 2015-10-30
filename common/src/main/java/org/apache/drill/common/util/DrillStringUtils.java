@@ -53,11 +53,11 @@ public class DrillStringUtils {
   }
 
   /**
-   * Escapes the characters in a {@code String} using Java String rules.
+   * Escapes the characters in a {@code String} according to Java string literal
+   * rules.
    *
-   * Deals correctly with quotes and control-chars (tab, backslash, cr, ff, etc.)
-   *
-   * So a tab becomes the characters {@code '\\'} and
+   * Deals correctly with quotes and control-chars (tab, backslash, cr, ff,
+   * etc.) so, for example, a tab becomes the characters {@code '\\'} and
    * {@code 't'}.
    *
    * Example:
