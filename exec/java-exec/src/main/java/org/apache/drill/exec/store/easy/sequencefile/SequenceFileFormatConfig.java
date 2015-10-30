@@ -30,7 +30,7 @@ public class SequenceFileFormatConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return (extensions == null) ? 0: extensions.hashCode();
+    return (extensions == null)? 0 : extensions.hashCode();
   }
 
   public List<String> getExtensions() {
