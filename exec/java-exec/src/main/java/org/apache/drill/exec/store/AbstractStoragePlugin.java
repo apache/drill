@@ -62,4 +62,13 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) throws IOException {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public void start() throws IOException {
+  }
+
+  @Override
+  public void close() throws Exception {
+  }
+
 }

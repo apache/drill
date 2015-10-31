@@ -32,7 +32,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
  * formats will implement methods that indicate if Drill can write or read its tables from that format,
  * if there are optimizer rules specific for the format, getting a storage config. etc.
  */
-public interface StoragePlugin extends SchemaFactory {
+public interface StoragePlugin extends SchemaFactory, AutoCloseable {
 
   /** Indicates if Drill can read the table from this format.
   */
@@ -74,5 +74,10 @@ public interface StoragePlugin extends SchemaFactory {
   * @return an extension of StoragePluginConfig
   */
   public StoragePluginConfig getConfig();
+
+  /**
+   * Initialize the storage plugin. The storage plugin will not be used until this method is called.
+   */
+  public void start() throws IOException;
 
 }

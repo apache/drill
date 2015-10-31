@@ -146,4 +146,10 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     }
     return client;
   }
+
+  @Override
+  public void close() throws Exception {
+    addressClientMap.invalidateAll();
+  }
+
 }
