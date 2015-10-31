@@ -30,13 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.RuleSet;
-
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -61,8 +60,12 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
@@ -78,13 +81,14 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public static final String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
 
   private Map<Object, Constructor<? extends StoragePlugin>> availablePlugins = new HashMap<Object, Constructor<? extends StoragePlugin>>();
-  private ConcurrentMap<String, StoragePlugin> plugins;
+  private final StoragePluginMap plugins = new StoragePluginMap();
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
   private final PStore<StoragePluginConfig> pluginSystemTable;
   private final LogicalPlanPersistence lpPersistence;
   private final ScanResult classpathScan;
+  private final LoadingCache<StoragePluginConfig, StoragePlugin> ephemeralPlugins;
 
   public StoragePluginRegistry(DrillbitContext context) {
     this.context = checkNotNull(context);
@@ -101,6 +105,22 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       logger.error("Failure while loading storage plugin registry.", e);
       throw new RuntimeException("Failure while reading and loading storage plugin configuration.", e);
     }
+
+    ephemeralPlugins = CacheBuilder.newBuilder()
+        .expireAfterAccess(24, TimeUnit.HOURS)
+        .maximumSize(250)
+        .removalListener(new RemovalListener<StoragePluginConfig, StoragePlugin>() {
+          @Override
+          public void onRemoval(RemovalNotification<StoragePluginConfig, StoragePlugin> notification) {
+            closePlugin(notification.getValue());
+          }
+        })
+        .build(new CacheLoader<StoragePluginConfig, StoragePlugin>() {
+          @Override
+          public StoragePlugin load(StoragePluginConfig config) throws Exception {
+            return create(null, config);
+          }
+        });
   }
 
   public PStore<StoragePluginConfig> getStore() {
@@ -124,19 +144,20 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
             || params[1] != DrillbitContext.class
             || !StoragePluginConfig.class.isAssignableFrom(params[0])
             || params[2] != String.class) {
-          logger.info("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a [constructor(StoragePluginConfig, DrillbitContext, String)]", c, plugin);
+          logger.info("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a "
+              + "[constructor(StoragePluginConfig, DrillbitContext, String)]", c, plugin);
           continue;
         }
         availablePlugins.put(params[0], (Constructor<? extends StoragePlugin>) c);
         i++;
       }
       if (i == 0) {
-        logger.debug("Skipping registration of StoragePlugin {} as it doesn't have a constructor with the parameters of (StorangePluginConfig, Config)", plugin.getCanonicalName());
+        logger.debug("Skipping registration of StoragePlugin {} as it doesn't have a constructor with the parameters "
+            + "of (StorangePluginConfig, Config)", plugin.getCanonicalName());
       }
     }
 
     // create registered plugins defined in "storage-plugins.json"
-    this.plugins = Maps.newConcurrentMap();
     this.plugins.putAll(createPlugins());
 
   }
@@ -197,27 +218,52 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   }
 
   public void deletePlugin(String name) {
-    plugins.remove(name);
+    StoragePlugin plugin = plugins.remove(name);
+    closePlugin(plugin);
     pluginSystemTable.delete(name);
+  }
+
+  private void closePlugin(StoragePlugin plugin) {
+    if (plugin == null) {
+      return;
+    }
+
+    try {
+      plugin.close();
+    } catch (Exception e) {
+      logger.warn("Exception while shutting down storage plugin.");
+    }
   }
 
   public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist) throws ExecutionSetupException {
     StoragePlugin oldPlugin = plugins.get(name);
 
-    StoragePlugin newPlugin = create(name, config);
     boolean ok = true;
-    if (oldPlugin != null) {
-      if (config.isEnabled()) {
-        ok = plugins.replace(name, oldPlugin, newPlugin);
-      } else {
-        ok = plugins.remove(name, oldPlugin);
+    final StoragePlugin newPlugin = create(name, config);
+    try {
+      if (oldPlugin != null) {
+        if (config.isEnabled()) {
+          ok = plugins.replace(name, oldPlugin, newPlugin);
+          if (ok) {
+            closePlugin(oldPlugin);
+          }
+        } else {
+          ok = plugins.remove(name, oldPlugin);
+          if (ok) {
+            closePlugin(oldPlugin);
+          }
+        }
+      } else if (config.isEnabled()) {
+        ok = (null == plugins.putIfAbsent(name, newPlugin));
       }
-    } else if (config.isEnabled()) {
-      ok = (null == plugins.putIfAbsent(name, newPlugin));
-    }
 
-    if(!ok) {
-      throw new ExecutionSetupException("Two processes tried to change a plugin at the same time.");
+      if (!ok) {
+        throw new ExecutionSetupException("Two processes tried to change a plugin at the same time.");
+      }
+    } finally {
+      if (!ok) {
+        closePlugin(newPlugin);
+      }
     }
 
     if (persist) {
@@ -241,7 +287,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
       return null;
     } else {
-      if (plugin == null || !plugin.getConfig().equals(config)) {
+      if (plugin == null
+          || !plugin.getConfig().equals(config)
+          || plugin.getConfig().isEnabled() != config.isEnabled()) {
         plugin = createOrUpdate(name, config, false);
       }
       return plugin;
@@ -252,8 +300,25 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     if (config instanceof NamedStoragePluginConfig) {
       return getPlugin(((NamedStoragePluginConfig) config).name);
     } else {
-      // TODO: for now, we'll throw away transient configs. we really ought to clean these up.
-      return create(null, config);
+      // try to lookup plugin by configuration
+      StoragePlugin plugin = plugins.get(config);
+      if (plugin != null) {
+        return plugin;
+      }
+
+      // no named plugin matches the desired configuration, let's create an
+      // ephemeral storage plugin (or get one from the cache)
+      try {
+        return ephemeralPlugins.get(config);
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ExecutionSetupException) {
+          throw (ExecutionSetupException) cause;
+        } else {
+          // this shouldn't happen. here for completeness.
+          throw new ExecutionSetupException("Failure while trying to create ephemeral plugin.", cause);
+        }
+      }
     }
   }
 
@@ -275,8 +340,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
     try {
       plugin = c.newInstance(pluginConfig, context, name);
+      plugin.start();
       return plugin;
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | IOException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException) e).getTargetException() : e;
       if (t instanceof ExecutionSetupException) {
         throw ((ExecutionSetupException) t);
@@ -288,13 +355,13 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   @Override
   public Iterator<Entry<String, StoragePlugin>> iterator() {
-    return plugins.entrySet().iterator();
+    return plugins.iterator();
   }
 
   public RuleSet getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext) {
     // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
-    for (StoragePlugin plugin : this.plugins.values()) {
+    for (StoragePlugin plugin : this.plugins.plugins()) {
       Set<? extends RelOptRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
       if (rules != null && rules.size() > 0) {
         setBuilder.addAll(rules);
@@ -316,7 +383,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       watch.start();
 
       try {
-        Set<String> currentPluginNames = Sets.newHashSet(plugins.keySet());
+        Set<String> currentPluginNames = Sets.newHashSet(plugins.names());
         // iterate through the plugin instances in the persistence store adding
         // any new ones and refreshing those whose configuration has changed
         for (Map.Entry<String, StoragePluginConfig> config : pluginSystemTable) {
@@ -334,7 +401,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         }
 
         // finally register schemas with the refreshed plugins
-        for (StoragePlugin plugin : plugins.values()) {
+        for (StoragePlugin plugin : plugins.plugins()) {
           plugin.registerSchemas(schemaConfig, parent);
         }
       } catch (ExecutionSetupException e) {
@@ -389,5 +456,6 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
   }
+
 
 }

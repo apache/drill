@@ -37,4 +37,9 @@ public class SystemTablePluginConfig extends StoragePluginConfig {
     return this == o;
   }
 
+  @Override
+  public int hashCode() {
+    return 1;
+  }
+
 }

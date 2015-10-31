@@ -33,15 +33,50 @@ public class FileSystemConfig extends StoragePluginConfig {
   public Map<String, FormatPluginConfig> formats;
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((connection == null) ? 0 : connection.hashCode());
+    result = prime * result + ((formats == null) ? 0 : formats.hashCode());
+    result = prime * result + ((workspaces == null) ? 0 : workspaces.hashCode());
+    return result;
+  }
+
+  @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof FileSystemConfig)) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
       return false;
     }
-    FileSystemConfig that = (FileSystemConfig) obj;
-    boolean same = ((this.connection == null && that.connection == null) || this.connection.equals(that.connection)) &&
-            ((this.workspaces == null && that.workspaces == null) || this.workspaces.equals(that.workspaces)) &&
-            ((this.formats== null && that.formats == null) || this.formats.equals(that.formats));
-    return same;
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    FileSystemConfig other = (FileSystemConfig) obj;
+    if (connection == null) {
+      if (other.connection != null) {
+        return false;
+      }
+    } else if (!connection.equals(other.connection)) {
+      return false;
+    }
+    if (formats == null) {
+      if (other.formats != null) {
+        return false;
+      }
+    } else if (!formats.equals(other.formats)) {
+      return false;
+    }
+    if (workspaces == null) {
+      if (other.workspaces != null) {
+        return false;
+      }
+    } else if (!workspaces.equals(other.workspaces)) {
+      return false;
+    }
+    return true;
   }
+
 
 }

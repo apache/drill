@@ -30,4 +30,9 @@ public class NamedStoragePluginConfig extends StoragePluginConfig {
     return this == o;
   }
 
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+
 }
