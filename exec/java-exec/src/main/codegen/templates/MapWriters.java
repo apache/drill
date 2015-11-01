@@ -110,9 +110,9 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
     FieldWriter writer = fields.get(name.toLowerCase());
     if(writer == null) {
       writer = new SingleListWriter(name, container, this);
-      writer.setPosition(${index});
       fields.put(name.toLowerCase(), writer);
     }
+    writer.setPosition(${index});
     return writer;
   }
 
