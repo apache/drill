@@ -474,9 +474,6 @@ public class BaseTestQuery extends ExecTest {
       loader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
       // SchemaChangeException, so check/clean throw clause above.
-      if (loader.getRecordCount() <= 0) {
-        continue;
-      }
       VectorUtil.showVectorAccessibleContent(loader, columnWidths);
       loader.clear();
       result.release();
