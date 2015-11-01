@@ -60,6 +60,20 @@ public class TestJsonReader extends BaseTestQuery {
   public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
+  public void testEmptyList() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/json/emptyLists").toURI().toString();
+    String query = String.format("select count(a[0]) as ct from dfs_test.`%s`", root, root);
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues(6l)
+        .build()
+        .run();
+  }
+
+  @Test
   public void schemaChange() throws Exception {
     test("select b from dfs.`${WORKING_PATH}/src/test/resources/vector/complex/writer/schemaChange/`");
   }
