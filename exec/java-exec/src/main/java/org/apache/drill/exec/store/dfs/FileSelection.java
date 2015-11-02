@@ -83,6 +83,14 @@ public class FileSelection {
     this.selectionRoot = selectionRoot;
   }
 
+  public FileSelection(List<String> files, String selectionRoot,
+                       ParquetTableMetadata_v1 meta, List<FileStatus> statuses) {
+    this.files = files;
+    this.selectionRoot = selectionRoot;
+    this.parquetMeta = meta;
+    this.statuses = statuses;
+  }
+
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
     init(fs);
     for (FileStatus p : statuses) {
