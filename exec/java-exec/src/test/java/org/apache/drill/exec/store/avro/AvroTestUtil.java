@@ -542,6 +542,42 @@ public class AvroTestUtil {
     return file.getAbsolutePath();
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public static String generateLinkedList() throws Exception {
+
+    final File file = File.createTempFile("avro-linkedlist", ".avro");
+    file.deleteOnExit();
+
+    final Schema schema = SchemaBuilder.record("LongList")
+            .namespace("org.apache.drill.exec.store.avro")
+            .aliases("LinkedLongs")
+            .fields()
+            .name("value").type().optional().longType()
+            .name("next").type().optional().type("LongList")
+            .endRecord();
+
+    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    writer.create(schema, file);
+    GenericRecord previousRecord = null;
+    try {
+      for (int i = 0; i < RECORD_COUNT; i++) {
+        GenericRecord record = (GenericRecord) (previousRecord == null ? new GenericData.Record(schema) : previousRecord.get("next"));
+        record.put("value", (long) i);
+        if (previousRecord != null) {
+          writer.append(previousRecord);
+        }
+        GenericRecord nextRecord = new GenericData.Record(record.getSchema());
+        record.put("next", nextRecord);
+        previousRecord = record;
+      }
+      writer.append(previousRecord);
+    } finally {
+      writer.close();
+    }
+
+    return file.getAbsolutePath();
+  }
+
   public static String generateStringAndUtf8Data() throws Exception {
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")

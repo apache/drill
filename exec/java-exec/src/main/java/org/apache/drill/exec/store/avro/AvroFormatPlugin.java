@@ -17,29 +17,41 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.FormatMatcher;
+import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Format plugin for Avro data files.
  */
 public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
+
+  private final AvroFormatMatcher matcher;
 
   public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
                           StoragePluginConfig storagePluginConfig) {
@@ -48,6 +60,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
   public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
     super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("avro"), "avro");
+    this.matcher = new AvroFormatMatcher(this);
   }
 
   @Override
@@ -75,5 +88,32 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     throw new UnsupportedOperationException("unimplemented");
   }
 
+  @Override
+  public FormatMatcher getMatcher() {
+    return this.matcher;
+  }
+
+  private static class AvroFormatMatcher extends BasicFormatMatcher {
+
+    public AvroFormatMatcher(AvroFormatPlugin plugin) {
+      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), ImmutableList.<MagicString>of());
+    }
+
+    @Override
+    public DrillTable isReadable(DrillFileSystem fs,
+        FileSelection selection, FileSystemPlugin fsPlugin,
+        String storageEngineName, String userName) throws IOException {
+      if (isFileReadable(fs, selection.getFirstPath(fs))) {
+        if (plugin.getName() != null) {
+          NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
+          namedConfig.name = plugin.getName();
+          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(namedConfig, selection));
+        } else {
+          return new AvroDrillTable(storageEngineName, fsPlugin, userName, new FormatSelection(plugin.getConfig(), selection));
+        }
+      }
+      return null;
+    }
+  }
 
 }

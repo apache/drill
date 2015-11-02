@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -57,6 +56,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
 import org.apache.hadoop.fs.Path;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {

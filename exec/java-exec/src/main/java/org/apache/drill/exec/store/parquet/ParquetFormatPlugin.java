@@ -32,6 +32,8 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -42,6 +44,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -204,14 +207,17 @@ public class ParquetFormatPlugin implements FormatPlugin{
     }
 
     @Override
-    public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+    public DrillTable isReadable(DrillFileSystem fs, FileSelection selection,
+        FileSystemPlugin fsPlugin, String storageEngineName, String userName)
+        throws IOException {
       // TODO: we only check the first file for directory reading.  This is because
       if(selection.containsDirectories(fs)){
         if(isDirReadable(fs, selection.getFirstPath(fs))){
-          return new FormatSelection(plugin.getConfig(), expandSelection(fs, selection));
+          return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+              new FormatSelection(plugin.getConfig(), expandSelection(fs, selection)));
         }
       }
-      return super.isReadable(fs, selection);
+      return super.isReadable(fs, selection, fsPlugin, storageEngineName, userName);
     }
 
     private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {

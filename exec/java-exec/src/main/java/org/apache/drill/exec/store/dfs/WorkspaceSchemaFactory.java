@@ -40,7 +40,6 @@ import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
-import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -326,9 +325,9 @@ public class WorkspaceSchemaFactory {
         if (fileSelection.containsDirectories(fs)) {
           for (FormatMatcher m : dirMatchers) {
             try {
-              Object selection = m.isReadable(fs, fileSelection);
-              if (selection != null) {
-                return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+              DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+              if (table != null) {
+                return table;
               }
             } catch (IOException e) {
               logger.debug("File read failed.", e);
@@ -338,9 +337,9 @@ public class WorkspaceSchemaFactory {
         }
 
         for (FormatMatcher m : fileMatchers) {
-          Object selection = m.isReadable(fs, fileSelection);
-          if (selection != null) {
-            return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+          DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+          if (table != null) {
+            return table;
           }
         }
         return null;
