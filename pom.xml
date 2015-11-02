@@ -113,6 +113,18 @@
     </repository>
 
     <repository>
+      <id>dremio-releases</id>
+      <name>Dremio Drill Third Party Artifacts</name>
+      <url>http://repo.dremio.com/release/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>    
+
+    <repository>
       <id>mapr-drill-thirdparty</id>
       <name>MapR Drill Third Party Artifacts</name>
       <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
@@ -1243,7 +1255,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r6</version>
+            <version>1.4.0-drill-r8</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

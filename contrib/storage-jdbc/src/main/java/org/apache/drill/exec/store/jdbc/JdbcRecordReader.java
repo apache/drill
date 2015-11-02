@@ -97,6 +97,7 @@ class JdbcRecordReader extends AbstractRecordReader {
         .put(java.sql.Types.CHAR, MinorType.VARCHAR)
         .put(java.sql.Types.VARCHAR, MinorType.VARCHAR)
         .put(java.sql.Types.LONGVARCHAR, MinorType.VARCHAR)
+        .put(java.sql.Types.CLOB, MinorType.VARCHAR)
 
         .put(java.sql.Types.NCHAR, MinorType.VARCHAR)
         .put(java.sql.Types.NVARCHAR, MinorType.VARCHAR)
@@ -104,6 +105,7 @@ class JdbcRecordReader extends AbstractRecordReader {
 
         .put(java.sql.Types.VARBINARY, MinorType.VARBINARY)
         .put(java.sql.Types.LONGVARBINARY, MinorType.VARBINARY)
+        .put(java.sql.Types.BLOB, MinorType.VARBINARY)
 
         .put(java.sql.Types.NUMERIC, MinorType.FLOAT8)
         .put(java.sql.Types.DECIMAL, MinorType.FLOAT8)
