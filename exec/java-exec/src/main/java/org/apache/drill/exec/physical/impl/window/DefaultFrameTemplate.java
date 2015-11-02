@@ -28,7 +28,6 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import javax.inject.Named;
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -229,8 +228,8 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void processRow(final int row) throws DrillException {
     if (partition.isFrameDone()) {
       // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-      partition.newFrame(countPeers(row));
-      aggregatePeers(row);
+      final long peers = aggregatePeers(row);
+      partition.newFrame(peers);
     }
 
     outputRow(row, partition);
@@ -286,66 +285,40 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   /**
-   * Counts how many rows are peer with the first row of the current frame. This is called when we don't require all
-   * batches of current partition to be processed at once.<br>
-   * Assumes the end of the frame has indeed been found, because of this it doesn't use partition.remaining to check
-   * the end of current partition but rather isSamePartition()
-   * @param start first row of current frame
-   * @return number of peer rows
+   * aggregates all peer rows of current row
+   * @param start starting row of the current frame
+   * @return num peer rows for current row
+   * @throws SchemaChangeException
    */
-  private long countPeers(final int start) {
+  private long aggregatePeers(final int start) throws SchemaChangeException {
+    logger.trace("aggregating rows starting from {}", start);
+
     // current frame always starts from first batch
     final VectorAccessible first = getCurrent();
+    VectorAccessible last = first;
     long length = 0;
 
-    // count all rows that are in the same frame of starting row
-    // keep increasing length until we find first non peer row we reach the very
-    // last batch
+    // a single frame can include rows from multiple batches
+    // start processing first batch and, if necessary, move to next batches
     for (WindowDataBatch batch : batches) {
+      setupEvaluatePeer(batch, container);
       final int recordCount = batch.getRecordCount();
 
       // for every remaining row in the partition, count it if it's a peer row
       for (int row = (batch == first) ? start : 0; row < recordCount; row++, length++) {
         if (!isPeer(start, first, row, batch)) {
-          return length;
+          break;
         }
+
+        evaluatePeer(row);
+        last = batch;
+        frameLastRow = row;
       }
     }
+
+    setupReadLastValue(last, container);
 
     return length;
-  }
-
-  /**
-   * aggregates all peer rows of current row
-   * @param currentRow starting row of the current frame
-   * @throws SchemaChangeException
-   */
-  private void aggregatePeers(final int currentRow) throws SchemaChangeException {
-    logger.trace("aggregating {} rows starting from {}", partition.getPeers(), currentRow);
-    assert !partition.isFrameDone() : "frame is empty!";
-
-    // a single frame can include rows from multiple batches
-    // start processing first batch and, if necessary, move to next batches
-    Iterator<WindowDataBatch> iterator = batches.iterator();
-    WindowDataBatch current = iterator.next();
-    setupEvaluatePeer(current, container);
-
-    final long peers = partition.getPeers();
-    int row = currentRow;
-    for (int i = 0; i < peers; i++, row++) {
-      if (row >= current.getRecordCount()) {
-        // we reached the end of the current batch, move to the next one
-        current = iterator.next();
-        setupEvaluatePeer(current, container);
-        row = 0;
-      }
-
-      evaluatePeer(row);
-    }
-
-    // last row of current frame
-    setupReadLastValue(current, container);
-    frameLastRow = row - 1;
   }
 
   /**
