@@ -162,7 +162,7 @@ If you need to add a storage plugin configuration to Drill and do not want to us
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
-    curl -X POST -H "Content-Tpe: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
+    curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
 
 For more information about the REST API, see this [Google doc](https://docs.google.com/document/d/1mRsuWk4Dpt6ts-jQ6ke3bB30PIwanRiCPfGxRwZEQME).
 
