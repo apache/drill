@@ -118,6 +118,12 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c8".getBytes(), "5".getBytes());
     p.add("f2".getBytes(), "c9".getBytes(), "6".getBytes());
     table.put(p);
+
+    p = new Put("b7".getBytes());
+    p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
+    p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
+    table.put(p);
+
     table.flushCommits();
     table.close();
   }
