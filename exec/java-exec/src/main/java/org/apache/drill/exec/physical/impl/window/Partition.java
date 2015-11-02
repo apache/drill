@@ -29,7 +29,7 @@ public class Partition {
   private long length; // size of this partition (if partial is true, then this is a partial length of the partition)
   private long remaining; // remaining non-processed rows in this partition
 
-  private int peers; // remaining non-processed peers in current frame
+  private long peers; // remaining non-processed peers in current frame
 
   // we keep these attributes public because the generated code needs to access them
   public int row_number = 1;
@@ -48,7 +48,7 @@ public class Partition {
   /**
    * @return peer rows not yet aggregated in current frame
    */
-  public int getPeers() {
+  public long getPeers() {
     return peers;
   }
 
@@ -70,7 +70,7 @@ public class Partition {
     row_number++;
   }
 
-  public void newFrame(int peers) {
+  public void newFrame(long peers) {
     this.peers = peers;
 
     rank = row_number; // rank = row number of 1st peer

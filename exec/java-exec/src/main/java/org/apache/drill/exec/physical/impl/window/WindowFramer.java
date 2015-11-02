@@ -40,16 +40,6 @@ public interface WindowFramer {
   void doWork() throws DrillException;
 
   /**
-   * check if current batch can be processed:
-   * <ol>
-   *   <li>we have at least 2 saved batches</li>
-   *   <li>last partition of current batch ended</li>
-   * </ol>
-   * @return true if current batch can be processed, false otherwise
-   */
-  boolean canDoWork();
-
-  /**
    * @return number rows processed in last batch
    */
   int getOutputCount();

@@ -229,11 +229,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   private void processRow(final int row) throws DrillException {
     if (partition.isFrameDone()) {
       // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-      if (!requireFullPartition) {
-        partition.newFrame(countPeersPartialPartition(row));
-      } else {
-        partition.newFrame(countPeersFullPartition(row));
-      }
+      partition.newFrame(countPeers(row));
       aggregatePeers(row);
     }
 
@@ -290,34 +286,6 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
   }
 
   /**
-   * Counts how many rows are peer with the first row of the current frame
-   * @param start first row of current frame
-   * @return number of peer rows
-   */
-  private int countPeersFullPartition(final int start) {
-    // current frame always starts from first batch
-    final VectorAccessible first = getCurrent();
-    final long remaining = partition.getRemaining();
-    int length = 0;
-
-    // count all rows that are in the same frame of starting row
-    // keep increasing length until we find first non peer row we reach the very
-    // last batch
-    for (WindowDataBatch batch : batches) {
-      final int recordCount = batch.getRecordCount();
-
-      // for every remaining row in the partition, count it if it's a peer row
-      for (int row = (batch == first) ? start : 0; row < recordCount && length < remaining; row++, length++) {
-        if (!isPeer(start, first, row, batch)) {
-          return length;
-        }
-      }
-    }
-
-    return length;
-  }
-
-  /**
    * Counts how many rows are peer with the first row of the current frame. This is called when we don't require all
    * batches of current partition to be processed at once.<br>
    * Assumes the end of the frame has indeed been found, because of this it doesn't use partition.remaining to check
@@ -325,10 +293,10 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
    * @param start first row of current frame
    * @return number of peer rows
    */
-  private int countPeersPartialPartition(final int start) {
+  private long countPeers(final int start) {
     // current frame always starts from first batch
     final VectorAccessible first = getCurrent();
-    int length = 0;
+    long length = 0;
 
     // count all rows that are in the same frame of starting row
     // keep increasing length until we find first non peer row we reach the very
@@ -338,7 +306,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
 
       // for every remaining row in the partition, count it if it's a peer row
       for (int row = (batch == first) ? start : 0; row < recordCount; row++, length++) {
-        if (!isSamePartition(start, first, row, batch) || !isPeer(start, first, row, batch)) {
+        if (!isPeer(start, first, row, batch)) {
           return length;
         }
       }
@@ -362,7 +330,7 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     WindowDataBatch current = iterator.next();
     setupEvaluatePeer(current, container);
 
-    final int peers = partition.getPeers();
+    final long peers = partition.getPeers();
     int row = currentRow;
     for (int i = 0; i < peers; i++, row++) {
       if (row >= current.getRecordCount()) {
@@ -378,29 +346,6 @@ public abstract class DefaultFrameTemplate implements WindowFramer {
     // last row of current frame
     setupReadLastValue(current, container);
     frameLastRow = row - 1;
-  }
-
-  @Override
-  public boolean canDoWork() {
-    // check if we can process a saved batch
-    if (batches.size() < 2) {
-      logger.trace("we don't have enough batches to proceed, fetch next batch");
-      return false;
-    }
-
-    final VectorAccessible current = getCurrent();
-    final int currentSize = current.getRecordCount();
-    final VectorAccessible last = batches.get(batches.size() - 1);
-    final int lastSize = last.getRecordCount();
-
-    if (!isSamePartition(currentSize - 1, current, lastSize - 1, last)
-        /*|| !isPeer(currentSize - 1, current, lastSize - 1, last)*/) {
-      logger.trace("partition changed, we are ready to process first saved batch");
-      return true;
-    } else {
-      logger.trace("partition didn't change, fetch next batch");
-      return false;
-    }
   }
 
   /**
