@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -316,6 +317,30 @@ class RepeatedVarCharOutput extends TextOutput {
 
   }
 
+  /**
+   * This method is a helper method added for DRILL-951
+   * TextRecordReader to call this method to get field names out
+   * @return array of field data strings
+   */
+  public String [] getTextOutput () throws ExecutionSetupException {
+    if (recordCount == 0 || fieldIndex == -1) {
+      return null;
+    }
+
+    if (this.recordStart != characterData) {
+      throw new ExecutionSetupException("record text was requested before finishing record");
+    }
+
+    //Currently only first line header is supported. Return only first record.
+    int retSize = fieldIndex+1;
+    String [] out = new String [retSize];
+
+    RepeatedVarCharVector.Accessor a = this.vector.getAccessor();
+    for (int i=0; i<retSize; i++){
+      out[i] = a.getSingleObject(0,i).toString();
+    }
+    return out;
+  }
 
   // Sets the record count in this batch within the value vector
   @Override

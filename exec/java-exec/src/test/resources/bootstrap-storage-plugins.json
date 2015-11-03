@@ -51,6 +51,12 @@
         "sequencefile": {
           type: "sequencefile",
           extensions: [ "seq" ]
+        },
+        "csvh" : {
+          type: "text",
+          extensions: [ "csvh" ],
+          delimiter: ",",
+          extractHeader: true
         }
       }
     }
