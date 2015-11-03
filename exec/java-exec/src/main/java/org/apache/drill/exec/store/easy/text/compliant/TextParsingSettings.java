@@ -43,7 +43,6 @@ public class TextParsingSettings {
   private String lineSeparatorString = "\n";
   private boolean skipFirstLine = false;
 
-  // these options are not yet supported
   private boolean headerExtractionEnabled = false;
   private boolean useRepeatedVarChar = true;
   private int numberOfRecordsToRead = -1;
@@ -57,6 +56,14 @@ public class TextParsingSettings {
     this.delimiter = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
     this.comment = bSafe(config.getComment(), "comment");
     this.skipFirstLine = config.isSkipFirstLine();
+    //TODO: avoid specific extension based check
+    if (config.getExtensions().get(0).equals("csvh")) {
+      // csv file with first line as a header
+      this.headerExtractionEnabled = true;
+      // TextRecordReader will use set of VarChar vectors instead, hence false
+      this.useRepeatedVarChar = false;
+      // TextRecordReader will set skipFirstLine = true after it reads the header
+    }
   }
 
   public byte getComment(){
