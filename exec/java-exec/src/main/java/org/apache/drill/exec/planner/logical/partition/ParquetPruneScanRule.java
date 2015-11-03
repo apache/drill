@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 
 public class ParquetPruneScanRule {
@@ -49,7 +50,11 @@ public class ParquetPruneScanRule {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
-        return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
@@ -77,7 +82,11 @@ public class ParquetPruneScanRule {
         final DrillScanRel scan = (DrillScanRel) call.rel(1);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for parquet based partition pruning
-        return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof ParquetGroupScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override

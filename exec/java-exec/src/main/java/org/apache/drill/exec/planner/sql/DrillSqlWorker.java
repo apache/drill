@@ -74,7 +74,8 @@ public class DrillSqlWorker {
   private final HepPlanner hepPlanner;
   public final static int LOGICAL_RULES = 0;
   public final static int PHYSICAL_MEM_RULES = 1;
-  public final static int LOGICAL_CONVERT_RULES = 2;
+  public final static int LOGICAL_HEP_JOIN_RULES = 2;
+  public final static int LOGICAL_HEP_JOIN__PP_RULES = 3;
 
   private final QueryContext context;
 
@@ -116,20 +117,32 @@ public class DrillSqlWorker {
 
   private RuleSet[] getRules(QueryContext context) {
     StoragePluginRegistry storagePluginRegistry = context.getStorage();
-    RuleSet drillLogicalRules = DrillRuleSets.mergedRuleSets(
+
+    // Ruleset for the case where VolcanoPlanner is used for everything : join, filter/project pushdown, partition pruning.
+    RuleSet drillLogicalVolOnlyRules = DrillRuleSets.mergedRuleSets(
         DrillRuleSets.getDrillBasicRules(context),
+        DrillRuleSets.getPruneScanRules(context),
         DrillRuleSets.getJoinPermRules(context),
         DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
+
+    // Ruleset for the case where join planning is done in Hep-LOPT, filter/project pushdown and parttion pruning are done in VolcanoPlanner
+    RuleSet drillLogicalHepJoinRules = DrillRuleSets.mergedRuleSets(
+        DrillRuleSets.getDrillBasicRules(context),
+        DrillRuleSets.getPruneScanRules(context),
+        DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
+
+    // Ruleset for the case where join planning and partition pruning is done in Hep, filter/project pushdown are done in VolcanoPlanner
+    RuleSet drillLogicalHepJoinPPRules = DrillRuleSets.mergedRuleSets(
+        DrillRuleSets.getDrillBasicRules(context),
+        DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
+
+    // Ruleset for physical planning rules
     RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
         DrillRuleSets.getPhysicalRules(context),
         storagePluginRegistry.getStoragePluginRuleSet(context));
 
-    // Following is used in LOPT join OPT.
-    RuleSet logicalConvertRules = DrillRuleSets.mergedRuleSets(
-        DrillRuleSets.getDrillBasicRules(context),
-        DrillRuleSets.getDrillUserConfigurableLogicalRules(context));
 
-    RuleSet[] allRules = new RuleSet[] {drillLogicalRules, drillPhysicalMem, logicalConvertRules};
+    RuleSet[] allRules = new RuleSet[] {drillLogicalVolOnlyRules, drillPhysicalMem, drillLogicalHepJoinRules, drillLogicalHepJoinPPRules};
 
     return allRules;
   }

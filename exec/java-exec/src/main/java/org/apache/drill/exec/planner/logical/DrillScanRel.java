@@ -54,19 +54,31 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   private GroupScan groupScan;
   private List<SchemaPath> columns;
   private PlannerSettings settings;
+  private final boolean partitionFilterPushdown;
 
   /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table) {
+                      final RelOptTable table) {
+    this(cluster, traits, table, false);
+  }
+    /** Creates a DrillScan. */
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table, boolean partitionFilterPushdown) {
     // By default, scan does not support project pushdown.
     // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
-    this(cluster, traits, table, table.getRowType(), GroupScan.ALL_COLUMNS);
+    this(cluster, traits, table, table.getRowType(), GroupScan.ALL_COLUMNS, partitionFilterPushdown);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
   /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns) {
+                      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns) {
+    this(cluster, traits, table, rowType, columns, false);
+  }
+
+  /** Creates a DrillScan. */
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
@@ -77,6 +89,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     } else { // planner asks to scan some columns
       this.columns  = ColumnList.some(columns);
     }
+    this.partitionFilterPushdown = partitionFilterPushdown;
     try {
       this.groupScan = drillTable.getGroupScan().clone(this.columns);
     } catch (final IOException e) {
@@ -86,12 +99,19 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   /** Creates a DrillScanRel for a particular GroupScan */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
-      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns) {
+                      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns) {
+    this(cluster, traits, table, groupScan, rowType, columns, false);
+  }
+
+  /** Creates a DrillScanRel for a particular GroupScan */
+  public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
+      final RelOptTable table, final GroupScan groupScan, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
     this.columns = columns;
     this.groupScan = groupScan;
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
+    this.partitionFilterPushdown = partitionFilterPushdown;
   }
 
 //
@@ -178,6 +198,10 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   public GroupScan getGroupScan() {
     return groupScan;
+  }
+
+  public boolean partitionFilterPushdown() {
+    return this.partitionFilterPushdown;
   }
 
 }

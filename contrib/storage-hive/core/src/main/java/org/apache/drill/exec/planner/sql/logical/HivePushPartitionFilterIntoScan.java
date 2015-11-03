@@ -27,6 +27,7 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.sql.HivePartitionDescriptor;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveScan;
@@ -52,7 +53,11 @@ public abstract class HivePushPartitionFilterIntoScan {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for Hive based partition pruning
-        return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
@@ -82,7 +87,11 @@ public abstract class HivePushPartitionFilterIntoScan {
         final DrillScanRel scan = (DrillScanRel) call.rel(1);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for Hive based partition pruning
-        return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof HiveScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
