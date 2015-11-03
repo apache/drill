@@ -58,10 +58,19 @@ public class RecordIterator implements VectorAccessible {
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
 
   public RecordIterator(RecordBatch incoming,
-                             AbstractRecordBatch<?> outgoing,
-                             OperatorContext oContext,
-                             int inputIndex) {
+                        AbstractRecordBatch<?> outgoing,
+                        OperatorContext oContext,
+                        int inputIndex) {
     this.incoming = incoming;
+    this.outgoing = outgoing;
+    this.inputIndex = inputIndex;
+    this.lastBatchRead = false;
+    this.container = new VectorContainer(oContext);
+    resetIndices();
+    this.initialized = false;
+  }
+
+  private void resetIndices() {
     this.innerPosition = -1;
     this.startBatchPosition = -1;
     this.outerPosition = -1;
@@ -69,11 +78,6 @@ public class RecordIterator implements VectorAccessible {
     this.innerRecordCount = 0;
     this.markedInnerPosition = -1;
     this.markedOuterPosition = -1;
-    this.outgoing = outgoing;
-    this.inputIndex = inputIndex;
-    this.lastBatchRead = false;
-    this.container = new VectorContainer(oContext);
-    this.initialized = false;
   }
 
   // Get next record batch.
@@ -117,7 +121,7 @@ public class RecordIterator implements VectorAccessible {
   }
 
   // Move forward by delta (may cross one or more record batches)
-  public void forward(int delta) {
+  public void forward(long delta) {
     Preconditions.checkArgument(delta >= 0);
     Preconditions.checkArgument(delta + outerPosition < totalRecordCount);
     final long nextOuterPosition = delta + outerPosition;
@@ -159,7 +163,7 @@ public class RecordIterator implements VectorAccessible {
           // If Schema changes in the middle of the execution clear out data and return
           if (initialized && lastOutcome == IterOutcome.OK_NEW_SCHEMA) {
             clear();
-            markedOuterPosition = markedInnerPosition = -1;
+            resetIndices();
             return lastOutcome;
           }
           // Transfer vectors from incoming record batch.
@@ -186,6 +190,8 @@ public class RecordIterator implements VectorAccessible {
           } else {
             // Release schema/empty batches.
             rbd.clear();
+            // Move to next non empty batch in order to position iterator to 0.
+            return next();
           }
           break;
         case OUT_OF_MEMORY:
@@ -215,6 +221,10 @@ public class RecordIterator implements VectorAccessible {
 
   public int getInnerRecordCount() {
     return innerRecordCount;
+  }
+
+  public long getOuterPosition() {
+    return outerPosition;
   }
 
   public int getCurrentPosition() {
@@ -253,7 +263,8 @@ public class RecordIterator implements VectorAccessible {
     return container.iterator();
   }
 
-  private void clear() {
+  // Release all vectors held by record batches, clear out range map.
+  public void clear() {
     if (container != null) {
       container.clear();
     }
@@ -263,8 +274,8 @@ public class RecordIterator implements VectorAccessible {
     batches.clear();
   }
 
-  public void close() {
-    clear();
+  // Deplete incoming batches.
+  public void clearInflightBatches() {
     while (lastOutcome == IterOutcome.OK || lastOutcome == IterOutcome.OK_NEW_SCHEMA) {
       // Clear all buffers from incoming.
       for (VectorWrapper<?> wrapper : incoming) {
@@ -272,5 +283,10 @@ public class RecordIterator implements VectorAccessible {
       }
       lastOutcome = incoming.next();
     }
+  }
+
+  public void close() {
+    clear();
+    clearInflightBatches();
   }
 }

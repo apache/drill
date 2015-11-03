@@ -60,7 +60,6 @@ public abstract class JoinTemplate implements JoinWorker {
       if (status.left.finished()) {
         return true;
       }
-
       final int comparison = doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition());
       switch (comparison) {
         case -1:
@@ -75,30 +74,40 @@ public abstract class JoinTemplate implements JoinWorker {
         case 0:
           // left key == right key
           // Mark current position in right iterator.
-          status.right.mark();
-          // Copy all equal keys from right side to the output record batch.
-          doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
-          doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
-          status.incOutputPos();
+          // If we have set a mark in previous iteration but didn't finish the inner loop,
+          // skip current right side as its already copied in earlier iteration.
+          if (status.shouldMark()) {
+            status.right.mark();
+            // Copy all equal keys from right side to the output record batch.
+            doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
+            doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
+            status.incOutputPos();
+          }
           // Move to next position in right iterator.
           status.right.next();
-          while(!status.isOutgoingBatchFull() && !status.right.finished()) {
+          while (!status.right.finished()) {
             if (doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition()) == 0) {
               doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
               doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
               status.incOutputPos();
+              if (status.isOutgoingBatchFull()) {
+                // Leave iterators at their current positions and markers.
+                // Don't mark on all subsequent doJoin iterations.
+                status.disableMarking();
+                return true;
+              }
               status.right.next();
             } else {
               break;
             }
           }
-          // TODO: Save delta.
           status.right.reset();
+          // Enable marking only when we have consumed all equal keys on right side.
+          status.enableMarking();
           status.left.next();
           continue;
         case 1:
           // left key > right key
-          // TODO: Use delta to move forward to next record.
           status.right.next();
           continue;
 
