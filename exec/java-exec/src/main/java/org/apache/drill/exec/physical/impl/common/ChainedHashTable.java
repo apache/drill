@@ -239,11 +239,11 @@ public class ChainedHashTable {
     int i = 0;
     for (LogicalExpression expr : keyExprs) {
       cg.setMappingSet(incomingMapping);
-      HoldingContainer left = cg.addExpr(expr, false);
+      HoldingContainer left = cg.addExpr(expr, false, true);
 
       cg.setMappingSet(htableMapping);
       ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i++]);
-      HoldingContainer right = cg.addExpr(vvrExpr, false);
+      HoldingContainer right = cg.addExpr(vvrExpr, false, true);
 
       JConditional jc;
 
@@ -258,7 +258,7 @@ public class ChainedHashTable {
           FunctionGenerationHelper
           .getOrderingComparatorNullsHigh(left, right, context.getFunctionRegistry());
 
-      HoldingContainer out = cg.addExpr(f, false);
+      HoldingContainer out = cg.addExpr(f, false, true);
 
       // check if two values are not equal (comparator result != 0)
       jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
@@ -280,7 +280,7 @@ public class ChainedHashTable {
       boolean useSetSafe = !Types.isFixedWidthType(expr.getMajorType()) || Types.isRepeated(expr.getMajorType());
       ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(htKeyFieldIds[i++], expr, useSetSafe);
 
-      cg.addExpr(vvwExpr, false); // this will write to the htContainer at htRowIdx
+      cg.addExpr(vvwExpr, false, true); // this will write to the htContainer at htRowIdx
     }
   }
 
@@ -293,7 +293,7 @@ public class ChainedHashTable {
         ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
         boolean useSetSafe = !Types.isFixedWidthType(vvrExpr.getMajorType()) || Types.isRepeated(vvrExpr.getMajorType());
         ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, useSetSafe);
-        cg.addExpr(vvwExpr);
+        cg.addExpr(vvwExpr, true, true);
       }
 
     }
