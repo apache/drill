@@ -172,6 +172,9 @@
           <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <exclude>**/*.log</exclude>
+            <exclude>**/nb-configuration.xml</exclude>
+            <exclude>**/src/test/resources/**</exclude>
+            <exclude>**/src/main/resources/**</exclude>
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
             <exclude>**/*.md</exclude>
