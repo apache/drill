@@ -41,72 +41,71 @@ public abstract class JoinTemplate implements JoinWorker {
    * @return  true of join succeeded; false if the worker needs to be regenerated
    */
   public final boolean doJoin(final JoinStatus status) {
-    while(!status.isOutgoingBatchFull()) {
+    final boolean isLeftJoin = (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT);
 
-      if (status.rightFinished()) {
-        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          while (!status.leftFinished()) {
+    while (!status.isOutgoingBatchFull()) {
+      if (status.right.finished()) {
+        if (isLeftJoin) {
+          while (!status.left.finished()) {
             if (status.isOutgoingBatchFull()) {
               return true;
             }
-            doCopyLeft(status.getLeftPosition(), status.getOutPosition());
+            doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
             status.incOutputPos();
-            status.advanceLeft();
+            status.left.next();
           }
         }
         return true;
       }
-      if (status.leftFinished()) {
+      if (status.left.finished()) {
         return true;
       }
 
-      final int comparison = doCompare(status.getLeftPosition(), status.getRightPosition());
+      final int comparison = doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition());
       switch (comparison) {
         case -1:
           // left key < right key
-          if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-            doCopyLeft(status.getLeftPosition(), status.getOutPosition());
+          if (isLeftJoin) {
+            doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
             status.incOutputPos();
           }
-          status.advanceLeft();
+          status.left.next();
           continue;
 
         case 0:
           // left key == right key
           // Mark current position in right iterator.
-          status.markRight();
-          // Copy all equal right keys to the output record batch
-          doCopyLeft(status.getLeftPosition(), status.getOutPosition());
-          doCopyRight(status.getRightPosition(), status.getOutPosition());
+          status.right.mark();
+          // Copy all equal keys from right side to the output record batch.
+          doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
+          doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
           status.incOutputPos();
           // Move to next position in right iterator.
-          status.advanceRight();
-          while(!status.isOutgoingBatchFull() && !status.rightFinished()) {
-            final int comparision = doCompare(status.getLeftPosition(), status.getRightPosition());
-            if (comparision == 0) {
-              doCopyLeft(status.getLeftPosition(), status.getOutPosition());
-              doCopyRight(status.getRightPosition(), status.getOutPosition());
+          status.right.next();
+          while(!status.isOutgoingBatchFull() && !status.right.finished()) {
+            if (doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition()) == 0) {
+              doCopyLeft(status.left.getCurrentPosition(), status.getOutPosition());
+              doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
               status.incOutputPos();
-              status.advanceRight();
+              status.right.next();
             } else {
               break;
             }
           }
           // TODO: Save delta.
-          status.resetRight();
-          status.advanceLeft();
+          status.right.reset();
+          status.left.next();
           continue;
         case 1:
           // left key > right key
           // TODO: Use delta to move forward to next record.
-          status.advanceRight();
+          status.right.next();
           continue;
 
         default:
           throw new IllegalStateException();
       }
     }
-
     return true;
   }
 
