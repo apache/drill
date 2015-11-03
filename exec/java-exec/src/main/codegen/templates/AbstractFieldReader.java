@@ -67,6 +67,10 @@ abstract class AbstractFieldReader extends AbstractBaseReader implements FieldRe
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign boxedType = (minor.boxedType!type.boxedType) />
 
+  public void read(${name}Holder holder){
+    fail("${name}");
+  }
+
   public void read(Nullable${name}Holder holder){
     fail("${name}");
   }

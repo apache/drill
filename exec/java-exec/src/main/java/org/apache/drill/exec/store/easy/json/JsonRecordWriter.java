@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.JSONOutputRecordWriter;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.vector.complex.fn.BasicJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
+import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -125,6 +126,29 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
         converter.writeField();
       }
       gen.writeEndObject();
+    }
+  }
+
+  @Override
+  public FieldConverter getNewUnionConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new UnionJsonConverter(fieldId, fieldName, reader);
+  }
+
+  public class UnionJsonConverter extends FieldConverter {
+
+    public UnionJsonConverter(int fieldId, String fieldName, FieldReader reader) {
+      super(fieldId, fieldName, reader);
+    }
+
+    @Override
+    public void startField() throws IOException {
+      gen.writeFieldName(fieldName);
+    }
+
+    @Override
+    public void writeField() throws IOException {
+      JsonWriter writer = new JsonWriter(gen);
+      writer.write(reader);
     }
   }
 

@@ -58,7 +58,8 @@ public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
     INTERVALYEAR(38),
     INTERVALDAY(39),
     LIST(40),
-    GENERIC_OBJECT(41);
+    GENERIC_OBJECT(41),
+    UNION(42);
     
     public final int number;
     
@@ -113,6 +114,7 @@ public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
             case 39: return INTERVALDAY;
             case 40: return LIST;
             case 41: return GENERIC_OBJECT;
+            case 42: return UNION;
             default: return null;
         }
     }

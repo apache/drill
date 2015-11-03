@@ -70,6 +70,12 @@ public class TestJdbcDistQuery extends JdbcTestBase {
         + "from dfs_test.`%s/../../sample-data/regionsSF/`", WORKING_PATH));
   }
 
+  @Test
+  public void testUnionType() throws Exception{
+    testQuery(String.format("select * "
+            + "from dfs.tmp.`sample.json`", WORKING_PATH));
+  }
+
 
   @Test
   public void testSimpleQueryMultiFile() throws Exception{

@@ -119,7 +119,13 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
-  
+
+  <#if nullMode != "Nullable">
+  public void read(${minor.class?cap_first}Holder h){
+    vector.getAccessor().get(idx(), h);
+  }
+  </#if>
+
   public void read(Nullable${minor.class?cap_first}Holder h){
     vector.getAccessor().get(idx(), h);
   }
@@ -157,6 +163,7 @@ public interface ${name}Reader extends BaseReader{
   public Object readObject(int arrayIndex);
   public ${friendlyType} read${safeType}(int arrayIndex);
   <#else>
+  public void read(${minor.class?cap_first}Holder h);
   public void read(Nullable${minor.class?cap_first}Holder h);
   public Object readObject();
   public ${friendlyType} read${safeType}();

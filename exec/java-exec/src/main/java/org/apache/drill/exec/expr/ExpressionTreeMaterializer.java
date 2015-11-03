@@ -87,12 +87,12 @@ public class ExpressionTreeMaterializer {
   };
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
-    return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, functionLookupContext, false);
+    return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, functionLookupContext, false, false);
   }
 
   public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr, VectorAccessible batch, FunctionLookupContext functionLookupContext) throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
-    LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false);
+    LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false, false);
     if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
@@ -100,8 +100,8 @@ public class ExpressionTreeMaterializer {
   }
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
-      boolean allowComplexWriterExpr) {
-    LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr), functionLookupContext);
+      boolean allowComplexWriterExpr, boolean unionTypeEnabled) {
+    LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr, unionTypeEnabled), functionLookupContext);
 
     if (!errorCollector.hasErrors()) {
       out = out.accept(ConditionalExprOptimizer.INSTANCE, null);
@@ -190,11 +190,13 @@ public class ExpressionTreeMaterializer {
     private final ErrorCollector errorCollector;
     private final VectorAccessible batch;
     private final boolean allowComplexWriter;
+    private final boolean unionTypeEnabled;
 
-    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter) {
+    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter, boolean unionTypeEnabled) {
       this.batch = batch;
       this.errorCollector = errorCollector;
       this.allowComplexWriter = allowComplexWriter;
+      this.unionTypeEnabled = unionTypeEnabled;
     }
 
     private LogicalExpression validateNewExpr(LogicalExpression newExpr) {
@@ -323,23 +325,42 @@ public class ExpressionTreeMaterializer {
 
       MinorType thenType = conditions.expression.getMajorType().getMinorType();
       MinorType elseType = newElseExpr.getMajorType().getMinorType();
+      if (unionTypeEnabled) {
+        if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
-      // Check if we need a cast
-      if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
+          MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType((Arrays.asList(thenType, elseType)));
+          if (leastRestrictive != thenType) {
+            // Implicitly cast the then expression
+            conditions = new IfExpression.IfCondition(newCondition,
+                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
+          } else if (leastRestrictive != elseType) {
+            // Implicitly cast the else expression
+            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
+          } else {
+            conditions = new IfExpression.IfCondition(newCondition,
+                    addCastExpression(conditions.expression, Types.optional(MinorType.UNION), functionLookupContext, errorCollector));
+            newElseExpr = addCastExpression(newElseExpr, Types.optional(MinorType.UNION), functionLookupContext, errorCollector);
+          }
+        }
 
-        MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType((Arrays.asList(thenType, elseType)));
-        if (leastRestrictive != thenType) {
-          // Implicitly cast the then expression
-          conditions = new IfExpression.IfCondition(newCondition,
-          addCastExpression(conditions.expression, newElseExpr.getMajorType(), functionLookupContext, errorCollector));
-        } else if (leastRestrictive != elseType) {
-          // Implicitly cast the else expression
-          newElseExpr = addCastExpression(newElseExpr, conditions.expression.getMajorType(), functionLookupContext, errorCollector);
-        } else {
-          /* Cannot cast one of the two expressions to make the output type of if and else expression
-           * to be the same. Raise error.
-           */
-          throw new DrillRuntimeException("Case expression should have similar output type on all its branches");
+      } else {
+        // Check if we need a cast
+        if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
+
+          MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType((Arrays.asList(thenType, elseType)));
+          if (leastRestrictive != thenType) {
+            // Implicitly cast the then expression
+            conditions = new IfExpression.IfCondition(newCondition,
+            addCastExpression(conditions.expression, newElseExpr.getMajorType(), functionLookupContext, errorCollector));
+          } else if (leastRestrictive != elseType) {
+            // Implicitly cast the else expression
+            newElseExpr = addCastExpression(newElseExpr, conditions.expression.getMajorType(), functionLookupContext, errorCollector);
+          } else {
+            /* Cannot cast one of the two expressions to make the output type of if and else expression
+             * to be the same. Raise error.
+             */
+            throw new DrillRuntimeException("Case expression should have similar output type on all its branches");
+          }
         }
       }
 
@@ -374,19 +395,21 @@ public class ExpressionTreeMaterializer {
         }
       }
 
-      // If the type of the IF expression is nullable, apply a convertToNullable*Holder function for "THEN"/"ELSE"
-      // expressions whose type is not nullable.
-      if (IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build().getMajorType().getMode()
-          == DataMode.OPTIONAL) {
+      if (!unionTypeEnabled) {
+        // If the type of the IF expression is nullable, apply a convertToNullable*Holder function for "THEN"/"ELSE"
+        // expressions whose type is not nullable.
+        if (IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build().getMajorType().getMode()
+                == DataMode.OPTIONAL) {
           IfExpression.IfCondition condition = conditions;
           if (condition.expression.getMajorType().getMode() != DataMode.OPTIONAL) {
             conditions = new IfExpression.IfCondition(condition.condition, getConvertToNullableExpr(ImmutableList.of(condition.expression),
-                                                      condition.expression.getMajorType().getMinorType(), functionLookupContext));
-         }
+                    condition.expression.getMajorType().getMinorType(), functionLookupContext));
+          }
 
-        if (newElseExpr.getMajorType().getMode() != DataMode.OPTIONAL) {
-          newElseExpr = getConvertToNullableExpr(ImmutableList.of(newElseExpr),
-              newElseExpr.getMajorType().getMinorType(), functionLookupContext);
+          if (newElseExpr.getMajorType().getMode() != DataMode.OPTIONAL) {
+            newElseExpr = getConvertToNullableExpr(ImmutableList.of(newElseExpr),
+                    newElseExpr.getMajorType().getMinorType(), functionLookupContext);
+          }
         }
       }
 
