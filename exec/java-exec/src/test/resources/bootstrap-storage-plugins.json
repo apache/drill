@@ -40,6 +40,11 @@
         "json" : {
           type: "json"
         },
+        "httpd" : {
+          type: "httpd",
+          logFormat: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"",
+          fields: [ "TIME.STAMP:request.receive.time", "HTTP.METHOD:request.firstline.method", "STRING:request.status.last", "BYTES:response.body.bytesclf" ]
+        },
         "txt" : {
           type : "text",
           extensions: [ "txt" ],

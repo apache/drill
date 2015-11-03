@@ -60,6 +60,8 @@ import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
+
+  @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
 
   private final BasicFormatMatcher matcher;
@@ -69,7 +71,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final boolean blockSplittable;
   private final Configuration fsConf;
   private final StoragePluginConfig storageConfig;
-  protected final FormatPluginConfig formatConfig;
+  protected final T formatConfig;
   private final String name;
   private final boolean compressible;
 
@@ -117,6 +119,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   /** Method indicates whether or not this format could also be in a compression container (for example: csv.gz versus csv).
    * If this format uses its own internal compression scheme, such as Parquet does, then this should return false.
+   * @return <code>true</code> if it is compressible
    */
   public boolean isCompressible() {
     return compressible;
@@ -134,7 +137,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     List<Integer> selectedPartitionColumns = Lists.newArrayList();
     boolean selectAllColumns = false;
 
-    if (columns == null || columns.size() == 0 || AbstractRecordReader.isStarQuery(columns)) {
+    if (columns == null || columns.isEmpty() || AbstractRecordReader.isStarQuery(columns)) {
       selectAllColumns = true;
     } else {
       List<SchemaPath> newColumns = Lists.newArrayList();
@@ -142,7 +145,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       for (SchemaPath column : columns) {
         Matcher m = pattern.matcher(column.getAsUnescapedPath());
         if (m.matches()) {
-          selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+          selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().substring(partitionDesignator.length())));
         } else {
           newColumns.add(column);
         }
@@ -150,7 +153,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
       // We must make sure to pass a table column(not to be confused with partition column) to the underlying record
       // reader.
-      if (newColumns.size()==0) {
+      if (newColumns.isEmpty()) {
         newColumns.add(AbstractRecordReader.STAR_COLUMN);
       }
       // Create a new sub scan object with the new set of columns;
@@ -231,7 +234,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public FormatPluginConfig getConfig() {
+  public T getConfig() {
     return formatConfig;
   }
 
