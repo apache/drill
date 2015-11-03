@@ -136,8 +136,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
       return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
-    } else
-    if (vector instanceof AbstractContainerVector) {
+    } else if (vector instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) vector;
       TypedFieldId.Builder builder = TypedFieldId.newBuilder();
