@@ -107,11 +107,11 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     try {
       InputStream stream = dfs.openPossiblyCompressedStream(split.getPath());
       TextInput input = new TextInput(settings,  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
+      TextOutput output = null;
 
       if(settings.isUseRepeatedVarChar()){
-        TextOutput output = new RepeatedVarCharOutput(outputMutator, getColumns(), isStarQuery());
+        output = new RepeatedVarCharOutput(outputMutator, getColumns(), isStarQuery());
         this.reader = new TextReader(settings, input, output, whitespaceBuffer);
-        reader.start();
       } else {
         // two-phase read approach.
         // phase-1: read the header from the file
@@ -120,10 +120,10 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
         // phase-2: now read the data
         stream = dfs.openPossiblyCompressedStream(split.getPath());
         input = new TextInput(settings,  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
-        TextOutput output = new FieldVarCharOutput(outputMutator, fieldNames, getColumns(), isStarQuery());
+        output = new FieldVarCharOutput(outputMutator, fieldNames, getColumns(), isStarQuery());
         this.reader = new TextReader(settings, input, output, whitespaceBuffer);
-        reader.start();
       }
+      reader.start();
 
     } catch (SchemaChangeException | IOException e) {
       throw new ExecutionSetupException(String.format("Failure while setting up text reader for file %s", split.getPath()), e);
@@ -145,14 +145,14 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     // we will use a separate output mutator to avoid reshaping query output with header data
     HeaderOutputMutator hOutputMutator = new HeaderOutputMutator();
     // setup reader
-    TextOutput output = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
-    this.reader = new TextReader(settings, input, output, oContext.getManagedBuffer(WHITE_SPACE_BUFFER));
+    TextOutput header = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
+    this.reader = new TextReader(settings, input, header, oContext.getManagedBuffer(WHITE_SPACE_BUFFER));
     // extract first row only
     reader.start();
     reader.parseNext();
     reader.close();
     // grab the field names from output
-    String [] fieldNames = ((RepeatedVarCharOutput)output).getTextOutput();
+    String [] fieldNames = ((RepeatedVarCharOutput)header).getTextOutput();
     // cleanup and set to skip the first line next time we read input
     hOutputMutator.close();
     settings.setSkipFirstLine(true);
@@ -252,7 +252,6 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       for (final ValueVector v : fieldVectorMap.values()) {
         v.clear();
       }
-
       fieldVectorMap.clear();
     }
 

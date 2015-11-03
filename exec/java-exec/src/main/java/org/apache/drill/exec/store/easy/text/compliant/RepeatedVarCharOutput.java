@@ -332,8 +332,7 @@ class RepeatedVarCharOutput extends TextOutput {
     }
 
     //Currently only first line header is supported. Return only first record.
-    int size = this.vector.getReader().size();
-    int retSize = (int)(size/recordCount);
+    int retSize = fieldIndex+1;
     String [] out = new String [retSize];
 
     for (int i=0; i<retSize; i++){

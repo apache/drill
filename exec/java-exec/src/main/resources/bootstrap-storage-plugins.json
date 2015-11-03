@@ -42,7 +42,8 @@
         "csvh" : {
           type: "text",
           extensions: [ "csvh" ],
-          delimiter: ","
+          delimiter: ",",
+          extractHeader: true
         }
       }
     },
@@ -74,7 +75,8 @@
         "csvh" : {
           type: "text",
           extensions: [ "csvh" ],
-          delimiter: ","
+          delimiter: ",",
+          extractHeader: true
         }
       }
     }

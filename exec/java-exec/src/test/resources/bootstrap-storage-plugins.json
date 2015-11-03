@@ -51,7 +51,8 @@
         "csvh" : {
           type: "text",
           extensions: [ "csvh" ],
-          delimiter: ","
+          delimiter: ",",
+          extractHeader: true
         }
       }
     }
