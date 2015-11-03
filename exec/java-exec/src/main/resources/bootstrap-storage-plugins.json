@@ -29,9 +29,11 @@
           extensions: [ "tsv" ],
           delimiter: "\t"
         },
-        "httpd" :{
+        "httpd" : {
           type: "httpd",
-          format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%{Cookie}i\""
+          logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\""
+          /* timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" */
+          /* fields: [ "TIME.STAMP:request.receive.time", ... ] */
         },
         "parquet" : {
           type: "parquet"

@@ -66,6 +66,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import java.util.ArrayList;
+import java.util.Arrays;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
+  		  
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
@@ -303,7 +308,7 @@ public class BaseTestQuery extends ExecTest {
       Preconditions.checkArgument(query instanceof String, "Expected a string as input query");
       query = QueryTestUtil.normalizeQuery((String)query);
       return client.runQuery(type, (String)query);
-    }
+  }
   }
 
   public static List<QueryDataBatch> testPreparedStatement(PreparedStatementHandle handle) throws Exception {
@@ -385,8 +390,8 @@ public class BaseTestQuery extends ExecTest {
       } catch (AssertionError e) {
         e.addSuppressed(actualException);
         throw e;
-      }
     }
+  }
   }
 
   /**
@@ -515,4 +520,72 @@ public class BaseTestQuery extends ExecTest {
 
     return formattedResults.toString();
   }
-}
+
+
+   public class TestResultSet {
+ 
+     private final List<List<String>> rows;
+ 
+     public TestResultSet() {
+       rows = new ArrayList<>();
+     }
+ 
+     public TestResultSet(List<QueryDataBatch> batches) throws SchemaChangeException {
+       rows = new ArrayList<>();
+       convert(batches);
+     }
+ 
+     public void addRow(String... cells) {
+       List<String> newRow = Arrays.asList(cells);
+       rows.add(newRow);
+     }
+ 
+     public int size() {
+       return rows.size();
+     }
+ 
+     @Override
+     public boolean equals(Object o) {
+       boolean result = false;
+ 
+       if (this == o) {
+         result = true;
+       }
+       else if (o instanceof TestResultSet) {
+         TestResultSet that = (TestResultSet) o;
+         assertEquals(this.size(), that.size());
+         for (int i = 0; i < this.rows.size(); i++) {
+           assertEquals(this.rows.get(i).size(), that.rows.get(i).size());
+           for (int j = 0; j < this.rows.get(i).size(); ++j) {
+             assertEquals(this.rows.get(i).get(j), that.rows.get(i).get(j));
+           }
+         }
+         result = true;
+       }
+ 
+       return result;
+     }
+ 
+     private void convert(List<QueryDataBatch> batches) throws SchemaChangeException {
+       RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+       for (QueryDataBatch batch : batches) {
+         int rc = batch.getHeader().getRowCount();
+         if (batch.getData() != null) {
+           loader.load(batch.getHeader().getDef(), batch.getData());
+           for (int i = 0; i < rc; ++i) {
+             List<String> newRow = new ArrayList<>();
+             rows.add(newRow);
+             for (VectorWrapper<?> vw : loader) {
+               ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
+               Object o = accessor.getObject(i);
+               newRow.add(o == null ? null : o.toString());
+             }
+           }
+         }
+         loader.clear();
+         batch.release();
+       }
+     }
+   }
+ 
+ }
