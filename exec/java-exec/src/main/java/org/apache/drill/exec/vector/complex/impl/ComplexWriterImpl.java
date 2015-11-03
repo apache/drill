@@ -38,13 +38,19 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
   Mode mode = Mode.INIT;
   private final String name;
+  private final boolean unionEnabled;
 
   private enum Mode { INIT, MAP, LIST };
 
-  public ComplexWriterImpl(String name, MapVector container){
+  public ComplexWriterImpl(String name, MapVector container, boolean unionEnabled){
     super(null);
     this.name = name;
     this.container = container;
+    this.unionEnabled = unionEnabled;
+  }
+
+  public ComplexWriterImpl(String name, MapVector container){
+    this(name, container, false);
   }
 
   @Override
@@ -120,7 +126,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     case INIT:
       MapVector map = (MapVector) container;
-      mapRoot = new SingleMapWriter(map, this);
+      mapRoot = new SingleMapWriter(map, this, unionEnabled);
       mapRoot.setPosition(idx());
       mode = Mode.MAP;
       break;
@@ -141,7 +147,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     case INIT:
       MapVector map = container.addOrGet(name, Types.required(MinorType.MAP), MapVector.class);
-      mapRoot = new SingleMapWriter(map, this);
+      mapRoot = new SingleMapWriter(map, this, unionEnabled);
       mapRoot.setPosition(idx());
       mode = Mode.MAP;
       break;

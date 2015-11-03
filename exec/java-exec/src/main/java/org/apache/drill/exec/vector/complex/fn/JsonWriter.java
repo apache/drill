@@ -27,6 +27,8 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 public class JsonWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonWriter.class);
@@ -45,6 +47,10 @@ public class JsonWriter {
       gen = new BasicJsonOutput(writer);
     }
 
+  }
+
+  public JsonWriter(JsonOutput gen) {
+    this.gen = gen;
   }
 
   public void write(FieldReader reader) throws JsonGenerationException, IOException{
@@ -109,7 +115,11 @@ public class JsonWriter {
 
       case LIST:
         // this is a pseudo class, doesn't actually contain the real reader so we have to drop down.
-        writeValue(reader.reader());
+        gen.writeStartArray();
+        while (reader.next()) {
+          writeValue(reader.reader());
+        }
+        gen.writeEndArray();
         break;
       case MAP:
         gen.writeStartObject();
@@ -125,6 +135,7 @@ public class JsonWriter {
         gen.writeEndObject();
         break;
       case NULL:
+      case LATE:
         gen.writeUntypedNull();
         break;
 

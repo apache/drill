@@ -49,7 +49,7 @@ public class MapOrListWriter {
     if (map != null) {
       map.start();
     } else {
-      list.start();
+      list.startList();
     }
   }
 
@@ -57,7 +57,7 @@ public class MapOrListWriter {
     if (map != null) {
       map.end();
     } else {
-      list.end();
+      list.endList();
     }
   }
 

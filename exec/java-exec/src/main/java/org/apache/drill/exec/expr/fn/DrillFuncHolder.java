@@ -19,13 +19,18 @@ package org.apache.drill.exec.expr.fn;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -186,7 +191,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
         ValueReference parameter = parameters[i];
         HoldingContainer inputVariable = inputVariables[i];
-        if (parameter.isFieldReader && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType())) {
+        if (parameter.isFieldReader && ! inputVariable.isReader() && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
           JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
               inputVariable.getMajorType().getMode()));
           JType fieldReadClass = g.getModel()._ref(FieldReader.class);
@@ -260,6 +265,17 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   public MajorType getReturnType(List<LogicalExpression> args) {
+    if (returnValue.type.getMinorType() == MinorType.UNION) {
+      Set<MinorType> subTypes = Sets.newHashSet();
+      for (ValueReference ref : parameters) {
+        subTypes.add(ref.getType().getMinorType());
+      }
+      MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
+      for (MinorType subType : subTypes) {
+        builder.addSubType(subType);
+      }
+      return builder.build();
+    }
     if (nullHandling == NullHandling.NULL_IF_NULL) {
       // if any one of the input types is nullable, then return nullable return type
       for (LogicalExpression e : args) {

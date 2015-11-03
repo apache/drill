@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -58,6 +60,20 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   public void addField(ValueVector vector) {
     container.add(vector);
     fieldVectorMap.put(vector.getField(), vector);
+  }
+
+  private void replace(ValueVector newVector, SchemaPath schemaPath) {
+    List<ValueVector> vectors = Lists.newArrayList();
+    for (VectorWrapper w : container) {
+      ValueVector vector = w.getValueVector();
+      if (vector.getField().getPath().equals(schemaPath)) {
+        vectors.add(newVector);
+      } else {
+        vectors.add(w.getValueVector());
+      }
+      container.remove(vector);
+    }
+    container.addCollection(vectors);
   }
 
   public Iterator<VectorWrapper<?>> iterator() {
@@ -96,6 +112,10 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   @Override
   public CallBack getCallBack() {
     return null;
+  }
+
+  public VectorContainer getContainer() {
+    return container;
   }
 
 }

@@ -19,10 +19,13 @@ package org.apache.drill.common.expression;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,6 +95,20 @@ public class IfExpression extends LogicalExpressionBase {
     // If the return type of one of the "then" expression or "else" expression is nullable, return "if" expression
     // type as nullable
     MajorType majorType = elseExpression.getMajorType();
+    if (majorType.getMinorType() == MinorType.UNION) {
+      Set<MinorType> subtypes = Sets.newHashSet();
+      for (MinorType subtype : majorType.getSubTypeList()) {
+        subtypes.add(subtype);
+      }
+      for (MinorType subtype : ifCondition.expression.getMajorType().getSubTypeList()) {
+        subtypes.add(subtype);
+      }
+      MajorType.Builder builder = MajorType.newBuilder().setMinorType(MinorType.UNION).setMode(DataMode.OPTIONAL);
+      for (MinorType subtype : subtypes) {
+        builder.addSubType(subtype);
+      }
+      return builder.build();
+    }
     if (majorType.getMode() == DataMode.OPTIONAL) {
       return majorType;
     }

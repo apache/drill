@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.VectorValidator;
 
 public class IteratorValidatorBatchIterator implements CloseableRecordBatch {

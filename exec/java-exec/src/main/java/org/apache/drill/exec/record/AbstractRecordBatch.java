@@ -22,6 +22,7 @@ import java.util.Iterator;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.server.options.OptionValue;
 
 public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
@@ -39,6 +41,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final FragmentContext context;
   protected final OperatorContext oContext;
   protected final OperatorStats stats;
+  protected final boolean unionTypeEnabled;
 
   protected BatchState state;
 
@@ -61,6 +64,12 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
       state = BatchState.BUILD_SCHEMA;
     } else {
       state = BatchState.FIRST;
+    }
+    OptionValue option = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE.getOptionName());
+    if (option != null) {
+      unionTypeEnabled = option.bool_val;
+    } else {
+      unionTypeEnabled = false;
     }
   }
 

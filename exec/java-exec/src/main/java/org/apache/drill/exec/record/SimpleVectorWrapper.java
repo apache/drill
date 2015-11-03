@@ -17,13 +17,24 @@
  */
 package org.apache.drill.exec.record;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.UnionVector;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleVectorWrapper.class);
@@ -103,6 +114,25 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
     }
     PathSegment seg = expectedPath.getRootSegment();
 
+    if (v instanceof UnionVector) {
+      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+      builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
+      List<MinorType> minorTypes = ((UnionVector) v).getSubTypes();
+      MajorType.Builder majorTypeBuilder = MajorType.newBuilder().setMinorType(MinorType.UNION);
+      for (MinorType type : minorTypes) {
+        majorTypeBuilder.addSubType(type);
+      }
+      MajorType majorType = majorTypeBuilder.build();
+      builder.finalType(majorType);
+      builder.intermediateType(majorType);
+      return builder.build();
+    } else if (v instanceof ListVector) {
+      ListVector list = (ListVector) v;
+      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+      builder.intermediateType(v.getField().getType());
+      builder.addId(id);
+      return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+    } else
     if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;

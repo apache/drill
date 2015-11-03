@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.DecimalMin.List;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -110,81 +111,10 @@ public abstract class AbstractContainerVector implements ValueVector {
   }
 
   public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg == null) {
-      if (addToBreadCrumb) {
-        builder.intermediateType(this.getField().getType());
-      }
-      return builder.finalType(this.getField().getType()).build();
-    }
-
-    if (seg.isArray()) {
-      if (seg.isLastPath()) {
-        builder //
-          .withIndex() //
-          .finalType(getLastPathType());
-
-        // remainder starts with the 1st array segment in SchemaPath.
-        // only set remainder when it's the only array segment.
-        if (addToBreadCrumb) {
-          addToBreadCrumb = false;
-          builder.remainder(seg);
-        }
-        return builder.build();
-      } else {
-        if (addToBreadCrumb) {
-          addToBreadCrumb = false;
-          builder.remainder(seg);
-        }
-      }
-    } else {
-      // name segment.
-    }
-
-    VectorWithOrdinal vord = getChildVectorWithOrdinal(seg.isArray() ? null : seg.getNameSegment().getPath());
-    if (vord == null) {
-      return null;
-    }
-
-    ValueVector v = vord.vector;
-    if (addToBreadCrumb) {
-      builder.intermediateType(v.getField().getType());
-      builder.addId(vord.ordinal);
-    }
-
-    if (v instanceof AbstractContainerVector) {
-      // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) v;
-      return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
-    } else {
-      if (seg.isNamed()) {
-        if(addToBreadCrumb) {
-          builder.intermediateType(v.getField().getType());
-        }
-        builder.finalType(v.getField().getType());
-      } else {
-        builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
-      }
-
-      if (seg.isLastPath()) {
-        return builder.build();
-      } else {
-        PathSegment child = seg.getChild();
-        if (child.isLastPath() && child.isArray()) {
-          if (addToBreadCrumb) {
-            builder.remainder(child);
-          }
-          builder.withIndex();
-          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
-          return builder.build();
-        } else {
-          logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
-          return null;
-        }
-      }
-    }
+    return FieldIdUtil.getFieldIdIfMatches(this, builder, addToBreadCrumb, seg);
   }
 
-  private MajorType getLastPathType() {
+  MajorType getLastPathType() {
     if((this.getField().getType().getMinorType() == MinorType.LIST  &&
         this.getField().getType().getMode() == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
       VectorWithOrdinal vord = getChildVectorWithOrdinal(null);

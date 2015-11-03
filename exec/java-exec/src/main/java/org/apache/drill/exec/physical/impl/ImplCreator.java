@@ -90,6 +90,7 @@ public class ImplCreator {
 
       return rootExec;
     } catch(Exception e) {
+      e.printStackTrace();
       context.fail(e);
       for(final CloseableRecordBatch crb : creator.getOperators()) {
         AutoCloseables.close(crb, logger);

@@ -139,12 +139,12 @@ public class TestRepeated {
     {
       final MapWriter map = writer.rootAsMap();
       final ListWriter list = map.list("a");
-      list.start();
+      list.startList();
 
       final ListWriter innerList = list.list();
       final IntWriter innerInt = innerList.integer();
 
-      innerList.start();
+      innerList.startList();
 
       final IntHolder holder = new IntHolder();
 
@@ -155,16 +155,16 @@ public class TestRepeated {
       holder.value = 3;
       innerInt.write(holder);
 
-      innerList.end();
-      innerList.start();
+      innerList.endList();
+      innerList.startList();
 
       holder.value = 4;
       innerInt.write(holder);
       holder.value = 5;
       innerInt.write(holder);
 
-      innerList.end();
-      list.end();
+      innerList.endList();
+      list.endList();
 
       final IntWriter numCol = map.integer("nums");
       holder.value = 14;
@@ -192,12 +192,12 @@ public class TestRepeated {
 
       final MapWriter map = writer.rootAsMap();
       final ListWriter list = map.list("a");
-      list.start();
+      list.startList();
 
       final ListWriter innerList = list.list();
       final IntWriter innerInt = innerList.integer();
 
-      innerList.start();
+      innerList.startList();
 
       final IntHolder holder = new IntHolder();
 
@@ -208,16 +208,16 @@ public class TestRepeated {
       holder.value = -3;
       innerInt.write(holder);
 
-      innerList.end();
-      innerList.start();
+      innerList.endList();
+      innerList.startList();
 
       holder.value = -4;
       innerInt.write(holder);
       holder.value = -5;
       innerInt.write(holder);
 
-      innerList.end();
-      list.end();
+      innerList.endList();
+      list.endList();
 
       final IntWriter numCol = map.integer("nums");
       holder.value = -28;

@@ -34,6 +34,7 @@ public class TypedFieldId {
   final MajorType intermediateType;
   final int[] fieldIds;
   final boolean isHyperReader;
+  final boolean isListVector;
   final PathSegment remainder;
 
   public TypedFieldId(MajorType type, int... fieldIds) {
@@ -49,12 +50,17 @@ public class TypedFieldId {
   }
 
   public TypedFieldId(MajorType intermediateType, MajorType secondaryFinal, MajorType finalType, boolean isHyper, PathSegment remainder, int... fieldIds) {
+    this(intermediateType, secondaryFinal, finalType, isHyper, false, remainder, fieldIds);
+  }
+
+  public TypedFieldId(MajorType intermediateType, MajorType secondaryFinal, MajorType finalType, boolean isHyper, boolean isListVector, PathSegment remainder, int... fieldIds) {
     super();
     this.intermediateType = intermediateType;
     this.finalType = finalType;
     this.secondaryFinal = secondaryFinal;
     this.fieldIds = fieldIds;
     this.isHyperReader = isHyper;
+    this.isListVector = isListVector;
     this.remainder = remainder;
   }
 
@@ -90,6 +96,10 @@ public class TypedFieldId {
     return isHyperReader;
   }
 
+  public boolean isListVector() {
+    return isListVector;
+  }
+
   public MajorType getIntermediateType() {
     return intermediateType;
   }
@@ -122,6 +132,7 @@ public class TypedFieldId {
     PathSegment remainder;
     boolean hyperReader = false;
     boolean withIndex = false;
+    boolean isListVector = false;
 
     public Builder addId(int id) {
       ids.add(id);
@@ -140,6 +151,11 @@ public class TypedFieldId {
 
     public Builder hyper() {
       this.hyperReader = true;
+      return this;
+    }
+
+    public Builder listVector() {
+      this.isListVector = true;
       return this;
     }
 
@@ -179,7 +195,7 @@ public class TypedFieldId {
       // TODO: there is a bug here with some things.
       //if(intermediateType != finalType) actualFinalType = finalType.toBuilder().setMode(DataMode.OPTIONAL).build();
 
-      return new TypedFieldId(intermediateType, secondaryFinal, actualFinalType, hyperReader, remainder, ids.toArray());
+      return new TypedFieldId(intermediateType, secondaryFinal, actualFinalType, hyperReader, isListVector, remainder, ids.toArray());
     }
   }
 

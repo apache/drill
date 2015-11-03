@@ -26,6 +26,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 

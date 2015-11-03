@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
+import com.sun.codemodel.JOp;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -349,10 +351,10 @@ public class EvaluationVisitor {
       // evaluation work.
       HoldingContainer out = generator.declare(e.getMajorType());
 
-      final boolean primitive = !Types.usesHolderForGet(e.getMajorType());
       final boolean hasReadPath = e.hasReadPath();
       final boolean complex = Types.isComplex(e.getMajorType());
       final boolean repeated = Types.isRepeated(e.getMajorType());
+      final boolean listVector = e.getTypedFieldId().isListVector();
 
       int[] fieldIds = e.getFieldId().getFieldIds();
       for (int i = 1; i < fieldIds.length; i++) {
@@ -370,7 +372,7 @@ public class EvaluationVisitor {
         PathSegment seg = e.getReadPath();
 
         JVar isNull = null;
-        boolean isNullReaderLikely = isNullReaderLikely(seg, complex || repeated);
+        boolean isNullReaderLikely = isNullReaderLikely(seg, complex || repeated || listVector);
         if (isNullReaderLikely) {
           isNull = generator.getEvalBlock().decl(generator.getModel().INT, generator.getNextVar("isNull"), JExpr.lit(0));
         }
@@ -387,7 +389,7 @@ public class EvaluationVisitor {
           if (seg.isArray()) {
             // stop once we get to the last segment and the final type is neither complex nor repeated (map, list, repeated list).
             // In case of non-complex and non-repeated type, we return Holder, in stead of FieldReader.
-            if (seg.isLastPath() && !complex && !repeated) {
+            if (seg.isLastPath() && !complex && !repeated && !listVector) {
               break;
             }
 
@@ -411,7 +413,7 @@ public class EvaluationVisitor {
             if (out.isOptional()) {
               ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
             }
-            ifNoVal.assign(isNull,  JExpr.lit(1));
+            ifNoVal.assign(isNull, JExpr.lit(1));
             ifNoVal._break(label);
 
             expr = list.invoke("reader");

@@ -33,11 +33,15 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
   private final SpecialMapVector mapVector;
   private final OutputMutator mutator;
 
-  public VectorContainerWriter(OutputMutator mutator) {
+  public VectorContainerWriter(OutputMutator mutator, boolean unionEnabled) {
     super(null);
     this.mutator = mutator;
     mapVector = new SpecialMapVector(mutator.getCallBack());
-    mapRoot = new SingleMapWriter(mapVector, this);
+    mapRoot = new SingleMapWriter(mapVector, this, unionEnabled);
+  }
+
+  public VectorContainerWriter(OutputMutator mutator) {
+    this(mutator, false);
   }
 
   @Override

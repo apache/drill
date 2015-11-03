@@ -160,6 +160,8 @@ public interface ExecConstants {
   public static String MONGO_READER_READ_NUMBERS_AS_DOUBLE = "store.mongo.read_numbers_as_double";
   public static OptionValidator MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(MONGO_READER_READ_NUMBERS_AS_DOUBLE, false);
 
+  public static BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator("exec.enable_union_type", false);
+
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.
   public static String HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS = "store.hive.optimize_scan_with_native_readers";
@@ -242,7 +244,7 @@ public interface ExecConstants {
       Long.MAX_VALUE, 60 * 1000 * 5);
 
   public static final String ENABLE_VERBOSE_ERRORS_KEY = "exec.errors.verbose";
-  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY, false);
+  public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY, true);
 
   public static final String ENABLE_NEW_TEXT_READER_KEY = "exec.storage.enable_new_text_reader";
   public static final OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY, true);

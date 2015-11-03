@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import org.apache.drill.exec.vector.complex.UnionVector;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
 
@@ -71,6 +73,8 @@ public class TypeHelper {
   public static SqlAccessor getSqlAccessor(ValueVector vector){
     final MajorType type = vector.getField().getType();
     switch(type.getMinorType()){
+    case UNION:
+      return new UnionSqlAccessor((UnionVector) vector);
     <#list vv.types as type>
     <#list type.minor as minor>
     case ${minor.class?upper_case}:
@@ -100,8 +104,11 @@ public class TypeHelper {
   
   public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
+    case UNION:
+      return UnionVector.class;
     case MAP:
       switch (mode) {
+      case OPTIONAL:
       case REQUIRED:
         return MapVector.class;
       case REPEATED:
@@ -112,6 +119,9 @@ public class TypeHelper {
       switch (mode) {
       case REPEATED:
         return RepeatedListVector.class;
+      case REQUIRED:
+      case OPTIONAL:
+        return ListVector.class;
       }
     
 <#list vv.types as type>
@@ -175,6 +185,7 @@ public class TypeHelper {
   
   public static Class<?> getWriterInterface( MinorType type, DataMode mode){
     switch (type) {
+    case UNION: return UnionWriter.class;
     case MAP: return MapWriter.class;
     case LIST: return ListWriter.class;
 <#list vv.types as type>
@@ -190,9 +201,12 @@ public class TypeHelper {
   
   public static Class<?> getWriterImpl( MinorType type, DataMode mode){
     switch (type) {
+    case UNION:
+      return UnionWriter.class;
     case MAP:
       switch (mode) {
       case REQUIRED:
+      case OPTIONAL:
         return SingleMapWriter.class;
       case REPEATED:
         return RepeatedMapWriter.class;
@@ -200,7 +214,8 @@ public class TypeHelper {
     case LIST:
       switch (mode) {
       case REQUIRED:
-        return SingleListWriter.class;
+      case OPTIONAL:
+        return UnionListWriter.class;
       case REPEATED:
         return RepeatedListWriter.class;
       }
@@ -247,6 +262,8 @@ public class TypeHelper {
   
   public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
     switch (type) {
+    case UNION:
+      return model._ref(UnionHolder.class);
     case MAP:
     case LIST:
       return model._ref(ComplexHolder.class);
@@ -280,10 +297,13 @@ public class TypeHelper {
 
     switch (type.getMinorType()) {
     
-    
+    case UNION:
+      return new UnionVector(field, allocator, callBack);
+
     case MAP:
       switch (type.getMode()) {
       case REQUIRED:
+      case OPTIONAL:
         return new MapVector(field, allocator, callBack);
       case REPEATED:
         return new RepeatedMapVector(field, allocator, callBack);
@@ -292,7 +312,10 @@ public class TypeHelper {
       switch (type.getMode()) {
       case REPEATED:
         return new RepeatedListVector(field, allocator, callBack);
-      }    
+      case OPTIONAL:
+      case REQUIRED:
+        return new ListVector(field, allocator, callBack);
+      }
 <#list vv.  types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case}:
