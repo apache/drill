@@ -30,22 +30,17 @@ public final class JoinStatus {
 
   private static final int OUTPUT_BATCH_SIZE = 32*1024;
 
-  private static enum InitState {
-    INIT, // initial state
-    CHECK, // need to check if batches are empty
-    READY // read to do work
-  }
-
   public final RecordIterator left;
   public final RecordIterator right;
+  private boolean iteratorInitialized;
 
   private int outputPosition;
   public MergeJoinBatch outputBatch;
 
   private final JoinRelType joinType;
+  private boolean allowMarking;
 
   public boolean ok = true;
-  private InitState initialSet = InitState.INIT;
 
   public JoinStatus(RecordIterator left, RecordIterator right, MergeJoinBatch output) {
     super();
@@ -53,6 +48,8 @@ public final class JoinStatus {
     this.right = right;
     this.outputBatch = output;
     this.joinType = output.getJoinType();
+    this.iteratorInitialized = false;
+    this.allowMarking = true;
   }
 
   @Override
@@ -65,31 +62,20 @@ public final class JoinStatus {
         + ", outputPosition = " + outputPosition
         + ", joinType = " + joinType
         + ", ok = " + ok
-        + ", initialSet = " + initialSet
+        + ", initialSet = " + iteratorInitialized
         + ", left = " + left
         + ", right = " + right
         + ", outputBatch = " + outputBatch
         + "]";
   }
 
-  public final void ensureInitial() {
-    switch(initialSet) {
-      case INIT:
-        left.next();
-        right.next();
-        initialSet = InitState.CHECK;
-        break;
-      case CHECK:
-        if (getLeftStatus() != IterOutcome.NONE && left.getInnerRecordCount() == 0) {
-          left.next();
-        }
-        if (getRightStatus() != IterOutcome.NONE && right.getInnerRecordCount() == 0) {
-          right.next();
-        }
-        initialSet = InitState.READY;
-        break;
-      default:
-        break;
+  // Initialize left and right record iterator. We avoid doing this in constructor.
+  // Callers must check state of each iterator after calling ensureInitial.
+  public void ensureInitial() {
+    if (!iteratorInitialized) {
+      left.next();
+      right.next();
+      iteratorInitialized = true;
     }
   }
 
@@ -113,6 +99,26 @@ public final class JoinStatus {
     ++outputPosition;
   }
 
+  public void disableMarking() {
+    allowMarking = false;
+  }
+
+  public void enableMarking() {
+    allowMarking = true;
+  }
+
+  public boolean shouldMark() {
+    return allowMarking;
+  }
+
+  /**
+   * Return state of join based on status of left and right iterator.
+   * @return
+   *  1. JoinOutcome.NO_MORE_DATA : Join is finished
+   *  2. JoinOutcome.FAILURE : There is an error during join.
+   *  3. JoinOutcome.BATCH_RETURNED : one of the side has data
+   *  4. JoinOutcome.SCHEMA_CHANGED : one of the side has change in schema.
+   */
   public JoinOutcome getOutcome() {
     if (!ok) {
       return JoinOutcome.FAILURE;
@@ -130,9 +136,12 @@ public final class JoinStatus {
     if (eitherMatches(IterOutcome.OK_NEW_SCHEMA)) {
       return JoinOutcome.SCHEMA_CHANGED;
     }
+    // should never see NOT_YET
     if (eitherMatches(IterOutcome.NOT_YET)) {
       return JoinOutcome.WAITING;
     }
+    ok = false;
+    // on STOP, OUT_OF_MEMORY return FAILURE.
     return JoinOutcome.FAILURE;
   }
 
