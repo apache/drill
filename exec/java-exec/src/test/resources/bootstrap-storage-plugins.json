@@ -40,9 +40,9 @@
         "json" : {
           type: "json"
         },
-        "httpd" :{
+        "httpd" : {
           type: "httpd",
-          format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%{Cookie}i\""
+          logFormat: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
         },
         "txt" : {
           type : "text",

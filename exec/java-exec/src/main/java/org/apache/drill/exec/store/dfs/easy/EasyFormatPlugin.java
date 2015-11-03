@@ -117,6 +117,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   /** Method indicates whether or not this format could also be in a compression container (for example: csv.gz versus csv).
    * If this format uses its own internal compression scheme, such as Parquet does, then this should return false.
+   * @return <code>true</code> if it is compressible
    */
   public boolean isCompressible() {
     return compressible;
