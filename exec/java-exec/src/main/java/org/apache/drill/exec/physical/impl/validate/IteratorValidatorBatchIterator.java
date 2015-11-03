@@ -277,13 +277,17 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
           lastNewSchema = lastSchema;
         }
 
-        logger.trace("[#{}; on {}]: incoming next() return: #records = {}, "
-                     + "\n  schema:"
-                     + "\n    {}, "
-                     + "\n  prev. new:"
-                     + "\n    {}",
-                     instNum, batchTypeName, incoming.getRecordCount(),
-                     lastSchema, prevLastNewSchema);
+        if (logger.isTraceEnabled()) {
+          logger.trace("[#{}; on {}]: incoming next() return: #records = {}, "
+                       + "\n  schema:"
+                       + "\n    {}, "
+                       + "\n  prev. new ({}):"
+                       + "\n    {}",
+                       instNum, batchTypeName, incoming.getRecordCount(),
+                       lastSchema,
+                       lastSchema.equals(prevLastNewSchema) ? "equal" : "not equal",
+                       prevLastNewSchema);
+          }
 
         if (lastSchema == null) {
           throw new IllegalStateException(
