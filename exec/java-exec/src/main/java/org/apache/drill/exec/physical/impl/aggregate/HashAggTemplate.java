@@ -325,13 +325,10 @@ public abstract class HashAggTemplate implements HashAggregator {
                 if (EXTRA_DEBUG_1) {
                   logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
                 }
-                final BatchSchema newIncomingSchema = incoming.getSchema();
-                if ((! newIncomingSchema.equals(schema)) && schema != null) {
-                  newSchema = true;
-                  this.cleanup();
-                  // TODO: new schema case needs to be handled appropriately
-                  return AggOutcome.UPDATE_AGGREGATOR;
-                }
+                newSchema = true;
+                this.cleanup();
+                // TODO: new schema case needs to be handled appropriately
+                return AggOutcome.UPDATE_AGGREGATOR;
 
               case OK:
                 resetIndex();
