@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.RecordIterator;
 import org.apache.calcite.rel.core.JoinRelType;
 
 /**
- * Maintain join state using RecordIterator.
+ * Maintain join state.
  */
 public final class JoinStatus {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinStatus.class);
@@ -72,20 +72,19 @@ public final class JoinStatus {
         + "]";
   }
 
-
   public final void ensureInitial() {
     switch(initialSet) {
       case INIT:
-        advanceLeft();
-        advanceRight();
+        left.next();
+        right.next();
         initialSet = InitState.CHECK;
         break;
       case CHECK:
         if (getLeftStatus() != IterOutcome.NONE && left.getInnerRecordCount() == 0) {
-          advanceLeft();
+          left.next();
         }
         if (getRightStatus() != IterOutcome.NONE && right.getInnerRecordCount() == 0) {
-          advanceRight();
+          right.next();
         }
         initialSet = InitState.READY;
         break;
@@ -94,41 +93,9 @@ public final class JoinStatus {
     }
   }
 
-  public final void advanceLeft() {
-    left.next();
-  }
-
-  public final void advanceRight() {
-    right.next();
-  }
-
-  public final boolean leftFinished() {
-     return left.finished();
-  }
-
-  public final boolean rightFinished() {
-    return right.finished();
-  }
-
-  public final int getLeftPosition() {
-    return left.getCurrentPosition();
-  }
-
-  public final int getRightPosition() {
-    return right.getCurrentPosition();
-  }
-
   public IterOutcome getLeftStatus() { return left.getLastOutcome(); }
 
   public IterOutcome getRightStatus() { return right.getLastOutcome(); }
-
-  public final void markRight() {
-    right.mark();
-  }
-
-  public final void resetRight() {
-    right.reset();
-  }
 
   public final int getOutPosition() {
     return outputPosition;
@@ -143,7 +110,7 @@ public final class JoinStatus {
   }
 
   public final void incOutputPos() {
-    outputPosition++;
+    ++outputPosition;
   }
 
   public JoinOutcome getOutcome() {

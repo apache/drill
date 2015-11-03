@@ -319,7 +319,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     //////////////////////
     cg.setMappingSet(copyLeftMapping);
     int vectorId = 0;
-    if (worker == null || !status.leftFinished()) {
+    if (worker == null || !status.left.finished()) {
       for (VectorWrapper<?> vw : leftIterator) {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
@@ -346,7 +346,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     cg.setMappingSet(copyRightMappping);
 
     int rightVectorBase = vectorId;
-    if (status.getRightStatus() != IterOutcome.NONE && (worker == null || !status.rightFinished())) {
+    if (status.getRightStatus() != IterOutcome.NONE && (worker == null || !status.right.finished())) {
       for (VectorWrapper<?> vw : rightIterator) {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;

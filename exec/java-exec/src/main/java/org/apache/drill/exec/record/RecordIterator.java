@@ -32,36 +32,43 @@ import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeRangeMap;
 
-
+/**
+ * RecordIterator iterates over incoming record batches one record at a time.
+ * It allows to mark a position during iteration and reset back.
+ * RecordIterator will hold onto multiple record batches in order to support resetting beyond record batch boundary.
+ */
 public class RecordIterator implements VectorAccessible {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordIterator.class);
 
   private final RecordBatch incoming;
   private final AbstractRecordBatch<?> outgoing;
-  private int outerPosition;       // Tracks total records consumed so far works across batches.
-  private int innerPosition;       // Index within current vector container.
-  private int innerRecordCount;    // Records in current container.
-  private int totalRecordCount;    // Total records read so far.
-  private int startBatchPosition;  // Start offset of current batch.
-  private int markedOuterPosition;
+  private long outerPosition;       // Tracks total records consumed so far, works across batches.
+  private int innerPosition;        // Index within current vector container.
+  private int innerRecordCount;     // Records in current container.
+  private long totalRecordCount;    // Total records read so far.
+  private long startBatchPosition;  // Start offset of current batch.
   private int markedInnerPosition;
+  private long markedOuterPosition;
   private IterOutcome lastOutcome;
-  private int inputIndex;          // For two way merge join 0:left, 1:right
-  private boolean lastBatchRead;   // True if all batches are consumed.
+  private int inputIndex;           // For two way merge join 0:left, 1:right
+  private boolean lastBatchRead;    // True if all batches are consumed.
   private boolean initialized;
 
-
-  private VectorContainer container; // Holds VectorContainer of current record batch
-  TreeRangeMap<Integer, RecordBatchData> batches = TreeRangeMap.create();
+  private final VectorContainer container; // Holds VectorContainer of current record batch
+  private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
 
   public RecordIterator(RecordBatch incoming,
                              AbstractRecordBatch<?> outgoing,
                              OperatorContext oContext,
                              int inputIndex) {
     this.incoming = incoming;
-    this.innerPosition = this.outerPosition = this.startBatchPosition = -1;
-    this.totalRecordCount = this.innerRecordCount = 0;
-    this.markedInnerPosition = this.markedOuterPosition = -1;
+    this.innerPosition = -1;
+    this.startBatchPosition = -1;
+    this.outerPosition = -1;
+    this.totalRecordCount = 0;
+    this.innerRecordCount = 0;
+    this.markedInnerPosition = -1;
+    this.markedOuterPosition = -1;
     this.outgoing = outgoing;
     this.inputIndex = inputIndex;
     this.lastBatchRead = false;
@@ -80,12 +87,11 @@ public class RecordIterator implements VectorAccessible {
 
   public void mark() {
     // Release all batches before current batch. [0 to startBatchPosition).
-    final Map<Range<Integer>,RecordBatchData> oldBatches = batches.subRangeMap(
-      Range.closedOpen(0, startBatchPosition)).asMapOfRanges();
-    for (Range<Integer> range : oldBatches.keySet()) {
+    final Map<Range<Long>,RecordBatchData> oldBatches = batches.subRangeMap(Range.closedOpen(0l, startBatchPosition)).asMapOfRanges();
+    for (Range<Long> range : oldBatches.keySet()) {
       oldBatches.get(range.lowerEndpoint()).clear();
     }
-    batches.remove(Range.closedOpen(0, startBatchPosition));
+    batches.remove(Range.closedOpen(0l, startBatchPosition));
     markedInnerPosition = innerPosition;
     markedOuterPosition = outerPosition;
   }
@@ -104,16 +110,17 @@ public class RecordIterator implements VectorAccessible {
       innerPosition = markedInnerPosition;
       outerPosition = markedOuterPosition;
       startBatchPosition = batches.getEntry(outerPosition).getKey().lowerEndpoint();
-      innerRecordCount = batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition;
-      markedInnerPosition = markedOuterPosition = -1;
+      innerRecordCount = (int)(batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition);
+      markedInnerPosition = -1;
+      markedOuterPosition = -1;
     }
   }
 
-  // TODO: Experimental: Move forward by delta (may cross one or more record batches)
+  // Move forward by delta (may cross one or more record batches)
   public void forward(int delta) {
     Preconditions.checkArgument(delta >= 0);
     Preconditions.checkArgument(delta + outerPosition < totalRecordCount);
-    final int nextOuterPosition = delta + outerPosition;
+    final long nextOuterPosition = delta + outerPosition;
     final RecordBatchData rbdNew = batches.get(nextOuterPosition);
     final RecordBatchData rbdOld = batches.get(outerPosition);
     Preconditions.checkArgument(rbdNew != null);
@@ -123,15 +130,20 @@ public class RecordIterator implements VectorAccessible {
     container.transferIn(rbdNew.getContainer());
     outerPosition = nextOuterPosition;
     startBatchPosition = batches.getEntry(outerPosition).getKey().lowerEndpoint();
-    innerPosition = outerPosition - startBatchPosition;
-    innerRecordCount = batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition;
+    innerPosition = (int)(outerPosition - startBatchPosition);
+    innerRecordCount = (int)(batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition);
   }
 
+  /**
+   * Move iterator to next record.
+   * @return
+   *     Status of current record batch read.
+   */
   public IterOutcome next() {
     if (finished()) {
       return lastOutcome;
     }
-    final int nextOuterPosition = outerPosition + 1;
+    final long nextOuterPosition = outerPosition + 1;
     final int nextInnerPosition = innerPosition + 1;
     if (!initialized || nextOuterPosition >= totalRecordCount) {
       nextBatch();
@@ -144,6 +156,12 @@ public class RecordIterator implements VectorAccessible {
           break;
         case OK_NEW_SCHEMA:
         case OK:
+          // If Schema changes in the middle of the execution clear out data and return
+          if (initialized && lastOutcome == IterOutcome.OK_NEW_SCHEMA) {
+            clear();
+            markedOuterPosition = markedInnerPosition = -1;
+            return lastOutcome;
+          }
           // Transfer vectors from incoming record batch.
           final RecordBatchData rbd = new RecordBatchData(incoming);
           innerRecordCount = incoming.getRecordCount();
@@ -170,9 +188,11 @@ public class RecordIterator implements VectorAccessible {
             rbd.clear();
           }
           break;
+        case OUT_OF_MEMORY:
+          return lastOutcome;
+        case NOT_YET:
         default:
-          // On errors return lastOutcome.
-          break;
+          throw new UnsupportedOperationException("Unsupported outcome received " + lastOutcome);
       }
     } else {
       outerPosition = nextOuterPosition;
@@ -189,7 +209,7 @@ public class RecordIterator implements VectorAccessible {
     return lastOutcome;
   }
 
-  public int getTotalRecordCount() {
+  public long getTotalRecordCount() {
     return totalRecordCount;
   }
 
@@ -233,7 +253,7 @@ public class RecordIterator implements VectorAccessible {
     return container.iterator();
   }
 
-  public void close() {
+  private void clear() {
     if (container != null) {
       container.clear();
     }
@@ -241,6 +261,10 @@ public class RecordIterator implements VectorAccessible {
       d.clear();
     }
     batches.clear();
+  }
+
+  public void close() {
+    clear();
     while (lastOutcome == IterOutcome.OK || lastOutcome == IterOutcome.OK_NEW_SCHEMA) {
       // Clear all buffers from incoming.
       for (VectorWrapper<?> wrapper : incoming) {
