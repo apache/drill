@@ -61,6 +61,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcFilterRule;
 import org.apache.drill.exec.store.jdbc.DrillJdbcRuleBase.DrillJdbcProjectRule;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -281,6 +282,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       return inner.getTableNames();
     }
 
+    public String toString() {
+      return Joiner.on(".").join(getSchemaPath());
+    }
+
     @Override
     public Table getTable(String name) {
       Table table = inner.getTable(name);
@@ -395,15 +400,22 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     @Override
     public Table getTable(String name) {
       Schema schema = getDefaultSchema();
+
       if (schema != null) {
-        Table t = schema.getTable(name);
-        if (t != null) {
-          return t;
+        try {
+          Table t = schema.getTable(name);
+          if (t != null) {
+            return t;
+          }
+          return schema.getTable(name.toUpperCase());
+        } catch (RuntimeException e) {
+          logger.warn("Failure while attempting to read table '{}' from JDBC source.", name, e);
+
         }
-        return schema.getTable(name.toUpperCase());
-      } else {
-        return null;
       }
+
+      // no table was found.
+      return null;
     }
 
     @Override
