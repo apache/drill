@@ -141,7 +141,8 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
       hTable = new HTable(hbaseConf, hbaseTableName);
 
-      // Add Vectors to output in the order specified when creating reader
+      // Add top-level column-family map vectors to output in the order specified
+      // when creating reader (order of first appearance in query).
       for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
           MaterializedField field = MaterializedField.create(column, ROW_KEY_TYPE);
