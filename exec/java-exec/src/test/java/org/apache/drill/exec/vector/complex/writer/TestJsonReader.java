@@ -512,7 +512,6 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testSumMultipleBatches() throws Exception {
     String dfs_temp = getDfsTestTmpSchemaLocation();
-    System.out.println(dfs_temp);
     File table_dir = new File(dfs_temp, "multi_batch");
     table_dir.mkdir();
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
@@ -539,7 +538,6 @@ public class TestJsonReader extends BaseTestQuery {
   @Test
   public void testSumFilesWithDifferentSchema() throws Exception {
     String dfs_temp = getDfsTestTmpSchemaLocation();
-    System.out.println(dfs_temp);
     File table_dir = new File(dfs_temp, "multi_file");
     table_dir.mkdir();
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
@@ -566,5 +564,23 @@ public class TestJsonReader extends BaseTestQuery {
     } finally {
       testNoResult("alter session set `exec.enable_union_type` = false");
     }
+  }
+
+  @Test
+  public void drill_4032() throws Exception {
+    String dfs_temp = getDfsTestTmpSchemaLocation();
+    File table_dir = new File(dfs_temp, "drill_4032");
+    table_dir.mkdir();
+    BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
+    os.write("{\"col1\": \"val1\",\"col2\": {\"col3\":\"abc\", \"col4\":\"xyz\"}}".getBytes());
+    os.flush();
+    os.close();
+    os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")));
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
+    os.flush();
+    os.close();
+    testNoResult("select t.col2.col3 from dfs_test.tmp.drill_4032 t");
   }
 }
