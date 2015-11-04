@@ -24,29 +24,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.ACLBackgroundPathAndBytesable;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
-import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.zookeeper.CreateMode;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.zookeeper.KeeperException;
 
 /**
  * This is the abstract class that is shared by ZkPStore (Persistent store) and ZkEStore (Ephemeral Store)
  * @param <V>
  */
 public abstract class ZkAbstractStore<V> implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkAbstractStore.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkAbstractStore.class);
 
-  protected CuratorFramework framework;
-  protected PStoreConfig<V> config;
+  protected final CuratorFramework framework;
+  protected final PStoreConfig<V> config;
   private final PathChildrenCache childrenCache;
-  private String prefix;
-  private String parent;
+  private final String prefix;
+  private final String parent;
 
   public ZkAbstractStore(CuratorFramework framework, PStoreConfig<V> config)
       throws IOException {
@@ -54,31 +54,26 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
     this.prefix = parent + "/";
     this.framework = framework;
     this.config = config;
+    this.childrenCache = new PathChildrenCache(framework, parent, true);
 
     // make sure the parent node exists.
+    createOrUpdate(parent, null, CreateMode.PERSISTENT);
     try {
-      if (framework.checkExists().forPath(parent) == null) {
-        framework.create().withMode(CreateMode.PERSISTENT).forPath(parent);
-      }
-
-      this.childrenCache = new PathChildrenCache(framework, parent, true);
-      this.childrenCache.start(StartMode.BUILD_INITIAL_CACHE);
-
+      childrenCache.start(StartMode.BUILD_INITIAL_CACHE);
     } catch (Exception e) {
-      throw new RuntimeException("Failure while accessing Zookeeper for PStore: " + e.getMessage(), e);
+      throw new RuntimeException("Failure while initializing Zookeeper for PStore", e);
     }
-
   }
 
   public Iterator<Entry<String, V>> iterator() {
     try {
       return new Iter(childrenCache.getCurrentData());
     } catch (Exception e) {
-      throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
+      throw new RuntimeException("Failure while accessing Zookeeper.", e);
     }
   }
 
-  protected String p(String key) {
+  protected String withPrefix(String key) {
     Preconditions.checkArgument(!key.contains("/"),
         "You cannot use keys that have slashes in them when using the Zookeeper SystemTable storage interface.");
     return prefix + key;
@@ -86,7 +81,7 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
 
   public V get(String key) {
     try {
-      ChildData d = childrenCache.getCurrentData(p(key));
+      ChildData d = childrenCache.getCurrentData(withPrefix(key));
       if(d == null || d.getData() == null){
         return null;
       }
@@ -100,12 +95,12 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
 
   public void put(String key, V value) {
     try {
-      if (childrenCache.getCurrentData(p(key)) != null) {
-        framework.setData().forPath(p(key), config.getSerializer().serialize(value));
+      if (childrenCache.getCurrentData(withPrefix(key)) != null) {
+        framework.setData().forPath(withPrefix(key), config.getSerializer().serialize(value));
       } else {
-        createNodeInZK(key, value);
+        createWithPrefix(key, value);
       }
-      childrenCache.rebuildNode(p(key));
+      childrenCache.rebuildNode(withPrefix(key));
 
     } catch (Exception e) {
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
@@ -114,8 +109,10 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
 
   public void delete(String key) {
     try {
-        framework.delete().forPath(p(key));
-        childrenCache.rebuildNode(p(key));
+      if (framework.checkExists().forPath(withPrefix(key)) != null) {
+        framework.delete().forPath(withPrefix(key));
+        childrenCache.rebuildNode(withPrefix(key));
+      }
     } catch (Exception e) {
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
     }
@@ -123,11 +120,11 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
 
   public boolean putIfAbsent(String key, V value) {
     try {
-      if (childrenCache.getCurrentData(p(key)) != null) {
+      if (childrenCache.getCurrentData(withPrefix(key)) != null) {
         return false;
       } else {
-        createNodeInZK(key, value);
-        childrenCache.rebuildNode(p(key));
+        createWithPrefix(key, value);
+        childrenCache.rebuildNode(withPrefix(key));
         return true;
       }
 
@@ -136,7 +133,81 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
     }
   }
 
-  public abstract void createNodeInZK (String key, V value);
+  /**
+   * Default {@link CreateMode create mode} that will be used in create operations referred in the see also section.
+   *
+   * @see #createOrUpdate(String, Object)
+   * @see #createWithPrefix(String, Object)
+   */
+  protected abstract CreateMode getCreateMode();
+
+
+  /**
+   * Creates a node in zookeeper with the {@link #getCreateMode() default create mode} and sets its value if supplied.
+   *
+   * @param path    target path
+   * @param value   value to set, null if none available
+   *
+   * @see #getCreateMode()
+   * @see #createOrUpdate(String, Object)
+   * @see #withPrefix(String)
+   */
+  protected void createWithPrefix(String path, V value) {
+    createOrUpdate(withPrefix(path), value);
+  }
+
+  /**
+   * Creates a node in zookeeper with the {@link #getCreateMode() default create mode} and sets its value if supplied
+   * or updates its value if the node already exists.
+   *
+   * Note that if node exists, its mode will not be changed.
+   *
+   * @param path    target path
+   * @param value   value to set, null if none available
+   *
+   * @see #getCreateMode()
+   * @see #createOrUpdate(String, Object, CreateMode)
+   */
+  protected void createOrUpdate(String path, V value) {
+    createOrUpdate(path, value, getCreateMode());
+  }
+
+  /**
+   * Creates a node in zookeeper with the given mode and sets its value if supplied or updates its value if the node
+   * already exists.
+   *
+   * Note that if the node exists, its mode will not be changed.
+   *
+   * Internally, the method suppresses {@link org.apache.zookeeper.KeeperException.NodeExistsException}. It is
+   * safe to do so since the implementation is idempotent.
+   *
+   * @param path    target path
+   * @param value   value to set, null if none available
+   * @param mode    creation mode
+   * @throws RuntimeException  throws a {@link RuntimeException} wrapping the root cause.
+   */
+  protected void createOrUpdate(String path, V value, CreateMode mode) {
+    try {
+      final boolean isUpdate = value != null;
+      final byte[] valueInBytes = isUpdate ? config.getSerializer().serialize(value) : null;
+      final boolean nodeExists = framework.checkExists().forPath(path) != null;
+      if (!nodeExists) {
+        final ACLBackgroundPathAndBytesable<String> creator = framework.create().withMode(mode);
+        if (isUpdate) {
+          creator.forPath(path, valueInBytes);
+        } else {
+          creator.forPath(path);
+        }
+      } else if (isUpdate) {
+        framework.setData().forPath(path, valueInBytes);
+      }
+    } catch (KeeperException.NodeExistsException ex) {
+      logger.warn("Node already exists in Zookeeper. Skipping... -- [path: {}, mode: {}]", path, mode);
+    } catch (Exception e) {
+      final String msg = String.format("Failed to create/update Zookeeper node. [path: %s, mode: %s]", path, mode);
+      throw new RuntimeException(msg, e);
+    }
+  }
 
   private class Iter implements Iterator<Entry<String, V>>{
 
