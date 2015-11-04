@@ -335,10 +335,10 @@ class RepeatedVarCharOutput extends TextOutput {
     int retSize = fieldIndex+1;
     String [] out = new String [retSize];
 
+    RepeatedVarCharVector.Accessor a = this.vector.getAccessor();
     for (int i=0; i<retSize; i++){
-      out[i] = this.vector.getReader().readText(i).toString();
+      out[i] = a.getSingleObject(0,i).toString();
     }
-
     return out;
   }
 

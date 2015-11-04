@@ -25,7 +25,11 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.VarCharVector;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Class is responsible for generating record batches for text file inputs. We generate
@@ -35,9 +39,12 @@ import java.util.Collection;
 class FieldVarCharOutput extends TextOutput {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldVarCharOutput.class);
+  static final String COL_NAME = "columns";
 
   // array of output vector
   private final VarCharVector [] vectors;
+  // boolean array indicating which fields are selected (if star query entire array is set to true)
+  private final boolean[] selectedFields;
   // current vector to which field will be added
   private VarCharVector currentVector;
   // track which field is getting appended
@@ -49,12 +56,13 @@ class FieldVarCharOutput extends TextOutput {
   // holds chars for a field
   private byte[] fieldBytes;
 
+  private boolean collect = true;
   private boolean rowHasData= false;
-  private static final int MAX_FIELD_LENGTH = 1024 * 10;
-  private static final int MAXIMUM_NUMBER_COLUMNS = 64 * 1024;
+  private static final int MAX_FIELD_LENGTH = 1024 * 64;
   private int recordCount = 0;
   private int batchIndex = 0;
-  private int numFields = 0;
+  private int qryFields = 0;
+  private int totalFields = 0;
 
   /**
    * We initialize and add the varchar vector for each incoming field in this
@@ -67,15 +75,49 @@ class FieldVarCharOutput extends TextOutput {
    */
   public FieldVarCharOutput(OutputMutator outputMutator, String [] fieldNames, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
 
-    numFields = fieldNames.length;
-    this.vectors = new VarCharVector[numFields];
+    totalFields = fieldNames.length;
+    this.selectedFields = new boolean[totalFields];
+    this.vectors = new VarCharVector[totalFields];
 
-    for (int i = 0; i < numFields; i++) {
-      MaterializedField field = MaterializedField.create(fieldNames[i], Types.required(TypeProtos.MinorType.VARCHAR));
-      this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
+    if (isStarQuery) {
+      qryFields = totalFields;
+      Arrays.fill(selectedFields, true);
+    }
+    else {
+      qryFields = columns.size();
+      List<Integer> columnIds = new ArrayList<Integer>();
+      String pathStr;
+      int index;
+
+      for (SchemaPath path : columns) {
+        pathStr = path.getRootSegment().getPath();
+        if (pathStr.equals(COL_NAME) && path.getRootSegment().getChild() != null) {
+          //TODO: support both field names and columns index
+          index = path.getRootSegment().getChild().getArraySegment().getIndex();
+          index = Math.min(totalFields-1, index);
+        }
+        else {
+          index = Arrays.asList(fieldNames).indexOf(pathStr);
+        }
+        columnIds.add(index);
+      }
+      Collections.sort(columnIds);
+
+      for(Integer i : columnIds) {
+        assert (i < totalFields);
+        selectedFields[i] = true;
+      }
+    }
+
+    for (int i = 0; i < totalFields; i++) {
+      if (selectedFields[i]) {
+        MaterializedField field = MaterializedField.create(fieldNames[i], Types.required(TypeProtos.MinorType.VARCHAR));
+        this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
+      }
     }
 
     this.fieldBytes = new byte[MAX_FIELD_LENGTH];
+
   }
 
   /**
@@ -86,6 +128,7 @@ class FieldVarCharOutput extends TextOutput {
     this.recordCount = 0;
     this.batchIndex = 0;
     this.currentFieldIndex= -1;
+    this.collect = true;
     this.fieldOpen = false;
   }
 
@@ -94,27 +137,37 @@ class FieldVarCharOutput extends TextOutput {
     currentFieldIndex = index;
     currentDataPointer = 0;
     fieldOpen = true;
+    collect = selectedFields[index];
     currentVector = vectors[index];
   }
 
   @Override
   public void append(byte data) {
+    if (!collect) {
+      return;
+    }
+
     if (currentDataPointer >= MAX_FIELD_LENGTH -1) {
       //TODO: figure out how to handle this
     }
+
     fieldBytes[currentDataPointer++] = data;
   }
 
   @Override
   public boolean endField() {
     fieldOpen = false;
-    currentVector.getMutator().setSafe(recordCount, fieldBytes, 0, currentDataPointer);
+
+    if(collect) {
+      assert currentVector != null;
+      currentVector.getMutator().setSafe(recordCount, fieldBytes, 0, currentDataPointer);
+    }
 
     if (currentDataPointer > 0) {
       this.rowHasData = true;
     }
 
-    return currentFieldIndex < MAXIMUM_NUMBER_COLUMNS;
+    return currentFieldIndex < totalFields;
   }
 
   @Override
@@ -136,9 +189,12 @@ class FieldVarCharOutput extends TextOutput {
   public void finishBatch() {
     batchIndex++;
 
-    for (int i = 0; i < numFields; i++) {
-      this.vectors[i].getMutator().setValueCount(batchIndex);
+    for (int i = 0; i < totalFields; i++) {
+      if (this.vectors[i] != null) {
+        this.vectors[i].getMutator().setValueCount(batchIndex);
+      }
     }
+
   }
 
   @Override

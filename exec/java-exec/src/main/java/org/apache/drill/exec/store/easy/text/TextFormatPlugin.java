@@ -166,6 +166,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       return fieldDelimiter;
     }
 
+    @JsonIgnore
     public boolean isHeaderExtractionEnabled() {
       return extractHeader;
     }

@@ -79,14 +79,15 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   // checks to see if we are querying all columns(star) or individual columns
   @Override
   public boolean isStarQuery() {
-    if (super.isStarQuery()) { return true; }
-    Predicate p = new Predicate<SchemaPath>() {
-      @Override
-      public boolean apply(@Nullable SchemaPath path) {
-        return path.equals(RepeatedVarCharOutput.COLUMNS);
-      }
-    };
-    return Iterables.tryFind(getColumns(), p).isPresent();
+    if(settings.isUseRepeatedVarChar()) {
+      return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
+        @Override
+        public boolean apply(@Nullable SchemaPath path) {
+          return path.equals(RepeatedVarCharOutput.COLUMNS);
+        }
+      }).isPresent();
+    }
+    return super.isStarQuery();
   }
 
   /**
@@ -104,25 +105,28 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     readBuffer = context.getManagedBuffer(READ_BUFFER);
     whitespaceBuffer = context.getManagedBuffer(WHITE_SPACE_BUFFER);
 
+    // setup Output, Input, and Reader
     try {
-      InputStream stream = dfs.openPossiblyCompressedStream(split.getPath());
-      TextInput input = new TextInput(settings,  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
       TextOutput output = null;
+      TextInput input = null;
+      InputStream stream = null;
 
-      if(settings.isUseRepeatedVarChar()){
-        output = new RepeatedVarCharOutput(outputMutator, getColumns(), isStarQuery());
-        this.reader = new TextReader(settings, input, output, whitespaceBuffer);
-      } else {
-        // two-phase read approach.
-        // phase-1: read the header from the file
-        String [] fieldNames = extractHeader(input);
-
-        // phase-2: now read the data
-        stream = dfs.openPossiblyCompressedStream(split.getPath());
-        input = new TextInput(settings,  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
+      // setup Output using OutputMutator
+      if (settings.isHeaderExtractionEnabled()){
+        //extract header and use that to setup a set of VarCharVectors
+        String [] fieldNames = extractHeader();
         output = new FieldVarCharOutput(outputMutator, fieldNames, getColumns(), isStarQuery());
-        this.reader = new TextReader(settings, input, output, whitespaceBuffer);
+      } else {
+        //simply use RepeatedVarCharVector
+        output = new RepeatedVarCharOutput(outputMutator, getColumns(), isStarQuery());
       }
+
+      // setup Input using InputStream
+      stream = dfs.openPossiblyCompressedStream(split.getPath());
+      input = new TextInput(settings,  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
+
+      // setup Reader using Input and Output
+      reader = new TextReader(settings, input, output, whitespaceBuffer);
       reader.start();
 
     } catch (SchemaChangeException | IOException e) {
@@ -138,22 +142,32 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
    * TODO: enhance to support more common header patterns
    * @return field name strings
    */
-  private String [] extractHeader(TextInput input) throws SchemaChangeException, IOException, ExecutionSetupException{
+  private String [] extractHeader() throws SchemaChangeException, IOException, ExecutionSetupException{
     assert (settings.isHeaderExtractionEnabled());
     assert (oContext != null);
 
-    // we will use a separate output mutator to avoid reshaping query output with header data
+    // setup Output using OutputMutator
+    // we should use a separate output mutator to avoid reshaping query output with header data
     HeaderOutputMutator hOutputMutator = new HeaderOutputMutator();
-    // setup reader
-    TextOutput header = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
-    this.reader = new TextReader(settings, input, header, oContext.getManagedBuffer(WHITE_SPACE_BUFFER));
-    // extract first row only
+    TextOutput hOutput = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
+
+    // setup Input using InputStream
+    // we should read file header irrespective of split given given to this reader
+    InputStream hStream = dfs.openPossiblyCompressedStream(split.getPath());
+    TextInput hInput = new TextInput(settings,  hStream, oContext.getManagedBuffer(READ_BUFFER), 0, split.getLength());
+
+    // setup Reader using Input and Output
+    this.reader = new TextReader(settings, hInput, hOutput, oContext.getManagedBuffer(WHITE_SPACE_BUFFER));
     reader.start();
+
+    // extract first row only
     reader.parseNext();
-    reader.close();
+
     // grab the field names from output
-    String [] fieldNames = ((RepeatedVarCharOutput)header).getTextOutput();
+    String [] fieldNames = ((RepeatedVarCharOutput)hOutput).getTextOutput();
+
     // cleanup and set to skip the first line next time we read input
+    reader.close();
     hOutputMutator.close();
     settings.setSkipFirstLine(true);
 
