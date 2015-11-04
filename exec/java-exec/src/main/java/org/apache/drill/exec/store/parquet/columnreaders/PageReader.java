@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.store.parquet.ByteBufBytesInput;
 import org.apache.drill.exec.store.parquet.ColumnDataReader;
 import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -170,7 +171,7 @@ final class PageReader {
   }
 
   public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
-    return BytesInput.from(buf.nioBuffer(offset, length), 0, length);
+    return new ByteBufBytesInput(buf, offset, length);
   }
 
   /**
