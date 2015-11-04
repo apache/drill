@@ -164,7 +164,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     status.ensureInitial();
     // loop so we can start over again if we find a new batch was created.
     while (true) {
-      // Check result of last .
+      // Check result of last iteration.
       switch (status.getOutcome()) {
         case BATCH_RETURNED:
           allocateBatch(false);

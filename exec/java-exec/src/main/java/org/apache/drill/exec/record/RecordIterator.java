@@ -147,7 +147,7 @@ public class RecordIterator implements VectorAccessible {
     if (finished()) {
       return lastOutcome;
     }
-    final long nextOuterPosition = outerPosition + 1;
+    long nextOuterPosition = outerPosition + 1;
     final int nextInnerPosition = innerPosition + 1;
     if (!initialized || nextOuterPosition >= totalRecordCount) {
       nextBatch();
@@ -160,11 +160,12 @@ public class RecordIterator implements VectorAccessible {
           break;
         case OK_NEW_SCHEMA:
         case OK:
-          // If Schema changes in the middle of the execution clear out data and return
+          // If Schema changes in the middle of the execution clear out data.
           if (initialized && lastOutcome == IterOutcome.OK_NEW_SCHEMA) {
             clear();
             resetIndices();
-            return lastOutcome;
+            initialized = false;
+            nextOuterPosition = 0;
           }
           // Transfer vectors from incoming record batch.
           final RecordBatchData rbd = new RecordBatchData(incoming);
