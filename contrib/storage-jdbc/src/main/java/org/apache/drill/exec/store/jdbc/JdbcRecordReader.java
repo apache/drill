@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -122,6 +123,23 @@ class JdbcRecordReader extends AbstractRecordReader {
         .build();
   }
 
+  private static String nameFromType(int javaSqlType) {
+    try {
+      for (Field f : java.sql.Types.class.getFields()) {
+        if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) &&
+            f.getType() == int.class &&
+            f.getInt(null) == javaSqlType) {
+          return f.getName();
+
+        }
+      }
+    } catch (IllegalArgumentException | IllegalAccessException e) {
+    }
+
+    return Integer.toString(javaSqlType);
+
+  }
+
   private Copier<?> getCopier(int jdbcType, int offset, ResultSet result, ValueVector v) {
 
     if (v instanceof NullableBigIntVector) {
@@ -170,13 +188,20 @@ class JdbcRecordReader extends AbstractRecordReader {
         final int scale = meta.getScale(i);
         MinorType minorType = JDBC_TYPE_MAPPINGS.get(jdbcType);
         if (minorType == null) {
-          throw UserException.dataReadError()
-              .message("The JDBC storage plugin failed while trying to execute a query. "
-                  + "The JDBC data type %d is not currently supported.", jdbcType)
 
+          logger.warn("Ignoring column that is unsupported.", UserException
+              .unsupportedError()
+              .message(
+                  "A column you queried has a data type that is not currently supported by the JDBC storage plugin. "
+                      + "The column's name was %s and its JDBC data type was %s. ",
+                  name,
+                  nameFromType(jdbcType))
               .addContext("sql", sql)
+              .addContext("column Name", name)
               .addContext("plugin", storagePluginName)
-              .build(logger);
+              .build(logger));
+
+          continue;
         }
 
         final MajorType type = Types.optional(minorType);
