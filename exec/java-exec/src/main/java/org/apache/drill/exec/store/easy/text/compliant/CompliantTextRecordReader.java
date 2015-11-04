@@ -150,6 +150,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     // we should use a separate output mutator to avoid reshaping query output with header data
     HeaderOutputMutator hOutputMutator = new HeaderOutputMutator();
     TextOutput hOutput = new RepeatedVarCharOutput(hOutputMutator, getColumns(), true);
+    this.allocate(hOutputMutator.fieldVectorMap);
 
     // setup Input using InputStream
     // we should read file header irrespective of split given given to this reader
