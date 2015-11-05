@@ -107,26 +107,14 @@ public class TestCsvHeader extends BaseTestQuery{
     validateResults (batches, expectedOutput);
   }
 
-  //@Test //DRILL-951
-  public void testCsvColumnsIndex() throws Exception {
-    String query = String.format("select columns[0], columns[2], columns[4] from dfs_test.`%s` where columns[1] = 'Chevy'", root);
+  @Test //DRILL-951
+  public void testCsvHeaderShortCircuitReads() throws Exception {
+    String query = String.format("select `Year`, Model from dfs_test.`%s` where Make = 'Chevy'", root);
     List<QueryDataBatch> batches = testSqlWithResults(query);
 
-    String expectedOutput = "Year|Model|Price\n" +
-        "1999|Venture \"Extended Edition\"|4900.00\n" +
-        "1999|Venture \"Extended Edition, Very Large\"|5000.00\n";
-
-    validateResults (batches, expectedOutput);
-  }
-
-  //@Test //DRILL-951
-  public void testCsvFieldNamesAndColumnsIndex() throws Exception {
-    String query = String.format("select columns[0], Model, Price from dfs_test.`%s` where Make = 'Chevy'", root);
-    List<QueryDataBatch> batches = testSqlWithResults(query);
-
-    String expectedOutput = "Year|Model|Price\n" +
-        "1999|Venture \"Extended Edition\"|4900.00\n" +
-        "1999|Venture \"Extended Edition, Very Large\"|5000.00\n";
+    String expectedOutput = "Year|Model\n" +
+        "1999|Venture \"Extended Edition\"\n" +
+        "1999|Venture \"Extended Edition, Very Large\"\n";
 
     validateResults (batches, expectedOutput);
   }

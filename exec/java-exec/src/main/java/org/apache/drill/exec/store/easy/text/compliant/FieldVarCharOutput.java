@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -61,8 +62,7 @@ class FieldVarCharOutput extends TextOutput {
   private static final int MAX_FIELD_LENGTH = 1024 * 64;
   private int recordCount = 0;
   private int batchIndex = 0;
-  private int qryFields = 0;
-  private int totalFields = 0;
+  private int maxField = 0;
 
   /**
    * We initialize and add the varchar vector for each incoming field in this
@@ -75,16 +75,14 @@ class FieldVarCharOutput extends TextOutput {
    */
   public FieldVarCharOutput(OutputMutator outputMutator, String [] fieldNames, Collection<SchemaPath> columns, boolean isStarQuery) throws SchemaChangeException {
 
-    totalFields = fieldNames.length;
+    int totalFields = fieldNames.length;
     this.selectedFields = new boolean[totalFields];
     this.vectors = new VarCharVector[totalFields];
 
     if (isStarQuery) {
-      qryFields = totalFields;
+      maxField = totalFields - 1;
       Arrays.fill(selectedFields, true);
-    }
-    else {
-      qryFields = columns.size();
+    } else {
       List<Integer> columnIds = new ArrayList<Integer>();
       String pathStr;
       int index;
@@ -92,24 +90,23 @@ class FieldVarCharOutput extends TextOutput {
       for (SchemaPath path : columns) {
         pathStr = path.getRootSegment().getPath();
         if (pathStr.equals(COL_NAME) && path.getRootSegment().getChild() != null) {
-          //TODO: support both field names and columns index
+          //TODO: support both field names and columns index in predicate pushdown
           index = path.getRootSegment().getChild().getArraySegment().getIndex();
-          index = Math.min(totalFields-1, index);
-        }
-        else {
+        } else {
           index = Arrays.asList(fieldNames).indexOf(pathStr);
         }
+        assert index >= 0 && index < totalFields : "Invalid column index encountered";
         columnIds.add(index);
       }
       Collections.sort(columnIds);
 
       for(Integer i : columnIds) {
-        assert (i < totalFields);
         selectedFields[i] = true;
+        maxField = i;
       }
     }
 
-    for (int i = 0; i < totalFields; i++) {
+    for (int i = 0; i <= maxField; i++) {
       if (selectedFields[i]) {
         MaterializedField field = MaterializedField.create(fieldNames[i], Types.required(TypeProtos.MinorType.VARCHAR));
         this.vectors[i] = outputMutator.addField(field, VarCharVector.class);
@@ -148,7 +145,12 @@ class FieldVarCharOutput extends TextOutput {
     }
 
     if (currentDataPointer >= MAX_FIELD_LENGTH -1) {
-      //TODO: figure out how to handle this
+      throw UserException
+          .unsupportedError()
+          .message("Trying to write something big in a column")
+          .addContext("columnIndex", currentFieldIndex)
+          .addContext("Limit", MAX_FIELD_LENGTH)
+          .build(logger);
     }
 
     fieldBytes[currentDataPointer++] = data;
@@ -167,7 +169,7 @@ class FieldVarCharOutput extends TextOutput {
       this.rowHasData = true;
     }
 
-    return currentFieldIndex < totalFields;
+    return currentFieldIndex < maxField;
   }
 
   @Override
@@ -189,7 +191,7 @@ class FieldVarCharOutput extends TextOutput {
   public void finishBatch() {
     batchIndex++;
 
-    for (int i = 0; i < totalFields; i++) {
+    for (int i = 0; i <= maxField; i++) {
       if (this.vectors[i] != null) {
         this.vectors[i].getMutator().setValueCount(batchIndex);
       }
