@@ -182,9 +182,7 @@ public class TestExampleQueries extends BaseTestQuery {
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b where a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
   }
 
-  // TODO check why this test fails during install but works if ran individually.
   @Test
-  @Ignore
   public void testPushExpInJoinConditionInnerJoin() throws Exception {
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b " + "" +
       " on a.n_regionkey + 100  = b.r_regionkey + 200" +      // expressions in both sides of equal join filter

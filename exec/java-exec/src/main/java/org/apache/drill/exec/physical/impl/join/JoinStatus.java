@@ -43,7 +43,6 @@ public final class JoinStatus {
   public boolean ok = true;
 
   public JoinStatus(RecordIterator left, RecordIterator right, MergeJoinBatch output) {
-    super();
     this.left = left;
     this.right = right;
     this.outputBatch = output;
@@ -71,12 +70,20 @@ public final class JoinStatus {
 
   // Initialize left and right record iterator. We avoid doing this in constructor.
   // Callers must check state of each iterator after calling ensureInitial.
-  public void ensureInitial() {
+  public void initialize() {
     if (!iteratorInitialized) {
       left.next();
       right.next();
       iteratorInitialized = true;
     }
+  }
+
+  public void prepare() {
+    if (!iteratorInitialized) {
+      initialize();
+    }
+    left.prepare();
+    right.prepare();
   }
 
   public IterOutcome getLeftStatus() { return left.getLastOutcome(); }

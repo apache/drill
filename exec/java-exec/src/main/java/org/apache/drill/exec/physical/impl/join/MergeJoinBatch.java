@@ -141,7 +141,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   @Override
   public void buildSchema() {
     // initialize iterators
-    status.ensureInitial();
+    status.initialize();
 
     final IterOutcome leftOutcome = status.getLeftStatus();
     final IterOutcome rightOutcome = status.getRightStatus();
@@ -154,14 +154,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       state = BatchState.OUT_OF_MEMORY;
       return;
     }
-
     allocateBatch(true);
   }
 
   @Override
   public IterOutcome innerNext() {
     // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
-    status.ensureInitial();
+    status.prepare();
     // loop so we can start over again if we find a new batch was created.
     while (true) {
       // Check result of last iteration.

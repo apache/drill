@@ -139,6 +139,17 @@ public class RecordIterator implements VectorAccessible {
   }
 
   /**
+   * buildSchema calls next() in order to read schema quikcly.
+   * Make sure we have fetched next non-empty batch at the end of the prepare.
+   * After prepare position of iterator is at 0.
+   */
+  public void prepare() {
+    while (!lastBatchRead && outerPosition == -1) {
+      next();
+    }
+  }
+
+  /**
    * Move iterator to next record.
    * @return
    *     Status of current record batch read.
@@ -191,8 +202,6 @@ public class RecordIterator implements VectorAccessible {
           } else {
             // Release schema/empty batches.
             rbd.clear();
-            // Move to next non empty batch in order to position iterator to 0.
-            return next();
           }
           break;
         case OUT_OF_MEMORY:
