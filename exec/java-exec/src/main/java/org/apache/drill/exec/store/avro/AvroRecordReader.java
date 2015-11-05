@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.security.PrivilegedExceptionAction;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -52,12 +53,14 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -78,6 +81,9 @@ public class AvroRecordReader extends AbstractRecordReader {
   private OperatorContext operatorContext;
   private FileSystem fs;
 
+  private final String opUserName;
+  private final String queryUserName;
+
   private static final int DEFAULT_BATCH_SIZE = 1000;
 
 
@@ -86,8 +92,9 @@ public class AvroRecordReader extends AbstractRecordReader {
                           final long start,
                           final long length,
                           final FileSystem fileSystem,
-                          final List<SchemaPath> projectedColumns) {
-    this(fragmentContext, inputPath, start, length, fileSystem, projectedColumns, DEFAULT_BATCH_SIZE);
+                          final List<SchemaPath> projectedColumns,
+                          final String userName) {
+    this(fragmentContext, inputPath, start, length, fileSystem, projectedColumns, userName, DEFAULT_BATCH_SIZE);
   }
 
   public AvroRecordReader(final FragmentContext fragmentContext,
@@ -95,15 +102,33 @@ public class AvroRecordReader extends AbstractRecordReader {
                           final long start,
                           final long length,
                           final FileSystem fileSystem,
-                          List<SchemaPath> projectedColumns, final int defaultBatchSize) {
+                          List<SchemaPath> projectedColumns,
+                          final String userName,
+                          final int defaultBatchSize) {
 
     hadoop = new Path(inputPath);
     this.start = start;
     this.end = start + length;
     buffer = fragmentContext.getManagedBuffer();
     this.fs = fileSystem;
-
+    this.opUserName = userName;
+    this.queryUserName = fragmentContext.getQueryUserName();
     setColumns(projectedColumns);
+  }
+
+  private DataFileReader getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
+    try {
+      final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
+      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader>() {
+        @Override
+        public DataFileReader run() throws Exception {
+          return new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
+        }
+      });
+    } catch (IOException | InterruptedException e) {
+      throw new ExecutionSetupException(
+        String.format("Error in creating avro reader for file: %s", hadoop), e);
+    }
   }
 
   @Override
@@ -112,7 +137,7 @@ public class AvroRecordReader extends AbstractRecordReader {
     writer = new VectorContainerWriter(output);
 
     try {
-      reader = new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
+      reader = getReader(hadoop, fs);
       logger.debug("Processing file : {}, start position : {}, end position : {} ", hadoop, start, end);
       reader.sync(this.start);
     } catch (IOException e) {
