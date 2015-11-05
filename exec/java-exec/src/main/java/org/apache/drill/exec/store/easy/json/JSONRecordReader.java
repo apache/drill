@@ -53,7 +53,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   protected JsonNode embeddedContent;
   protected InputStream stream;
   private final DrillFileSystem fileSystem;
-  private JsonProcessor jsonReader;
+  protected JsonProcessor jsonReader;
   private int recordCount;
   private long runningRecordCount = 0;
   private final FragmentContext fragmentContext;

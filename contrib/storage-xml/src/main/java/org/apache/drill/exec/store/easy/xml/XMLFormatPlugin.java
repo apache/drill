@@ -70,7 +70,7 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
 
     @Override
     public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-                                        List<SchemaPath> columns) throws ExecutionSetupException {
+                                        List<SchemaPath> columns, String userName) throws ExecutionSetupException {
         return new XMLRecordReader(context, fileWork.getPath(), dfs, columns, xmlConfig);
     }
 
