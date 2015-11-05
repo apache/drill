@@ -184,14 +184,19 @@ public class DrillTestWrapper {
     expected.append("Expected Records near verification failure:\n");
     actual.append("Actual Records near verification failure:\n");
     int firstRecordToPrint = Math.max(0, offset - 5);
-    for (int i = firstRecordToPrint; i < 10; i++) {
+    List<Object> expectedValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    List<Object> actualValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    int numberOfRecordsToPrint = Math.min(Math.min(10, expectedValuesInFirstColumn.size()), actualValuesInFirstColumn.size());
+    for (int i = firstRecordToPrint; i < numberOfRecordsToPrint; i++) {
       expected.append("Record Number: ").append(i).append(" { ");
       actual.append("Record Number: ").append(i).append(" { ");
       for (String s : actualRecords.keySet()) {
-        List expectedValues = expectedRecords.get(s);
         List actualValues = actualRecords.get(s);
-        expected.append(s).append(" : ").append(expectedValues.get(i)).append(",");
         actual.append(s).append(" : ").append(actualValues.get(i)).append(",");
+      }
+      for (String s : expectedRecords.keySet()) {
+        List expectedValues = expectedRecords.get(s);
+        expected.append(s).append(" : ").append(expectedValues.get(i)).append(",");
       }
       expected.append(" }\n");
       actual.append(" }\n");
