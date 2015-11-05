@@ -49,9 +49,9 @@ public class JSONRecordReader extends AbstractRecordReader {
   private VectorContainerWriter writer;
 
   // Data we're consuming
-  private Path hadoopPath;
-  private JsonNode embeddedContent;
-  private InputStream stream;
+  protected Path hadoopPath;
+  protected JsonNode embeddedContent;
+  protected InputStream stream;
   private final DrillFileSystem fileSystem;
   private JsonProcessor jsonReader;
   private int recordCount;
