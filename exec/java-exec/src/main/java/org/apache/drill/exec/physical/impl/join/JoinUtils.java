@@ -37,6 +37,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.LinkedList;
@@ -162,8 +163,8 @@ public class JoinUtils {
    * @param rightBatch right input record batch
    * @param context fragment context
    */
-  public static void addLeastRestrictiveCasts(LogicalExpression[] leftExpressions, RecordBatch leftBatch,
-                                              LogicalExpression[] rightExpressions, RecordBatch rightBatch,
+  public static void addLeastRestrictiveCasts(LogicalExpression[] leftExpressions, VectorAccessible leftBatch,
+                                              LogicalExpression[] rightExpressions, VectorAccessible rightBatch,
                                               FragmentContext context) {
     assert rightExpressions.length == leftExpressions.length;
 
