@@ -43,7 +43,6 @@ public class TextParsingSettings {
   private String lineSeparatorString = "\n";
   private boolean skipFirstLine = false;
 
-  // these options are not yet supported
   private boolean headerExtractionEnabled = false;
   private boolean useRepeatedVarChar = true;
   private int numberOfRecordsToRead = -1;
@@ -57,6 +56,11 @@ public class TextParsingSettings {
     this.delimiter = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
     this.comment = bSafe(config.getComment(), "comment");
     this.skipFirstLine = config.isSkipFirstLine();
+    this.headerExtractionEnabled = config.isHeaderExtractionEnabled();
+    if (this.headerExtractionEnabled) {
+      // In case of header TextRecordReader will use set of VarChar vectors vs RepeatedVarChar
+      this.useRepeatedVarChar = false;
+    }
   }
 
   public byte getComment(){

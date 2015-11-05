@@ -47,6 +47,12 @@
         },
         "avro" : {
           type: "avro"
+        },
+        "csvh" : {
+          type: "text",
+          extensions: [ "csvh" ],
+          delimiter: ",",
+          extractHeader: true
         }
       }
     }

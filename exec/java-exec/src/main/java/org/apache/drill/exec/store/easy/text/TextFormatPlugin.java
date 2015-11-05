@@ -140,7 +140,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     public char escape = '"';
     public char comment = '#';
     public boolean skipFirstLine = false;
-
+    public boolean extractHeader = false;
 
     public List<String> getExtensions() {
       return extensions;
@@ -164,6 +164,11 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     public char getFieldDelimiter() {
       return fieldDelimiter;
+    }
+
+    @JsonIgnore
+    public boolean isHeaderExtractionEnabled() {
+      return extractHeader;
     }
 
     @JsonIgnore
