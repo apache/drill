@@ -49,7 +49,6 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   protected final ${containerClass} container;
   private Mode mode = Mode.INIT;
   private FieldWriter writer;
-  private int lastWrittenIndex = Integer.MAX_VALUE;
   protected RepeatedValueVector innerVector;
 
   <#if mode == "Repeated">private int currentChildIndex = 0;</#if>
@@ -164,14 +163,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
       if(vectorCount != container.size()) {
         writer.allocate();
       }
-
-      for(int i = lastWrittenIndex; i < ${index}; ++i) {
-        writer.setPosition(i);
-      }
-
       writer.setPosition(${index});
-      lastWrittenIndex = ${index} + 1;
-
       mode = Mode.IN_${upperName};
       return writer;
     case IN_${upperName}:
@@ -218,14 +210,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   public void setPosition(int index) {
     super.setPosition(index);
     if(writer != null) {
-      for(int i = lastWrittenIndex; i < index; ++i) {
-        writer.setPosition(i);
-      }
-
       writer.setPosition(index);
-      lastWrittenIndex = index + 1;
-    } else {
-      lastWrittenIndex = Math.min(lastWrittenIndex, index);
     }
   }
 

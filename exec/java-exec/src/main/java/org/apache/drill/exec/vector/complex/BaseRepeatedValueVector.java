@@ -239,6 +239,9 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
 
     @Override
     public void startNewValue(int index) {
+      while (offsets.getValueCapacity() <= index) {
+        offsets.reAlloc();
+      }
       offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
       setValueCount(index+1);
     }
