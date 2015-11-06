@@ -17,17 +17,24 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.math.BigDecimal;
 
 public class TestFunctionsQuery extends BaseTestQuery {
+
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(90_000 /* ms */);
+
 
   // enable decimal data type
   @BeforeClass
