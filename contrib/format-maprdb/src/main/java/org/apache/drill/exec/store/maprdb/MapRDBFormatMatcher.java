@@ -17,15 +17,19 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
-import com.mapr.fs.MapRFileStatus;
+import java.io.IOException;
+
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 
-import java.io.IOException;
+import com.mapr.fs.MapRFileStatus;
 
 public class MapRDBFormatMatcher extends FormatMatcher {
 
@@ -40,14 +44,16 @@ public class MapRDBFormatMatcher extends FormatMatcher {
     return false;
   }
 
-  @Override
-  public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+  public DrillTable isReadable(DrillFileSystem fs,
+      FileSelection selection, FileSystemPlugin fsPlugin,
+      String storageEngineName, String userName) throws IOException {
     FileStatus status = selection.getFirstPath(fs);
     if (!isFileReadable(fs, status)) {
       return null;
     }
 
-    return new FormatSelection(getFormatPlugin().getConfig(), selection);
+    return new DynamicDrillTable(fsPlugin, storageEngineName, userName,
+        new FormatSelection(getFormatPlugin().getConfig(), selection));
   }
 
   @Override

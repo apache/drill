@@ -116,7 +116,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
     protected byte[] stopRow;
     protected byte[] serializedFilter;
 
-    @parquet.org.codehaus.jackson.annotate.JsonCreator
+    @JsonCreator
     public HBaseSubScanSpec(@JsonProperty("tableName") String tableName,
                             @JsonProperty("regionServer") String regionServer,
                             @JsonProperty("startRow") byte[] startRow,
