@@ -39,8 +39,6 @@ import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -59,17 +57,14 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
 
   private final FileSystemSchemaFactory schemaFactory;
-  private final Map<String, FormatPlugin> formatPluginsByName;
+  private final FormatCreator formatCreator;
   private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
   private final FileSystemConfig config;
   private final Configuration fsConf;
   private final LogicalPlanPersistence lpPersistance;
 
-  private DrillbitContext context;
-
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
     this.config = config;
-    this.context = context;
     this.lpPersistance = context.getLpPersistence();
     try {
 
@@ -78,10 +73,10 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
 
-      formatPluginsByName = FormatCreator.getFormatPlugins(context, fsConf, config, context.getClasspathScan());
+      formatCreator = new FormatCreator(context, fsConf, config, context.getClasspathScan());
       List<FormatMatcher> matchers = Lists.newArrayList();
       formatPluginsByConfig = Maps.newHashMap();
-      for (FormatPlugin p : formatPluginsByName.values()) {
+      for (FormatPlugin p : formatCreator.getConfiguredFormatPlugins()) {
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
@@ -121,12 +116,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     FormatSelection formatSelection = selection.getWith(lpPersistance, FormatSelection.class);
     FormatPlugin plugin;
     if (formatSelection.getFormat() instanceof NamedFormatPluginConfig) {
-      plugin = formatPluginsByName.get( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
+      plugin = formatCreator.getFormatPluginByName( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
     } else {
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
     if (plugin == null) {
-      plugin = FormatCreator.newFormatPlugin(context, fsConf, config, context.getClasspathScan(), formatSelection.getFormat());
+      plugin = formatCreator.newFormatPlugin(formatSelection.getFormat());
     }
     return plugin.getGroupScan(userName, formatSelection.getSelection(), columns);
   }
@@ -137,26 +132,21 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   }
 
   public FormatPlugin getFormatPlugin(String name) {
-    return formatPluginsByName.get(name);
+    return formatCreator.getFormatPluginByName(name);
   }
 
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
-      return formatPluginsByName.get(((NamedFormatPluginConfig) config).name);
+      return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
     } else {
       return formatPluginsByConfig.get(config);
     }
   }
 
-  // TODO: make this generic. Just for now restrict to text
-  public FormatPlugin newTextFormatPlugin(TextFormatConfig fpconfig) {
-    return new TextFormatPlugin(null, context, fsConf, config, fpconfig);
-  }
-
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     Builder<StoragePluginOptimizerRule> setBuilder = ImmutableSet.builder();
-    for(FormatPlugin plugin : this.formatPluginsByName.values()){
+    for(FormatPlugin plugin : formatCreator.getConfiguredFormatPlugins()){
       Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
       if(rules != null && rules.size() > 0){
         setBuilder.addAll(rules);
