@@ -186,7 +186,7 @@
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-winutils</artifactId>
-          <version>2.4.1</version>
+          <version>2.7.1</version>
           <type>zip</type>
         </dependency>
       </dependencies>
@@ -212,7 +212,7 @@
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-winutils</artifactId>
-          <version>2.4.1-mapr-1408</version>
+          <version>2.7.0-mapr-1506</version>
           <type>zip</type>
         </dependency>
       </dependencies>
