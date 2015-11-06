@@ -59,6 +59,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
   private static final OutboundRpcMessage PONG = new OutboundRpcMessage(RpcMode.PONG, 0, 0, Acks.OK);
+  private static final boolean ENABLE_SEPARATE_THREADS = "true".equals(System.getProperty("drill.enable_rpc_offload"));
 
   protected final CoordinationQueue queue = new CoordinationQueue(16, 16);
 
@@ -256,16 +257,25 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   }
 
+  private class SameExecutor implements Executor {
+
+    @Override
+    public void execute(Runnable command) {
+      command.run();
+    }
+
+  }
 
   protected class InboundHandler extends MessageToMessageDecoder<InboundRpcMessage> {
 
-    private final RpcEventHandler exec;
+    private final Executor exec;
     private final C connection;
 
     public InboundHandler(C connection) {
       super();
       this.connection = connection;
-      this.exec = new RpcEventHandler(rpcConfig.getExecutor());
+      final Executor underlyingExecutor = ENABLE_SEPARATE_THREADS ? rpcConfig.getExecutor() : new SameExecutor();
+      this.exec = new RpcEventHandler(underlyingExecutor);
     }
 
     @Override
