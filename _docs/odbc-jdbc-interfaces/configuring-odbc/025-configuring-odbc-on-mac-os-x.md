@@ -44,7 +44,7 @@ Create or modify the `/etc/launchd.conf` file to set environment variables. Set 
     setenv SIMBAINI /Users/joeuser/.mapr.drillodbc.ini
     setenv ODBCSYSINI /Users/joeuser/.odbcinst.ini
     setenv ODBCINI /Users/joeuser/.odbc.ini
-    launchctl setenv DYLD_LIBRARY_PATH /usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal
+    setenv DYLD_LIBRARY_PATH /usr/local/iODBC/lib:/opt/mapr/drillodbc/lib/universal
 
 Restart the Mac OS X or run `launchctl load /etc/launchd.conf`.
 

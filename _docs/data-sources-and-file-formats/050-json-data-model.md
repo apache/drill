@@ -250,7 +250,7 @@ Sum and group the ticket sales by date and sort in ascending order of total tick
     5 rows selected (0.252 seconds)
 
 ### Example: Access a Map Field in an Array
-To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json), modified slightly as described in the empty array workaround in ["Limitations and Workarounds."]({{ site.baseurl }}/docs/json-data-model#empty-array) 
+To access a map field in an array, use dot notation to drill down through the hierarchy of the JSON data to the field. Examples are based on the following [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json).
 
     {
       "type": "FeatureCollection",
@@ -387,7 +387,6 @@ In most cases, you can use a workaround, presented in the following sections, to
 * [Irregular data]({{site.baseurl}}/docs/json-data-model/#irregular-data)
 * [Varying types]({{site.baseurl}}/docs/json-data-model/#varying-types)
 * [Misusing Dot Notation]({{site.baseurl}}/docs/json-data-model/#misusing-dot-notation)
-* [Empty array]({{site.baseurl}}/docs/json-data-model/#empty-array)
 * [Lengthy JSON objects]({{site.baseurl}}/docs/json-data-model/#lengthy-json-objects)
 * [Complex JSON objects]({{site.baseurl}}/docs/json-data-model/#complex-json-objects)
 * [Schema changes]({{site.baseurl}}/docs/json-data-model/#schema-changes)
@@ -487,17 +486,6 @@ The following query, however, causes an error because there is no table named ge
 Workaround: Use a table alias. For example:
 
 ``select tbl.geometry.x from dfs.`some-file.json` tbl;``
-
-### Empty array
-Drill cannot read some empty arrays.
-
-Workaround: Try removing empty arrays if you have a problem.
-
-For example, you cannot query the [City Lots San Francisco in .json](https://github.com/zemirco/sf-city-lots-json) data unless you make the following modification.
-
-![drill query flow]({{ site.baseurl }}/docs/img/json-workaround.png)
-
-After removing the extraneous square brackets in the coordinates array, you can drill down to query all the data for the lots.
 
 ### Lengthy JSON objects
 Currently, Drill cannot manage lengthy JSON objects, such as a gigabit JSON file. Finding the beginning and end of records can be time consuming and require scanning the whole file.
