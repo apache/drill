@@ -253,11 +253,6 @@ public class DrillTestWrapper {
                 System.out.println(w.getField());
               }
             }
-            else if (obj instanceof byte[]) {
-              // Borrowed from parquet-tools, allows printing of varbinary columns as readable strings
-              // and also matches the data output by 'parquet-tools cat'
-              obj= new BinaryNode((byte[]) obj).asText();
-            }
           }
           combinedVectors.get(field).add(obj);
         }
