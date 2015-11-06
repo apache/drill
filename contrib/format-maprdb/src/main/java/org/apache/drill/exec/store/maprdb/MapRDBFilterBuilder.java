@@ -67,6 +67,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
        */
       Filter filter = parsedSpec.getFilter();
       if (filter instanceof RowFilter &&
+          ((RowFilter)filter).getOperator() != CompareOp.NOT_EQUAL &&
           ((RowFilter)filter).getComparator() instanceof BinaryComparator) {
     	  filter = null;
       }
