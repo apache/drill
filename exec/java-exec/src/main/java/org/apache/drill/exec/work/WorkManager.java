@@ -150,6 +150,7 @@ public class WorkManager implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
+    statusThread.interrupt();
 
     if (!runningFragments.isEmpty()) {
       logger.warn("Closing WorkManager but there are {} running fragments.", runningFragments.size());
