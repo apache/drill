@@ -6,7 +6,10 @@ title: Community Resources
 
 * [Documentation]({{ site.baseurl }}/docs/)
 * Twitter: [@ApacheDrill](https://twitter.com/ApacheDrill)
-* Meetup: [Bay Area Apache Drill User Group](http://www.meetup.com/Bay-Area-Apache-Drill-User-Group/)
+* Meetups:
+    * [Bay Area](http://www.meetup.com/Bay-Area-Apache-Drill-User-Group/)
+    * [New York](http://www.meetup.com/New-York-Apache-Drill-Meetup/)
+    * [London](http://www.meetup.com/London-Apache-Drill/)
 * Presentations: [SlideShare](http://www.slideshare.net/ApacheDrill/)
 
 ## Developer Resources
