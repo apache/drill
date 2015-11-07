@@ -288,6 +288,11 @@
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>vector</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- <dependency> -->
     <!-- <groupId>org.apache.drill.exec</groupId> -->
     <!-- <version>${project.version}</version> -->
