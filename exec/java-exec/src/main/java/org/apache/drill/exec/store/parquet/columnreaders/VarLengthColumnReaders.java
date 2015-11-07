@@ -187,7 +187,8 @@ public class VarLengthColumnReaders {
 
       if (usingDictionary) {
         currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-        mutator.setSafe(index, currDictValToWrite.toByteBuffer(), 0, currDictValToWrite.length());
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
         mutator.setSafe(index, start, start + length, bytebuf);
       }

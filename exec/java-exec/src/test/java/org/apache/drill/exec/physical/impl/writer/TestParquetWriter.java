@@ -21,7 +21,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
@@ -45,25 +50,46 @@ public class TestParquetWriter extends BaseTestQuery {
   public TemporaryFolder folder = new TemporaryFolder();
   static FileSystem fs;
 
-  private String allTypesSelection =
-      "cast( `int_col` AS             int)                `int_col`, " +
-          "cast( `bigint_col` AS          bigint)             `bigint_col`, " +
-          // TODO(DRILL-3367)
-//          "cast( `decimal9_col` AS        decimal(9, 4))      `decimal9_col`, " +
-//          "cast( `decimal18_col` AS       decimal(18,9))      `decimal18_col`, " +
-//          "cast( `decimal28sparse_col` AS decimal(28, 14))    `decimal28sparse_col`, " +
-//          "cast( `decimal38sparse_col` AS decimal(38, 19))    `decimal38sparse_col`, " +
-          "cast( `date_col` AS            date)               `date_col`, " +
-          "cast( `timestamp_col` AS       timestamp)          `timestamp_col`, " +
-          "cast( `float4_col` AS          float)              `float4_col`, " +
-          "cast( `float8_col` AS          double)             `float8_col`, " +
-          "cast( `varbinary_col` AS       varbinary(65000))   `varbinary_col`, " +
-          // TODO(DRILL-2297)
-//        "cast( `intervalyear_col` AS    interval year)      `intervalyear_col`, " +
-          "cast( `intervalday_col` AS     interval day)       `intervalday_col`, " +
-          "cast( `bit_col` AS             boolean)            `bit_col`, " +
-          "      `varchar_col`                                `varchar_col`, " +
-          "cast( `time_col` AS            time)               `time_col` ";
+  // Map storing a convenient name as well as the cast type necessary
+  // to produce it casting from a varchar
+  private static final Map<String, String> allTypes = new HashMap<>();
+
+  // Select statement for all supported Drill types, for use in conjunction with
+  // the file parquet/alltypes.json in the resources directory
+  private static final String allTypesSelection;
+
+  static {
+    allTypes.put("int",                "int");
+    allTypes.put("bigint",             "bigint");
+    // TODO(DRILL-3367)
+//    allTypes.put("decimal(9, 4)",      "decimal9");
+//    allTypes.put("decimal(18,9)",      "decimal18");
+//    allTypes.put("decimal(28, 14)",    "decimal28sparse");
+//    allTypes.put("decimal(38, 19)",    "decimal38sparse");
+    allTypes.put("date",               "date");
+    allTypes.put("timestamp",          "timestamp");
+    allTypes.put("float",              "float4");
+    allTypes.put("double",             "float8");
+    allTypes.put("varbinary(65000)",   "varbinary");
+    // TODO(DRILL-2297)
+//    allTypes.put("interval year",      "intervalyear");
+    allTypes.put("interval day",       "intervalday");
+    allTypes.put("boolean",            "bit");
+    allTypes.put("varchar",            "varchar");
+    allTypes.put("time",               "time");
+
+    List<String> allTypeSelectsAndCasts = new ArrayList<>();
+    for (String s : allTypes.keySet()) {
+      // don't need to cast a varchar, just add the column reference
+      if (s.equals("varchar")) {
+        allTypeSelectsAndCasts.add(String.format("`%s_col`", allTypes.get(s)));
+        continue;
+      }
+      allTypeSelectsAndCasts.add(String.format("cast(`%s_col` AS %S) `%s_col`", allTypes.get(s), s, allTypes.get(s)));
+    }
+    allTypesSelection = Joiner.on(",").join(allTypeSelectsAndCasts);
+  }
+
 
   private String allTypesTable = "cp.`/parquet/alltypes.json`";
 
@@ -155,6 +181,12 @@ public class TestParquetWriter extends BaseTestQuery {
     } finally {
       test(String.format("alter session set %s = false", ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
     }
+  }
+
+  @Test
+  public void testDictionaryError() throws Exception {
+    compareParquetReadersColumnar("*", "cp.`parquet/required_dictionary.parquet`");
+    runTestAndValidate("*", "*", "cp.`parquet/required_dictionary.parquet`", "required_dictionary");
   }
 
   @Test
@@ -668,6 +700,7 @@ public class TestParquetWriter extends BaseTestQuery {
 
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
     try {
+      deleteTableIfExists(outputFile);
       test("use dfs_test.tmp");
   //    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
       String query = String.format("SELECT %s FROM %s", selection, inputTable);
