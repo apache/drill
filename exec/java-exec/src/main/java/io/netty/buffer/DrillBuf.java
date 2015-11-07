@@ -445,7 +445,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
-  public ByteBuf retain(int increment) {
+  public synchronized ByteBuf retain(int increment) {
     if(rootBuffer){
       this.rootRefCnt.addAndGet(increment);
     }else{
