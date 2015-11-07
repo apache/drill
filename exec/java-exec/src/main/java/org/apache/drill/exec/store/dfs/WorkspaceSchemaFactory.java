@@ -20,14 +20,21 @@ package org.apache.drill.exec.store.dfs;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,9 +47,15 @@ import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.TableMacro;
 import org.apache.calcite.schema.TranslatableTable;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.FormatPluginConfigBase;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.RunTimeScan;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -66,6 +79,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -89,13 +103,15 @@ public class WorkspaceSchemaFactory {
   private final LogicalPlanPersistence logicalPlanPersistence;
   private final Path wsPath;
 
+  private final OptionExtractor optionExtractor;
+
   public WorkspaceSchemaFactory(
       FileSystemPlugin plugin,
       String schemaName,
       String storageEngineName,
       WorkspaceConfig config,
       List<FormatMatcher> formatMatchers,
-      LogicalPlanPersistence logicalPlanPersistence)
+      LogicalPlanPersistence logicalPlanPersistence, ScanResult scanResult)
     throws ExecutionSetupException, IOException {
     this.logicalPlanPersistence = logicalPlanPersistence;
     this.fsConf = plugin.getFsConf();
@@ -107,6 +123,7 @@ public class WorkspaceSchemaFactory {
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
     this.wsPath = new Path(config.getLocation());
+    this.optionExtractor = new OptionExtractor(scanResult);
 
     for (FormatMatcher m : formatMatchers) {
       if (m.supportDirectoryReads()) {
@@ -165,6 +182,131 @@ public class WorkspaceSchemaFactory {
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
   }
 
+  private static class OptionsDescriptor {
+    private final Class<? extends FormatPluginConfig> pluginConfigClass;
+    private final String typeName;
+    private final List<TableParamDef> functionSignature;
+
+    public OptionsDescriptor(Class<? extends FormatPluginConfig> pluginConfigClass) {
+      this.pluginConfigClass = pluginConfigClass;
+      List<TableParamDef> params = new ArrayList<>();
+      Field[] fields = pluginConfigClass.getDeclaredFields();
+      // @JsonTypeName("text")
+      JsonTypeName annotation = pluginConfigClass.getAnnotation(JsonTypeName.class);
+      this.typeName = annotation != null ? annotation.value() : null;
+      if (this.typeName != null) {
+        params.add(new TableParamDef("type", String.class));
+      }
+      for (Field field : fields) {
+        Class<?> fieldType = field.getType();
+        if (fieldType == char.class) {
+          // TODO
+          fieldType = String.class;
+        }
+        params.add(new TableParamDef(field.getName(), fieldType).optional());
+      }
+      this.functionSignature = Collections.unmodifiableList(params);
+    }
+
+    public TableSignature getTableSignature(String tableName) {
+      return new TableSignature(tableName, functionSignature);
+    }
+
+    public String presentParams() {
+      StringBuilder sb = new StringBuilder("(");
+      for (int i = 0; i < functionSignature.size(); i++) {
+        TableParamDef paramDef = functionSignature.get(i);
+        if (i != 0) {
+          sb.append(", ");
+        }
+        sb.append(paramDef.name).append(": ").append(paramDef.type.getSimpleName());
+      }
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public FormatPluginConfig eval(TableInstance t) {
+      if (!t.sig.equals(new TableSignature(t.sig.name, this.functionSignature))) {
+        throw new IllegalArgumentException("The parameters provided are not applicable to the type specified:\n"
+            + "provided: " + t.presentParams() + "\nexpected: " + this.presentParams());
+      }
+      try {
+        FormatPluginConfig config = pluginConfigClass.newInstance();
+        // we ignore the "type" parameter
+        for (int i = 1; i < t.params.size(); i++) {
+          Object param = t.params.get(i);
+          if (param == null) continue;
+          TableParamDef paramDef = t.sig.params.get(i);
+          if (!paramDef.type.isInstance(param)) {
+            throw new IllegalArgumentException(String.format(
+                "param %s of type %s does not accept %s of type %s",
+                paramDef.name, paramDef.type, param, param.getClass().getName())
+                );
+          }
+          Field field = pluginConfigClass.getField(paramDef.name);
+          field.setAccessible(true);
+          if (field.getType() == char.class && param instanceof String) {
+            String stringParam = (String) param;
+            if (stringParam.length() != 1) {
+              throw new IllegalArgumentException("Expected character but was String: " + stringParam);
+            }
+            field.set(config, stringParam.charAt(0));
+          } else {
+            field.set(config, param);
+          }
+        }
+        return config;
+      } catch (InstantiationException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+        // TODO
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  /**
+   * manages Storage plugins options
+   */
+  private static class OptionExtractor {
+
+    private final Map<String, OptionsDescriptor> optionsByTypeName;
+
+    public OptionExtractor(ScanResult scanResult) {
+      Map<String, OptionsDescriptor> result = new HashMap<>();
+      Set<Class<? extends FormatPluginConfig>> pluginConfigClasses = FormatPluginConfigBase.getSubTypes(scanResult);
+      for (Class<? extends FormatPluginConfig> pluginConfigClass : pluginConfigClasses) {
+        OptionsDescriptor optionsDescriptor = new OptionsDescriptor(pluginConfigClass);
+        result.put(optionsDescriptor.typeName.toLowerCase(), optionsDescriptor);
+      }
+      this.optionsByTypeName = unmodifiableMap(result);
+    }
+
+    public List<TableSignature> getTableSignatures(String tableName) {
+      List<TableSignature> result = new ArrayList<>();
+      for (OptionsDescriptor optionsDescriptor : optionsByTypeName.values()) {
+        TableSignature sig = optionsDescriptor.getTableSignature(tableName);
+        result.add(sig);
+      }
+      return unmodifiableList(result);
+    }
+
+    public FormatPluginConfig eval(TableInstance t) {
+      if (!t.sig.params.get(0).name.equals("type")) {
+        throw new IllegalArgumentException("unknown first param for " + t);
+      }
+      String type = (String)t.params.get(0);
+      if (type == null) {
+        throw new IllegalArgumentException("type param must be present but was null: " + t);
+      }
+      OptionsDescriptor optionsDescriptor = optionsByTypeName.get(type.toLowerCase());
+      if (optionsDescriptor == null) {
+        throw new IllegalArgumentException(String.format(
+            "unknown type %s, expected one of %s",
+            type, optionsByTypeName.keySet()));
+      }
+      return optionsDescriptor.eval(t);
+    }
+  }
+
   public static class WithOptionsTableMacro implements TableMacro {
 
     private TableSignature sig;
@@ -176,39 +318,32 @@ public class WorkspaceSchemaFactory {
       this.schema = schema;
     }
 
-    private static class IntHolder {
-      private int val = 0;
-    }
-
     @Override
     public List<FunctionParameter> getParameters() {
-      final IntHolder i = new IntHolder();
-      return Lists.transform(sig.params, new com.google.common.base.Function<TableParamDef, FunctionParameter>() {
-        @Override
-        public FunctionParameter apply(final TableParamDef input) {
-          return new FunctionParameter() {
-            @Override
-            public int getOrdinal() {
-              return i.val ++;
-            }
-
-            @Override
-            public String getName() {
-              return input.name;
-            }
-
-            @Override
-            public RelDataType getType(RelDataTypeFactory typeFactory) {
-              return typeFactory.createJavaType(input.type);
-            }
-
-            @Override
-            public boolean isOptional() {
-              return false;
-            }
-          };
-        }
-      });
+      List<FunctionParameter> result = new ArrayList<>();
+      for (int i = 0; i < sig.params.size(); i++) {
+        final TableParamDef p = sig.params.get(i);
+        final int ordinal = i;
+        result.add(new FunctionParameter() {
+          @Override
+          public int getOrdinal() {
+            return ordinal;
+          }
+          @Override
+          public String getName() {
+            return p.name;
+          }
+          @Override
+          public RelDataType getType(RelDataTypeFactory typeFactory) {
+            return typeFactory.createJavaType(p.type);
+          }
+          @Override
+          public boolean isOptional() {
+            return p.optional;
+          }
+        });
+      }
+      return result;
     }
 
     @Override
@@ -231,6 +366,25 @@ public class WorkspaceSchemaFactory {
       }
       this.sig = sig;
       this.params = params;
+    }
+
+    public String presentParams() {
+      StringBuilder sb = new StringBuilder("(");
+      boolean first = true;
+      for (int i = 0; i < params.size(); i++) {
+        Object param = params.get(i);
+        if (param != null) {
+          if (first) {
+            first = false;
+          } else {
+            sb.append(", ");
+          }
+          TableParamDef paramDef = sig.params.get(i);
+          sb.append(paramDef.name).append(": ").append(paramDef.type.getSimpleName()).append(" => ").append(param);
+        }
+      }
+      sb.append(")");
+      return sb.toString();
     }
 
     // eclipse generated
@@ -264,14 +418,28 @@ public class WorkspaceSchemaFactory {
       return true;
     }
 
+    @Override
+    public String toString() {
+      return "TableInstance [sig=" + sig + ", params=" + params + "]";
+    }
   }
   private static class TableParamDef {
     private final String name;
     private final Class<?> type;
+    private final boolean optional;
 
     public TableParamDef(String name, Class<?> type) {
+      this(name, type, false);
+    }
+
+    public TableParamDef(String name, Class<?> type, boolean optional) {
       this.name = name;
       this.type = type;
+      this.optional = optional;
+    }
+
+    public TableParamDef optional() {
+      return new TableParamDef(name, type, true);
     }
 
     // eclipse generated
@@ -280,6 +448,7 @@ public class WorkspaceSchemaFactory {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + (optional ? 1231 : 1237);
       result = prime * result + ((type == null) ? 0 : type.hashCode());
       return result;
     }
@@ -297,6 +466,8 @@ public class WorkspaceSchemaFactory {
           return false;
       } else if (!name.equals(other.name))
         return false;
+      if (optional != other.optional)
+        return false;
       if (type == null) {
         if (other.type != null)
           return false;
@@ -304,15 +475,22 @@ public class WorkspaceSchemaFactory {
         return false;
       return true;
     }
+    @Override
+    public String toString() {
+      return "TableParamDef [name=" + name + ", type=" + type + ", optional=" + optional + "]";
+    }
   }
   private static class TableSignature {
     private final String name;
     private final List<TableParamDef> params;
 
     public TableSignature(String name, TableParamDef... params) {
-      super();
+      this(name, Arrays.asList(params));
+    }
+
+    public TableSignature(String name, List<TableParamDef> params) {
       this.name = name;
-      this.params = Arrays.asList(params);
+      this.params = params;
     }
 
     // eclipse generated
@@ -346,6 +524,10 @@ public class WorkspaceSchemaFactory {
       return true;
     }
 
+    @Override
+    public String toString() {
+      return "TableSignature [name=" + name + ", params=" + params + "]";
+    }
   }
 
   public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<TableInstance, DrillTable> {
@@ -446,12 +628,14 @@ public class WorkspaceSchemaFactory {
     @Override
     public List<Function> getFunctions(String name) {
       System.out.println("getFunctions(" + name + ")");
-      List<TableSignature> sigs = Arrays.asList(
-          new TableSignature(name, new TableParamDef("delimiter", String.class)),
-          new TableSignature(name, new TableParamDef("delimiter", Integer.TYPE)),
-          new TableSignature(name, new TableParamDef("foo", Integer.TYPE), new TableParamDef("bar", Integer.TYPE)),
-          new TableSignature(name, new TableParamDef("foo", String.class))
-      );
+      List<TableSignature> sigs = optionExtractor.getTableSignatures(name);
+      System.out.println(sigs);
+//      List<TableSignature> sigs = Arrays.asList(
+//          new TableSignature(name, new TableParamDef("delimiter", String.class, true)),
+//          new TableSignature(name, new TableParamDef("delimiter", Integer.TYPE, true)),
+//          new TableSignature(name, new TableParamDef("foo", Integer.TYPE, true), new TableParamDef("bar", Integer.TYPE, true)),
+//          new TableSignature(name, new TableParamDef("foo", String.class, true))
+//      );
       return Lists.transform(sigs, new com.google.common.base.Function<TableSignature, Function>() {
         @Override
         public Function apply(TableSignature input) {
@@ -563,9 +747,10 @@ public class WorkspaceSchemaFactory {
           return null;
         }
         if (key.sig.params.size() > 0) {
-          TextFormatPlugin.TextFormatConfig fconfig = new TextFormatPlugin.TextFormatConfig();
-          fconfig.extensions = Arrays.asList();
-          fconfig.fieldDelimiter = ((String)key.params.get(0)).charAt(0);
+          FormatPluginConfig fconfig = optionExtractor.eval(key);
+//          TextFormatPlugin.TextFormatConfig fconfig = new TextFormatPlugin.TextFormatConfig();
+//          fconfig.extensions = Arrays.asList();
+//          fconfig.fieldDelimiter = ((String)key.params.get(0)).charAt(0);
           return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), new FormatSelection(fconfig, fileSelection));
         }
         if (fileSelection.containsDirectories(fs)) {

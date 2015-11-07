@@ -33,10 +33,10 @@ public class TestSelectWithOption extends BaseTestQuery {
 //  }
 
   @Test
-  public void testFoo() throws Exception {
-//    test("ALTER SESSION SET `exec.errors.verbose` = true");
+  public void testText() throws Exception {
     File input = new File("target/" + this.getClass().getName() + ".csv");
-    String query = "select columns from table(dfs.`${WORKING_PATH}/" + input.getPath() + "`(delimiter => '%s'))";
+    String query = "select columns from table(dfs.`${WORKING_PATH}/" + input.getPath() +
+        "`(type => 'TEXT', fieldDelimiter => '%s'))";
     String queryComma = format(query, ",");
     String queryPipe = format(query, "|");
     System.out.println(queryComma);
@@ -62,6 +62,24 @@ public class TestSelectWithOption extends BaseTestQuery {
 
     builderComma.build().run();
     builderPipe.build().run();
+  }
+
+  @Test
+  public void testParquetFailure() throws Exception {
+    File input = new File("target/" + this.getClass().getName() + ".csv");
+    try (FileWriter fw = new FileWriter(input)) {
+//      fw.append("a|b\n");
+      for (int i = 0; i < 3; i++) {
+        fw.append("\"b\"|\"" + i + "\"\n");
+      }
+    }
+
+    String query = "select columns from table(dfs.`${WORKING_PATH}/" + input.getPath() +
+        "`(type => 'PARQUET'))";
+    System.out.println(query);
+
+    test(query);
+
   }
 
 }
