@@ -45,6 +45,7 @@
 
 
   <modules>
+    <module>vector</module>
     <module>java-exec</module>
     <module>jdbc</module>
   </modules>
