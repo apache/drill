@@ -31,11 +31,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.calcite.linq4j.Ord;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.util.Hook;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.jdbc.ConnectionFactory;

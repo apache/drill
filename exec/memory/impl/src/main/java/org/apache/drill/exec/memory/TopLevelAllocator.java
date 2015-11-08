@@ -37,8 +37,10 @@ public class TopLevelAllocator implements BufferAllocator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
   public static final String CHILD_BUFFER_INJECTION_SITE = "child.buffer";
 
-  public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
-  public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
+  private static final PooledByteBufAllocatorL ALLOCATOR = new PooledByteBufAllocatorL(DrillMetrics.getInstance());
+
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
+  public static final String ERROR_ON_MEMORY_LEAK = "drill.memory.debug.error_on_leak";
 
   public static long MAXIMUM_DIRECT_MEMORY;
 
@@ -52,7 +54,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
     MAXIMUM_DIRECT_MEMORY = maximumAllocation;
-    innerAllocator = new PooledByteBufAllocatorL(DrillMetrics.getInstance());
+    innerAllocator = ALLOCATOR;
     this.config=(config!=null) ? config : DrillConfig.create();
     this.errorOnLeak = errorOnLeak;
     this.acct = new AccountorImpl(config, errorOnLeak, null, null, maximumAllocation, 0, true);

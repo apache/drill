@@ -40,6 +40,13 @@
       <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
@@ -116,20 +123,27 @@
 
   <build>
     <plugins>
-      <plugin>
+      <plugin> <!-- classpath scanning --> 
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.2.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.drill</groupId>
+            <artifactId>drill-common</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <phase>process-classes</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
+            <goals><goal>java</goal></goals>
           </execution>
         </executions>
         <configuration>
           <mainClass>org.apache.drill.common.scanner.BuildTimeScan</mainClass>
+          <includePluginDependencies>true</includePluginDependencies>
           <arguments>
             <argument>${project.build.outputDirectory}</argument>
           </arguments>

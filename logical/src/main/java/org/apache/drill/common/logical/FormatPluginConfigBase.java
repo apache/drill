@@ -34,7 +34,18 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
    */
   public static Set<Class<? extends FormatPluginConfig>> getSubTypes(final ScanResult classpathScan) {
     final Set<Class<? extends FormatPluginConfig>> pluginClasses = classpathScan.getImplementations(FormatPluginConfig.class);
-    logger.debug("Found {} format plugin configuration classes: {}.", pluginClasses.size(), pluginClasses);
+    if (logger.isDebugEnabled()) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Found ");
+      sb.append(pluginClasses.size());
+      sb.append("format plugin configuration classes:\n");
+      for (Class<?> c : pluginClasses) {
+        sb.append('\t');
+        sb.append(c.getName());
+        sb.append('\n');
+      }
+      logger.debug(sb.toString());
+    }
     return pluginClasses;
   }
 

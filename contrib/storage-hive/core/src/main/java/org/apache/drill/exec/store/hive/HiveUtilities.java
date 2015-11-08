@@ -231,7 +231,7 @@ public class HiveUtilities {
       }
 
       case DECIMAL28SPARSE: {
-        final int needSpace = Decimal28SparseHolder.nDecimalDigits * DecimalUtility.integerSize;
+      final int needSpace = Decimal28SparseHolder.nDecimalDigits * DecimalUtility.INTEGER_SIZE;
         Preconditions.checkArgument(managedBuffer.capacity() > needSpace,
             String.format("Not sufficient space in given managed buffer. Need %d bytes, buffer has %d bytes",
                 needSpace, managedBuffer.capacity()));
@@ -252,7 +252,7 @@ public class HiveUtilities {
       }
 
       case DECIMAL38SPARSE: {
-        final int needSpace = Decimal38SparseHolder.nDecimalDigits * DecimalUtility.integerSize;
+      final int needSpace = Decimal38SparseHolder.nDecimalDigits * DecimalUtility.INTEGER_SIZE;
         Preconditions.checkArgument(managedBuffer.capacity() > needSpace,
             String.format("Not sufficient space in given managed buffer. Need %d bytes, buffer has %d bytes",
                 needSpace, managedBuffer.capacity()));
