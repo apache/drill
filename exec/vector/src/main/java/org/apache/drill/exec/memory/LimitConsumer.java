@@ -15,25 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.server;
+package org.apache.drill.exec.memory;
 
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.glassfish.hk2.api.Factory;
+public interface LimitConsumer {
 
-public class DrillClientFactory implements Factory<DrillClient> {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClientFactory.class);
+  public String getIdentifier();
+  public long getAllocated();
 
-  @Override
-  public void dispose(DrillClient arg0) {
-  }
+  public long getLimit();
 
-  @Override
-  public DrillClient provide() {
-    try {
-      return new DrillClient();
-    } catch(OutOfMemoryException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  public void setLimit(long limit);
 }

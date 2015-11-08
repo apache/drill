@@ -30,10 +30,9 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -184,7 +183,7 @@ public class ScanBatch implements CloseableRecordBatch {
         injector.injectChecked(context.getExecutionControls(), "next-allocate", OutOfMemoryException.class);
 
         currentReader.allocate(fieldVectorMap);
-      } catch (OutOfMemoryException | OutOfMemoryRuntimeException e) {
+      } catch (OutOfMemoryException e) {
         logger.debug("Caught Out of Memory Exception", e);
         clearFieldVectorMap();
         return IterOutcome.OUT_OF_MEMORY;
@@ -260,7 +259,7 @@ public class ScanBatch implements CloseableRecordBatch {
       } else {
         return IterOutcome.OK;
       }
-    } catch (OutOfMemoryRuntimeException ex) {
+    } catch (OutOfMemoryException ex) {
       context.fail(UserException.memoryError(ex).build(logger));
       return IterOutcome.STOP;
     } catch (Exception ex) {

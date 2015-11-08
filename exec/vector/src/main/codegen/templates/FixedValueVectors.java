@@ -94,7 +94,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   @Override
   public void allocateNew() {
     if(!allocateNewSafe()){
-      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+      throw new OutOfMemoryException("Failure while allocating buffer.");
     }
   }
 
@@ -124,7 +124,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    * Note that the maximum number of values a vector can allocate is Integer.MAX_VALUE / value width.
    *
    * @param valueCount
-   * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
+   * @throws org.apache.drill.exec.memory.OutOfMemoryException if it can't allocate the new buffer
    */
   @Override
   public void allocateNew(final int valueCount) {
@@ -154,7 +154,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 /**
  * Allocate new buffer with double capacity, and copy data into the new buffer. Replace vector's buffer with new buffer, and release old one
  *
- * @throws org.apache.drill.exec.memory.OutOfMemoryRuntimeException if it can't allocate the new buffer
+ * @throws org.apache.drill.exec.memory.OutOfMemoryException if it can't allocate the new buffer
  */
   public void reAlloc() {
     final long newAllocationSize = allocationSizeInBytes * 2L;

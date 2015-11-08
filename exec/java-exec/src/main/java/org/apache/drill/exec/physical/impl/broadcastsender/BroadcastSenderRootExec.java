@@ -19,8 +19,8 @@ package org.apache.drill.exec.physical.impl.broadcastsender;
 
 import java.util.List;
 
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -97,7 +97,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     logger.debug("Outcome of sender next {}", out);
     switch(out){
       case OUT_OF_MEMORY:
-        throw new OutOfMemoryRuntimeException();
+        throw new OutOfMemoryException();
       case STOP:
       case NONE:
         for (int i = 0; i < tunnels.length; ++i) {

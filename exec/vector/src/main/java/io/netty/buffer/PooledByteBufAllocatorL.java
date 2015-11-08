@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import com.codahale.metrics.Gauge;
@@ -40,9 +39,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
   private static final int MEMORY_LOGGER_FREQUENCY_SECONDS = 60;
 
   private static final String METRIC_PREFIX = "drill.allocator.";
-  public static final PooledByteBufAllocatorL DEFAULT = new PooledByteBufAllocatorL();
-
-  private final MetricRegistry registry = DrillMetrics.getInstance();
+  private final MetricRegistry registry;
   private final AtomicLong hugeBufferSize = new AtomicLong(0);
   private final AtomicLong hugeBufferCount = new AtomicLong(0);
   private final AtomicLong normalBufferSize = new AtomicLong(0);
@@ -53,8 +50,9 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
   private final Histogram largeBuffersHist;
   private final Histogram normalBuffersHist;
 
-  private PooledByteBufAllocatorL() {
+  public PooledByteBufAllocatorL(MetricRegistry registry) {
     super(true);
+    this.registry = registry;
     try {
       Field f = PooledByteBufAllocator.class.getDeclaredField("directArenas");
       f.setAccessible(true);
@@ -110,6 +108,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
       public boolean matches(String name, Metric metric) {
         return name.startsWith("drill.allocator.");
       }
+
     });
   }
 

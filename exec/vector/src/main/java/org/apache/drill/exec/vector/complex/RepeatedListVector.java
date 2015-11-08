@@ -32,7 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedListHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -182,9 +182,9 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    public void allocateNew() throws OutOfMemoryRuntimeException {
+    public void allocateNew() throws OutOfMemoryException {
       if (!allocateNewSafe()) {
-        throw new OutOfMemoryRuntimeException();
+        throw new OutOfMemoryException();
       }
     }
 
@@ -300,7 +300,7 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
+  public void allocateNew() throws OutOfMemoryException {
     delegate.allocateNew();
   }
 

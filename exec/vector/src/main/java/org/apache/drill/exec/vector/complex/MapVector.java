@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import com.google.common.collect.Ordering;
-import com.google.common.primitives.Ints;
-
 import io.netty.buffer.DrillBuf;
 
 import java.util.Collection;
@@ -34,7 +31,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -49,6 +46,8 @@ import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
 
 public class MapVector extends AbstractMapVector {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);
@@ -269,7 +268,7 @@ public class MapVector extends AbstractMapVector {
       ValueVector vector = getChild(fieldDef.getLastName());
       if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
-        vector = TypeHelper.getNewVector(fieldDef, allocator);
+        vector = BasicTypeHelper.getNewVector(fieldDef, allocator);
         putChild(fieldDef.getLastName(), vector);
       }
       if (child.getValueCount() == 0) {

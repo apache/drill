@@ -26,7 +26,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -72,7 +72,7 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
+  public void allocateNew() throws OutOfMemoryException {
     super.allocateNewSafe();
   }
 

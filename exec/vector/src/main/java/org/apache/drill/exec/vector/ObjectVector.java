@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -103,11 +103,11 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
+  public void allocateNew() throws OutOfMemoryException {
     addNewArray();
   }
 
-  public void allocateNew(int valueCount) throws OutOfMemoryRuntimeException {
+  public void allocateNew(int valueCount) throws OutOfMemoryException {
     while (maxCount < valueCount) {
       addNewArray();
     }

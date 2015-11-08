@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.planner.logical.ColumnList;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;

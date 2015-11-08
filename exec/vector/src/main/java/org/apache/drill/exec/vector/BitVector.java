@@ -25,7 +25,7 @@ import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -88,7 +88,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   @Override
   public void allocateNew() {
     if (!allocateNewSafe()) {
-      throw new OutOfMemoryRuntimeException();
+      throw new OutOfMemoryException();
     }
   }
 
@@ -105,7 +105,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     try {
       allocateBytes(curAllocationSize);
-    } catch (OutOfMemoryRuntimeException ex) {
+    } catch (OutOfMemoryException ex) {
       return false;
     }
     return true;

@@ -17,20 +17,22 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.drill.common.collections.MapWithOrdinal;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /*
  * Base class for MapVectors. Currently used by RepeatedMapVector and MapVector
@@ -48,7 +50,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
     for (MaterializedField child : clonedField.getChildren()) {
       if (!child.equals(BaseRepeatedValueVector.OFFSETS_FIELD)) {
         final String fieldName = child.getLastName();
-        final ValueVector v = TypeHelper.getNewVector(child, allocator, callBack);
+        final ValueVector v = BasicTypeHelper.getNewVector(child, allocator, callBack);
         putVector(fieldName, v);
       }
     }
@@ -128,7 +130,7 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
       create = true;
     }
     if (create) {
-      final T vector = (T) TypeHelper.getNewVector(field.getPath(), name, allocator, type, callBack);
+      final T vector = (T) BasicTypeHelper.getNewVector(field.getPath(), name, allocator, type, callBack);
       putChild(name, vector);
       if (callBack!=null) {
         callBack.doWork();

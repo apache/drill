@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.memory;
+package org.apache.drill.exec.exception;
 
-import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class OutOfMemoryException extends FragmentSetupException{
+public class OutOfMemoryException extends DrillRuntimeException {
+  private static final long serialVersionUID = -6858052345185793382L;
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutOfMemoryException.class);
 
   public OutOfMemoryException() {
     super();
-
   }
 
   public OutOfMemoryException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-
   }
 
   public OutOfMemoryException(String message, Throwable cause) {

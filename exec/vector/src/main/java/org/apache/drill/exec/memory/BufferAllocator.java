@@ -19,11 +19,10 @@ package org.apache.drill.exec.memory;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.UnsafeDirectLittleEndian;
 
 import java.io.Closeable;
 
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.util.Pointer;
 
 /**
@@ -39,7 +38,7 @@ public interface BufferAllocator extends Closeable {
    * @param size
    *          The size in bytes.
    * @return A new ByteBuf.
-   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
+   * @throws OutOfMemoryException if buffer cannot be allocated
    */
   public abstract DrillBuf buffer(int size);
 
@@ -50,7 +49,7 @@ public interface BufferAllocator extends Closeable {
    * @param minSize The minimum size in bytes.
    * @param maxSize The maximum size in bytes.
    * @return A new ByteBuf.
-   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
+   * @throws OutOfMemoryException if buffer cannot be allocated
    */
   public abstract DrillBuf buffer(int minSize, int maxSize);
 
@@ -59,14 +58,19 @@ public interface BufferAllocator extends Closeable {
   /**
    * Create a child allocator nested below this one.
    *
-   * @param context - owning fragment for this allocator
-   * @param initialReservation - specified in bytes
-   * @param maximumReservation - specified in bytes
-   * @param applyFragmentLimit - flag to conditionally enable fragment memory limits
+   * @param context
+   *          - BufferManager associated with the new child allocator
+   * @param initialReservation
+   *          - specified in bytes
+   * @param maximumReservation
+   *          - specified in bytes
+   * @param applyFragmentLimit
+   *          - flag to conditionally enable fragment memory limits
    * @return - a new buffer allocator owned by the parent it was spawned from
-   * @throws OutOfMemoryException - when off-heap memory has been exhausted
+   * @throws OutOfMemoryException
+   *           - when off-heap memory has been exhausted
    */
-  public abstract BufferAllocator getChildAllocator(FragmentContext context, long initialReservation,
+  public abstract BufferAllocator getChildAllocator(LimitConsumer limitListener, long initialReservation,
       long maximumReservation, boolean applyFragmentLimit) throws OutOfMemoryException;
 
   /**
@@ -90,15 +94,15 @@ public interface BufferAllocator extends Closeable {
   /**
    * For Top Level Allocators. Reset the fragment limits for all allocators
    */
-  public void resetFragmentLimits();
+  public void resetLimits();
 
   /**
    * For Child allocators to set the Fragment limit for the corresponding fragment allocator.
    * @param l the new fragment limit
    */
-  public void setFragmentLimit(long l);
+  public void setLimit(long l);
 
-  public long getFragmentLimit();
+  public long getLimit();
 
 
   /**

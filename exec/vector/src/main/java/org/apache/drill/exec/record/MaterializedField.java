@@ -26,7 +26,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 
@@ -196,7 +196,7 @@ public class MaterializedField {
   }
 
   public Class<?> getValueClass() {
-    return TypeHelper.getValueVectorClass(getType().getMinorType(), getDataMode());
+    return BasicTypeHelper.getValueVectorClass(getType().getMinorType(), getDataMode());
   }
 
   public boolean matches(SchemaPath path) {

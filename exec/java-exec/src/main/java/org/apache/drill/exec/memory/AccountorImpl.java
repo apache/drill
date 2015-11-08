@@ -28,25 +28,20 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-public class Accountor {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Accountor.class);
+public class AccountorImpl implements Accountor {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountorImpl.class);
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final AtomicRemainder remainder;
   private final long total;
   private ConcurrentMap<ByteBuf, DebugStackTrace> buffers = Maps.newConcurrentMap();
-  private final FragmentHandle handle;
-  private String fragmentStr;
-  private Accountor parent;
+  private AccountorImpl parent;
 
   private final boolean errorOnLeak;
   // some operators are no subject to the fragment limit. They set the applyFragmentLimit to false
@@ -59,16 +54,17 @@ public class Accountor {
 
   private final boolean applyFragmentLimit;
 
-  private final FragmentContext fragmentContext;
+  private final LimitConsumer limitConsumer;
   long fragmentLimit;
 
   private long peakMemoryAllocation = 0;
 
-  // The top level Allocator has an accountor that keeps track of all the FragmentContexts currently executing.
+  // The top level Allocator has an accountor that keeps track of all the LimitConsumers currently executing.
   // This enables the top level accountor to calculate a new fragment limit whenever necessary.
-  private final List<FragmentContext> fragmentContexts;
+  private final List<LimitConsumer> limitConsumers;
 
-  public Accountor(DrillConfig config, boolean errorOnLeak, FragmentContext context, Accountor parent, long max, long preAllocated, boolean applyFragLimit) {
+  public AccountorImpl(DrillConfig config, boolean errorOnLeak, LimitConsumer context, AccountorImpl parent, long max,
+      long preAllocated, boolean applyFragLimit) {
     // TODO: fix preallocation stuff
     this.errorOnLeak = errorOnLeak;
     AtomicRemainder parentRemainder = parent != null ? parent.remainder : null;
@@ -92,19 +88,17 @@ public class Accountor {
 
     this.remainder = new AtomicRemainder(errorOnLeak, parentRemainder, max, preAllocated, applyFragmentLimit);
     this.total = max;
-    this.fragmentContext=context;
-    this.handle = (context!=null) ? context.getHandle() : null;
-    this.fragmentStr= (handle!=null) ? ( handle.getMajorFragmentId()+":"+handle.getMinorFragmentId() ) : "0:0";
+    this.limitConsumer = context;
     this.fragmentLimit=this.total; // Allow as much as possible to start with;
     if (ENABLE_ACCOUNTING) {
       buffers = Maps.newConcurrentMap();
     } else {
       buffers = null;
     }
-    this.fragmentContexts = new ArrayList<FragmentContext>();
+    this.limitConsumers = new ArrayList<LimitConsumer>();
     if(parent!=null && parent.parent==null){ // Only add the fragment context to the fragment level accountor
       synchronized(this) {
-        addFragmentContext(this.fragmentContext);
+        addLimitConsumer(this.limitConsumer);
       }
     }
   }
@@ -124,7 +118,10 @@ public class Accountor {
     }
 
     if (ENABLE_ACCOUNTING) {
-      target.buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
+      if (target instanceof AccountorImpl) {
+        ((AccountorImpl) target).buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread()
+            .getStackTrace()));
+      }
     }
     return withinLimit;
   }
@@ -149,7 +146,6 @@ public class Accountor {
   }
 
   public boolean reserve(long size) {
-    logger.trace("Fragment:"+fragmentStr+" Reserved "+size+" bytes. Total Allocated: "+getAllocation());
     boolean status = remainder.get(size, this.applyFragmentLimit);
     peakMemoryAllocation = Math.max(peakMemoryAllocation, getAllocation());
     return status;
@@ -210,19 +206,12 @@ public class Accountor {
     }
   }
 
-  private void addFragmentContext(FragmentContext c) {
+  private void addLimitConsumer(LimitConsumer c) {
     if (parent != null){
-      parent.addFragmentContext(c);
+      parent.addLimitConsumer(c);
     }else {
       if(logger.isTraceEnabled()) {
-        FragmentHandle hndle;
-        String fragStr;
-        if(c!=null) {
-          hndle = c.getHandle();
-          fragStr = (hndle != null) ? (hndle.getMajorFragmentId() + ":" + hndle.getMinorFragmentId()) : "[Null Fragment Handle]";
-        }else{
-          fragStr = "[Null Context]";
-        }
+        String fragStr = c == null ? "[Null Context]" : c.getIdentifier();
         fragStr+=" (Object Id: "+System.identityHashCode(c)+")";
         StackTraceElement[] ste = (new Throwable()).getStackTrace();
         StringBuffer sb = new StringBuffer();
@@ -234,32 +223,25 @@ public class Accountor {
         logger.trace("Fragment " + fragStr + " added to root accountor.\n"+sb.toString());
       }
       synchronized(this) {
-        fragmentContexts.add(c);
+        limitConsumers.add(c);
       }
     }
   }
 
-  private void removeFragmentContext(FragmentContext c) {
+  private void removeLimitConsumer(LimitConsumer c) {
     if (parent != null){
       if (parent.parent==null){
         // only fragment level allocators will have the fragment context saved
-        parent.removeFragmentContext(c);
+        parent.removeLimitConsumer(c);
       }
     }else{
       if(logger.isDebugEnabled()) {
-        FragmentHandle hndle;
-        String fragStr;
-        if (c != null) {
-          hndle = c.getHandle();
-          fragStr = (hndle != null) ? (hndle.getMajorFragmentId() + ":" + hndle.getMinorFragmentId()) : "[Null Fragment Handle]";
-        } else {
-          fragStr = "[Null Context]";
-        }
+        String fragStr = c == null ? "[Null Context]" : c.getIdentifier();
         fragStr += " (Object Id: " + System.identityHashCode(c) + ")";
         logger.trace("Fragment " + fragStr + " removed from root accountor");
       }
       synchronized(this) {
-        fragmentContexts.remove(c);
+        limitConsumers.remove(c);
       }
     }
   }
@@ -279,13 +261,10 @@ public class Accountor {
       //If the already running fragments end quickly, their limits will be assigned back to the remaining fragments
       //quickly. If they are long running, then we want to favour them with larger limits anyway.
       synchronized (this) {
-        int nFragments=fragmentContexts.size();
+        int nFragments = limitConsumers.size();
         long allocatedMemory=0;
-        for(FragmentContext fragment: fragmentContexts){
-          BufferAllocator a = fragment.getAllocator();
-          if(a!=null) {
-            allocatedMemory += fragment.getAllocator().getAllocatedMemory();
-          }
+        for (LimitConsumer fragment : limitConsumers) {
+          allocatedMemory += fragment.getAllocated();
         }
         if(logger.isTraceEnabled()) {
           logger.trace("Resetting Fragment Memory Limit: total Available memory== "+total
@@ -297,8 +276,8 @@ public class Accountor {
         }
         if(nFragments>0) {
           long rem = (total - allocatedMemory) / nFragments;
-          for (FragmentContext fragment : fragmentContexts) {
-            fragment.setFragmentLimit((long) (rem * fragmentMemOvercommitFactor));
+          for (LimitConsumer fragment : limitConsumers) {
+            fragment.setLimit((long) (rem * fragmentMemOvercommitFactor));
           }
         }
         if(logger.isTraceEnabled() && false){
@@ -309,23 +288,15 @@ public class Accountor {
           sb.append(" Fragment Limit: ");
           sb.append(this.getFragmentLimit());
           logger.trace(sb.toString());
-          for(FragmentContext fragment: fragmentContexts){
+          for (LimitConsumer fragment : limitConsumers) {
             sb= new StringBuffer();
-            if (handle != null) {
-              sb.append("[");
-              sb.append(QueryIdHelper.getQueryId(handle.getQueryId()));
-              sb.append("](");
-              sb.append(handle.getMajorFragmentId());
-              sb.append(":");
-              sb.append(handle.getMinorFragmentId());
-              sb.append(")");
-            }else{
-              sb.append("[fragment](0:0)");
-            }
+            sb.append('[');
+            sb.append(fragment.getIdentifier());
+            sb.append(']');
             sb.append("Allocated memory: ");
-            sb.append(fragment.getAllocator().getAllocatedMemory());
+            sb.append(fragment.getAllocated());
             sb.append(" Fragment Limit: ");
-            sb.append(fragment.getAllocator().getFragmentLimit());
+            sb.append(fragment.getLimit());
             logger.trace(sb.toString());
           }
           logger.trace("Resetting Complete");
@@ -338,8 +309,9 @@ public class Accountor {
   public void close() {
     // remove the fragment context and reset fragment limits whenever an allocator closes
     if(parent!=null && parent.parent==null) {
-      logger.debug("Fragment " + fragmentStr + "  accountor being closed");
-      removeFragmentContext(fragmentContext);
+
+      logger.debug("Fragment " + limitConsumer.getIdentifier() + "  accountor being closed");
+      removeLimitConsumer(limitConsumer);
     }
     resetFragmentLimits();
 
@@ -347,15 +319,8 @@ public class Accountor {
       StringBuffer sb = new StringBuffer();
       sb.append("Attempted to close accountor with ");
       sb.append(buffers.size());
-      sb.append(" buffer(s) still allocated");
-      if (handle != null) {
-        sb.append("for QueryId: ");
-        sb.append(QueryIdHelper.getQueryId(handle.getQueryId()));
-        sb.append(", MajorFragmentId: ");
-        sb.append(handle.getMajorFragmentId());
-        sb.append(", MinorFragmentId: ");
-        sb.append(handle.getMinorFragmentId());
-      }
+      sb.append(" buffer(s) still allocated for ");
+      sb.append(limitConsumer.getIdentifier());
       sb.append(".\n");
 
       Multimap<DebugStackTrace, DebugStackTrace> multi = LinkedListMultimap.create();
@@ -400,7 +365,7 @@ public class Accountor {
     if (parent != null && parent.parent==null) { // This is a fragment level accountor
       this.fragmentLimit=getAllocation()+add;
       this.remainder.setLimit(this.fragmentLimit);
-      logger.trace("Fragment "+fragmentStr+" memory limit set to "+this.fragmentLimit);
+      logger.trace("Fragment " + limitConsumer.getIdentifier() + " memory limit set to " + this.fragmentLimit);
     }
   }
 

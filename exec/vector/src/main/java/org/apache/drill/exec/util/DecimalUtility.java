@@ -33,7 +33,7 @@ public class DecimalUtility extends CoreDecimalUtility{
     public final static int MAX_DIGITS = 9;
     public final static int DIGITS_BASE = 1000000000;
     public final static int DIGITS_MAX = 999999999;
-    public final static int integerSize = (Integer.SIZE/8);
+    public final static int INTEGER_SIZE = (Integer.SIZE/8);
 
     public final static String[] decimalToString = {"",
             "0",
@@ -184,7 +184,7 @@ public class DecimalUtility extends CoreDecimalUtility{
 
         for (int i = 1; i < nDecimalDigits; i++) {
 
-            BigInteger temp = BigInteger.valueOf(data.getInt(startIndex + (i * integerSize)));
+            BigInteger temp = BigInteger.valueOf(data.getInt(startIndex + (i * INTEGER_SIZE)));
             decimalDigits = decimalDigits.multiply(base);
             decimalDigits = decimalDigits.add(temp);
         }
@@ -216,7 +216,7 @@ public class DecimalUtility extends CoreDecimalUtility{
          * representation has one more integer than the dense
          * representation.
          */
-        byte[] intermediateBytes = new byte[((nDecimalDigits + 1) * integerSize)];
+        byte[] intermediateBytes = new byte[((nDecimalDigits + 1) * INTEGER_SIZE)];
 
         // Start storing from the least significant byte of the first integer
         int intermediateIndex = 3;
@@ -259,7 +259,7 @@ public class DecimalUtility extends CoreDecimalUtility{
             inputIndex++;
             intermediateIndex++;
 
-            if (((inputIndex - 1) % integerSize) == 0) {
+            if (((inputIndex - 1) % INTEGER_SIZE) == 0) {
                 shiftBits = (byte) ((shiftBits & 0xFF) >>> 2);
                 maskIndex++;
                 shiftOrder -= 2;
@@ -287,7 +287,7 @@ public class DecimalUtility extends CoreDecimalUtility{
 
         // Initialize the buffer
         for (int i = 0; i < nDecimalDigits; i++) {
-          data.setInt(startIndex + (i * integerSize), 0);
+          data.setInt(startIndex + (i * INTEGER_SIZE), 0);
         }
 
         boolean sign = false;
@@ -311,7 +311,7 @@ public class DecimalUtility extends CoreDecimalUtility{
 
         while (integerPart.compareTo(BigDecimal.ZERO) == 1) {
             // store the modulo as the integer value
-            data.setInt(startIndex + (destIndex * integerSize), (integerPart.remainder(base)).intValue());
+            data.setInt(startIndex + (destIndex * INTEGER_SIZE), (integerPart.remainder(base)).intValue());
             destIndex--;
             // Divide by base 1 billion
             integerPart = (integerPart.divide(base)).setScale(0, BigDecimal.ROUND_DOWN);
@@ -337,7 +337,7 @@ public class DecimalUtility extends CoreDecimalUtility{
             fractionalPart = fractionalPart.movePointLeft(MAX_DIGITS);
             BigDecimal temp = fractionalPart.remainder(BigDecimal.ONE);
 
-            data.setInt(startIndex + (destIndex * integerSize), (temp.unscaledValue().intValue()));
+            data.setInt(startIndex + (destIndex * INTEGER_SIZE), (temp.unscaledValue().intValue()));
             destIndex--;
 
             fractionalPart = fractionalPart.setScale(0, BigDecimal.ROUND_DOWN);
@@ -695,7 +695,7 @@ public class DecimalUtility extends CoreDecimalUtility{
     }
 
     int index = nDecimalDigits - roundUp(scale);
-    return (int) (adjustScaleDivide(data.getInt(start + (index * integerSize)), MAX_DIGITS - 1));
+    return (int) (adjustScaleDivide(data.getInt(start + (index * INTEGER_SIZE)), MAX_DIGITS - 1));
   }
 
   public static int compareSparseSamePrecScale(DrillBuf left, int lStart, byte[] right, int length) {

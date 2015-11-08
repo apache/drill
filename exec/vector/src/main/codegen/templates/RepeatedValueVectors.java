@@ -204,7 +204,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     try {
       offsets.allocateNew();
       values.allocateNew();
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       clear();
       throw e;
     }
@@ -223,7 +223,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     try {
       offsets.allocateNew(valueCount + 1);
       values.allocateNew(totalBytes, innerValueCount);
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       clear();
       throw e;
     }
@@ -249,7 +249,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
     try {
       offsets.allocateNew(valueCount + 1);
       values.allocateNew(innerValueCount);
-    } catch(OutOfMemoryRuntimeException e){
+    } catch(OutOfMemoryException e){
       clear();
       throw e;
     }
