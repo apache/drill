@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.collect.LinkedListMultimap;
@@ -38,6 +37,10 @@ public class AccountorImpl implements Accountor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountorImpl.class);
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
+
+  public static final String ENABLE_FRAGMENT_MEMORY_LIMIT = "drill.exec.memory.enable_frag_limit";
+  public static final String FRAGMENT_MEM_OVERCOMMIT_FACTOR = "drill.exec.memory.frag_mem_overcommit_factor";
+
   private final AtomicRemainder remainder;
   private final long total;
   private ConcurrentMap<ByteBuf, DebugStackTrace> buffers = Maps.newConcurrentMap();
@@ -74,8 +77,8 @@ public class AccountorImpl implements Accountor {
     double  fragmentMemOvercommitFactor;
 
     try {
-      enableFragmentLimit = config.getBoolean(ExecConstants.ENABLE_FRAGMENT_MEMORY_LIMIT);
-      fragmentMemOvercommitFactor = config.getDouble(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR);
+      enableFragmentLimit = config.getBoolean(ENABLE_FRAGMENT_MEMORY_LIMIT);
+      fragmentMemOvercommitFactor = config.getDouble(FRAGMENT_MEM_OVERCOMMIT_FACTOR);
     }catch(Exception e){
       enableFragmentLimit = DEFAULT_ENABLE_FRAGMENT_LIMIT;
       fragmentMemOvercommitFactor = DEFAULT_FRAGMENT_MEM_OVERCOMMIT_FACTOR;

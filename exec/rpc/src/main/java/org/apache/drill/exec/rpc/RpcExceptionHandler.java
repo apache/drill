@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import org.eclipse.jetty.io.Connection;
 
 public class RpcExceptionHandler<C extends RemoteConnection> implements ChannelHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcExceptionHandler.class);

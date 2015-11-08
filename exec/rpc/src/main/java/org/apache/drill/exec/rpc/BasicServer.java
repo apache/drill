@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -27,25 +28,18 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.Future;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.net.BindException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
-import com.google.protobuf.Internal.EnumLite;
 import com.google.common.base.Stopwatch;
-import com.google.common.io.Closeables;
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -192,7 +186,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
     return null;
   }
 
-  public int bind(final int initialPort, boolean allowPortHunting) throws DrillbitStartupException {
+  public int bind(final int initialPort, boolean allowPortHunting) {
     int port = initialPort - 1;
     while (true) {
       try {

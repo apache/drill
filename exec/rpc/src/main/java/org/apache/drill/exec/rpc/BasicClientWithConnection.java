@@ -23,7 +23,6 @@ import io.netty.channel.socket.SocketChannel;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;

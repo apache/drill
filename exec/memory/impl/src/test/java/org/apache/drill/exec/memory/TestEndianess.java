@@ -22,11 +22,11 @@ import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecTest;
+import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
 
-public class TestEndianess extends ExecTest {
+public class TestEndianess extends DrillTest {
   @Test
   public void testLittleEndian() {
     final DrillConfig drillConfig = DrillConfig.create();
