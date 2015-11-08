@@ -170,7 +170,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Output ${type.to}Holder out;
 
     public void setup() {
-      int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+      int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
       buffer = buffer.reallocIfNeeded(size);
     }
 

@@ -67,6 +67,16 @@
 
 
   <build>
+  
+    <resources>
+      <resource>
+        <!-- Copy freemarker template and fmpp configuration files of Vector's 
+          to allow clients to leverage definitions. -->
+        <directory>${basedir}/src/main/codegen</directory>
+        <targetPath>codegen</targetPath>
+      </resource>
+    </resources>
+      
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>

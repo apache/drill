@@ -20,6 +20,7 @@ package org.apache.drill.exec.memory;
 
 
 import static org.junit.Assert.fail;
+import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Properties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
@@ -47,8 +49,6 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import io.netty.buffer.DrillBuf;
 
 public class TestAllocators {
 

@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.AssertionUtil;
@@ -44,7 +45,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final Map<ChildAllocator, StackTraceElement[]> childrenMap;
-  private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
+  private final PooledByteBufAllocatorL innerAllocator;
   private final AccountorImpl acct;
   private final boolean errorOnLeak;
   private final DrillBuf empty;
@@ -52,6 +53,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private TopLevelAllocator(DrillConfig config, long maximumAllocation, boolean errorOnLeak){
     MAXIMUM_DIRECT_MEMORY = maximumAllocation;
+    innerAllocator = new PooledByteBufAllocatorL(DrillMetrics.getInstance());
     this.config=(config!=null) ? config : DrillConfig.create();
     this.errorOnLeak = errorOnLeak;
     this.acct = new AccountorImpl(config, errorOnLeak, null, null, maximumAllocation, 0, true);

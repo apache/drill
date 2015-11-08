@@ -43,11 +43,11 @@ public class BasicTypeHelper {
   // a high value like this will not inflate the size for small values
   public static final int VARCHAR_DEFAULT_CAST_LEN = 65536;
 
-  private static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
+  protected static String buildErrorMessage(final String operation, final MinorType type, final DataMode mode) {
     return String.format("Unable to %s for minor type [%s] and mode [%s]", operation, type, mode);
   }
 
-  private static String buildErrorMessage(final String operation, final MajorType type) {
+  protected static String buildErrorMessage(final String operation, final MajorType type) {
     return buildErrorMessage(operation, type.getMinorType(), type.getMode());
   }
 

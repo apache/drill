@@ -35,7 +35,7 @@ import org.apache.drill.exec.vector.accessor.*;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
 
-public class TypeHelper extends BasicTypeHelper{
+public class TypeHelper extends BasicTypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
 
   public static SqlAccessor getSqlAccessor(ValueVector vector){
