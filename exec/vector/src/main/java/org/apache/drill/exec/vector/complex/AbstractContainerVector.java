@@ -34,7 +34,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
@@ -59,9 +59,9 @@ public abstract class AbstractContainerVector implements ValueVector {
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
+  public void allocateNew() throws OutOfMemoryException {
     if (!allocateNewSafe()) {
-      throw new OutOfMemoryRuntimeException();
+      throw new OutOfMemoryException();
     }
   }
 

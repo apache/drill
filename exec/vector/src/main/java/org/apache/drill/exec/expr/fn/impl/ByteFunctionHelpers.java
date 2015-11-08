@@ -193,7 +193,7 @@ public class ByteFunctionHelpers {
   }
   // Get the integer, ignore the sign
   public static int getInteger(byte[] b, int index, boolean ignoreSign) {
-    int startIndex = index * DecimalUtility.integerSize;
+    int startIndex = index * DecimalUtility.INTEGER_SIZE;
 
     if (index == 0 && ignoreSign == true) {
       return (b[startIndex + 3] & 0xFF) |
@@ -211,7 +211,7 @@ public class ByteFunctionHelpers {
 
   // Set integer in the byte array
   public static void setInteger(byte[] b, int index, int value) {
-    int startIndex = index * DecimalUtility.integerSize;
+    int startIndex = index * DecimalUtility.INTEGER_SIZE;
     b[startIndex] = (byte) ((value >> 24) & 0xFF);
     b[startIndex + 1] = (byte) ((value >> 16) & 0xFF);
     b[startIndex + 2] = (byte) ((value >> 8) & 0xFF);

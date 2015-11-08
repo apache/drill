@@ -17,33 +17,27 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import io.netty.buffer.DrillBuf;
 
-public class OutOfMemoryRuntimeException extends DrillRuntimeException{
+public interface Accountor extends AutoCloseable{
 
-  public OutOfMemoryRuntimeException() {
-    super();
+  public boolean transferTo(Accountor target, DrillBuf buf, long size);
+  public boolean transferIn(DrillBuf buf, long size);
+  public long getAvailable();
+  public long getCapacity();
+  public long getAllocation();
+  public long getPeakMemoryAllocation();
 
-  }
+  public boolean reserve(long size);
+  public boolean forceAdditionalReservation(long size);
 
-  public OutOfMemoryRuntimeException(String message, Throwable cause, boolean enableSuppression,
-      boolean writableStackTrace) {
-    super(message, cause, enableSuppression, writableStackTrace);
+  public void reserved(long expected, DrillBuf buf);
 
-  }
+  public void release(DrillBuf buf, long size);
+  public void releasePartial(DrillBuf buf, long size);
+  public long resetFragmentLimits();
+  public void close();
 
-  public OutOfMemoryRuntimeException(String message, Throwable cause) {
-    super(message, cause);
-
-  }
-
-  public OutOfMemoryRuntimeException(String message) {
-    super(message);
-
-  }
-
-  public OutOfMemoryRuntimeException(Throwable cause) {
-    super(cause);
-
-  }
+  public void setFragmentLimit(long add);
+  public long getFragmentLimit();
 }

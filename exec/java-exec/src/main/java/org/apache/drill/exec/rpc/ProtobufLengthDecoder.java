@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.drill.exec.memory.BufferAllocator;
 
 import com.google.protobuf.CodedInputStream;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 
 /**
  * Modified version of {@link io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder} that avoids bytebuf copy.
@@ -85,7 +85,7 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
           ByteBuf outBuf;
           try {
             outBuf = allocator.buffer(length);
-          } catch (OutOfMemoryRuntimeException e) {
+          } catch (OutOfMemoryException e) {
             logger.warn("Failure allocating buffer on incoming stream due to memory limits.  Current Allocation: {}.", allocator.getAllocatedMemory());
             in.resetReaderIndex();
             outOfMemoryHandler.handle();

@@ -20,7 +20,7 @@ package org.apache.drill.exec.record.selection;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
@@ -90,7 +90,7 @@ public class SelectionVector2 implements AutoCloseable {
   public boolean allocateNewSafe(int size) {
     try {
       allocateNew(size);
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       return false;
     }
     return true;

@@ -32,8 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.drill.exec.memory.Accountor;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.base.Preconditions;
@@ -58,8 +56,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   // to share code and to remove the hacky code here to use only
   // one of these types at a time and use null checks to find out
   // which.
-  private OperatorContext context;
-  private FragmentContext fContext;
   private BufferManager bufManager;
 
   public DrillBuf(BufferAllocator allocator, Accountor a, UnsafeDirectLittleEndian b) {
@@ -127,13 +123,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     this.allocator = allocator;
   }
 
-  public void setOperatorContext(OperatorContext c) {
-    this.context = c;
-  }
-  public void setFragmentContext(FragmentContext c) {
-    this.fContext = c;
-  }
-
   public void setBufferManager(BufferManager bufManager) {
     this.bufManager = bufManager;
   }
@@ -146,11 +135,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     if (this.capacity() >= size) {
       return this;
     }
-    if (context != null) {
-      return context.replace(this, size);
-    } else if(fContext != null) {
-      return fContext.replace(this, size);
-    } else if (bufManager != null) {
+
+    if (bufManager != null) {
       return bufManager.replace(this, size);
     } else {
       throw new UnsupportedOperationException("Realloc is only available in the context of an operator's UDFs");

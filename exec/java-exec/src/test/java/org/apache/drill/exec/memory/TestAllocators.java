@@ -170,7 +170,7 @@ public class TestAllocators {
     try {
       oContext31.getAllocator().buffer(4400000);
       fail("Fragment 3 should fail to allocate buffer");
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       // expected
     }
 
@@ -179,7 +179,7 @@ public class TestAllocators {
     try {
       DrillBuf b32 = oContext32.getAllocator().buffer(4400000);
       b32.release();
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       fail("Fragment 3 failed to allocate buffer");
     } finally {
       closeOp(oContext32);

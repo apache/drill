@@ -43,8 +43,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
@@ -247,7 +246,7 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
-    } catch (final OutOfMemoryException | OutOfMemoryRuntimeException e) {
+    } catch (final OutOfMemoryException e) {
       moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
     } catch (final ForemanException e) {
       moveToState(QueryState.FAILED, e);
@@ -407,7 +406,7 @@ public class Foreman implements Runnable {
     setupRootFragment(rootPlanFragment, work.getRootOperator());
 
     setupNonRootFragments(planFragments);
-    drillbitContext.getAllocator().resetFragmentLimits(); // TODO a global effect for this query?!?
+    drillbitContext.getAllocator().resetLimits(); // TODO a global effect for this query?!?
 
     moveToState(QueryState.RUNNING, null);
     logger.debug("Fragments running.");

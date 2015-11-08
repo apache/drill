@@ -151,7 +151,7 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public void allocateNew() throws OutOfMemoryRuntimeException {
+  public void allocateNew() throws OutOfMemoryException {
     internalMap.allocateNew();
     if (typeVector != null) {
       typeVector.zeroVector();

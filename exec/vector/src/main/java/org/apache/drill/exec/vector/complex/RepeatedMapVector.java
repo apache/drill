@@ -31,11 +31,11 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -108,7 +108,7 @@ public class RepeatedMapVector extends AbstractMapVector
       for (ValueVector v : getChildren()) {
         AllocationHelper.allocatePrecomputedChildCount(v, groupCount, 50, innerValueCount);
       }
-    } catch (OutOfMemoryRuntimeException e){
+    } catch (OutOfMemoryException e){
       clear();
       throw e;
     }
@@ -458,7 +458,7 @@ public class RepeatedMapVector extends AbstractMapVector
       ValueVector vector = getChild(fieldDef.getLastName());
       if (vector == null) {
         // if we arrive here, we didn't have a matching vector.
-        vector = TypeHelper.getNewVector(fieldDef, allocator);
+        vector = BasicTypeHelper.getNewVector(fieldDef, allocator);
         putChild(fieldDef.getLastName(), vector);
       }
       final int vectorLength = child.getBufferLength();

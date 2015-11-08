@@ -18,7 +18,6 @@
 package org.apache.drill.exec.exception;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.record.RecordBatch;
 
 /**
  * An exception that is used to signal that allocation request in bytes is greater than the maximum allowed by

@@ -22,7 +22,7 @@ import java.io.Closeable;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -58,9 +58,9 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 public interface ValueVector extends Closeable, Iterable<ValueVector> {
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
-   * @throws OutOfMemoryRuntimeException Thrown if no memory can be allocated.
+   * @throws OutOfMemoryException Thrown if no memory can be allocated.
    */
-  void allocateNew() throws OutOfMemoryRuntimeException;
+  void allocateNew() throws OutOfMemoryException;
 
   /**
    * Allocates new buffers. ValueVector implements logic to determine how much to allocate.

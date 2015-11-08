@@ -18,7 +18,7 @@
 
 import java.lang.Override;
 
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -284,7 +284,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   @Override
   public void allocateNew() {
     if(!allocateNewSafe()){
-      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+      throw new OutOfMemoryException("Failure while allocating buffer.");
     }
   }
 
@@ -314,7 +314,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data = allocator.buffer(requestedSize);
       allocationSizeInBytes = requestedSize;
       offsetVector.allocateNew();
-    } catch (OutOfMemoryRuntimeException e) {
+    } catch (OutOfMemoryException e) {
       clear();
       return false;
     }

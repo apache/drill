@@ -16,27 +16,25 @@
  * limitations under the License.
  */
 
-import org.apache.drill.exec.vector.complex.UnionVector;
-
 <@pp.dropOutputFile />
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/BasicTypeHelper.java" />
 
 <#include "/@includes/license.ftl" />
 
 package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
+import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.*;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.util.CallBack;
 
-public class TypeHelper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
+public class BasicTypeHelper {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicTypeHelper.class);
 
   private static final int WIDTH_ESTIMATE = 50;
 
@@ -70,31 +68,6 @@ public class TypeHelper {
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
 
-  public static SqlAccessor getSqlAccessor(ValueVector vector){
-    final MajorType type = vector.getField().getType();
-    switch(type.getMinorType()){
-    case UNION:
-      return new UnionSqlAccessor((UnionVector) vector);
-    <#list vv.types as type>
-    <#list type.minor as minor>
-    case ${minor.class?upper_case}:
-      switch (type.getMode()) {
-        case REQUIRED:
-          return new ${minor.class}Accessor((${minor.class}Vector) vector);
-        case OPTIONAL:
-          return new Nullable${minor.class}Accessor((Nullable${minor.class}Vector) vector);
-        case REPEATED:
-          return new GenericAccessor(vector);
-      }
-    </#list>
-    </#list>
-    case MAP:
-    case LIST:
-      return new GenericAccessor(vector);
-    }
-    throw new UnsupportedOperationException(buildErrorMessage("find sql accessor", type));
-  }
-  
   public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type, CallBack callback){
     SchemaPath child = parentPath.getChild(name);
     MaterializedField field = MaterializedField.create(child, type);
@@ -260,35 +233,6 @@ public class TypeHelper {
       throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
   }
   
-  public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
-    switch (type) {
-    case UNION:
-      return model._ref(UnionHolder.class);
-    case MAP:
-    case LIST:
-      return model._ref(ComplexHolder.class);
-      
-<#list vv.types as type>
-  <#list type.minor as minor>
-      case ${minor.class?upper_case}:
-        switch (mode) {
-          case REQUIRED:
-            return model._ref(${minor.class}Holder.class);
-          case OPTIONAL:
-            return model._ref(Nullable${minor.class}Holder.class);
-          case REPEATED:
-            return model._ref(Repeated${minor.class}Holder.class);
-        }
-  </#list>
-</#list>
-      case GENERIC_OBJECT:
-        return model._ref(ObjectHolder.class);
-      default:
-        break;
-      }
-      throw new UnsupportedOperationException(buildErrorMessage("get holder type", type, mode));
-  }
-
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
     return getNewVector(field, allocator, null);
   }
@@ -494,7 +438,7 @@ public class TypeHelper {
   }
 
   public static boolean isNull(ValueHolder holder) {
-    MajorType type = TypeHelper.getValueHolderType(holder);
+    MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
       <#list vv.types as type>
@@ -517,7 +461,7 @@ public class TypeHelper {
   }
 
   public static ValueHolder deNullify(ValueHolder holder) {
-    MajorType type = TypeHelper.getValueHolderType(holder);
+    MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
       <#list vv.types as type>
@@ -551,7 +495,7 @@ public class TypeHelper {
   }
 
   public static ValueHolder nullify(ValueHolder holder) {
-    MajorType type = TypeHelper.getValueHolderType(holder);
+    MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
       <#list vv.types as type>

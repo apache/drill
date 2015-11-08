@@ -17,9 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.ops;
 
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.memory.BufferAllocator;
 
 /**
  * Manages a list of {@link DrillBuf}s that can be reallocated as needed. Upon
@@ -35,47 +33,34 @@ import org.apache.drill.exec.memory.BufferAllocator;
  * the code depending on them is done executing (currently {@link FragmentContext}
  * and {@link QueryContext}.
  */
-public class BufferManager implements AutoCloseable {
-  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
-  private final BufferAllocator allocator;
+public interface BufferManager extends AutoCloseable {
 
-  // fragment context associated with this buffer manager, if the buffer
-  // manager is owned by another type, this can be null
-  private final FragmentContext fragmentContext;
+  /**
+   * Replace an old buffer with a new version at least of the provided size. Does not copy data.
+   *
+   * @param old
+   *          Old Buffer that the user is no longer going to use.
+   * @param newSize
+   *          Size of new replacement buffer.
+   * @return
+   */
+  public DrillBuf replace(DrillBuf old, int newSize);
 
-  public BufferManager(BufferAllocator allocator, FragmentContext fragmentContext) {
-    this.allocator = allocator;
-    this.fragmentContext = fragmentContext;
-  }
+  /**
+   * Get a managed buffer of indeterminate size.
+   *
+   * @return A buffer.
+   */
+  public DrillBuf getManagedBuffer();
 
-  @Override
-  public void close() throws Exception {
-    final Object[] mbuffers = ((LongObjectOpenHashMap<Object>) (Object) managedBuffers).values;
-    for (int i = 0; i < mbuffers.length; i++) {
-      if (managedBuffers.allocated[i]) {
-        ((DrillBuf) mbuffers[i]).release(1);
-      }
-    }
-    managedBuffers.clear();
-  }
+  /**
+   * Get a managed buffer of at least a certain size.
+   *
+   * @param size
+   *          The desired size
+   * @return A buffer
+   */
+  public DrillBuf getManagedBuffer(int size);
 
-  public DrillBuf replace(DrillBuf old, int newSize) {
-    if (managedBuffers.remove(old.memoryAddress()) == null) {
-      throw new IllegalStateException("Tried to remove unmanaged buffer.");
-    }
-    old.release(1);
-    return getManagedBuffer(newSize);
-  }
-
-  public DrillBuf getManagedBuffer() {
-    return getManagedBuffer(256);
-  }
-
-  public DrillBuf getManagedBuffer(int size) {
-    DrillBuf newBuf = allocator.buffer(size);
-    managedBuffers.put(newBuf.memoryAddress(), newBuf);
-    newBuf.setFragmentContext(fragmentContext);
-    newBuf.setBufferManager(this);
-    return newBuf;
-  }
+  public void close();
 }

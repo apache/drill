@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Collections;
 import java.util.Iterator;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ObjectArrays;
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
@@ -36,6 +35,9 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ObjectArrays;
 
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
 
@@ -185,7 +187,7 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     boolean created = false;
     if (vector == DEFAULT_DATA_VECTOR && descriptor.getType().getMinorType() != TypeProtos.MinorType.LATE) {
       final MaterializedField field = descriptor.withName(DATA_VECTOR_NAME).getField();
-      vector = TypeHelper.getNewVector(field, allocator);
+      vector = BasicTypeHelper.getNewVector(field, allocator);
       // returned vector must have the same field
       assert field.equals(vector.getField());
       getField().addChild(field);

@@ -138,7 +138,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   @Override
   public void allocateNew() {
     if(!allocateNewSafe()){
-      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+      throw new OutOfMemoryException("Failure while allocating buffer.");
     }
   }
 
@@ -201,7 +201,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     try {
       values.allocateNew(valueCount);
       bits.allocateNew(valueCount+1);
-    } catch(OutOfMemoryRuntimeException e) {
+    } catch(OutOfMemoryException e) {
       clear();
       throw e;
     }

@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.vector.complex.impl;
 
+import java.lang.reflect.Constructor;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.ValueVector;
@@ -30,8 +32,6 @@ import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
-
-import java.lang.reflect.Constructor;
 
 /**
  * This FieldWriter implementation delegates all FieldWriter API calls to an inner FieldWriter. This inner field writer
@@ -85,11 +85,13 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     state = State.SINGLE;
     vector = v;
     type = v.getField().getType().getMinorType();
-    Class writerClass = TypeHelper.getWriterImpl(v.getField().getType().getMinorType(), v.getField().getDataMode());
+    Class writerClass = BasicTypeHelper
+        .getWriterImpl(v.getField().getType().getMinorType(), v.getField().getDataMode());
     if (writerClass.equals(SingleListWriter.class)) {
       writerClass = UnionListWriter.class;
     }
-    Class vectorClass = TypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField().getDataMode());
+    Class vectorClass = BasicTypeHelper.getValueVectorClass(v.getField().getType().getMinorType(), v.getField()
+        .getDataMode());
     try {
       Constructor constructor = null;
       for (Constructor c : writerClass.getConstructors()) {

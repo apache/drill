@@ -17,28 +17,27 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.netty.buffer.DrillBuf;
-
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
-import org.apache.drill.exec.testing.ExecutionControls;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.work.WorkManager;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.work.WorkManager;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorContextImpl.class);
@@ -46,9 +45,9 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   private final BufferAllocator allocator;
   private final ExecutionControls executionControls;
   private boolean closed = false;
-  private PhysicalOperator popConfig;
-  private OperatorStats stats;
-  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
+  private final PhysicalOperator popConfig;
+  private final OperatorStats stats;
+  private final BufferManager manager;
   private final boolean applyFragmentLimit;
   private DrillFileSystem fs;
   private final ExecutorService executor;
@@ -65,6 +64,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     this.applyFragmentLimit=applyFragmentLimit;
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
+    this.manager = new BufferManagerImpl(allocator);
 
     OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
     stats = context.getStats().newOperatorStats(def, allocator);
@@ -76,28 +76,22 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     this.applyFragmentLimit=applyFragmentLimit;
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
+    this.manager = new BufferManagerImpl(allocator);
     this.stats     = stats;
     executionControls = context.getExecutionControls();
     executor = context.getDrillbitContext().getExecutor();
   }
 
   public DrillBuf replace(DrillBuf old, int newSize) {
-    if (managedBuffers.remove(old.memoryAddress()) == null) {
-      throw new IllegalStateException("Tried to remove unmanaged buffer.");
-    }
-    old.release();
-    return getManagedBuffer(newSize);
+    return manager.replace(old, newSize);
   }
 
   public DrillBuf getManagedBuffer() {
-    return getManagedBuffer(256);
+    return manager.getManagedBuffer();
   }
 
   public DrillBuf getManagedBuffer(int size) {
-    DrillBuf newBuf = allocator.buffer(size);
-    managedBuffers.put(newBuf.memoryAddress(), newBuf);
-    newBuf.setOperatorContext(this);
-    return newBuf;
+    return manager.getManagedBuffer(size);
   }
 
   public ExecutionControls getExecutionControls() {
@@ -123,13 +117,7 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
     }
     logger.debug("Closing context for {}", popConfig != null ? popConfig.getClass().getName() : null);
 
-    // release managed buffers.
-    Object[] buffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
-    for (int i =0; i < buffers.length; i++) {
-      if (managedBuffers.allocated[i]) {
-        ((DrillBuf)buffers[i]).release();
-      }
-    }
+    manager.close();
 
     if (allocator != null) {
       allocator.close();
