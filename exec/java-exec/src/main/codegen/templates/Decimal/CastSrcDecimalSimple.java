@@ -57,7 +57,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -102,7 +102,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int shiftOrder = 2;
 
         // Start shifting bits just after the first integer
-        int byteIndex = in.WIDTH - (org.apache.drill.exec.util.DecimalUtility.integerSize + 1);
+        int byteIndex = in.WIDTH - (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE + 1);
 
         while (byteIndex >= 0) {
 
@@ -159,7 +159,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 

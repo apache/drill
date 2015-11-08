@@ -53,7 +53,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     @Output ${type.to}Holder out;
 
     public void setup() {
-        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -124,14 +124,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          */
 
           /* Allocate a byte array */
-          int size = (((intermediate.length - 1) * org.apache.drill.exec.util.DecimalUtility.integerSize) + 1);
+          int size = (((intermediate.length - 1) * org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) + 1);
           byte[] intermediateBytes = new byte[size];
           java.nio.ByteBuffer wrapper = java.nio.ByteBuffer.wrap(intermediateBytes);
 
           wrapper.put((byte) intermediate[0]);
 
           for (int i = 1; i < intermediate.length; i++) {
-            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.drill.exec.util.DecimalUtility.integerSize).putInt(intermediate[i]).array());
+            wrapper.put(java.nio.ByteBuffer.allocate(org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE).putInt(intermediate[i]).array());
           }
 
           final int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
@@ -139,21 +139,21 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
           int shiftOrder = 2;
 
           // Start just after the last integer and shift bits to the right
-          index = size - (org.apache.drill.exec.util.DecimalUtility.integerSize+ 1);
+          index = size - (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE+ 1);
 
           while (index >= 0) {
 
               /* get the last bits that need to shifted to the next byte */
               byte shiftBits = (byte) ((intermediateBytes[index] & mask[maskIndex]) << (8 - shiftOrder));
 
-              int shiftOrder1 = ((index % org.apache.drill.exec.util.DecimalUtility.integerSize) == 0) ? shiftOrder - 2 : shiftOrder;
+              int shiftOrder1 = ((index % org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) == 0) ? shiftOrder - 2 : shiftOrder;
 
               /* transfer the bits from the left to the right */
               intermediateBytes[index + 1] = (byte) (((intermediateBytes[index + 1] & 0xFF) >>> (shiftOrder1)) | shiftBits);
 
               index--;
 
-              if ((index % org.apache.drill.exec.util.DecimalUtility.integerSize) == 0) {
+              if ((index % org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE) == 0) {
                   /* We are on a border */
                   shiftOrder += 2;
                   maskIndex++;

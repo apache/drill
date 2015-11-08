@@ -471,11 +471,12 @@
   </profiles>
 
   <build>
+  
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
-          <execution> <!-- copy all templates in the same location to compile them at once -->
+          <execution> <!-- copy all templates/data in the same location to compile them at once -->
             <id>copy-fmpp-resources</id>
             <phase>initialize</phase>
             <goals><goal>copy-resources</goal></goals>
@@ -492,12 +493,12 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Extract parser grammar template from calcite-core.jar and put 
-          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.8</version>
         <executions>
+        <!-- Extract parser grammar template from calcite-core.jar and put 
+          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
           <execution>
             <id>unpack-parser-template</id>
             <phase>initialize</phase>
@@ -517,8 +518,31 @@
               </artifactItems>
             </configuration>
           </execution>
+          
+        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
+          it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
+          <execution>
+            <id>unpack-vector-types</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.drill.exec</groupId>
+                  <artifactId>vector</artifactId>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <includes>codegen/data/ValueVectorTypes.tdd</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>          
         </executions>
       </plugin>
+
       <plugin> <!-- generate sources from fmpp -->
         <groupId>org.apache.drill.tools</groupId>
         <artifactId>drill-fmpp-maven-plugin</artifactId>
@@ -536,7 +560,7 @@
             <phase>generate-sources</phase>
             <goals><goal>generate</goal></goals>
             <configuration>
-              <config>src/main/codegen/config.fmpp</config>
+              <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
               <templates>${project.build.directory}/codegen/templates</templates>
             </configuration>

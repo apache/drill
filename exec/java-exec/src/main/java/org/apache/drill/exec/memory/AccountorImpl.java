@@ -207,6 +207,10 @@ public class AccountorImpl implements Accountor {
   }
 
   private void addLimitConsumer(LimitConsumer c) {
+    if (c == null) {
+      return;
+    }
+
     if (parent != null){
       parent.addLimitConsumer(c);
     }else {
@@ -229,6 +233,10 @@ public class AccountorImpl implements Accountor {
   }
 
   private void removeLimitConsumer(LimitConsumer c) {
+    if (c == null) {
+      return;
+    }
+
     if (parent != null){
       if (parent.parent==null){
         // only fragment level allocators will have the fragment context saved
@@ -308,8 +316,7 @@ public class AccountorImpl implements Accountor {
 
   public void close() {
     // remove the fragment context and reset fragment limits whenever an allocator closes
-    if(parent!=null && parent.parent==null) {
-
+    if (parent != null && parent.parent == null && limitConsumer != null) {
       logger.debug("Fragment " + limitConsumer.getIdentifier() + "  accountor being closed");
       removeLimitConsumer(limitConsumer);
     }

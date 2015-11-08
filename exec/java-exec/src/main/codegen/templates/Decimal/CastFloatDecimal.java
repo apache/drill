@@ -60,7 +60,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void setup() {
         <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
         buffer = buffer.reallocIfNeeded(size);
         </#if>
     }
