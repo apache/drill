@@ -41,9 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.OperatorStats;
-import org.apache.drill.exec.util.AssertionUtil;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Seekable;
@@ -310,7 +308,7 @@ final class TextInput {
       throw StreamFinishedPseudoException.INSTANCE;
     }
 
-    if(AssertionUtil.BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buffer.checkBytes(bufferPtr - 1, bufferPtr);
     }
 

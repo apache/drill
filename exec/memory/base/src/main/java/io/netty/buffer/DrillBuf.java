@@ -30,16 +30,16 @@ import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.exec.memory.Accountor;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
-import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.base.Preconditions;
 
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
 
   private final ByteBuf b;
   private final long addr;

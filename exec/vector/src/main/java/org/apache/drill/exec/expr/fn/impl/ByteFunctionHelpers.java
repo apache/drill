@@ -21,7 +21,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
-import org.apache.drill.exec.util.AssertionUtil;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.util.DecimalUtility;
 
 import com.google.common.primitives.UnsignedLongs;
@@ -29,7 +29,7 @@ import com.google.common.primitives.UnsignedLongs;
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
 
   /**
    * Helper function to check for equality of bytes in two DrillBuffers

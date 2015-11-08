@@ -20,20 +20,18 @@ package org.apache.drill.exec.util;
 public class AssertionUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AssertionUtil.class);
 
-
   public static final boolean ASSERT_ENABLED;
-  public static final boolean BOUNDS_CHECKING_ENABLED;
 
   static{
     boolean isAssertEnabled = false;
     assert isAssertEnabled = true;
     ASSERT_ENABLED = isAssertEnabled;
-    BOUNDS_CHECKING_ENABLED = ASSERT_ENABLED || !"true".equals(System.getProperty("drill.enable_unsafe_memory_access"));
   }
 
   public static boolean isAssertionsEnabled(){
     return ASSERT_ENABLED;
   }
 
-
+  private AssertionUtil() {
+  }
 }
