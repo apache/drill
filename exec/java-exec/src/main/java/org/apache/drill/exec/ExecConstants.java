@@ -26,8 +26,8 @@ import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValid
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
-import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
+import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -49,9 +49,6 @@ public interface ExecConstants {
   public static final String USER_RPC_TIMEOUT = "drill.exec.rpc.user.timeout";
   public static final String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
   public static final String USE_IP_ADDRESS = "drill.exec.rpc.use.ip";
-  public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.exec.metrics.jmx.enabled";
-  public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.exec.metrics.log.enabled";
-  public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.exec.metrics.log.interval";
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
@@ -75,7 +72,6 @@ public interface ExecConstants {
   public static final String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   public static final String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
-  public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
@@ -91,7 +87,6 @@ public interface ExecConstants {
   public static final String USER_AUTHENTICATION_ENABLED = "drill.exec.security.user.auth.enabled";
   public static final String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
   public static final String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
-  public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   public static final String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";
@@ -104,11 +99,8 @@ public interface ExecConstants {
   public static final String RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS =
       "drill.exec.debug.return_error_for_failure_in_cancelled_fragments";
 
-  /** Fragment memory planning */
-  public static final String ENABLE_FRAGMENT_MEMORY_LIMIT = "drill.exec.memory.enable_frag_limit";
-  public static final String FRAGMENT_MEM_OVERCOMMIT_FACTOR = "drill.exec.memory.frag_mem_overcommit_factor";
 
-  public static final String USE_LINUX_EPOLL = "drill.exec.enable-epoll";
+
 
   public static final String CLIENT_SUPPORT_COMPLEX_TYPES = "drill.client.supports-complex-types";
 

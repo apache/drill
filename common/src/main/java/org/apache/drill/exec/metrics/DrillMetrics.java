@@ -22,7 +22,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Metric;
@@ -37,6 +36,11 @@ import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 
 public class DrillMetrics {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetrics.class);
+
+  public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.exec.metrics.jmx.enabled";
+  public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.exec.metrics.log.enabled";
+  public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.exec.metrics.log.interval";
+
   static final DrillConfig config = DrillConfig.create();
 
   private DrillMetrics() {
@@ -62,7 +66,7 @@ public class DrillMetrics {
     }
 
     private static JmxReporter getJmxReporter() {
-      if (config.getBoolean(ExecConstants.METRICS_JMX_OUTPUT_ENABLED)) {
+      if (config.getBoolean(METRICS_JMX_OUTPUT_ENABLED)) {
         JmxReporter reporter = JmxReporter.forRegistry(getInstance()).build();
         reporter.start();
 
@@ -73,10 +77,10 @@ public class DrillMetrics {
     }
 
     private static Slf4jReporter getLogReporter() {
-      if (config.getBoolean(ExecConstants.METRICS_LOG_OUTPUT_ENABLED)) {
+      if (config.getBoolean(METRICS_LOG_OUTPUT_ENABLED)) {
         Slf4jReporter reporter = Slf4jReporter.forRegistry(getInstance()).outputTo(logger)
             .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS).build();
-        reporter.start(config.getInt(ExecConstants.METRICS_LOG_OUTPUT_INTERVAL), TimeUnit.SECONDS);
+        reporter.start(config.getInt(METRICS_LOG_OUTPUT_INTERVAL), TimeUnit.SECONDS);
 
         return reporter;
       } else {

@@ -16,27 +16,15 @@
  * limitations under the License.
  */
 package org.apache.drill.common.exceptions;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.logical.data.LogicalOperatorBase;
 
 public class LogicalPlanParsingException extends DrillRuntimeException{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalPlanParsingException.class);
 
-  private Set<ConstraintViolation<LogicalOperatorBase>> violations;
   private LogicalOperator operator;
 
   public LogicalPlanParsingException() {
     super();
-  }
-
-  public LogicalPlanParsingException(LogicalOperator operator, Set<ConstraintViolation<LogicalOperatorBase>> violations){
-    super(getErrorMessage(operator, violations));
-    this.operator = operator;
-    this.violations = violations;
   }
 
   public LogicalPlanParsingException(String message, Throwable cause, boolean enableSuppression,
@@ -56,20 +44,5 @@ public class LogicalPlanParsingException extends DrillRuntimeException{
     super(cause);
   }
 
-
-  private static String getErrorMessage(LogicalOperator operator, Set<ConstraintViolation<LogicalOperatorBase>> violations){
-    StringBuffer sb = new StringBuffer();
-    sb.append("Failure while attempting to set up operator of type ");
-    sb.append(operator.getClass().getCanonicalName());
-    sb.append(".  Constraints violated:\n");
-    for(ConstraintViolation<LogicalOperatorBase> v : violations){
-      sb.append("\t");
-      sb.append(v.getMessage());
-      sb.append(", Invalid value: ");
-      sb.append(v.getInvalidValue());
-      sb.append("\n");
-    }
-    return sb.toString();
-  }
 
 }

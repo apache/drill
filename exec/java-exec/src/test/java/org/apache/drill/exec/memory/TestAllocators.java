@@ -28,7 +28,6 @@ import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -45,18 +44,19 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestAllocators {
+public class TestAllocators extends DrillTest {
 
   private static final Properties TEST_CONFIGURATIONS = new Properties() {
     {
-      put(ExecConstants.TOP_LEVEL_MAX_ALLOC, "14000000");
-      put(ExecConstants.ENABLE_FRAGMENT_MEMORY_LIMIT, "true");
-      put(ExecConstants.FRAGMENT_MEM_OVERCOMMIT_FACTOR, "1.1");
+      put(TopLevelAllocator.TOP_LEVEL_MAX_ALLOC, "14000000");
+      put(AccountorImpl.ENABLE_FRAGMENT_MEMORY_LIMIT, "true");
+      put(AccountorImpl.FRAGMENT_MEM_OVERCOMMIT_FACTOR, "1.1");
     }
   };
 
@@ -66,8 +66,8 @@ public class TestAllocators {
   public void testTransfer() throws Exception {
     final Properties props = new Properties() {
       {
-        put(ExecConstants.TOP_LEVEL_MAX_ALLOC, "1000000");
-        put(ExecConstants.ERROR_ON_MEMORY_LEAK, "true");
+        put(TopLevelAllocator.TOP_LEVEL_MAX_ALLOC, "1000000");
+        put(TopLevelAllocator.ERROR_ON_MEMORY_LEAK, "true");
       }
     };
     final DrillConfig config = DrillConfig.create(props);

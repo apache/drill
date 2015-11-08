@@ -28,18 +28,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.metrics.DrillMetrics;
-import org.apache.drill.exec.testing.ControlsInjector;
-import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.exec.util.Pointer;
 
 public class TopLevelAllocator implements BufferAllocator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
-  private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(TopLevelAllocator.class);
   public static final String CHILD_BUFFER_INJECTION_SITE = "child.buffer";
+
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
+  public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
 
   public static long MAXIMUM_DIRECT_MEMORY;
 
@@ -62,8 +61,8 @@ public class TopLevelAllocator implements BufferAllocator {
   }
 
   TopLevelAllocator(DrillConfig config) {
-    this(config, Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)),
-        config.getBoolean(ExecConstants.ERROR_ON_MEMORY_LEAK)
+    this(config, Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(TOP_LEVEL_MAX_ALLOC)),
+        config.getBoolean(ERROR_ON_MEMORY_LEAK)
         );
   }
 

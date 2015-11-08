@@ -18,37 +18,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <artifactId>exec-parent</artifactId>
+    <groupId>org.apache.drill.exec</groupId>
     <version>1.3.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.exec</groupId>
-  <artifactId>exec-parent</artifactId>
+  <groupId>org.apache.drill.memory</groupId>
+  <artifactId>memory-parent</artifactId>
   <packaging>pom</packaging>
-  <name>exec/Parent Pom</name>
-
-
-  <profiles>
-    <profile>
-      <id>build-jdbc-all</id>
-      <activation>
-        <property>
-          <name>!skipJdbcAll</name>
-        </property>
-      </activation>
-      <modules>
-        <module>jdbc-all</module>
-      </modules>
-    </profile>
-  </profiles>
-
+  <name>exec/memory/Parent Pom</name>
 
   <modules>
-    <module>memory</module>
-    <module>rpc</module>
-    <module>vector</module>
-    <module>java-exec</module>
-    <module>jdbc</module>
+    <module>base</module>
+    <module>impl</module>
   </modules>
 </project>

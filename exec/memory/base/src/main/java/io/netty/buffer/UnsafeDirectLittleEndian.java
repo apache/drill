@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.drill.exec.util.AssertionUtil;
 
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
-    private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
+  private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
   private final AbstractByteBuf wrapped;
   private final long memoryAddress;
   private AtomicLong bufferCount;

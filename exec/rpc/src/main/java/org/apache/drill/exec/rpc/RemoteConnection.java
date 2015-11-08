@@ -27,7 +27,6 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 
 public abstract class RemoteConnection implements ConnectionThrottle, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
