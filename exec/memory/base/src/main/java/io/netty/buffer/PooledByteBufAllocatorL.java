@@ -23,9 +23,6 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.util.AssertionUtil;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Metric;
@@ -142,7 +139,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
         }
 
         normalBuffersHist.update(buf.capacity());
-        if (AssertionUtil.ASSERT_ENABLED) {
+        if (ASSERT_ENABLED) {
           normalBufferSize.addAndGet(buf.capacity());
           normalBufferCount.incrementAndGet();
         }
@@ -228,7 +225,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
       normalBufferCount.set(0);
       hugeBufferSize.set(0);
       normalBufferSize.set(0);
-      throw new DrillRuntimeException(buf.toString());
+      throw new IllegalStateException(buf.toString());
     }
   }
 
@@ -253,5 +250,13 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
     buf.append(this.normalBufferSize.get());
     buf.append(" bytes.");
     return buf.toString();
+  }
+
+  public static final boolean ASSERT_ENABLED;
+
+  static {
+    boolean isAssertEnabled = false;
+    assert isAssertEnabled = true;
+    ASSERT_ENABLED = isAssertEnabled;
   }
 }

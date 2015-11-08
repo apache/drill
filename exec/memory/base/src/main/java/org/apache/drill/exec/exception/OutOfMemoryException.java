@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.exception;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 
-public class OutOfMemoryException extends DrillRuntimeException {
+public class OutOfMemoryException extends RuntimeException {
   private static final long serialVersionUID = -6858052345185793382L;
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutOfMemoryException.class);
