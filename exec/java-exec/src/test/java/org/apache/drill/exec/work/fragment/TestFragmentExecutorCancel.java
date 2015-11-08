@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import static org.junit.Assert.fail;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 
 /**
@@ -44,7 +46,7 @@ public class TestFragmentExecutorCancel extends BaseTestQuery {
       + "\"desc\":\"" + "next-allocate" + "\","
       + "\"nSkip\":0,"
       + "\"nFire\":1,"
-      + "\"exceptionClass\":\"" + "org.apache.drill.exec.memory.OutOfMemoryException" + "\""
+        + "\"exceptionClass\":\"" + OutOfMemoryException.class.getName() + "\""
       + "}]}";
     ControlsInjectionUtil.setControls(client, controlsString);
 

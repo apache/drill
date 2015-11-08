@@ -37,9 +37,9 @@ import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 public class DrillMetrics {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetrics.class);
 
-  public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.exec.metrics.jmx.enabled";
-  public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.exec.metrics.log.enabled";
-  public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.exec.metrics.log.interval";
+  public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.metrics.jmx.enabled";
+  public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.metrics.log.enabled";
+  public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.metrics.log.interval";
 
   static final DrillConfig config = DrillConfig.create();
 

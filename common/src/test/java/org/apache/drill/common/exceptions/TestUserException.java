@@ -26,7 +26,8 @@ import org.junit.Test;
  * Test various use cases when creating user exceptions
  */
 public class TestUserException {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUserException.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger("--ignore.as.this.is.for.testing.exceptions--");
 
   private Exception wrap(UserException uex, int numWraps) {
     Exception ex = uex;

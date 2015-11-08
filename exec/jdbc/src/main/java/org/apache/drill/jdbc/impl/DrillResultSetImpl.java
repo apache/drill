@@ -56,18 +56,13 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
-import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 import org.apache.drill.jdbc.SchemaChangeListener;
-
-import static org.slf4j.LoggerFactory.getLogger;
-
-import org.slf4j.Logger;
 
 import com.google.common.collect.Queues;
 
@@ -1935,7 +1930,8 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   // ResultsListener:
 
   static class ResultsListener implements UserResultsListener {
-    private static final Logger logger = getLogger( ResultsListener.class );
+    private static final org.slf4j.Logger logger =
+        org.slf4j.LoggerFactory.getLogger(ResultsListener.class);
 
     private static volatile int nextInstanceId = 1;
 

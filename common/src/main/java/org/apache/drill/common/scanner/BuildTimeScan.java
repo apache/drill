@@ -87,6 +87,15 @@ public class BuildTimeScan {
       }
     }
     if (result != null) {
+      if (logger.isInfoEnabled()) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(format("Loaded prescanned packages %s from locations:\n", result.getScannedPackages()));
+        for (URL u : preScanned) {
+          sb.append('\t');
+          sb.append(u.toExternalForm());
+          sb.append('\n');
+        }
+      }
       logger.info(format("Loaded prescanned packages %s from locations %s", result.getScannedPackages(), preScanned));
       return result;
     } else {

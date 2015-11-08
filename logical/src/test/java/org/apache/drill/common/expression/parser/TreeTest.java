@@ -29,6 +29,7 @@ import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
 public class TreeTest extends DrillTest {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TreeTest.class);
 
   @Test
   public void testIfWithCase() throws Exception{
@@ -103,11 +104,11 @@ public class TreeTest extends DrillTest {
    * @throws IOException
    */
   private void testExpressionParsing(String expr) throws RecognitionException, IOException{
-    System.out.println("-----" + expr + "-----");
+    logger.debug("-----" + expr + "-----");
     LogicalExpression e = parseExpression(expr);
 
     String newStringExpr = serializeExpression(e);
-    System.out.println(newStringExpr);
+    logger.debug(newStringExpr);
     LogicalExpression e2 = parseExpression(newStringExpr);
     //Assert.assertEquals(e, e2);
 
