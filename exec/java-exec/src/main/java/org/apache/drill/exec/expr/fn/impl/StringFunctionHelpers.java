@@ -22,7 +22,7 @@ import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
 
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.util.AssertionUtil;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.joda.time.chrono.ISOChronology;
 
 import com.google.common.base.Charsets;
@@ -30,7 +30,7 @@ import com.google.common.base.Charsets;
 public class StringFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
 
   static final int RADIX = 10;
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
