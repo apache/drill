@@ -178,6 +178,10 @@ public class WorkspaceSchemaFactory {
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
   }
 
+  /**
+   * Describes the options for a format plugin
+   * extracted from the FormatPluginConfig subclass
+   */
   private static class OptionsDescriptor {
     private final Class<? extends FormatPluginConfig> pluginConfigClass;
     private final String typeName;
@@ -234,38 +238,59 @@ public class WorkspaceSchemaFactory {
           || !typeName.equalsIgnoreCase((String) typeParam)) {
         badInput(t);
       }
+      FormatPluginConfig config;
       try {
-        FormatPluginConfig config = pluginConfigClass.newInstance();
-        for (int i = 1; i < t.params.size(); i++) {
-          Object param = t.params.get(i);
-          if (param == null)
-            continue;
-          TableParamDef paramDef = t.sig.params.get(i);
-          TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);
-          if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
-            badInput(t);
-          }
-          if (!paramDef.type.isInstance(param)) {
-            throw new IllegalArgumentException(String.format("param %s of type %s does not accept %s of type %s",
-                paramDef.name, paramDef.type, param, param.getClass().getName()));
-          }
+        config = pluginConfigClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw UserException.parseError(e)
+            .message(
+                "configuration for format of type %s can not be created (class: %s)",
+                this.typeName, pluginConfigClass.getName())
+            .addContext("table", t.sig.name)
+            .build(logger);
+      }
+      for (int i = 1; i < t.params.size(); i++) {
+        Object param = t.params.get(i);
+        if (param == null)
+          continue;
+        TableParamDef paramDef = t.sig.params.get(i);
+        TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);
+        if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
+          badInput(t);
+        }
+        if (!paramDef.type.isInstance(param)) {
+          throw UserException.parseError()
+              .message(
+                  "param %s of type %s does not accept %s of type %s",
+                  paramDef.name, paramDef.type, param, param.getClass().getName())
+              .addContext("table", t.sig.name)
+              .build(logger);
+        }
+        try {
           Field field = pluginConfigClass.getField(paramDef.name);
           field.setAccessible(true);
           if (field.getType() == char.class && param instanceof String) {
             String stringParam = (String) param;
             if (stringParam.length() != 1) {
-              throw new IllegalArgumentException("Expected character but was String: " + stringParam);
+              throw UserException.parseError()
+                .message("Expected character but was String: %s", stringParam)
+                .addContext("table", t.sig.name)
+                .addContext("parameter", paramDef.name)
+                .build(logger);
             }
             field.set(config, stringParam.charAt(0));
           } else {
             field.set(config, param);
           }
+        } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
+          throw UserException.parseError(e)
+              .message("can not set parameter %s", paramDef.name)
+              .addContext("table", t.sig.name)
+              .addContext("parameter", paramDef.name)
+              .build(logger);
         }
-        return config;
-      } catch (InstantiationException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-        // TODO
-        throw new RuntimeException(e);
       }
+      return config;
     }
 
     private void badInput(TableInstance t) {
@@ -308,17 +333,26 @@ public class WorkspaceSchemaFactory {
 
     public FormatPluginConfig eval(TableInstance t) {
       if (!t.sig.params.get(0).name.equals("type")) {
-        throw new IllegalArgumentException("unknown first param for " + t);
+        throw UserException.parseError()
+          .message("unknown first param for %s", t.sig)
+          .addContext("table", t.sig.name)
+          .build(logger);
       }
       String type = (String)t.params.get(0);
       if (type == null) {
-        throw new IllegalArgumentException("type param must be present but was null: " + t);
+        throw UserException.parseError()
+            .message("type param must be present but was null")
+            .addContext("table", t.sig.name)
+            .build(logger);
       }
       OptionsDescriptor optionsDescriptor = optionsByTypeName.get(type.toLowerCase());
       if (optionsDescriptor == null) {
-        throw new IllegalArgumentException(String.format(
-            "unknown type %s, expected one of %s",
-            type, optionsByTypeName.keySet()));
+        throw UserException.parseError()
+            .message(
+                "unknown type %s, expected one of %s",
+                type, optionsByTypeName.keySet())
+            .addContext("table", t.sig.name)
+            .build(logger);
       }
       return optionsDescriptor.eval(t);
     }
@@ -380,9 +414,12 @@ public class WorkspaceSchemaFactory {
     public TableInstance(TableSignature sig, List<Object> params) {
       super();
       if (params.size() != sig.params.size()) {
-        throw new IllegalArgumentException(format(
-            "should have as many params (%d) as signature (%d)",
-            params.size(), sig.params.size()));
+        throw UserException.parseError()
+            .message(
+                "should have as many params (%d) as signature (%d)",
+                params.size(), sig.params.size())
+            .addContext("table", sig.name)
+            .build(logger);
       }
       this.sig = sig;
       this.params = params;
