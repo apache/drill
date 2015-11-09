@@ -56,7 +56,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void setup() {
         <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38")>
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
         buffer = buffer.reallocIfNeeded(size);
         </#if>
 

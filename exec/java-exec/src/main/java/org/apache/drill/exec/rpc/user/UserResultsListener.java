@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.user;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 
 public interface UserResultsListener {
 

@@ -1914,6 +1914,7 @@
     <module>tools</module>
     <module>protocol</module>
     <module>common</module>
+    <module>logical</module>
     <module>exec</module>
     <module>distribution</module>
   </modules>

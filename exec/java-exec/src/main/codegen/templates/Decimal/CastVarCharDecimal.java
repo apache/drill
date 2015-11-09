@@ -241,7 +241,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
     </#if>
 
     public void setup() {
-        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.INTEGER_SIZE);
         buffer = buffer.reallocIfNeeded(size);
     }
 

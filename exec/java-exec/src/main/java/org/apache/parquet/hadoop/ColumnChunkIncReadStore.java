@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.store.parquet.ColumnDataReader;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -217,7 +217,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
         }
         in.close();
         return null;
-      } catch (OutOfMemoryRuntimeException e) {
+      } catch (OutOfMemoryException e) {
         throw e; // throw as it is
       } catch (Exception e) {
         throw new DrillRuntimeException("Error reading page." +

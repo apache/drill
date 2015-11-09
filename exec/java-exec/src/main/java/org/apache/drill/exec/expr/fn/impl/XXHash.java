@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.util.AssertionUtil;
-
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
+
+import org.apache.drill.exec.memory.BoundsChecking;
 
 import com.google.common.primitives.UnsignedLongs;
 
 public final class XXHash {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = AssertionUtil.BOUNDS_CHECKING_ENABLED;
+  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
 
   static final long PRIME64_1 = UnsignedLongs.decode("11400714785074694791");
   static final long PRIME64_2 = UnsignedLongs.decode("14029467366897019727");

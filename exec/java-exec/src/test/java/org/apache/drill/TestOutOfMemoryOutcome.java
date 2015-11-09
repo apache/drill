@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.testing.ControlsInjectionUtil;
@@ -44,7 +45,7 @@ public class TestOutOfMemoryOutcome extends BaseTestQuery{
       + "\"desc\":\"" + "next-allocate" + "\","
       + "\"nSkip\":0,"
       + "\"nFire\":1,"
-      + "\"exceptionClass\":\"" + "org.apache.drill.exec.memory.OutOfMemoryException" + "\""
+        + "\"exceptionClass\":\"" + OutOfMemoryException.class.getName() + "\""
       + "}]}";
     ControlsInjectionUtil.setControls(client, controlsString);
 

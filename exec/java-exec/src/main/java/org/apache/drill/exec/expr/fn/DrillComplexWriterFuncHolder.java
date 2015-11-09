@@ -22,7 +22,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
-import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
+import org.apache.drill.exec.record.VectorAccessibleComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.sun.codemodel.JBlock;
@@ -54,13 +54,13 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder{
 
     JVar complexWriter = g.declareClassField("complexWriter", g.getModel()._ref(ComplexWriter.class));
 
-    JClass cwClass = g.getModel().ref(ComplexWriterImpl.class);
 
     JInvocation container = g.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
 
     //Default name is "col", if not passed in a reference name for the output vector.
     String refName = ref == null? "col" : ref.getRootSegment().getPath();
 
+    JClass cwClass = g.getModel().ref(VectorAccessibleComplexWriter.class);
     g.getSetupBlock().assign(complexWriter, cwClass.staticInvoke("getWriter").arg(refName).arg(container));
 
     JClass projBatchClass = g.getModel().ref(ProjectRecordBatch.class);

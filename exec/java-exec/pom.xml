@@ -119,12 +119,6 @@
       <version>2.4.3</version>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-transport-native-epoll</artifactId>
-      <classifier>linux-x86_64</classifier>
-      <version>4.0.27.Final</version>
-    </dependency>
-    <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
       <artifactId>jersey-mvc-freemarker</artifactId>
       <version>2.8</version>
@@ -264,16 +258,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-servlets</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <version>1</version>
@@ -286,6 +270,26 @@
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-logical</artifactId>
+      <version>${project.version}</version>
+    </dependency>    
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-rpc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.memory</groupId>
+      <artifactId>drill-memory-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>vector</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- <dependency> -->
@@ -466,11 +470,12 @@
   </profiles>
 
   <build>
+  
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
-          <execution> <!-- copy all templates in the same location to compile them at once -->
+          <execution> <!-- copy all templates/data in the same location to compile them at once -->
             <id>copy-fmpp-resources</id>
             <phase>initialize</phase>
             <goals><goal>copy-resources</goal></goals>
@@ -487,12 +492,12 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Extract parser grammar template from calcite-core.jar and put 
-          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.8</version>
         <executions>
+        <!-- Extract parser grammar template from calcite-core.jar and put 
+          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
           <execution>
             <id>unpack-parser-template</id>
             <phase>initialize</phase>
@@ -512,8 +517,31 @@
               </artifactItems>
             </configuration>
           </execution>
+          
+        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put 
+          it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
+          <execution>
+            <id>unpack-vector-types</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.drill.exec</groupId>
+                  <artifactId>vector</artifactId>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <includes>codegen/data/ValueVectorTypes.tdd</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>          
         </executions>
       </plugin>
+
       <plugin> <!-- generate sources from fmpp -->
         <groupId>org.apache.drill.tools</groupId>
         <artifactId>drill-fmpp-maven-plugin</artifactId>
@@ -531,7 +559,7 @@
             <phase>generate-sources</phase>
             <goals><goal>generate</goal></goals>
             <configuration>
-              <config>src/main/codegen/config.fmpp</config>
+              <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
               <templates>${project.build.directory}/codegen/templates</templates>
             </configuration>

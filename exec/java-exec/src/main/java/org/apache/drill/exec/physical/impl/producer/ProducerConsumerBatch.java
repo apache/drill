@@ -22,9 +22,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.ProducerConsumer;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -81,7 +81,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     } else if (wrapper.failed) {
       return IterOutcome.STOP;
     } else if (wrapper.outOfMemory) {
-      throw new OutOfMemoryRuntimeException();
+      throw new OutOfMemoryException();
     }
 
     recordCount = wrapper.batch.getRecordCount();
@@ -149,7 +149,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
               throw new UnsupportedOperationException();
           }
         }
-      } catch (final OutOfMemoryRuntimeException e) {
+      } catch (final OutOfMemoryException e) {
         try {
           queue.putFirst(RecordBatchDataWrapper.outOfMemory());
         } catch (final InterruptedException ex) {

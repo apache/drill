@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -45,8 +47,6 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.OutOfMemoryException;
-import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -71,7 +71,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.calcite.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
@@ -145,7 +144,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SPILL_THRESHOLD = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD);
     dirs = Iterators.cycle(config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS));
     copierAllocator = oContext.getAllocator().getChildAllocator(
-        context, PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION, true);
+        context.asLimitConsumer(), PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION, true);
     FragmentHandle handle = context.getHandle();
     fileName = String.format("%s/major_fragment_%s/minor_fragment_%s/operator_%s", QueryIdHelper.getQueryId(handle.getQueryId()),
         handle.getMajorFragmentId(), handle.getMinorFragmentId(), popConfig.getOperatorId());
@@ -321,7 +320,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             } catch(InterruptedException e) {
               return IterOutcome.STOP;
             } catch (OutOfMemoryException e) {
-              throw new OutOfMemoryRuntimeException(e);
+              throw new OutOfMemoryException(e);
             }
           }
           int count = sv2.getCount();
@@ -343,7 +342,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 // current memory used is more than 95% of memory usage limit of this operator
                 (totalSizeInMemory > .95 * popConfig.getMaxAllocation()) ||
                 // current memory used is more than 95% of memory usage limit of this fragment
-                (totalSizeInMemory > .95 * oContext.getAllocator().getFragmentLimit()) ||
+                (totalSizeInMemory > .95 * oContext.getAllocator().getLimit()) ||
                 // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
                 // since the last spill exceed the defined limit
                 (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {

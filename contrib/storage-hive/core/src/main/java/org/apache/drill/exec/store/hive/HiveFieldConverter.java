@@ -191,7 +191,7 @@ public abstract class HiveFieldConverter {
     public Decimal28(int precision, int scale, FragmentContext context) {
       holder.scale = scale;
       holder.precision = precision;
-      holder.buffer = context.getManagedBuffer(Decimal28SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.buffer = context.getManagedBuffer(Decimal28SparseHolder.nDecimalDigits * DecimalUtility.INTEGER_SIZE);
       holder.start = 0;
     }
 
@@ -210,7 +210,7 @@ public abstract class HiveFieldConverter {
     public Decimal38(int precision, int scale, FragmentContext context) {
       holder.scale = scale;
       holder.precision = precision;
-      holder.buffer = context.getManagedBuffer(Decimal38SparseHolder.nDecimalDigits * DecimalUtility.integerSize);
+      holder.buffer = context.getManagedBuffer(Decimal38SparseHolder.nDecimalDigits * DecimalUtility.INTEGER_SIZE);
       holder.start = 0;
     }
 

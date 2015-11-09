@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc.impl;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -53,16 +55,13 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
+import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
-import org.apache.drill.jdbc.DrillConnection;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 import org.apache.drill.jdbc.SchemaChangeListener;
-
-import static org.slf4j.LoggerFactory.getLogger;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Queues;
