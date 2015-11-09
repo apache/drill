@@ -36,7 +36,7 @@ public class TestSelectWithOption extends BaseTestQuery {
   public void testText() throws Exception {
     File input = new File("target/" + this.getClass().getName() + ".csv");
     String query = "select columns from table(dfs.`${WORKING_PATH}/" + input.getPath() +
-        "`(type => 'TEXT', fieldDelimiter => '%s'))";
+        "`(type => 'TeXT', fieldDelimiter => '%s'))";
     String queryComma = format(query, ",");
     String queryPipe = format(query, "|");
     System.out.println(queryComma);
