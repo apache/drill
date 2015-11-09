@@ -177,6 +177,7 @@
             <exclude>**/*.md</exclude>
             <exclude>**/*.eps</exclude>
             <exclude>**/*.json</exclude>
+            <exclude>**/*.seq</exclude>
             <exclude>**/*.parquet</exclude>
             <exclude>**/*.sql</exclude>
             <exclude>**/git.properties</exclude>

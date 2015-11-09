@@ -19,6 +19,8 @@ package org.apache.drill.exec.rpc.user;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 
 public class QueryDataBatch {
@@ -26,6 +28,7 @@ public class QueryDataBatch {
 
   private final QueryData header;
   private final DrillBuf data;
+  private final AtomicBoolean released = new AtomicBoolean(false);
 
   public QueryDataBatch(QueryData header, DrillBuf data) {
     // logger.debug("New Result Batch with header {} and data {}", header, data);
@@ -49,6 +52,10 @@ public class QueryDataBatch {
   }
 
   public void release() {
+    if (!released.compareAndSet(false, true)) {
+      throw new IllegalStateException("QueryDataBatch was released twice.");
+    }
+
     if (data != null) {
       data.release(1);
     }
