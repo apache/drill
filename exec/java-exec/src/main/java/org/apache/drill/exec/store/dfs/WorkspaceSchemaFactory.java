@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.dfs;
 
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
@@ -27,8 +26,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -182,12 +183,12 @@ public class WorkspaceSchemaFactory {
    * Describes the options for a format plugin
    * extracted from the FormatPluginConfig subclass
    */
-  private static class OptionsDescriptor {
-    private final Class<? extends FormatPluginConfig> pluginConfigClass;
-    private final String typeName;
+  static final class OptionsDescriptor {
+    final Class<? extends FormatPluginConfig> pluginConfigClass;
+    final String typeName;
     private final Map<String, TableParamDef> functionParamsByName;
 
-    public OptionsDescriptor(Class<? extends FormatPluginConfig> pluginConfigClass) {
+    OptionsDescriptor(Class<? extends FormatPluginConfig> pluginConfigClass) {
       this.pluginConfigClass = pluginConfigClass;
       Map<String, TableParamDef> paramsByName = new LinkedHashMap<>();
       Field[] fields = pluginConfigClass.getDeclaredFields();
@@ -198,9 +199,14 @@ public class WorkspaceSchemaFactory {
         paramsByName.put("type", new TableParamDef("type", String.class));
       }
       for (Field field : fields) {
+        if (Modifier.isStatic(field.getModifiers())
+            // we want to deprecate this field
+            || (field.getName().equals("extensions") && field.getType() == List.class)) {
+          continue;
+        }
         Class<?> fieldType = field.getType();
         if (fieldType == char.class) {
-          // TODO
+          // calcite does not like char type. Just use String and enforce later that length == 1
           fieldType = String.class;
         }
         paramsByName.put(field.getName(), new TableParamDef(field.getName(), fieldType).optional());
@@ -208,7 +214,7 @@ public class WorkspaceSchemaFactory {
       this.functionParamsByName = unmodifiableMap(paramsByName);
     }
 
-    public TableSignature getTableSignature(String tableName) {
+    TableSignature getTableSignature(String tableName) {
       return new TableSignature(tableName, params());
     }
 
@@ -216,7 +222,7 @@ public class WorkspaceSchemaFactory {
       return new ArrayList<>(functionParamsByName.values());
     }
 
-    public String presentParams() {
+    String presentParams() {
       StringBuilder sb = new StringBuilder("(");
       List<TableParamDef> params = params();
       for (int i = 0; i < params.size(); i++) {
@@ -230,7 +236,7 @@ public class WorkspaceSchemaFactory {
       return sb.toString();
     }
 
-    public FormatPluginConfig eval(TableInstance t) {
+    FormatPluginConfig eval(TableInstance t) {
       // Per the constructor, the first param is always "type"
       TableParamDef typeParamDef = t.sig.params.get(0);
       Object typeParam = t.params.get(0);
@@ -258,14 +264,6 @@ public class WorkspaceSchemaFactory {
         if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
           badInput(t);
         }
-        if (!paramDef.type.isInstance(param)) {
-          throw UserException.parseError()
-              .message(
-                  "param %s of type %s does not accept %s of type %s",
-                  paramDef.name, paramDef.type, param, param.getClass().getName())
-              .addContext("table", t.sig.name)
-              .build(logger);
-        }
         try {
           Field field = pluginConfigClass.getField(paramDef.name);
           field.setAccessible(true);
@@ -278,13 +276,12 @@ public class WorkspaceSchemaFactory {
                 .addContext("parameter", paramDef.name)
                 .build(logger);
             }
-            field.set(config, stringParam.charAt(0));
-          } else {
-            field.set(config, param);
+            param = stringParam.charAt(0);
           }
+          field.set(config, param);
         } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
           throw UserException.parseError(e)
-              .message("can not set parameter %s", paramDef.name)
+              .message("can not set value %s to parameter %s: %s", param, paramDef.name, paramDef.type)
               .addContext("table", t.sig.name)
               .addContext("parameter", paramDef.name)
               .build(logger);
@@ -308,11 +305,11 @@ public class WorkspaceSchemaFactory {
   /**
    * manages Storage plugins options
    */
-  private static class OptionExtractor {
+  static final class OptionExtractor {
 
     private final Map<String, OptionsDescriptor> optionsByTypeName;
 
-    public OptionExtractor(ScanResult scanResult) {
+    OptionExtractor(ScanResult scanResult) {
       Map<String, OptionsDescriptor> result = new HashMap<>();
       Set<Class<? extends FormatPluginConfig>> pluginConfigClasses = FormatPluginConfigBase.getSubTypes(scanResult);
       for (Class<? extends FormatPluginConfig> pluginConfigClass : pluginConfigClasses) {
@@ -322,7 +319,11 @@ public class WorkspaceSchemaFactory {
       this.optionsByTypeName = unmodifiableMap(result);
     }
 
-    public List<TableSignature> getTableSignatures(String tableName) {
+    Collection<OptionsDescriptor> getOptions() {
+      return optionsByTypeName.values();
+    }
+
+    List<TableSignature> getTableSignatures(String tableName) {
       List<TableSignature> result = new ArrayList<>();
       for (OptionsDescriptor optionsDescriptor : optionsByTypeName.values()) {
         TableSignature sig = optionsDescriptor.getTableSignature(tableName);
@@ -331,7 +332,7 @@ public class WorkspaceSchemaFactory {
       return unmodifiableList(result);
     }
 
-    public FormatPluginConfig eval(TableInstance t) {
+    FormatPluginConfig eval(TableInstance t) {
       if (!t.sig.params.get(0).name.equals("type")) {
         throw UserException.parseError()
           .message("unknown first param for %s", t.sig)
@@ -358,12 +359,12 @@ public class WorkspaceSchemaFactory {
     }
   }
 
-  public static class WithOptionsTableMacro implements TableMacro {
+  static final class WithOptionsTableMacro implements TableMacro {
 
-    private TableSignature sig;
-    private WorkspaceSchema schema;
+    private final TableSignature sig;
+    private final WorkspaceSchema schema;
 
-    public WithOptionsTableMacro(TableSignature sig, WorkspaceSchema schema) {
+    WithOptionsTableMacro(TableSignature sig, WorkspaceSchema schema) {
       super();
       this.sig = sig;
       this.schema = schema;
@@ -407,11 +408,11 @@ public class WorkspaceSchemaFactory {
 
   }
 
-  private static class TableInstance {
-    private final TableSignature sig;
-    private final List<Object> params;
+  static final class TableInstance {
+    final TableSignature sig;
+    final List<Object> params;
 
-    public TableInstance(TableSignature sig, List<Object> params) {
+    TableInstance(TableSignature sig, List<Object> params) {
       super();
       if (params.size() != sig.params.size()) {
         throw UserException.parseError()
@@ -422,10 +423,10 @@ public class WorkspaceSchemaFactory {
             .build(logger);
       }
       this.sig = sig;
-      this.params = params;
+      this.params = unmodifiableList(params);
     }
 
-    public String presentParams() {
+    String presentParams() {
       StringBuilder sb = new StringBuilder("(");
       boolean first = true;
       for (int i = 0; i < params.size(); i++) {
@@ -482,22 +483,22 @@ public class WorkspaceSchemaFactory {
     }
   }
 
-  private static class TableParamDef {
-    private final String name;
-    private final Class<?> type;
-    private final boolean optional;
+  static final class TableParamDef {
+    final String name;
+    final Class<?> type;
+    final boolean optional;
 
-    public TableParamDef(String name, Class<?> type) {
+    TableParamDef(String name, Class<?> type) {
       this(name, type, false);
     }
 
-    public TableParamDef(String name, Class<?> type, boolean optional) {
+    TableParamDef(String name, Class<?> type, boolean optional) {
       this.name = name;
       this.type = type;
       this.optional = optional;
     }
 
-    public TableParamDef optional() {
+    TableParamDef optional() {
       return new TableParamDef(name, type, true);
     }
 
@@ -542,17 +543,17 @@ public class WorkspaceSchemaFactory {
     }
   }
 
-  private static class TableSignature {
-    private final String name;
-    private final List<TableParamDef> params;
+  static final class TableSignature {
+    final String name;
+    final List<TableParamDef> params;
 
-    public TableSignature(String name, TableParamDef... params) {
+    TableSignature(String name, TableParamDef... params) {
       this(name, Arrays.asList(params));
     }
 
-    public TableSignature(String name, List<TableParamDef> params) {
+    TableSignature(String name, List<TableParamDef> params) {
       this.name = name;
-      this.params = params;
+      this.params = unmodifiableList(params);
     }
 
     // eclipse generated

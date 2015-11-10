@@ -22,62 +22,183 @@ import static org.apache.drill.TestBuilder.listOf;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestSelectWithOption extends BaseTestQuery {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
-//  @Test
-//  public void testBar() throws Exception {
-//    test("select dfs.`${WORKING_PATH}/some/path`() from cp.`tpch/region.parquet`");
-//  }
-
-  @Test
-  public void testText() throws Exception {
-    File input = new File("target/" + this.getClass().getName() + ".csv");
-    String query = "select columns from dfs.`${WORKING_PATH}/" + input.getPath() +
-        "` (type => 'TeXT', fieldDelimiter => '%s')";
-    String queryComma = format(query, ",");
-    String queryPipe = format(query, "|");
-    TestBuilder builderComma = testBuilder()
-        .sqlQuery(queryComma)
-        .ordered()
-        .baselineColumns("columns");
-    TestBuilder builderPipe = testBuilder()
-        .sqlQuery(queryPipe)
-        .ordered()
-        .baselineColumns("columns");
-    try (FileWriter fw = new FileWriter(input)) {
-//      fw.append("a|b\n");
-      for (int i = 0; i < 3; i++) {
-        fw.append("\"b\"|\"" + i + "\"\n");
-        builderComma = builderComma.baselineValues(listOf("b\"|\"" + i));
-        builderPipe = builderPipe.baselineValues(listOf("b", String.valueOf(i)));
+  private File genCSVFile(String name, String... rows) throws IOException {
+    File file = new File(format("target/%s_%s.csv", this.getClass().getName(), name));
+    try (FileWriter fw = new FileWriter(file)) {
+      for (int i = 0; i < rows.length; i++) {
+        fw.append(rows[i] + "\n");
       }
     }
+    return file;
+  }
 
-    test("select columns from dfs.`${WORKING_PATH}/" + input.getPath() + "`");
+  private String genCSVTable(String name, String... rows) throws IOException {
+    File f = genCSVFile(name, rows);
+    return format("dfs.`${WORKING_PATH}/%s`", f.getPath());
+  }
 
-    builderComma.build().run();
-    builderPipe.build().run();
+  private void testWithResult(String query, Object... expectedResult) throws Exception {
+    TestBuilder builder = testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("columns");
+    for (Object o : expectedResult) {
+      builder = builder.baselineValues(o);
+    }
+    builder.build().run();
   }
 
   @Test
-  public void testParquetFailure() throws Exception {
-    File input = new File("target/" + this.getClass().getName() + ".csv");
-    try (FileWriter fw = new FileWriter(input)) {
-//      fw.append("a|b\n");
-      for (int i = 0; i < 3; i++) {
-        fw.append("\"b\"|\"" + i + "\"\n");
-      }
-    }
+  public void testTextFieldDelimiter() throws Exception {
+    String tableName = genCSVTable("testTextFieldDelimiter",
+        "\"b\"|\"0\"",
+        "\"b\"|\"1\"",
+        "\"b\"|\"2\"");
 
-    String query = "select columns from table(dfs.`${WORKING_PATH}/" + input.getPath() +
-        "`(type => 'PARQUET'))";
-    System.out.println(query);
-
-    test(query);
-
+    String queryTemplate =
+        "select columns from table(%s (type => 'TeXT', fieldDelimiter => '%s'))";
+    testWithResult(format(queryTemplate, tableName, ","),
+        listOf("b\"|\"0"),
+        listOf("b\"|\"1"),
+        listOf("b\"|\"2")
+      );
+    testWithResult(format(queryTemplate, tableName, "|"),
+        listOf("b", "0"),
+        listOf("b", "1"),
+        listOf("b", "2")
+      );
   }
 
+  @Test @Ignore // It does not look like lineDelimiter is working
+  public void testTextLineDelimiter() throws Exception {
+    String tableName = genCSVTable("testTextLineDelimiter",
+        "\"b\"|\"0\"",
+        "\"b\"|\"1\"",
+        "\"b\"|\"2\"");
+
+    testWithResult(format("select columns from table(%s(type => 'TeXT', lineDelimiter => '|'))", tableName),
+        listOf("\"b\""),
+        listOf("\"0\"", "\"b\""),
+        listOf("\"1\"", "\"b\""),
+        listOf("\"2\"")
+      );
+  }
+
+  @Test
+  public void testTextQuote() throws Exception {
+    String tableName = genCSVTable("testTextQuote",
+        "\"b\"|\"0\"",
+        "\"b\"|\"1\"",
+        "\"b\"|\"2\"");
+
+    testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', quote => '@'))", tableName),
+        listOf("\"b\"", "\"0\""),
+        listOf("\"b\"", "\"1\""),
+        listOf("\"b\"", "\"2\"")
+        );
+
+    String quoteTableName = genCSVTable("testTextQuote2",
+        "@b@|@0@",
+        "@b$@c@|@1@");
+    // It seems that a parameter can not be called "escape"
+    testWithResult(format("select columns from table(%s(`escape` => '$', type => 'TeXT', fieldDelimiter => '|', quote => '@'))", quoteTableName),
+        listOf("b", "0"),
+        listOf("b$@c", "1") // shouldn't $ be removed here?
+        );
+  }
+
+  @Test
+  public void testTextComment() throws Exception {
+      String commentTableName = genCSVTable("testTextComment",
+          "b|0",
+          "@ this is a comment",
+          "b|1");
+      testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', comment => '@'))", commentTableName),
+          listOf("b", "0"),
+          listOf("b", "1")
+          );
+  }
+
+  @Test
+  public void testTextHeader() throws Exception {
+    String headerTableName = genCSVTable("testTextHeader",
+        "b|a",
+        "b|0",
+        "b|1");
+    testWithResult(format("select columns from table(%s(type => 'TeXT', fieldDelimiter => '|', skipFirstLine => true))", headerTableName),
+        listOf("b", "0"),
+        listOf("b", "1")
+        );
+
+    testBuilder()
+        .sqlQuery(format("select a, b from table(%s(type => 'TeXT', fieldDelimiter => '|', extractHeader => true))", headerTableName))
+        .ordered()
+        .baselineColumns("b", "a")
+        .baselineValues("b", "0")
+        .baselineValues("b", "1")
+        .build().run();
+  }
+
+  @Test
+  public void testVariationsCSV() throws Exception {
+    String csvTableName = genCSVTable("testVariationsCSV",
+        "a,b",
+        "c|d");
+    // Using the defaults in TextFormatConfig (the field delimiter is neither "," not "|")
+    String[] csvQueries = {
+        format("select columns from %s ('TeXT')", csvTableName),
+        format("select columns from %s('TeXT')", csvTableName),
+        format("select columns from table(%s ('TeXT'))", csvTableName),
+//        format("select columns from table(%s ('TeXT')) EXTEND ()", csvTableName),
+        format("select columns from table(%s (type => 'TeXT'))", csvTableName),
+        format("select columns from %s (type => 'TeXT')", csvTableName)
+    };
+    for (String csvQuery : csvQueries) {
+      testWithResult(csvQuery,
+          listOf("a,b"),
+          listOf("c|d"));
+    }
+    // the drill config file binds .csv to "," delimited
+    testWithResult(format("select columns from %s EXTEND (a bigint)", csvTableName),
+          listOf("a", "b"),
+          listOf("c|d"));
+    // setting the delimiter
+    testWithResult(format("select columns from %s (type => 'TeXT', fieldDelimiter => ',')", csvTableName),
+        listOf("a", "b"),
+        listOf("c|d"));
+    testWithResult(format("select columns from %s (type => 'TeXT', fieldDelimiter => '|')", csvTableName),
+        listOf("a,b"),
+        listOf("c", "d"));
+  }
+
+  @Test
+  public void testVariationsJSON() throws Exception {
+    String jsonTableName = genCSVTable("testVariationsJSON",
+        "{\"columns\": [\"f\",\"g\"]}");
+    // the extension is actually csv
+    testWithResult(format("select columns from %s", jsonTableName),
+        listOf("{\"columns\": [\"f\"", "g\"]}\n")
+        );
+    String[] jsonQueries = {
+        format("select columns from table(%s ('JSON'))", jsonTableName),
+        format("select columns from table(%s(type => 'JSON'))", jsonTableName),
+        format("select columns from %s ('JSON')", jsonTableName),
+        format("select columns from %s (type => 'JSON')", jsonTableName),
+        format("select columns from %s(type => 'JSON')", jsonTableName),
+        // we can use named format plugin configurations too!
+        format("select columns from %s(type => 'Named', name => 'json')", jsonTableName),
+    };
+    for (String jsonQuery : jsonQueries) {
+      testWithResult(jsonQuery, listOf("f","g"));
+    }
+  }
 }

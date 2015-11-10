@@ -395,6 +395,8 @@ public class DrillTestWrapper {
     }
 
     compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+    } catch (Exception e) {
+      throw new Exception(e.getMessage() + "\nFor query: " + query , e);
     } finally {
       cleanupBatches(expected, actual);
     }
