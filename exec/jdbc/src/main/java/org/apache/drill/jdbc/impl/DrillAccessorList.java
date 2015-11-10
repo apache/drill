@@ -26,15 +26,34 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.BoundCheckingAccessor;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
+import org.apache.drill.jdbc.JdbcApiSqlException;
 
 
-class DrillAccessorList extends BasicList<Accessor>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAccessorList.class);
+class DrillAccessorList extends BasicList<Accessor> {
+
+  @SuppressWarnings("unused")
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(DrillAccessorList.class);
+  /** "None" value for rowLastColumnOffset. */
+  // (Not -1, since -1 can result from 0 (bad 1-based index) minus 1 (offset
+  // from 1-based to 0-based indexing.)
+  private static final int NULL_LAST_COLUMN_INDEX = -2;
 
   private AvaticaDrillSqlAccessor[] accessors = new AvaticaDrillSqlAccessor[0];
-  // TODO  Rename to lastColumnAccessed and/or document.
-  // TODO  Why 1, rather than, say, -1?
-  private int lastColumn = 1;
+
+  /** Zero-based offset of last column referenced in current row.
+   *  For {@link #wasNull()}. */
+  private int rowLastColumnOffset = NULL_LAST_COLUMN_INDEX;
+
+
+  /**
+   * Resets last-column-referenced information for {@link #wasNull}.
+   * Must be called whenever row is advanced (when {@link ResultSet#next()}
+   * is called).
+   */
+  void clearLastColumnIndexedInRow() {
+    rowLastColumnOffset = NULL_LAST_COLUMN_INDEX;
+  }
 
   void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch) {
     int cnt = currentBatch.getSchema().getFieldCount();
@@ -47,16 +66,29 @@ class DrillAccessorList extends BasicList<Accessor>{
               );
       accessors[i] = new AvaticaDrillSqlAccessor(acc, cursor);
     }
+    clearLastColumnIndexedInRow();
   }
 
+  /**
+   * @param  accessorOffset  0-based index of accessor array (not 1-based SQL
+   *           column index/ordinal value)
+   */
   @Override
-  public AvaticaDrillSqlAccessor get(int index) {
-    lastColumn = index;
-    return accessors[index];
+  public AvaticaDrillSqlAccessor get(final int accessorOffset) {
+    final AvaticaDrillSqlAccessor accessor = accessors[accessorOffset];
+    // Update lastColumnIndexedInRow after indexing accessors to not touch
+    // lastColumnIndexedInRow in case of out-of-bounds exception.
+    rowLastColumnOffset = accessorOffset;
+    return accessor;
   }
 
   boolean wasNull() throws SQLException{
-    return accessors[lastColumn].wasNull();
+    if (NULL_LAST_COLUMN_INDEX == rowLastColumnOffset) {
+      throw new JdbcApiSqlException(
+          "ResultSet.wasNull() called without a preceding call to a column"
+          + " getter method since the last call to ResultSet.next()");
+    }
+    return accessors[rowLastColumnOffset].wasNull();
   }
 
   @Override
