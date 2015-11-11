@@ -92,12 +92,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
-    try {
-      allocator = drillbitContext.getAllocator().getChildAllocator(null, plannerSettings.getInitialPlanningMemorySize(),
-          plannerSettings.getPlanningMemoryLimit(), false);
-    } catch (OutOfMemoryException e) {
-      throw new DrillRuntimeException("Error creating off-heap allocator for planning context.",e);
-    }
+    allocator = drillbitContext.getAllocator().getChildAllocator(null, plannerSettings.getInitialPlanningMemorySize(),
+        plannerSettings.getPlanningMemoryLimit(), false);
     // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);

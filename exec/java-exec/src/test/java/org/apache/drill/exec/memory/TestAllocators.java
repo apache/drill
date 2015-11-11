@@ -18,21 +18,30 @@
 
 package org.apache.drill.exec.memory;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import io.netty.buffer.UnsafeDirectLittleEndian;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OpProfileDef;
@@ -43,6 +52,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.Drillbit;
@@ -66,7 +76,7 @@ public class TestAllocators extends DrillTest {
     }
   };
 
-  private final static String planFile="/physical_allocator_test.json";
+  private final static String planFile = "/physical_allocator_test.json";
 
   /**
    * Contract for DrillBuf[] returned from getBuffers() is that buffers are returned in a reader appropriate state
@@ -230,12 +240,14 @@ public class TestAllocators extends DrillTest {
     ((AutoCloseable) oContext22).close();
 
     // Fragment 3 asks for more and fails
+    boolean outOfMem = false;
     try {
-      oContext31.getAllocator().buffer(4400000);
+      oContext31.getAllocator().buffer(44000000);
       fail("Fragment 3 should fail to allocate buffer");
-    } catch (OutOfMemoryException e) {
-      // expected
+    } catch (OutOfMemoryRuntimeException e) {
+      outOfMem = true; // Expected.
     }
+    assertTrue(outOfMem);
 
     // Operator is Exempt from Fragment limits. Fragment 3 asks for more and succeeds
     OperatorContext oContext32 = fragmentContext3.newOperatorContext(physicalOperator6, false);
@@ -262,6 +274,12 @@ public class TestAllocators extends DrillTest {
 
     bit.close();
     serviceSet.close();
+
+/*
+    // ---------------------------------------- DEBUG ----------------------------------
+    assertEquals(0, UnsafeDirectLittleEndian.getBufferCount());
+    // ---------------------------------------- DEBUG ----------------------------------
+*/
   }
 
   private void closeOp(OperatorContext c) throws Exception {

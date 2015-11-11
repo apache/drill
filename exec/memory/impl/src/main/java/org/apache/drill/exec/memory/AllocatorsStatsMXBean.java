@@ -17,27 +17,18 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.config.DrillConfig;
-
-public class RootAllocatorFactory {
+/**
+ * JMX bean interface for global allocator statistics.
+ */
+// TODO use Stats infrastructure instead of JMX beans
+public interface AllocatorsStatsMXBean {
   /**
-   * Constructor to prevent instantiation of this static utility class.
-   */
-  private RootAllocatorFactory() {}
-
-  /**
-   * Factory method.
+   * Get the maximum amount of direct memory that can be used.
    *
-   * @param drillConfig the DrillConfig
-   * @return a new root allocator
+   * <p>This is determined by what is available, or by the drillbit
+   * configuration, if it specifies a value.</p>
+   *
+   * @return the amount of direct memory that can be used
    */
-  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(cwestin)
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocator(drillConfig);
-    }
-*/
-    return new RootAllocator(drillConfig);
-    // TODO(cwestin) return new TopLevelAllocator(drillConfig);
-  }
+  public long getMaxDirectMemory();
 }
