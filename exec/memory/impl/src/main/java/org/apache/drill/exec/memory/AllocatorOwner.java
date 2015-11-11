@@ -17,27 +17,24 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.testing.ExecutionControls;
 
-public class RootAllocatorFactory {
+/**
+ * This interface provides a means for allocator owners to inject services
+ * required by allocators, as well as to identify themselves for debugging purposes.
+ * Identification is done by overriding the implementation of
+ * {#link {@link Object#toString()}.
+ */
+public interface AllocatorOwner {
   /**
-   * Constructor to prevent instantiation of this static utility class.
-   */
-  private RootAllocatorFactory() {}
-
-  /**
-   * Factory method.
+   * Get the current ExecutionControls from the allocator's owner.
    *
-   * @param drillConfig the DrillConfig
-   * @return a new root allocator
+   * @return the current execution controls; may return null if this isn't
+   *   possible
    */
-  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(cwestin)
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocator(drillConfig);
-    }
-*/
-    return new RootAllocator(drillConfig);
-    // TODO(cwestin) return new TopLevelAllocator(drillConfig);
-  }
+  ExecutionControls getExecutionControls();
+
+  @Deprecated // Only for TopLevelAllocator and its friends.
+  FragmentContext getFragmentContext();
 }

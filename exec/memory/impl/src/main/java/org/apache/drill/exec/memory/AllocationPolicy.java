@@ -17,27 +17,22 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.config.DrillConfig;
-
-public class RootAllocatorFactory {
+/**
+ * Implicitly specifies an allocation policy by providing a factory method to
+ * create an enforcement agent.
+ *
+ * <p>Allocation policies are meant to be global, and may not work properly if
+ * different allocators are given different policies. These are designed to
+ * be supplied to the root-most allocator only, and then shared with descendant
+ * (child) allocators.</p>
+ */
+public interface AllocationPolicy {
   /**
-   * Constructor to prevent instantiation of this static utility class.
-   */
-  private RootAllocatorFactory() {}
-
-  /**
-   * Factory method.
+   * Create an allocation policy enforcement agent. Each newly created allocator should
+   * call this in order to obtain its own agent.
    *
-   * @param drillConfig the DrillConfig
-   * @return a new root allocator
+   * @return the newly instantiated agent; if an agent's implementation is stateless,
+   *   this may return a sharable singleton
    */
-  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(cwestin)
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocator(drillConfig);
-    }
-*/
-    return new RootAllocator(drillConfig);
-    // TODO(cwestin) return new TopLevelAllocator(drillConfig);
-  }
+  AllocationPolicyAgent newAgent();
 }

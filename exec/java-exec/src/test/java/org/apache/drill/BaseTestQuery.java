@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.io.Files;
+
+import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.ClassPathScanner;
@@ -42,6 +45,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -67,6 +71,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class BaseTestQuery extends ExecTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
@@ -247,6 +256,26 @@ public class BaseTestQuery extends ExecTest {
 
   public static TestBuilder testBuilder() {
     return new TestBuilder(allocator);
+  }
+
+  /**
+   * Utility function that can be used in tests to verify the state of drillbit
+   * allocators.
+   */
+  public static void verifyAllocators() {
+    if (bits != null) {
+      for(Drillbit bit : bits) {
+        if (bit != null) {
+          final DrillbitContext drillbitContext = bit.getContext();
+          final BufferAllocator bufferAllocator = drillbitContext.getAllocator();
+          if (!(bufferAllocator instanceof RootAllocator)) {
+            throw new IllegalStateException("The DrillbitContext's allocator is not a RootAllocator");
+          }
+          final RootAllocator rootAllocator = (RootAllocator) bufferAllocator;
+          rootAllocator.verify();
+        }
+      }
+    }
   }
 
   @AfterClass
