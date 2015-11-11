@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical.partition;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.RelNode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -41,8 +42,8 @@ public class ParquetPruneScanRule {
         optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new ParquetPartitionDescriptor(settings, scanRel);
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+        return new ParquetPartitionDescriptor(settings, (DrillScanRel) scanRel);
       }
 
       @Override
@@ -73,8 +74,8 @@ public class ParquetPruneScanRule {
         "PruneScanRule:Filter_On_Scan_Parquet", optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new ParquetPartitionDescriptor(settings, scanRel);
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+        return new ParquetPartitionDescriptor(settings, (DrillScanRel) scanRel);
       }
 
       @Override

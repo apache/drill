@@ -1019,7 +1019,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query)
         .expectsEmptyResultSet()
         .optionSettingQueriesForTestQuery("ALTER SESSION SET `planner.enable_hashjoin` = false; " +
-                                          "ALTER SESSION SET `planner.disable_exchanges` = true")
+            "ALTER SESSION SET `planner.disable_exchanges` = true")
         .build()
         .run();
 
@@ -1193,5 +1193,10 @@ public class TestExampleQueries extends BaseTestQuery {
         .baselineValues("1930-01-08")
         .build()
         .run();
+  }
+
+  @Test
+  public void t() throws Exception {
+    test("explain plan for select a from dfs.tmp.foo where dir0 = 1");
   }
 }

@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.sql.logical;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PartitionDescriptor;
@@ -43,8 +44,8 @@ public abstract class HivePushPartitionFilterIntoScan {
         optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+        return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
 
@@ -77,8 +78,8 @@ public abstract class HivePushPartitionFilterIntoScan {
         "HivePushPartitionFilterIntoScan:Filter_On_Scan_Hive", optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
-        return new HivePartitionDescriptor(settings, scanRel, getOptimizerRulesContext().getManagedBuffer(),
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+        return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
 
