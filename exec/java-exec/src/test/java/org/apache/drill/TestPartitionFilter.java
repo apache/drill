@@ -295,5 +295,19 @@ public class TestPartitionFilter extends PlanTestBase {
     testExcludeFilter(query, 1, "Filter", 1);
   }
 
+  // Coalesce filter is on the non directory column. DRILL-4071
+  @Test
+  public void testPartitionWithCoalesceFilter_1() throws Exception {
+    String query = String.format("select 1 from dfs_test.`%s/multilevel/parquet` where dir0=1994 and dir1='Q1' and coalesce(o_custkey, 0) = 890", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
+
+  // Coalesce filter is on the directory column
+  @Test
+  public void testPartitionWithCoalesceFilter_2() throws Exception {
+    String query = String.format("select 1 from dfs_test.`%s/multilevel/parquet` where dir0=1994 and o_custkey = 890 and coalesce(dir1, 'NA') = 'Q1'", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
+
 
 }

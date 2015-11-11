@@ -204,6 +204,13 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
   }
 
   private boolean isHolisticExpression(RexCall call) {
+    /* If we are already processing a holistic expression then all
+     * nested expressions should be treated holistically as well
+     */
+    if (holisticExpression > 0) {
+      return true;
+    }
+
     if (call.getOperator().getSyntax() == SqlSyntax.SPECIAL ||
         call.getOperator().getSyntax() == SqlSyntax.FUNCTION) {
       return true;
