@@ -17,11 +17,17 @@
  */
 package org.apache.drill;
 
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestTpchLimit0 extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchLimit0.class);
+
+  @After
+  public void checkForLeaks() {
+    verifyAllocators();
+  }
 
   private void testLimitZero(String fileName) throws Exception {
     String query = getFile(fileName);

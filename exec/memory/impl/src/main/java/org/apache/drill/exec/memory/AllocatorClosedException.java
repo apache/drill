@@ -17,27 +17,15 @@
  */
 package org.apache.drill.exec.memory;
 
-import org.apache.drill.common.config.DrillConfig;
-
-public class RootAllocatorFactory {
-  /**
-   * Constructor to prevent instantiation of this static utility class.
-   */
-  private RootAllocatorFactory() {}
-
-  /**
-   * Factory method.
-   *
-   * @param drillConfig the DrillConfig
-   * @return a new root allocator
-   */
-  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(cwestin)
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocator(drillConfig);
-    }
-*/
-    return new RootAllocator(drillConfig);
-    // TODO(cwestin) return new TopLevelAllocator(drillConfig);
+/**
+ * Exception thrown when a closed BufferAllocator is used. Note
+ * this is an unchecked exception.
+ *
+ * @param message string associated with the cause
+ */
+@SuppressWarnings("serial")
+public class AllocatorClosedException extends RuntimeException {
+  public AllocatorClosedException(String message) {
+    super(message);
   }
 }

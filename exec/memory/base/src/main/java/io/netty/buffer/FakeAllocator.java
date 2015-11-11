@@ -17,10 +17,11 @@
  */
 package io.netty.buffer;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.Accountor;
+import org.apache.drill.exec.memory.AllocationReservation;
+import org.apache.drill.exec.memory.AllocatorOwner;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.LimitConsumer;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.util.Pointer;
 
 class FakeAllocator implements BufferAllocator {
@@ -46,7 +47,7 @@ class FakeAllocator implements BufferAllocator {
   }
 
   @Override
-  public BufferAllocator getChildAllocator(LimitConsumer consumer, long initialReservation, long maximumReservation,
+  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation, long maximumReservation,
                                            boolean applyFragmentLimit)
       throws OutOfMemoryException {
     throw new UnsupportedOperationException();
@@ -63,22 +64,12 @@ class FakeAllocator implements BufferAllocator {
   }
 
   @Override
-  public PreAllocator getNewPreAllocator() {
+  public void setFragmentLimit(long l) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void resetLimits() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setLimit(long l) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public long getLimit(){
+  public long getFragmentLimit(){
     throw new UnsupportedOperationException();
   }
 
@@ -96,9 +87,10 @@ class FakeAllocator implements BufferAllocator {
     return 0;
   }
 
-  static class FakeAccountor implements Accountor {
+  static class FakeAccountor extends Accountor {
 
     public FakeAccountor() {
+      super(null, false, null, null, 0, 0, true);
     }
 
     @Override
@@ -138,50 +130,38 @@ class FakeAllocator implements BufferAllocator {
 
     @Override
     public void releasePartial(DrillBuf buf, long size) {
-      throw new UnsupportedOperationException();
+
     }
 
     @Override
     public void release(DrillBuf buf, long size) {
-      throw new UnsupportedOperationException();
+
     }
 
     @Override
     public void close() {
-      throw new UnsupportedOperationException();
+
     }
-
-    @Override
-    public boolean transferIn(DrillBuf buf, long size) {
-      return false;
-    }
-
-    @Override
-    public long getPeakMemoryAllocation() {
-      return 0;
-    }
-
-    @Override
-    public long resetFragmentLimits() {
-      return 0;
-    }
-
-    @Override
-    public void setFragmentLimit(long add) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getFragmentLimit() {
-      return 0;
-    }
-
-
   }
 
   @Override
-  public boolean takeOwnership(DrillBuf buf, Pointer<DrillBuf> bufOut) {
+  public BufferAllocator newChildAllocator(AllocatorOwner allocatorOwner,
+      long initReservation, long maxAllocation, int flags) {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public boolean shareOwnership(DrillBuf buf, Pointer<DrillBuf> bufOut) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public int getId() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public AllocationReservation newReservation() {
+    throw new UnsupportedOperationException();
+  }
 }
