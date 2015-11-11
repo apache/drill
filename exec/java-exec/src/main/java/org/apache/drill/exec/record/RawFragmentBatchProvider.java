@@ -25,4 +25,7 @@ public interface RawFragmentBatchProvider extends AutoCloseable{
 
   public RawFragmentBatch getNext() throws IOException, InterruptedException;
   public void kill(FragmentContext context);
+
+  @Override
+  public void close(); // Suppress the "throws Exception".
 }

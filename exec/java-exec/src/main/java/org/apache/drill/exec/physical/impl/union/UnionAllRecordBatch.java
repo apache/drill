@@ -84,6 +84,14 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   }
 
   @Override
+  public void kill(boolean sendUpstream) {
+    if(current != null) {
+      current.kill(sendUpstream);
+      current = null;
+    }
+  }
+
+  @Override
   protected void killIncoming(boolean sendUpstream) {
     unionAllInput.getLeftRecordBatch().kill(sendUpstream);
     unionAllInput.getRightRecordBatch().kill(sendUpstream);
@@ -270,8 +278,10 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   // This method is used by inner class to clear the current record batch
   private void clearCurrentRecordBatch() {
-    for(VectorWrapper<?> v: current) {
-      v.clear();
+    if (current != null) {
+      for(final VectorWrapper<?> v: current) {
+        v.clear();
+      }
     }
   }
 

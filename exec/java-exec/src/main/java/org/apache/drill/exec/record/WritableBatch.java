@@ -32,8 +32,8 @@ import com.google.common.collect.Lists;
 /**
  * A specialized version of record batch that can moves out buffers and preps them for writing.
  */
-public class WritableBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WritableBatch.class);
+public class WritableBatch implements AutoCloseable {
+  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WritableBatch.class);
 
   private final RecordBatchDef def;
   private final DrillBuf[] buffers;
@@ -170,15 +170,16 @@ public class WritableBatch {
     return getBatchNoHVWrap(batch.getRecordCount(), batch, sv2);
   }
 
-  public void retainBuffers() {
-    for (DrillBuf buf : buffers) {
-      buf.retain();
+  public void retainBuffers(final int increment) {
+    for (final DrillBuf buf : buffers) {
+      buf.retain(increment);
     }
   }
 
-  public void retainBuffers(int increment) {
-    for (DrillBuf buf : buffers) {
-      buf.retain(increment);
+  @Override
+  public void close() {
+    for(final DrillBuf drillBuf : buffers) {
+      drillBuf.release(1);
     }
   }
 
