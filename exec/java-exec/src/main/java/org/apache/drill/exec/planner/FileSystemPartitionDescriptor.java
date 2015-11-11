@@ -27,6 +27,8 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -35,6 +37,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -50,12 +53,14 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   private final String partitionLabel;
   private final int partitionLabelLength;
   private final Map<String, Integer> partitions = Maps.newHashMap();
-  private final DrillScanRel scanRel;
+  private final EnumerableTableScan scanRel;
+  private final DynamicDrillTable table;
 
-  public FileSystemPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+  public FileSystemPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
     this.partitionLabel = settings.getFsPartitionColumnLabel();
     this.partitionLabelLength = partitionLabel.length();
-    this.scanRel = scanRel;
+    this.scanRel = (EnumerableTableScan) scanRel;
+    table = scanRel.getTable().unwrap(DynamicDrillTable.class);
     for(int i =0; i < 10; i++){
       partitions.put(partitionLabel + i, i);
     }
@@ -84,9 +89,17 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
-    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
+    /*
+    THIS NEEDS TO CHANGE. WE SHOULD RETURN A ENUMERABLETABLESCAN??
+    final FileSelection newFileSelection = new FileSelection(newFiles, getBaseTableLocation(), true);
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
     return newScan;
+    */
+    return null;
+  }
+
+  public DynamicDrillTable getTable() {
+    return table;
   }
 
   @Override
@@ -124,13 +137,13 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   private String getBaseTableLocation() {
-    final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
+    final FormatSelection origSelection = (FormatSelection) table.getSelection();
     return origSelection.getSelection().selectionRoot;
   }
 
   @Override
   protected void createPartitionSublists() {
-    List<String> fileLocations = ((FormatSelection) scanRel.getDrillTable().getSelection()).getAsFiles();
+    List<String> fileLocations = ((FormatSelection) table.getSelection()).getAsFiles();
     List<PartitionLocation> locations = new LinkedList<>();
     for (String file: fileLocations) {
       locations.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
