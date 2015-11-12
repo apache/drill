@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.persistence.AnnotationDescriptor;
 import org.apache.drill.common.scanner.persistence.AttributeDescriptor;
 import org.apache.drill.common.scanner.persistence.ChildClassDescriptor;
@@ -408,7 +409,7 @@ public final class ClassPathScanner {
                 new ArrayList<>(subTypesScanner.getChildrenOf(baseTypeName))));
       }
       List<AnnotatedClassDescriptor> annotated = annotationScanner.getAnnotatedClasses();
-      verifyClassUnicity(annotated);
+      verifyClassUnicity(annotated, pathsToScan);
       return new ScanResult(
           packagePrefixes,
           scannedClasses,
@@ -422,11 +423,18 @@ public final class ClassPathScanner {
     }
   }
 
-  private static void verifyClassUnicity(List<AnnotatedClassDescriptor> annotatedClasses) {
+  private static void verifyClassUnicity(List<AnnotatedClassDescriptor> annotatedClasses, Collection<URL> pathsScanned) {
     Set<String> scanned = new HashSet<>();
     for (AnnotatedClassDescriptor annotated : annotatedClasses) {
       if (!scanned.add(annotated.getClassName())) {
-        throw new RuntimeException("BUG: " + annotated.getClassName() + " scanned twice");
+        throw UserException.functionError()
+            .message(
+                "function %s scanned twice in the following locations:\n"
+                + "%s\n"
+                + "Do you have conflicting jars on the classpath?",
+                annotated.getClassName(), pathsScanned
+            )
+            .build(logger);
       }
     }
   }
