@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -145,12 +146,20 @@ public class FormatCreator {
   FormatPlugin newFormatPlugin(FormatPluginConfig fpconfig) {
     Constructor<?> c = configConstructors.get(fpconfig.getClass());
     if (c == null) {
-      throw new RuntimeException("Unable to find constructor for storage config of type " + fpconfig.getClass().getName());
+      throw UserException.dataReadError()
+        .message(
+            "Unable to find constructor for storage config of type %s",
+            fpconfig.getClass().getName())
+        .build(logger);
     }
     try {
       return (FormatPlugin) c.newInstance(null, context, fsConf, storageConfig, fpconfig);
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
-      throw new RuntimeException("Failure initializing storage config of type " + fpconfig.getClass().getName(), e1);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw UserException.dataReadError(e)
+        .message(
+            "Failure initializing storage config of type %s",
+            fpconfig.getClass().getName())
+        .build(logger);
     }
   }
 }
