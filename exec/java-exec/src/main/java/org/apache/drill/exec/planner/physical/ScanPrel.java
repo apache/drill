@@ -118,8 +118,9 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
     // double rowCount = RelMetadataQuery.getRowCount(this);
     double rowCount = stats.getRecordCount();
 
-
-    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count.
+    // As DRILL-4083 points out, when columnCount == 0, cpuCost becomes zero,
+    // which makes the costs of HiveScan and HiveDrillNativeParquetScan the same
+    double cpuCost = rowCount * Math.max(columnCount, 1); // For now, assume cpu cost is proportional to row count.
 
     // If a positive value for CPU cost is given multiply the default CPU cost by given CPU cost.
     if (stats.getCpuCost() > 0) {

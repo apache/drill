@@ -36,6 +36,21 @@ public class TestHiveStorage extends HiveTestBase {
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
   }
 
+
+  @Test // DRILL-4083
+  public void testNativeScanWhenNoColumnIsRead() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+
+      String query = "SELECT count(*) FROM hive.readtest_parquet";
+      testPhysicalPlan(query, "hive-drill-native-parquet-scan");
+    } finally {
+      test(String.format("alter session set `%s` = %s",
+          ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS,
+              ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR.getDefault().bool_val ? "true" : "false"));
+    }
+  }
+
   @Test
   public void hiveReadWithDb() throws Exception {
     test("select * from hive.kv");
