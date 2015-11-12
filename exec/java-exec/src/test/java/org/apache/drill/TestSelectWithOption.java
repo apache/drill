@@ -158,7 +158,6 @@ public class TestSelectWithOption extends BaseTestQuery {
         format("select columns from %s ('TeXT')", csvTableName),
         format("select columns from %s('TeXT')", csvTableName),
         format("select columns from table(%s ('TeXT'))", csvTableName),
-//        format("select columns from table(%s ('TeXT')) EXTEND ()", csvTableName),
         format("select columns from table(%s (type => 'TeXT'))", csvTableName),
         format("select columns from %s (type => 'TeXT')", csvTableName)
     };
@@ -168,7 +167,7 @@ public class TestSelectWithOption extends BaseTestQuery {
           listOf("c|d"));
     }
     // the drill config file binds .csv to "," delimited
-    testWithResult(format("select columns from %s EXTEND (a bigint)", csvTableName),
+    testWithResult(format("select columns from %s", csvTableName),
           listOf("a", "b"),
           listOf("c|d"));
     // setting the delimiter
