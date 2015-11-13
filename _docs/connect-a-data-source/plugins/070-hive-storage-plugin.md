@@ -9,7 +9,7 @@ must have the SerDes or InputFormat/OutputFormat `JAR` files in the
 
 ## Hive Remote Metastore Configuration
 
-The Hive metastore configuration runs as a separate service outside
+The Hive metastore runs as a separate service outside
 of Hive. Drill communicates with the Hive metastore through Thrift. The
 metastore service communicates with the Hive database over JDBC. Point Drill
 to the Hive metastore service address, and provide the connection parameters
@@ -46,7 +46,8 @@ To register a remote Hive metastore with Drill:
    * `hdfs://<hostname>:<port>`
 6. Click **Enable**.  
 
-After configuring a Hive storage plugin, you can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).
+The "fs.default.name" should point to a the main control node. Do not point fs.default.name to a non-control node, such as a NameNode. If you're using MapR Drill, "fs.default.name" should be maprfs:///. The MapR FileClient figures out CLDB locations from mapr-clusters.conf. 
+
 
 ## Hive Embedded Metastore Configuration
 
@@ -75,6 +76,9 @@ steps:
               "hive.metastore.sasl.enabled": "false"
             }
           }
-5. Change the `"fs.default.name"` attribute to specify the default location of files. The value needs to be a URI that is available and capable of handling file system requests. For example, change the local file system URI `"file:///"` to the HDFS URI: `hdfs://`, or to the path on HDFS with a namenode: `hdfs://<hostname>:<port>`
-6. Click **Enable**.
-  
+5. Change the `"fs.default.name"` attribute to specify the default location of files. The value needs to be a URI that is available and capable of handling file system requests. For example, change the local file system URI `"file:///"` to the HDFS URI: `hdfs://`, or to the path on HDFS with a namenode: `hdfs://<hostname>:<port>`  
+6. Click **Enable**.  
+
+The "javax.jdo.option.ConnectionURL" might be a MySQL database that stores the metadata. The Hive metastore service provides access to the physical DB like MySQL. MySQL stores the metadata. 
+
+After configuring a Hive storage plugin, you can [query Hive tables]({{ site.baseurl }}/docs/querying-hive/).

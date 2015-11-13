@@ -3,7 +3,7 @@ title: "Analyzing Data Using Window Functions"
 parent: "Tutorials"
 ---
 
-This tutorial briefly introduces the analytics in Drill 1.2, namely ANSI SQL-compliant Analytic and Window functions. Drill supports the following SQL window functions:
+This tutorial briefly introduces the analytics in Drill 1.2, namely ANSI SQL-compliant analytic and window functions. Drill supports the following SQL window functions:
 
 * PARTITION BY and OVER clauses
 * A variety of aggregated window functions for Sum, Max, Min, Count, Avg

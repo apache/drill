@@ -108,6 +108,8 @@ URI. Metadata for Hive tables is automatically available for users to query.
       }
     }
 
+Do not use this storage plugin configuration outside the sandbox. Use either the configuration for either the [remote or embedded metastore configuration].
+
 ## What's Next
 
 Start running queries by going to [Lesson 1: Learn About the Data

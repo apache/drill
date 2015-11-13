@@ -6,7 +6,7 @@ Drill supports the following functions for casting and converting data types:
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)
 * [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from)
-* [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function)
+* [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion/#binary_string-function)
 * [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)
 
 ## CAST
