@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.avro;
 
+import com.google.common.base.Charsets;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
@@ -26,9 +27,13 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,7 +43,86 @@ public class AvroTestUtil {
 
   public static final int RECORD_COUNT = 10;
 
-  public static String generateSimplePrimitiveSchema_NoNullValues() throws Exception {
+  public static class AvroTestSetup {
+    private String filePath;
+    private List<Map> expectedRecords;
+
+    public AvroTestSetup(String filePath, List<Map> expectedRecords) {
+      this.filePath = filePath;
+      this.expectedRecords = expectedRecords;
+    }
+  }
+
+  /**
+   * Class to write records to an Avro file while simultaneously
+   * constructing a corresponding list of records in the format taken in
+   * by the Drill test builder to describe expected results.
+   */
+  public static class AvroTestRecordWriter implements Closeable {
+    private final List<Map> expectedRecords;
+    GenericData.Record currentAvroRecord;
+    Map<String, Object> currentExpectedRecord;
+    private Schema schema;
+    private final DataFileWriter writer;
+    private final String filePath;
+
+    private AvroTestRecordWriter(Schema schema, File file) {
+      writer = new DataFileWriter(new GenericDatumWriter(schema));
+      try {
+        writer.create(schema, file);
+      } catch (IOException e) {
+        throw new RuntimeException("Error creating file in Avro test setup.", e);
+      }
+      this.schema = schema;
+      currentExpectedRecord = new HashMap<>();
+      expectedRecords = new ArrayList<>();
+      filePath = file.getAbsolutePath();
+    }
+
+    public void startRecord() {
+      currentAvroRecord = new GenericData.Record(schema);
+      currentExpectedRecord = new HashMap<>();
+    }
+
+    public void put(String key, Object value) {
+      currentAvroRecord.put(key, value);
+      // convert binary values into byte[], the format they will be given
+      // in the Drill result set in the test framework
+      if (value instanceof ByteBuffer) {
+        ByteBuffer bb = ((ByteBuffer)value);
+        byte[] drillVal = new byte[((ByteBuffer)value).remaining()];
+        bb.get(drillVal);
+        bb.position(0);
+        value = new String(drillVal, Charsets.UTF_8);
+      }
+      currentExpectedRecord.put("`" + key + "`", value);
+    }
+
+    public void endRecord() throws IOException {
+      writer.append(currentAvroRecord);
+      expectedRecords.add(currentExpectedRecord);
+    }
+
+    @Override
+    public void close() throws IOException {
+      writer.close();
+    }
+
+    public String getFilePath() {
+      return filePath;
+    }
+
+    public List<Map>getExpectedRecords() {
+      return expectedRecords;
+    }
+  }
+
+
+  public static AvroTestRecordWriter generateSimplePrimitiveSchema_NoNullValues() throws Exception {
+    return generateSimplePrimitiveSchema_NoNullValues(RECORD_COUNT);
+  }
+
+  public static AvroTestRecordWriter generateSimplePrimitiveSchema_NoNullValues(int numRecords) throws Exception {
 
     final Schema schema = SchemaBuilder.record("AvroRecordReaderTest")
             .namespace("org.apache.drill.exec.store.avro")
@@ -56,15 +140,14 @@ public class AvroTestUtil {
     final File file = File.createTempFile("avro-primitive-test", ".avro");
     file.deleteOnExit();
 
-    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter(schema));
+    final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      writer.create(schema, file);
-
       ByteBuffer bb = ByteBuffer.allocate(1);
-      bb.put(0, (byte) 1);
+      bb.put(0, (byte) 'a');
 
-      for (int i = 0; i < RECORD_COUNT; i++) {
-        final GenericRecord record = new GenericData.Record(schema);
+      for (int i = 0; i < numRecords; i++) {
+        bb.position(0);
+        record.startRecord();
         record.put("a_string", "a_" + i);
         record.put("b_int", i);
         record.put("c_long", (long) i);
@@ -73,13 +156,13 @@ public class AvroTestUtil {
         record.put("f_bytes", bb);
         record.put("g_null", null);
         record.put("h_boolean", (i % 2 == 0));
-        writer.append(record);
+        record.endRecord();
       }
     } finally {
-      writer.close();
+      record.close();
     }
 
-    return file.getAbsolutePath();
+    return record;
   }
 
   public static String generateUnionSchema_WithNullValues() throws Exception {
