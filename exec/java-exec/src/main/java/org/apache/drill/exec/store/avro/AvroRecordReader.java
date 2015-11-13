@@ -41,13 +41,6 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.Float4Holder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -84,7 +77,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   private final String opUserName;
   private final String queryUserName;
 
-  private static final int DEFAULT_BATCH_SIZE = 1000;
+  private static final int DEFAULT_BATCH_SIZE = 4096;
 
 
   public AvroRecordReader(final FragmentContext fragmentContext,
@@ -94,18 +87,6 @@ public class AvroRecordReader extends AbstractRecordReader {
                           final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns,
                           final String userName) {
-    this(fragmentContext, inputPath, start, length, fileSystem, projectedColumns, userName, DEFAULT_BATCH_SIZE);
-  }
-
-  public AvroRecordReader(final FragmentContext fragmentContext,
-                          final String inputPath,
-                          final long start,
-                          final long length,
-                          final FileSystem fileSystem,
-                          List<SchemaPath> projectedColumns,
-                          final String userName,
-                          final int defaultBatchSize) {
-
     hadoop = new Path(inputPath);
     this.start = start;
     this.end = start + length;
@@ -161,10 +142,9 @@ public class AvroRecordReader extends AbstractRecordReader {
     writer.reset();
 
     try {
-
-      // XXX - Implement batch size
-
-      for (GenericContainer container = null; reader.hasNext() && !reader.pastSync(end); recordCount++) {
+      for (GenericContainer container = null;
+           recordCount < DEFAULT_BATCH_SIZE && reader.hasNext() && !reader.pastSync(end);
+           recordCount++) {
         writer.setPosition(recordCount);
         container = reader.next(container);
         processRecord(container, container.getSchema());
@@ -284,56 +264,39 @@ public class AvroRecordReader extends AbstractRecordReader {
     switch (type) {
       case STRING:
         byte[] binary = null;
+        final int length;
         if (value instanceof Utf8) {
           binary = ((Utf8) value).getBytes();
+          length = ((Utf8) value).getByteLength();
         } else {
           binary = value.toString().getBytes(Charsets.UTF_8);
+          length = binary.length;
         }
-        final int length = binary.length;
-        final VarCharHolder vh = new VarCharHolder();
         ensure(length);
         buffer.setBytes(0, binary);
-        vh.buffer = buffer;
-        vh.start = 0;
-        vh.end = length;
-        writer.varChar(fieldName).write(vh);
+        writer.varChar(fieldName).writeVarChar(0, length, buffer);
         break;
       case INT:
-        final IntHolder ih = new IntHolder();
-        ih.value = (Integer) value;
-        writer.integer(fieldName).write(ih);
+        writer.integer(fieldName).writeInt((Integer) value);
         break;
       case LONG:
-        final BigIntHolder bh = new BigIntHolder();
-        bh.value = (Long) value;
-        writer.bigInt(fieldName).write(bh);
+        writer.bigInt(fieldName).writeBigInt((Long) value);
         break;
       case FLOAT:
-        final Float4Holder fh = new Float4Holder();
-        fh.value = (Float) value;
-        writer.float4(fieldName).write(fh);
+        writer.float4(fieldName).writeFloat4((Float) value);
         break;
       case DOUBLE:
-        final Float8Holder f8h = new Float8Holder();
-        f8h.value = (Double) value;
-        writer.float8(fieldName).write(f8h);
+        writer.float8(fieldName).writeFloat8((Double) value);
         break;
       case BOOLEAN:
-        final BitHolder bit = new BitHolder();
-        bit.value = (Boolean) value ? 1 : 0;
-        writer.bit(fieldName).write(bit);
+        writer.bit(fieldName).writeBit((Boolean) value ? 1 : 0);
         break;
       case BYTES:
-        // XXX - Not sure if this is correct. Nothing prints from sqlline for byte fields.
-        final VarBinaryHolder vb = new VarBinaryHolder();
         final ByteBuffer buf = (ByteBuffer) value;
-        final byte[] bytes = buf.array();
-        ensure(bytes.length);
-        buffer.setBytes(0, bytes);
-        vb.buffer = buffer;
-        vb.start = 0;
-        vb.end = bytes.length;
-        writer.binary(fieldName).write(vb);
+        length = buf.remaining();
+        ensure(length);
+        buffer.setBytes(0, buf);
+        writer.binary(fieldName).writeVarBinary(0, length, buffer);
         break;
       case NULL:
         // Nothing to do for null type
@@ -346,13 +309,10 @@ public class AvroRecordReader extends AbstractRecordReader {
         } catch (UnsupportedEncodingException e) {
           throw new DrillRuntimeException("Unable to read enum value for field: " + fieldName, e);
         }
-        final VarCharHolder vch = new VarCharHolder();
         ensure(b.length);
         buffer.setBytes(0, b);
-        vch.buffer = buffer;
-        vch.start = 0;
-        vch.end = b.length;
-        writer.varChar(fieldName).write(vch);
+        writer.varChar(fieldName).writeVarChar(0, b.length, buffer);
+
         break;
       default:
         throw new DrillRuntimeException("Unhandled Avro type: " + type.toString());
