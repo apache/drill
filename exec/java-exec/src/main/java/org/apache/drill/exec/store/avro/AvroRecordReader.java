@@ -284,12 +284,15 @@ public class AvroRecordReader extends AbstractRecordReader {
     switch (type) {
       case STRING:
         byte[] binary = null;
+        final int length;
         if (value instanceof Utf8) {
           binary = ((Utf8) value).getBytes();
+          length = ((Utf8) value).getByteLength();
         } else {
           binary = value.toString().getBytes(Charsets.UTF_8);
+          length = binary.length;
         }
-        final int length = binary.length;
+
         final VarCharHolder vh = new VarCharHolder();
         ensure(length);
         buffer.setBytes(0, binary);
