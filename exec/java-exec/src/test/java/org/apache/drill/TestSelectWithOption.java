@@ -155,11 +155,11 @@ public class TestSelectWithOption extends BaseTestQuery {
         "c|d");
     // Using the defaults in TextFormatConfig (the field delimiter is neither "," not "|")
     String[] csvQueries = {
-        format("select columns from %s ('TeXT')", csvTableName),
-        format("select columns from %s('TeXT')", csvTableName),
+//        format("select columns from %s ('TeXT')", csvTableName),
+//        format("select columns from %s('TeXT')", csvTableName),
         format("select columns from table(%s ('TeXT'))", csvTableName),
         format("select columns from table(%s (type => 'TeXT'))", csvTableName),
-        format("select columns from %s (type => 'TeXT')", csvTableName)
+//        format("select columns from %s (type => 'TeXT')", csvTableName)
     };
     for (String csvQuery : csvQueries) {
       testWithResult(csvQuery,
@@ -171,10 +171,10 @@ public class TestSelectWithOption extends BaseTestQuery {
           listOf("a", "b"),
           listOf("c|d"));
     // setting the delimiter
-    testWithResult(format("select columns from %s (type => 'TeXT', fieldDelimiter => ',')", csvTableName),
+    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => ','))", csvTableName),
         listOf("a", "b"),
         listOf("c|d"));
-    testWithResult(format("select columns from %s (type => 'TeXT', fieldDelimiter => '|')", csvTableName),
+    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => '|'))", csvTableName),
         listOf("a,b"),
         listOf("c", "d"));
   }
@@ -190,11 +190,11 @@ public class TestSelectWithOption extends BaseTestQuery {
     String[] jsonQueries = {
         format("select columns from table(%s ('JSON'))", jsonTableName),
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
-        format("select columns from %s ('JSON')", jsonTableName),
-        format("select columns from %s (type => 'JSON')", jsonTableName),
-        format("select columns from %s(type => 'JSON')", jsonTableName),
+//        format("select columns from %s ('JSON')", jsonTableName),
+//        format("select columns from %s (type => 'JSON')", jsonTableName),
+//        format("select columns from %s(type => 'JSON')", jsonTableName),
         // we can use named format plugin configurations too!
-        format("select columns from %s(type => 'Named', name => 'json')", jsonTableName),
+        format("select columns from table(%s(type => 'Named', name => 'json'))", jsonTableName),
     };
     for (String jsonQuery : jsonQueries) {
       testWithResult(jsonQuery, listOf("f","g"));
