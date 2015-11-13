@@ -80,6 +80,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     options.put("extension", "json");
     options.put("extended", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_EXTENDED_TYPES)));
+    options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
 
     RecordWriter recordWriter = new JsonRecordWriter();
     recordWriter.init(options);
