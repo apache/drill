@@ -257,8 +257,9 @@ public class WorkspaceSchemaFactory {
       }
       for (int i = 1; i < t.params.size(); i++) {
         Object param = t.params.get(i);
-        if (param == null)
+        if (param == null) {
           continue;
+        }
         TableParamDef paramDef = t.sig.params.get(i);
         TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);
         if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
@@ -408,6 +409,10 @@ public class WorkspaceSchemaFactory {
 
   }
 
+  private static Object[] array(Object... objects) {
+    return objects;
+  }
+
   static final class TableInstance {
     final TableSignature sig;
     final List<Object> params;
@@ -445,36 +450,21 @@ public class WorkspaceSchemaFactory {
       return sb.toString();
     }
 
-    // eclipse generated
+    private Object[] toArray() {
+      return array(sig, params);
+    }
+
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((params == null) ? 0 : params.hashCode());
-      result = prime * result + ((sig == null) ? 0 : sig.hashCode());
-      return result;
+      return Arrays.hashCode(toArray());
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      TableInstance other = (TableInstance) obj;
-      if (params == null) {
-        if (other.params != null)
-          return false;
-      } else if (!params.equals(other.params))
-        return false;
-      if (sig == null) {
-        if (other.sig != null)
-          return false;
-      } else if (!sig.equals(other.sig))
-        return false;
-      return true;
+      if (obj instanceof TableInstance) {
+        return Arrays.equals(this.toArray(), ((TableInstance)obj).toArray());
+      }
+      return false;
     }
 
     @Override
@@ -502,39 +492,21 @@ public class WorkspaceSchemaFactory {
       return new TableParamDef(name, type, true);
     }
 
-    // eclipse generated
+    private Object[] toArray() {
+      return array(name, type, optional);
+    }
+
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((name == null) ? 0 : name.hashCode());
-      result = prime * result + (optional ? 1231 : 1237);
-      result = prime * result + ((type == null) ? 0 : type.hashCode());
-      return result;
+      return Arrays.hashCode(toArray());
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      TableParamDef other = (TableParamDef) obj;
-      if (name == null) {
-        if (other.name != null)
-          return false;
-      } else if (!name.equals(other.name))
-        return false;
-      if (optional != other.optional)
-        return false;
-      if (type == null) {
-        if (other.type != null)
-          return false;
-      } else if (!type.equals(other.type))
-        return false;
-      return true;
+      if (obj instanceof TableParamDef) {
+        return Arrays.equals(this.toArray(), ((TableParamDef)obj).toArray());
+      }
+      return false;
     }
 
     @Override
@@ -556,36 +528,21 @@ public class WorkspaceSchemaFactory {
       this.params = unmodifiableList(params);
     }
 
-    // eclipse generated
+    private Object[] toArray() {
+      return array(name, params);
+    }
+
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((name == null) ? 0 : name.hashCode());
-      result = prime * result + ((params == null) ? 0 : params.hashCode());
-      return result;
+      return Arrays.hashCode(toArray());
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      TableSignature other = (TableSignature) obj;
-      if (name == null) {
-        if (other.name != null)
-          return false;
-      } else if (!name.equals(other.name))
-        return false;
-      if (params == null) {
-        if (other.params != null)
-          return false;
-      } else if (!params.equals(other.params))
-        return false;
-      return true;
+      if (obj instanceof TableSignature) {
+        return Arrays.equals(this.toArray(), ((TableSignature)obj).toArray());
+      }
+      return false;
     }
 
     @Override
