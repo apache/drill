@@ -80,7 +80,9 @@ public class ComplexCopier {
         if (reader.isSet()) {
           Nullable${name}Holder ${uncappedName}Holder = new Nullable${name}Holder();
           reader.read(${uncappedName}Holder);
-          writer.write${name}(<#list fields as field>${uncappedName}Holder.${field.name}<#if field_has_next>, </#if></#list>);
+          if (${uncappedName}Holder.isSet == 1) {
+            writer.write${name}(<#list fields as field>${uncappedName}Holder.${field.name}<#if field_has_next>, </#if></#list>);
+          }
         }
         break;
 

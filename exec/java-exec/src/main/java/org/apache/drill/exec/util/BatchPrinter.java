@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -74,6 +75,42 @@ public class BatchPrinter {
         System.out.printf("|\n");
         System.out.println(StringUtils.repeat("-", width*17 + 1));
       }
+      for (ValueVector vv : vectors) {
+        Object o = vv.getAccessor().getObject(row);
+        String value;
+        if (o == null) {
+          value = "null";
+        } else
+        if (o instanceof byte[]) {
+          value = new String((byte[]) o);
+        } else {
+          value = o.toString();
+        }
+        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+      }
+      System.out.printf("|\n");
+    }
+  }
+
+  public static void printBatch(VectorAccessible batch, SelectionVector2 sv2) {
+    List<String> columns = Lists.newArrayList();
+    List<ValueVector> vectors = Lists.newArrayList();
+    for (VectorWrapper vw : batch) {
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
+      vectors.add(vw.getValueVector());
+    }
+    int width = columns.size();
+    int rows = vectors.get(0).getMetadata().getValueCount();
+    for (int i = 0; i < rows; i++) {
+      if (i%50 == 0) {
+        System.out.println(StringUtils.repeat("-", width * 17 + 1));
+        for (String column : columns) {
+          System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
+        }
+        System.out.printf("|\n");
+        System.out.println(StringUtils.repeat("-", width*17 + 1));
+      }
+      int row = sv2.getIndex(i);
       for (ValueVector vv : vectors) {
         Object o = vv.getAccessor().getObject(row);
         String value;

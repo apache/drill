@@ -18,10 +18,14 @@
 package org.apache.drill.exec.vector.complex;
 
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
+
+import java.util.List;
 
 public class FieldIdUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
@@ -118,6 +122,65 @@ public class FieldIdUtil {
           logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
           return null;
         }
+      }
+    }
+  }
+
+  public static TypedFieldId getFieldId(ValueVector vector, int id, SchemaPath expectedPath, boolean hyper) {
+    if (!expectedPath.getRootSegment().segmentEquals(vector.getField().getPath().getRootSegment())) {
+      return null;
+    }
+    PathSegment seg = expectedPath.getRootSegment();
+
+    TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+    if (hyper) {
+      builder.hyper();
+    }
+    if (vector instanceof UnionVector) {
+      builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
+      List<MinorType> minorTypes = ((UnionVector) vector).getSubTypes();
+      MajorType.Builder majorTypeBuilder = MajorType.newBuilder().setMinorType(MinorType.UNION);
+      for (MinorType type : minorTypes) {
+        majorTypeBuilder.addSubType(type);
+      }
+      MajorType majorType = majorTypeBuilder.build();
+      builder.intermediateType(majorType);
+      if (seg.isLastPath()) {
+        builder.finalType(majorType);
+        return builder.build();
+      } else {
+        return ((UnionVector) vector).getFieldIdIfMatches(builder, false, seg.getChild());
+      }
+    } else if (vector instanceof ListVector) {
+      ListVector list = (ListVector) vector;
+      builder.intermediateType(vector.getField().getType());
+      builder.addId(id);
+      return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+    } else
+    if (vector instanceof AbstractContainerVector) {
+      // we're looking for a multi path.
+      AbstractContainerVector c = (AbstractContainerVector) vector;
+      builder.intermediateType(vector.getField().getType());
+      builder.addId(id);
+      return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+
+    } else {
+      builder.intermediateType(vector.getField().getType());
+      builder.addId(id);
+      builder.finalType(vector.getField().getType());
+      if (seg.isLastPath()) {
+        return builder.build();
+      } else {
+        PathSegment child = seg.getChild();
+        if (child.isArray() && child.isLastPath()) {
+          builder.remainder(child);
+          builder.withIndex();
+          builder.finalType(vector.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
+          return builder.build();
+        } else {
+          return null;
+        }
+
       }
     }
   }

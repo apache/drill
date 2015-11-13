@@ -19,10 +19,16 @@ package org.apache.drill.exec.physical.impl.sort;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -38,6 +44,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.vector.complex.UnionVector;
 
 public class SortRecordBatchBuilder implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
@@ -47,10 +54,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   private int recordCount;
   private long runningBatches;
   private SelectionVector4 sv4;
+  private BufferAllocator allocator;
   final PreAllocator svAllocator;
   private boolean svAllocatorUsed = false;
 
   public SortRecordBatchBuilder(BufferAllocator a) {
+    this.allocator = a;
     this.svAllocator = a.getNewPreAllocator();
   }
 

@@ -24,7 +24,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -51,21 +53,34 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
   private FileSystem fs;
   private BufferAllocator allocator;
   private int spilledBatches = 0;
+  private OperatorContext context;
+  private BatchSchema schema;
 
-  public BatchGroup(VectorContainer container, SelectionVector2 sv2) {
+  public BatchGroup(VectorContainer container, SelectionVector2 sv2, OperatorContext context) {
     this.sv2 = sv2;
     this.currentContainer = container;
+    this.context = context;
   }
 
-  public BatchGroup(VectorContainer container, FileSystem fs, String path, BufferAllocator allocator) {
+  public BatchGroup(VectorContainer container, FileSystem fs, String path, OperatorContext context) {
     currentContainer = container;
     this.fs = fs;
     this.path = new Path(path);
-    this.allocator = allocator;
+    this.allocator = context.getAllocator();
+    this.context = context;
   }
 
   public SelectionVector2 getSv2() {
     return sv2;
+  }
+
+  /**
+   * Updates the schema for this batch group. The current as well as any deserialized batches will be coerced to this schema
+   * @param schema
+   */
+  public void setSchema(BatchSchema schema) {
+    currentContainer = SchemaUtil.coerceContainer(currentContainer, schema, context);
+    this.schema = schema;
   }
 
   public void addBatch(VectorContainer newContainer) throws IOException {
@@ -96,6 +111,9 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     watch.start();
     vas.readFromStream(inputStream);
     VectorContainer c =  vas.get();
+    if (schema != null) {
+      c = SchemaUtil.coerceContainer(c, schema, context);
+    }
 //    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
     currentContainer.zeroVectors();

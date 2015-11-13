@@ -58,6 +58,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -66,6 +67,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -289,29 +291,42 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         case STOP:
           return upstream;
         case OK_NEW_SCHEMA:
-          // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
-          if (!incoming.getSchema().equals(schema)) {
-            if (schema != null) {
-              throw new SchemaChangeException();
-            }
-            this.schema = incoming.getSchema();
-            this.sorter = createNewSorter(context, incoming);
-          }
-          // fall through.
         case OK:
+          VectorContainer convertedBatch;
+          // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
+          if (upstream == IterOutcome.OK_NEW_SCHEMA && !incoming.getSchema().equals(schema)) {
+            if (schema != null) {
+              if (unionTypeEnabled) {
+                this.schema = SchemaUtil.mergeSchemas(schema, incoming.getSchema());
+              } else {
+                throw new SchemaChangeException("Schema changes not supported in External Sort. Please enable Union type");
+              }
+            } else {
+              schema = incoming.getSchema();
+            }
+            convertedBatch = SchemaUtil.coerceContainer(incoming, schema, oContext);
+            for (BatchGroup b : batchGroups) {
+              b.setSchema(schema);
+            }
+            for (BatchGroup b : spilledBatchGroups) {
+              b.setSchema(schema);
+            }
+            this.sorter = createNewSorter(context, convertedBatch);
+          } else {
+            convertedBatch = SchemaUtil.coerceContainer(incoming, schema, oContext);
+          }
           if (first) {
             first = false;
           }
-          if (incoming.getRecordCount() == 0) {
-            for (VectorWrapper<?> w : incoming) {
+          if (convertedBatch.getRecordCount() == 0) {
+            for (VectorWrapper<?> w : convertedBatch) {
               w.clear();
             }
             break;
           }
-          totalSizeInMemory += getBufferSize(incoming);
           SelectionVector2 sv2;
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
-            sv2 = incoming.getSelectionVector2();
+            sv2 = incoming.getSelectionVector2().clone();
             if (sv2.getBuffer(false).isRootBuffer()) {
               oContext.getAllocator().takeOwnership(sv2.getBuffer(false));
             }
@@ -324,18 +339,16 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
               throw new OutOfMemoryException(e);
             }
           }
+          totalSizeInMemory += getBufferSize(convertedBatch);
           int count = sv2.getCount();
           totalCount += count;
-          totalBatches++;
-          sorter.setup(context, sv2, incoming);
+          sorter.setup(context, sv2, convertedBatch);
           sorter.sort(sv2);
-          RecordBatchData rbd = new RecordBatchData(incoming);
+          RecordBatchData rbd = new RecordBatchData(convertedBatch);
           boolean success = false;
           try {
-            if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE) {
-              rbd.setSv2(sv2);
-            }
-            batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
+            rbd.setSv2(sv2);
+            batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2(), oContext));
             batchesSinceLastSpill++;
             if (// We have spilled at least once and the current memory used is more than the 75% of peak memory used.
                 (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
@@ -531,7 +544,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     c1.setRecordCount(count);
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
-    BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext.getAllocator());
+    BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext);
     boolean threw = true; // true if an exception is thrown in the try block below
     logger.info("Merging and spilling to {}", outputFile);
     try {

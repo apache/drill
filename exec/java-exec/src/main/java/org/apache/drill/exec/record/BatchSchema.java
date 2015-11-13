@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 
 public class BatchSchema implements Iterable<MaterializedField> {
@@ -113,7 +115,42 @@ public class BatchSchema implements Iterable<MaterializedField> {
     } else if (!fields.equals(other.fields)) {
       return false;
     }
+    for (int i = 0; i < fields.size(); i++) {
+      MajorType t1 = fields.get(i).getType();
+      MajorType t2 = other.fields.get(i).getType();
+      if (t1 == null) {
+        if (t2 != null) {
+          return false;
+        }
+      } else {
+        if (!majorTypeEqual(t1, t2)) {
+          return false;
+        }
+      }
+    }
     if (selectionVectorMode != other.selectionVectorMode) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * We treat fields with same set of Subtypes as equal, even if they are in a different order
+   * @param t1
+   * @param t2
+   * @return
+   */
+  private boolean majorTypeEqual(MajorType t1, MajorType t2) {
+    if (t1.equals(t2)) {
+      return true;
+    }
+    if (!t1.getMinorType().equals(t2.getMinorType())) {
+      return false;
+    }
+    if (!t1.getMode().equals(t2.getMode())) {
+      return false;
+    }
+    if (!Sets.newHashSet(t1.getSubTypeList()).equals(Sets.newHashSet(t2.getSubTypeList()))) {
       return false;
     }
     return true;

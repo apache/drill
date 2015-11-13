@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.FieldIdUtil;
 import org.apache.drill.exec.vector.complex.MapVector;
 
 import com.google.common.base.Preconditions;
@@ -110,27 +111,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
     ValueVector v = vectors[0];
-    if (!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) {
-      return null;
-    }
-
-    if (v instanceof AbstractContainerVector) {
-      // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) v;
-      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(v.getField().getType());
-      builder.hyper();
-      builder.addId(id);
-      return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
-
-    } else {
-      return TypedFieldId.newBuilder() //
-          .intermediateType(v.getField().getType()) //
-          .finalType(v.getField().getType()) //
-          .addId(id) //
-          .hyper() //
-          .build();
-    }
+    return FieldIdUtil.getFieldId(v, id, expectedPath, true);
   }
 
   @Override
