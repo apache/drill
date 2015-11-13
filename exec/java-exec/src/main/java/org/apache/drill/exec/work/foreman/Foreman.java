@@ -900,6 +900,10 @@ public class Foreman implements Runnable {
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {
+    // log query id and query text before starting any real work. Also, put
+    // them together such that it is easy to search based on query id
+    logger.info("Query text for query id {}: {}", this.queryIdString, sql);
+
     final DrillSqlWorker sqlWorker = new DrillSqlWorker(queryContext);
     final Pointer<String> textPlan = new Pointer<>();
     final PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
