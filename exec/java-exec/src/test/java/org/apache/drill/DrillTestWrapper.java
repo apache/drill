@@ -395,6 +395,8 @@ public class DrillTestWrapper {
     }
 
     compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+    } catch (Exception e) {
+      throw new Exception(e.getMessage() + "\nFor query: " + query , e);
     } finally {
       cleanupBatches(expected, actual);
     }
@@ -624,7 +626,7 @@ public class DrillTestWrapper {
         missingCols += colName + ", ";
       }
     }
-    return "Expected column(s) " + missingCols + " not found in result set.";
+    return "Expected column(s) " + missingCols + " not found in result set: " + actual + ".";
   }
 
   private String printRecord(Map<String, Object> record) {

@@ -91,7 +91,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   @JsonTypeName("json")
   public static class JSONFormatConfig implements FormatPluginConfig {
 
-    public List<String> extensions;
+    public List<String> extensions = ImmutableList.of("json");
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)

@@ -583,6 +583,11 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
+<!--
+              <debugParser>true</debugParser>
+              <debugLookAhead>true</debugLookAhead>
+              <debugTokenManager>true</debugTokenManager>
+ -->
             </configuration>
           </execution>
         </executions>
