@@ -7,22 +7,22 @@ You can use the following string functions in Drill queries:
 
 Function| Return Type  
 --------|---  
-[BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation#byte_substr)|BINARY or VARCHAR
-[CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation#char_length)| INTEGER  
-[CONCAT]({{ site.baseurl }}/docs/string-manipulation#concat)| VARCHAR
-[INITCAP]({{ site.baseurl }}/docs/string-manipulation#initcap)| VARCHAR
-[LENGTH]({{ site.baseurl }}/docs/string-manipulation#length)| INTEGER
-[LOWER]({{ site.baseurl }}/docs/string-manipulation#lower)| VARCHAR
-[LPAD]({{ site.baseurl }}/docs/string-manipulation#lpad)| VARCHAR
-[LTRIM]({{ site.baseurl }}/docs/string-manipulation#ltrim)| VARCHAR
-[POSITION]({{ site.baseurl }}/docs/string-manipulation#position)| INTEGER
-[REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation#regexp_replace)|VARCHAR
-[RPAD]({{ site.baseurl }}/docs/string-manipulation#rpad)| VARCHAR
-[RTRIM]({{ site.baseurl }}/docs/string-manipulation#rtrim)| VARCHAR
-[STRPOS]({{ site.baseurl }}/docs/string-manipulation#strpos)| INTEGER
-[SUBSTR]({{ site.baseurl }}/docs/string-manipulation#substr)| VARCHAR
-[TRIM]({{ site.baseurl }}/docs/string-manipulation#trim)| VARCHAR
-[UPPER]({{ site.baseurl }}/docs/string-manipulation#upper)| VARCHAR
+[BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation/#byte_substr)|BINARY or VARCHAR
+[CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation/#char_length)| INTEGER  
+[CONCAT]({{ site.baseurl }}/docs/string-manipulation/#concat)| VARCHAR
+[INITCAP]({{ site.baseurl }}/docs/string-manipulation/#initcap)| VARCHAR
+[LENGTH]({{ site.baseurl }}/docs/string-manipulation/#length)| INTEGER
+[LOWER]({{ site.baseurl }}/docs/string-manipulation/#lower)| VARCHAR
+[LPAD]({{ site.baseurl }}/docs/string-manipulation/#lpad)| VARCHAR
+[LTRIM]({{ site.baseurl }}/docs/string-manipulation/#ltrim)| VARCHAR
+[POSITION]({{ site.baseurl }}/docs/string-manipulation/#position)| INTEGER
+[REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation/#regexp_replace)|VARCHAR
+[RPAD]({{ site.baseurl }}/docs/string-manipulation/#rpad)| VARCHAR
+[RTRIM]({{ site.baseurl }}/docs/string-manipulation/#rtrim)| VARCHAR
+[STRPOS]({{ site.baseurl }}/docs/string-manipulation/#strpos)| INTEGER
+[SUBSTR]({{ site.baseurl }}/docs/string-manipulation/#substr)| VARCHAR
+[TRIM]({{ site.baseurl }}/docs/string-manipulation/#trim)| VARCHAR
+[UPPER]({{ site.baseurl }}/docs/string-manipulation/#upper)| VARCHAR
 
 ## BYTE_SUBSTR
 Returns in binary format a substring of a string.
@@ -99,7 +99,7 @@ Concatenates arguments.
     +--------------------+
     1 row selected (0.134 seconds)
 
-Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators#string-concatenate-operator) to concatenate strings.
+Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators/#string-concatenate-operator) to concatenate strings.
 
 ## INITCAP
 Returns the string using initial caps.

@@ -14,6 +14,8 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Learn how to handle dynamic data without changing a schema or going through an ETL phase.
 * [Analyzing Social Media]({{site.baseurl}}/docs/analyzing-social-media)  
   Analyze Twitter data in its native JSON format using Drill.  
+* [Analyzing Data Using Window Functions]({{site.baseurl}}/docs/analyzing-data-using-window-functions)
+  Learn how to use analytic/window functions. 
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables using Drill and Tableau.  
 * [Using MicroStrategy Analytics with Apache Drill]({{site.baseurl}}/docs/using-microstrategy-analytics-with-apache-drill/)  
@@ -26,7 +28,7 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Connect Tableau 9 Desktop to Apache Drill, explore multiple data formats on Hadoop, and access semi-structured data.  
 * [Using Apache Drill with Tableau 9 Server]({{site.baseurl}}/docs/using-apache-drill-with-tableau-9-server)  
   Connect Tableau 9 Server to Apache Drill, explore multiple data formats on Hadoop, access semi-structured data, and share Tableau visualizations with others.  
-* [Using Drill to Analyze Amazon Spot Prices](https://github.com/vicenteg/spot-price-history#drill-workshop---amazon-spot-prices)  
+* [Using Drill to Analyze Amazon Spot Prices](https://github.com/vicenteg/spot-price-history/#drill-workshop---amazon-spot-prices)  
   Use a Drill workshop on github to create views of JSON and Parquet data.  
 * [Running Drill Queries on S3 Data](http://drill.apache.org/blog/2014/12/09/running-sql-queries-on-amazon-s3/)  
   Step through querying files using Drill and Amazon Simple Storage Service (S3).  

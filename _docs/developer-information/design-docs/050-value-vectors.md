@@ -3,7 +3,7 @@ title: "Value Vectors"
 parent: "Design Docs"
 ---
 This document defines the data structures required for passing sequences of
-columnar data between [Operators](https://docs.google.com/a/maprtech.com/document/d/1zaxkcrK9mYyfpGwX1kAV80z0PCi8abefL45zOzb97dI/edit#bookmark=id.iip15ful18mm).
+columnar data between [Operators](https://docs.google.com/a/maprtech.com/document/d/1zaxkcrK9mYyfpGwX1kAV80z0PCi8abefL45zOzb97dI).
 
 ## Goals
 
@@ -39,7 +39,7 @@ schema changes during the course of record iteration.
 
 ### Homogenous Value Types
 
-Each value in a Value Vector is of the same type. The [Record Batch](https://docs.google.com/a/maprtech.com/document/d/1zaxkcrK9mYyfpGwX1kAV80z0PCi8abefL45zOzb97dI/edit#bookmark=kix.s2xuoqnr8obe) implementation is responsible for
+Each value in a Value Vector is of the same type. The [Record Batch](https://docs.google.com/a/maprtech.com/document/d/1zaxkcrK9mYyfpGwX1kAV80z0PCi8abefL45zOzb97dI/) implementation is responsible for
 creating a new Value Vector any time there is a change in schema.
 
 ## Definitions

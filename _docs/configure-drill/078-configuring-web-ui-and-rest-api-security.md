@@ -18,7 +18,7 @@ Drill generates a self-signed certificate that works with SSL for HTTPS access t
 
 ## Setting Up a Custom SSL Configuration
 
-As cluster administrator, you can set the following SSL configuration parameters in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html#Customization):
+As cluster administrator, you can set the following SSL configuration parameters in the `conf/drill-override.conf` file, as described in the [Java product documentation](http://docs.oracle.com/javase/7/docs/technotes/guides/security/jsse/JSSERefGuide.html/#Customization):
 
 * javax.net.ssl.keyStore  
   Path to the application's certificate and private key in the Java keystore file.  

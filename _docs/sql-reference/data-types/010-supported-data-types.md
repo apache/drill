@@ -79,23 +79,23 @@ changes in the data processing, Drill regenerates the code as necessary.
 In Drill, you cast or convert data to the required type for moving data from one data source to another.
 You do not assign a data type to every column name in a CREATE TABLE statement to define the table as you do in database software. Instead, you use the CREATE TABLE AS (CTAS) statement with one or more of the following functions to define the table:
 
-* [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)    
-* [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)   
+* [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)    
+* [CONVERT TO/FROM]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from)   
   Use the [CONVERT TO AND CONVERT FROM data types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  
-* Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)   
+* Other [data conversion functions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)   
 
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to cast the data. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. The following list describes how Drill treats data types from various data sources:
 
 * HBase  
   Does not implicitly cast input to SQL types. Convert data to appropriate types as as described in the section ["Querying HBase"]({{ site.baseurl}}/docs/querying-hbase/). Use [CONVERT_TO or CONVERT_FROM data types]({{ site.baseurl }}/docs//data-type-conversion/#convert_to-and-convert_from).
 * Hive  
-  Implicitly casts Hive types to SQL types as shown in the Hive [type mapping example]({{ site.baseurl }}/docs/hive-to-drill-data-type-mapping#type-mapping-example)
+  Implicitly casts Hive types to SQL types as shown in the Hive [type mapping example]({{ site.baseurl }}/docs/hive-to-drill-data-type-mapping/#type-mapping-example)
 * JSON  
-  Implicitly casts JSON data to its [corresponding SQL types]({{ site.baseurl }}/docs/json-data-model#data-type-mapping) or to VARCHAR if Drill is in all text mode. 
+  Implicitly casts JSON data to its [corresponding SQL types]({{ site.baseurl }}/docs/json-data-model/#data-type-mapping) or to VARCHAR if Drill is in all text mode. 
 * MapR-DB  
   Implicitly casts MapR-DB data to SQL types when you use [the maprdb format]({{ site.baseurl }}/docs/mapr-db-format) for reading MapR-DB data. The dfs storage plugin defines the format when you install Drill from the mapr-drill package on a MapR node.
 * Parquet  
-  Implicitly casts Parquet data to the SQL types shown in [SQL Data Types to Parquet]({{ site.baseurl }}/docs/parquet-format#sql-data-types-to-parquet). 
+  Implicitly casts Parquet data to the SQL types shown in [SQL Data Types to Parquet]({{ site.baseurl }}/docs/parquet-format/#sql-data-types-to-parquet). 
 * Text: CSV, TSV, and other text  
   Implicitly casts all textual data to VARCHAR.
 
@@ -129,7 +129,7 @@ As shown in the table, Drill can cast a NULL value, which has the lowest precede
 
 In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as previously mentioned. To handle textual data, you can use the following functions to cast and convert compatible data types:
 
-* [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)  
+* [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)  
   Casts data from one data type to another.
 * CONVERT_TO and CONVERT_FROM functions
   Converts data, including binary data, from one data type to another using ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  

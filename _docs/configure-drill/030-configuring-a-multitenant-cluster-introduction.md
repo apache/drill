@@ -14,7 +14,7 @@ Drill supports multiple users sharing a Drillbit and running separate Drillbits 
 You need to plan and configure the following resources for use with Drill and other workloads: 
 
 * [Memory]({{site.baseurl}}/docs/configuring-multitenant-resources)  
-* [CPU]({{site.baseurl}}/docs/configuring-multitenant-resources#how-to-manage-drill-cpu-resources)  
-* [Disk]({{site.baseurl}}/docs/configuring-multitenant-resources#how-to-manage-drill-disk-resources) 
+* [CPU]({{site.baseurl}}/docs/configuring-multitenant-resources/#how-to-manage-drill-cpu-resources)  
+* [Disk]({{site.baseurl}}/docs/configuring-multitenant-resources/#how-to-manage-drill-disk-resources) 
 
-When users share a Drillbit, [configure queues]({{site.baseurl}}/docs/configuring-resources-for-a-shared-drillbit#configuring-query-queuing) and [parallelization]({{site.baseurl}}/docs/configuring-resources-for-a-shared-drillbit#configuring-parallelization) in addition to memory. 
+When users share a Drillbit, [configure queues]({{site.baseurl}}/docs/configuring-resources-for-a-shared-drillbit/#configuring-query-queuing) and [parallelization]({{site.baseurl}}/docs/configuring-resources-for-a-shared-drillbit/#configuring-parallelization) in addition to memory. 

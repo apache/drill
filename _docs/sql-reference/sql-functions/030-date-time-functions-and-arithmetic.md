@@ -9,14 +9,14 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 
 **Function**| **Return Type**  
 ---|---  
-[AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#age)                               | INTERVALDAY or INTERVALYEAR
-[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#extract)      | DOUBLE
+[AGE(TIMESTAMP)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#age)                               | INTERVALDAY or INTERVALYEAR
+[EXTRACT(field from time_expression)]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#extract)      | DOUBLE
 [CURRENT_DATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)      | DATE  
 [CURRENT_TIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)      | TIME   
 [CURRENT_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions) | TIMESTAMP 
-[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_add)                                | DATE, TIMESTAMP  
-[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_part)                              | DOUBLE  
-[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic#date_sub)                                | DATE, TIMESTAMP     
+[DATE_ADD]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#date_add)                                | DATE, TIMESTAMP  
+[DATE_PART]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#date_part)                              | DOUBLE  
+[DATE_SUB]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#date_sub)                                | DATE, TIMESTAMP     
 [LOCALTIME]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | TIME  
 [LOCALTIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)    | TIMESTAMP  
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  

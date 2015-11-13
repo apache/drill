@@ -28,7 +28,7 @@ The following table lists the commands that you can run on the Drill command lin
 | !run          | Run a script from the specified file.                                                                                                 |
 | !save         | Save the current variables and aliases.                                                                                               |
 | !script       | Start saving a script to a file.                                                                                                      |
-| !set          | Set the given variable. See [The Set Command Variables]({{site.baseurl}}/docs/configuring-the-drill-shell#the-set-command-variables). |
+| !set          | Set the given variable. See [Set Command Variables]({{site.baseurl}}/docs/configuring-the-drill-shell/#the-set-command-variables).    |
 | !tables       | List all the tables in the database.                                                                                                  |
 | !verbose      | Show unabbreviated error messages.                                                                                                    |
 

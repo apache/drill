@@ -114,7 +114,7 @@ The following examples show the input and output format of INTERVALYEAR (Year, M
 
 DATE, TIME, and TIMESTAMP literals. Drill stores values in Coordinated Universal Time (UTC). Drill supports time functions in the range 1971 to 2037.
 
-Drill does not support TIMESTAMP with time zone; however, if your data includes the time zone, use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types#to_timestamp) and [Joda format specifiers]({{site.baseurl}}/docs/data-type-conversion/#format-specifiers-for-date/time-conversions) as shown the examples in section, ["Time Zone Limitation"]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).
+Drill does not support TIMESTAMP with time zone; however, if your data includes the time zone, use the [TO_TIMESTAMP function]({{ site.baseurl }}/docs/casting/converting-data-types/#to_timestamp) and [Joda format specifiers]({{site.baseurl}}/docs/data-type-conversion/#format-specifiers-for-date/time-conversions) as shown the examples in section, ["Time Zone Limitation"]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).
 
 Next, use the following literals in a SELECT statement. 
 

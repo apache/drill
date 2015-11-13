@@ -11,15 +11,15 @@ A SQL statement used in Drill can include one or more of the following parts:
 * Function, scalar and aggregate, such as sum
 * Literal value
 
-  * [Boolean]({{ site.baseurl }}/docs/lexical-structure#boolean)
-  * [Identifier]({{ site.baseurl }}/docs/lexical-structure#identifier)
-  * [Integer]({{ site.baseurl }}/docs/lexical-structure#integer)
-  * [Numeric constant]({{ site.baseurl }}/docs/lexical-structure#numeric-constant)
-  * [String]({{ site.baseurl }}/docs/lexical-structure#string)
+  * [Boolean]({{ site.baseurl }}/docs/lexical-structure/#boolean)
+  * [Identifier]({{ site.baseurl }}/docs/lexical-structure/#identifier)
+  * [Integer]({{ site.baseurl }}/docs/lexical-structure/#integer)
+  * [Numeric constant]({{ site.baseurl }}/docs/lexical-structure/#numeric-constant)
+  * [String]({{ site.baseurl }}/docs/lexical-structure/#string)
 
 * Operator, such as [NOT] IN, LIKE, and AND
 * Predicate, such as a > b in `SELECT * FROM myfile WHERE a > b`.
-* [Storage plugin and workspace reference]({{ site.baseurl }}/docs/lexical-structure#storage-plugin-and-workspace-references)
+* [Storage plugin and workspace reference]({{ site.baseurl }}/docs/lexical-structure/#storage-plugin-and-workspace-references)
 * Whitespace
 * Comment in the following format: 
 

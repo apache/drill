@@ -70,7 +70,7 @@ Drill reads tuples defined in single objects, having no comma between objects. A
     { name: "Apples", desc: "Delicious" }
     { name: "Oranges", desc: "Florida Navel" }
 
-To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model#analyzing-json) files, use the FLATTEN and KVGEN functions. For example, you need to flatten the data to read all the names in this JSON file:
+To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model/#analyzing-json) files, use the FLATTEN and KVGEN functions. For example, you need to flatten the data to read all the names in this JSON file:
 
      {"Fruits: [{"name":"Apples", "quantity":115},
                 {"name":"Oranges","quantity":199},
@@ -497,7 +497,7 @@ Complex arrays and maps can be difficult or impossible to query.
 
 Workaround: Separate lengthy objects into objects delimited by curly braces using the following functions:
 
-* [FLATTEN]({{ site.baseurl }}/docs/json-data-model#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
+* [FLATTEN]({{ site.baseurl }}/docs/json-data-model/#flatten-json-data) separates a set of nested JSON objects into individual rows in a DRILL table.
 
 * [KVGEN]({{ site.baseurl }}/docs/kvgen/) separates objects having more elements than optimal for querying.
 

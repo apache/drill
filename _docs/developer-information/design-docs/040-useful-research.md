@@ -22,7 +22,7 @@ parent: "Design Docs"
   * <http://pdf.aminer.org/000/094/728/database_cracking.pdf>
   * <http://homepages.cwi.nl/~idreos/NoDBsigmod2012.pdf>
   * <http://db.csail.mit.edu/projects/cstore/abadiicde2007.pdf>
-  * Hive Architecture: <https://cwiki.apache.org/confluence/display/Hive/Design#Design-HiveArchitecture>
+  * Hive Architecture: <https://cwiki.apache.org/confluence/display/Hive/Design/#Design-HiveArchitecture>
   * Fast Response in an unreliable world: <http://research.google.com/people/jeff/latency.html>
   * Column-Oriented Database Systems: <http://www.vldb.org/pvldb/2/vldb09-tutorial6.pdf> (SLIDES: <http://phdopen.mimuw.edu.pl/lato10/boncz_mimuw.pdf>)
 

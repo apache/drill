@@ -50,7 +50,7 @@ This example demonstrates the mapping of Hive data types to Drill data types. Us
 The example makes the following assumptions:
 
 * The CSV resides in the following location in the Drill sandbox: `/mapr/demo.mapr.com/data/`  
-* You [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types#enabling-the-decimal-type) in Drill.  
+* You [enabled the DECIMAL data type]({{site.baseurl}}/docs/supported-data-types/#enabling-the-decimal-type) in Drill.  
 
 ### Define an External Table in Hive
 

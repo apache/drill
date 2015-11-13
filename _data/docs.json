@@ -160,6 +160,23 @@
             "title": "Aggregate and Aggregate Statistical", 
             "url": "/docs/aggregate-and-aggregate-statistical/"
         }, 
+        "Analyzing Data Using Window Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "Tutorials", 
+                    "url": "/docs/tutorials/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Install Drill", 
+            "next_url": "/docs/install-drill/", 
+            "parent": "Tutorials", 
+            "previous_title": "Analyzing Social Media", 
+            "previous_url": "/docs/analyzing-social-media/", 
+            "relative_path": "_docs/tutorials/070-analyzing-data-using-window-functions.md", 
+            "title": "Analyzing Data Using Window Functions", 
+            "url": "/docs/analyzing-data-using-window-functions/"
+        }, 
         "Analyzing Highly Dynamic Datasets": {
             "breadcrumbs": [
                 {
@@ -185,8 +202,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Install Drill", 
-            "next_url": "/docs/install-drill/", 
+            "next_title": "Analyzing Data Using Window Functions", 
+            "next_url": "/docs/analyzing-data-using-window-functions/", 
             "parent": "Tutorials", 
             "previous_title": "Analyzing Highly Dynamic Datasets", 
             "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
@@ -3791,8 +3808,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Social Media", 
-            "previous_url": "/docs/analyzing-social-media/", 
+            "previous_title": "Analyzing Data Using Window Functions", 
+            "previous_url": "/docs/analyzing-data-using-window-functions/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"
@@ -10824,14 +10841,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Data Using Window Functions", 
+                    "next_url": "/docs/analyzing-data-using-window-functions/", 
                     "parent": "Tutorials", 
                     "previous_title": "Analyzing Highly Dynamic Datasets", 
                     "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
                     "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
                     "title": "Analyzing Social Media", 
                     "url": "/docs/analyzing-social-media/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Social Media", 
+                    "previous_url": "/docs/analyzing-social-media/", 
+                    "relative_path": "_docs/tutorials/070-analyzing-data-using-window-functions.md", 
+                    "title": "Analyzing Data Using Window Functions", 
+                    "url": "/docs/analyzing-data-using-window-functions/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -11922,14 +11956,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Install Drill", 
-                    "next_url": "/docs/install-drill/", 
+                    "next_title": "Analyzing Data Using Window Functions", 
+                    "next_url": "/docs/analyzing-data-using-window-functions/", 
                     "parent": "Tutorials", 
                     "previous_title": "Analyzing Highly Dynamic Datasets", 
                     "previous_url": "/docs/analyzing-highly-dynamic-datasets/", 
                     "relative_path": "_docs/tutorials/060-analyzing-social-media.md", 
                     "title": "Analyzing Social Media", 
                     "url": "/docs/analyzing-social-media/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Tutorials", 
+                            "url": "/docs/tutorials/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Install Drill", 
+                    "next_url": "/docs/install-drill/", 
+                    "parent": "Tutorials", 
+                    "previous_title": "Analyzing Social Media", 
+                    "previous_url": "/docs/analyzing-social-media/", 
+                    "relative_path": "_docs/tutorials/070-analyzing-data-using-window-functions.md", 
+                    "title": "Analyzing Data Using Window Functions", 
+                    "url": "/docs/analyzing-data-using-window-functions/"
                 }
             ], 
             "next_title": "Tutorials Introduction", 
@@ -12186,8 +12237,8 @@
             "next_title": "Install Drill Introduction", 
             "next_url": "/docs/install-drill-introduction/", 
             "parent": "", 
-            "previous_title": "Analyzing Social Media", 
-            "previous_url": "/docs/analyzing-social-media/", 
+            "previous_title": "Analyzing Data Using Window Functions", 
+            "previous_url": "/docs/analyzing-data-using-window-functions/", 
             "relative_path": "_docs/040-install-drill.md", 
             "title": "Install Drill", 
             "url": "/docs/install-drill/"

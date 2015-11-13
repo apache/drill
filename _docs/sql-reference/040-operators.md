@@ -70,7 +70,7 @@ You can use the following string operator in your Drill queries to concatenate s
 
   * string || string
 
-The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation#concat) and will concatenate input if Drill can implicitly convert the input to a string.
+The concatenate operator is an alternative to the [concat function]({{ site.baseurl }}/docs/string-manipulation/#concat) and will concatenate input if Drill can implicitly convert the input to a string.
 
 The concat function treats NULL as an empty string. The concatenate operator (||) returns NULL if any input is NULL.
 

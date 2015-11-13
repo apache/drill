@@ -73,7 +73,7 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
    The message of the day followed by the [`0: jdbc:drill:zk=local>`  prompt]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/#about-the-drill-prompt) appears.  
 
-   At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes#query-sample-data) to Drill.
+   At this point, you can [submit queries]({{site.baseurl}}/docs/drill-in-10-minutes/#query-sample-data) to Drill.
 
 ### Install Drill on Windows
 
@@ -98,7 +98,7 @@ Start the Drill shell using the **sqlline command**. Complete the following step
    ``sqlline.bat -u "jdbc:drill:zk=local"``
    ![drill install dir]({{ site.baseurl }}/docs/img/sqlline1.png)
 
-The `zk=local` means the local node is the ZooKeeper node. At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes#query-sample-data).
+The `zk=local` means the local node is the ZooKeeper node. At this point, you can [run queries]({{ site.baseurl }}/docs/drill-in-10-minutes/#query-sample-data).
 
 ## Stopping Drill
 

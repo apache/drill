@@ -32,10 +32,10 @@ SQuirreL on Windows.
 To use the Drill JDBC driver with SQuirreL on Windows, complete the following
 steps:
 
-  * [Step 1: Getting the Drill JDBC Driver]({{ site.baseurl }}/docs/using-jdbc#step-1:-getting-the-drill-jdbc-driver) 
-  * [Step 2: Installing and Starting SQuirreL]({{ site.baseurl }}/docs/using-jdbc#step-2:-installing-and-starting-squirrel)
-  * [Step 3: Adding the Drill JDBC Driver to SQuirreL]({{ site.baseurl }}/docs/using-jdbc#step-3:-adding-the-drill-jdbc-driver-to-squirrel)
-  * [Step 4: Running a Drill Query from SQuirreL]({{ site.baseurl }}/docs/using-jdbc#step-4:-running-a-drill-query-from-squirrel)
+  * [Step 1: Getting the Drill JDBC Driver]({{ site.baseurl }}/docs/using-jdbc/#step-1:-getting-the-drill-jdbc-driver) 
+  * [Step 2: Installing and Starting SQuirreL]({{ site.baseurl }}/docs/using-jdbc/#step-2:-installing-and-starting-squirrel)
+  * [Step 3: Adding the Drill JDBC Driver to SQuirreL]({{ site.baseurl }}/docs/using-jdbc/#step-3:-adding-the-drill-jdbc-driver-to-squirrel)
+  * [Step 4: Running a Drill Query from SQuirreL]({{ site.baseurl }}/docs/using-jdbc/#step-4:-running-a-drill-query-from-squirrel)
 
 For information about how to use SQuirreL, refer to the [SQuirreL Quick
 Start](http://squirrel-sql.sourceforge.net/user-manual/quick_start.html)

@@ -4,10 +4,10 @@ parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
 
-* [CAST]({{ site.baseurl }}/docs/data-type-conversion#cast)
-* [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion#convert_to-and-convert_from)
-* [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function)
-* [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion#other-data-type-conversions)
+* [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)
+* [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }}/docs/data-type-conversion/#convert_to-and-convert_from)
+* [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function)
+* [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)
 
 ## CAST
 
@@ -158,7 +158,7 @@ Drill can optimize scans of HBase tables when you use the \*\_BE encoded types s
 
 CONVERT_TO also converts an SQL data type to complex types, including HBase byte arrays, JSON and Parquet arrays, and maps. CONVERT_FROM converts from complex types, including HBase arrays, JSON and Parquet arrays and maps to an SQL data type. 
 
-You can use [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion#binary_string-function) custom Drill functions with CONVERT_TO and CONVERT_FROM to get meaningful results.
+You can use [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion/#binary_string-function) custom Drill functions with CONVERT_TO and CONVERT_FROM to get meaningful results.
 
 ### Conversion of Data Types Examples
 

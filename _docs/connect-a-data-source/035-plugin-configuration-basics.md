@@ -177,4 +177,4 @@ After cluster startup, you have to use the REST API or Drill Web Console to add 
 can modify the entry in ZooKeeper by uploading the json file for
 that plugin to the /drill directory of the zookeeper installation, or by just deleting the /drill directory if you do not have configuration properties to preserve.
 
-If you load an HBase storage plugin configuration using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html#config.files) and retry settings in the config block of the HBase plugin configuration.
+If you load an HBase storage plugin configuration using bootstrap-storage-plugins.json file and HBase is not installed, you might experience a delay when executing the queries. Configure the [HBase client timeout](http://hbase.apache.org/book.html/#config.files) and retry settings in the config block of the HBase plugin configuration.

@@ -32,7 +32,7 @@ You create the JAR for a UDF to use in Drill in a conventional manner with a few
         # jar tf target/MyUDF-1.0.0.jar  |grep -i drill
         drill-module.conf
 
-6. Test the UDF in Hive as shown in the [Github readme](https://github.com/viadea/HiveUDF#c-test-udf).
+6. Test the UDF in Hive as shown in the [Github readme](https://github.com/viadea/HiveUDF/#c-test-udf).
 
 The `drill-module.conf` file defines [startup options]({{ site.baseurl }}/docs/start-up-options/) and makes the JAR functions available to use in queries throughout the Hadoop cluster. After exporting the UDF logic to a JAR file, set up the UDF in Drill. Drill users can access the custom UDF for use in Hive queries.
 

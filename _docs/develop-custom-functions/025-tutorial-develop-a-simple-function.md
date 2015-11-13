@@ -84,7 +84,7 @@ public class SimpleMaskFunc implements DrillSimpleFunc{
 
 ## Step 3: Declare input parameters
 
-The function will be generated dynamically, as you can see in the [DrillSimpleFuncHolder](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/DrillSimpleFuncHolder.java#L42), and the input parameters and output holders are defined using holders by annotations. Define the parameters using the @Param annotation. 
+The function will be generated dynamically, as you can see in the [DrillSimpleFuncHolder](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/expr/fn/DrillSimpleFuncHolder.java/#L42), and the input parameters and output holders are defined using holders by annotations. Define the parameters using the @Param annotation. 
 
 * A nullable string  
 * The mask char or string  
