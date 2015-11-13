@@ -20,22 +20,15 @@ package org.apache.drill.exec.store.dfs;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -52,7 +45,6 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.common.logical.FormatPluginConfigBase;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
@@ -76,7 +68,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -85,7 +76,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class WorkspaceSchemaFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dropFileMatchers;
@@ -100,7 +91,7 @@ public class WorkspaceSchemaFactory {
   private final LogicalPlanPersistence logicalPlanPersistence;
   private final Path wsPath;
 
-  private final OptionExtractor optionExtractor;
+  private final FormatPluginOptionExtractor optionExtractor;
 
   public WorkspaceSchemaFactory(
       FileSystemPlugin plugin,
@@ -120,7 +111,7 @@ public class WorkspaceSchemaFactory {
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
     this.wsPath = new Path(config.getLocation());
-    this.optionExtractor = new OptionExtractor(scanResult);
+    this.optionExtractor = new FormatPluginOptionExtractor(scanResult);
 
     for (FormatMatcher m : formatMatchers) {
       if (m.supportDirectoryReads()) {
@@ -177,187 +168,6 @@ public class WorkspaceSchemaFactory {
 
   public WorkspaceSchema createSchema(List<String> parentSchemaPath, SchemaConfig schemaConfig) throws IOException {
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
-  }
-
-  /**
-   * Describes the options for a format plugin
-   * extracted from the FormatPluginConfig subclass
-   */
-  static final class OptionsDescriptor {
-    final Class<? extends FormatPluginConfig> pluginConfigClass;
-    final String typeName;
-    private final Map<String, TableParamDef> functionParamsByName;
-
-    OptionsDescriptor(Class<? extends FormatPluginConfig> pluginConfigClass) {
-      this.pluginConfigClass = pluginConfigClass;
-      Map<String, TableParamDef> paramsByName = new LinkedHashMap<>();
-      Field[] fields = pluginConfigClass.getDeclaredFields();
-      // @JsonTypeName("text")
-      JsonTypeName annotation = pluginConfigClass.getAnnotation(JsonTypeName.class);
-      this.typeName = annotation != null ? annotation.value() : null;
-      if (this.typeName != null) {
-        paramsByName.put("type", new TableParamDef("type", String.class));
-      }
-      for (Field field : fields) {
-        if (Modifier.isStatic(field.getModifiers())
-            // we want to deprecate this field
-            || (field.getName().equals("extensions") && field.getType() == List.class)) {
-          continue;
-        }
-        Class<?> fieldType = field.getType();
-        if (fieldType == char.class) {
-          // calcite does not like char type. Just use String and enforce later that length == 1
-          fieldType = String.class;
-        }
-        paramsByName.put(field.getName(), new TableParamDef(field.getName(), fieldType).optional());
-      }
-      this.functionParamsByName = unmodifiableMap(paramsByName);
-    }
-
-    TableSignature getTableSignature(String tableName) {
-      return new TableSignature(tableName, params());
-    }
-
-    private List<TableParamDef> params() {
-      return new ArrayList<>(functionParamsByName.values());
-    }
-
-    String presentParams() {
-      StringBuilder sb = new StringBuilder("(");
-      List<TableParamDef> params = params();
-      for (int i = 0; i < params.size(); i++) {
-        TableParamDef paramDef = params.get(i);
-        if (i != 0) {
-          sb.append(", ");
-        }
-        sb.append(paramDef.name).append(": ").append(paramDef.type.getSimpleName());
-      }
-      sb.append(")");
-      return sb.toString();
-    }
-
-    FormatPluginConfig eval(TableInstance t) {
-      // Per the constructor, the first param is always "type"
-      TableParamDef typeParamDef = t.sig.params.get(0);
-      Object typeParam = t.params.get(0);
-      if (!typeParamDef.name.equals("type") || typeParamDef.type != String.class || !(typeParam instanceof String)
-          || !typeName.equalsIgnoreCase((String) typeParam)) {
-        badInput(t);
-      }
-      FormatPluginConfig config;
-      try {
-        config = pluginConfigClass.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw UserException.parseError(e)
-            .message(
-                "configuration for format of type %s can not be created (class: %s)",
-                this.typeName, pluginConfigClass.getName())
-            .addContext("table", t.sig.name)
-            .build(logger);
-      }
-      for (int i = 1; i < t.params.size(); i++) {
-        Object param = t.params.get(i);
-        if (param == null) {
-          continue;
-        }
-        TableParamDef paramDef = t.sig.params.get(i);
-        TableParamDef expectedParamDef = this.functionParamsByName.get(paramDef.name);
-        if (expectedParamDef == null || expectedParamDef.type != paramDef.type) {
-          badInput(t);
-        }
-        try {
-          Field field = pluginConfigClass.getField(paramDef.name);
-          field.setAccessible(true);
-          if (field.getType() == char.class && param instanceof String) {
-            String stringParam = (String) param;
-            if (stringParam.length() != 1) {
-              throw UserException.parseError()
-                .message("Expected character but was String: %s", stringParam)
-                .addContext("table", t.sig.name)
-                .addContext("parameter", paramDef.name)
-                .build(logger);
-            }
-            param = stringParam.charAt(0);
-          }
-          field.set(config, param);
-        } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
-          throw UserException.parseError(e)
-              .message("can not set value %s to parameter %s: %s", param, paramDef.name, paramDef.type)
-              .addContext("table", t.sig.name)
-              .addContext("parameter", paramDef.name)
-              .build(logger);
-        }
-      }
-      return config;
-    }
-
-    private void badInput(TableInstance t) {
-      throw new IllegalArgumentException("The parameters provided are not applicable to the type specified:\n"
-          + "provided: " + t.presentParams() + "\nexpected: " + this.presentParams());
-    }
-
-    @Override
-    public String toString() {
-      return "OptionsDescriptor [pluginConfigClass=" + pluginConfigClass + ", typeName=" + typeName
-          + ", functionParamsByName=" + functionParamsByName + "]";
-    }
-  }
-
-  /**
-   * manages Storage plugins options
-   */
-  static final class OptionExtractor {
-
-    private final Map<String, OptionsDescriptor> optionsByTypeName;
-
-    OptionExtractor(ScanResult scanResult) {
-      Map<String, OptionsDescriptor> result = new HashMap<>();
-      Set<Class<? extends FormatPluginConfig>> pluginConfigClasses = FormatPluginConfigBase.getSubTypes(scanResult);
-      for (Class<? extends FormatPluginConfig> pluginConfigClass : pluginConfigClasses) {
-        OptionsDescriptor optionsDescriptor = new OptionsDescriptor(pluginConfigClass);
-        result.put(optionsDescriptor.typeName.toLowerCase(), optionsDescriptor);
-      }
-      this.optionsByTypeName = unmodifiableMap(result);
-    }
-
-    Collection<OptionsDescriptor> getOptions() {
-      return optionsByTypeName.values();
-    }
-
-    List<TableSignature> getTableSignatures(String tableName) {
-      List<TableSignature> result = new ArrayList<>();
-      for (OptionsDescriptor optionsDescriptor : optionsByTypeName.values()) {
-        TableSignature sig = optionsDescriptor.getTableSignature(tableName);
-        result.add(sig);
-      }
-      return unmodifiableList(result);
-    }
-
-    FormatPluginConfig eval(TableInstance t) {
-      if (!t.sig.params.get(0).name.equals("type")) {
-        throw UserException.parseError()
-          .message("unknown first param for %s", t.sig)
-          .addContext("table", t.sig.name)
-          .build(logger);
-      }
-      String type = (String)t.params.get(0);
-      if (type == null) {
-        throw UserException.parseError()
-            .message("type param must be present but was null")
-            .addContext("table", t.sig.name)
-            .build(logger);
-      }
-      OptionsDescriptor optionsDescriptor = optionsByTypeName.get(type.toLowerCase());
-      if (optionsDescriptor == null) {
-        throw UserException.parseError()
-            .message(
-                "unknown type %s, expected one of %s",
-                type, optionsByTypeName.keySet())
-            .addContext("table", t.sig.name)
-            .build(logger);
-      }
-      return optionsDescriptor.eval(t);
-    }
   }
 
   static final class WithOptionsTableMacro implements TableMacro {
@@ -756,7 +566,7 @@ public class WorkspaceSchemaFactory {
           return null;
         }
         if (key.sig.params.size() > 0) {
-          FormatPluginConfig fconfig = optionExtractor.eval(key);
+          FormatPluginConfig fconfig = optionExtractor.createConfigForTable(key);
           return new DynamicDrillTable(
               plugin, storageEngineName, schemaConfig.getUserName(),
               new FormatSelection(fconfig, fileSelection));
