@@ -1258,7 +1258,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r8</version>
+            <version>1.4.0-drill-r8-named-params</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
