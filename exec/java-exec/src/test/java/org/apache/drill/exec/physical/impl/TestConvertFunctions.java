@@ -75,6 +75,22 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   String textFileContent;
 
+  @Test // DRILL-3854
+  public void testCONVERT_FROM_CONVERT_TO_INT_BE() throws Exception {
+    final String query = "select CONVERT_FROM(CONVERT_TO(r_regionkey, 'int_be'), 'int_be') as c from cp.`tpch/region.parquet`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("c")
+        .baselineValues(0)
+        .baselineValues(1)
+        .baselineValues(2)
+        .baselineValues(3)
+        .baselineValues(4)
+        .build()
+        .run();
+  }
+
   @Test
   public void test_JSON_convertTo_empty_list_drill_1416() throws Exception {
 
