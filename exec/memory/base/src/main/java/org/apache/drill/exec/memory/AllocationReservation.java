@@ -17,18 +17,17 @@
  */
 package org.apache.drill.exec.memory;
 
-import com.google.common.base.Preconditions;
-
 import io.netty.buffer.DrillBuf;
 
+import com.google.common.base.Preconditions;
+
 /**
- * Supports cumulative allocation reservation. Clients may increase the size of
- * the reservation repeatedly until they call for an allocation of the current
- * total size. The reservation can only be used once, and will throw an exception
+ * Supports cumulative allocation reservation. Clients may increase the size of the reservation repeatedly until they
+ * call for an allocation of the current total size. The reservation can only be used once, and will throw an exception
  * if it is used more than once.
- *
- * <p>For the purposes of airtight memory accounting, the reservation must be close()d
- * whether it is used or not.
+ * <p>
+ * For the purposes of airtight memory accounting, the reservation must be close()d whether it is used or not.
+ * This is not threadsafe.
  */
 public abstract class AllocationReservation implements AutoCloseable {
   private int nBytes = 0;
@@ -37,11 +36,10 @@ public abstract class AllocationReservation implements AutoCloseable {
 
   /**
    * Constructor. Prevent construction except by derived classes.
-   *
    * <p>The expectation is that the derived class will be a non-static inner
    * class in an allocator.
    */
-  protected AllocationReservation() {
+  AllocationReservation() {
   }
 
   /**
@@ -58,11 +56,16 @@ public abstract class AllocationReservation implements AutoCloseable {
     Preconditions.checkState(!closed, "Attempt to increase reservation after reservation has been closed");
     Preconditions.checkState(!used, "Attempt to increase reservation after reservation has been used");
 
-    if (!reserve(nBytes)) {
+    // we round up to next power of two since all reservations are done in powers of two. This may overestimate the
+    // preallocation since someone may perceive additions to be power of two. If this becomes a problem, we can look at
+    // modifying this behavior so that we maintain what we reserve and what the user asked for and make sure to only
+    // round to power of two as necessary.
+    final int nBytesTwo = BaseAllocator.nextPowerOfTwo(nBytes);
+    if (!reserve(nBytesTwo)) {
       return false;
     }
 
-    this.nBytes += nBytes;
+    this.nBytes += nBytesTwo;
     return true;
   }
 
@@ -74,7 +77,7 @@ public abstract class AllocationReservation implements AutoCloseable {
    * @param nBytes the amount to reserve
    * @return true if the reservation can be satisfied, false otherwise
    */
-  protected abstract boolean reserve(int nBytes);
+  abstract boolean reserve(int nBytes);
 
   /**
    * Allocate a buffer whose size is the total of all the add()s made.
@@ -102,7 +105,7 @@ public abstract class AllocationReservation implements AutoCloseable {
    * @param nBytes the size of the buffer requested
    * @return the buffer, or null, if the request cannot be satisfied
    */
-  protected abstract DrillBuf allocate(int nBytes);
+  abstract DrillBuf allocate(int nBytes);
 
   @Override
   public void close() {
@@ -121,7 +124,7 @@ public abstract class AllocationReservation implements AutoCloseable {
    *
    * @param nBytes the size of the reservation
    */
-  protected abstract void releaseReservation(int nBytes);
+  abstract void releaseReservation(int nBytes);
 
   /**
    * Get the current size of the reservation (the sum of all the add()s).

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.memory;
 
+
 /**
  * Child allocator class. Only slightly different from the {@see RootAllocator},
  * in that these can't be created directly, but must be obtained from
@@ -40,8 +41,13 @@ class ChildAllocator extends BaseAllocator {
    *   force, even less memory may be available
    * @param flags one or more of BaseAllocator.F_* flags
    */
-  ChildAllocator(BaseAllocator parentAllocator, AllocatorOwner allocatorOwner,
-      AllocationPolicy allocationPolicy, long initReservation, long maxAllocation, int flags) {
-    super(parentAllocator, allocatorOwner, allocationPolicy, initReservation, maxAllocation, flags);
+  ChildAllocator(
+      BaseAllocator parentAllocator,
+      String name,
+      long initReservation,
+      long maxAllocation) {
+    super(parentAllocator, name, initReservation, maxAllocation);
   }
+
+
 }

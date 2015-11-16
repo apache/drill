@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.slf4j.Logger;
@@ -106,8 +107,8 @@ public class HistoricalLog {
    *
    * @param sb {@link StringBuilder} to write to
    */
-  public void buildHistory(final StringBuilder sb) {
-    buildHistory(sb, null);
+  public void buildHistory(final StringBuilder sb, boolean includeStackTrace) {
+    buildHistory(sb, 0, includeStackTrace);
   }
 
   /**
@@ -119,34 +120,44 @@ public class HistoricalLog {
    * @param additional an extra string that will be written between the identifying
    *     information and the history; often used for a current piece of state
    */
-  public synchronized void buildHistory(final StringBuilder sb, final CharSequence additional) {
-    sb.append('\n')
-        .append(idString);
 
-    if (additional != null) {
-      sb.append('\n')
-          .append(additional)
-          .append('\n');
-    }
+  /**
+   *
+   * @param sb
+   * @param indexLevel
+   * @param includeStackTrace
+   */
+  public synchronized void buildHistory(final StringBuilder sb, int indent, boolean includeStackTrace) {
+    final char[] indentation = new char[indent];
+    Arrays.fill(indentation, ' ');
 
-    sb.append(" event log\n");
+    sb.append(indentation)
+        .append("event log for: ")
+        .append(idString)
+        .append('\n');
+
 
     if (firstEvent != null) {
       sb.append("  ")
           .append(firstEvent.note)
           .append('\n');
-      firstEvent.stackTrace.writeToBuilder(sb, 4);
+      if (includeStackTrace) {
+        firstEvent.stackTrace.writeToBuilder(sb, indent + 4);
+      }
 
       for(final Event event : history) {
         if (event == firstEvent) {
           continue;
         }
-
-        sb.append("  ")
+        sb.append(indentation)
+            .append("  ")
             .append(event.note)
             .append('\n');
 
-        event.stackTrace.writeToBuilder(sb, 4);
+        if (includeStackTrace) {
+          event.stackTrace.writeToBuilder(sb, indent + 4);
+          sb.append('\n');
+        }
       }
     }
   }
@@ -157,23 +168,10 @@ public class HistoricalLog {
    * events with their stack traces.
    *
    * @param logger {@link Logger} to write to
-   * @param additional an extra string that will be written between the identifying
-   *     information and the history; often used for a current piece of state
-   */
-  public void logHistory(final Logger logger, final CharSequence additional) {
-    final StringBuilder sb = new StringBuilder();
-    buildHistory(sb, additional);
-    logger.debug(sb.toString());
-  }
-
-  /**
-   * Write the history of this object to the given {@link Logger}. The history
-   * includes the identifying string provided at construction time, and all the recorded
-   * events with their stack traces.
-   *
-   * @param logger {@link Logger} to write to
    */
   public void logHistory(final Logger logger) {
-    logHistory(logger, null);
+    final StringBuilder sb = new StringBuilder();
+    buildHistory(sb, 0, true);
+    logger.debug(sb.toString());
   }
 }

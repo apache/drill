@@ -48,7 +48,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
   public DataClient(DrillbitEndpoint remoteEndpoint, BootStrapContext context, DataConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getUnderlyingAllocator(),
+        context.getAllocator().getAsByteBufAllocator(),
         context.getBitClientLoopGroup(),
         RpcType.HANDSHAKE,
         BitServerHandshake.class,

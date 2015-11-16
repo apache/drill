@@ -17,22 +17,27 @@
  */
 package org.apache.drill.exec.memory;
 
-/**
- * Implicitly specifies an allocation policy by providing a factory method to
- * create an enforcement agent.
- *
- * <p>Allocation policies are meant to be global, and may not work properly if
- * different allocators are given different policies. These are designed to
- * be supplied to the root-most allocator only, and then shared with descendant
- * (child) allocators.</p>
- */
-public interface AllocationPolicy {
-  /**
-   * Create an allocation policy enforcement agent. Each newly created allocator should
-   * call this in order to obtain its own agent.
-   *
-   * @return the newly instantiated agent; if an agent's implementation is stateless,
-   *   this may return a sharable singleton
-   */
-  AllocationPolicyAgent newAgent();
+import static org.junit.Assert.assertEquals;
+import io.netty.buffer.ByteBuf;
+
+import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.config.DrillConfig;
+import org.junit.Test;
+
+
+public class TestEndianess {
+
+  @Test
+  public void testLittleEndian() {
+    final BufferAllocator a = new RootAllocator(0, DrillConfig.getMaxDirectMemory());
+    final ByteBuf b = a.buffer(4);
+    b.setInt(0, 35);
+    assertEquals(b.getByte(0), 35);
+    assertEquals(b.getByte(1), 0);
+    assertEquals(b.getByte(2), 0);
+    assertEquals(b.getByte(3), 0);
+    b.release();
+    DrillAutoCloseables.closeNoChecked(a);
+  }
+
 }

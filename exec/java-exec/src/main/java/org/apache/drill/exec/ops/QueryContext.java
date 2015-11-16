@@ -30,13 +30,14 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -52,8 +53,6 @@ import org.apache.drill.exec.util.Utilities;
 
 import com.google.common.collect.Lists;
 
-// TODO except for a couple of tests, this is only created by Foreman
-// TODO the many methods that just return drillbitContext.getXxx() should be replaced with getDrillbitContext()
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext {
@@ -80,7 +79,12 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
    */
   private boolean closed = false;
 
+  @Deprecated
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext) {
+    this(session, drillbitContext, QueryId.getDefaultInstance());
+  }
+
+  public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId) {
     this.drillbitContext = drillbitContext;
     this.session = session;
     queryOptions = new QueryOptionManager(session.getOptions());
@@ -92,9 +96,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaName());
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
-    allocator = drillbitContext.getAllocator().getChildAllocator(null, plannerSettings.getInitialPlanningMemorySize(),
-        plannerSettings.getPlanningMemoryLimit(), false);
-    // TODO(DRILL-1942) the new allocator has this capability built-in, so this can be removed once that is available
+    allocator = drillbitContext.getAllocator().newChildAllocator(
+        "query:" + QueryIdHelper.getQueryId(queryId),
+        PlannerSettings.getInitialPlanningMemorySize(),
+        plannerSettings.getPlanningMemoryLimit());
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreesToClose = Lists.newArrayList();

@@ -20,24 +20,21 @@ package org.apache.drill.exec.memory;
 import org.apache.drill.common.config.DrillConfig;
 
 public class RootAllocatorFactory {
+
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
+
   /**
    * Constructor to prevent instantiation of this static utility class.
    */
   private RootAllocatorFactory() {}
 
   /**
-   * Factory method.
-   *
-   * @param drillConfig the DrillConfig
+   * Create a new Root Allocator
+   * @param drillConfig
+   *          the DrillConfig
    * @return a new root allocator
    */
   public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-/* TODO(cwestin)
-    if (BaseAllocator.DEBUG) {
-      return new RootAllocator(drillConfig);
-    }
-*/
-    return new RootAllocator(drillConfig);
-    // TODO(cwestin) return new TopLevelAllocator(drillConfig);
+    return new RootAllocator(0, Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
   }
 }

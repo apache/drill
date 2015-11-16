@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.data;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+import io.netty.buffer.DrillBuf.TransferResult;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -44,7 +45,6 @@ import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import com.google.protobuf.MessageLite;
@@ -57,10 +57,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
 
-  public DataServer(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
+  public DataServer(BootStrapContext context, BufferAllocator alloc, WorkEventBus workBus,
+      DataResponseHandler dataHandler) {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getUnderlyingAllocator(),
+        alloc.getAsByteBufAllocator(),
         context.getBitLoopGroup());
     this.context = context;
     this.workBus = workBus;
@@ -168,12 +169,12 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     }
 
     final BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-    final Pointer<DrillBuf> out = new Pointer<>();
-
     final boolean withinMemoryEnvelope;
-
+    final DrillBuf transferredBuffer;
     try {
-      withinMemoryEnvelope = allocator.shareOwnership((DrillBuf) body, out);
+      TransferResult result = body.transferOwnership(allocator);
+      withinMemoryEnvelope = result.allocationFit;
+      transferredBuffer = result.buffer;
     } catch(final AllocatorClosedException e) {
       /*
        * It can happen that between the time we get the fragment manager and we
@@ -198,11 +199,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     }
 
     ack.increment();
-    dataHandler.handle(manager, fragmentBatch, out.value, ack);
+    dataHandler.handle(manager, fragmentBatch, transferredBuffer, ack);
 
     // make sure to release the reference count we have to the new buffer.
     // dataHandler.handle should have taken any ownership it needed.
-    out.value.release();
+    transferredBuffer.release();
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {

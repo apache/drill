@@ -15,29 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ *  Memory Allocation, Account and Management
+ *
+ *  See the README.md file in this directory for detailed information about Drill's memory allocation subsystem.
+ *
+ */
 package org.apache.drill.exec.memory;
-
-import static org.junit.Assert.assertEquals;
-import io.netty.buffer.ByteBuf;
-
-import org.apache.drill.common.DrillAutoCloseables;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.test.DrillTest;
-import org.junit.Test;
-
-
-public class TestEndianess extends DrillTest {
-  @Test
-  public void testLittleEndian() {
-    final DrillConfig drillConfig = DrillConfig.create();
-    final BufferAllocator a = RootAllocatorFactory.newRoot(drillConfig);
-    final ByteBuf b = a.buffer(4);
-    b.setInt(0, 35);
-    assertEquals(b.getByte(0), 35);
-    assertEquals(b.getByte(1), 0);
-    assertEquals(b.getByte(2), 0);
-    assertEquals(b.getByte(3), 0);
-    b.release();
-    DrillAutoCloseables.closeNoChecked(a);
-  }
-}

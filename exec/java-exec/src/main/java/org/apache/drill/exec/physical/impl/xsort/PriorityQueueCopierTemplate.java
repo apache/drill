@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.xsort;
 
 import io.netty.buffer.DrillBuf;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Named;
@@ -66,7 +67,6 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     allocateVectors(targetRecordCount);
     for (int outgoingIndex = 0; outgoingIndex < targetRecordCount; outgoingIndex++) {
       if (queueSize == 0) {
-        close();
         return 0;
       }
       int compoundIndex = vector4.get(0);
@@ -96,13 +96,17 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     vector4.clear();
     for (final VectorWrapper<?> w: outgoing) {
       w.getValueVector().clear();
     }
     for (final VectorWrapper<?> w : hyperBatch) {
       w.clear();
+    }
+
+    for (BatchGroup batchGroup : batchGroups) {
+      batchGroup.close();
     }
   }
 

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
@@ -38,5 +39,5 @@ public interface PriorityQueueCopier extends AutoCloseable {
       new TemplateClassDefinition<>(PriorityQueueCopier.class, PriorityQueueCopierTemplate.class);
 
   @Override
-  abstract public void close(); // specify this to leave out the Exception
+  abstract public void close() throws IOException; // specify this to leave out the Exception
 }

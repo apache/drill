@@ -17,43 +17,39 @@
  */
 package io.netty.buffer;
 
-import java.util.concurrent.atomic.AtomicLong;
+import org.apache.drill.exec.memory.BufferAllocator;
 
 /**
- * A MutableWrappedByteBuf that also maintains a metric of the number of huge buffer bytes and counts.
+ * Allows us to decorate DrillBuf to make it expandable so that we can use them in the context of the Netty framework
+ * (thus supporting RPC level memory accounting).
  */
-public class LargeBuffer extends MutableWrappedByteBuf {
+public class ExpandableByteBuf extends MutableWrappedByteBuf {
 
-  private final AtomicLong hugeBufferSize;
-  private final AtomicLong hugeBufferCount;
+  private final BufferAllocator allocator;
 
-  private final int initCap;
-
-  public LargeBuffer(ByteBuf buffer, AtomicLong hugeBufferSize, AtomicLong hugeBufferCount) {
+  public ExpandableByteBuf(ByteBuf buffer, BufferAllocator allocator) {
     super(buffer);
-    initCap = buffer.capacity();
-    this.hugeBufferCount = hugeBufferCount;
-    this.hugeBufferSize = hugeBufferSize;
+    this.allocator = allocator;
   }
 
   @Override
   public ByteBuf copy(int index, int length) {
-    return new LargeBuffer(buffer.copy(index, length), hugeBufferSize, hugeBufferCount);
+    return new ExpandableByteBuf(buffer.copy(index, length), allocator);
   }
 
   @Override
-  public boolean release() {
-    return release(1);
-  }
-
-  @Override
-  public boolean release(int decrement) {
-    boolean released = unwrap().release(decrement);
-    if (released) {
-      hugeBufferSize.addAndGet(-initCap);
-      hugeBufferCount.decrementAndGet();
+  public ByteBuf capacity(int newCapacity) {
+    if (newCapacity > capacity()) {
+      ByteBuf newBuf = allocator.buffer(newCapacity);
+      newBuf.writeBytes(buffer, 0, buffer.capacity());
+      newBuf.readerIndex(buffer.readerIndex());
+      newBuf.writerIndex(buffer.writerIndex());
+      buffer.release();
+      buffer = newBuf;
+      return newBuf;
+    } else {
+      return super.capacity(newCapacity);
     }
-    return released;
   }
 
 }

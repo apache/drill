@@ -21,7 +21,15 @@ package io.netty.buffer;
 import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.drill.common.StackTrace;
+import org.slf4j.Logger;
 
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
@@ -32,36 +40,8 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   private AtomicLong bufferSize;
   private long initCap = -1;
 
-  private final static IdentityHashMap<UnsafeDirectLittleEndian, StackTrace> bufferMap = new IdentityHashMap<>();
-
-  @Override
-  public boolean release() {
-    return release(1);
-  }
-
-  @Override
-  public boolean release(int decrement) {
-    boolean released = super.release(decrement);
-    if (TRACK_BUFFERS) {
-      if (released) {
-        final Object object;
-        synchronized (bufferMap) {
-          object = bufferMap.remove(this);
-        }
-        if (object == null) {
-          throw new IllegalStateException("no such buffer");
-        }
-
-        if (initCap != -1) {
-          bufferCount.decrementAndGet();
-          bufferSize.addAndGet(-initCap);
-        }
-      }
-    }
-
-    return released;
-  }
-
+  private final static Map<UnsafeDirectLittleEndian, StackTrace> bufferMap = Collections
+      .synchronizedMap(new IdentityHashMap<UnsafeDirectLittleEndian, StackTrace>());
 
   public static int getBufferCount() {
     return bufferMap.size();
@@ -79,21 +59,25 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   }
 
   public static void logBuffers(final Logger logger) {
-    synchronized (bufferMap) {
-      int count = 0;
-      final Set<UnsafeDirectLittleEndian> bufferSet = bufferMap.keySet();
-      for (final UnsafeDirectLittleEndian udle : bufferSet) {
-        final StackTrace stackTrace = bufferMap.get(udle);
-        ++count;
-        logger.debug("#" + count + " active buffer allocated at\n" + stackTrace);
-      }
+    int count = 0;
+    final Set<UnsafeDirectLittleEndian> bufferSet = bufferMap.keySet();
+    for (final UnsafeDirectLittleEndian udle : bufferSet) {
+      final StackTrace stackTrace = bufferMap.get(udle);
+      ++count;
+      logger.debug("#" + count + " active buffer allocated at\n" + stackTrace);
     }
   }
+
+  UnsafeDirectLittleEndian(DuplicatedByteBuf buf) {
+    this(buf, true);
+  }
+
   UnsafeDirectLittleEndian(LargeBuffer buf) {
     this(buf, true);
   }
 
-  UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf, AtomicLong bufferCount, AtomicLong bufferSize) {
+  UnsafeDirectLittleEndian(PooledUnsafeDirectByteBuf buf, AtomicLong bufferCount,
+      AtomicLong bufferSize) {
     this(buf, true);
     this.bufferCount = bufferCount;
     this.bufferSize = bufferSize;
@@ -147,156 +131,139 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   }
 
   @Override
-    public double getDouble(int index) {
-        return Double.longBitsToDouble(getLong(index));
-    }
-
-    @Override
-    public char getChar(int index) {
-        return (char) getShort(index);
-    }
-
-    @Override
-    public long getUnsignedInt(int index) {
-        return getInt(index) & 0xFFFFFFFFL;
-    }
-
-    @Override
-    public int getInt(int index) {
-//        wrapped.checkIndex(index, 4);
-        int v = PlatformDependent.getInt(addr(index));
-        return v;
-    }
-
-    @Override
-    public int getUnsignedShort(int index) {
-        return getShort(index) & 0xFFFF;
-    }
-
-    @Override
-    public short getShort(int index) {
-//        wrapped.checkIndex(index, 2);
-        short v = PlatformDependent.getShort(addr(index));
-        return v;
-    }
-
-    @Override
-    public ByteBuf setShort(int index, int value) {
-        wrapped.checkIndex(index, 2);
-        _setShort(index, value);
-        return this;
-    }
-
-    @Override
-    public ByteBuf setInt(int index, int value) {
-        wrapped.checkIndex(index, 4);
-        _setInt(index, value);
-        return this;
-    }
-
-    @Override
-    public ByteBuf setLong(int index, long value) {
-        wrapped.checkIndex(index, 8);
-        _setLong(index, value);
-        return this;
-    }
-
-    @Override
-    public ByteBuf setChar(int index, int value) {
-        setShort(index, value);
-        return this;
-    }
-
-    @Override
-    public ByteBuf setFloat(int index, float value) {
-        setInt(index, Float.floatToRawIntBits(value));
-        return this;
-    }
-
-    @Override
-    public ByteBuf setDouble(int index, double value) {
-        setLong(index, Double.doubleToRawLongBits(value));
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeShort(int value) {
-        wrapped.ensureWritable(2);
-        _setShort(wrapped.writerIndex, value);
-        wrapped.writerIndex += 2;
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeInt(int value) {
-        wrapped.ensureWritable(4);
-        _setInt(wrapped.writerIndex, value);
-        wrapped.writerIndex += 4;
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeLong(long value) {
-        wrapped.ensureWritable(8);
-        _setLong(wrapped.writerIndex, value);
-        wrapped.writerIndex += 8;
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeChar(int value) {
-        writeShort(value);
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeFloat(float value) {
-        writeInt(Float.floatToRawIntBits(value));
-        return this;
-    }
-
-    @Override
-    public ByteBuf writeDouble(double value) {
-        writeLong(Double.doubleToRawLongBits(value));
-        return this;
-    }
-
-    private void _setShort(int index, int value) {
-        PlatformDependent.putShort(addr(index), (short) value);
-    }
-
-    private void _setInt(int index, int value) {
-        PlatformDependent.putInt(addr(index), value);
-    }
-
-    private void _setLong(int index, long value) {
-        PlatformDependent.putLong(addr(index), value);
-    }
-
-    @Override
-    public byte getByte(int index) {
-      return PlatformDependent.getByte(addr(index));
-    }
-
-    @Override
-    public ByteBuf setByte(int index, int value) {
-      PlatformDependent.putByte(addr(index), (byte) value);
-      return this;
-    }
-
-  @Override
-  public boolean release() {
-    return release(1);
+  public double getDouble(int index) {
+    return Double.longBitsToDouble(getLong(index));
   }
 
   @Override
-  public boolean release(int decrement) {
-    boolean released = super.release(decrement);
-    if (released && initCap != -1) {
-      bufferCount.decrementAndGet();
-      bufferSize.addAndGet(-initCap);
-    }
-    return released;
+  public char getChar(int index) {
+    return (char) getShort(index);
+  }
+
+  @Override
+  public long getUnsignedInt(int index) {
+    return getInt(index) & 0xFFFFFFFFL;
+  }
+
+  @Override
+  public int getInt(int index) {
+    int v = PlatformDependent.getInt(addr(index));
+    return v;
+  }
+
+  @Override
+  public int getUnsignedShort(int index) {
+    return getShort(index) & 0xFFFF;
+  }
+
+  @Override
+  public short getShort(int index) {
+    short v = PlatformDependent.getShort(addr(index));
+    return v;
+  }
+
+  @Override
+  public ByteBuf setShort(int index, int value) {
+    wrapped.checkIndex(index, 2);
+    _setShort(index, value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setInt(int index, int value) {
+    wrapped.checkIndex(index, 4);
+    _setInt(index, value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setLong(int index, long value) {
+    wrapped.checkIndex(index, 8);
+    _setLong(index, value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setChar(int index, int value) {
+    setShort(index, value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setFloat(int index, float value) {
+    setInt(index, Float.floatToRawIntBits(value));
+    return this;
+  }
+
+  @Override
+  public ByteBuf setDouble(int index, double value) {
+    setLong(index, Double.doubleToRawLongBits(value));
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeShort(int value) {
+    wrapped.ensureWritable(2);
+    _setShort(wrapped.writerIndex, value);
+    wrapped.writerIndex += 2;
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeInt(int value) {
+    wrapped.ensureWritable(4);
+    _setInt(wrapped.writerIndex, value);
+    wrapped.writerIndex += 4;
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeLong(long value) {
+    wrapped.ensureWritable(8);
+    _setLong(wrapped.writerIndex, value);
+    wrapped.writerIndex += 8;
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeChar(int value) {
+    writeShort(value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeFloat(float value) {
+    writeInt(Float.floatToRawIntBits(value));
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeDouble(double value) {
+    writeLong(Double.doubleToRawLongBits(value));
+    return this;
+  }
+
+  private void _setShort(int index, int value) {
+    PlatformDependent.putShort(addr(index), (short) value);
+  }
+
+  private void _setInt(int index, int value) {
+    PlatformDependent.putInt(addr(index), value);
+  }
+
+  private void _setLong(int index, long value) {
+    PlatformDependent.putLong(addr(index), value);
+  }
+
+  @Override
+  public byte getByte(int index) {
+    return PlatformDependent.getByte(addr(index));
+  }
+
+  @Override
+  public ByteBuf setByte(int index, int value) {
+    PlatformDependent.putByte(addr(index), (byte) value);
+    return this;
   }
 
   public static final boolean ASSERT_ENABLED;

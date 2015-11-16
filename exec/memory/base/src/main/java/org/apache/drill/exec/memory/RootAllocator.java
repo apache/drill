@@ -17,18 +17,23 @@
  */
 package org.apache.drill.exec.memory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
- * JMX bean interface for global allocator statistics.
+ * The root allocator for using direct memory inside a Drillbit. Supports creating a
+ * tree of descendant child allocators.
  */
-// TODO use Stats infrastructure instead of JMX beans
-public interface AllocatorsStatsMXBean {
+public class RootAllocator extends BaseAllocator {
+
+  public RootAllocator(final long reservation, final long limit) {
+    super(null, "ROOT", reservation, limit);
+  }
+
   /**
-   * Get the maximum amount of direct memory that can be used.
-   *
-   * <p>This is determined by what is available, or by the drillbit
-   * configuration, if it specifies a value.</p>
-   *
-   * @return the amount of direct memory that can be used
+   * Verify the accounting state of the allocation system.
    */
-  public long getMaxDirectMemory();
+  @VisibleForTesting
+  public void verify() {
+    verifyAllocator();
+  }
 }

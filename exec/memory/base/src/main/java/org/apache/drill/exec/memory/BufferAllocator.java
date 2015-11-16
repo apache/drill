@@ -20,8 +20,8 @@ package org.apache.drill.exec.memory;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.ops.BufferManager;
 
 /**
  * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods.
@@ -31,119 +31,47 @@ public interface BufferAllocator extends AutoCloseable {
    * Allocate a new or reused buffer of the provided size. Note that the buffer may technically be larger than the
    * requested size for rounding purposes. However, the buffer's capacity will be set to the configured size.
    *
-   * @param size The size in bytes.
+   * @param size
+   *          The size in bytes.
    * @return a new DrillBuf, or null if the request can't be satisfied
-   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
+   * @throws OutOfMemoryException
+   *           if buffer cannot be allocated
    */
   public DrillBuf buffer(int size);
 
   /**
-   * Allocate a new or reused buffer within provided range. Note that the buffer may technically be larger than the
+   * Allocate a new or reused buffer of the provided size. Note that the buffer may technically be larger than the
    * requested size for rounding purposes. However, the buffer's capacity will be set to the configured size.
    *
-   * @param minSize The minimum size in bytes.
-   * @param maxSize The maximum size in bytes.
+   * @param size
+   *          The size in bytes.
+   * @param manager
+   *          A buffer manager to manage reallocation.
    * @return a new DrillBuf, or null if the request can't be satisfied
-   * @throws OutOfMemoryRuntimeException if buffer cannot be allocated
+   * @throws OutOfMemoryException
+   *           if buffer cannot be allocated
    */
-  public DrillBuf buffer(int minSize, int maxSize);
+  public DrillBuf buffer(int size, BufferManager manager);
 
   /**
    * Returns the allocator this allocator falls back to when it needs more memory.
    *
    * @return the underlying allocator used by this allocator
    */
-  public ByteBufAllocator getUnderlyingAllocator();
-
-  /**
-   * Create a child allocator nested below this one.
-   *
-   * @param context - the owner or this allocator
-   * @param initialReservation - specified in bytes
-   * @param maximumReservation - specified in bytes
-   * @param applyFragmentLimit - flag to conditionally enable fragment memory limits
-   * @return - a new buffer allocator owned by the parent it was spawned from
-   */
-  @Deprecated
-  public BufferAllocator getChildAllocator(FragmentContext context, long initialReservation,
-      long maximumReservation, boolean applyFragmentLimit);
-
-  /**
-   * Flag: this allocator is a limiting sub-tree root, meaning that the maxAllocation for
-   * it applies to all its descendant child allocators. In low memory situations, the limits
-   * for sub-tree roots may be adjusted down so that they evenly share the total amount of
-   * direct memory across all the sub-tree roots.
-   */
-  public final static int F_LIMITING_ROOT = 0x0001;
+  public ByteBufAllocator getAsByteBufAllocator();
 
   /**
    * Create a new child allocator.
    *
-   * @param allocatorOwner the allocator owner
-   * @param initReservation the initial space reservation (obtained from this allocator)
-   * @param maxAllocation maximum amount of space the new allocator can allocate
-   * @param flags one or more of BufferAllocator.F_* flags
+   * @param name
+   *          the name of the allocator.
+   * @param initReservation
+   *          the initial space reservation (obtained from this allocator)
+   * @param maxAllocation
+   *          maximum amount of space the new allocator can allocate
    * @return the new allocator, or null if it can't be created
    */
-  public BufferAllocator newChildAllocator(AllocatorOwner allocatorOwner,
-      long initReservation, long maxAllocation, int flags);
-
-  /**
-   * Take over ownership of the given buffer, adjusting accounting accordingly.
-   * This allocator always takes over ownership.
-   *
-   * @param buf the buffer to take over
-   * @return false if over allocation
-   */
-  public boolean takeOwnership(DrillBuf buf);
-
-  /**
-   * Share ownership of a buffer between allocators.
-   *
-   * @param buf the buffer
-   * @param bufOut a new DrillBuf owned by this allocator, but sharing the same underlying buffer
-   * @return false if over allocation.
-   */
-  public boolean shareOwnership(DrillBuf buf, Pointer<DrillBuf> bufOut);
-
-  /**
-   * Not thread safe.
-   *
-   * WARNING: unclaimed pre-allocations leak memory. If you call preAllocate(), you must
-   * make sure to ultimately try to get the buffer and release it.
-   *
-   * For Child allocators to set their Fragment limits.
-   *
-   * @param fragmentLimit the new fragment limit
-   */
-  @Deprecated // happens automatically, and via allocation policies
-  public void setFragmentLimit(long fragmentLimit);
-
-  /**
-   * Returns the current fragment limit.
-   *
-   * @return the current fragment limit
-   */
-  /*
-   * TODO should be replaced with something more general because of
-   * the availability of multiple allocation policies
-   *
-   * TODO We should also have a getRemainingMemory() so operators
-   * can query how much more is left to allocate. That could be
-   * tricky.
-   */
-  @Deprecated
-  public long getFragmentLimit();
-
-  /**
-   * Return a unique Id for an allocator. Id's may be recycled after
-   * a long period of time.
-   *
-   * <p>Primary use for this is for debugging output.</p>
-   *
-   * @return the allocator's id
-   */
-  public int getId();
+  public BufferAllocator newChildAllocator(String name, long initReservation, long maxAllocation);
 
   /**
    * Close and release all buffers generated from this buffer pool.
@@ -152,7 +80,7 @@ public interface BufferAllocator extends AutoCloseable {
    * that, release all buffers before the allocator is closed.
    */
   @Override
-  public void close() throws Exception;
+  public void close();
 
   /**
    * Returns the amount of memory currently allocated from this allocator.
@@ -162,18 +90,26 @@ public interface BufferAllocator extends AutoCloseable {
   public long getAllocatedMemory();
 
   /**
+   * Set the maximum amount of memory this allocator is allowed to allocate.
+   *
+   * @param newLimit
+   *          The new Limit to apply to allocations
+   */
+  public void setLimit(long newLimit);
+
+  /**
+   * Return the current maximum limit this allocator imposes.
+   *
+   * @return Limit in number of bytes.
+   */
+  public long getLimit();
+
+  /**
    * Returns the peak amount of memory allocated from this allocator.
    *
    * @return the peak amount of memory allocated
    */
   public long getPeakMemoryAllocation();
-
-  /**
-   * Returns an empty DrillBuf.
-   *
-   * @return an empty DrillBuf
-   */
-  public DrillBuf getEmpty();
 
   /**
    * Create an allocation reservation. A reservation is a way of building up
@@ -183,4 +119,31 @@ public interface BufferAllocator extends AutoCloseable {
    * @return the newly created reservation
    */
   public AllocationReservation newReservation();
+
+  /**
+   * Get a reference to the empty buffer associated with this allocator. Empty buffers are special because we don't
+   * worry about them leaking or managing reference counts on them since they don't actually point to any memory.
+   */
+  public DrillBuf getEmpty();
+
+  /**
+   * Return the name of this allocator. This is a human readable name that can help debugging. Typically provides
+   * coordinates about where this allocator was created
+   */
+  public String getName();
+
+  /**
+   * Return whether or not this allocator (or one if its parents) is over its limits. In the case that an allocator is
+   * over its limit, all consumers of that allocator should aggressively try to addrss the overlimit situation.
+   */
+  public boolean isOverLimit();
+
+  /**
+   * Return a verbose string describing this allocator. If in DEBUG mode, this will also include relevant stacktraces
+   * and historical logs for underlying objects
+   *
+   * @return A very verbose description of the allocator hierarchy.
+   */
+  public String toVerboseString();
+
 }
