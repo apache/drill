@@ -142,6 +142,7 @@
               <goal>unpack</goal>
             </goals>
             <configuration>
+              <skip>${skipTests}</skip>
               <artifactItems>
                 <artifactItem>
                   <!-- This will download a MySQL distribution and use it to run tests against -->
@@ -211,6 +212,7 @@
               <goal>stop</goal>
             </goals>
             <configuration>
+              <skip>${skipTests}</skip>
               <port>${mysql.reserved.port}</port>
               <data>${project.build.directory}/mysql-data</data>
               <clearexistingdata>true</clearexistingdata>
@@ -231,6 +233,7 @@
           </dependency>
         </dependencies>
         <configuration>
+          <skip>${skipTests}</skip>
           <driver>com.mysql.jdbc.Driver</driver>
           <username>root</username>
           <password>root</password>
