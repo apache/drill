@@ -108,7 +108,7 @@ URI. Metadata for Hive tables is automatically available for users to query.
       }
     }
 
-Do not use this storage plugin configuration outside the sandbox. Use either the configuration for either the [remote or embedded metastore configuration].
+Do not use this storage plugin configuration outside the sandbox. Use the configuration for either the [remote or embedded metastore configuration]({{ site.baseurl }}/docs/hive-storage-plugin/).
 
 ## What's Next
 

@@ -41,13 +41,20 @@ To register a remote Hive metastore with Drill:
              "configProps": {
              "hive.metastore.uris": "thrift://<host>:<port>",
           ...
-5. Change the default location of files to suit your environment; for example, change `"fs.default.name"` property from `"file:///"` to one of these locations:
-   * `hdfs://`
-   * `hdfs://<hostname>:<port>`
+
+5. Change the default location of files to suit your environment; for example, change `"fs.default.name"` property from `"file:///"` to `hdfs://` or `hdfs://<host name>:<port>`. The `"fs.default.name"` that includes a host name and port must point to the main control node. For example:
+
+          {
+            "type": "hive",
+            "enabled": false,
+            "configProps": {
+            "hive.metastore.uris": "thrift://hdfs41:9083",
+            "hive.metastore.sasl.enabled": "false",
+            "fs.default.name": "hdfs://10.10.10.41/"
+            }
+          }
+
 6. Click **Enable**.  
-
-The "fs.default.name" should point to a the main control node. Do not point fs.default.name to a non-control node, such as a NameNode. If you're using MapR Drill, "fs.default.name" should be maprfs:///. The MapR FileClient figures out CLDB locations from mapr-clusters.conf. 
-
 
 ## Hive Embedded Metastore Configuration
 
