@@ -23,19 +23,22 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+/*
+ * Returns Y minima of a bounding box 2d or 3d or a geometry
+ */
+@FunctionTemplate(name = "st_ymin", scope = FunctionTemplate.FunctionScope.SIMPLE,
   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class STGeomFromText implements DrillSimpleFunc {
+public class STYMin implements DrillSimpleFunc {
   @Param
-  NullableVarCharHolder input;
+  VarBinaryHolder geom1Param;
 
   @Output
-  VarBinaryHolder out;
+  Float8Holder out;
 
   @Inject
   DrillBuf buffer;
@@ -44,17 +47,17 @@ public class STGeomFromText implements DrillSimpleFunc {
   }
 
   public void eval() {
-    String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-            input.buffer);
+    com.esri.core.geometry.ogc.OGCGeometry geom1;
+    geom1 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end - geom1Param.start));
 
-    com.esri.core.geometry.ogc.OGCGeometry geom;
-    geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-    java.nio.ByteBuffer pointBytes = geom.asBinary();
-
-    int outputSize = pointBytes.remaining();
-    buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
-    out.start = 0;
-    out.end = outputSize;
-    buffer.setBytes(0, pointBytes);
+    com.esri.core.geometry.ogc.OGCGeometry envelopeGeom;
+    if (geom1.geometryType().equals("Point")) {
+      out.value = ((com.esri.core.geometry.ogc.OGCPoint) geom1).Y();
+    } else {
+      com.esri.core.geometry.Envelope envelope = new com.esri.core.geometry.Envelope();
+      geom1.getEsriGeometry().queryEnvelope(envelope);
+      out.value = envelope.getYMin();
+    }
   }
 }

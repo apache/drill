@@ -23,16 +23,19 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 
 import io.netty.buffer.DrillBuf;
 
-@FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
+/*
+ * Returns a geometry representing the double precision (float8) bounding box of the supplied geometry.
+ * The polygon is defined by the corner points of the bounding box ((MINX, MINY), (MINX, MAXY), (MAXX, MAXY), (MAXX, MINY), (MINX, MINY))
+ */
+@FunctionTemplate(name = "st_envelope", scope = FunctionTemplate.FunctionScope.SIMPLE,
   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class STGeomFromText implements DrillSimpleFunc {
+public class STEnvelope implements DrillSimpleFunc {
   @Param
-  NullableVarCharHolder input;
+  VarBinaryHolder geom1Param;
 
   @Output
   VarBinaryHolder out;
@@ -44,17 +47,23 @@ public class STGeomFromText implements DrillSimpleFunc {
   }
 
   public void eval() {
-    String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-            input.buffer);
+    com.esri.core.geometry.ogc.OGCGeometry geom1;
+    geom1 = com.esri.core.geometry.ogc.OGCGeometry
+        .fromBinary(geom1Param.buffer.nioBuffer(geom1Param.start, geom1Param.end - geom1Param.start));
 
-    com.esri.core.geometry.ogc.OGCGeometry geom;
-    geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-    java.nio.ByteBuffer pointBytes = geom.asBinary();
+    com.esri.core.geometry.ogc.OGCGeometry envelopeGeom;
+    if (geom1.geometryType().equals("Point")) {
+      envelopeGeom = geom1;
+    } else {
+      envelopeGeom = geom1.envelope();
+    }
 
-    int outputSize = pointBytes.remaining();
+    java.nio.ByteBuffer envelopeGeomBytes = envelopeGeom.asBinary();
+
+    int outputSize = envelopeGeomBytes.remaining();
     buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
     out.end = outputSize;
-    buffer.setBytes(0, pointBytes);
+    buffer.setBytes(0, envelopeGeomBytes);
   }
 }
