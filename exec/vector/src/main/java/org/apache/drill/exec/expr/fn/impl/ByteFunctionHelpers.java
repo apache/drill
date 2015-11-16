@@ -29,8 +29,6 @@ import com.google.common.primitives.UnsignedLongs;
 public class ByteFunctionHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ByteFunctionHelpers.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
-
   /**
    * Helper function to check for equality of bytes in two DrillBuffers
    *
@@ -43,7 +41,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int equal(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       left.checkBytes(lStart, lEnd);
       right.checkBytes(rStart, rEnd);
     }
@@ -97,7 +95,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int compare(final DrillBuf left, int lStart, int lEnd, final DrillBuf right, int rStart, int rEnd){
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       left.checkBytes(lStart, lEnd);
       right.checkBytes(rStart, rEnd);
     }
@@ -152,7 +150,7 @@ public class ByteFunctionHelpers {
    * @return 1 if left input is greater, -1 if left input is smaller, 0 otherwise
    */
   public static final int compare(final DrillBuf left, int lStart, int lEnd, final byte[] right, int rStart, final int rEnd) {
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       left.checkBytes(lStart, lEnd);
     }
     return memcmp(left.memoryAddress(), lStart, lEnd, right, rStart, rEnd);

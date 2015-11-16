@@ -280,8 +280,6 @@ public final class SchemaBitData
 
                 if(message.hasIsLastBatch())
                     output.writeBool(7, message.getIsLastBatch(), false);
-                if(message.hasIsOutOfMemory())
-                    output.writeBool(8, message.getIsOutOfMemory(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitData.FragmentRecordBatch message)
             {
@@ -344,9 +342,6 @@ public final class SchemaBitData
                         case 7:
                             builder.setIsLastBatch(input.readBool());
                             break;
-                        case 8:
-                            builder.setIsOutOfMemory(input.readBool());
-                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -394,7 +389,6 @@ public final class SchemaBitData
                 case 5: return "sendingMinorFragmentId";
                 case 6: return "def";
                 case 7: return "isLastBatch";
-                case 8: return "isOutOfMemory";
                 default: return null;
             }
         }
@@ -413,7 +407,6 @@ public final class SchemaBitData
             fieldMap.put("sendingMinorFragmentId", 5);
             fieldMap.put("def", 6);
             fieldMap.put("isLastBatch", 7);
-            fieldMap.put("isOutOfMemory", 8);
         }
     }
 

@@ -38,9 +38,9 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.ControllerImpl;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
-import org.apache.drill.exec.rpc.data.DataResponseHandler;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.user.UserWorker;
 
@@ -58,7 +58,7 @@ public class ServiceEngine implements Closeable{
   private final boolean allowPortHunting;
 
   public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context,
-      WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) throws DrillbitStartupException {
+      WorkEventBus workBus, WorkerBee bee, boolean allowPortHunting) throws DrillbitStartupException {
     final EventLoopGroup eventLoopGroup = TransportCheck.createEventLoopGroup(
         context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-");
     this.userServer = new UserServer(
@@ -69,7 +69,7 @@ public class ServiceEngine implements Closeable{
         userWorker,
         context.getExecutor());
     this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
-    this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
+    this.dataPool = new DataConnectionCreator(context, workBus, bee, allowPortHunting);
     this.config = context.getConfig();
     this.allowPortHunting = allowPortHunting;
   }

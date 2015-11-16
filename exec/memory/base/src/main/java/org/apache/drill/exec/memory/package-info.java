@@ -15,20 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.memory;
-
 /**
- * JMX bean interface for global allocator statistics.
+ *  Memory Allocation, Account and Management
+ *
+ *  See the README.md file in this directory for detailed information about Drill's memory allocation subsystem.
+ *
  */
-// TODO use Stats infrastructure instead of JMX beans
-public interface AllocatorsStatsMXBean {
-  /**
-   * Get the maximum amount of direct memory that can be used.
-   *
-   * <p>This is determined by what is available, or by the drillbit
-   * configuration, if it specifies a value.</p>
-   *
-   * @return the amount of direct memory that can be used
-   */
-  public long getMaxDirectMemory();
-}
+package org.apache.drill.exec.memory;

@@ -65,7 +65,7 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
 
     @Override
     public boolean checkForOutOfMemory() {
-      return buffer.peekFirst().getHeader().getIsOutOfMemory();
+      return context.isOverMemoryLimit();
     }
 
     @Override

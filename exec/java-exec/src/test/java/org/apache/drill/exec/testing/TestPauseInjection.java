@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.testing;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -24,6 +29,7 @@ import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -33,11 +39,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.Pointer;
 import org.junit.Test;
 import org.slf4j.Logger;
-
-import java.util.concurrent.CountDownLatch;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestPauseInjection extends BaseTestQuery {
 
@@ -126,7 +127,7 @@ public class TestPauseInjection extends BaseTestQuery {
 
     ControlsInjectionUtil.setControls(session, controls);
 
-    final QueryContext queryContext = new QueryContext(session, bits[0].getContext());
+    final QueryContext queryContext = new QueryContext(session, bits[0].getContext(), QueryId.getDefaultInstance());
 
     (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
 
@@ -181,7 +182,7 @@ public class TestPauseInjection extends BaseTestQuery {
       final long expectedDuration = 1000L;
       final ExtendedLatch trigger = new ExtendedLatch(1);
       final Pointer<Exception> ex = new Pointer<>();
-      final QueryContext queryContext = new QueryContext(session, drillbitContext1);
+      final QueryContext queryContext = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
       (new ResumingThread(queryContext, trigger, ex, expectedDuration)).start();
 
       // test that the pause happens
@@ -199,7 +200,7 @@ public class TestPauseInjection extends BaseTestQuery {
 
     {
       final ExtendedLatch trigger = new ExtendedLatch(1);
-      final QueryContext queryContext = new QueryContext(session, drillbitContext2);
+      final QueryContext queryContext = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
 
       // if the resume did not happen, the test would hang
       final DummyClass dummyClass = new DummyClass(queryContext, trigger);

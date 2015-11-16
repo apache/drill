@@ -17,27 +17,23 @@
  */
 package org.apache.drill.exec.memory;
 
-import static org.junit.Assert.assertEquals;
-import io.netty.buffer.ByteBuf;
+import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.drill.common.DrillAutoCloseables;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.test.DrillTest;
-import org.junit.Test;
+/**
+ * The root allocator for using direct memory inside a Drillbit. Supports creating a
+ * tree of descendant child allocators.
+ */
+public class RootAllocator extends BaseAllocator {
 
+  public RootAllocator(final long limit) {
+    super(null, "ROOT", 0, limit);
+  }
 
-public class TestEndianess extends DrillTest {
-  @Test
-  public void testLittleEndian() {
-    final DrillConfig drillConfig = DrillConfig.create();
-    final BufferAllocator a = RootAllocatorFactory.newRoot(drillConfig);
-    final ByteBuf b = a.buffer(4);
-    b.setInt(0, 35);
-    assertEquals(b.getByte(0), 35);
-    assertEquals(b.getByte(1), 0);
-    assertEquals(b.getByte(2), 0);
-    assertEquals(b.getByte(3), 0);
-    b.release();
-    DrillAutoCloseables.closeNoChecked(a);
+  /**
+   * Verify the accounting state of the allocation system.
+   */
+  @VisibleForTesting
+  public void verify() {
+    verifyAllocator();
   }
 }

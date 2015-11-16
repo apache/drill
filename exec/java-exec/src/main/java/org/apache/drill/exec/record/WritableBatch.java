@@ -21,6 +21,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.util.List;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -58,7 +59,7 @@ public class WritableBatch implements AutoCloseable {
     return buffers;
   }
 
-  public void reconstructContainer(VectorContainer container) {
+  public void reconstructContainer(BufferAllocator allocator, VectorContainer container) {
     Preconditions.checkState(!cleared,
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
     if (buffers.length > 0) { /* If we have DrillBuf's associated with value vectors */
@@ -67,7 +68,7 @@ public class WritableBatch implements AutoCloseable {
         len += b.capacity();
       }
 
-      DrillBuf newBuf = buffers[0].getAllocator().buffer(len);
+      DrillBuf newBuf = allocator.buffer(len);
       try {
         /* Copy data from each buffer into the compound buffer */
         int offset = 0;

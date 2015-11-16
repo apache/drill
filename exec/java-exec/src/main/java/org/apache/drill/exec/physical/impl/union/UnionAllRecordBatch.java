@@ -37,7 +37,6 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -81,14 +80,6 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   @Override
   public int getRecordCount() {
     return recordCount;
-  }
-
-  @Override
-  public void kill(boolean sendUpstream) {
-    if(current != null) {
-      current.kill(sendUpstream);
-      current = null;
-    }
   }
 
   @Override
@@ -278,10 +269,8 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
   // This method is used by inner class to clear the current record batch
   private void clearCurrentRecordBatch() {
-    if (current != null) {
-      for(final VectorWrapper<?> v: current) {
-        v.clear();
-      }
+    for(VectorWrapper<?> v: current) {
+      v.clear();
     }
   }
 

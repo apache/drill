@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -93,26 +92,18 @@ public abstract class AbstractDataCollector implements DataCollector{
   @Override
   public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch)  throws IOException {
 
-    // if we received an out of memory, add an item to all the buffer queues.
-    if (batch.getHeader().getIsOutOfMemory()) {
-      for (RawBatchBuffer buffer : buffers) {
-        buffer.enqueue(batch);
-      }
-    }
-
     // check to see if we have enough fragments reporting to proceed.
-    boolean decremented = false;
+    boolean decrementedToZero = false;
     if (remainders.compareAndSet(fragmentMap.get(minorFragmentId), 0, 1)) {
       int rem = remainingRequired.decrementAndGet();
       if (rem == 0) {
-        parentAccounter.decrementAndGet();
-        decremented = true;
+        decrementedToZero = 0 == parentAccounter.decrementAndGet();
       }
     }
 
     getBuffer(minorFragmentId).enqueue(batch);
 
-    return decremented;
+    return decrementedToZero;
   }
 
 

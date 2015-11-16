@@ -21,13 +21,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.data.IncomingDataBatch;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -38,10 +42,21 @@ import com.google.common.collect.Maps;
 public class IncomingBuffers implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IncomingBuffers.class);
 
+  private volatile boolean closed = false;
   private final AtomicInteger streamsRemaining = new AtomicInteger(0);
   private final AtomicInteger remainingRequired;
-  private final Map<Integer, DataCollector> fragCounts;
+  private final Map<Integer, DataCollector> collectorMap;
   private final FragmentContext context;
+
+  /**
+   * Lock used to manage close and data acceptance. We should only create a local reference to incoming data in the case
+   * that the incoming buffers are !closed. As such, we need to make sure that we aren't in the process of closing the
+   * incoming buffers when data is arriving. The read lock can be shared by many incoming batches but the write lock
+   * must be exclusive to the close method.
+   */
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final AutoCloseableLock sharedIncomingBatchLock = new AutoCloseableLock(lock.readLock());
+  private final AutoCloseableLock exclusiveCloseLock = new AutoCloseableLock(lock.writeLock());
 
   public IncomingBuffers(PlanFragment fragment, FragmentContext context) {
     this.context = context;
@@ -56,39 +71,50 @@ public class IncomingBuffers implements AutoCloseable {
     }
 
     logger.debug("Came up with a list of {} required fragments.  Fragments {}", remainingRequired.get(), collectors);
-    fragCounts = ImmutableMap.copyOf(collectors);
+    collectorMap = ImmutableMap.copyOf(collectors);
 
     // Determine the total number of incoming streams that will need to be completed before we are finished.
     int totalStreams = 0;
-    for (DataCollector bc : fragCounts.values()) {
+    for (DataCollector bc : collectorMap.values()) {
       totalStreams += bc.getTotalIncomingFragments();
     }
     assert totalStreams >= remainingRequired.get() : String.format("Total Streams %d should be more than the minimum number of streams to commence (%d).  It isn't.", totalStreams, remainingRequired.get());
     streamsRemaining.set(totalStreams);
   }
 
-  public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException, IOException {
-    // no need to do anything if we've already enabled running.
-    // logger.debug("New Batch Arrived {}", batch);
-    if (batch.getHeader().getIsOutOfMemory()) {
-      for (DataCollector fSet : fragCounts.values()) {
-        fSet.batchArrived(0, batch);
+  public boolean batchArrived(final IncomingDataBatch incomingBatch) throws FragmentSetupException, IOException {
+
+    // we want to make sure that we only generate local record batch reference in the case that we're not closed.
+    // Otherwise we would leak memory.
+    try (AutoCloseableLock lock = sharedIncomingBatchLock.open()) {
+      if (closed) {
+        return false;
       }
-      return false;
+
+      if (incomingBatch.getHeader().getIsLastBatch()) {
+        streamsRemaining.decrementAndGet();
+      }
+
+      final int sendMajorFragmentId = incomingBatch.getHeader().getSendingMajorFragmentId();
+      DataCollector collector = collectorMap.get(sendMajorFragmentId);
+      if (collector == null) {
+        throw new FragmentSetupException(String.format(
+            "We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId,
+            Arrays.toString(collectorMap.values().toArray())));
+      }
+
+      synchronized (collector) {
+        final RawFragmentBatch newRawFragmentBatch = incomingBatch.newRawFragmentBatch(context.getAllocator());
+        boolean decrementedToZero = collector
+            .batchArrived(incomingBatch.getHeader().getSendingMinorFragmentId(), newRawFragmentBatch);
+        newRawFragmentBatch.release();
+
+        // we should only return true if remaining required has been decremented and is currently equal to zero.
+        return decrementedToZero;
+      }
+
     }
-    if (batch.getHeader().getIsLastBatch()) {
-      streamsRemaining.decrementAndGet();
-    }
-    int sendMajorFragmentId = batch.getHeader().getSendingMajorFragmentId();
-    DataCollector fSet = fragCounts.get(sendMajorFragmentId);
-    if (fSet == null) {
-      throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
-    }
-    synchronized (this) {
-      boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
-      // we should only return true if remaining required has been decremented and is currently equal to zero.
-      return decremented && remainingRequired.get() == 0;
-    }
+
   }
 
   public int getRemainingRequired() {
@@ -100,11 +126,8 @@ public class IncomingBuffers implements AutoCloseable {
   }
 
   public RawBatchBuffer[] getBuffers(int senderMajorFragmentId) {
-    return fragCounts.get(senderMajorFragmentId).getBuffers();
+    return collectorMap.get(senderMajorFragmentId).getBuffers();
   }
-
-
-
 
   public boolean isDone() {
     return streamsRemaining.get() < 1;
@@ -112,7 +135,10 @@ public class IncomingBuffers implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    AutoCloseables.close(fragCounts.values().toArray(new AutoCloseable[0]));
+    try (AutoCloseableLock lock = exclusiveCloseLock.open()) {
+      closed = true;
+      AutoCloseables.close(collectorMap.values());
+    }
   }
 
 }
