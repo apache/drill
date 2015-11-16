@@ -46,11 +46,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected BatchState state;
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context) throws OutOfMemoryException {
-    this(popConfig, context, true, context.newOperatorContext(popConfig, true));
+    this(popConfig, context, true, context.newOperatorContext(popConfig));
   }
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema) throws OutOfMemoryException {
-    this(popConfig, context, buildSchema, context.newOperatorContext(popConfig, true));
+    this(popConfig, context, buildSchema, context.newOperatorContext(popConfig));
   }
 
   protected AbstractRecordBatch(final T popConfig, final FragmentContext context, final boolean buildSchema,

@@ -45,11 +45,6 @@
       <version>${project.version}</version>
     </dependency>    
     <dependency>
-      <groupId>org.apache.drill.memory</groupId>
-      <artifactId>drill-memory-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency> 
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-rpc</artifactId>
       <version>${project.version}</version>

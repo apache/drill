@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.util;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -142,7 +144,7 @@ public class DecimalUtility extends CoreDecimalUtility{
         return str;
     }
 
-    public static BigDecimal getBigDecimalFromIntermediate(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
+  public static BigDecimal getBigDecimalFromIntermediate(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
 
         // In the intermediate representation we don't pad the scale with zeroes, so set truncate = false
         return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
@@ -172,7 +174,8 @@ public class DecimalUtility extends CoreDecimalUtility{
      * This function assumes that data is provided in a non-dense format
      * It works on both sparse and intermediate representations.
      */
-    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf data, int startIndex, int nDecimalDigits, int scale, boolean truncateScale) {
+  public static BigDecimal getBigDecimalFromDrillBuf(ByteBuf data, int startIndex, int nDecimalDigits, int scale,
+      boolean truncateScale) {
 
         // For sparse decimal type we have padded zeroes at the end, strip them while converting to BigDecimal.
         int actualDigits;
@@ -272,18 +275,24 @@ public class DecimalUtility extends CoreDecimalUtility{
         if (sign == true) {
             intermediateBytes[0] = (byte) (intermediateBytes[0] | 0x80);
         }
-        DrillBuf intermediate = data.getAllocator().buffer(intermediateBytes.length);
+
+    final ByteBuf intermediate = UnpooledByteBufAllocator.DEFAULT.buffer(intermediateBytes.length);
+    try {
         intermediate.setBytes(0, intermediateBytes);
 
-        BigDecimal ret = getBigDecimalFromIntermediate(intermediate, 0, nDecimalDigits + 1, scale);
-        intermediate.release();
-        return ret;
+      BigDecimal ret = getBigDecimalFromIntermediate(intermediate, 0, nDecimalDigits + 1, scale);
+      return ret;
+    } finally {
+      intermediate.release();
+    }
+
     }
 
     /*
      * Function converts the BigDecimal and stores it in out internal sparse representation
      */
-    public static void getSparseFromBigDecimal(BigDecimal input, DrillBuf data, int startIndex, int scale, int precision, int nDecimalDigits) {
+  public static void getSparseFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex, int scale, int precision,
+      int nDecimalDigits) {
 
         // Initialize the buffer
         for (int i = 0; i < nDecimalDigits; i++) {

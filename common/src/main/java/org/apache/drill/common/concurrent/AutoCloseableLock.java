@@ -15,20 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.rpc.data;
+package org.apache.drill.common.concurrent;
 
-import io.netty.buffer.DrillBuf;
+import java.util.concurrent.locks.Lock;
 
-import java.io.IOException;
+/**
+ * Simple wrapper class that allows Locks to be released via an try-with-resources block.
+ */
+public class AutoCloseableLock implements AutoCloseable {
 
-import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
-import org.apache.drill.exec.work.fragment.FragmentManager;
+  private final Lock lock;
 
-public interface DataResponseHandler {
+  public AutoCloseableLock(Lock lock) {
+    this.lock = lock;
+  }
 
-  public void handle(FragmentManager manager, FragmentRecordBatch fragmentBatch,
-      DrillBuf data, AckSender sender) throws FragmentSetupException, IOException;
+  public AutoCloseableLock open() {
+    lock.lock();
+    return this;
+  }
 
-  public void informOutOfMemory();
+  @Override
+  public void close() {
+    lock.unlock();
+  }
+
 }

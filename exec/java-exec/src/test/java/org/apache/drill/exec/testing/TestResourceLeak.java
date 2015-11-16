@@ -18,11 +18,13 @@
 package org.apache.drill.exec.testing;
 
 import static org.junit.Assert.fail;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-
 import io.netty.buffer.DrillBuf;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
+
+import javax.inject.Inject;
 
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.common.config.DrillConfig;
@@ -42,16 +44,12 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.test.DrillTest;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 
 /*
  * TODO(DRILL-3170)
@@ -138,7 +136,7 @@ public class TestResourceLeak extends DrillTest {
 
     @Override
     public void eval() {
-      buf.getAllocator().buffer(1);
+      buf.retain();
       out.value = in.value;
     }
   }
