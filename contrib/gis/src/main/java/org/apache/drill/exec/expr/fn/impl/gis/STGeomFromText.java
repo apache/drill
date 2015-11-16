@@ -45,12 +45,10 @@ public class STGeomFromText implements DrillSimpleFunc {
 
   public void eval() {
     String wktText = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end,
-        input.buffer);
+            input.buffer);
 
     com.esri.core.geometry.ogc.OGCGeometry geom;
-
     geom = com.esri.core.geometry.ogc.OGCGeometry.fromText(wktText);
-
     java.nio.ByteBuffer pointBytes = geom.asBinary();
 
     int outputSize = pointBytes.remaining();
