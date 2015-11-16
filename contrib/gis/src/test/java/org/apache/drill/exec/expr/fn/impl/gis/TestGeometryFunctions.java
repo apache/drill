@@ -72,4 +72,188 @@ public class TestGeometryFunctions extends BaseTestQuery {
     .build()
     .run();
   }
+
+  @Test
+  public void testSTXQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("select ST_X(ST_Point(-121.895, 37.339)) "
+          + "from cp.`/sample-data/CA-cities.csv` limit 1")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(-121.895)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testSTYQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("select ST_Y(ST_Point(-121.895, 37.339)) "
+          + "from cp.`/sample-data/CA-cities.csv` limit 1")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(37.339)
+      .build()
+      .run();
+  }
+  
+
+  @Test
+  public void testSTX_STYGivesNaNForNonPointGeometry() throws Exception {
+
+    testBuilder()
+      .sqlQuery("select ST_X(ST_GeomFromText('MULTIPOINT((16 64))')) "
+          + "from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(Double.NaN)
+      .build()
+      .run();
+
+    testBuilder()
+    .sqlQuery("select ST_Y(ST_GeomFromText('MULTIPOINT((16 64))')) "
+        + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(Double.NaN)
+    .build()
+    .run();
+  }
+
+
+  @Test
+  public void testIntersectQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Intersects(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('LINESTRING(2 0,0 2)')) "
+          + "from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(false)
+      .build()
+      .run();
+    
+    testBuilder()
+    .sqlQuery("SELECT ST_Intersects(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('LINESTRING(0 0,0 2)')) "
+        + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(true)
+    .build()
+    .run();
+  }
+
+  @Test
+  public void testRelateQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2), '0FFFFF212') "
+          + "from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(true)
+      .build()
+      .run();
+
+    testBuilder()
+    .sqlQuery("SELECT ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2), '*FF*FF212') "
+        + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(true)
+    .build()
+    .run();
+
+    testBuilder()
+    .sqlQuery("SELECT ST_Relate(ST_GeomFromText('POINT(0 0)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2), '*FF*FF212') "
+        + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(false)
+    .build()
+    .run();
+
+  }
+
+  @Test
+  public void testTouchesQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Touches(ST_GeomFromText('LINESTRING(0 0, 1 1, 0 2)'), ST_GeomFromText('POINT(1 1)')) "
+          + "from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(false)
+      .build()
+      .run();
+
+    testBuilder()
+    .sqlQuery("SELECT ST_Touches(ST_GeomFromText('LINESTRING(0 0, 1 1, 0 2)'), ST_GeomFromText('POINT(0 2)')) "
+        + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(true)
+    .build()
+    .run();
+
+  }
+
+  @Test
+  public void testEqualsQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Equals(ST_GeomFromText('LINESTRING(0 0, 10 10)'), "
+                + "ST_GeomFromText('LINESTRING(0 0, 5 5, 10 10)')) from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(true)
+      .build()
+      .run();
+
+  }
+
+  @Test
+  public void testContainsQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Contains(smallc, bigc) As smallcontainsbig, "
+                     + "ST_Contains(bigc,smallc) As bigcontainssmall, "
+                     + "ST_Contains(bigc, ST_Union(smallc, bigc)) as bigcontainsunion, "
+                     + "ST_Equals(bigc, ST_Union(smallc, bigc)) as bigisunion "
+                + "FROM (SELECT ST_Buffer(ST_GeomFromText('POINT(1 2)'), 10) As smallc, "
+                       + "ST_Buffer(ST_GeomFromText('POINT(1 2)'), 20) As bigc from (VALUES(1)) ) As foo")
+      .ordered().baselineColumns("smallcontainsbig", "bigcontainssmall", "bigcontainsunion", "bigisunion")
+      .baselineValues(false, true, true, true)
+      .build()
+      .run();
+
+  }
+
+  @Test
+  public void testOverlapsCrossesIntersectsContainsQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Overlaps(a,b) As a_overlap_b, "
+                  + "ST_Crosses(a,b) As a_crosses_b, "
+                  + "ST_Intersects(a, b) As a_intersects_b, "
+                  + "ST_Contains(b,a) As b_contains_a "
+                + "FROM (SELECT ST_GeomFromText('POINT(1 0.5)') As a, ST_GeomFromText('LINESTRING(1 0, 1 1, 3 5)')  As b "
+                  + "from (VALUES(1)) ) As foo")
+      .ordered().baselineColumns("a_overlap_b", "a_crosses_b", "a_intersects_b", "b_contains_a")
+      .baselineValues(false, false, true, true)
+      .build()
+      .run();
+
+  }
+
+  @Test
+  public void testDisjointQuery() throws Exception {
+
+    testBuilder()
+      .sqlQuery("SELECT ST_Disjoint(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('LINESTRING( 2 0, 0 2 )')) "
+                + "from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0")
+      .baselineValues(true)
+      .build()
+      .run();
+
+    testBuilder()
+    .sqlQuery("SELECT ST_Disjoint(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('LINESTRING( 0 0, 0 2 )')) "
+              + "from (VALUES(1))")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(false)
+    .build()
+    .run();
+
+  }
 }
