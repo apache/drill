@@ -65,7 +65,7 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
   private final JSONOptions options;
   private final double rowCount;
 
-  protected DrillValuesRel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
+  public DrillValuesRel(RelOptCluster cluster, RelDataType rowType, ImmutableList<ImmutableList<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, traits);
     assert getConvention() == DRILL_LOGICAL;
     verifyRowType(tuples, rowType);
