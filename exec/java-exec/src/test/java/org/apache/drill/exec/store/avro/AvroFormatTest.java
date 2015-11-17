@@ -33,27 +33,56 @@ public class AvroFormatTest extends BaseTestQuery {
   //      2. Avro supports recursive types? Can we test this?
 
   @Test
+  public void testBatchCutoff() throws Exception {
+
+    final AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues(5000);
+    final String file = testSetup.getFilePath();
+    final String sql =
+        "select a_string, b_int, c_long, d_float, e_double, f_bytes, h_boolean, g_null " +
+            "from dfs_test.`" + file + "`";
+    test(sql);
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .expectsNumBatches(2)
+        .baselineRecords(testSetup.getExpectedRecords())
+        .go();
+  }
+
+  @Test
   public void testSimplePrimitiveSchema_NoNullValues() throws Exception {
 
-    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final String file = testSetup.getFilePath();
     final String sql =
             "select a_string, b_int, c_long, d_float, e_double, f_bytes, h_boolean, g_null " +
              "from dfs_test.`" + file + "`";
     test(sql);
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineRecords(testSetup.getExpectedRecords())
+        .go();
   }
 
   @Test
   public void testSimplePrimitiveSchema_StarQuery() throws Exception {
 
-    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final String file = testSetup.getFilePath();
     final String sql = "select * from dfs_test.`" + file + "`";
     test(sql);
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineRecords(testSetup.getExpectedRecords())
+        .go();
   }
 
   @Test
   public void testSimplePrimitiveSchema_SelectColumnSubset() throws Exception {
 
-    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues().getFilePath();
     final String sql = "select h_boolean, e_double from dfs_test.`" + file + "`";
     test(sql);
   }
@@ -61,7 +90,7 @@ public class AvroFormatTest extends BaseTestQuery {
   @Test
   public void testSimplePrimitiveSchema_NoColumnsExistInTheSchema() throws Exception {
 
-    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues().getFilePath();
     final String sql = "select h_dummy1, e_dummy2 from dfs_test.`" + file + "`";
     try {
       test(sql);
@@ -75,7 +104,7 @@ public class AvroFormatTest extends BaseTestQuery {
   @Test
   public void testSimplePrimitiveSchema_OneExistAndOneDoesNotExistInTheSchema() throws Exception {
 
-    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues();
+    final String file = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues().getFilePath();
     final String sql = "select h_boolean, e_dummy2 from dfs_test.`" + file + "`";
     try {
       test(sql);
