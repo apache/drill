@@ -56,6 +56,19 @@ public class Drill2288GetColumnsMetadataWhenNoRowsTest {
     connection.close();
   }
 
+  protected void checkForSchemaAndNoRows(final String query) throws Exception {
+    try (final Statement stmt = connection.createStatement();
+         final ResultSet results = stmt.executeQuery(query)) {
+
+      // Result set should still have columns even though there are no rows:
+      ResultSetMetaData metadata = results.getMetaData();
+      assertThat("ResultSetMetaData.getColumnCount() should have been > 0",
+          metadata.getColumnCount(), not(equalTo(0)));
+
+      assertThat("Unexpected non-empty results. Test rot?",
+          false, equalTo(results.next()));
+    }
+  }
 
   /**
    * Tests that an empty JSON file (having zero records) no longer triggers
@@ -64,16 +77,7 @@ public class Drill2288GetColumnsMetadataWhenNoRowsTest {
    */
   @Test
   public void testEmptyJsonFileDoesntSuppressNetSchema1() throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results = stmt.executeQuery( "SELECT a, b, c, * FROM cp.`empty.json`" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT a, b, c, * FROM cp.`empty.json`");
   }
 
   @Test
@@ -98,87 +102,32 @@ public class Drill2288GetColumnsMetadataWhenNoRowsTest {
    */
   @Test
   public void testInfoSchemaTablesZeroRowsBy_TABLE_SCHEMA_works() throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results =
-        stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.`TABLES`"
-                           + " WHERE TABLE_SCHEMA = ''" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA = ''");
   }
 
   /** (Worked before (because TABLE_CATALOG test not pushed down).) */
   @Test
   public void testInfoSchemaTablesZeroRowsBy_TABLE_CATALOG_works() throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results =
-        stmt.executeQuery( "SELECT * FROM INFORMATION_SCHEMA.`TABLES`"
-                           + " WHERE TABLE_CATALOG = ''" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_CATALOG = ''");
   }
 
   /** (Failed before (because TABLE_NAME test is pushed down).) */
   @Test
   public void testInfoSchemaTablesZeroRowsBy_TABLE_NAME_works()
       throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results =
-        stmt.executeQuery(
-            "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME = ''" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME = ''");
   }
 
   /** (Worked before.) */
   @Test
   public void testInfoSchemaTablesZeroRowsByLimitWorks() throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results =
-        stmt.executeQuery(
-            "SELECT * FROM INFORMATION_SCHEMA.`TABLES` LIMIT 0" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT * FROM INFORMATION_SCHEMA.`TABLES` LIMIT 0");
   }
 
   /** (Worked before.) */
   @Test
   public void testInfoSchemaTablesZeroRowsByWhereFalseWorks() throws Exception {
-    Statement stmt = connection.createStatement();
-    ResultSet results =
-        stmt.executeQuery(
-            "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE FALSE" );
-
-    // Result set should still have columns even though there are no rows:
-    ResultSetMetaData metadata = results.getMetaData();
-    assertThat( "ResultSetMetaData.getColumnCount() should have been > 0",
-                metadata.getColumnCount(), not( equalTo( 0 ) ) );
-
-    assertThat( "Unexpected non-empty results.  Test rot?",
-                false, equalTo( results.next() ) );
+    checkForSchemaAndNoRows("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE FALSE");
   }
 
   /** (Failed before (because table schema and name tests are pushed down).) */
@@ -196,6 +145,5 @@ public class Drill2288GetColumnsMetadataWhenNoRowsTest {
     assertThat( "Unexpected non-empty results.  Test rot?",
                 false, equalTo( results.next() ) );
   }
-
 
 }
