@@ -84,8 +84,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
-    final FileSelection newFileSelection = new FileSelection(newFiles, getBaseTableLocation(), true);
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
+    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
 

@@ -316,16 +316,16 @@ public class WorkspaceSchemaFactory {
     @Override
     public DrillTable create(String key) {
       try {
-
-        FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
-        if (fileSelection == null) {
+        final FileSelection selection = FileSelection.create(fs, config.getLocation(), key);
+        if (selection == null) {
           return null;
         }
 
-        if (fileSelection.containsDirectories(fs)) {
-          for (FormatMatcher m : dirMatchers) {
+        final boolean hasDirectories = selection.containsDirectories(fs);
+        if (hasDirectories) {
+          for (final FormatMatcher matcher : dirMatchers) {
             try {
-              DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+              DrillTable table = matcher.isReadable(fs, selection, plugin, storageEngineName, schemaConfig.getUserName());
               if (table != null) {
                 return table;
               }
@@ -333,11 +333,15 @@ public class WorkspaceSchemaFactory {
               logger.debug("File read failed.", e);
             }
           }
-          fileSelection = fileSelection.minusDirectories(fs);
         }
 
-        for (FormatMatcher m : fileMatchers) {
-          DrillTable table = m.isReadable(fs, fileSelection, plugin, storageEngineName, schemaConfig.getUserName());
+        final FileSelection newSelection = hasDirectories ? selection.minusDirectories(fs) : selection;
+        if (newSelection == null) {
+          return null;
+        }
+
+        for (final FormatMatcher matcher : fileMatchers) {
+          DrillTable table = matcher.isReadable(fs, newSelection, plugin, storageEngineName, schemaConfig.getUserName());
           if (table != null) {
             return table;
           }
@@ -396,7 +400,7 @@ public class WorkspaceSchemaFactory {
 
       FormatMatcher matcher = null;
       Queue<FileStatus> listOfFiles = new LinkedList<>();
-      listOfFiles.addAll(fileSelection.getFileStatusList(fs));
+      listOfFiles.addAll(fileSelection.getStatuses(fs));
 
       while (!listOfFiles.isEmpty()) {
         FileStatus currentFile = listOfFiles.poll();

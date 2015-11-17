@@ -46,7 +46,6 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   private final List<SchemaPath> partitionColumns;
   private final DrillScanRel scanRel;
-  static final int MAX_NESTED_SUBDIRS = 10;
 
   public ParquetPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
     ParquetGroupScan scan = (ParquetGroupScan) scanRel.getGroupScan();
@@ -81,8 +80,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
-    final FileSelection newFileSelection = new FileSelection(newFiles, getBaseTableLocation(), true);
-    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
+    final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
+    final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
   }
 

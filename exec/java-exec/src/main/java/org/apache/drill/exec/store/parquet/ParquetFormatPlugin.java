@@ -234,9 +234,9 @@ public class ParquetFormatPlugin implements FormatPlugin{
         // file:/a/b.  The reason is that the file names above have been created in the form
         // /a/b/c.parquet and the format of the selection root must match that of the file names
         // otherwise downstream operations such as partition pruning can break.
-        Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
-        return new FileSelection(fileNames, metaRootPath.toString(), metadata, /* save metadata for future use */
-            selection.getFileStatusList(fs));
+        final Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
+        final FileSelection newSelection = FileSelection.create(null, fileNames, metaRootPath.toString());
+        return ParquetFileSelection.create(newSelection, metadata);
       } else {
         // don't expand yet; ParquetGroupScan's metadata gathering operation
         // does that.

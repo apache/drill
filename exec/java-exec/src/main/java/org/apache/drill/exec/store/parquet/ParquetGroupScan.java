@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -178,13 +177,16 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.fs = ImpersonationUtil.createFileSystem(userName, formatPlugin.getFsConf());
 
     this.entries = Lists.newArrayList();
-    List<FileStatus> files = selection.getFileStatusList(fs);
+    final List<FileStatus> files = selection.getStatuses(fs);
     for (FileStatus file : files) {
       entries.add(new ReadEntryWithPath(file.getPath().toString()));
     }
 
     this.selectionRoot = selectionRoot;
-    this.parquetTableMetadata = selection.getParquetMetadata();
+    if (selection instanceof ParquetFileSelection) {
+      final ParquetFileSelection pfs = ParquetFileSelection.class.cast(selection);
+      this.parquetTableMetadata = pfs.getParquetMetadata();
+    }
 
     init();
   }
@@ -341,7 +343,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   public void modifyFileSelection(FileSelection selection) {
     entries.clear();
     fileSet = Sets.newHashSet();
-    for (String fileName : selection.getAsFiles()) {
+    for (String fileName : selection.getFiles()) {
       entries.add(new ReadEntryWithPath(fileName));
       fileSet.add(fileName);
     }
