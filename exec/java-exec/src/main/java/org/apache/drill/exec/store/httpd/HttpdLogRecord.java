@@ -32,9 +32,6 @@ import org.slf4j.LoggerFactory;
 public class HttpdLogRecord {
 
   private static final Logger LOG = LoggerFactory.getLogger(HttpdLogRecord.class);
-  private static final String WILDCARD_MAP_FIELD_NAME = ":map";
-  private static final String WILDCARD = ".*";
-  private static final String SAFE_SEPARATOR = "_";
   private final Map<String, VarCharWriter> strings = Maps.newHashMap();
   private final Map<String, BigIntWriter> longs = Maps.newHashMap();
   private final Map<String, Float8Writer> doubles = Maps.newHashMap();
@@ -141,7 +138,7 @@ public class HttpdLogRecord {
   /**
    * This method is referenced and called via reflection. When the parser processes a field like:
    * HTTP.URI:request.firstline.uri.query.* where star is an arbitrary field that the parser found this method will be
-   * invoked. <br/>
+   * invoked. <br>
    *
    * @param field name of field
    * @param value value of field
@@ -159,7 +156,7 @@ public class HttpdLogRecord {
   /**
    * This method is referenced and called via reflection. When the parser processes a field like:
    * HTTP.URI:request.firstline.uri.query.* where star is an arbitrary field that the parser found this method will be
-   * invoked. <br/>
+   * invoked. <br>
    *
    * @param field name of field
    * @param value value of field
@@ -177,7 +174,7 @@ public class HttpdLogRecord {
   /**
    * This method is referenced and called via reflection. When the parser processes a field like:
    * HTTP.URI:request.firstline.uri.query.* where star is an arbitrary field that the parser found this method will be
-   * invoked. <br/>
+   * invoked. <br>
    *
    * @param field name of field
    * @param value value of field
@@ -214,9 +211,9 @@ public class HttpdLogRecord {
            */
           if (!cleanExtensions.containsKey(field)) {
             final String extension = field.substring(root.length() + 1, field.length());
-            final String cleanExtension = cleanseFieldName(extension);
+            final String cleanExtension = HttpdParser.drillFormattedFieldName(extension);
             cleanExtensions.put(field, cleanExtension);
-            LOG.debug("Added: field='{}' with cleanExtension='{}'", field, cleanExtension);
+            LOG.debug("Added extension: field='{}' with cleanExtension='{}'", field, cleanExtension);
           }
 
           /**
@@ -227,7 +224,7 @@ public class HttpdLogRecord {
             /**
              * Start and store this root map writer for later retrieval.
              */
-            LOG.debug("Starting new wildcard map: {}", field);
+            LOG.debug("Starting new wildcard field writer: {}", field);
             writer.start();
             startedWildcards.put(field, writer);
             wildcardWriters.put(root, writer);
@@ -257,17 +254,6 @@ public class HttpdLogRecord {
   }
 
   /**
-   * Drill cannot deal with fields with dots in them like request.referer. For the sake of simplicity we are going
-   * replace the dots. The resultant output field will look like: request_referer.<br/>
-   * Additionally, wild cards will get replaced with map[] as the field name as they can contain repeated values.
-   *
-   * @param field name to be cleansed.
-   */
-  private String cleanseFieldName(final String field) {
-    return field.replaceAll("\\.", SAFE_SEPARATOR);
-  }
-
-  /**
    * This record will be used with a single parser. For each field that is to be parsed a setter will be called. It
    * registers a setter method for each field being parsed. It also builds the data writers to hold the data beings
    * parsed.
@@ -275,39 +261,39 @@ public class HttpdLogRecord {
    * @param parser
    * @param mapWriter
    * @param type
-   * @param field
+   * @param parserFieldName
+   * @param drillFieldName
    * @throws NoSuchMethodException
    */
-  public void addField(final Parser<HttpdLogRecord> parser, final MapWriter mapWriter, final EnumSet<Casts> type, final String field) throws NoSuchMethodException {
-    final boolean hasWildcard = field.endsWith(WILDCARD);
-    final String nothingWild = hasWildcard ? field.substring(0, field.length() - 2) : field;
-    final String cleansedFieldName = cleanseFieldName(nothingWild);
+  public void addField(final Parser<HttpdLogRecord> parser, final MapWriter mapWriter, final EnumSet<Casts> type, final String parserFieldName, final String drillFieldName) throws NoSuchMethodException {
+    final boolean hasWildcard = parserFieldName.endsWith(HttpdParser.PARSER_WILDCARD);
 
     /**
      * This is a dynamic way to map the setter for each specified field type. <br/>
      * e.g. a TIME.STAMP may map to a LONG while a referrer may map to a STRING
      */
     if (hasWildcard) {
-      LOG.debug("Adding Wildcard parse target: {}, with clean name: {}", field, cleansedFieldName + WILDCARD_MAP_FIELD_NAME);
-      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, String.class), field);
-      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Double.class), field);
-      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Long.class), field);
-      wildcards.put(nothingWild, mapWriter.map(cleansedFieldName + WILDCARD_MAP_FIELD_NAME));
+      final String cleanName = parserFieldName.substring(0, parserFieldName.length() - HttpdParser.PARSER_WILDCARD.length());
+      LOG.debug("Adding WILDCARD parse target: {} as {}, with field name: {}", parserFieldName, cleanName, drillFieldName);
+      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, String.class), parserFieldName);
+      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Double.class), parserFieldName);
+      parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Long.class), parserFieldName);
+      wildcards.put(cleanName, mapWriter.map(drillFieldName));
     }
     else if (type.contains(Casts.DOUBLE)) {
-      LOG.debug("Adding Double parse target: {}, with clean name: {}", field, cleansedFieldName);
-      parser.addParseTarget(this.getClass().getMethod("set", String.class, Double.class), field);
-      doubles.put(field, mapWriter.float8(cleansedFieldName));
+      LOG.debug("Adding DOUBLE parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      parser.addParseTarget(this.getClass().getMethod("set", String.class, Double.class), parserFieldName);
+      doubles.put(parserFieldName, mapWriter.float8(drillFieldName));
     }
     else if (type.contains(Casts.LONG)) {
-      LOG.debug("Adding Long parse target: {}, with clean name: {}", field, cleansedFieldName);
-      parser.addParseTarget(this.getClass().getMethod("set", String.class, Long.class), field);
-      longs.put(field, mapWriter.bigInt(cleansedFieldName));
+      LOG.debug("Adding LONG parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      parser.addParseTarget(this.getClass().getMethod("set", String.class, Long.class), parserFieldName);
+      longs.put(parserFieldName, mapWriter.bigInt(drillFieldName));
     }
     else {
-      LOG.debug("Adding String parse target: {}, with clean name: {}", field, cleansedFieldName);
-      parser.addParseTarget(this.getClass().getMethod("set", String.class, String.class), field);
-      strings.put(field, mapWriter.varChar(cleansedFieldName));
+      LOG.debug("Adding STRING parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      parser.addParseTarget(this.getClass().getMethod("set", String.class, String.class), parserFieldName);
+      strings.put(parserFieldName, mapWriter.varChar(drillFieldName));
     }
   }
 }
