@@ -16,7 +16,7 @@
 package org.apache.drill.exec.store.httpd;
 
 import io.netty.buffer.DrillBuf;
-import java.util.List;
+import java.util.Map;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class HttpdParserTest {
   private void runTest(String logFormat, String logLine) throws Exception {
     MapWriter mapWriter = null;
     DrillBuf managedBuffer = null;
-    List<String> configuredFields = null;
+    Map<String, String> configuredFields = null;
     HttpdParser parser = new HttpdParser(mapWriter, managedBuffer, logFormat, null, configuredFields);
     parser.parse(logLine);
   }

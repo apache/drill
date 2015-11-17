@@ -33,7 +33,6 @@
           type: "httpd",
           logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\""
           /* timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" */
-          /* fields: [ "TIME.STAMP:request.receive.time", ... ] */
         },
         "parquet" : {
           type: "parquet"

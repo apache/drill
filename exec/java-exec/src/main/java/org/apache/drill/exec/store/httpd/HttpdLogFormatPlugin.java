@@ -12,9 +12,6 @@
  */
 package org.apache.drill.exec.store.httpd;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -52,6 +49,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import java.util.Map;
 import org.apache.drill.exec.store.RecordReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,8 +77,6 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
 
     private String logFormat;
     private String timestampFormat;
-    @JsonInclude(Include.NON_DEFAULT)
-    private List<String> fields;
 
     /**
      * @return the logFormat
@@ -93,13 +90,6 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
      */
     public String getTimestampFormat() {
       return timestampFormat;
-    }
-
-    /**
-     * @return the fields
-     */
-    public List<String> getFields() {
-      return fields;
     }
   }
 
@@ -117,20 +107,42 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
     private LineRecordReader lineReader;
     private LongWritable lineNumber;
 
-    public HttpdLogRecordReader(final FragmentContext context, final DrillFileSystem fs, final FileWork work) {
+    public HttpdLogRecordReader(final FragmentContext context, final DrillFileSystem fs, final FileWork work, final List<SchemaPath> columns) {
       this.fs = fs;
       this.work = work;
       this.fragmentContext = context;
+      setColumns(columns);
+    }
+
+    /**
+     * The query fields passed in are formatted in a way that Drill requires. Those must be cleaned up to work with the
+     * parser.
+     *
+     * @return Map<DrillFieldNames, ParserFieldNames>
+     */
+    private Map<String, String> makeParserFields() {
+      final Map<String, String> fieldMapping = Maps.newHashMap();
+      for (final SchemaPath sp : getColumns()) {
+        final String drillField = sp.getRootSegment().getPath();
+        final String parserField = HttpdParser.parserFormattedFieldName(drillField);
+        fieldMapping.put(drillField, parserField);
+      }
+      return fieldMapping;
     }
 
     @Override
     public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
       try {
+        /**
+         * Extract the list of field names for the parser to use if it is NOT a star query. If it is a star query just
+         * pass through an empty map, because the parser is going to have to build all possibilities.
+         */
+        final Map<String, String> fieldMapping = !isStarQuery() ? makeParserFields() : null;
         writer = new VectorContainerWriter(output);
         parser = new HttpdParser(writer.rootAsMap(), context.getManagedBuffer(),
             HttpdLogFormatPlugin.this.getConfig().getLogFormat(),
             HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
-            HttpdLogFormatPlugin.this.getConfig().getFields());
+            fieldMapping);
 
         final Path path = fs.makeQualified(new Path(work.getPath()));
         FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
@@ -214,7 +226,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
 
   @Override
   public RecordReader getRecordReader(final FragmentContext context, final DrillFileSystem dfs, final FileWork fileWork, final List<SchemaPath> columns, final String userName) throws ExecutionSetupException {
-    return new HttpdLogRecordReader(context, dfs, fileWork);
+    return new HttpdLogRecordReader(context, dfs, fileWork, columns);
   }
 
   @Override

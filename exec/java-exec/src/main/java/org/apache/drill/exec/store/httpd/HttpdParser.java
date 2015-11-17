@@ -16,9 +16,11 @@
 package org.apache.drill.exec.store.httpd;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import io.netty.buffer.DrillBuf;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
 import nl.basjes.parse.core.exceptions.DissectionFailure;
@@ -32,11 +34,15 @@ import org.slf4j.LoggerFactory;
 public class HttpdParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(HttpdParser.class);
+  public static final String PARSER_WILDCARD = ".*";
+  public static final String SAFE_WILDCARD = "_$";
+  public static final String SAFE_SEPARATOR = "_";
+  public static final String REMAPPING_FLAG = "#";
   private final Parser<HttpdLogRecord> parser;
   private final HttpdLogRecord record;
 
   public HttpdParser(final MapWriter mapWriter, final DrillBuf managedBuffer, final String logFormat,
-      final String timestampFormat, final List<String> configuredFields)
+      final String timestampFormat, final Map<String, String> fieldMapping)
       throws NoSuchMethodException, MissingDissectorsException, InvalidDissectorException {
 
     Preconditions.checkArgument(logFormat != null && !logFormat.trim().isEmpty(), "logFormat cannot be null or empty");
@@ -44,7 +50,7 @@ public class HttpdParser {
     this.record = new HttpdLogRecord(managedBuffer);
     this.parser = new HttpdLoglineParser<>(HttpdLogRecord.class, logFormat, timestampFormat);
 
-    setupParser(mapWriter, logFormat, configuredFields);
+    setupParser(mapWriter, logFormat, fieldMapping);
 
     if (timestampFormat != null && !timestampFormat.trim().isEmpty()) {
       LOG.info("Custom timestamp format has been specified. This is an informational note only as custom timestamps is rather unusual.");
@@ -70,37 +76,63 @@ public class HttpdParser {
 
   /**
    * In order to define a type remapping the format of the field configuration will look like: <br/>
-   * STRING:HTTP.URI:request.firstline.uri.query.[parameter name] <br/>
-   *
-   * STRING, DOUBLE, LONG are the only valid options for the Cast type.
+   * HTTP.URI:request.firstline.uri.query.[parameter name] <br/>
    *
    * @param parser Add type remapping to this parser instance.
    * @param fieldName request.firstline.uri.query.[parameter_name]
    * @param fieldType HTTP.URI, etc..
-   * @param castType STRING, DOUBLE, or LONG
    */
-  private void addTypeRemapping(final Parser<HttpdLogRecord> parser, final String fieldName, final String fieldType, final String castType) {
-    final EnumSet<Casts> casts = EnumSet.of(Casts.valueOf(castType.toUpperCase()));
-    LOG.debug("Adding type remapping - fieldName: {}, fieldType: {}, castType: {}", fieldName, fieldType, casts);
-    parser.addTypeRemapping(fieldName, fieldType, casts);
+  private void addTypeRemapping(final Parser<HttpdLogRecord> parser, final String fieldName, final String fieldType) {
+    LOG.debug("Adding type remapping - fieldName: {}, fieldType: {}", fieldName, fieldType);
+    parser.addTypeRemapping(fieldName, fieldType);
   }
 
-  private void setupParser(final MapWriter mapWriter, final String logFormat, final List<String> configuredFields)
+  /**
+   * The parser deals with dots unlike Drill wanting underscores request_referer. For the sake of simplicity we are
+   * going replace the dots. The resultant output field will look like: request.referer.<br>
+   * Additionally, wild cards will get replaced with .*
+   *
+   * @param drillFieldName name to be cleansed.
+   * @return
+   */
+  public static String parserFormattedFieldName(final String drillFieldName) {
+    return drillFieldName.replace(SAFE_WILDCARD, PARSER_WILDCARD).replaceAll(SAFE_SEPARATOR, ".").replaceAll("\\.\\.", "_");
+  }
+
+  /**
+   * Drill cannot deal with fields with dots in them like request.referer. For the sake of simplicity we are going
+   * ensure the field name is cleansed. The resultant output field will look like: request_referer.<br>
+   * Additionally, wild cards will get replaced with _$
+   *
+   * @param parserFieldName name to be cleansed.
+   * @return
+   */
+  public static String drillFormattedFieldName(final String parserFieldName) {
+    return parserFieldName.replaceAll("_", "__").replace(PARSER_WILDCARD, SAFE_WILDCARD).replaceAll("\\.", SAFE_SEPARATOR);
+  }
+
+  private void setupParser(final MapWriter mapWriter, final String logFormat, final Map<String, String> fieldMapping)
       throws NoSuchMethodException, MissingDissectorsException, InvalidDissectorException {
 
     /**
-     * If the configuration has fields defined, then we will use them because this would be the most efficient way to
-     * parse the log. Otherwise we will use all possible paths that the parser has determined from the log format
-     * because the user doesn't know exactly what they want.
+     * If the user has selected fields, then we will use them to configure the parser because this would be the most
+     * efficient way to parse the log.
      */
-    final List<String> possiblePaths;
-    if (configuredFields != null && !configuredFields.isEmpty()) {
+    final Map<String, String> requestedPaths;
+    final List<String> allParserPaths = parser.getPossiblePaths();
+    if (fieldMapping != null && !fieldMapping.isEmpty()) {
       LOG.debug("Using fields defined by user.");
-      possiblePaths = configuredFields;
+      requestedPaths = fieldMapping;
     }
     else {
+      /**
+       * Use all possible paths that the parser has determined from the specified log format.
+       */
       LOG.debug("No fields defined by user, defaulting to all possible fields.");
-      possiblePaths = parser.getPossiblePaths();
+      requestedPaths = Maps.newHashMap();
+      for (final String parserPath : allParserPaths) {
+        requestedPaths.put(drillFormattedFieldName(parserPath), parserPath);
+      }
     }
 
     /**
@@ -109,27 +141,31 @@ public class HttpdParser {
      * because this will be the slowest parsing path possible for the specified format.
      */
     Parser<Object> dummy = new HttpdLoglineParser<>(Object.class, logFormat);
-    dummy.addParseTarget(String.class.getMethod("indexOf", String.class), possiblePaths);
+    dummy.addParseTarget(String.class.getMethod("indexOf", String.class), allParserPaths);
 
-    for (final String path : possiblePaths) {
-      final EnumSet<Casts> casts = dummy.getCasts(path);
-      LOG.debug("Setting up path: {}, which casts: {}", path, casts);
+    for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
+      final EnumSet<Casts> casts;
 
       /**
-       * Check the field specified by the user to see if it is supposed to be remapped. If it is supposed to be remapped
-       * then remap and setup the field name for the setter without the cast type in the name.
+       * Check the field specified by the user to see if it is supposed to be remapped.
        */
-      final String field;
-      final String[] pieces = path.split(":");
-      if (pieces.length == 3) {
-        addTypeRemapping(parser, pieces[2], pieces[1], pieces[0]);
-        field = pieces[1] + ":" + pieces[2];
+      if (entry.getValue().startsWith(REMAPPING_FLAG)) {
+        /**
+         * Because this field is being remapped we need to replace the field name that the parser uses.
+         */
+        entry.setValue(entry.getValue().substring(REMAPPING_FLAG.length()));
+
+        final String[] pieces = entry.getValue().split(":");
+        addTypeRemapping(parser, pieces[1], pieces[0]);
+
+        casts = Casts.STRING_ONLY;
       }
       else {
-        field = path;
+        casts = dummy.getCasts(entry.getValue());
       }
 
-      record.addField(parser, mapWriter, casts, field);
+      LOG.debug("Setting up drill field: {}, parser field: {}, which casts as: {}", entry.getKey(), entry.getValue(), casts);
+      record.addField(parser, mapWriter, casts, entry.getValue(), entry.getKey());
     }
   }
 }

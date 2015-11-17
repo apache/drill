@@ -32,8 +32,21 @@ public class TestHttpdLogFormatPlugin extends BaseTestQuery {
    * @throws Exception
    */
   @Test
-  public void testDfsTestBootstrap() throws Exception {
+  public void testDfsTestBootstrap_star() throws Exception {
     test("select * from dfs_test.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-test-bootstrap-test.httpd`");
+  }
+
+  /**
+   * This test covers the test bootstrap-storage-plugins.json section of httpd.
+   *
+   * Indirectly this validates the HttpdLogFormatPlugin.HttpdLogFormatConfig deserializing properly.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testDfsTestBootstrap_notstar() throws Exception {
+    test("select `TIME_STAMP:request_receive_time`, `HTTP_METHOD:request_firstline_method`, `STRING:request_status_last`, `BYTES:response_body_bytesclf` \n"
+        + "from dfs_test.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-test-bootstrap-test.httpd`");
   }
 
   /**
@@ -42,12 +55,32 @@ public class TestHttpdLogFormatPlugin extends BaseTestQuery {
    * @throws Exception
    */
   @Test
-  public void testDfsBootstrap() throws Exception {
+  public void testDfsBootstrap_star() throws Exception {
     test("select * from dfs.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-bootstrap.httpd`");
   }
 
+  /**
+   * This test covers the main bootstrap-storage-plugins.json section of httpd.
+   *
+   * @throws Exception
+   */
   @Test
-  public void testGroupBy() throws Exception {
+  public void testDfsBootstrap_wildcard() throws Exception {
+    test("select `STRING:request_referer_query_$` from dfs.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-bootstrap.httpd`");
+  }
+
+  /**
+   * This test covers the main bootstrap-storage-plugins.json section of httpd.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testDfsBootstrap_underscore() throws Exception {
+    test("select `TIME_DAY:request_receive_time_day__utc` from dfs.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-bootstrap.httpd`");
+  }
+
+  @Test
+  public void testGroupBy_1() throws Exception {
     final List<QueryDataBatch> actualResults = testSqlWithResults(
         "select `HTTP_METHOD:request_firstline_method` as http_method, `STRING:request_status_last` as status_code, sum(`BYTES:response_body_bytesclf`) as total_bytes \n"
         + "from dfs_test.`${WORKING_PATH}/src/test/resources/store/httpd/dfs-test-bootstrap-test.httpd`\n"
