@@ -19,7 +19,10 @@
 package org.apache.drill.exec.memory;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -40,10 +44,12 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
@@ -61,6 +67,63 @@ public class TestAllocators extends DrillTest {
   };
 
   private final static String planFile="/physical_allocator_test.json";
+
+  /**
+   * Contract for DrillBuf[] returned from getBuffers() is that buffers are returned in a reader appropriate state
+   * (i.e., readIndex = 0)
+   *
+   * Before this patch, the following scenario breaks this contract:
+   * As data being read from DrillBuf, readIndex will be pushed forward. And, later on,
+   * when DrillBuf[] are read from the ValueVector, readIndex will point at the location of the most recent reading
+   *
+   * This unit test is added to ensure that the readIndex points at zero under this scenario
+   */
+  @Test // DRILL-3854
+  public void ensureDrillBufReadIndexIsZero() throws Exception {
+    final int length = 10;
+
+    final Properties props = new Properties() {
+      {
+        put(TopLevelAllocator.TOP_LEVEL_MAX_ALLOC, "1000000");
+        put(TopLevelAllocator.ERROR_ON_MEMORY_LEAK, "true");
+      }
+    };
+    final DrillConfig config = DrillConfig.create(props);
+
+    final BufferAllocator allc = RootAllocatorFactory.newRoot(config);
+    final TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder();
+    builder.setMinorType(TypeProtos.MinorType.INT);
+    builder.setMode(TypeProtos.DataMode.REQUIRED);
+
+    final IntVector iv = new IntVector(MaterializedField.create("Field", builder.build()), allc);
+    iv.allocateNew();
+
+    // Write data to DrillBuf
+    for(int i = 0; i < length; ++i) {
+      iv.getBuffer().writeInt(i);
+    }
+
+    // Read data to DrillBuf
+    for(int i = 0; i < length; ++i) {
+      assertEquals(i, iv.getBuffer().readInt());
+    }
+
+    for(DrillBuf drillBuf : iv.getBuffers(false)) {
+      assertEquals(0, drillBuf.readInt());
+    }
+
+    final List<DrillBuf> toBeClean = Lists.newArrayList();
+    for(DrillBuf drillBuf : iv.getBuffers(true)) {
+      assertEquals(0, drillBuf.readInt());
+      toBeClean.add(drillBuf);
+    }
+
+    for(DrillBuf drillBuf : toBeClean) {
+      drillBuf.release();
+    }
+
+    allc.close();
+  }
 
   @Test
   public void testTransfer() throws Exception {
