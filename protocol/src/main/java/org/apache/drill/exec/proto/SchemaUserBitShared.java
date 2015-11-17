@@ -405,6 +405,260 @@ public final class SchemaUserBitShared
         }
     }
 
+    public static final class WarningMsg
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.WarningMsg>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.WarningMsg message) throws java.io.IOException
+            {
+                if(message.hasMessage())
+                    output.writeString(1, message.getMessage(), false);
+                if(message.hasCount())
+                    output.writeInt32(2, message.getCount(), false);
+                if(message.hasWarningCode())
+                    output.writeString(3, message.getWarningCode(), false);
+                if(message.hasSqlState())
+                    output.writeString(4, message.getSqlState(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.WarningMsg message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.WarningMsg> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.WarningMsg message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.WarningMsg newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setMessage(input.readString());
+                            break;
+                        case 2:
+                            builder.setCount(input.readInt32());
+                            break;
+                        case 3:
+                            builder.setWarningCode(input.readString());
+                            break;
+                        case 4:
+                            builder.setSqlState(input.readString());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.WarningMsg.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "message";
+                case 2: return "count";
+                case 3: return "warningCode";
+                case 4: return "sqlState";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("message", 1);
+            fieldMap.put("count", 2);
+            fieldMap.put("warningCode", 3);
+            fieldMap.put("sqlState", 4);
+        }
+    }
+
+    public static final class QueryWarning
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryWarning>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryWarning message) throws java.io.IOException
+            {
+                if(message.hasQueryId())
+                    output.writeObject(1, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
+
+                for(org.apache.drill.exec.proto.UserBitShared.WarningMsg warnings : message.getWarningsList())
+                    output.writeObject(2, warnings, org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.WRITE, true);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryWarning message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryWarning> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryWarning message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.QueryWarning newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setQueryId(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.MERGE));
+
+                            break;
+                        case 2:
+                            builder.addWarnings(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.WarningMsg.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryWarning.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "queryId";
+                case 2: return "warnings";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("queryId", 1);
+            fieldMap.put("warnings", 2);
+        }
+    }
+
     public static final class ExceptionWrapper
     {
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.MessageSchema WRITE =
@@ -1355,6 +1609,9 @@ public final class SchemaUserBitShared
                 for(org.apache.drill.exec.proto.UserBitShared.DrillPBError error : message.getErrorList())
                     output.writeObject(3, error, org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, true);
 
+                if(message.hasWarning())
+                    output.writeObject(4, message.getWarning(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.WRITE, false);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryResult message)
             {
@@ -1405,6 +1662,10 @@ public final class SchemaUserBitShared
                             builder.addError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
 
                             break;
+                        case 4:
+                            builder.setWarning(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryWarning.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryWarning.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1448,6 +1709,7 @@ public final class SchemaUserBitShared
                 case 1: return "queryState";
                 case 2: return "queryId";
                 case 3: return "error";
+                case 4: return "warning";
                 default: return null;
             }
         }
@@ -1462,6 +1724,7 @@ public final class SchemaUserBitShared
             fieldMap.put("queryState", 1);
             fieldMap.put("queryId", 2);
             fieldMap.put("error", 3);
+            fieldMap.put("warning", 4);
         }
     }
 

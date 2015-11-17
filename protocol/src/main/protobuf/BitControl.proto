@@ -46,6 +46,11 @@ message BitStatus {
 message FragmentStatus {
   optional exec.shared.MinorFragmentProfile profile = 1;
   optional FragmentHandle handle = 2;
+  repeated exec.shared.WarningMsg summary_warnings = 3; //vehicle for summary warnings
+}
+
+message DrillWarning{
+  repeated exec.shared.WarningMsg warnings = 1; // will be used for out of band warning from non-root fragments
 }
 
 message InitializeFragments {

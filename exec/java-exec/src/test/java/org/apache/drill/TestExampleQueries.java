@@ -271,6 +271,12 @@ public class TestExampleQueries extends BaseTestQuery {
   }
 
   @Test
+  public void testFakeJsonColum() throws Exception {
+    test("alter session set `exec.errors.verbose` = true ");
+    test("SELECT first_name, nick_name FROM cp.`employee.json` LIMIT 5");
+  }
+
+  @Test
   public void testFilterOnArrayTypes() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
     String query = String.format("select columns[0] from dfs_test.`%s` " +

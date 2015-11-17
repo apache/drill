@@ -88,6 +88,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
     private QueryState queryState;
     private QueryId queryId;
     private List<DrillPBError> error;
+    private QueryWarning warning;
 
     public QueryResult()
     {
@@ -132,6 +133,19 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
     public QueryResult setErrorList(List<DrillPBError> error)
     {
         this.error = error;
+        return this;
+    }
+
+    // warning
+
+    public QueryWarning getWarning()
+    {
+        return warning;
+    }
+
+    public QueryResult setWarning(QueryWarning warning)
+    {
+        this.warning = warning;
         return this;
     }
 
@@ -202,6 +216,10 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
                     message.error.add(input.mergeObject(null, DrillPBError.getSchema()));
                     break;
 
+                case 4:
+                    message.warning = input.mergeObject(message.warning, QueryWarning.getSchema());
+                    break;
+
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -227,6 +245,10 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
             }
         }
 
+
+        if(message.warning != null)
+             output.writeObject(4, message.warning, QueryWarning.getSchema(), false);
+
     }
 
     public String getFieldName(int number)
@@ -236,6 +258,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
             case 1: return "queryState";
             case 2: return "queryId";
             case 3: return "error";
+            case 4: return "warning";
             default: return null;
         }
     }
@@ -252,6 +275,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
         __fieldMap.put("queryState", 1);
         __fieldMap.put("queryId", 2);
         __fieldMap.put("error", 3);
+        __fieldMap.put("warning", 4);
     }
     
 }

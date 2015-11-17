@@ -98,7 +98,17 @@ public class FragmentStatusReporter {
   }
 
   private void sendStatus(final FragmentStatus status) {
-    tunnel.sendFragmentStatus(status);
+    FragmentStatus updatedStatus = status;
+    // grab warnings from fragment context and pass them with fragment status
+    if (context.getWarningHelper().hasWarnings()) {
+      logger.trace("FSR Send Status: {} ", context.getWarningHelper().getWarnings().toString());
+      updatedStatus = status.toBuilder()
+          .addAllSummaryWarnings(context.getWarningHelper().getWarnings())
+          .build();
+    }
+    tunnel.sendFragmentStatus(updatedStatus);
+    //clear all warnings
+    context.getWarningHelper().clearWarnings();
   }
 
   /**

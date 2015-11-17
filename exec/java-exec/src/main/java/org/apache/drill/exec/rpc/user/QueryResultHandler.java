@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
@@ -72,6 +73,24 @@ public class QueryResultHandler {
   public RpcOutcomeListener<QueryId> getWrappedListener(RemoteConnection connection,
       UserResultsListener resultsListener) {
     return new SubmissionListener(connection, resultsListener);
+  }
+
+  /**
+   * Maps internal low-level API protocol to {@link UserResultsListener}-level API protocol.
+   * handles query warning messages
+   */
+  public void warningArrived( ByteBuf pBody ) throws RpcException {
+    //parse query warning out of RPCBus
+    final QueryWarning queryWarning = RpcBus.get( pBody, QueryWarning.PARSER );
+    final QueryId queryId = queryWarning.getQueryId();
+    final UserResultsListener resultsListener = newUserResultsListener(queryId);
+
+    try {
+      logger.trace("QRH Warning Arrived: {}", queryWarning.toString());
+      resultsListener.warningsArrived(queryWarning);
+    } catch ( Exception e ) {
+      resultsListener.submissionFailed(UserException.systemError(e).build(logger));
+    }
   }
 
   /**
@@ -122,6 +141,9 @@ public class QueryResultHandler {
         // A successful completion/canceled case--pass on via resultArrived
 
         try {
+          // pass on warnings before completing the query
+          logger.trace("QRH Result Arrived: {}", queryResult.getWarning().toString());
+          resultsListener.warningsArrived(queryResult.getWarning());
           resultsListener.queryCompleted(queryState);
         } catch ( Exception e ) {
           resultsListener.submissionFailed(UserException.systemError(e).build(logger));
@@ -238,6 +260,10 @@ public class QueryResultHandler {
           output.queryCompleted(state);
         }
       }
+    }
+
+    @Override
+    public void warningsArrived(QueryWarning warning) {
     }
 
     @Override

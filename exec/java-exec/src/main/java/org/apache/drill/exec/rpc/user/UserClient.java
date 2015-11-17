@@ -112,6 +112,9 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     case RpcType.QUERY_RESULT_VALUE:
       queryResultHandler.resultArrived(pBody);
       return new Response(RpcType.ACK, Acks.OK);
+    case RpcType.QUERY_WARNING_VALUE:
+      queryResultHandler.warningArrived(pBody);
+      return new Response(RpcType.ACK, Acks.OK);
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));
     }

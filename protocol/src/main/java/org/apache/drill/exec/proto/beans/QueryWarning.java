@@ -32,70 +32,64 @@ import com.dyuproject.protostuff.Input;
 import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.UninitializedMessageException;
 
-public final class FragmentStatus implements Externalizable, Message<FragmentStatus>, Schema<FragmentStatus>
+public final class QueryWarning implements Externalizable, Message<QueryWarning>, Schema<QueryWarning>
 {
 
-    public static Schema<FragmentStatus> getSchema()
+    public static Schema<QueryWarning> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static FragmentStatus getDefaultInstance()
+    public static QueryWarning getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final FragmentStatus DEFAULT_INSTANCE = new FragmentStatus();
+    static final QueryWarning DEFAULT_INSTANCE = new QueryWarning();
 
     
-    private MinorFragmentProfile profile;
-    private FragmentHandle handle;
-    private List<WarningMsg> summaryWarnings;
+    private QueryId queryId;
+    private List<WarningMsg> warnings;
 
-    public FragmentStatus()
+    public QueryWarning()
     {
         
     }
 
+    public QueryWarning(
+        QueryId queryId
+    )
+    {
+        this.queryId = queryId;
+    }
+
     // getters and setters
 
-    // profile
+    // queryId
 
-    public MinorFragmentProfile getProfile()
+    public QueryId getQueryId()
     {
-        return profile;
+        return queryId;
     }
 
-    public FragmentStatus setProfile(MinorFragmentProfile profile)
+    public QueryWarning setQueryId(QueryId queryId)
     {
-        this.profile = profile;
+        this.queryId = queryId;
         return this;
     }
 
-    // handle
+    // warnings
 
-    public FragmentHandle getHandle()
+    public List<WarningMsg> getWarningsList()
     {
-        return handle;
+        return warnings;
     }
 
-    public FragmentStatus setHandle(FragmentHandle handle)
+    public QueryWarning setWarningsList(List<WarningMsg> warnings)
     {
-        this.handle = handle;
-        return this;
-    }
-
-    // summaryWarnings
-
-    public List<WarningMsg> getSummaryWarningsList()
-    {
-        return summaryWarnings;
-    }
-
-    public FragmentStatus setSummaryWarningsList(List<WarningMsg> summaryWarnings)
-    {
-        this.summaryWarnings = summaryWarnings;
+        this.warnings = warnings;
         return this;
     }
 
@@ -113,39 +107,40 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
 
     // message method
 
-    public Schema<FragmentStatus> cachedSchema()
+    public Schema<QueryWarning> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public FragmentStatus newMessage()
+    public QueryWarning newMessage()
     {
-        return new FragmentStatus();
+        return new QueryWarning();
     }
 
-    public Class<FragmentStatus> typeClass()
+    public Class<QueryWarning> typeClass()
     {
-        return FragmentStatus.class;
+        return QueryWarning.class;
     }
 
     public String messageName()
     {
-        return FragmentStatus.class.getSimpleName();
+        return QueryWarning.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return FragmentStatus.class.getName();
+        return QueryWarning.class.getName();
     }
 
-    public boolean isInitialized(FragmentStatus message)
+    public boolean isInitialized(QueryWarning message)
     {
-        return true;
+        return 
+            message.queryId != null;
     }
 
-    public void mergeFrom(Input input, FragmentStatus message) throws IOException
+    public void mergeFrom(Input input, QueryWarning message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -154,17 +149,13 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
                 case 0:
                     return;
                 case 1:
-                    message.profile = input.mergeObject(message.profile, MinorFragmentProfile.getSchema());
+                    message.queryId = input.mergeObject(message.queryId, QueryId.getSchema());
                     break;
 
                 case 2:
-                    message.handle = input.mergeObject(message.handle, FragmentHandle.getSchema());
-                    break;
-
-                case 3:
-                    if(message.summaryWarnings == null)
-                        message.summaryWarnings = new ArrayList<WarningMsg>();
-                    message.summaryWarnings.add(input.mergeObject(null, WarningMsg.getSchema()));
+                    if(message.warnings == null)
+                        message.warnings = new ArrayList<WarningMsg>();
+                    message.warnings.add(input.mergeObject(null, WarningMsg.getSchema()));
                     break;
 
                 default:
@@ -174,22 +165,19 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     }
 
 
-    public void writeTo(Output output, FragmentStatus message) throws IOException
+    public void writeTo(Output output, QueryWarning message) throws IOException
     {
-        if(message.profile != null)
-             output.writeObject(1, message.profile, MinorFragmentProfile.getSchema(), false);
+        if(message.queryId == null)
+            throw new UninitializedMessageException(message);
+        output.writeObject(1, message.queryId, QueryId.getSchema(), false);
 
 
-        if(message.handle != null)
-             output.writeObject(2, message.handle, FragmentHandle.getSchema(), false);
-
-
-        if(message.summaryWarnings != null)
+        if(message.warnings != null)
         {
-            for(WarningMsg summaryWarnings : message.summaryWarnings)
+            for(WarningMsg warnings : message.warnings)
             {
-                if(summaryWarnings != null)
-                    output.writeObject(3, summaryWarnings, WarningMsg.getSchema(), true);
+                if(warnings != null)
+                    output.writeObject(2, warnings, WarningMsg.getSchema(), true);
             }
         }
 
@@ -199,9 +187,8 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     {
         switch(number)
         {
-            case 1: return "profile";
-            case 2: return "handle";
-            case 3: return "summaryWarnings";
+            case 1: return "queryId";
+            case 2: return "warnings";
             default: return null;
         }
     }
@@ -215,9 +202,8 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("profile", 1);
-        __fieldMap.put("handle", 2);
-        __fieldMap.put("summaryWarnings", 3);
+        __fieldMap.put("queryId", 1);
+        __fieldMap.put("warnings", 2);
     }
     
 }

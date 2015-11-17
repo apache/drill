@@ -71,6 +71,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.CoreDecimalUtility;
+import org.apache.drill.exec.exception.DrillWarningTypes;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
@@ -78,6 +79,7 @@ import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -93,6 +95,9 @@ import com.google.common.collect.Lists;
 public class ExpressionTreeMaterializer {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
+
+  //DRILL-4015: For testing purpose, will be removed in final version of PR
+  static FragmentContext fContext;
 
   private ExpressionTreeMaterializer() {
   };
@@ -113,6 +118,13 @@ public class ExpressionTreeMaterializer {
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
                                               boolean allowComplexWriterExpr) {
     return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, false);
+  }
+
+  //DRILL-4015: For testing purpose, will be removed in final version of PR
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
+                                              boolean allowComplexWriterExpr, boolean unionTypeEnabled, FragmentContext context) {
+    fContext = context;
+    return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, unionTypeEnabled);
   }
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
@@ -624,10 +636,17 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
-//      logger.debug("Visiting schema path {}", path);
+      //logger.debug("Visiting schema path {}", path);
       TypedFieldId tfId = batch.getValueVectorId(path);
       if (tfId == null) {
         logger.warn("Unable to find value vector of path {}, returning null instance.", path);
+        //DRILL-4015: For testing purpose, will be removed in final version of PR
+        fContext.getWarningHelper()
+            .addWarning(
+                0,
+                DrillWarningTypes.NON_EXISTING_COLUMN,
+                "Column " + path + " you requested does not exist. Returning null values."
+            );
         return NullExpression.INSTANCE;
       } else {
         ValueVectorReadExpression e = new ValueVectorReadExpression(tfId);

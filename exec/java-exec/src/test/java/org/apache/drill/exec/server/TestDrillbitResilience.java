@@ -58,6 +58,7 @@ import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
@@ -422,6 +423,10 @@ public class TestDrillbitResilience extends DrillTest {
     public void queryCompleted(final QueryState state) {
       this.state = state;
       latch.countDown();
+    }
+
+    @Override
+    public void warningsArrived(QueryWarning warning) {
     }
 
     @Override

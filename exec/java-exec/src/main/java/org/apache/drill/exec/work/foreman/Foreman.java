@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
@@ -62,6 +63,8 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.WarningMsg;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -135,6 +138,7 @@ public class Foreman implements Runnable {
   private final ForemanResult foremanResult = new ForemanResult();
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
+  private QueryWarning queryWarning;
 
   private String queryText;
 
@@ -189,6 +193,32 @@ public class Foreman implements Runnable {
    */
   public QueryManager getQueryManager() {
     return queryManager;
+  }
+
+  /**
+   * Collect warnings messages from all fragments and store them in QueryWarning
+   * @param warnings warning message from a fragment
+   */
+  public void addQueryWarnings (List<WarningMsg> warnings) {
+    if (warnings.size() == 0) {
+      return;
+    }
+    if (queryWarning == null) {
+      queryWarning = QueryWarning.newBuilder()
+          .addAllWarnings(warnings)
+          .setQueryId(queryId)
+          .build();
+    } else {
+      queryWarning = queryWarning.toBuilder().addAllWarnings(warnings).build();
+    }
+  }
+
+  /**
+   * Get query warning object
+   * @return QueryWarning object
+   */
+  public QueryWarning getQueryWarning () {
+    return queryWarning;
   }
 
   /**
@@ -736,6 +766,10 @@ public class Foreman implements Runnable {
       final QueryResult.Builder resultBuilder = QueryResult.newBuilder()
           .setQueryId(queryId)
           .setQueryState(resultState);
+      //add summary warnings to QueryResults
+      if (getQueryWarning() != null) {
+        resultBuilder.setWarning(getQueryWarning());
+      }
       final UserException uex;
       if (resultException != null) {
         final boolean verbose = queryContext.getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
@@ -757,6 +791,10 @@ public class Foreman implements Runnable {
       try {
         // send whatever result we ended up with
         initiatingClient.sendResult(responseListener, resultBuilder.build(), true);
+        //DRILL-4015: For testing outof band warning only. Will be removed in final version of PR
+        if (getQueryWarning() != null) {
+          initiatingClient.sendWarning(responseListener, getQueryWarning(), true);
+        }
       } catch(final Exception e) {
         addException(e);
         logger.warn("Exception sending result to client", resultException);

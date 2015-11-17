@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
@@ -68,6 +69,10 @@ public class AwaitableUserResultsListener implements UserResultsListener {
   public void queryCompleted(QueryState state) {
     latch.countDown();
     child.queryCompleted(state);
+  }
+
+  @Override
+  public void warningsArrived(QueryWarning warning) {
   }
 
   public int await() throws Exception {

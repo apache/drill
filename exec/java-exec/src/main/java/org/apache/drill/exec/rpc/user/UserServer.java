@@ -35,6 +35,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
@@ -159,6 +160,11 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result, boolean allowInEventThread){
       logger.trace("Sending result to client with {}", result);
       send(listener, this, RpcType.QUERY_RESULT, result, Ack.class, allowInEventThread);
+    }
+
+    public void sendWarning(RpcOutcomeListener<Ack> listener, QueryWarning warning, boolean allowInEventThread){
+      logger.trace("Sending warning to client with {}", warning);
+      send(listener, this, RpcType.QUERY_WARNING, warning, Ack.class, allowInEventThread);
     }
 
     public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){

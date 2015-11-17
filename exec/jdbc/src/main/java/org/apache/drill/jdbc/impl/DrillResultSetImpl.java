@@ -51,6 +51,8 @@ import net.hydromatic.avatica.AvaticaStatement;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.proto.UserBitShared.WarningMsg;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -178,6 +180,16 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public void close() {
     // Note:  No already-closed exception for close().
+    try {
+      int cnt = 1;
+      SQLWarning warn = getWarnings();
+      while (warn != null) {
+        System.out.println("WARNING-" + cnt++ + ": " +  warn.getMessage());
+        warn = warn.getNextWarning();
+      }
+    } catch (SQLException e) {
+      //do nothing
+    }
     super.close();
   }
 
@@ -387,7 +399,49 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
   @Override
   public SQLWarning getWarnings() throws SQLException {
     throwIfClosed();
-    return super.getWarnings();
+    QueryWarning incomingWarning = resultsListener.getQueryWarning();
+    SQLWarning returnWarning = queryToSQLWarning(incomingWarning);
+    // see if super has some warnings
+    if (returnWarning == null) {
+      return super.getWarnings();
+    } else {
+      returnWarning.setNextWarning(super.getWarnings());
+    }
+    //cleanup incoming warnings so they are not surfaced again
+    resultsListener.clearWarning();
+    return returnWarning;
+  }
+
+  /**
+   * Converts QueryWarning tree into SQLWarning tree
+   * @param queryWarning incoming query warning tree
+   * @return SQLWarning tree
+   */
+  private SQLWarning queryToSQLWarning (QueryWarning queryWarning) {
+    if (queryWarning == null) {
+      return null;
+    }
+    SQLWarning sqlWarning = null;
+    for (WarningMsg warn : queryWarning.getWarningsList()) {
+      if (sqlWarning == null) {
+        sqlWarning = createSQLWarning(warn);
+        continue;
+      }
+      sqlWarning.setNextWarning(createSQLWarning(warn));
+    }
+    return sqlWarning;
+  }
+
+  /**
+   * Creates new SQLWarning object from QueryWarning
+   * @param msg incoming warningMsg
+   * @return SQLWarning object
+   */
+  private SQLWarning createSQLWarning (WarningMsg msg) {
+    return new SQLWarning(
+        msg.getMessage(),
+        msg.getSqlState()
+    );
   }
 
   @Override
@@ -1970,6 +2024,7 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
     final LinkedBlockingDeque<QueryDataBatch> batchQueue =
         Queues.newLinkedBlockingDeque();
 
+    private QueryWarning warning;
 
     /**
      * ...
@@ -2069,6 +2124,25 @@ class DrillResultSetImpl extends AvaticaResultSet implements DrillResultSet {
       logger.debug( "[#{}] Received query completion: {}.", instanceId, state );
       releaseIfFirst();
       completed = true;
+    }
+
+    @Override
+    public void warningsArrived(QueryWarning warning) {
+      if (this.warning == null) {
+        this.warning = warning;
+      }
+      //add incoming warning to existing warning
+      this.warning.toBuilder()
+          .addAllWarnings(warning.getWarningsList())
+          .build();
+    }
+
+    public QueryWarning getQueryWarning () {
+      return warning;
+    }
+
+    public void clearWarning () {
+      this.warning = null;
     }
 
     QueryId getQueryId() {

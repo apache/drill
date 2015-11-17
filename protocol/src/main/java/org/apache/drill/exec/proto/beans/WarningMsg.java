@@ -24,8 +24,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.dyuproject.protostuff.GraphIOUtil;
 import com.dyuproject.protostuff.Input;
@@ -33,69 +31,83 @@ import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
 
-public final class FragmentStatus implements Externalizable, Message<FragmentStatus>, Schema<FragmentStatus>
+public final class WarningMsg implements Externalizable, Message<WarningMsg>, Schema<WarningMsg>
 {
 
-    public static Schema<FragmentStatus> getSchema()
+    public static Schema<WarningMsg> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static FragmentStatus getDefaultInstance()
+    public static WarningMsg getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final FragmentStatus DEFAULT_INSTANCE = new FragmentStatus();
+    static final WarningMsg DEFAULT_INSTANCE = new WarningMsg();
 
     
-    private MinorFragmentProfile profile;
-    private FragmentHandle handle;
-    private List<WarningMsg> summaryWarnings;
+    private String message;
+    private int count;
+    private String warningCode;
+    private String sqlState;
 
-    public FragmentStatus()
+    public WarningMsg()
     {
         
     }
 
     // getters and setters
 
-    // profile
+    // message
 
-    public MinorFragmentProfile getProfile()
+    public String getMessage()
     {
-        return profile;
+        return message;
     }
 
-    public FragmentStatus setProfile(MinorFragmentProfile profile)
+    public WarningMsg setMessage(String message)
     {
-        this.profile = profile;
+        this.message = message;
         return this;
     }
 
-    // handle
+    // count
 
-    public FragmentHandle getHandle()
+    public int getCount()
     {
-        return handle;
+        return count;
     }
 
-    public FragmentStatus setHandle(FragmentHandle handle)
+    public WarningMsg setCount(int count)
     {
-        this.handle = handle;
+        this.count = count;
         return this;
     }
 
-    // summaryWarnings
+    // warningCode
 
-    public List<WarningMsg> getSummaryWarningsList()
+    public String getWarningCode()
     {
-        return summaryWarnings;
+        return warningCode;
     }
 
-    public FragmentStatus setSummaryWarningsList(List<WarningMsg> summaryWarnings)
+    public WarningMsg setWarningCode(String warningCode)
     {
-        this.summaryWarnings = summaryWarnings;
+        this.warningCode = warningCode;
+        return this;
+    }
+
+    // sqlState
+
+    public String getSqlState()
+    {
+        return sqlState;
+    }
+
+    public WarningMsg setSqlState(String sqlState)
+    {
+        this.sqlState = sqlState;
         return this;
     }
 
@@ -113,39 +125,39 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
 
     // message method
 
-    public Schema<FragmentStatus> cachedSchema()
+    public Schema<WarningMsg> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public FragmentStatus newMessage()
+    public WarningMsg newMessage()
     {
-        return new FragmentStatus();
+        return new WarningMsg();
     }
 
-    public Class<FragmentStatus> typeClass()
+    public Class<WarningMsg> typeClass()
     {
-        return FragmentStatus.class;
+        return WarningMsg.class;
     }
 
     public String messageName()
     {
-        return FragmentStatus.class.getSimpleName();
+        return WarningMsg.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return FragmentStatus.class.getName();
+        return WarningMsg.class.getName();
     }
 
-    public boolean isInitialized(FragmentStatus message)
+    public boolean isInitialized(WarningMsg message)
     {
         return true;
     }
 
-    public void mergeFrom(Input input, FragmentStatus message) throws IOException
+    public void mergeFrom(Input input, WarningMsg message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -154,19 +166,17 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
                 case 0:
                     return;
                 case 1:
-                    message.profile = input.mergeObject(message.profile, MinorFragmentProfile.getSchema());
+                    message.message = input.readString();
                     break;
-
                 case 2:
-                    message.handle = input.mergeObject(message.handle, FragmentHandle.getSchema());
+                    message.count = input.readInt32();
                     break;
-
                 case 3:
-                    if(message.summaryWarnings == null)
-                        message.summaryWarnings = new ArrayList<WarningMsg>();
-                    message.summaryWarnings.add(input.mergeObject(null, WarningMsg.getSchema()));
+                    message.warningCode = input.readString();
                     break;
-
+                case 4:
+                    message.sqlState = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -174,34 +184,29 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     }
 
 
-    public void writeTo(Output output, FragmentStatus message) throws IOException
+    public void writeTo(Output output, WarningMsg message) throws IOException
     {
-        if(message.profile != null)
-             output.writeObject(1, message.profile, MinorFragmentProfile.getSchema(), false);
+        if(message.message != null)
+            output.writeString(1, message.message, false);
 
+        if(message.count != 0)
+            output.writeInt32(2, message.count, false);
 
-        if(message.handle != null)
-             output.writeObject(2, message.handle, FragmentHandle.getSchema(), false);
+        if(message.warningCode != null)
+            output.writeString(3, message.warningCode, false);
 
-
-        if(message.summaryWarnings != null)
-        {
-            for(WarningMsg summaryWarnings : message.summaryWarnings)
-            {
-                if(summaryWarnings != null)
-                    output.writeObject(3, summaryWarnings, WarningMsg.getSchema(), true);
-            }
-        }
-
+        if(message.sqlState != null)
+            output.writeString(4, message.sqlState, false);
     }
 
     public String getFieldName(int number)
     {
         switch(number)
         {
-            case 1: return "profile";
-            case 2: return "handle";
-            case 3: return "summaryWarnings";
+            case 1: return "message";
+            case 2: return "count";
+            case 3: return "warningCode";
+            case 4: return "sqlState";
             default: return null;
         }
     }
@@ -215,9 +220,10 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("profile", 1);
-        __fieldMap.put("handle", 2);
-        __fieldMap.put("summaryWarnings", 3);
+        __fieldMap.put("message", 1);
+        __fieldMap.put("count", 2);
+        __fieldMap.put("warningCode", 3);
+        __fieldMap.put("sqlState", 4);
     }
     
 }
