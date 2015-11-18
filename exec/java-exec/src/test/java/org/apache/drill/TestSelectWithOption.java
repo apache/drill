@@ -200,4 +200,20 @@ public class TestSelectWithOption extends BaseTestQuery {
       testWithResult(jsonQuery, listOf("f","g"));
     }
   }
+
+  @Test
+  public void testUse() throws Exception {
+    File f = genCSVFile("testUse",
+        "{\"columns\": [\"f\",\"g\"]}");
+    String jsonTableName = format("`${WORKING_PATH}/%s`", f.getPath());
+    // the extension is actually csv
+    test("use dfs");
+    String[] jsonQueries = {
+        format("select columns from table(%s ('JSON'))", jsonTableName),
+        format("select columns from table(%s(type => 'JSON'))", jsonTableName),
+    };
+    for (String jsonQuery : jsonQueries) {
+      testWithResult(jsonQuery, listOf("f","g"));
+    }
+  }
 }
