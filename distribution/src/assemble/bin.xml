@@ -307,5 +307,9 @@
       <source>src/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>
+    <file>
+      <source>src/resources/core-site.xml</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
   </files>
 </assembly>
