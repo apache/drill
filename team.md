@@ -28,3 +28,4 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Bridget Bevens | bridgetb |
 | Hanifi Gunes | hg |
 | Abdelhakim Deneche | adeneche |
+| Sudheesh Katkam | sudheesh |
