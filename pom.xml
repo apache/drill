@@ -183,6 +183,7 @@
             <exclude>**/git.properties</exclude>
             <exclude>**/*.csv</exclude>
             <exclude>**/*.csvh</exclude>
+            <exclude>**/*.csvh-test</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.ssv</exclude>

@@ -119,6 +119,49 @@ public class TestCsvHeader extends BaseTestQuery{
     validateResults (batches, expectedOutput);
   }
 
+  @Test //DRILL-4108
+  public void testCsvHeaderNonExistingColumn() throws Exception {
+    String query = String.format("select `Year`, Model, Category from dfs_test.`%s` where Make = 'Chevy'", root);
+    List<QueryDataBatch> batches = testSqlWithResults(query);
+
+    String expectedOutput = "Year|Model|Category\n" +
+        "1999|Venture \"Extended Edition\"|\n" +
+        "1999|Venture \"Extended Edition, Very Large\"|\n";
+
+    validateResults (batches, expectedOutput);
+  }
+
+  @Test //DRILL-4108
+  public void testCsvHeaderMismatch() throws Exception {
+    String ddir = FileUtils.getResourceAsFile("/store/text/data/d2").toURI().toString();
+    String query = String.format("select `Year`, Model, Category from dfs_test.`%s` where Make = 'Chevy'", ddir);
+    List<QueryDataBatch> batches = testSqlWithResults(query);
+    // double header is unique to this test framework, doesn't happen with sqlline
+    String expectedOutput = "Year|Model|Category\n" +
+        "1999|Venture \"Extended Edition\"|\n" +
+        "1999|Venture \"Extended Edition, Very Large\"|\n" +
+        "Year|Model|Category\n" +
+        "1999||Venture \"Extended Edition\"\n" +
+        "1999||Venture \"Extended Edition, Very Large\"\n";
+
+    validateResults (batches, expectedOutput);
+  }
+
+  @Test //DRILL-4108
+  public void testCsvHeaderSkipFirstLine() throws Exception {
+    // test that header is not skipped when skipFirstLine is true
+    // testing by defining new format plugin with skipFirstLine set to true and diff file extension
+    String dfile = FileUtils.getResourceAsFile("/store/text/data/cars.csvh-test").toURI().toString();
+    String query = String.format("select `Year`, Model from dfs_test.`%s` where Make = 'Chevy'", dfile);
+    List<QueryDataBatch> batches = testSqlWithResults(query);
+
+    String expectedOutput = "Year|Model\n" +
+        "1999|Venture \"Extended Edition\"\n" +
+        "1999|Venture \"Extended Edition, Very Large\"\n";
+
+    validateResults (batches, expectedOutput);
+  }
+
   private void validateResults (List<QueryDataBatch> batches, String expectedOutput) throws SchemaChangeException {
     String actualOutput = getResultString(batches, OUTPUT_DELIMITER);
     //for your and machine's eyes
