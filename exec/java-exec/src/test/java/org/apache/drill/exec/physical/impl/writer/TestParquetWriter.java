@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
+import static org.apache.drill.exec.store.parquet.ParquetRecordWriter.DRILL_VERSION_PROPERTY;
+import static org.apache.parquet.format.converter.ParquetMetadataConverter.SKIP_ROW_GROUPS;
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
@@ -28,12 +32,19 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.parquet.ParquetRecordWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.format.converter.ParquetMetadataConverter.MetadataFilter;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.AfterClass;
@@ -714,6 +725,14 @@ public class TestParquetWriter extends BaseTestQuery {
           .sqlBaselineQuery(validateQuery)
           .go();
 
+      Configuration hadoopConf = new Configuration();
+      Path output = new Path(getDfsTestTmpSchemaLocation(), outputFile);
+      FileSystem fs = output.getFileSystem(hadoopConf);
+      for (FileStatus file : fs.listStatus(output)) {
+        ParquetMetadata footer = ParquetFileReader.readFooter(hadoopConf, file, SKIP_ROW_GROUPS);
+        String version = footer.getFileMetaData().getKeyValueMetaData().get(DRILL_VERSION_PROPERTY);
+        assertEquals(DrillVersionInfo.getVersion(), version);
+      }
     } finally {
       deleteTableIfExists(outputFile);
     }
