@@ -53,9 +53,11 @@ import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
@@ -170,6 +172,9 @@ public class WorkspaceSchemaFactory {
     return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig);
   }
 
+  /**
+   * Implementation of a table macro that generates a table based on parameters
+   */
   static final class WithOptionsTableMacro implements TableMacro {
 
     private final TableSignature sig;
@@ -214,7 +219,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public TranslatableTable apply(List<Object> arguments) {
-      return schema.getDrillTable(new TableInstance(sig, arguments));
+      return new DrillTranslatableTable(schema.getDrillTable(new TableInstance(sig, arguments)));
     }
 
   }

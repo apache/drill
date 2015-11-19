@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
-import org.apache.calcite.schema.TranslatableTable;
+import org.apache.calcite.schema.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -31,7 +31,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
-public abstract class DrillTable implements TranslatableTable {
+public abstract class DrillTable implements Table {
 
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;

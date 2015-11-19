@@ -208,12 +208,18 @@ public class TestSelectWithOption extends BaseTestQuery {
     String jsonTableName = format("`${WORKING_PATH}/%s`", f.getPath());
     // the extension is actually csv
     test("use dfs");
-    String[] jsonQueries = {
-        format("select columns from table(%s ('JSON'))", jsonTableName),
-        format("select columns from table(%s(type => 'JSON'))", jsonTableName),
-    };
-    for (String jsonQuery : jsonQueries) {
-      testWithResult(jsonQuery, listOf("f","g"));
+    try {
+      String[] jsonQueries = {
+          format("select columns from table(%s ('JSON'))", jsonTableName),
+          format("select columns from table(%s(type => 'JSON'))", jsonTableName),
+      };
+      for (String jsonQuery : jsonQueries) {
+        testWithResult(jsonQuery, listOf("f","g"));
+      }
+
+      testWithResult(format("select length(columns[0]) as columns from table(%s ('JSON'))", jsonTableName), 1L);
+    } finally {
+      test("use sys");
     }
   }
 }

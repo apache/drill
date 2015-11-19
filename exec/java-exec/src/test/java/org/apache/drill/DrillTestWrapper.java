@@ -626,7 +626,7 @@ public class DrillTestWrapper {
         missingCols += colName + ", ";
       }
     }
-    return "Expected column(s) " + missingCols + " not found in result set.";
+    return "Expected column(s) " + missingCols + " not found in result set: " + actual + ".";
   }
 
   private String printRecord(Map<String, Object> record) {

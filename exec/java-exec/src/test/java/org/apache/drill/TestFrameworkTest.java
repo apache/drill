@@ -221,7 +221,10 @@ public class TestFrameworkTest extends BaseTestQuery{
           .baselineColumns("employee_id", "first_name", "last_name", "address")
           .build().run();
     } catch (Exception ex) {
-      assertEquals("Expected column(s) `address`,  not found in result set.", ex.getMessage());
+      assertEquals(
+          "Expected column(s) `address`,  not found in result set: [`first_name`, `last_name`, `employee_id`].\n"
+          + "For query: select employee_id, first_name, last_name from cp.`testframework/small_test_data.json`",
+          ex.getMessage());
       // this indicates successful completion of the test
       return;
     }
