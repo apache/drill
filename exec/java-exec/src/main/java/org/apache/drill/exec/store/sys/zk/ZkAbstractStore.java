@@ -136,6 +136,10 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
     }
   }
 
+  protected final void cleanCache() {
+    childrenCache.clear();
+  }
+
   public abstract void createNodeInZK (String key, V value);
 
   private class Iter implements Iterator<Entry<String, V>>{

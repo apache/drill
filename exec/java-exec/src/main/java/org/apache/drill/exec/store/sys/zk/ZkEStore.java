@@ -41,6 +41,7 @@ public class ZkEStore<V> extends ZkAbstractStore<V> implements EStore<V>{
         framework.delete().forPath(p(key));
       }
     } catch (Exception e) {
+      cleanCache();
       throw new RuntimeException("Failure while accessing Zookeeper. " + e.getMessage(), e);
     }
   }
