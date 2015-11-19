@@ -44,6 +44,8 @@ import org.kududb.client.RowResult;
 import org.kududb.client.RowResultIterator;
 import org.kududb.client.shaded.com.google.common.collect.ImmutableMap;
 
+import com.google.common.collect.Lists;
+
 public class KuduRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduRecordReader.class);
 
@@ -51,7 +53,6 @@ public class KuduRecordReader extends AbstractRecordReader {
 
   private final KuduClient client;
   private final KuduSubScanSpec scanSpec;
-  private KuduTable table;
   private VectorContainerWriter containerWriter;
   private MapWriter writer;
   private KuduScanner scanner;
@@ -70,7 +71,12 @@ public class KuduRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try {
       KuduTable table = client.openTable(scanSpec.getTableName());
-      scanner = client.newScannerBuilder(table).build();
+      List<String> colNames = Lists.newArrayList();
+      for (SchemaPath p : this.getColumns()) {
+        colNames.add(p.getAsUnescapedPath());
+      }
+      scanner = client.newScannerBuilder(table)
+          .setProjectedColumnNames(colNames).build();
       containerWriter = new VectorContainerWriter(output);
       writer = containerWriter.rootAsMap();
     } catch (Exception e) {
@@ -106,7 +112,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         }
         iterator = scanner.nextRows();
       }
-      for (; rowCount < 4095 && iterator.hasNext(); rowCount++) {
+      for (; rowCount < TARGET_RECORD_COUNT && iterator.hasNext(); rowCount++) {
         writer.setPosition(rowCount);
         addRowResult(iterator.next());
       }
