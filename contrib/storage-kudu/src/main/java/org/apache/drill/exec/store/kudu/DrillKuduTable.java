@@ -17,20 +17,64 @@
  */
 package org.apache.drill.exec.store.kudu;
 
+import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.kududb.ColumnSchema;
+import org.kududb.Schema;
+import org.kududb.Type;
+
+import com.google.common.collect.Lists;
 
 public class DrillKuduTable extends DynamicDrillTable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillKuduTable.class);
 
-  public DrillKuduTable(String storageEngineName, KuduStoragePlugin plugin, KuduScanSpec scanSpec) {
+  private final Schema schema;
+
+  public DrillKuduTable(String storageEngineName, KuduStoragePlugin plugin, Schema schema, KuduScanSpec scanSpec) {
     super(plugin, storageEngineName, scanSpec);
+    this.schema = schema;
   }
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return super.getRowType(typeFactory);
+
+    List<String> names = Lists.newArrayList();
+    List<RelDataType> types = Lists.newArrayList();
+    for (ColumnSchema column : schema.getColumns()) {
+      names.add(column.getName());
+      RelDataType type = getSqlTypeFromKuduType(typeFactory, column.getType());
+      type = typeFactory.createTypeWithNullability(type, column.isNullable());
+      types.add(type);
+    }
+
+    return typeFactory.createStructType(types, names);
   }
 
+  private RelDataType getSqlTypeFromKuduType(RelDataTypeFactory typeFactory, Type type) {
+    switch (type) {
+    case BINARY:
+      return typeFactory.createSqlType(SqlTypeName.VARBINARY, Integer.MAX_VALUE);
+    case BOOL:
+      return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+    case DOUBLE:
+      return typeFactory.createSqlType(SqlTypeName.DOUBLE);
+    case FLOAT:
+      return typeFactory.createSqlType(SqlTypeName.FLOAT);
+    case INT16:
+    case INT32:
+    case INT64:
+    case INT8:
+      return typeFactory.createSqlType(SqlTypeName.INTEGER);
+    case STRING:
+      return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
+    case TIMESTAMP:
+      return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+    default:
+      throw new UnsupportedOperationException("Unsupported type.");
+    }
+  }
 }

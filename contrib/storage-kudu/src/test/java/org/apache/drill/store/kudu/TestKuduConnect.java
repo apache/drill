@@ -54,10 +54,10 @@ public class TestKuduConnect {
 
       List<ColumnSchema> columns = new ArrayList<>(5);
       columns.add(new ColumnSchema.ColumnSchemaBuilder("key", Type.INT32).key(true).build());
-      columns.add(new ColumnSchema.ColumnSchemaBuilder("binary", Type.BINARY).build());
-      columns.add(new ColumnSchema.ColumnSchemaBuilder("boolean", Type.BOOL).build());
-      columns.add(new ColumnSchema.ColumnSchemaBuilder("float", Type.FLOAT).build());
-      columns.add(new ColumnSchema.ColumnSchemaBuilder("string", Type.STRING).build());
+      columns.add(new ColumnSchema.ColumnSchemaBuilder("binary", Type.BINARY).nullable(false).build());
+      columns.add(new ColumnSchema.ColumnSchemaBuilder("boolean", Type.BOOL).nullable(true).build());
+      columns.add(new ColumnSchema.ColumnSchemaBuilder("float", Type.FLOAT).nullable(false).build());
+      columns.add(new ColumnSchema.ColumnSchemaBuilder("string", Type.STRING).nullable(true).build());
 
       Schema schema = new Schema(columns);
       client.createTable(KUDU_TABLE, schema);

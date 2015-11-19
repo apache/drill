@@ -23,9 +23,12 @@ import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.kududb.Schema;
+import org.kududb.client.KuduTable;
 import org.kududb.client.ListTablesResponse;
 
 import com.google.common.collect.ImmutableList;
@@ -71,7 +74,15 @@ public class KuduSchemaFactory implements SchemaFactory {
     @Override
     public Table getTable(String name) {
       KuduScanSpec scanSpec = new KuduScanSpec(name);
-      return new DrillKuduTable(schemaName, plugin, scanSpec);
+      try {
+        KuduTable table = plugin.getClient().openTable(name);
+        Schema schema = table.getSchema();
+        return new DrillKuduTable(schemaName, plugin, schema, scanSpec);
+      } catch (Exception e) {
+        logger.warn("Failure while retrieving kudu table {}", name, e);
+        return null;
+      }
+
     }
 
     @Override
@@ -83,6 +94,23 @@ public class KuduSchemaFactory implements SchemaFactory {
         logger.warn("Failure reading kudu tables.", e);
         return Collections.EMPTY_SET;
       }
+    }
+
+    @Override
+    public void dropTable(String tableName) {
+      try {
+        plugin.getClient().deleteTable(tableName);
+      } catch (Exception e) {
+        throw UserException.dataWriteError(e)
+            .message("Failure while trying to drop table '%s'.", tableName)
+            .addContext("plugin", name)
+            .build(logger);
+      }
+    }
+
+    @Override
+    public boolean isMutable() {
+      return true;
     }
 
     @Override

@@ -26,4 +26,11 @@ public class TestKuduPlugin extends BaseTestQuery {
   public void testBasicQuery() throws Exception {
     test("select * from kudu.demo;");
   }
+
+  @Test
+  public void testDescribe() throws Exception {
+    test("use kudu;");
+    test("show tables;");
+    test("describe demo");
+  }
 }
