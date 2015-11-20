@@ -3,24 +3,25 @@ title: "REST API"
 parent: "Developer Information"
 ---
 
-You can use RESTful requests for programmatically performing the same set of operations as the [Drill Web Console](/starting-the-web-console/). For example, you can run queries, perform storage plugin task, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
+The Drill REST API provides methods you can call to programmatically perform the same functions available in the [Drill Web Console](/starting-the-web-console/). For example, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
 
-This document describes the Drill REST API commands. Commands having a .json suffix output return a JSON response body. Generally, these commands return HTML when used without the .json suffix.
+Drill REST API calls having a .json suffix output return a JSON response body. Generally, these commands return HTML when used without the .json suffix.
 
-## Requests and Examples
+A Drill REST request connects to Drill using the familiar Web Console URI:
 
-The REST requests connect to Drill using the familiar Web Console URI:
+`http://<IP address or host name>:8047`
 
-http://<IP address or host name>:8047
+## Getting Started with the Drill REST API
 
-Examples using cURL are provided. Several examples use the donuts.json file. To download this file, go to [Drill test resources](https://github.com/apache/drill/blob/master/exec/java-exec/src/test/resources) page, locate donuts.json in the list of files, and download it. When using cURL, use unicode \u0027 for the single quotation mark as shown in the Query example.
+Before making REST requests, [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).
 
-Before running REST requests, [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).
+Several examples in the document use the donuts.json file. To download this file, go to [Drill test resources](https://github.com/apache/drill/blob/master/exec/java-exec/src/test/resources) page, locate donuts.json in the list of files, and download it. When using cURL, use unicode \u0027 for the single quotation mark as shown in the Query example.
 
 ## Links to HTTP Methods
 
 The following short description of methods link to more information and examples:
 
+* [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json).
 * Submit a query to Drill and return query results. 
 * 
 
@@ -33,7 +34,7 @@ List the name, default, and data type of the system and session options.
 
 **Example**
 
-     curl http://localhost:8047/options.json
+`curl http://localhost:8047/options.json`
 
 **Response Body**
 
@@ -99,7 +100,7 @@ Get the profiles of running and completed queries.
 
 **Example**
 
-     curl http://localhost:8047/profiles.json
+`curl http://localhost:8047/profiles.json`
 
 **Response Body**
 
@@ -125,7 +126,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
 **Example**
 
-     curl http://localhost:8047/profiles/29b2e988-35e7-4c85-3151-32c7d3347f15.json
+`curl http://localhost:8047/profiles/29b2e988-35e7-4c85-3151-32c7d3347f15.json`
 
 **Response Body**
 
@@ -141,7 +142,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
 **Example**
 
-     curl http://localhost:8047/profiles/cancel/29b2e988-35e7-4c85-3151-32c7d3347f15
+`curl http://localhost:8047/profiles/cancel/29b2e988-35e7-4c85-3151-32c7d3347f15`
 
 **Response Body**
 
@@ -151,7 +152,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
 ## Query
 
-The query methods  
+Using the query method, you can programmatically run queries. 
 
 ### POST /query.json
 
@@ -198,7 +199,7 @@ Get the list of storage plugin names and configurations.
 
 **Example**
 
-     curl http://localhost:8047/storage.json
+`curl http://localhost:8047/storage.json`
 
 **Response Body**
 
@@ -234,7 +235,7 @@ name--The assigned name in the storage plugin definition.
 
 **Example**
 
-     curl http://localhost:8047/storage/mongo.json
+`curl http://localhost:8047/storage/mongo.json`
 
 **Response Body**
 
@@ -257,7 +258,7 @@ Enable or disable the named storage plugin.
 
 **Example**
 
-     curl http://localhost:8047/storage/mongo/enable/true
+`curl http://localhost:8047/storage/mongo/enable/true`
 
 **Response Body**
 
@@ -306,7 +307,7 @@ name--The name of the storage plugin configuration to delete.
 
 **Example**
 
-     curl -X DELETE -H "Content-Type: application/json" http://localhost:8047/storage/myplugin.json
+`curl -X DELETE -H "Content-Type: application/json" http://localhost:8047/storage/myplugin.json`
 
 **Response Body**
 
@@ -324,7 +325,7 @@ Returns Drillbit stats such as ports and max direct memory.
 
 **Example**
 
-     curl http://localhost:8047/stats.json
+`curl http://localhost:8047/stats.json`
 
 **Response Body**
 
@@ -354,7 +355,7 @@ Get the status of Drill.
 
 **Example**
 
-     curl http://localhost:8047/status
+`curl http://localhost:8047/status`
 
 **Response Body**
 
@@ -374,7 +375,7 @@ Get the current memory metrics.
 
 **Example**
 
-     curl http://localhost:8047/status/metrics
+`curl http://localhost:8047/status/metrics`
 
 **Response Body**
 
@@ -388,7 +389,7 @@ Get status of threads.
 
 **Example**
 
-     curl http://localhost:8047/status/threads
+`curl http://localhost:8047/status/threads`
 
 **Response Body**
 
