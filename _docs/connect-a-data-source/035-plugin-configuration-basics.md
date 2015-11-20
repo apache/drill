@@ -85,7 +85,7 @@ The following table describes the attributes you configure for storage plugins i
   <tr>
     <td>"formats"</td>
     <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb" *</td>
-    <td>yes</td>
+    <td>yes if type is file</td>
     <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
   </tr>
   <tr>
@@ -162,9 +162,9 @@ If you need to add a storage plugin configuration to Drill and do not want to us
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
-    curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
+    curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
 
-For more information about the REST API, see this [Google doc](https://docs.google.com/document/d/1mRsuWk4Dpt6ts-jQ6ke3bB30PIwanRiCPfGxRwZEQME).
+This example assumes HTTPS has not been enabled. For more information about the REST API, see the [REST API]({{base.url}}/docs/rest-api).
 
 ## Bootstrapping a Storage Plugin
 
