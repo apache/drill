@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.store.solr;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -29,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SolrAggrQueryBuilder extends
-    AbstractExprVisitor<SolrScanSpec, Void, RuntimeException> {
+    AbstractExprVisitor<SolrAggrParam, Void, RuntimeException> {
 
   static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
   final SolrGroupScan groupScan;
@@ -43,15 +40,15 @@ public class SolrAggrQueryBuilder extends
     logger.debug("SolrAggrQueryBuilder :: constructor");
   }
 
-  public SolrScanSpec parseTree() {
+  public SolrAggrParam parseTree() {
     logger.debug("SolrQueryBuilder :: parseTree");
-    SolrScanSpec parsedSpec = le.accept(this, null);
+    SolrAggrParam parsedSpec = le.accept(this, null);
 
     return parsedSpec;
   }
 
   @Override
-  public SolrScanSpec visitUnknown(LogicalExpression e, Void valueArg)
+  public SolrAggrParam visitUnknown(LogicalExpression e, Void valueArg)
       throws RuntimeException {
     logger.info("SolrQueryBuilder :: visitUnknown");
     allExpressionsConverted = false;
@@ -63,43 +60,45 @@ public class SolrAggrQueryBuilder extends
   }
 
   @Override
-  public SolrScanSpec visitFunctionHolderExpression(
+  public SolrAggrParam visitFunctionHolderExpression(
       FunctionHolderExpression fhe, Void valueArg) {
     logger.info("SolrQueryBuilder :: visitFunctionHolderExpression");
-
+    allExpressionsConverted = false;
     return null;
 
   }
 
   @Override
-  public SolrScanSpec visitBooleanOperator(BooleanOperator op, Void valueArg) {
+  public SolrAggrParam visitBooleanOperator(BooleanOperator op, Void valueArg) {
     return null;
   }
 
   @Override
-  public SolrScanSpec visitFunctionCall(FunctionCall call, Void valueArg)
+  public SolrAggrParam visitFunctionCall(FunctionCall call, Void valueArg)
       throws RuntimeException {
-    logger.debug("SolrQueryBuilder :: visitFunctionCall");
+    
     SolrAggrFunctionProcessor evaluator = SolrAggrFunctionProcessor
         .process(call);
+
+    logger.debug("SolrQueryBuilder :: visitFunctionCall"+" evaluator isSuccess : "+evaluator.isSuccess()+ " func "+evaluator.getFunctionName() + " path "+evaluator.getPath());
     if (evaluator.isSuccess() && evaluator.getPath() != null) {
       SolrAggrParam solrAggrParam = new SolrAggrParam();
       solrAggrParam.setFieldName(evaluator.getPath().toString()
           .replaceAll("`", ""));
       solrAggrParam.setFunctionName(evaluator.getFunctionName());
-      List<SolrAggrParam> aggrParams = this.groupScan.getSolrScanSpec()
-          .getAggrParams() != null ? this.groupScan.getSolrScanSpec()
-          .getAggrParams() : new ArrayList<SolrAggrParam>();
-      aggrParams.add(solrAggrParam);
+      // List<SolrAggrParam> aggrParams = this.groupScan.getSolrScanSpec()
+      // .getAggrParams() != null ? this.groupScan.getSolrScanSpec()
+      // .getAggrParams() : new ArrayList<SolrAggrParam>();
+      // aggrParams.add(solrAggrParam);
+      // logger.debug("aggr func name "+evaluator.getFunctionName());
+      // SolrScanSpec solrScanSpec = this.groupScan.getSolrScanSpec();
+      // solrScanSpec.setAggregateQuery(true);
+      // solrScanSpec.setAggrParams(aggrParams);
+      // allExpressionsConverted = true;
 
-      SolrScanSpec solrScanSpec = this.groupScan.getSolrScanSpec();
-      solrScanSpec.setAggregateQuery(true);
-      solrScanSpec.setAggrParams(aggrParams);
-
-      logger.debug(" evaluator 1 " + evaluator.getFunctionName());
-      logger.debug(" evaluator 2 " + evaluator.getValue());
-      logger.debug(" evaluator 3 " + evaluator.getPath());
-      return solrScanSpec;
+      return solrAggrParam;
+    } else {
+      allExpressionsConverted = false;
     }
     return null;
   }

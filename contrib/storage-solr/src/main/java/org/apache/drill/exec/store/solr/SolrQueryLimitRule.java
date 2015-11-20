@@ -64,8 +64,9 @@ public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
         DrillScanRel scanRel) {
       SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
       RexNode fetch = limitRel.getFetch();
-      if (solrGroupScan.getSolrScanSpec() == null)
+      if (solrGroupScan.getSolrScanSpec() == null) {
         return;
+      }
       solrGroupScan.getSolrScanSpec().setSolrDocFetchCount(
           Integer.parseInt(fetch.toString()));
 

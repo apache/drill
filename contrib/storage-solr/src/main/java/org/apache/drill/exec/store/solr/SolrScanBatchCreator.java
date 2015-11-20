@@ -54,9 +54,9 @@ public class SolrScanBatchCreator implements BatchCreator<SolrSubScan> {
       }
       boolean isAggregateQuery = solrSubScan.getSolrScanSpec()
           .isAggregateQuery();
-      if (isAggregateQuery)
-        readers.add(new SolrAggrReader(context, solrSubScan));
-      else
+      // if (isAggregateQuery)
+      //   readers.add(new SolrAggrReader(context, solrSubScan));
+      // else
         readers.add(new SolrRecordReader(context, solrSubScan));
     } catch (Exception e) {
       logger.info("SolrScanBatchCreator creation failed for subScan:  "

@@ -43,17 +43,19 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.XMLResponseParser;
 import org.apache.solr.client.solrj.io.stream.SolrStream;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
+import org.apache.solr.common.params.GroupParams;
 
-import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public class SolrClientAPIExec {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
@@ -97,10 +99,11 @@ public class SolrClientAPIExec {
 
   public SolrSchemaPojo getSchemaForCore(String coreName, String solrServerUrl,
       String schemaUrl) {
-    coreName = coreName.replaceAll("`", "");
+    //coreName = coreName.replaceAll("`", "");
+    // schemaUrl = MessageFormat.format(schemaUrl,solrServerUrl, coreName);
     schemaUrl = MessageFormat.format(schemaUrl, coreName);
     logger.debug("getting schema information from :: " + schemaUrl);
-    HttpClient client = new DefaultHttpClient();
+    HttpClient client = HttpClientBuilder.create().build();
     HttpGet request = new HttpGet(schemaUrl);
     SolrSchemaPojo oCVSchema = null;
     request.setHeader("Content-Type", "application/json");
@@ -124,47 +127,91 @@ public class SolrClientAPIExec {
     return oCVSchema;
   }
 
-  public SolrDocumentList getSolrDocs(String solrServer, String solrCoreName,
+  public QueryResponse getSolrDocs(String solrServer, String solrCoreName,
       String uniqueKey, List<String> fields, Integer solrDocFectCount,
-      StringBuilder filters) {
-    solrCoreName = solrCoreName.replaceAll("`", "");
+      StringBuilder filters, List<SolrAggrParam> solrAggrParams, boolean isGroup) {
+    //solrCoreName = solrCoreName.replaceAll("`", "");
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
-    SolrDocumentList sList = null;
+    String fieldStr = null;
+    String[] fieldListArr = null;
+    List<String> statsFieldList = Lists.newArrayList();
+    
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
-        .setQuery(uniqueKey + ":*").setRows(solrDocFectCount);
+        .setQuery(uniqueKey + ":*").setRows(0);
 
-    if (fields != null) {
-      String fieldStr = Joiner.on(",").join(fields);
-      solrQuery.setParam("fl", fieldStr);
-      logger.debug("response field list [" + fieldStr + " ]");
-    }
     if (filters.length() > 0) {
       solrQuery.setParam("fq", filters.toString());
       logger.debug("filter query [ " + filters.toString() + " ]");
     }
+
+    if (fields != null && !fields.isEmpty()) {
+      fieldStr = Joiner.on(",").join(fields);
+      solrQuery.setParam("fl", fieldStr);
+      solrQuery.setRows(solrDocFectCount);
+      logger.debug("response field list [" + fieldStr + " ]");
+    }
+    if (solrAggrParams != null && !solrAggrParams.isEmpty()) {
+      if (isGroup) {
+        solrQuery.setGetFieldStatistics(true);        
+        for (SolrAggrParam solrAggrParam : solrAggrParams) {
+          String statsField = solrAggrParam.getFieldName();
+          if (!statsFieldList.contains(statsField)) {
+            statsFieldList.add(statsField);
+          }
+          fields.remove(statsField);
+        }
+        if (!fields.isEmpty()) {
+          fieldListArr = fields.toArray(new String[fields.size()]);          
+        }
+      }
+      for (String statsField : statsFieldList) {        
+        solrQuery.setGetFieldStatistics(statsField);
+        logger.debug(" adding stats field parameter.. [ " + statsField + " ]");
+        if (isGroup && fieldListArr != null) {
+          logger.debug(" adding stats facet parameters.. [ " + fields + " ]");
+          solrQuery.addStatsFieldFacets(statsField, fieldListArr);
+        }
+
+      }
+      solrQuery.setRows(0);
+    }
+    QueryResponse rsp = null;
     try {
       logger.info("setting up solrquery with /select handler..");
-      QueryResponse rsp = solrClient.query(solrQuery);
+      rsp = solrClient.query(solrQuery);
+
       logger.info("response recieved from [ " + solrServer + " ] core [ "
-          + solrCoreName + " ]");
-      sList = rsp.getResults();
+          + solrCoreName + " ] in " + rsp.getQTime() + "ms.");
+
     } catch (SolrServerException | IOException e) {
       logger.debug("error occured while fetching results from solr server "
           + e.getMessage());
+    } finally {
+      try {
+        solrClient.close();
+      } catch (IOException e) {
+        logger.debug("error occured while closing connection of solr server "
+            + e.getMessage());
+      }
     }
-    return sList;
+
+    return rsp;
   }
 
   public QueryResponse getSolrFieldStats(String solrServer,
-      String solrCoreName, List<String> fields, StringBuilder filters) {
+      String solrCoreName, String uniqueKey, List<String> fields,
+      StringBuilder filters) {
 
     solrCoreName = solrCoreName.replaceAll("`", "");
     SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
+
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
-        .setQuery("*:*").setRows(0);
+        .setQuery(uniqueKey + ":*").setRows(0);
+
     solrQuery.setGetFieldStatistics(true);
-    solrQuery.setGetFieldStatistics("szkb");
-    solrQuery.setGetFieldStatistics("cistate");
+    for (String field : fields) {
+      solrQuery.setGetFieldStatistics(field);
+    }
     if (filters.length() > 0) {
       solrQuery.setParam("fq", filters.toString());
       logger.info("filter query [ " + filters.toString() + " ]");
@@ -178,6 +225,12 @@ public class SolrClientAPIExec {
     } catch (SolrServerException | IOException e) {
       logger.debug("error occured while fetching results from solr server "
           + e.getMessage());
+    } finally {
+      try {
+        solrClient.close();
+      } catch (IOException e) {
+
+      }
     }
     return null;
   }
@@ -212,7 +265,7 @@ public class SolrClientAPIExec {
       SolrSchemaPojo oCVSchema) throws ClientProtocolException, IOException {
 
     List<SolrSchemaField> schemaFieldList = oCVSchema.getSchemaFields();
-    List<String> fieldNames = Lists.newArrayList(schemaFieldList.size());
+    List<String> fieldNames = Lists.newArrayList();
     String createViewSql = "CREATE OR REPLACE VIEW {0}.{1} as SELECT {2} from solr.{3}";
     for (SolrSchemaField cvSchemaField : schemaFieldList) {
       if (!cvSchemaField.isSkipdelete())

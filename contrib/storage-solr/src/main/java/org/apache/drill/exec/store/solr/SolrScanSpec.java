@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.solr;
 
 import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -27,8 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SolrScanSpec {
   private String solrCoreName;
   private boolean isAggregateQuery = false;
-  private SolrFilterParam filter;
-  private List<SolrAggrParam> aggrParams;
+  private boolean isGroup = false;
+  private boolean isDataQuery = false;
+  private SolrFilterParam filter = new SolrFilterParam();
+  private List<SolrAggrParam> aggrParams = Lists.newArrayList();
   private Integer solrDocFetchCount = -1;
   private SolrSchemaPojo cvSchema;
   private List<String> responseFieldList;
@@ -114,6 +116,22 @@ public class SolrScanSpec {
 
   public void setResponseFieldList(List<String> responseFieldList) {
     this.responseFieldList = responseFieldList;
+  }
+
+  public boolean isDataQuery() {
+    return isDataQuery;
+  }
+
+  public void setDataQuery(boolean isDataQuery) {
+    this.isDataQuery = isDataQuery;
+  }
+
+  public boolean isGroup() {
+    return isGroup;
+  }
+
+  public void setGroup(boolean isGroup) {
+    this.isGroup = isGroup;
   }
 
   @Override

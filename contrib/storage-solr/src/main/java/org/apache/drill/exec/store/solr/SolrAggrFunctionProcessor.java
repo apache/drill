@@ -339,7 +339,7 @@ public class SolrAggrFunctionProcessor implements
     AGGR_FUNCTIONS_TRANSPOSE_MAP = builder
         // aggr functions
         .put("sum", "sum").put("count", "count").put("min", "min")
-        .put("max", "max").put("avg", "avg")
+        .put("max", "max")
         // scalar functions
         .build();
   }
