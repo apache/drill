@@ -152,7 +152,7 @@ For example, using uppercase letters in the query after defining the storage plu
 
 ## Storage Plugin REST API
 
-If you need to add a storage plugin configuration to Drill and do not want to use a web browser, Drill provides a REST API that you can use to create a storage plugin configuration. Use a POST and pass two properties:
+If you need to add a storage plugin configuration to Drill and do not want to use a web browser, you can use the [Drill REST API]({{site.baseurl}}/docs/rest-api/#get-status-threads) to create a storage plugin configuration. Use a POST request and pass two properties:
 
 * name  
   The storage plugin configuration name. 
@@ -164,7 +164,7 @@ For example, this command creates a storage plugin named myplugin for reading fi
 
     curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
 
-This example assumes HTTPS has not been enabled. For more information about the REST API, see the [REST API]({{base.url}}/docs/rest-api).
+This example assumes HTTPS has not been enabled. 
 
 ## Bootstrapping a Storage Plugin
 
