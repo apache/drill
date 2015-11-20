@@ -315,10 +315,10 @@ public class KuduRecordReader extends AbstractRecordReader {
       case TIMESTAMP:
         if (pci.kuduColumn.isNullable()) {
           ((NullableTimeStampVector.Mutator)pci.vv.getMutator())
-            .setSafe(rowIndex, result.getLong(pci.index));
+            .setSafe(rowIndex, result.getLong(pci.index) / 1000);
         } else {
           ((TimeStampVector.Mutator)pci.vv.getMutator())
-            .setSafe(rowIndex, result.getLong(pci.index));
+            .setSafe(rowIndex, result.getLong(pci.index) / 1000);
         }
         break;
       default:
