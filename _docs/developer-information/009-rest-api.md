@@ -22,7 +22,7 @@ Several examples in the document use the donuts.json file. To download this file
 The following short description of methods link to more information and examples:
 
 * [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json).
-* [Change the value or type of the named option]().
+* [Change the value or type of the named option]({{site.baseurl}}/drill/docs/rest-api/#post-option-optionname).
 * [Submit a query to Drill and return query results](). 
 * 
 
@@ -73,9 +73,11 @@ List the name, default, and data type of the system and session options.
 Change the value or type of the named option.
 
 **Parameter**
+
 optionName--The name of a [Drill system option]({{site.baseurl}}/docs/configuration-options-introduction/#system-options).
 
 **Request Body**
+
 Enclose option values of kind STRING in double quotation marks.
 
         {
@@ -86,6 +88,7 @@ Enclose option values of kind STRING in double quotation marks.
         }
 
 **Example**
+
         curl -X POST -H "Content-Type: application/json" -d '{"name" : "store.json.all_text_mode", "value" : true, "type" : "SYSTEM", "kind" : "BOOLEAN"}' http://localhost:8047/option/store.json.all_text_mode
 
 <!-- Not merged yet, need to test -->
@@ -131,6 +134,7 @@ Get the profiles of running and completed queries.
 Get the profile of given queryid.
 
 **Parameter**
+
 queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) format that Drill assigns to each query. 
 
 **Example**
@@ -149,6 +153,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 Cancel the query having the given queryid.
 
 **Parameter**
+
 queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) format that Drill assigns to each query. 
 
 **Example**
@@ -177,6 +182,7 @@ Submits a query, waits until the query completes, and then returns the results a
 * query--A SQL query that runs in Drill.
 
 **Request Body**
+
         {
           "queryType" : "SQL",
           "query" : "<Drill query>"
@@ -248,6 +254,7 @@ Get the list of storage plugin names and configurations.
 Get the named storage plugin name and configuration.
 
 **Parameter**
+
 name--The assigned name in the storage plugin definition.
 
 **Example**
@@ -272,6 +279,7 @@ name--The assigned name in the storage plugin definition.
 Enable or disable the named storage plugin.
 
 **Parameters**
+
 * name--The assigned name in the storage plugin definition.
 * val--Either true (to enable) or false (to disable).
 
@@ -292,6 +300,7 @@ Enable or disable the named storage plugin.
 Create or update a storage plugin configuration.
 
 **Parameters**
+
 name--The name of the storage plugin configuration to create or update.
 
 **Request Body**
@@ -326,6 +335,7 @@ Valid storage plugin types include file, hbase, hive, mongo, and jdbc. Construct
 Delete a storage plugin configuration.
 
 **Parameter**
+
 name--The name of the storage plugin configuration to delete.
 
 **Example**
