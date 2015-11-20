@@ -21,10 +21,20 @@ Several examples in the document use the donuts.json file. To download this file
 
 The following short description of methods link to more information and examples:
 
-* [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json).
-* [Change the value or type of the named option]({{site.baseurl}}/drill/docs/rest-api/#post-option-optionname).
-* [Submit a query to Drill and return query results](). 
-* 
+* [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json)  
+* [Change the value or type of the named option]({{site.baseurl}}/drill/docs/rest-api/#post-option-optionname)  
+* [Get the profiles of running and completed queries]({{site.baseurl}}/docs/rest-api/#get-profiles-json)  
+* [Get the profile of the query that has the given queryid]({{site.baseurl}}/drill/docs/rest-api/#get-profiles-queryid-json)  
+* [Cancel the query that has the given queryid]({{site.baseurl}}/docs/rest-api/#get-profiles-cancel-queryid)  
+* [Submit a query and return results]({{site.baseurl}}/docs/rest-api/#post-query-json)  
+* [Get the list of storage plugin names and configurations]({{site.baseurl}}/docs/rest-api/#get-storage-json)  
+* [Get the definition of the named storage plugin]({{site.baseurl}}/docs/rest-api/#get-storage-name-json)  
+* [Enable or disable the named storage plugin]({{site.baseurl}}/docs/rest-api/#get-storage-name-enable-val)  
+* [Create or update a storage plugin configuration]({{site.baseurl}}/docs/rest-api/#post-storage-name-json)  
+* [Delete a storage plugin configuration]({{site.baseurl}}/docs/rest-api/#delete-storage-name-json)  
+* [Get Drillbit information, such as ports numbers]({{site.baseurl}}/drill/docs/rest-api/#get-stats-json)  
+* [Get the current memory metrics]({{site.baseurl}}/docs/rest-api/#get-status-metrics)  
+* [Get the status of threads]({{site.baseurl}}/docs/rest-api/#get-status-threads)  
 
 ## Options
 These methods get and set system options.
@@ -94,6 +104,7 @@ Enclose option values of kind STRING in double quotation marks.
 <!-- Not merged yet, need to test -->
 
 **Response Body**
+
         {
           "result" : "success"
         }
@@ -131,7 +142,7 @@ Get the profiles of running and completed queries.
 
 ### GET /profiles/{queryid}.json
 
-Get the profile of given queryid.
+Get the profile of the query that has the given queryid.
 
 **Parameter**
 
@@ -150,7 +161,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
 ### GET /profiles/cancel/{queryid}
 
-Cancel the query having the given queryid.
+Cancel the query that has the given queryid.
 
 **Parameter**
 
@@ -174,7 +185,7 @@ Using the query method, you can programmatically run queries.
 
 ### POST /query.json
 
-Submits a query, waits until the query completes, and then returns the results as single JSON object.
+Submit a query and return results.
 
 **Parameters**
 
@@ -251,7 +262,7 @@ Get the list of storage plugin names and configurations.
 
 ### GET /storage/{name}.json
 
-Get the named storage plugin name and configuration.
+Get the definition of the named storage plugin.
 
 **Parameter**
 
@@ -356,7 +367,7 @@ Gets metric information.
 
 ### GET /stats.json
 
-Returns Drillbit stats such as ports and max direct memory.
+Get Drillbit information, such as ports numbers.
 
 **Example**
 
@@ -425,7 +436,7 @@ Get the current memory metrics.
 
 ### GET /status/threads
 
-Get status of threads.
+Get the status of threads.
 
 **Example**
 
