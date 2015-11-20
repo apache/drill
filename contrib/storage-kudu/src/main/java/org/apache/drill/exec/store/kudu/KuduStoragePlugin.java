@@ -18,16 +18,12 @@
 package org.apache.drill.exec.store.kudu;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.kududb.client.KuduClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -83,6 +79,11 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
+  public boolean supportsWrite() {
+    return true;
+  }
+
+  @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
@@ -92,8 +93,4 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
     return engineConfig;
   }
 
-  @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return Collections.EMPTY_SET;
-  }
 }
