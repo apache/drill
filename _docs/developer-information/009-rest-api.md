@@ -3,113 +3,95 @@ title: "REST API"
 parent: "Developer Information"
 ---
 
-The Drill REST API provides methods you can call to programmatically perform the same functions available in the [Drill Web Console](/starting-the-web-console/). For example, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
+The Drill REST API provides methods that perform the same functions as those in the [Drill Web Console](/starting-the-web-console/). For example, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
 
-Drill REST API calls having a .json suffix output return a JSON response body. Generally, these commands return HTML when used without the .json suffix.
+An HTTP request having a .json suffix output returns a JSON response body. Generally, when you drop the .json suffix from these commands, Drill returns HTML.
 
-A Drill REST request connects to Drill using the familiar Web Console URI:
+An HTTP request connects to Drill using the familiar Web Console URI:
 
 `http://<IP address or host name>:8047`
 
-## Getting Started with the Drill REST API
+## Getting Started
 
-Before making REST requests, [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).
+Before making HTTP requests, [start Drill]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x).
 
 Several examples in the document use the donuts.json file. To download this file, go to [Drill test resources](https://github.com/apache/drill/blob/master/exec/java-exec/src/test/resources) page, locate donuts.json in the list of files, and download it. When using cURL, use unicode \u0027 for the single quotation mark as shown in the Query example.
 
-## Links to HTTP Methods
+This documentation presents HTTP methods in the same order as functions appear in the Web Console:
 
-The following short description of methods link to more information and examples:
+[**Query**]({{site.baseurl}}/docs/rest-api/#query)
 
-* [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json)  
-* [Change the value or type of the named option]({{site.baseurl}}/docs/rest-api/#post-option-optionname)  
-* [Get the profiles of running and completed queries]({{site.baseurl}}/docs/rest-api/#get-profiles-json)  
-* [Get the profile of the query that has the given queryid]({{site.baseurl}}/docs/rest-api/#get-profiles-queryid-json)  
-* [Cancel the query that has the given queryid]({{site.baseurl}}/docs/rest-api/#get-profiles-cancel-queryid)  
-* [Submit a query and return results]({{site.baseurl}}/docs/rest-api/#post-query-json)  
-* [Get the list of storage plugin names and configurations]({{site.baseurl}}/docs/rest-api/#get-storage-json)  
-* [Get the definition of the named storage plugin]({{site.baseurl}}/docs/rest-api/#get-storage-name-json)  
-* [Enable or disable the named storage plugin]({{site.baseurl}}/docs/rest-api/#get-storage-name-enable-val)  
-* [Create or update a storage plugin configuration]({{site.baseurl}}/docs/rest-api/#post-storage-name-json)  
-* [Delete a storage plugin configuration]({{site.baseurl}}/docs/rest-api/#delete-storage-name-json)  
-* [Get Drillbit information, such as ports numbers]({{site.baseurl}}/drill/docs/rest-api/#get-stats-json)  
-* [Get the current memory metrics]({{site.baseurl}}/docs/rest-api/#get-status-metrics)  
-* [Get the status of threads]({{site.baseurl}}/docs/rest-api/#get-status-threads)  
+Submit a query and return results]
 
-## Options
-These methods get and set system options.
+[**Profiles**](({{site.baseurl}}/docs/rest-api/#profiles))
 
-----------
+* Get the profiles of running and completed queries  
+* Get the profile of the query that has the given queryid  
+* Cancel the query that has the given queryid  
 
-### GET /options.json
+[**Storage**]({{site.baseurl}}/docs/rest-api/#storage)
 
-List the name, default, and data type of the system and session options.
+* Get the list of storage plugin names and configurations  
+* Get the definition of the named storage plugin  
+* Enable or disable the named storage plugin  
+* Create or update a storage plugin configuration  
+* Delete a storage plugin configuration  
+* Get Drillbit information, such as ports numbers  
+* Get the current memory metrics  
 
-**Example**
+[**Threads**](({{site.baseurl}}/docs/rest-api/#threads))
 
-`curl http://localhost:8047/options.json`
+Get the status of threads  
 
-**Response Body**
+[**Options**]({{site.baseurl}}/docs/rest-api/#options)
 
-        [ {
-          "name" : "planner.broadcast_factor",
-          "value" : 1.0,
-          "type" : "SYSTEM",
-          "kind" : "DOUBLE"
-        }, 
+* List information about system/session options  
+* Change the value or type of the named option  
 
-        . . .
 
-        {
-          "name" : "store.parquet.compression",
-          "value" : "snappy",
-          "type" : "SYSTEM",
-          "kind" : "STRING"
-        },
+## Query
 
-        . . .
-
-        {
-          "name" : "exec.enable_union_type",
-          "value" : false,
-          "type" : "SYSTEM",
-          "kind" : "BOOLEAN"
-        } ]
+Using the query method, you can programmatically run queries. 
 
 ----------
 
-### POST /option/{optionName}
+### POST /query.json
 
-Change the value or type of the named option.
+Submit a query and return results.
 
-**Parameter**
+**Parameters**
 
-optionName--The name of a [Drill system option]({{site.baseurl}}/docs/configuration-options-introduction/#system-options).
+* queryType--SQL, PHYSICAL, or LOGICAL are valid types. Use only "SQL". Other types are for internal use only.  
+* query--A SQL query that runs in Drill.
 
 **Request Body**
 
-Enclose option values of kind STRING in double quotation marks.
-
         {
-          "name" : "<option name>",
-          "value" : ["]<new value>["],
-          "type" : "<SYSTEM or SESSION>",
-          "kind" : "<option data type>"
+          "queryType" : "SQL",
+          "query" : "<Drill query>"
         }
 
 **Example**
 
-        curl -X POST -H "Content-Type: application/json" -d '{"name" : "store.json.all_text_mode", "value" : true, "type" : "SYSTEM", "kind" : "BOOLEAN"}' http://localhost:8047/option/store.json.all_text_mode
-
-<!-- Not merged yet, need to test -->
+     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
 
 **Response Body**
 
-        {
-          "result" : "success"
-        }
+     {
+       "columns" : [ "id", "type", "name", "ppu", "sales", "batters", "topping", "filling" ],
+       "rows" : [ {
+         "id" : "0001",
+         "sales" : "35",
+         "name" : "Cake",
+         "topping" : "[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5007\",\"type\":\"Powdered Sugar\"},{\"id\":\"5006\",\"type\":\"Chocolate with Sprinkles\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]",
+         "ppu" : "0.55",
+         "type" : "donut",
+         "batters" : "{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"},{\"id\":\"1002\",\"type\":\"Chocolate\"},{\"id\":\"1003\",\"type\":\"Blueberry\"},{\"id\":\"1004\",\"type\":\"Devil's Food\"}]}",
+         "filling" : "[]"
+       } ]
+     }
 
-## Profile
+## Profiles
 
 These methods get query profiles. 
 
@@ -177,47 +159,6 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
           "result" : "success"
         }
 
-## Query
-
-Using the query method, you can programmatically run queries. 
-
-----------
-
-### POST /query.json
-
-Submit a query and return results.
-
-**Parameters**
-
-* queryType--SQL, PHYSICAL, or LOGICAL are valid types. Use only "SQL". Other types are for internal use only.  
-* query--A SQL query that runs in Drill.
-
-**Request Body**
-
-        {
-          "queryType" : "SQL",
-          "query" : "<Drill query>"
-        }
-
-**Example**
-
-     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
-
-**Response Body**
-
-     {
-       "columns" : [ "id", "type", "name", "ppu", "sales", "batters", "topping", "filling" ],
-       "rows" : [ {
-         "id" : "0001",
-         "sales" : "35",
-         "name" : "Cake",
-         "topping" : "[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5007\",\"type\":\"Powdered Sugar\"},{\"id\":\"5006\",\"type\":\"Chocolate with Sprinkles\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]",
-         "ppu" : "0.55",
-         "type" : "donut",
-         "batters" : "{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"},{\"id\":\"1002\",\"type\":\"Chocolate\"},{\"id\":\"1003\",\"type\":\"Blueberry\"},{\"id\":\"1004\",\"type\":\"Devil's Food\"}]}",
-         "filling" : "[]"
-       } ]
-     }
 
 ## Storage
 
@@ -432,6 +373,10 @@ Get the current memory metrics.
          . . .
         ,"drill.allocator.normal.hist":{"count":84,"max":1024,"mean":273.6666666666667,"min":12,"p50":256.0,"p75":448.0,"p95":896.0,"p98":1024.0,"p99":1024.0,"p999":1024.0,"stddev":248.17013855555368}},"meters":{},"timers":{}}
 
+## Threads
+
+Get information about threads.
+
 ----------
 
 ### GET /status/threads
@@ -460,6 +405,78 @@ Get the status of threads.
             - locked <0x738fda67> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
         . . .
 
+## Options
+These methods get and set system options.
+
+----------
+
+### GET /options.json
+
+List the name, default, and data type of the system and session options.
+
+**Example**
+
+`curl http://localhost:8047/options.json`
+
+**Response Body**
+
+        [ {
+          "name" : "planner.broadcast_factor",
+          "value" : 1.0,
+          "type" : "SYSTEM",
+          "kind" : "DOUBLE"
+        }, 
+
+        . . .
+
+        {
+          "name" : "store.parquet.compression",
+          "value" : "snappy",
+          "type" : "SYSTEM",
+          "kind" : "STRING"
+        },
+
+        . . .
+
+        {
+          "name" : "exec.enable_union_type",
+          "value" : false,
+          "type" : "SYSTEM",
+          "kind" : "BOOLEAN"
+        } ]
+
+----------
+
+### POST /option/{optionName}
+
+Change the value or type of the named option.
+
+**Parameter**
+
+optionName--The name of a [Drill system option]({{site.baseurl}}/docs/configuration-options-introduction/#system-options).
+
+**Request Body**
+
+Enclose option values of kind STRING in double quotation marks.
+
+        {
+          "name" : "<option name>",
+          "value" : ["]<new value>["],
+          "type" : "<SYSTEM or SESSION>",
+          "kind" : "<option data type>"
+        }
+
+**Example**
+
+        curl -X POST -H "Content-Type: application/json" -d '{"name" : "store.json.all_text_mode", "value" : true, "type" : "SYSTEM", "kind" : "BOOLEAN"}' http://localhost:8047/option/store.json.all_text_mode
+
+<!-- Not merged yet, need to test -->
+
+**Response Body**
+
+        {
+          "result" : "success"
+        }
 
 
 
