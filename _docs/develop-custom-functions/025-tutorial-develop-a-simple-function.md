@@ -202,6 +202,9 @@ For simplicity, use maven to build your project in a pom.xml file as follows:
 </plugin>
 ```
 
+## Add a drill-module.conf File to Resources
+Add a `drill-module.conf` file in the resources folder of your project. The presence of this file tells Drill that your jar contains a custom function. If you have no specific configuration to set for your function, you can keep this file empty.
+
 ## Build and Deploy the Function
 Build the function using mvn package:
 
@@ -215,9 +218,6 @@ Maven generates two JAR files:
 Copy the JAR files to the following location:
 
 `<Drill installation directory>/jars/3rdparty` 
-
-## Add a drill-module.conf File to Resources
-Add a `drill-module.conf` file in the resources folder of your project. The presence of this file tells Drill that your jar contains a custom function. If you have no specific configuration to set for your function, you can keep this file empty.
 
 ## Test the New Function
 
