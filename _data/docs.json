@@ -2671,8 +2671,8 @@
             "next_title": "Compiling Drill from Source", 
             "next_url": "/docs/compiling-drill-from-source/", 
             "parent": "Developer Information", 
-            "previous_title": "Developer Information", 
-            "previous_url": "/docs/developer-information/", 
+            "previous_title": "REST API", 
+            "previous_url": "/docs/rest-api/", 
             "relative_path": "_docs/developer-information/010-develop-drill.md", 
             "title": "Develop Drill", 
             "url": "/docs/develop-drill/"
@@ -2680,6 +2680,23 @@
         "Developer Information": {
             "breadcrumbs": [], 
             "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Drill", 
+                    "next_url": "/docs/develop-drill/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "Developer Information", 
+                    "previous_url": "/docs/developer-information/", 
+                    "relative_path": "_docs/developer-information/009-rest-api.md", 
+                    "title": "REST API", 
+                    "url": "/docs/rest-api/"
+                }, 
                 {
                     "breadcrumbs": [
                         {
@@ -2734,8 +2751,8 @@
                     "next_title": "Compiling Drill from Source", 
                     "next_url": "/docs/compiling-drill-from-source/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Developer Information", 
-                    "previous_url": "/docs/developer-information/", 
+                    "previous_title": "REST API", 
+                    "previous_url": "/docs/rest-api/", 
                     "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
@@ -2924,8 +2941,8 @@
                     "url": "/docs/design-docs/"
                 }
             ], 
-            "next_title": "Develop Drill", 
-            "next_url": "/docs/develop-drill/", 
+            "next_title": "REST API", 
+            "next_url": "/docs/rest-api/", 
             "parent": "", 
             "previous_title": "Troubleshooting", 
             "previous_url": "/docs/troubleshooting/", 
@@ -7540,6 +7557,23 @@
             "relative_path": "_docs/sql-reference/nested-data-functions/030-repeated-count.md", 
             "title": "REPEATED_COUNT", 
             "url": "/docs/repeated-count/"
+        }, 
+        "REST API": {
+            "breadcrumbs": [
+                {
+                    "title": "Developer Information", 
+                    "url": "/docs/developer-information/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Develop Drill", 
+            "next_url": "/docs/develop-drill/", 
+            "parent": "Developer Information", 
+            "previous_title": "Developer Information", 
+            "previous_url": "/docs/developer-information/", 
+            "relative_path": "_docs/developer-information/009-rest-api.md", 
+            "title": "REST API", 
+            "url": "/docs/rest-api/"
         }, 
         "RPC Overview": {
             "breadcrumbs": [
@@ -15686,6 +15720,23 @@
                             "url": "/docs/developer-information/"
                         }
                     ], 
+                    "children": [], 
+                    "next_title": "Develop Drill", 
+                    "next_url": "/docs/develop-drill/", 
+                    "parent": "Developer Information", 
+                    "previous_title": "Developer Information", 
+                    "previous_url": "/docs/developer-information/", 
+                    "relative_path": "_docs/developer-information/009-rest-api.md", 
+                    "title": "REST API", 
+                    "url": "/docs/rest-api/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Developer Information", 
+                            "url": "/docs/developer-information/"
+                        }
+                    ], 
                     "children": [
                         {
                             "breadcrumbs": [
@@ -15733,8 +15784,8 @@
                     "next_title": "Compiling Drill from Source", 
                     "next_url": "/docs/compiling-drill-from-source/", 
                     "parent": "Developer Information", 
-                    "previous_title": "Developer Information", 
-                    "previous_url": "/docs/developer-information/", 
+                    "previous_title": "REST API", 
+                    "previous_url": "/docs/rest-api/", 
                     "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
@@ -15923,8 +15974,8 @@
                     "url": "/docs/design-docs/"
                 }
             ], 
-            "next_title": "Develop Drill", 
-            "next_url": "/docs/develop-drill/", 
+            "next_title": "REST API", 
+            "next_url": "/docs/rest-api/", 
             "parent": "", 
             "previous_title": "Troubleshooting", 
             "previous_url": "/docs/troubleshooting/", 
