@@ -19,11 +19,15 @@ package org.apache.drill.exec.store.kudu;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Writer;
+import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
@@ -94,6 +98,23 @@ public class KuduSchemaFactory implements SchemaFactory {
         logger.warn("Failure reading kudu tables.", e);
         return Collections.EMPTY_SET;
       }
+    }
+
+    @Override
+    public CreateTableEntry createNewTable(final String tableName, List<String> partitionColumns) {
+      return new CreateTableEntry(){
+
+        @Override
+        public Writer getWriter(PhysicalOperator child) throws IOException {
+          return new KuduWriter(child, tableName, plugin);
+        }
+
+        @Override
+        public List<String> getPartitionColumns() {
+          return Collections.emptyList();
+        }
+
+      };
     }
 
     @Override

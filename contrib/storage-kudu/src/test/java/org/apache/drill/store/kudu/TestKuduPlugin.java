@@ -18,8 +18,10 @@
 package org.apache.drill.store.kudu;
 
 import org.apache.drill.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("requires a remote kudu server to run.")
 public class TestKuduPlugin extends BaseTestQuery {
 
   @Test
@@ -32,5 +34,13 @@ public class TestKuduPlugin extends BaseTestQuery {
     test("use kudu;");
     test("show tables;");
     test("describe demo");
+  }
+
+  @Test
+  public void testCreate() throws Exception {
+    test("create table kudu.regions as select 1, * from sys.options limit 1");
+    test("select * from kudu.regions");
+    test("drop table kudu.regions");
+
   }
 }
