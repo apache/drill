@@ -22,9 +22,9 @@ Several examples in the document use the donuts.json file. To download this file
 The following short description of methods link to more information and examples:
 
 * [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json)  
-* [Change the value or type of the named option]({{site.baseurl}}/drill/docs/rest-api/#post-option-optionname)  
+* [Change the value or type of the named option]({{site.baseurl}}/docs/rest-api/#post-option-optionname)  
 * [Get the profiles of running and completed queries]({{site.baseurl}}/docs/rest-api/#get-profiles-json)  
-* [Get the profile of the query that has the given queryid]({{site.baseurl}}/drill/docs/rest-api/#get-profiles-queryid-json)  
+* [Get the profile of the query that has the given queryid]({{site.baseurl}}/docs/rest-api/#get-profiles-queryid-json)  
 * [Cancel the query that has the given queryid]({{site.baseurl}}/docs/rest-api/#get-profiles-cancel-queryid)  
 * [Submit a query and return results]({{site.baseurl}}/docs/rest-api/#post-query-json)  
 * [Get the list of storage plugin names and configurations]({{site.baseurl}}/docs/rest-api/#get-storage-json)  
