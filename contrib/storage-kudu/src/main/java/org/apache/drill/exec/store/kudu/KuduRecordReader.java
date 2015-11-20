@@ -78,6 +78,7 @@ public class KuduRecordReader extends AbstractRecordReader {
     setColumns(projectedColumns);
     this.client = client;
     scanSpec = subScanSpec;
+    logger.debug("Scan spec: {}", subScanSpec);
   }
 
   @Override
@@ -94,7 +95,10 @@ public class KuduRecordReader extends AbstractRecordReader {
         }
         builder.setProjectedColumnNames(colNames);
       }
-      scanner = builder.build();
+      scanner = builder
+              .lowerBoundPartitionKeyRaw(scanSpec.getStartKey())
+              .exclusiveUpperBoundPartitionKeyRaw(scanSpec.getEndKey())
+              .build();
     } catch (Exception e) {
       throw new ExecutionSetupException(e);
     }
