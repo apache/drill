@@ -33,6 +33,30 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
+  @Test // DRILL-2915
+  public void testJoinOrderFailure() throws Exception {
+    final String query = String.format("SELECT a.r_regionkey as col1, b.n_regionkey as col2 \n"
+        + "FROM  cp.`tpch/region.parquet` AS a, \n"
+        + "      cp.`tpch/nation.parquet` AS b, \n"
+        + "      cp.`employee.json` AS c \n"
+        + "WHERE  a.r_regionkey = c.position_id \n"
+        + "       AND b.n_regionkey = c.position_id \n"
+        + "       AND "
+        + "(a.r_regionkey = 1 OR b.n_regionkey = 1) \n");
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("col1", "col2")
+        .baselineValues(1, 1)
+        .baselineValues(1, 1)
+        .baselineValues(1, 1)
+        .baselineValues(1, 1)
+        .baselineValues(1, 1)
+        .build()
+        .run();
+  }
+
   @Test // see DRILL-2328
   public void testConcatOnNull() throws Exception {
     try {

@@ -26,33 +26,36 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.hep.HepMatchOrder;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.metadata.CachingRelMetadataProvider;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
-import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
-import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.TypedSqlNode;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
@@ -70,18 +73,17 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.cost.DrillDefaultRelMetadataProvider;
+import org.apache.drill.exec.planner.logical.DrillFilterJoinRules;
+import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
-import org.apache.drill.exec.planner.logical.DrillMergeProjectRule;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
+import org.apache.drill.exec.planner.logical.DrillPushFilterPastProjectRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectPastFilterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
-import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
-import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -532,7 +534,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
   }
 
-
   private RelNode doLogicalPlanning(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
     if (! context.getPlannerSettings().isHepOptEnabled()) {
       return planner.transform(DrillSqlWorker.LOGICAL_RULES, relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
@@ -565,8 +566,58 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
       log("HepRel", loptNode, logger);
 
-      return loptNode;
+      if(!cartesianCanImpByNLP(loptNode, context.getPlannerSettings().isNestedLoopJoinEnabled(), context.getPlannerSettings().isNlJoinForScalarOnly())) {
+        logger.info("Detect cartesian-join; Try to merge multiple joins and re-plan");
+
+        ImmutableSet<RelOptRule> pullFilterAndJoinOrderRules = ImmutableSet.<RelOptRule>builder()
+            .add(
+                // Pull filters out from join
+                DrillJoinFilterTransposeRule.LEFT_FILTER,
+                DrillJoinFilterTransposeRule.RIGHT_FILTER,
+                DrillPushProjectPastFilterRule.INSTANCE,
+
+                // Merge joins more completely and re-order them
+                DrillRuleSets.DRILL_JOIN_TO_MULTIJOIN_RULE,
+                DrillRuleSets.DRILL_LOPT_OPTIMIZE_JOIN_RULE,
+                ProjectRemoveRule.INSTANCE,
+
+                // Push filters downwards
+                DrillPushFilterPastProjectRule.INSTANCE,
+                DrillFilterJoinRules.DRILL_FILTER_ON_JOIN
+            )
+            .build();
+
+        final RelNode newLoptNode = doHepPlan(convertedRelNode, pullFilterAndJoinOrderRules, HepMatchOrder.BOTTOM_UP);
+        log("HepRel", newLoptNode, logger);
+        return newLoptNode;
+      } else {
+        return loptNode;
+      }
     }
+  }
+
+  private boolean cartesianCanImpByNLP(final RelNode relNode, final boolean isNLJEnabled, final boolean isNLJScalarOnly) {
+    final boolean[] canImpByNLP = new boolean[] {true};
+    relNode.accept(new RelShuttleImpl() {
+      @Override
+      public RelNode visit(RelNode other) {
+        if(other instanceof DrillJoinRel) {
+          final DrillJoinRel join = (DrillJoinRel) other;
+          final RelNode left = join.getLeft();
+          final RelNode right = join.getRight();
+          final JoinUtils.JoinCategory category = JoinUtils.getJoinCategory(left, right, join.getCondition(), join.getLeftKeys(), join.getRightKeys());
+          if(category != JoinUtils.JoinCategory.EQUALITY) {
+            if (!isNLJEnabled
+                || (isNLJScalarOnly && !JoinUtils.isScalarSubquery(left) && !JoinUtils.isScalarSubquery(right))) {
+              canImpByNLP[0] = false;
+              return join;
+            }
+          }
+        }
+        return visitChildren(other);
+      }
+    });
+    return canImpByNLP[0];
   }
 
   /**
@@ -650,5 +701,69 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
   }
 
+  public static class DrillJoinFilterTransposeRule extends RelOptRule {
+    public static final DrillJoinFilterTransposeRule LEFT_FILTER =
+        new DrillJoinFilterTransposeRule(operand(DrillJoinRel.class,
+            operand(DrillFilterRel.class, any()),
+            operand(RelNode.class, any())));
+    public static final DrillJoinFilterTransposeRule RIGHT_FILTER =
+        new DrillJoinFilterTransposeRule(operand(DrillJoinRel.class,
+            operand(RelNode.class, any()),
+            operand(DrillFilterRel.class, any())));
 
+    private DrillJoinFilterTransposeRule(RelOptRuleOperand operand){
+      super(operand);
+    }
+
+    @Override public void onMatch(RelOptRuleCall call) {
+      DrillJoinRel join = call.rel(0);
+      final RelNode left = call.rel(1);
+      final RelNode right = call.rel(2);
+
+      final List<RelNode> joinChildren = Lists.newArrayList();
+      final List<RexNode> conditions = Lists.newArrayList();
+
+      if(left instanceof DrillFilterRel) {
+        final DrillFilterRel childFilter = (DrillFilterRel) left;
+
+        joinChildren.add(((HepRelVertex) join.getInput(0)).getCurrentRel().getInput(0));
+        conditions.add(childFilter.getCondition());
+      } else {
+        joinChildren.add(join.getInput(0));
+      }
+
+      if(right instanceof DrillFilterRel) {
+        final DrillFilterRel childFilter = (DrillFilterRel) right;
+
+        joinChildren.add(((HepRelVertex) join.getInput(1)).getCurrentRel().getInput(0));
+        final int numLeftColumn = join.getInput(1).getRowType().getFieldCount();
+        conditions.add(childFilter.getCondition().accept(new RexVisitorImpl<RexNode>(true) {
+          @Override
+          public RexNode visitInputRef(RexInputRef inputRef) {
+            return new RexInputRef(inputRef.getIndex() + numLeftColumn,
+                inputRef.getType());
+          }
+
+          @Override
+          public RexNode visitLiteral(RexLiteral literal) {
+            return literal;
+          }
+         }));
+      } else {
+        joinChildren.add(join.getInput(1));
+      }
+
+      final RexNode newCondition;
+      if(conditions.size() == 1) {
+        newCondition = conditions.get(0);
+      } else {
+        newCondition = join.getCluster()
+            .getRexBuilder()
+            .makeCall(SqlStdOperatorTable.AND, conditions);
+      }
+
+      join = (DrillJoinRel) join.copy(join.getTraitSet(), joinChildren);
+      call.transformTo(DrillFilterRel.create(join, newCondition));
+    }
+  }
 }
