@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.kududb.ColumnSchema;
 import org.kududb.Schema;
 import org.kududb.Type;
+import org.kududb.client.CreateTableBuilder;
 import org.kududb.client.Insert;
 import org.kududb.client.KuduClient;
 import org.kududb.client.KuduScanner;
@@ -33,24 +34,24 @@ import org.kududb.client.ListTablesResponse;
 import org.kududb.client.PartialRow;
 import org.kududb.client.RowResult;
 import org.kududb.client.RowResultIterator;
+import org.kududb.client.SessionConfiguration;
+
+import static org.kududb.Type.STRING;
 
 
 public class TestKuduConnect {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestKuduConnect.class);
 
   public static final String KUDU_MASTER = "172.31.1.99";
-  public static final String KUDU_TABLE = "demo";
 
-  @Test
-  public void abc() throws Exception {
+  public static void createKuduTable(String tableName, int tablets, int replicas, int rows) throws Exception {
 
     try (KuduClient client = new KuduClient.KuduClientBuilder(KUDU_MASTER).build()) {
 
-      ListTablesResponse tables = client.getTablesList(KUDU_TABLE);
+      ListTablesResponse tables = client.getTablesList(tableName);
       if (!tables.getTablesList().isEmpty()) {
-        client.deleteTable(KUDU_TABLE);
+        client.deleteTable(tableName);
       }
-      ;
 
       List<ColumnSchema> columns = new ArrayList<>(5);
       columns.add(new ColumnSchema.ColumnSchemaBuilder("key", Type.INT32).key(true).build());
@@ -60,12 +61,22 @@ public class TestKuduConnect {
       columns.add(new ColumnSchema.ColumnSchemaBuilder("string", Type.STRING).nullable(true).build());
 
       Schema schema = new Schema(columns);
-      client.createTable(KUDU_TABLE, schema);
 
-      KuduTable table = client.openTable(KUDU_TABLE);
+      CreateTableBuilder builder = new CreateTableBuilder();
+      builder.setNumReplicas(replicas);
+      for (int i = 1; i < tablets; i++) {
+        PartialRow splitRow = schema.newPartialRow();
+        splitRow.addInt("key", i*1000);
+        builder.addSplitRow(splitRow);
+      }
+
+      client.createTable(tableName, schema, builder);
+
+      KuduTable table = client.openTable(tableName);
 
       KuduSession session = client.newSession();
-      for (int i = 0; i < 3; i++) {
+      session.setFlushMode(SessionConfiguration.FlushMode.AUTO_FLUSH_SYNC);
+      for (int i = 0; i < rows; i++) {
         Insert insert = table.newInsert();
         PartialRow row = insert.getRow();
         row.addInt(0, i);
@@ -89,5 +100,15 @@ public class TestKuduConnect {
         }
       }
     }
+  }
+
+  @Test
+  public void abc() throws Exception {
+    createKuduTable("demo", 1, 1, 3);
+  }
+
+  @Test
+  public void def() throws Exception {
+    createKuduTable("demo-large-splits", 6, /* replicas */ 1, 6000);
   }
 }
