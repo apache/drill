@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.kudu.KuduSubScan.KuduSubScanSpec;
@@ -210,7 +211,8 @@ public class KuduGroupScan extends AbstractGroupScan {
   // List<KuduSubScanSpec> tabletInfoList, List<SchemaPath> columns
   @Override
   public ScanStats getScanStats() {
-    return ScanStats.TRIVIAL_TABLE;
+    long recordCount = 100000 * kuduWorkList.size();
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, recordCount, 1, recordCount);
   }
 
   @Override

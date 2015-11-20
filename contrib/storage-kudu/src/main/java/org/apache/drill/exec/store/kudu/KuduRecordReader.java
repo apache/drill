@@ -77,6 +77,7 @@ public class KuduRecordReader extends AbstractRecordReader {
   private RowResultIterator iterator;
   
   private OutputMutator output;
+  private OperatorContext context;
 
   private static class ProjectedColumnInfo {
     int index;
@@ -97,6 +98,7 @@ public class KuduRecordReader extends AbstractRecordReader {
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.output = output;
+    this.context = context;
     try {
       KuduTable table = client.openTable(scanSpec.getTableName());
       
@@ -108,10 +110,16 @@ public class KuduRecordReader extends AbstractRecordReader {
         }
         builder.setProjectedColumnNames(colNames);
       }
-      scanner = builder
-              .lowerBoundPartitionKeyRaw(scanSpec.getStartKey())
-              .exclusiveUpperBoundPartitionKeyRaw(scanSpec.getEndKey())
-              .build();
+
+      context.getStats().startWait();
+      try {
+        scanner = builder
+                .lowerBoundPartitionKeyRaw(scanSpec.getStartKey())
+                .exclusiveUpperBoundPartitionKeyRaw(scanSpec.getEndKey())
+                .build();
+      } finally {
+        context.getStats().stopWait();
+      }
     } catch (Exception e) {
       throw new ExecutionSetupException(e);
     }
@@ -143,7 +151,12 @@ public class KuduRecordReader extends AbstractRecordReader {
           iterator = null;
           return 0;
         }
-        iterator = scanner.nextRows();
+        context.getStats().startWait();
+        try {
+          iterator = scanner.nextRows();
+        } finally {
+          context.getStats().stopWait();
+        }
       }
       for (; rowCount < TARGET_RECORD_COUNT && iterator.hasNext(); rowCount++) {
         addRowResult(iterator.next(), rowCount);
