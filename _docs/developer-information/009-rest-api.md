@@ -22,11 +22,14 @@ Several examples in the document use the donuts.json file. To download this file
 The following short description of methods link to more information and examples:
 
 * [List information about system/session options]({{site.baseurl}}/docs/rest-api/#get-options-json).
-* Submit a query to Drill and return query results. 
+* [Change the value or type of the named option]().
+* [Submit a query to Drill and return query results](). 
 * 
 
 ## Options
 These methods get and set system options.
+
+----------
 
 ### GET /options.json
 
@@ -63,9 +66,11 @@ List the name, default, and data type of the system and session options.
           "kind" : "BOOLEAN"
         } ]
 
+----------
+
 ### POST /option/{optionName}
 
-Change the value or session/system type of the named option.
+Change the value or type of the named option.
 
 **Parameter**
 optionName--The name of a [Drill system option]({{site.baseurl}}/docs/configuration-options-introduction/#system-options).
@@ -94,6 +99,8 @@ Enclose option values of kind STRING in double quotation marks.
 
 These methods get query profiles. 
 
+----------
+
 ### GET /profiles.json
 
 Get the profiles of running and completed queries. 
@@ -117,6 +124,8 @@ Get the profiles of running and completed queries.
           }, 
           . . .
 
+----------
+
 ### GET /profiles/{queryid}.json
 
 Get the profile of given queryid.
@@ -132,6 +141,8 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
         {"id":{"part1":3004720672638717061,"part2":3553677414795345685},"type":1,"start":1447892599827,"end":1447892599950,"query":"select * from dfs.`/Users/joe-user/drill/apache-drill-1.3.0/sample-data/donuts.json` where name= 'Cake'","plan":"00-00    Screen : rowType = RecordType(ANY *): 
         . . ."lastUpdate":1447892599950,"lastProgress":1447892599950}]}],"user":"anonymous"}
+
+----------
 
 ### GET /profiles/cancel/{queryid}
 
@@ -153,6 +164,8 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 ## Query
 
 Using the query method, you can programmatically run queries. 
+
+----------
 
 ### POST /query.json
 
@@ -193,6 +206,8 @@ Submits a query, waits until the query completes, and then returns the results a
 
 The storage REST methods manage Drill storage plugin configurations.
 
+----------
+
 ### GET /storage.json
 
 Get the list of storage plugin names and configurations.
@@ -226,6 +241,8 @@ Get the list of storage plugin names and configurations.
           }
         } ]
 
+----------
+
 ### GET /storage/{name}.json
 
 Get the named storage plugin name and configuration.
@@ -248,6 +265,8 @@ name--The assigned name in the storage plugin definition.
           }
         }
 
+----------
+
 ### Get /storage/{name}/enable/{val}
 
 Enable or disable the named storage plugin.
@@ -265,6 +284,8 @@ Enable or disable the named storage plugin.
 {
   "result" : "success"
 }
+
+----------
 
 ### POST /storage/{name}.json
 
@@ -298,6 +319,8 @@ Valid storage plugin types include file, hbase, hive, mongo, and jdbc. Construct
   "result" : "success"
 }
 
+----------
+
 ### DELETE /storage/{name}.json
 
 Delete a storage plugin configuration.
@@ -318,6 +341,8 @@ name--The name of the storage plugin configuration to delete.
 ## Metrics
 
 Gets metric information.
+
+----------
 
 ### GET /stats.json
 
@@ -349,6 +374,8 @@ Returns Drillbit stats such as ports and max direct memory.
           "value" : 8589934592
         } ]
 
+----------
+
 ### GET /status
 
 Get the status of Drill. 
@@ -368,6 +395,7 @@ Get the status of Drill.
 
           </html>
 
+----------
 
 ### GET /status/metrics
 
@@ -382,6 +410,8 @@ Get the current memory metrics.
         {"version":"3.0.0","gauges":{"PS-MarkSweep.count":{"value":0},"PS-MarkSweep.time":{"value":0},"PS-Scavenge.count":{"value":1},"PS-Scavenge.time":{"value":74},"blocked.
          . . .
         ,"drill.allocator.normal.hist":{"count":84,"max":1024,"mean":273.6666666666667,"min":12,"p50":256.0,"p75":448.0,"p95":896.0,"p98":1024.0,"p99":1024.0,"p999":1024.0,"stddev":248.17013855555368}},"meters":{},"timers":{}}
+
+----------
 
 ### GET /status/threads
 
