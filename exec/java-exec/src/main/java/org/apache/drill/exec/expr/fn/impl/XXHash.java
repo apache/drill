@@ -180,23 +180,36 @@ public final class XXHash {
 
   /* 32 bit variations */
   public static int hash32(int val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(long val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(float val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(double val, long seed){
-    return (int) hash64(val, seed);
+    return convert64To32(hash64(val, seed));
   }
 
   public static int hash32(int start, int end, DrillBuf buffer, long seed){
-    return (int) hash64(start, end, buffer, seed);
+    return convert64To32(hash64(start, end, buffer, seed));
+  }
+
+  /**
+   * Convert a 64 bit hash value to a 32 bit by taking the XOR of the
+   * most significant 4 bytes with the least significant 4 bytes.
+   * @param val the input 64 bit hash value
+   * @return converted 32 bit hash value
+   */
+  private static int convert64To32(long val) {
+
+    int msb = (int) ((val >>> 32) & 0xFFFFFFFF);
+    int lsb = (int) (val);
+    return (msb ^ lsb);
   }
 
 }

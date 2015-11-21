@@ -55,9 +55,10 @@ public class HashPrelUtil {
         }
       };
 
-  private static final String HASH64_FUNCTION_NAME = "hash64";
-  private static final String HASH64_DOUBLE_FUNCTION_NAME = "hash64AsDouble";
-  private static final String CAST_TO_INT_FUNCTION_NAME = "castInt";
+  // The hash32 functions actually use hash64 underneath.  The reason we want to call hash32 is that
+  // the hash based operators make use of 4 bytes of hash value, not 8 bytes (for reduced memory use).
+  private static final String HASH32_FUNCTION_NAME = "hash32";
+  private static final String HASH32_DOUBLE_FUNCTION_NAME = "hash32AsDouble";
 
   /**
    * Create hash based partition expression based on the given distribution fields.
@@ -93,18 +94,18 @@ public class HashPrelUtil {
 
     assert inputExprs.size() > 0;
 
-    final String functionName = hashAsDouble ? HASH64_DOUBLE_FUNCTION_NAME : HASH64_FUNCTION_NAME;
+    final String functionName = hashAsDouble ? HASH32_DOUBLE_FUNCTION_NAME : HASH32_FUNCTION_NAME;
 
     T func = helper.createCall(functionName,  ImmutableList.of(inputExprs.get(0)));
     for (int i = 1; i<inputExprs.size(); i++) {
       func = helper.createCall(functionName, ImmutableList.of(inputExprs.get(i), func));
     }
 
-    return helper.createCall(CAST_TO_INT_FUNCTION_NAME, ImmutableList.of(func));
+    return func;
   }
 
   /**
-   * Return a hash expression :  (int) hash(field1, hash(field2, hash(field3, 0)));
+   * Return a hash expression :  hash32(field1, hash32(field2, hash32(field3, 0)));
    */
   public static LogicalExpression getHashExpression(List<LogicalExpression> fields, boolean hashAsDouble){
     return createHashExpression(fields, HASH_HELPER_LOGICALEXPRESSION, hashAsDouble);

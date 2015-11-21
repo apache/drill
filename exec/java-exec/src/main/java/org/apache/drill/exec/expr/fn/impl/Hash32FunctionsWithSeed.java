@@ -53,490 +53,532 @@ import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-public class HashFunctions {
-
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+/*
+ * Class contains hash32 function definitions for different data types.
+ */
+public class Hash32FunctionsWithSeed {
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableFloatHash implements DrillSimpleFunc {
 
     @Param NullableFloat4Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class FloatHash implements DrillSimpleFunc {
 
     @Param Float4Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableDoubleHash implements DrillSimpleFunc {
 
     @Param NullableFloat8Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class DoubleHash implements DrillSimpleFunc {
 
     @Param Float8Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVarBinaryHash implements DrillSimpleFunc {
 
     @Param NullableVarBinaryHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVarCharHash implements DrillSimpleFunc {
 
     @Param NullableVarCharHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableVar16CharHash implements DrillSimpleFunc {
 
     @Param NullableVar16CharHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableBigIntHash implements DrillSimpleFunc {
 
     @Param NullableBigIntHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableIntHash implements DrillSimpleFunc {
     @Param NullableIntHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarBinaryHash implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarCharHash implements DrillSimpleFunc {
 
     @Param VarCharHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Var16CharHash implements DrillSimpleFunc {
 
     @Param Var16CharHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.end, in.buffer, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class HashBigInt implements DrillSimpleFunc {
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class BigIntHash implements DrillSimpleFunc {
 
     @Param BigIntHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IntHash implements DrillSimpleFunc {
     @Param IntHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class DateHash implements DrillSimpleFunc {
     @Param  DateHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDateHash implements DrillSimpleFunc {
     @Param  NullableDateHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class TimeStampHash implements DrillSimpleFunc {
     @Param  TimeStampHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableTimeStampHash implements DrillSimpleFunc {
     @Param  NullableTimeStampHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class TimeHash implements DrillSimpleFunc {
     @Param  TimeHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableTimeHash implements DrillSimpleFunc {
     @Param  NullableTimeHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Decimal9Hash implements DrillSimpleFunc {
     @Param  Decimal9Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDecimal9Hash implements DrillSimpleFunc {
     @Param  NullableDecimal9Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Decimal18Hash implements DrillSimpleFunc {
     @Param  Decimal18Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDecimal18Hash implements DrillSimpleFunc {
     @Param  NullableDecimal18Holder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Decimal28Hash implements DrillSimpleFunc {
     @Param  Decimal28SparseHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-
-      int xor = 0;
-      for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ Decimal28SparseHolder.getInteger(i, in.start, in.buffer);
-      }
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(xor, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + Decimal28SparseHolder.WIDTH, in.buffer, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDecimal28Hash implements DrillSimpleFunc {
     @Param  NullableDecimal28SparseHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        int xor = 0;
-        for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ NullableDecimal28SparseHolder.getInteger(i, in.start, in.buffer);
-        }
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(xor, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + NullableDecimal28SparseHolder.WIDTH, in.buffer, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class Decimal38Hash implements DrillSimpleFunc {
     @Param  Decimal38SparseHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-
-      int xor = 0;
-      for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ Decimal38SparseHolder.getInteger(i, in.start, in.buffer);
-      }
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(xor, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + Decimal38SparseHolder.WIDTH, in.buffer, seed.value);
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(name = "hash32", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableDecimal38Hash implements DrillSimpleFunc {
     @Param  NullableDecimal38SparseHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        int xor = 0;
-        for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ NullableDecimal38SparseHolder.getInteger(i, in.start, in.buffer);
-        }
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(xor, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.start, in.start + NullableDecimal38SparseHolder.WIDTH, in.buffer, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableBitHash implements DrillSimpleFunc {
 
     @Param NullableBitHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
       if (in.isSet == 0) {
-        out.value = 0;
+        out.value = seed.value;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
       }
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  @FunctionTemplate(names = {"hash32", "hash32AsDouble"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class BitHash implements DrillSimpleFunc {
 
     @Param BitHolder in;
+    @Param IntHolder seed;
     @Output IntHolder out;
+
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, seed.value);
     }
-  }
-
-}
+  }}
