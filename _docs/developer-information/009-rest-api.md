@@ -71,7 +71,7 @@ Submit a query and return results.
 
 **Example**
 
-`curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json`
+     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
 
 **Response Body**
 
@@ -447,7 +447,7 @@ List the name, default, and data type of the system and session options.
 
 ### POST /option/{optionName}
 
-Change the value or type of the named option. <<Needs testing on 1.3>>
+Change the value or type of the named option. Doc Note: Test on 1.3.
 
 **Parameter**
 
