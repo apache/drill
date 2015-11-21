@@ -3,11 +3,9 @@ title: "REST API"
 parent: "Developer Information"
 ---
 
-The Drill REST API provides methods that perform the same functions as those in the [Drill Web Console](/starting-the-web-console/). For example, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
+The Drill REST API provides programmatic access to Drill through the [Web Console](/starting-the-web-console/). Using HTTP requests, you can run queries, perform storage plugin tasks, such as creating a storage plugin, obtain profiles of queries, and get current memory metrics. 
 
-An HTTP request having a .json suffix output returns a JSON response body. Generally, when you drop the .json suffix from these commands, Drill returns HTML.
-
-An HTTP request connects to Drill using the familiar Web Console URI:
+AN HTTP request uses the familiar Web Console URI:
 
 `http://<IP address or host name>:8047`
 
