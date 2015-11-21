@@ -19,7 +19,7 @@ This documentation presents HTTP methods in the same order as functions appear i
 
 [**Query**]({{site.baseurl}}/docs/rest-api/#query)
 
-Submit a query and return results]
+Submit a query and return results.
 
 [**Profiles**](({{site.baseurl}}/docs/rest-api/#profiles))
 
