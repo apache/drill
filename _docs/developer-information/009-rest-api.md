@@ -23,28 +23,28 @@ Submit a query and return results.
 
 [**Profiles**](({{site.baseurl}}/docs/rest-api/#profiles))
 
-* Get the profiles of running and completed queries  
-* Get the profile of the query that has the given queryid  
-* Cancel the query that has the given queryid  
+* Get the profiles of running and completed queries.  
+* Get the profile of the query that has the given queryid.  
+* Cancel the query that has the given queryid.  
 
 [**Storage**]({{site.baseurl}}/docs/rest-api/#storage)
 
-* Get the list of storage plugin names and configurations  
-* Get the definition of the named storage plugin  
-* Enable or disable the named storage plugin  
-* Create or update a storage plugin configuration  
-* Delete a storage plugin configuration  
-* Get Drillbit information, such as ports numbers  
-* Get the current memory metrics  
+* Get the list of storage plugin names and configurations.  
+* Get the definition of the named storage plugin.  
+* Enable or disable the named storage plugin.  
+* Create or update a storage plugin configuration.  
+* Delete a storage plugin configuration.  
+* Get Drillbit information, such as ports numbers.  
+* Get the current memory metrics.  
 
 [**Threads**](({{site.baseurl}}/docs/rest-api/#threads))
 
-Get the status of threads  
+Get the status of threads.  
 
 [**Options**]({{site.baseurl}}/docs/rest-api/#options)
 
-* List information about system/session options  
-* Change the value or type of the named option  
+* List information about system/session options.  
+* Change the value or type of the named option.  
 
 
 ## Query
@@ -71,7 +71,7 @@ Submit a query and return results.
 
 **Example**
 
-     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
+`curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json`
 
 **Response Body**
 
@@ -447,7 +447,7 @@ List the name, default, and data type of the system and session options.
 
 ### POST /option/{optionName}
 
-Change the value or type of the named option.
+Change the value or type of the named option. <<Needs testing on 1.3>>
 
 **Parameter**
 
