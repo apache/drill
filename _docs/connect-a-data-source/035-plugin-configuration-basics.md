@@ -131,6 +131,13 @@ The following table describes the attributes you configure for storage plugins i
     <td>To include or omit the header when reading a delimited text file. Set to true to avoid reading headers as data.
     </td>
   </tr>
+    <tr>
+    <td>"formats" . . . "extractHeader"</td>
+    <td>true</td>
+    <td>no</td>
+    <td>Set to true to extract and use headers as column names when reading a delimited text file, false otherwise. Ensure skipFirstLine=false when extractHeader=true.
+    </td>
+  </tr>
 </table>
 
 \* Pertains only to distributed Drill installations using the mapr-drill package.  
