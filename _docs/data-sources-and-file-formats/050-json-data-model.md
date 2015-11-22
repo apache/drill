@@ -60,6 +60,21 @@ When you set this option, Drill reads all numbers from the JSON files as DOUBLE.
 
 Drill uses these types internally for reading complex and nested data structures from data sources such as JSON.
 
+### Experimental Feature: Heterogeneous types
+The Union type allows storing different types in the same field. This new feature is still considered experimental, and must be explicitly enabled by setting the `exec.enabel_union_type` option to true.
+
+    ALTER SESSION SET `exec.enable_union_type` = true;
+    
+ With this feature enabled, JSON data with changing types, which previously could not be queried by drill, are now queryable.
+ 
+A field with a Union type can be used inside of functions. Drill will automatically handle evaluation of the function appropriately for each type. If the data requires special handling for the different types, you can do this with case statement, leveraging the new `type` functions:
+
+```
+select 1 + case when is_list(a) then a[0] else a end from table;
+```
+
+In this example, the column a contains both scalar and list types, so the case where it is a list is handled by using the first element of the array.
+
 ## Reading JSON
 To read JSON data using Drill, use a [file system storage plugin]({{ site.baseurl }}/docs/file-system-storage-plugin/) that defines the JSON format. You can use the `dfs` storage plugin, which includes the definition.
 
@@ -464,6 +479,8 @@ Workaround: None, per se, but if you avoid querying the multi-polygon lines (120
     | -122.4379846573301  | 37.75844260679518  | 0.0     |
     +---------------------+--------------------+---------+
     1 row selected (6.64 seconds)
+    
+Another option is to use the experimental union type.
 
 ### Varying types
 Any attempt to query a list that has
@@ -472,7 +489,7 @@ coordinates for shapes of type Polygon.  For shapes of MultiPolygon, this file h
 of coordinates. Even a query that tries to filter away the
 MultiPolygons will fail.
 
-Workaround: None.
+Workaround: Use union type (experimental).
 
 ### Misusing Dot Notation
 Drill accesses an object when you use dot notation in the SELECT statement only when the dot is *not* the first dot in the expression. Drill attempts to access the table that appears after the first dot. For example,  records in `some-file` have a geometry field that Drill successfully accesses given this query:
@@ -516,4 +533,4 @@ Workaround: Set the `store.json.read_numbers_as_double` property, described earl
 ### Selecting all in a JSON directory query
 Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/querying-directories) that selects all (SELECT *) JSON files.
 
-Workaround: Query each file individually.
+Workaround: Query each file individually. Another option is to use the union type (experimental).
