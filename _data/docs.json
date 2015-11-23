@@ -375,11 +375,28 @@
             "next_title": "Apache Drill 1.1.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-1-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
+            "previous_title": "Apache Drill 1.3.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
             "relative_path": "_docs/rn/009-1.2.0-rn.md", 
             "title": "Apache Drill 1.2.0 Release Notes", 
             "url": "/docs/apache-drill-1-2-0-release-notes/"
+        }, 
+        "Apache Drill 1.3.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.2.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/008-1.3.0-rn.md", 
+            "title": "Apache Drill 1.3.0 Release Notes", 
+            "url": "/docs/apache-drill-1-3-0-release-notes/"
         }, 
         "Apache Drill Contribution Guidelines": {
             "breadcrumbs": [
@@ -2671,8 +2688,8 @@
             "next_title": "Compiling Drill from Source", 
             "next_url": "/docs/compiling-drill-from-source/", 
             "parent": "Developer Information", 
-            "previous_title": "REST API", 
-            "previous_url": "/docs/rest-api/", 
+            "previous_title": "Developer Information", 
+            "previous_url": "/docs/developer-information/", 
             "relative_path": "_docs/developer-information/010-develop-drill.md", 
             "title": "Develop Drill", 
             "url": "/docs/develop-drill/"
@@ -2680,23 +2697,6 @@
         "Developer Information": {
             "breadcrumbs": [], 
             "children": [
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Developer Information", 
-                            "url": "/docs/developer-information/"
-                        }
-                    ], 
-                    "children": [], 
-                    "next_title": "Develop Drill", 
-                    "next_url": "/docs/develop-drill/", 
-                    "parent": "Developer Information", 
-                    "previous_title": "Developer Information", 
-                    "previous_url": "/docs/developer-information/", 
-                    "relative_path": "_docs/developer-information/009-rest-api.md", 
-                    "title": "REST API", 
-                    "url": "/docs/rest-api/"
-                }, 
                 {
                     "breadcrumbs": [
                         {
@@ -2751,8 +2751,8 @@
                     "next_title": "Compiling Drill from Source", 
                     "next_url": "/docs/compiling-drill-from-source/", 
                     "parent": "Developer Information", 
-                    "previous_title": "REST API", 
-                    "previous_url": "/docs/rest-api/", 
+                    "previous_title": "Developer Information", 
+                    "previous_url": "/docs/developer-information/", 
                     "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
@@ -2941,8 +2941,8 @@
                     "url": "/docs/design-docs/"
                 }
             ], 
-            "next_title": "REST API", 
-            "next_url": "/docs/rest-api/", 
+            "next_title": "Develop Drill", 
+            "next_url": "/docs/develop-drill/", 
             "parent": "", 
             "previous_title": "Troubleshooting", 
             "previous_url": "/docs/troubleshooting/", 
@@ -7558,23 +7558,6 @@
             "title": "REPEATED_COUNT", 
             "url": "/docs/repeated-count/"
         }, 
-        "REST API": {
-            "breadcrumbs": [
-                {
-                    "title": "Developer Information", 
-                    "url": "/docs/developer-information/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Develop Drill", 
-            "next_url": "/docs/develop-drill/", 
-            "parent": "Developer Information", 
-            "previous_title": "Developer Information", 
-            "previous_url": "/docs/developer-information/", 
-            "relative_path": "_docs/developer-information/009-rest-api.md", 
-            "title": "REST API", 
-            "url": "/docs/rest-api/"
-        }, 
         "RPC Overview": {
             "breadcrumbs": [
                 {
@@ -7628,11 +7611,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.1.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-1-0-release-notes/", 
+                    "next_title": "Apache Drill 1.2.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/008-1.3.0-rn.md", 
+                    "title": "Apache Drill 1.3.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-3-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.1.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-1-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.3.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
                     "relative_path": "_docs/rn/009-1.2.0-rn.md", 
                     "title": "Apache Drill 1.2.0 Release Notes", 
                     "url": "/docs/apache-drill-1-2-0-release-notes/"
@@ -7808,8 +7808,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.2.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+            "next_title": "Apache Drill 1.3.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -15720,23 +15720,6 @@
                             "url": "/docs/developer-information/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Develop Drill", 
-                    "next_url": "/docs/develop-drill/", 
-                    "parent": "Developer Information", 
-                    "previous_title": "Developer Information", 
-                    "previous_url": "/docs/developer-information/", 
-                    "relative_path": "_docs/developer-information/009-rest-api.md", 
-                    "title": "REST API", 
-                    "url": "/docs/rest-api/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Developer Information", 
-                            "url": "/docs/developer-information/"
-                        }
-                    ], 
                     "children": [
                         {
                             "breadcrumbs": [
@@ -15784,8 +15767,8 @@
                     "next_title": "Compiling Drill from Source", 
                     "next_url": "/docs/compiling-drill-from-source/", 
                     "parent": "Developer Information", 
-                    "previous_title": "REST API", 
-                    "previous_url": "/docs/rest-api/", 
+                    "previous_title": "Developer Information", 
+                    "previous_url": "/docs/developer-information/", 
                     "relative_path": "_docs/developer-information/010-develop-drill.md", 
                     "title": "Develop Drill", 
                     "url": "/docs/develop-drill/"
@@ -15974,8 +15957,8 @@
                     "url": "/docs/design-docs/"
                 }
             ], 
-            "next_title": "REST API", 
-            "next_url": "/docs/rest-api/", 
+            "next_title": "Develop Drill", 
+            "next_url": "/docs/develop-drill/", 
             "parent": "", 
             "previous_title": "Troubleshooting", 
             "previous_url": "/docs/troubleshooting/", 
@@ -15994,11 +15977,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.1.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-1-0-release-notes/", 
+                    "next_title": "Apache Drill 1.2.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/008-1.3.0-rn.md", 
+                    "title": "Apache Drill 1.3.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-3-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.1.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-1-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.3.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-3-0-release-notes/", 
                     "relative_path": "_docs/rn/009-1.2.0-rn.md", 
                     "title": "Apache Drill 1.2.0 Release Notes", 
                     "url": "/docs/apache-drill-1-2-0-release-notes/"
@@ -16174,8 +16174,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.2.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+            "next_title": "Apache Drill 1.3.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
