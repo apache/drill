@@ -1766,8 +1766,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "JDBC Storage Plugin", 
-                    "next_url": "/docs/jdbc-storage-plugin/", 
+                    "next_title": "RDBMS Storage Plugin", 
+                    "next_url": "/docs/rdbms-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "HBase Storage Plugin", 
                     "previous_url": "/docs/hbase-storage-plugin/", 
@@ -1788,9 +1788,9 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Hive Storage Plugin", 
                     "previous_url": "/docs/hive-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
-                    "title": "JDBC Storage Plugin", 
-                    "url": "/docs/jdbc-storage-plugin/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/080-rdbms-storage-plugin.md", 
+                    "title": "RDBMS Storage Plugin", 
+                    "url": "/docs/rdbms-storage-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -1803,8 +1803,8 @@
                     "next_title": "MapR-DB Format", 
                     "next_url": "/docs/mapr-db-format/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "JDBC Storage Plugin", 
-                    "previous_url": "/docs/jdbc-storage-plugin/", 
+                    "previous_title": "RDBMS Storage Plugin", 
+                    "previous_url": "/docs/rdbms-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
                     "title": "MongoDB Storage Plugin", 
                     "url": "/docs/mongodb-storage-plugin/"
@@ -1817,14 +1817,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "S3 Storage Plugin", 
+                    "next_url": "/docs/s3-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Storage Plugin", 
                     "previous_url": "/docs/mongodb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "MapR-DB Format", 
+                    "previous_url": "/docs/mapr-db-format/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
+                    "title": "S3 Storage Plugin", 
+                    "url": "/docs/s3-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -2148,14 +2165,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Sequence Files", 
+                    "next_url": "/docs/sequence-files/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "JSON Data Model", 
                     "previous_url": "/docs/json-data-model/", 
                     "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
                     "title": "Text Files: CSV, TSV, PSV", 
                     "url": "/docs/text-files-csv-tsv-psv/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "Text Files: CSV, TSV, PSV", 
+                    "previous_url": "/docs/text-files-csv-tsv-psv/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/070-sequencefile-format.md", 
+                    "title": "Sequence Files", 
+                    "url": "/docs/sequence-files/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -2594,8 +2628,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "Text Files: CSV, TSV, PSV", 
-            "previous_url": "/docs/text-files-csv-tsv-psv/", 
+            "previous_title": "Sequence Files", 
+            "previous_url": "/docs/sequence-files/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
@@ -3477,8 +3511,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "JDBC Storage Plugin", 
-            "next_url": "/docs/jdbc-storage-plugin/", 
+            "next_title": "RDBMS Storage Plugin", 
+            "next_url": "/docs/rdbms-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "HBase Storage Plugin", 
             "previous_url": "/docs/hbase-storage-plugin/", 
@@ -4322,23 +4356,6 @@
             "title": "Interfaces Introduction", 
             "url": "/docs/interfaces-introduction/"
         }, 
-        "JDBC Storage Plugin": {
-            "breadcrumbs": [
-                {
-                    "title": "Connect a Data Source", 
-                    "url": "/docs/connect-a-data-source/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "MongoDB Storage Plugin", 
-            "next_url": "/docs/mongodb-storage-plugin/", 
-            "parent": "Connect a Data Source", 
-            "previous_title": "Hive Storage Plugin", 
-            "previous_url": "/docs/hive-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
-            "title": "JDBC Storage Plugin", 
-            "url": "/docs/jdbc-storage-plugin/"
-        }, 
         "JSON Data Model": {
             "breadcrumbs": [
                 {
@@ -4787,8 +4804,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ODBC/JDBC Interfaces", 
-            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "next_title": "S3 Storage Plugin", 
+            "next_url": "/docs/s3-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "MongoDB Storage Plugin", 
             "previous_url": "/docs/mongodb-storage-plugin/", 
@@ -4866,8 +4883,8 @@
             "next_title": "MapR-DB Format", 
             "next_url": "/docs/mapr-db-format/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "JDBC Storage Plugin", 
-            "previous_url": "/docs/jdbc-storage-plugin/", 
+            "previous_title": "RDBMS Storage Plugin", 
+            "previous_url": "/docs/rdbms-storage-plugin/", 
             "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
             "title": "MongoDB Storage Plugin", 
             "url": "/docs/mongodb-storage-plugin/"
@@ -5625,8 +5642,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "MapR-DB Format", 
-            "previous_url": "/docs/mapr-db-format/", 
+            "previous_title": "S3 Storage Plugin", 
+            "previous_url": "/docs/s3-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -6476,14 +6493,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying HBase", 
-                            "next_url": "/docs/querying-hbase/", 
+                            "next_title": "Querying Sequence Files", 
+                            "next_url": "/docs/querying-sequence-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Plain Text Files", 
                             "previous_url": "/docs/querying-plain-text-files/", 
                             "relative_path": "_docs/query-data/query-a-file-system/040-querying-directories.md", 
                             "title": "Querying Directories", 
                             "url": "/docs/querying-directories/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying a File System", 
+                                    "url": "/docs/querying-a-file-system/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying HBase", 
+                            "next_url": "/docs/querying-hbase/", 
+                            "parent": "Querying a File System", 
+                            "previous_title": "Querying Directories", 
+                            "previous_url": "/docs/querying-directories/", 
+                            "relative_path": "_docs/query-data/query-a-file-system/050-querying-sequence-files.md", 
+                            "title": "Querying Sequence Files", 
+                            "url": "/docs/querying-sequence-files/"
                         }
                     ], 
                     "next_title": "Querying a File System Introduction", 
@@ -6506,8 +6544,8 @@
                     "next_title": "Querying Complex Data", 
                     "next_url": "/docs/querying-complex-data/", 
                     "parent": "Query Data", 
-                    "previous_title": "Querying Directories", 
-                    "previous_url": "/docs/querying-directories/", 
+                    "previous_title": "Querying Sequence Files", 
+                    "previous_url": "/docs/querying-sequence-files/", 
                     "relative_path": "_docs/query-data/030-querying-hbase.md", 
                     "title": "Querying HBase", 
                     "url": "/docs/querying-hbase/"
@@ -7215,8 +7253,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Querying HBase", 
-            "next_url": "/docs/querying-hbase/", 
+            "next_title": "Querying Sequence Files", 
+            "next_url": "/docs/querying-sequence-files/", 
             "parent": "Querying a File System", 
             "previous_title": "Querying Plain Text Files", 
             "previous_url": "/docs/querying-plain-text-files/", 
@@ -7235,8 +7273,8 @@
             "next_title": "Querying Complex Data", 
             "next_url": "/docs/querying-complex-data/", 
             "parent": "Query Data", 
-            "previous_title": "Querying Directories", 
-            "previous_url": "/docs/querying-directories/", 
+            "previous_title": "Querying Sequence Files", 
+            "previous_url": "/docs/querying-sequence-files/", 
             "relative_path": "_docs/query-data/030-querying-hbase.md", 
             "title": "Querying HBase", 
             "url": "/docs/querying-hbase/"
@@ -7320,6 +7358,27 @@
             "relative_path": "_docs/query-data/query-a-file-system/030-querying-plain-text-files.md", 
             "title": "Querying Plain Text Files", 
             "url": "/docs/querying-plain-text-files/"
+        }, 
+        "Querying Sequence Files": {
+            "breadcrumbs": [
+                {
+                    "title": "Querying a File System", 
+                    "url": "/docs/querying-a-file-system/"
+                }, 
+                {
+                    "title": "Query Data", 
+                    "url": "/docs/query-data/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Querying HBase", 
+            "next_url": "/docs/querying-hbase/", 
+            "parent": "Querying a File System", 
+            "previous_title": "Querying Directories", 
+            "previous_url": "/docs/querying-directories/", 
+            "relative_path": "_docs/query-data/query-a-file-system/050-querying-sequence-files.md", 
+            "title": "Querying Sequence Files", 
+            "url": "/docs/querying-sequence-files/"
         }, 
         "Querying System Tables": {
             "breadcrumbs": [
@@ -7442,14 +7501,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Querying HBase", 
-                    "next_url": "/docs/querying-hbase/", 
+                    "next_title": "Querying Sequence Files", 
+                    "next_url": "/docs/querying-sequence-files/", 
                     "parent": "Querying a File System", 
                     "previous_title": "Querying Plain Text Files", 
                     "previous_url": "/docs/querying-plain-text-files/", 
                     "relative_path": "_docs/query-data/query-a-file-system/040-querying-directories.md", 
                     "title": "Querying Directories", 
                     "url": "/docs/querying-directories/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Querying a File System", 
+                            "url": "/docs/querying-a-file-system/"
+                        }, 
+                        {
+                            "title": "Query Data", 
+                            "url": "/docs/query-data/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Querying HBase", 
+                    "next_url": "/docs/querying-hbase/", 
+                    "parent": "Querying a File System", 
+                    "previous_title": "Querying Directories", 
+                    "previous_url": "/docs/querying-directories/", 
+                    "relative_path": "_docs/query-data/query-a-file-system/050-querying-sequence-files.md", 
+                    "title": "Querying Sequence Files", 
+                    "url": "/docs/querying-sequence-files/"
                 }
             ], 
             "next_title": "Querying a File System Introduction", 
@@ -7498,6 +7578,23 @@
             "relative_path": "_docs/query-data/060-querying-the-information-schema.md", 
             "title": "Querying the INFORMATION SCHEMA", 
             "url": "/docs/querying-the-information-schema/"
+        }, 
+        "RDBMS Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "MongoDB Storage Plugin", 
+            "next_url": "/docs/mongodb-storage-plugin/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "Hive Storage Plugin", 
+            "previous_url": "/docs/hive-storage-plugin/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/080-rdbms-storage-plugin.md", 
+            "title": "RDBMS Storage Plugin", 
+            "url": "/docs/rdbms-storage-plugin/"
         }, 
         "REPEATED_CONTAINS": {
             "breadcrumbs": [
@@ -7816,6 +7913,23 @@
             "relative_path": "_docs/log-and-debug/004-review-the-java-stack-trace.md", 
             "title": "Review the Java Stack Trace", 
             "url": "/docs/review-the-java-stack-trace/"
+        }, 
+        "S3 Storage Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source", 
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ODBC/JDBC Interfaces", 
+            "next_url": "/docs/odbc-jdbc-interfaces/", 
+            "parent": "Connect a Data Source", 
+            "previous_title": "MapR-DB Format", 
+            "previous_url": "/docs/mapr-db-format/", 
+            "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
+            "title": "S3 Storage Plugin", 
+            "url": "/docs/s3-storage-plugin/"
         }, 
         "SELECT": {
             "breadcrumbs": [
@@ -10205,6 +10319,23 @@
             "title": "Selecting Nested Data for a Column", 
             "url": "/docs/selecting-nested-data-for-a-column/"
         }, 
+        "Sequence Files": {
+            "breadcrumbs": [
+                {
+                    "title": "Data Sources and File Formats", 
+                    "url": "/docs/data-sources-and-file-formats/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Develop Custom Functions", 
+            "next_url": "/docs/develop-custom-functions/", 
+            "parent": "Data Sources and File Formats", 
+            "previous_title": "Text Files: CSV, TSV, PSV", 
+            "previous_url": "/docs/text-files-csv-tsv-psv/", 
+            "relative_path": "_docs/data-sources-and-file-formats/070-sequencefile-format.md", 
+            "title": "Sequence Files", 
+            "url": "/docs/sequence-files/"
+        }, 
         "Sort-Based and Hash-Based Memory-Constrained Operators": {
             "breadcrumbs": [
                 {
@@ -10559,8 +10690,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Develop Custom Functions", 
-            "next_url": "/docs/develop-custom-functions/", 
+            "next_title": "Sequence Files", 
+            "next_url": "/docs/sequence-files/", 
             "parent": "Data Sources and File Formats", 
             "previous_title": "JSON Data Model", 
             "previous_url": "/docs/json-data-model/", 
@@ -12735,8 +12866,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "JDBC Storage Plugin", 
-                    "next_url": "/docs/jdbc-storage-plugin/", 
+                    "next_title": "RDBMS Storage Plugin", 
+                    "next_url": "/docs/rdbms-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "HBase Storage Plugin", 
                     "previous_url": "/docs/hbase-storage-plugin/", 
@@ -12757,9 +12888,9 @@
                     "parent": "Connect a Data Source", 
                     "previous_title": "Hive Storage Plugin", 
                     "previous_url": "/docs/hive-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/080-jdbc-storage-plugin.md", 
-                    "title": "JDBC Storage Plugin", 
-                    "url": "/docs/jdbc-storage-plugin/"
+                    "relative_path": "_docs/connect-a-data-source/plugins/080-rdbms-storage-plugin.md", 
+                    "title": "RDBMS Storage Plugin", 
+                    "url": "/docs/rdbms-storage-plugin/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12772,8 +12903,8 @@
                     "next_title": "MapR-DB Format", 
                     "next_url": "/docs/mapr-db-format/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "JDBC Storage Plugin", 
-                    "previous_url": "/docs/jdbc-storage-plugin/", 
+                    "previous_title": "RDBMS Storage Plugin", 
+                    "previous_url": "/docs/rdbms-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/090-mongodb-storage-plugin.md", 
                     "title": "MongoDB Storage Plugin", 
                     "url": "/docs/mongodb-storage-plugin/"
@@ -12786,14 +12917,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ODBC/JDBC Interfaces", 
-                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "next_title": "S3 Storage Plugin", 
+                    "next_url": "/docs/s3-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "MongoDB Storage Plugin", 
                     "previous_url": "/docs/mongodb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
                     "title": "MapR-DB Format", 
                     "url": "/docs/mapr-db-format/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source", 
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ODBC/JDBC Interfaces", 
+                    "next_url": "/docs/odbc-jdbc-interfaces/", 
+                    "parent": "Connect a Data Source", 
+                    "previous_title": "MapR-DB Format", 
+                    "previous_url": "/docs/mapr-db-format/", 
+                    "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
+                    "title": "S3 Storage Plugin", 
+                    "url": "/docs/s3-storage-plugin/"
                 }
             ], 
             "next_title": "Connect a Data Source Introduction", 
@@ -13376,8 +13524,8 @@
             "next_title": "Interfaces Introduction", 
             "next_url": "/docs/interfaces-introduction/", 
             "parent": "", 
-            "previous_title": "MapR-DB Format", 
-            "previous_url": "/docs/mapr-db-format/", 
+            "previous_title": "S3 Storage Plugin", 
+            "previous_url": "/docs/s3-storage-plugin/", 
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md", 
             "title": "ODBC/JDBC Interfaces", 
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -13506,14 +13654,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Querying HBase", 
-                            "next_url": "/docs/querying-hbase/", 
+                            "next_title": "Querying Sequence Files", 
+                            "next_url": "/docs/querying-sequence-files/", 
                             "parent": "Querying a File System", 
                             "previous_title": "Querying Plain Text Files", 
                             "previous_url": "/docs/querying-plain-text-files/", 
                             "relative_path": "_docs/query-data/query-a-file-system/040-querying-directories.md", 
                             "title": "Querying Directories", 
                             "url": "/docs/querying-directories/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Querying a File System", 
+                                    "url": "/docs/querying-a-file-system/"
+                                }, 
+                                {
+                                    "title": "Query Data", 
+                                    "url": "/docs/query-data/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Querying HBase", 
+                            "next_url": "/docs/querying-hbase/", 
+                            "parent": "Querying a File System", 
+                            "previous_title": "Querying Directories", 
+                            "previous_url": "/docs/querying-directories/", 
+                            "relative_path": "_docs/query-data/query-a-file-system/050-querying-sequence-files.md", 
+                            "title": "Querying Sequence Files", 
+                            "url": "/docs/querying-sequence-files/"
                         }
                     ], 
                     "next_title": "Querying a File System Introduction", 
@@ -13536,8 +13705,8 @@
                     "next_title": "Querying Complex Data", 
                     "next_url": "/docs/querying-complex-data/", 
                     "parent": "Query Data", 
-                    "previous_title": "Querying Directories", 
-                    "previous_url": "/docs/querying-directories/", 
+                    "previous_title": "Querying Sequence Files", 
+                    "previous_url": "/docs/querying-sequence-files/", 
                     "relative_path": "_docs/query-data/030-querying-hbase.md", 
                     "title": "Querying HBase", 
                     "url": "/docs/querying-hbase/"
@@ -15513,14 +15682,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Develop Custom Functions", 
-                    "next_url": "/docs/develop-custom-functions/", 
+                    "next_title": "Sequence Files", 
+                    "next_url": "/docs/sequence-files/", 
                     "parent": "Data Sources and File Formats", 
                     "previous_title": "JSON Data Model", 
                     "previous_url": "/docs/json-data-model/", 
                     "relative_path": "_docs/data-sources-and-file-formats/060-text-files-csv-tsv-psv.md", 
                     "title": "Text Files: CSV, TSV, PSV", 
                     "url": "/docs/text-files-csv-tsv-psv/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats", 
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Develop Custom Functions", 
+                    "next_url": "/docs/develop-custom-functions/", 
+                    "parent": "Data Sources and File Formats", 
+                    "previous_title": "Text Files: CSV, TSV, PSV", 
+                    "previous_url": "/docs/text-files-csv-tsv-psv/", 
+                    "relative_path": "_docs/data-sources-and-file-formats/070-sequencefile-format.md", 
+                    "title": "Sequence Files", 
+                    "url": "/docs/sequence-files/"
                 }
             ], 
             "next_title": "Data Sources and File Formats Introduction", 
@@ -15658,8 +15844,8 @@
             "next_title": "Develop Custom Functions Introduction", 
             "next_url": "/docs/develop-custom-functions-introduction/", 
             "parent": "", 
-            "previous_title": "Text Files: CSV, TSV, PSV", 
-            "previous_url": "/docs/text-files-csv-tsv-psv/", 
+            "previous_title": "Sequence Files", 
+            "previous_url": "/docs/sequence-files/", 
             "relative_path": "_docs/100-develop-custom-functions.md", 
             "title": "Develop Custom Functions", 
             "url": "/docs/develop-custom-functions/"
