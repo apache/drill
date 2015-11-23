@@ -11,15 +11,19 @@ Best practices for reading text files are:
 
 ### Select Data from Particular Columns
 
-Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, select data from particular columns using the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column
-names using aliases. For example:
+Converting text files to another format, such as Parquet, using the CTAS command and a SELECT * statement is not recommended. Instead, you should select data from particular columns. If your text file have no headers, use the [COLUMN[n] syntax]({{site.baseurl}}/docs/querying-plain-text-files), and then assign meaningful column names using aliases. For example:
 
     CREATE TABLE parquet_users AS SELECT CAST(COLUMNS[0] AS INT) AS user_id,
     COLUMNS[1] AS username, CAST(COLUMNS[2] AS TIMESTAMP) AS registration_date
     FROM `users.csv1`;
 
-You need to select particular columns instead of using SELECT * for performance reasons. Drill reads CSV, TSV, and PSV files into a list of
-VARCHARS, rather than individual columns. While parquet supports and Drill reads lists, as of this release of Drill, the read path for complex data is not optimized. 
+You need to select particular columns instead of using SELECT * for performance reasons. Drill reads CSV, TSV, and PSV files into a list of VARCHARS, rather than individual columns. While parquet supports and Drill reads lists, as of this release of Drill, the read path for complex data is not optimized. 
+
+If your text file have headers, you can enable extractHeader and select particular columns by name. For example:
+
+    CREATE TABLE parquet_users AS SELECT CAST(user_id AS INT) AS user_id,
+    username, CAST(registration_date AS TIMESTAMP) AS registration_date
+    FROM `users.csv1`;
 
 ### Cast data
 
@@ -36,6 +40,7 @@ In the storage plugin configuration, you [set the attributes]({{site.baseurl}}/d
 * delimiter  
 * quote  
 * skipFirstLine
+* extractHeader
 
 Set the `sys.options` property setting `exec.storage.enable_new_text_reader` to true (the default) before attempting to use these attributes. 
 
@@ -58,8 +63,17 @@ As mentioned previously, set the `sys.options` property setting `exec.storage.en
 ## Examples of Querying Text Files
 The examples in this section show the results of querying CSV files that use and do not use a header, include comments, and use an escape character:
 
-### Using a Header in a File
+### Not Using a Header in a File
 
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv2"
+      ],
+      "skipFirstLine": true,
+      "delimiter": ","
+    },
+    
 ![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
@@ -74,9 +88,48 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     +------------------------+
+    7 rows selected (0.112 seconds)
+    
+### Using a Header in a File
 
-### Not Using a Header in a File
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv2"
+      ],
+      "skipFirstLine": false,
+      "extractHeader": true,
+      "delimiter": ","
+    },
+    
+![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
 
+    0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
+    +-------+------+------+------+
+    | name  | num1 | num2 | num3 |
+    +-------+------+------+------+
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    | hello |   1  |   2  |   3  |
+    +-------+------+------+------+
+    7 rows selected (0.12 seconds)
+
+### File with no Header
+
+    "csv": {
+      "type": "text",
+      "extensions": [
+        "csv"
+      ],
+      "skipFirstLine": false,
+      "extractHeader": false,
+      "delimiter": ","
+    },
+    
 ![CSV no header]({{ site.baseurl }}/docs/img/csv_no_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_no_header.csv`;
@@ -157,7 +210,8 @@ Storage Plugin B
         "csv"
       ],
       "comment": "&",
-      "skipFirstLine": true,
+      "skipFirstLine": false,
+      "extractHeader": true,
       "delimiter": ","
     },
 
@@ -177,7 +231,8 @@ You can use a different extension for files with and without a header, and use a
         "csv2"
       ],
       "comment": "&",
-      "skipFirstLine": true,
+      "skipFirstLine": false,
+      "extractHeader": true,
       "delimiter": ","
     },
 
