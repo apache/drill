@@ -48,6 +48,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
@@ -67,7 +68,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -119,6 +119,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private int targetRecordCount;
   private final String fileName;
   private int firstSpillBatchCount = 0;
+  private long peakSizeInMemory = -1;
+  private int peakNumBatches = -1;
 
   /**
    * The copier uses the COPIER_BATCH_MEM_LIMIT to estimate the target
@@ -130,6 +132,16 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   public static final String INTERRUPTION_AFTER_SETUP = "after-setup";
   public static final String INTERRUPTION_WHILE_SPILLING = "spilling";
 
+  public enum Metric implements MetricDef {
+    SPILL_COUNT,            // number of times operator spilled to disk
+    PEAK_SIZE_IN_MEMORY,    // peak value for totalSizeInMemory
+    PEAK_BATCHES_IN_MEMORY; // maximum number of batches kept in memory
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, true);
@@ -340,6 +352,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             }
           }
           totalSizeInMemory += getBufferSize(convertedBatch);
+          if (peakSizeInMemory < totalSizeInMemory) {
+            peakSizeInMemory = totalSizeInMemory;
+            stats.setLongStat(Metric.PEAK_SIZE_IN_MEMORY, peakSizeInMemory);
+          }
+
           int count = sv2.getCount();
           totalCount += count;
           sorter.setup(context, sv2, convertedBatch);
@@ -349,6 +366,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           try {
             rbd.setSv2(sv2);
             batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2(), oContext));
+            if (peakNumBatches < batchGroups.size()) {
+              peakNumBatches = batchGroups.size();
+              stats.setLongStat(Metric.PEAK_BATCHES_IN_MEMORY, peakNumBatches);
+            }
+
             batchesSinceLastSpill++;
             if (// We have spilled at least once and the current memory used is more than the 75% of peak memory used.
                 (spillCount > 0 && totalSizeInMemory > .75 * highWaterMark) ||
@@ -544,6 +566,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     c1.setRecordCount(count);
 
     String outputFile = Joiner.on("/").join(dirs.next(), fileName, spillCount++);
+    stats.setLongStat(Metric.SPILL_COUNT, spillCount);
+
     BatchGroup newGroup = new BatchGroup(c1, fs, outputFile, oContext);
     boolean threw = true; // true if an exception is thrown in the try block below
     logger.info("Merging and spilling to {}", outputFile);
