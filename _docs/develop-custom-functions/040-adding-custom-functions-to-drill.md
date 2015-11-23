@@ -17,7 +17,7 @@ To add a custom function to Drill, complete the following steps:
     **Example**
 		
 		drill.classpath.scanning.package+= "com.mydomain.drill.fn"
-  3. On each Drill node in the cluster, navigate to the Drill installation directory, and issue the following command to restart the Drillbit:
+  4. On each Drill node in the cluster, navigate to the Drill installation directory, and issue the following command to restart the Drillbit:
   
         <drill installation directory>/bin/drillbit.sh restart
 
