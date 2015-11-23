@@ -84,8 +84,8 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile" *</td>
-    <td>yes</td>
+<td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile" *</td>
+    <td>yes if type is file</td>
     <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
   </tr>
   <tr>
@@ -159,7 +159,7 @@ For example, using uppercase letters in the query after defining the storage plu
 
 ## Storage Plugin REST API
 
-If you need to add a storage plugin configuration to Drill and do not want to use a web browser, Drill provides a REST API that you can use to create a storage plugin configuration. Use a POST and pass two properties:
+If you need to add a storage plugin configuration to Drill and do not want to use a web browser, you can use the [Drill REST API]({{site.baseurl}}/docs/rest-api/) to create a storage plugin configuration. Use a POST request and pass two properties:
 
 * name  
   The storage plugin configuration name. 
@@ -169,9 +169,9 @@ If you need to add a storage plugin configuration to Drill and do not want to us
 
 For example, this command creates a storage plugin named myplugin for reading files of an unknown type located on the root of the file system:
 
-    curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' https://localhost:8047/storage/myplugin.json
+    curl -X POST -H "Content-Type: application/json" -d '{"name":"myplugin", "config": {"type": "file", "enabled": false, "connection": "file:///", "workspaces": { "root": { "location": "/", "writable": false, "defaultInputFormat": null}}, "formats": null}}' http://localhost:8047/storage/myplugin.json
 
-For more information about the REST API, see this [Google doc](https://docs.google.com/document/d/1mRsuWk4Dpt6ts-jQ6ke3bB30PIwanRiCPfGxRwZEQME).
+This example assumes HTTPS has not been enabled. 
 
 ## Bootstrapping a Storage Plugin
 
