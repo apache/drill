@@ -18,6 +18,7 @@ Drill supports. Currently, Drill supports the following input types:
   * CSV, TSV, or PSV
   * Parquet
   * JSON
+  * Hadoop Sequence Files
 
 You must have a [defined workspace]({{ site.baseurl }}/docs/workspaces) before you can define a default input format.
 
