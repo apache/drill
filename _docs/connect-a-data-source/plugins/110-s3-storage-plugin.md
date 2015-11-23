@@ -42,7 +42,7 @@ Enable S3 storage plugin if you already have one configured or you can add a new
 
 You should now be able to talk to data stored on S3 using the S3a library.
 
-## S3 Example
+## Example S3 Storage Plugin
 
 ```
 {
@@ -81,4 +81,20 @@ You should now be able to talk to data stored on S3 using the S3a library.
   }
 }
 ```
+## Quering Parquet Format Files On S3 
 
+Drill uses Hadoop FileSystem for reading S3 input files, which in the end uses Apache HttpClient. HttpClient has a default limit of four simultaneous requests, and it puts the subsequent S3 requests in the queue. A Drill query with large number of columns or a Select * query, on Parquet formatted files ends up issuing many S3 requests and can fail with ConnectionPoolTimeoutException.   
+
+Fortunately, as a part of S3a implementation in Hadoop 2.7.1, HttpClient's required limit parameter is extracted out in a config and can be raised to avoid ConnectionPoolTimeoutException. This is how you can set this parameter in conf/core-site.xml file in your Drill install directory:
+
+```
+<configuration>
+  ...
+  
+  <property>
+    <name>fs.s3a.connection.maximum</name>
+    <value>100</value>
+  </property>
+
+</configuration>
+```
