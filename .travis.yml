@@ -15,3 +15,5 @@
 
 before_install: git fetch --unshallow
 language: java
+install: mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dsource.skip=true > mvn_install.log || (cat mvn_install.log && false)
+script: mvn test -DskipTests=true 
