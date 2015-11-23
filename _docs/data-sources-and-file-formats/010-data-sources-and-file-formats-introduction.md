@@ -17,6 +17,7 @@ Drill supports the following input formats for data:
 * PSV (Pipe-Separated-Values)
 * Parquet
 * MapR-DB*
+* Hadoop Sequence Files
 
 \* Only available when you install Drill on a cluster using the mapr-drill package.
 
