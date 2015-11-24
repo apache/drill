@@ -98,7 +98,6 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         false /* ScanBatch is not subject to fragment memory limit */);
 
     int currentPartitionIndex = 0;
-    boolean success = false;
     final List<RecordReader> readers = Lists.newArrayList();
 
     final Configuration conf = getConf(hiveConfigOverride);
@@ -139,15 +138,9 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         }
         currentPartitionIndex++;
       }
-      success = true;
-    } catch (final IOException e) {
+    } catch (final IOException|RuntimeException e) {
+      AutoCloseables.close(e, readers);
       throw new ExecutionSetupException("Failed to create RecordReaders. " + e.getMessage(), e);
-    } finally {
-      if (!success) {
-        for(RecordReader reader : readers) {
-          AutoCloseables.close(reader, logger);
-        }
-      }
     }
 
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
