@@ -21,7 +21,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -48,6 +56,9 @@ public class HiveSchemaFactory implements SchemaFactory {
 
   // MetaStoreClient created using process user credentials
   private final DrillHiveMetaStoreClient processUserMetastoreClient;
+  // MetasStoreClient created using SchemaConfig credentials
+  private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
+
   private final HiveStoragePlugin plugin;
   private final Map<String, String> hiveConfigOverride;
   private final String schemaName;
@@ -55,7 +66,7 @@ public class HiveSchemaFactory implements SchemaFactory {
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
-  public HiveSchemaFactory(HiveStoragePlugin plugin, String name, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
 
@@ -79,6 +90,25 @@ public class HiveSchemaFactory implements SchemaFactory {
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
+
+    metaStoreClientLoadingCache = CacheBuilder
+        .newBuilder()
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .maximumSize(5) // Up to 5 clients for impersonation-enabled.
+        .removalListener(new RemovalListener<String, DrillHiveMetaStoreClient>() {
+          @Override
+          public void onRemoval(RemovalNotification<String, DrillHiveMetaStoreClient> notification) {
+            DrillHiveMetaStoreClient client = notification.getValue();
+            client.close();
+          }
+        })
+        .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
+          @Override
+          public DrillHiveMetaStoreClient load(String userName) throws Exception {
+            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
+                HiveSchemaFactory.this.hiveConfigOverride, userName);
+          }
+        });
   }
 
   /**
@@ -94,9 +124,8 @@ public class HiveSchemaFactory implements SchemaFactory {
     DrillHiveMetaStoreClient mClientForSchemaTree = processUserMetastoreClient;
     if (isDrillImpersonationEnabled) {
       try {
-        mClientForSchemaTree = DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
-            hiveConfigOverride, schemaConfig.getUserName(), schemaConfig.getIgnoreAuthErrors());
-      } catch (final TException e) {
+        mClientForSchemaTree = metaStoreClientLoadingCache.get(schemaConfig.getUserName());
+      } catch (final ExecutionException e) {
         throw new IOException("Failure setting up Hive metastore client.", e);
       }
     }
@@ -202,7 +231,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         dbName = "default";
       }
       try{
-        return mClient.getHiveReadEntry(dbName, t);
+        return mClient.getHiveReadEntry(dbName, t, schemaConfig.getIgnoreAuthErrors());
       }catch(final TException e) {
         logger.warn("Exception occurred while trying to read table. {}.{}", dbName, t, e.getCause());
         return null;
