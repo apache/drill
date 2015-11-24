@@ -284,7 +284,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public String toString() {
-      return "TableInstance [sig=" + sig + ", params=" + params + "]";
+      return sig.name + (params.size() == 0 ? "" : presentParams());
     }
   }
 
@@ -326,7 +326,8 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public String toString() {
-      return "TableParamDef [name=" + name + ", type=" + type + ", optional=" + optional + "]";
+      String p = name + ": " + type;
+      return optional ? "[" + p + "]" : p;
     }
   }
 
@@ -362,7 +363,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public String toString() {
-      return "TableSignature [name=" + name + ", params=" + params + "]";
+      return name + params;
     }
   }
 
