@@ -509,11 +509,11 @@ public class WorkspaceSchemaFactory {
               if (!schemaConfig.getIgnoreAuthErrors()) {
                 logger.debug(e.getMessage());
                 throw UserException.permissionError(e)
-                  .message("Not authorized to read view [%s] in schema [%s]", name, getFullSchemaName())
+                  .message("Not authorized to read view [%s] in schema [%s]", tableName, getFullSchemaName())
                   .build(logger);
               }
             } catch (IOException e) {
-              logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", name, getFullSchemaName(), e);
+              logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
             }
           }
         }
