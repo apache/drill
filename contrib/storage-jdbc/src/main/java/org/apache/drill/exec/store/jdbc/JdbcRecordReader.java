@@ -260,10 +260,8 @@ class JdbcRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void close() {
-    AutoCloseables.close(resultSet, logger);
-    AutoCloseables.close(statement, logger);
-    AutoCloseables.close(connection, logger);
+  public void close() throws Exception {
+    AutoCloseables.close(resultSet, statement, connection);
   }
 
   private abstract class Copier<T extends ValueVector.Mutator> {

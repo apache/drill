@@ -245,13 +245,17 @@ public class Drillbit implements AutoCloseable {
       Thread.currentThread().interrupt();
     }
 
-    // TODO these should use a DeferredException
-    AutoCloseables.close(webServer, logger);
-    AutoCloseables.close(engine, logger);
-    AutoCloseables.close(storeProvider, logger);
-    AutoCloseables.close(coord, logger);
-    AutoCloseables.close(manager, logger);
-    AutoCloseables.close(context, logger);
+    try {
+      AutoCloseables.close(
+          webServer,
+          engine,
+          storeProvider,
+          coord,
+          manager,
+          context);
+    } catch(Exception e) {
+      logger.warn("Failure on close()", e);
+    }
 
     logger.info("Shutdown completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
     isClosed = true;
