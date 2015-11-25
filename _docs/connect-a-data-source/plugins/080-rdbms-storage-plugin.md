@@ -27,8 +27,7 @@ To configure the JDBC storage plugin:
 1. On the Storage tab, enter a name in **New Storage Plugin**. For example, enter `myplugin`.
    Each configuration registered with Drill must have a distinct name. Names are case-sensitive.  
 
-    {% include startnote.html %}The URL differs depending on your installation and configuration.{% include endnote.html %}  
-    See the [example configurations](#Example-Configurations) below for examples.  
+    {% include startnote.html %}The URL differs depending on your installation and configuration. See the [example configurations](#Example-Configurations) below for examples.{% include endnote.html %}  
 1. Click **Create**.  
 1. In Configuration, set the required properties using JSON formatting as shown in the following example. Change the properties to match your environment.  
 
