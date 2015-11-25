@@ -93,7 +93,7 @@ public class RecordIterator implements VectorAccessible {
     // Release all batches before current batch. [0 to startBatchPosition).
     final Map<Range<Long>,RecordBatchData> oldBatches = batches.subRangeMap(Range.closedOpen(0l, startBatchPosition)).asMapOfRanges();
     for (Range<Long> range : oldBatches.keySet()) {
-      oldBatches.get(range.lowerEndpoint()).clear();
+      oldBatches.get(range).clear();
     }
     batches.remove(Range.closedOpen(0l, startBatchPosition));
     markedInnerPosition = innerPosition;
@@ -113,8 +113,9 @@ public class RecordIterator implements VectorAccessible {
       }
       innerPosition = markedInnerPosition;
       outerPosition = markedOuterPosition;
-      startBatchPosition = batches.getEntry(outerPosition).getKey().lowerEndpoint();
-      innerRecordCount = (int)(batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition);
+      final Range<Long> markedBatchRange = batches.getEntry(outerPosition).getKey();
+      startBatchPosition = markedBatchRange.lowerEndpoint();
+      innerRecordCount = (int)(markedBatchRange.upperEndpoint() - startBatchPosition);
       markedInnerPosition = -1;
       markedOuterPosition = -1;
     }
@@ -133,9 +134,10 @@ public class RecordIterator implements VectorAccessible {
     // Get vectors from new position.
     container.transferIn(rbdNew.getContainer());
     outerPosition = nextOuterPosition;
-    startBatchPosition = batches.getEntry(outerPosition).getKey().lowerEndpoint();
+    final Range<Long> markedBatchRange = batches.getEntry(outerPosition).getKey();
+    startBatchPosition = markedBatchRange.lowerEndpoint();
     innerPosition = (int)(outerPosition - startBatchPosition);
-    innerRecordCount = (int)(batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition);
+    innerRecordCount = (int)(markedBatchRange.upperEndpoint() - startBatchPosition);
   }
 
   /**
@@ -239,7 +241,9 @@ public class RecordIterator implements VectorAccessible {
 
   public int getCurrentPosition() {
     Preconditions.checkArgument(initialized);
-    Preconditions.checkArgument(innerPosition >= 0 && innerPosition < innerRecordCount);
+    Preconditions.checkArgument(innerPosition >= 0 && innerPosition < innerRecordCount,
+      String.format("innerPosition:%d, outerPosition:%d, innerRecordCount:%d, totalRecordCount:%d",
+        innerPosition, outerPosition, innerRecordCount, totalRecordCount));
     return innerPosition;
   }
 
