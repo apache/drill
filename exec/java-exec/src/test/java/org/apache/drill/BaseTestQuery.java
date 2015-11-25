@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -365,15 +366,17 @@ public class BaseTestQuery extends ExecTest {
    * @param expectedErrorMsg Expected error message.
    */
   protected static void errorMsgTestHelper(final String testSqlQuery, final String expectedErrorMsg) throws Exception {
-    UserException expException = null;
     try {
       test(testSqlQuery);
-    } catch (final UserException ex) {
-      expException = ex;
+      fail("Expected a UserException when running " + testSqlQuery);
+    } catch (final UserException actualException) {
+      try {
+        assertThat("message of UserException when running " + testSqlQuery, actualException.getMessage(), containsString(expectedErrorMsg));
+      } catch (AssertionError e) {
+        e.addSuppressed(actualException);
+        throw e;
+      }
     }
-
-    assertNotNull("Expected a UserException", expException);
-    assertThat(expException.getMessage(), containsString(expectedErrorMsg));
   }
 
   /**

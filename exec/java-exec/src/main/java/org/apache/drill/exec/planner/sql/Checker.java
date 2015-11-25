@@ -49,4 +49,9 @@ class Checker implements SqlOperandTypeChecker {
     return Consistency.NONE;
   }
 
+  @Override
+  public boolean isOptional(int i) {
+    return false;
+  }
+
 }
