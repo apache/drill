@@ -84,18 +84,13 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-<<<<<<< HEAD
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile" *</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"*<br>"sequencefile"</td>
     <td>yes</td>
-=======
-<td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile" *</td>
-    <td>yes if type is file</td>
->>>>>>> remotes/apache/gh-pages
     <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"sequencefile" *</td>
+    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"*<br>"avro"<br>"sequencefile"</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
@@ -164,11 +159,7 @@ For example, using uppercase letters in the query after defining the storage plu
 
 ## Storage Plugin REST API
 
-<<<<<<< HEAD
 If you need to add a storage plugin configuration to Drill and do not want to use a web browser, you can use the [Drill REST API]({{site.baseurl}}/docs/rest-api/#get-status-threads) to create a storage plugin configuration. Use a POST request and pass two properties:
-=======
-If you need to add a storage plugin configuration to Drill and do not want to use a web browser, you can use the [Drill REST API]({{site.baseurl}}/docs/rest-api/) to create a storage plugin configuration. Use a POST request and pass two properties:
->>>>>>> remotes/apache/gh-pages
 
 * name  
   The storage plugin configuration name. 
