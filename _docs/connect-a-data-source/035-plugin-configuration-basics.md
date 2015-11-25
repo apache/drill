@@ -13,7 +13,7 @@ You can use the Drill Web Console to update or add a new storage plugin configur
 
 To create a name and new configuration:
 
-1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
+1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
 2. [Start the Web Console]({{site.baseurl}}/docs/starting-the-web-console/).  
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
@@ -84,13 +84,13 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb" *</td>
-    <td>yes if type is file</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile" *</td>
+    <td>yes</td>
     <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"text"<br>"parquet"<br>"json"<br>"maprdb" *</td>
+    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"sequencefile" *</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
