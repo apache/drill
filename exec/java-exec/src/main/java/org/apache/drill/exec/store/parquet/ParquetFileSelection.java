@@ -19,17 +19,17 @@ package org.apache.drill.exec.store.parquet;
 
 import com.google.common.base.Preconditions;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadata_v1;
+import org.apache.drill.exec.store.parquet.Metadata.ParquetTableMetadataBase;
 
 /**
- * Parquet specific {@link FileSelection selection} that carries out {@link ParquetTableMetadata_v1 metadata} along.
+ * Parquet specific {@link FileSelection selection} that carries out {@link ParquetTableMetadataBase metadata} along.
  */
 public class ParquetFileSelection extends FileSelection {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetFileSelection.class);
 
-  private final ParquetTableMetadata_v1 metadata;
+  private final ParquetTableMetadataBase metadata;
 
-  protected ParquetFileSelection(final FileSelection delegate, final ParquetTableMetadata_v1 metadata) {
+  protected ParquetFileSelection(final FileSelection delegate, final ParquetTableMetadataBase metadata) {
     super(delegate);
     this.metadata = Preconditions.checkNotNull(metadata, "Parquet metadata cannot be null");
   }
@@ -40,7 +40,7 @@ public class ParquetFileSelection extends FileSelection {
    * It will always be null for non-parquet files and null for cases
    * where no metadata cache was created.
    */
-  public ParquetTableMetadata_v1 getParquetMetadata() {
+  public ParquetTableMetadataBase getParquetMetadata() {
     return metadata;
   }
 
@@ -52,7 +52,7 @@ public class ParquetFileSelection extends FileSelection {
    * @return  null if selection is null
    *          otherwise a new selection
    */
-  public static ParquetFileSelection create(final FileSelection selection, final ParquetTableMetadata_v1 metadata) {
+  public static ParquetFileSelection create(final FileSelection selection, final ParquetTableMetadataBase metadata) {
     if (selection == null) {
       return null;
     }
