@@ -346,7 +346,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           SelectionVector2 sv2;
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
-            sv2 = incoming.getSelectionVector2();
+            sv2 = incoming.getSelectionVector2().clone();
           } else {
             try {
               sv2 = newSV2();
