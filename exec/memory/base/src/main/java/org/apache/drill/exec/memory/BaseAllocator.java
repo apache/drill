@@ -43,7 +43,8 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
   private static final int CHUNK_SIZE = AllocatorManager.INNER_ALLOCATOR.getChunkSize();
 
-  static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
+  public static final int DEBUG_LOG_LENGTH = 6;
+  public static final boolean DEBUG = AssertionUtil.isAssertionsEnabled()
       || Boolean.parseBoolean(System.getProperty(DEBUG_ALLOCATOR, "false"));
   private final Object DEBUG_LOCK = DEBUG ? new Object() : null;
 
@@ -92,7 +93,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       childAllocators = new IdentityHashMap<>();
       reservations = new IdentityHashMap<>();
       childLedgers = new IdentityHashMap<>();
-      historicalLog = new HistoricalLog(4, "allocator[%d]", id);
+      historicalLog = new HistoricalLog(DEBUG_LOG_LENGTH, "allocator[%d]", id);
       hist("created by \"%s\", owned = %d", name.toString(), this.getAllocatedMemory());
     } else {
       childAllocators = null;
@@ -220,7 +221,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   private DrillBuf bufferWithoutReservation(final int size, BufferManager bufferManager) throws OutOfMemoryException {
     AllocatorManager manager = new AllocatorManager(this, size);
     BufferLedger ledger = manager.associate(this);
-    DrillBuf buffer = ledger.newDrillBuf(0, size, bufferManager);
+    DrillBuf buffer = ledger.newDrillBuf(0, size, bufferManager, true);
 
     // make sure that our allocation is equal to what we expected.
     Preconditions.checkArgument(buffer.capacity() == size,
@@ -660,7 +661,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   }
 
 
-  static StringBuilder indent(StringBuilder sb, int indent) {
+  public static StringBuilder indent(StringBuilder sb, int indent) {
     final char[] indentation = new char[indent * 2];
     Arrays.fill(indentation, ' ');
     sb.append(indentation);

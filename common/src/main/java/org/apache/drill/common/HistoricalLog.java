@@ -129,7 +129,9 @@ public class HistoricalLog {
    */
   public synchronized void buildHistory(final StringBuilder sb, int indent, boolean includeStackTrace) {
     final char[] indentation = new char[indent];
+    final char[] innerIndentation = new char[indent + 2];
     Arrays.fill(indentation, ' ');
+    Arrays.fill(innerIndentation, ' ');
 
     sb.append(indentation)
         .append("event log for: ")
@@ -138,24 +140,24 @@ public class HistoricalLog {
 
 
     if (firstEvent != null) {
-      sb.append("  ")
+      sb.append(innerIndentation)
           .append(firstEvent.note)
           .append('\n');
       if (includeStackTrace) {
-        firstEvent.stackTrace.writeToBuilder(sb, indent + 4);
+        firstEvent.stackTrace.writeToBuilder(sb, indent + 2);
       }
 
       for(final Event event : history) {
         if (event == firstEvent) {
           continue;
         }
-        sb.append(indentation)
+        sb.append(innerIndentation)
             .append("  ")
             .append(event.note)
             .append('\n');
 
         if (includeStackTrace) {
-          event.stackTrace.writeToBuilder(sb, indent + 4);
+          event.stackTrace.writeToBuilder(sb, indent + 2);
           sb.append('\n');
         }
       }

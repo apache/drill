@@ -32,6 +32,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.HistoricalLog;
 import org.apache.drill.exec.memory.AllocatorManager.BufferLedger;
+import org.apache.drill.exec.memory.BaseAllocator;
+import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
@@ -43,7 +45,6 @@ import com.google.common.base.Preconditions;
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
 
-  private static final boolean DEBUG = false;
   private static final AtomicLong idGenerator = new AtomicLong(0);
 
   private final long id = idGenerator.incrementAndGet();
@@ -51,14 +52,14 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   private final UnsafeDirectLittleEndian byteBuf;
   private final long addr;
   private final int offset;
-  private final int flags;
   private final BufferLedger ledger;
   private final BufferManager bufManager;
   private final ByteBufAllocator alloc;
   private final boolean isEmpty;
   private volatile int length;
 
-  private final HistoricalLog historicalLog = DEBUG ? new HistoricalLog(4, "DrillBuf[%d]", id) : null;
+  private final HistoricalLog historicalLog = BaseAllocator.DEBUG ?
+      new HistoricalLog(BaseAllocator.DEBUG_LOG_LENGTH, "DrillBuf[%d]", id) : null;
 
   public DrillBuf(
       final AtomicInteger refCnt,
@@ -79,7 +80,11 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     this.ledger = ledger;
     this.length = length;
     this.offset = offset;
-    this.flags = 0;
+
+    if (BaseAllocator.DEBUG) {
+      historicalLog.recordEvent("create()");
+    }
+
   }
 
   public DrillBuf reallocIfNeeded(final int size) {
@@ -115,7 +120,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       throw new IllegalArgumentException("length: " + fieldLength + " (expected: >= 0)");
     }
     if (index < 0 || index > capacity() - fieldLength) {
-      if (DEBUG) {
+      if (BaseAllocator.DEBUG) {
         historicalLog.logHistory(logger);
       }
       throw new IndexOutOfBoundsException(String.format(
@@ -156,8 +161,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
    *
    * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
    * reference count of 1 (in the case that this is the first time this memory is being associated with the new
-   * allocator) or the current value of the reference count for the other AllocatorManager/BufferLedger combination in
-   * the case that the provided allocator already had an association to this underlying memory.
+   * allocator) or the current value of the reference count + 1 for the other AllocatorManager/BufferLedger combination
+   * in the case that the provided allocator already had an association to this underlying memory.
    *
    * @param allocator
    *          The target allocator to create an association with.
@@ -169,8 +174,11 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return this;
     }
 
+    if (BaseAllocator.DEBUG) {
+      historicalLog.recordEvent("retain(%s)", allocator.getName());
+    }
     BufferLedger otherLedger = this.ledger.getLedgerForAllocator(allocator);
-    return otherLedger.newDrillBuf(offset, length);
+    return otherLedger.newDrillBuf(offset, length, null, true);
   }
 
   /**
@@ -204,7 +212,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     }
 
     final BufferLedger otherLedger = this.ledger.getLedgerForAllocator(target);
-    final DrillBuf newBuf = otherLedger.newDrillBuf(offset, length);
+    final DrillBuf newBuf = otherLedger.newDrillBuf(offset, length, null, true);
     final boolean allocationFit = this.ledger.transferBalance(otherLedger);
     return new TransferResult(allocationFit, newBuf);
   }
@@ -245,13 +253,18 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return false;
     }
 
-    Preconditions.checkArgument(decrement > 0, String.format("release(%d) argument is not positive", decrement));
-    if (DEBUG) {
+    Preconditions.checkArgument(decrement > 0, String.format("release(%d) argument is not positive. Buffer Info: %s",
+        decrement, toVerboseString()));
+    if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("release(%d)", decrement);
     }
 
     final int refCnt = this.refCnt.addAndGet(-decrement);
-    Preconditions.checkState(refCnt >= 0, String.format("DrillBuf[%d] refCnt has gone negative", id));
+    if (refCnt < 0) {
+      throw new IllegalStateException(
+          String.format("DrillBuf[%d] refCnt has gone negative. Buffer Info: %s", id, toVerboseString()));
+
+    }
     if (refCnt == 0) {
       ledger.release();
       return true;
@@ -473,7 +486,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return this;
     }
 
-    if (DEBUG) {
+    if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("retain(%d)", increment);
     }
 
@@ -849,5 +862,23 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     }
   }
 
+  public String toVerboseString() {
+    if (isEmpty) {
+      return toString();
+    }
+
+    StringBuilder sb = new StringBuilder();
+    ledger.print(sb, 0, Verbosity.LOG_WITH_STACKTRACE);
+    return sb.toString();
+  }
+
+  public void print(StringBuilder sb, int indent, Verbosity verbosity) {
+    BaseAllocator.indent(sb, indent).append(toString());
+
+    if (BaseAllocator.DEBUG && !isEmpty && verbosity.includeHistoricalLog) {
+      sb.append("\n");
+      historicalLog.buildHistory(sb, indent + 1, verbosity.includeStackTraces);
+    }
+  }
 
 }

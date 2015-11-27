@@ -22,7 +22,9 @@ import io.netty.buffer.DrillBuf;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.UnsafeDirectLittleEndian;
 
+import java.util.IdentityHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -52,8 +54,9 @@ import com.google.common.base.Preconditions;
  *
  */
 public class AllocatorManager {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocatorManager.class);
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocatorManager.class);
 
+  private static final AtomicLong LEDGER_ID_GENERATOR = new AtomicLong(0);
   static final PooledByteBufAllocatorL INNER_ALLOCATOR = new PooledByteBufAllocatorL(DrillMetrics.getInstance());
 
   private final RootAllocator root;
@@ -64,6 +67,8 @@ public class AllocatorManager {
   private final LongObjectOpenHashMap<BufferLedger> map = new LongObjectOpenHashMap<>();
   private final AutoCloseableLock readLock = new AutoCloseableLock(lock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(lock.writeLock());
+  private final IdentityHashMap<DrillBuf, Object> buffers =
+      BaseAllocator.DEBUG ? new IdentityHashMap<DrillBuf, Object>() : null;
 
   AllocatorManager(BaseAllocator accountingAllocator, int size) {
     Preconditions.checkNotNull(accountingAllocator);
@@ -172,10 +177,13 @@ public class AllocatorManager {
    * As with AllocatorManager, the only reason this is public is due to DrillBuf being in io.netty.buffer package.
    */
   public class BufferLedger {
-    private final AtomicInteger bufRefCnt = new AtomicInteger(1);
+    private final long id = LEDGER_ID_GENERATOR.incrementAndGet(); // unique ID assigned to each ledger
+    private final AtomicInteger bufRefCnt = new AtomicInteger(0); // start at zero so we can manage request for retain
+                                                                  // correctly
     private final BaseAllocator allocator;
     private final ReleaseListener listener;
-    private final HistoricalLog historicalLog = BaseAllocator.DEBUG ? new HistoricalLog(4, "BufferLedger[%d]", 1)
+    private final HistoricalLog historicalLog = BaseAllocator.DEBUG ? new HistoricalLog(BaseAllocator.DEBUG_LOG_LENGTH,
+        "BufferLedger[%d]", 1)
         : null;
 
     private BufferLedger(BaseAllocator allocator, ReleaseListener listener) {
@@ -226,7 +234,7 @@ public class AllocatorManager {
      * @param verbosity
      *          The level of verbosity to print.
      */
-    void print(StringBuilder sb, int indent, Verbosity verbosity) {
+    public void print(StringBuilder sb, int indent, Verbosity verbosity) {
       indent(sb, indent)
           .append("ledger (allocator: ")
           .append(allocator.name)
@@ -238,9 +246,20 @@ public class AllocatorManager {
           .append(bufRefCnt.get())
           .append('\n');
 
-      if(BaseAllocator.DEBUG && verbosity.includeHistoricalLog){
-        historicalLog.buildHistory(sb, indent + 2, verbosity.includeStackTraces);
+      if (BaseAllocator.DEBUG) {
+        // This doesn't seem as useful as the individual buffer logs below. Removing from default presentation.
+        // if (verbosity.includeHistoricalLog) {
+        // historicalLog.buildHistory(sb, indent + 2, verbosity.includeStackTraces);
+        // }
+        synchronized (buffers) {
+          indent(sb, indent + 1).append("BufferLedger[" + id + "] holds ").append(buffers.size())
+              .append(" buffers. \n");
+          for (DrillBuf buf : buffers.keySet()) {
+            buf.print(sb, indent + 2, verbosity);
+          }
+        }
       }
+
     }
 
     /**
@@ -267,8 +286,8 @@ public class AllocatorManager {
     }
 
     /**
-     * Create a new DrillBuf associated with this AllocatorManager and memory.
-     *
+     * Create a new DrillBuf associated with this AllocatorManager and memory. Does not impact reference count.
+     * Typically used for slicing.
      * @param offset
      *          The offset in bytes to start this new DrillBuf.
      * @param length
@@ -276,22 +295,23 @@ public class AllocatorManager {
      * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
      */
     public DrillBuf newDrillBuf(int offset, int length) {
-      return newDrillBuf(offset, length, null);
+      return newDrillBuf(offset, length, null, false);
     }
 
     /**
      * Create a new DrillBuf associated with this AllocatorManager and memory.
-     *
      * @param offset
      *          The offset in bytes to start this new DrillBuf.
      * @param length
      *          The length in bytes that this DrillBuf will provide access to.
      * @param manager
      *          An optional BufferManager argument that can be used to manage expansion of this DrillBuf
+     * @param retain
+     *          Whether or not the newly created buffer should get an additional reference count added to it.
      * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
      * @return
      */
-    public DrillBuf newDrillBuf(int offset, int length, BufferManager manager) {
+    public DrillBuf newDrillBuf(int offset, int length, BufferManager manager, boolean retain) {
       final DrillBuf buf = new DrillBuf(
           bufRefCnt,
           this,
@@ -301,13 +321,23 @@ public class AllocatorManager {
           offset,
           length,
           false);
+
+      if (retain) {
+        buf.retain();
+      }
+
       if (BaseAllocator.DEBUG) {
         historicalLog.recordEvent(
             "DrillBuf(BufferLedger, BufferAllocator[%d], UnsafeDirectLittleEndian[identityHashCode == "
                 + "%d](%s)) => ledger hc == %d",
             allocator.getId(), System.identityHashCode(buf), buf.toString(),
             System.identityHashCode(this));
+
+        synchronized (buffers) {
+          buffers.put(buf, null);
+        }
       }
+
       return buf;
 
     }

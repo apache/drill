@@ -19,7 +19,6 @@ package org.apache.drill.exec.memory;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -89,12 +88,9 @@ class Accountant implements AutoCloseable {
    * @return True if the allocation was successful, false if the allocation failed.
    */
   AllocationOutcome allocateBytes(long size) {
-    final DeltaLog mlog = new DeltaLog();
-    final AllocationOutcome outcome = allocate(mlog, size, false);
+    final AllocationOutcome outcome = allocate(size, true, false);
     if (!outcome.isOk()) {
-      mlog.rollback();
-    } else {
-      updatePeak();
+      releaseBytes(size);
     }
     return outcome;
   }
@@ -125,59 +121,49 @@ class Accountant implements AutoCloseable {
    * @return Whether the allocation fit within limits.
    */
   boolean forceAllocate(long size) {
-    final DeltaLog mlog = new DeltaLog();
-    boolean ok = allocate(mlog, size, true) == AllocationOutcome.SUCCESS;
-    updatePeak();
-    return ok;
+    final AllocationOutcome outcome = allocate(size, true, true);
+    return outcome.isOk();
   }
 
-  private AllocationOutcome allocate(DeltaOperator mlog, long size, boolean forceAllocation) {
-    final long remainder = mlog.tryAdd(locallyHeldMemory, reservation, size);
+  /**
+   * Internal method for allocation. This takes a forced approach to allocation to ensure that we manage reservation
+   * boundary issues consistently. Allocation is always done through the entire tree. The two options that we influence
+   * are whether the allocation should be forced and whether or not the peak memory allocation should be updated. If at
+   * some point during allocation escalation we determine that the allocation is no longer possible, we will continue to
+   * do a complete and consistent allocation but we will stop updating the peak allocation. We do this because we know
+   * that we will be directly unwinding this allocation (and thus never actually making the allocation). If force
+   * allocation is passed, then we continue to update the peak limits since we now know that this allocation will occur
+   * despite our moving past one or more limits.
+   *
+   * @param size
+   *          The size of the allocation.
+   * @param incomingUpdatePeak
+   *          Whether we should update the local peak for this allocation.
+   * @param forceAllocation
+   *          Whether we should force the allocation.
+   * @return The outcome of the allocation.
+   */
+  private AllocationOutcome allocate(final long size, final boolean incomingUpdatePeak, final boolean forceAllocation) {
+    final long newLocal = locallyHeldMemory.addAndGet(size);
+    final long beyondReservation = newLocal - reservation;
+    final boolean beyondLimit = newLocal > allocationLimit.get();
+    final boolean updatePeak = forceAllocation || (incomingUpdatePeak && !beyondLimit);
 
-    if(remainder == 0){
-      // we were able to allocate all required memory from our reservation.
-      return AllocationOutcome.SUCCESS;
+    AllocationOutcome parentOutcome = AllocationOutcome.SUCCESS;
+    if (beyondReservation > 0 && parent != null) {
+      // we need to get memory from our parent.
+      final long parentRequest = Math.min(beyondReservation, size);
+      parentOutcome = parent.allocate(parentRequest, updatePeak, forceAllocation);
     }
 
-    // check to see if we are allowed to allocate this much based on our max allocation.
-    final long limitRemainder = mlog.tryAdd(locallyHeldMemory, allocationLimit, remainder);
+    final AllocationOutcome finalOutcome = beyondLimit ? AllocationOutcome.FAILED_LOCAL :
+        parentOutcome.ok ? AllocationOutcome.SUCCESS : AllocationOutcome.FAILED_PARENT;
 
-    if (limitRemainder != 0) {
-      // our limit disallowed us from allocating on the memory.
-      if (forceAllocation) {
-        // allocate locally anyway.
-        mlog.tryAdd(locallyHeldMemory, Long.MAX_VALUE, limitRemainder);
-
-        if(parent != null){
-          parent.allocate(mlog, remainder, forceAllocation);
-        }
-
-        // we've blown past our local limit. What our potential parent says doesn't matter.
-        return AllocationOutcome.FORCED_SUCESS;
-      } else {
-        // allocation isn't forced, the allocation failed.
-        return AllocationOutcome.FAILED_LOCAL;
-      }
+    if (updatePeak) {
+      updatePeak();
     }
 
-    assert limitRemainder == 0;
-    assert remainder > 0;
-
-    if (parent != null){
-      // if the parent of this allocator isn't null, confirm that its limit also allow this allocation.
-      AllocationOutcome parentOutcome = parent.allocate(mlog, remainder, forceAllocation);
-
-      // rewrite a local failure since it is reported from our parent.
-      if (parentOutcome == AllocationOutcome.FAILED_LOCAL) {
-        return AllocationOutcome.FAILED_PARENT;
-      }
-
-      return parentOutcome;
-
-    } else{
-      // the allocation was successful and this is the root allocator.
-      return AllocationOutcome.SUCCESS;
-    }
+    return finalOutcome;
   }
 
   public void releaseBytes(long size) {
@@ -194,118 +180,6 @@ class Accountant implements AutoCloseable {
       parent.releaseBytes(actualToReleaseToParent);
     }
 
-  }
-
-  private interface DeltaOperator {
-    public long tryAdd(final AtomicLong valueToChange, final AtomicLong maximumAllowed, final long deltaToAttempt);
-    public long tryAdd(final AtomicLong valueToChange, final long maximumAllowed, final long deltaToAttempt);
-  }
-
-  /**
-   * Private log of memory actions.
-   */
-  @NotThreadSafe
-  private class DeltaLog implements DeltaOperator {
-
-    private DeltaOperation op;
-
-    private class DeltaOperation {
-      final AtomicLong atomicLong;
-      final long delta;
-      final DeltaOperation next;
-
-      public DeltaOperation(AtomicLong atomicLong, long delta, DeltaOperation next) {
-        super();
-        this.atomicLong = atomicLong;
-        this.delta = delta;
-        this.next = next;
-      }
-
-      private void rollback(){
-        atomicLong.addAndGet(-delta);
-      }
-    }
-
-    private void add(AtomicLong variable, long delta){
-      final DeltaOperation newOp = new DeltaOperation(variable, delta, op);
-      this.op = newOp;
-    }
-
-    /**
-     * Rollback any memory changes that have taken place.
-     */
-    public void rollback(){
-      DeltaOperation o = op;
-      while(o != null){
-        o.rollback();
-        o = o.next;
-      }
-    }
-
-    /**
-     * Attempt to add a value to an atomic long. The result is guaranteed to be within [0..deltaToAttempt]
-     *
-     * This is a best-effort fail-fast approach to delta application. We attempt to apply the entire delta. If that
-     * fails, we'll rewind to apply only the portion of delta that was possible when we did our initial application
-     * (possibly nothing). We do not double-check maximumAllowed nor valueToChange to see if they might have changed
-     * between our initial C & CAS and when we are considering rewinding.
-     *
-     * This is best effort because it is possible for multiple threads to interact with the underlying valueToChange and
-     * maximumAllowed amounts while this function is operating. In those cases this function may return a different
-     * value depending on when those were applied. Consumers of this interface should ensure that this is their desired
-     * behavior. The ordering of operations here supports a consistent view of the world.
-     *
-     * @param valueToChange
-     *          Value to change.
-     * @param limit
-     *          The maximum value allowed.
-     * @param deltaToAttempt
-     *          The amount you would like to attempt to add.
-     * @return The remaining amount of delta that has been yet to apply [0..deltaToAttempt]. If 0, that means the
-     *         complete delta was applied
-     */
-    public long tryAdd(final AtomicLong valueToChange, final AtomicLong limit, final long deltaToAttempt){
-      return tryAdd(valueToChange, limit.get(), deltaToAttempt);
-    }
-
-
-    /**
-     * Similar to {@link #tryAdd(AtomicLong, AtomicLong, deltaToAttempt) tryAdd} method except accepts long for maximum
-     * value instead of AtomicLong.
-     */
-    public long tryAdd(final AtomicLong valueToChange, final long limit, final long deltaToAttempt){
-      assert deltaToAttempt >= 0;
-
-      // we check this first so we don't waste a bunch of time when we can't apply a change.
-      if (valueToChange.get() >= limit) {
-        // we're already beyond our limit, no reason to try anything else.
-        return deltaToAttempt;
-      }
-
-      final long newValue = valueToChange.addAndGet(deltaToAttempt);
-      final long overreach = newValue - limit;
-
-      if(overreach <= 0){
-        // we allocated everything and didn't overreach.
-        add(valueToChange, deltaToAttempt);
-        return 0;
-
-      }
-
-      final long originalValue = newValue - deltaToAttempt;
-      final long desiredAllocation = limit - originalValue;
-
-      if(desiredAllocation <= 0){
-        // we were already over allocated before we started. unroll our allocation and return the entire delta.
-        valueToChange.addAndGet(-deltaToAttempt);
-        return deltaToAttempt;
-      }else{
-        final long excess = deltaToAttempt - desiredAllocation;
-        valueToChange.addAndGet(-excess);
-        add(valueToChange, desiredAllocation);
-        return excess;
-      }
-    }
   }
 
   /**

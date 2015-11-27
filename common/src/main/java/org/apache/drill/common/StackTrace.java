@@ -36,13 +36,14 @@ public class StackTrace {
 
   /**
    * Write the stack trace to a StringBuilder.
-   *
-   * @param sb where to write it
-   * @param indent how many spaces to indent each line
+   * @param sb
+   *          where to write it
+   * @param indent
+   *          how many double spaces to indent each line
    */
   public void writeToBuilder(final StringBuilder sb, final int indent) {
     // create the indentation string
-    final char[] indentation = new char[indent];
+    final char[] indentation = new char[indent * 2];
     Arrays.fill(indentation, ' ');
 
     // write the stack trace in standard Java format
