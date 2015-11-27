@@ -253,8 +253,11 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       return false;
     }
 
-    Preconditions.checkArgument(decrement > 0, String.format("release(%d) argument is not positive. Buffer Info: %s",
-        decrement, toVerboseString()));
+    if (decrement < 1) {
+      throw new IllegalStateException(String.format("release(%d) argument is not positive. Buffer Info: %s",
+          decrement, toVerboseString()));
+    }
+
     if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("release(%d)", decrement);
     }
