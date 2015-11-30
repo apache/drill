@@ -282,7 +282,7 @@ public class AllocatorManager {
      * @return
      */
     public BufferLedger getLedgerForAllocator(BufferAllocator allocator) {
-      return associate((BaseAllocator) allocator);
+      return associate(allocator.unwrap(BaseAllocator.class));
     }
 
     /**

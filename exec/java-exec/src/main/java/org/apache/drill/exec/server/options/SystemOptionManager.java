@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.options;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,22 +26,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.LogicalPlanPersistence;
-import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import com.google.common.collect.Sets;
 
 /**
  * {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
@@ -130,7 +132,8 @@ public class SystemOptionManager extends BaseOptionManager {
       ExecConstants.ENABLE_VERBOSE_ERRORS,
       ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR,
       ClassTransformer.SCALAR_REPLACEMENT_VALIDATOR,
-      ExecConstants.ENABLE_NEW_TEXT_READER
+        ExecConstants.ENABLE_NEW_TEXT_READER,
+        WorkEventBus.MEMORY_MAX_PER_QUERY
     };
     final Map<String, OptionValidator> tmp = new HashMap<>();
     for (final OptionValidator validator : validators) {

@@ -45,6 +45,7 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
@@ -55,6 +56,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.fragment.AllocatorTree.QueryAllocator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -155,14 +157,13 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
     executionControls = new ExecutionControls(fragmentOptions, dbContext.getEndpoint());
 
-    // Add the fragment context to the root allocator.
-    // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
+    final long maxQueryMemory = context.getOptionManager().getOption(WorkEventBus.MEMORY_MAX_PER_QUERY) * 1024 * 1024;
+    final QueryAllocator queryAllocator = context.getWorkBus()
+        .getQueryAllocator(context.getAllocator(), fragment.getHandle().getQueryId(), 0, maxQueryMemory);
+
     try {
-      allocator = context.getAllocator().newChildAllocator(
-          "frag:" + QueryIdHelper.getFragmentId(fragment.getHandle()),
-          fragment.getMemInitial(),
+      allocator = queryAllocator.newMinorFragmentAllocator(fragment.getHandle(), fragment.getMemInitial(),
           fragment.getMemMax());
-      Preconditions.checkNotNull(allocator, "Unable to acuqire allocator");
     } catch (final OutOfMemoryException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())

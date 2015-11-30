@@ -146,4 +146,18 @@ public interface BufferAllocator extends AutoCloseable {
    */
   public String toVerboseString();
 
+  /**
+   * Whether this allocator has been closed.
+   *
+   * @return True if allocator is closed.
+   */
+  public boolean isClosed();
+
+  /**
+   * Unwrap the class so that exposes the provided interface, if possible. Otherwise, throw Exception.
+   * @param c
+   *          The class or interface that you want this class to implement/extend.
+   * @return The instance of that class related to 'this'
+   */
+  public <T> T unwrap(Class<T> c);
 }
