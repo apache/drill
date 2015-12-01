@@ -93,7 +93,7 @@ public class RecordIterator implements VectorAccessible {
     // Release all batches before current batch. [0 to startBatchPosition).
     final Map<Range<Long>,RecordBatchData> oldBatches = batches.subRangeMap(Range.closedOpen(0l, startBatchPosition)).asMapOfRanges();
     for (Range<Long> range : oldBatches.keySet()) {
-      oldBatches.get(range).clear();
+      oldBatches.get(range.lowerEndpoint()).clear();
     }
     batches.remove(Range.closedOpen(0l, startBatchPosition));
     markedInnerPosition = innerPosition;
@@ -213,8 +213,23 @@ public class RecordIterator implements VectorAccessible {
           throw new UnsupportedOperationException("Unsupported outcome received " + lastOutcome);
       }
     } else {
-      outerPosition = nextOuterPosition;
-      innerPosition = nextInnerPosition;
+      if (nextInnerPosition >= innerRecordCount) {
+        // move to next batch
+        final RecordBatchData rbdNew = batches.get(nextOuterPosition);
+        final RecordBatchData rbdOld = batches.get(outerPosition);
+        Preconditions.checkArgument(rbdNew != null);
+        Preconditions.checkArgument(rbdOld != null);
+        Preconditions.checkArgument(rbdOld != rbdNew);
+        container.transferOut(rbdOld.getContainer());
+        container.transferIn(rbdNew.getContainer());
+        innerPosition = 0;
+        outerPosition = nextOuterPosition;
+        startBatchPosition = batches.getEntry(outerPosition).getKey().lowerEndpoint();
+        innerRecordCount = (int)(batches.getEntry(outerPosition).getKey().upperEndpoint() - startBatchPosition);
+      } else {
+        outerPosition = nextOuterPosition;
+        innerPosition = nextInnerPosition;
+      }
     }
     return lastOutcome;
   }
