@@ -307,12 +307,12 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
 
       databases = CacheBuilder //
           .newBuilder() //
-          .expireAfterAccess(1, TimeUnit.MINUTES) //
+          .expireAfterWrite(1, TimeUnit.MINUTES) //
           .build(new DatabaseLoader());
 
       tableNameLoader = CacheBuilder //
           .newBuilder() //
-          .expireAfterAccess(1, TimeUnit.MINUTES) //
+          .expireAfterWrite(1, TimeUnit.MINUTES) //
           .build(new TableNameLoader());
 
       tableLoaders = CacheBuilder //
@@ -387,7 +387,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       public LoadingCache<String, HiveReadEntry> load(String key) throws Exception {
         return CacheBuilder
             .newBuilder()
-            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .expireAfterWrite(1, TimeUnit.MINUTES)
             .build(new TableLoader(key));
       }
     }

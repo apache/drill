@@ -429,6 +429,12 @@ public class HiveTestDataGenerator {
 
     executeQuery(hiveDriver, "DROP TABLE partition_pruning_test_loadtable");
 
+    // Create a partitioned parquet table (DRILL-3938)
+    executeQuery(hiveDriver,
+        "CREATE TABLE kv_parquet(key INT, value STRING) PARTITIONED BY (part1 int) STORED AS PARQUET");
+    executeQuery(hiveDriver, "INSERT INTO TABLE kv_parquet PARTITION(part1) SELECT key, value, key FROM default.kv");
+    executeQuery(hiveDriver, "ALTER TABLE kv_parquet ADD COLUMNS (newcol string)");
+
     ss.close();
   }
 
