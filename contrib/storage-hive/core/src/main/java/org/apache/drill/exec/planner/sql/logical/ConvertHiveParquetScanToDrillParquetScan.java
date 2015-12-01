@@ -101,10 +101,22 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
       return true;
     }
 
+    final List<FieldSchema> tableSchema = hiveTable.getSd().getCols();
     // Make sure all partitions have the same input format as the table input format
     for (HivePartition partition : partitions) {
-      Class<? extends InputFormat> inputFormat = getInputFormatFromSD(hiveTable, partition.getPartition().getSd());
+      final StorageDescriptor partitionSD = partition.getPartition().getSd();
+      Class<? extends InputFormat> inputFormat = getInputFormatFromSD(hiveTable, partitionSD);
       if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
+        return false;
+      }
+
+      // Make sure the schema of the table and schema of the partition matches. If not return false. Currently native
+      // reader conversion doesn't handle schema changes between partition and table. Hive has extensive list of
+      // convert methods to convert from one type to rest of the possible types. Drill doesn't have the similar set of
+      // methods yet.
+      if (!partitionSD.getCols().equals(tableSchema)) {
+        logger.debug("Partitions schema is different from table schema. Currently native reader conversion can't " +
+            "handle schema difference between partitions and table");
         return false;
       }
     }
