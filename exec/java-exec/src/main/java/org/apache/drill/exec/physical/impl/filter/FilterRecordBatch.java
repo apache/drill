@@ -153,7 +153,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     for (final VectorWrapper<?> vw : incoming) {
       for (final ValueVector vv : vw.getValueVectors()) {
-        final TransferPair pair = vv.getTransferPair();
+        final TransferPair pair = vv.getTransferPair(oContext.getAllocator());
         container.add(pair.getTo());
         transfers.add(pair);
       }

@@ -120,7 +120,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         final FragmentWritableBatch batch = new FragmentWritableBatch(
             false, handle.getQueryId(), handle.getMajorFragmentId(),
             handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(),
-            incoming.getWritableBatch());
+            incoming.getWritableBatch().transfer(oContext.getAllocator()));
         updateStats(batch);
         stats.startWait();
         try {

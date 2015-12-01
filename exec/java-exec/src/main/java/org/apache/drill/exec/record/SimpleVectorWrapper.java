@@ -26,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
@@ -74,8 +75,8 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   @SuppressWarnings("unchecked")
   @Override
-  public VectorWrapper<T> cloneAndTransfer() {
-    TransferPair tp = vector.getTransferPair();
+  public VectorWrapper<T> cloneAndTransfer(BufferAllocator allocator) {
+    TransferPair tp = vector.getTransferPair(allocator);
     tp.transfer();
     return new SimpleVectorWrapper<T>((T) tp.getTo());
   }

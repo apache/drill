@@ -79,13 +79,13 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new TransferImpl(getField());
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new TransferImpl(getField(), allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref){
-    return new TransferImpl(getField().withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator){
+    return new TransferImpl(getField().withPath(ref), allocator);
   }
 
   @Override
@@ -131,7 +131,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   private class TransferImpl implements TransferPair {
     final Repeated${minor.class}Vector to;
 
-    public TransferImpl(MaterializedField field) {
+    public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       this.to = new Repeated${minor.class}Vector(field, allocator);
     }
 

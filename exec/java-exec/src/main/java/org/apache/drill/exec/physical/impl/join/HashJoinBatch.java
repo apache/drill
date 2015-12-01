@@ -380,7 +380,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                      * to the hyper vector container. Will be used when we want to retrieve
                      * records that have matching keys on the probe side.
                      */
-        final RecordBatchData nextBatch = new RecordBatchData(right);
+        final RecordBatchData nextBatch = new RecordBatchData(right, oContext.getAllocator());
         boolean success = false;
         try {
           if (hyperContainer == null) {

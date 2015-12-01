@@ -80,6 +80,10 @@ public class UnionVector implements ValueVector {
     this.callBack = callBack;
   }
 
+  public BufferAllocator getAllocator() {
+    return allocator;
+  }
+
   public List<MinorType> getSubTypes() {
     return majorType.getSubTypeList();
   }
@@ -198,13 +202,13 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new TransferImpl(field);
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new TransferImpl(field, allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new TransferImpl(field.withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new TransferImpl(field.withPath(ref), allocator);
   }
 
   @Override
@@ -242,7 +246,7 @@ public class UnionVector implements ValueVector {
 
     UnionVector to;
 
-    public TransferImpl(MaterializedField field) {
+    public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       to = new UnionVector(field, allocator, null);
     }
 

@@ -53,6 +53,7 @@ public class RecordIterator implements VectorAccessible {
   private int inputIndex;           // For two way merge join 0:left, 1:right
   private boolean lastBatchRead;    // True if all batches are consumed.
   private boolean initialized;
+  private OperatorContext oContext;
 
   private final VectorContainer container; // Holds VectorContainer of current record batch
   private final TreeRangeMap<Long, RecordBatchData> batches = TreeRangeMap.create();
@@ -66,6 +67,7 @@ public class RecordIterator implements VectorAccessible {
     this.inputIndex = inputIndex;
     this.lastBatchRead = false;
     this.container = new VectorContainer(oContext);
+    this.oContext = oContext;
     resetIndices();
     this.initialized = false;
   }
@@ -181,7 +183,7 @@ public class RecordIterator implements VectorAccessible {
             nextOuterPosition = 0;
           }
           // Transfer vectors from incoming record batch.
-          final RecordBatchData rbd = new RecordBatchData(incoming);
+          final RecordBatchData rbd = new RecordBatchData(incoming, oContext.getAllocator());
           innerRecordCount = incoming.getRecordCount();
           if (!initialized) {
             for (VectorWrapper<?> w : rbd.getContainer()) {

@@ -100,7 +100,7 @@ public class SchemaUtil {
                                            int recordCount, OperatorContext context) {
     if (v != null) {
       int valueCount = v.getAccessor().getValueCount();
-      TransferPair tp = v.getTransferPair();
+      TransferPair tp = v.getTransferPair(context.getAllocator());
       tp.transfer();
       if (v.getField().getType().getMinorType().equals(field.getType().getMinorType())) {
         if (field.getType().getMinorType() == MinorType.UNION) {

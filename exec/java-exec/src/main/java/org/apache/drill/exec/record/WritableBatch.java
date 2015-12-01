@@ -51,6 +51,18 @@ public class WritableBatch implements AutoCloseable {
     this.buffers = buffers;
   }
 
+  public WritableBatch transfer(BufferAllocator allocator) {
+    List<DrillBuf> newBuffers = Lists.newArrayList();
+    for (DrillBuf buf : buffers) {
+      int writerIndex = buf.writerIndex();
+      DrillBuf newBuf = buf.transferOwnership(allocator).buffer;
+      newBuf.writerIndex(writerIndex);
+      newBuffers.add(newBuf);
+    }
+    clear();
+    return new WritableBatch(def, newBuffers);
+  }
+
   public RecordBatchDef getDef() {
     return def;
   }

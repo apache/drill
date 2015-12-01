@@ -590,7 +590,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         OrderedPartitionProjector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
 
     for (VectorWrapper<?> vw : batch) {
-      TransferPair tp = vw.getValueVector().getTransferPair();
+      TransferPair tp = vw.getValueVector().getTransferPair(oContext.getAllocator());
       transfers.add(tp);
       container.add(tp.getTo());
     }

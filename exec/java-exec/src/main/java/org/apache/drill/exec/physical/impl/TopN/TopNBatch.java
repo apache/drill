@@ -229,9 +229,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           batchCount++;
           RecordBatchData batch;
           if (schemaChanged) {
-            batch = new RecordBatchData(SchemaUtil.coerceContainer(incoming, this.schema, oContext));
+            batch = new RecordBatchData(SchemaUtil.coerceContainer(incoming, this.schema, oContext), oContext.getAllocator());
           } else {
-            batch = new RecordBatchData(incoming);
+            batch = new RecordBatchData(incoming, oContext.getAllocator());
           }
           boolean success = false;
           try {

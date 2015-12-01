@@ -140,7 +140,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
 
     /* Add all the value vectors in the container */
     for (VectorWrapper<?> vv : incoming) {
-      TransferPair tp = vv.getValueVector().getTransferPair();
+      TransferPair tp = vv.getValueVector().getTransferPair(oContext.getAllocator());
       container.add(tp.getTo());
     }
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());

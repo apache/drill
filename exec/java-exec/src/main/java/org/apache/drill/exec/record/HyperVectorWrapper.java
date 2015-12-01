@@ -21,6 +21,7 @@ import java.util.AbstractMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
@@ -116,7 +117,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 
   @Override
   @SuppressWarnings("unchecked")
-  public VectorWrapper<T> cloneAndTransfer() {
+  public VectorWrapper<T> cloneAndTransfer(BufferAllocator allocator) {
     return new HyperVectorWrapper<T>(f, vectors, false);
 //    T[] newVectors = (T[]) Array.newInstance(vectors.getClass().getComponentType(), vectors.length);
 //    for(int i =0; i < newVectors.length; i++) {

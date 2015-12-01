@@ -117,7 +117,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
 
       case OK_NEW_SCHEMA:
       case OK:
-        WritableBatch writableBatch = incoming.getWritableBatch();
+        WritableBatch writableBatch = incoming.getWritableBatch().transfer(oContext.getAllocator());
         if (tunnels.length > 1) {
           writableBatch.retainBuffers(tunnels.length - 1);
         }
