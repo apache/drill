@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.util.Iterator;
 
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -34,11 +35,11 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
   private final SelectionVector2 sv2;
   private final SelectionVector4 sv4;
 
-  public InternalBatch(RecordBatch incoming) {
-    this(incoming, null);
+  public InternalBatch(RecordBatch incoming, OperatorContext oContext) {
+    this(incoming, null, oContext);
   }
 
-  public InternalBatch(RecordBatch incoming, VectorWrapper[] ignoreWrappers){
+  public InternalBatch(RecordBatch incoming, VectorWrapper[] ignoreWrappers, OperatorContext oContext){
     switch(incoming.getSchema().getSelectionVectorMode()){
     case FOUR_BYTE:
       this.sv4 = incoming.getSelectionVector4().createNewWrapperCurrent();
@@ -53,7 +54,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
       this.sv2 = null;
     }
     this.schema = incoming.getSchema();
-    this.container = VectorContainer.getTransferClone(incoming, ignoreWrappers);
+    this.container = VectorContainer.getTransferClone(incoming, ignoreWrappers, oContext);
   }
 
   public BatchSchema getSchema() {

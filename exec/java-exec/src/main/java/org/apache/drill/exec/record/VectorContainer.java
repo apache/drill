@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -148,15 +149,15 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
    *          The RecordBatch iterator the contains the batch we should take over.
    * @return A cloned vector container.
    */
-  public static VectorContainer getTransferClone(VectorAccessible incoming) {
-    VectorContainer vc = new VectorContainer();
+  public static VectorContainer getTransferClone(VectorAccessible incoming, OperatorContext oContext) {
+    VectorContainer vc = new VectorContainer(oContext);
     for (VectorWrapper<?> w : incoming) {
       vc.cloneAndTransfer(w);
     }
     return vc;
   }
 
-  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers) {
+  public static VectorContainer getTransferClone(VectorAccessible incoming, VectorWrapper[] ignoreWrappers, OperatorContext oContext) {
     Iterable<VectorWrapper<?>> wrappers = incoming;
     if (ignoreWrappers != null) {
       final List<VectorWrapper> ignored = Lists.newArrayList(ignoreWrappers);
@@ -165,7 +166,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       wrappers = resultant;
     }
 
-    final VectorContainer vc = new VectorContainer();
+    final VectorContainer vc = new VectorContainer(oContext);
     for (VectorWrapper<?> w : wrappers) {
       vc.cloneAndTransfer(w);
     }
@@ -198,7 +199,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
-    wrappers.add(wrapper.cloneAndTransfer());
+    wrappers.add(wrapper.cloneAndTransfer(oContext.getAllocator()));
   }
 
   public void addCollection(Iterable<ValueVector> vectors) {

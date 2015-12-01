@@ -21,6 +21,7 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -41,12 +42,12 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private int outputCount = 0;
   private RecordBatch incoming;
   private StreamingAggBatch outgoing;
-  private FragmentContext context;
   private boolean done = false;
+  private OperatorContext context;
 
 
   @Override
-  public void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException {
+  public void setup(OperatorContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException {
     this.context = context;
     this.incoming = incoming;
     this.outgoing = outgoing;
@@ -164,7 +165,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
           previousIndex = currentIndex;
         }
 
-        InternalBatch previous = new InternalBatch(incoming);
+        InternalBatch previous = new InternalBatch(incoming, context);
 
         try {
           while (true) {

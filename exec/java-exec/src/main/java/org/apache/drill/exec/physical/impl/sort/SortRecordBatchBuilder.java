@@ -91,7 +91,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     }
 
 
-    RecordBatchData bd = new RecordBatchData(batch);
+    RecordBatchData bd = new RecordBatchData(batch, allocator);
     runningBatches++;
     batches.put(batch.getSchema(), bd);
     recordCount += bd.getRecordCount();

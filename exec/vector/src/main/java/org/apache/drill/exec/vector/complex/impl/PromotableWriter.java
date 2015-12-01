@@ -151,7 +151,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
 
   private FieldWriter promoteToUnion() {
     String name = vector.getField().getLastName();
-    TransferPair tp = vector.getTransferPair(new FieldReference(vector.getField().getType().getMinorType().name().toLowerCase()));
+    TransferPair tp = vector.getTransferPair(new FieldReference(vector.getField().getType().getMinorType().name().toLowerCase()), vector.getAllocator());
     tp.transfer();
     if (parentContainer != null) {
       unionVector = parentContainer.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);

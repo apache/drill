@@ -94,7 +94,7 @@ public class ZeroVector implements ValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair() {
+  public TransferPair getTransferPair(BufferAllocator allocator) {
     return defaultPair;
   }
 
@@ -138,6 +138,11 @@ public class ZeroVector implements ValueVector {
   }
 
   @Override
+  public BufferAllocator getAllocator() {
+    return null;
+  }
+
+  @Override
   public void setInitialCapacity(int numRecords) { }
 
   @Override
@@ -146,7 +151,7 @@ public class ZeroVector implements ValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
     return defaultPair;
   }
 

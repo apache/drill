@@ -366,7 +366,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           totalCount += count;
           sorter.setup(context, sv2, convertedBatch);
           sorter.sort(sv2);
-          RecordBatchData rbd = new RecordBatchData(convertedBatch);
+          RecordBatchData rbd = new RecordBatchData(convertedBatch, oContext.getAllocator());
           boolean success = false;
           try {
             rbd.setSv2(sv2);
@@ -446,7 +446,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         builder = new SortRecordBatchBuilder(oContext.getAllocator());
 
         for (BatchGroup group : batchGroups) {
-          RecordBatchData rbd = new RecordBatchData(group.getContainer());
+          RecordBatchData rbd = new RecordBatchData(group.getContainer(), oContext.getAllocator());
           rbd.setSv2(group.getSv2());
           builder.add(rbd);
         }
@@ -562,7 +562,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // 1 output container is kept in memory, so we want to hold on to it and transferClone
     // allows keeping ownership
-    VectorContainer c1 = VectorContainer.getTransferClone(outputContainer);
+    VectorContainer c1 = VectorContainer.getTransferClone(outputContainer, oContext);
     c1.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     c1.setRecordCount(count);
 

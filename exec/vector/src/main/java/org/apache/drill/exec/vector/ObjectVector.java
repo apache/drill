@@ -147,7 +147,7 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair() {
+  public TransferPair getTransferPair(BufferAllocator allocator) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
@@ -157,7 +157,7 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
