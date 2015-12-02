@@ -61,7 +61,8 @@ public class UnionAllPrule extends Prule {
         convertedInputList.add(convertedInput);
       }
 
-      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
+      // DrillDistributionTrait is set to be ANY to allow Union-All to be parallelized
+      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.ANY);
 
       Preconditions.checkArgument(convertedInputList.size() >= 2, "Union list must be at least two items.");
       RelNode left = convertedInputList.get(0);

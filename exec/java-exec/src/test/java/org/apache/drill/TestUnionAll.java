@@ -20,6 +20,7 @@ package org.apache.drill;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
 import org.junit.Test;
@@ -898,5 +899,36 @@ public class TestUnionAll extends BaseTestQuery{
         .baselineValues((long) 900)
         .build()
         .run();
+  }
+
+  @Test // see DRILL-4147
+  public void testUnionAllDistributedMode() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/csv/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/csv/1995").toURI().toString();
+
+    final String query = String.format("SELECT columns[0] as col FROM dfs_test.`%s` \n" +
+        "Union All SELECT columns[0] as col FROM dfs_test.`%s`", l, r);
+    final String optionSetOne = "alter session set `planner.slice_target` = 1";
+    final String optionSetDefault = "alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT;
+
+    // Validate the plan
+    final String[] expectedPlan = {"UnionExchange.*\n",
+        ".*Project.*\n" +
+        ".*UnionAll"};
+    final String[] excludedPlan = {};
+
+    test(optionSetOne);
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    testBuilder()
+        .optionSettingQueriesForTestQuery(optionSetOne)
+        .optionSettingQueriesForBaseline(optionSetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+
+    test(optionSetDefault);
   }
 }
