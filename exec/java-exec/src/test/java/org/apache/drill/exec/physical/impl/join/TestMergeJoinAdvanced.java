@@ -24,7 +24,9 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,6 +35,8 @@ import java.io.IOException;
 import java.util.Random;
 
 public class TestMergeJoinAdvanced extends BaseTestQuery {
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(120000); // Longer timeout than usual.
 
   // Have to disable hash join to test merge join in this class
   @BeforeClass
