@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -32,7 +33,10 @@ import java.util.List;
 public class TestUnionDistinct extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionDistinct.class);
 
-  @Test  // Simple Unionover two scans
+  private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
+  private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
+
+  @Test  // Simple Union over two scans
   public void testUnionDistinct1() throws Exception {
     String query = "(select n_regionkey from cp.`tpch/nation.parquet`) union (select r_regionkey from cp.`tpch/region.parquet`)";
 
@@ -821,4 +825,34 @@ public class TestUnionDistinct extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test // DRILL-4147 // union-distinct base case
+  public void testDrill4147_1() throws Exception {
+    final String l = FileUtils.getResourceAsFile("/multilevel/parquet/1994").toURI().toString();
+    final String r = FileUtils.getResourceAsFile("/multilevel/parquet/1995").toURI().toString();
+
+    final String query = String.format("SELECT o_custkey FROM dfs_test.`%s` \n" +
+        "Union distinct SELECT o_custkey FROM dfs_test.`%s`", l, r);
+
+    // Validate the plan
+    final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};
+    final String[] excludedPlan = {};
+
+    try {
+      test(sliceTargetSmall);
+      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+      testBuilder()
+        .optionSettingQueriesForTestQuery(sliceTargetSmall)
+        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .build()
+        .run();
+    } finally {
+      test(sliceTargetDefault);
+    }
+  }
+
 }
