@@ -47,7 +47,7 @@ public class AutoCloseables {
     }
   }
 
-  public static void close(AutoCloseable[] ac) throws Exception {
+  public static void close(AutoCloseable... ac) throws Exception {
     Exception topLevelException = null;
     for (AutoCloseable closeable : ac) {
       try {

@@ -70,7 +70,9 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   public UserServer(DrillConfig config, ScanResult classpathScan, BufferAllocator alloc, EventLoopGroup eventLoopGroup,
       UserWorker worker, Executor executor) throws DrillbitStartupException {
-    super(UserRpcConfig.getMapping(config, executor), alloc.getUnderlyingAllocator(), eventLoopGroup);
+    super(UserRpcConfig.getMapping(config, executor),
+        alloc.getAsByteBufAllocator(),
+        eventLoopGroup);
     this.worker = worker;
     this.alloc = alloc;
     // TODO: move this up

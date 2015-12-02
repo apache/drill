@@ -24,7 +24,7 @@ import java.lang.management.MemoryUsage;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -63,7 +63,7 @@ public class MemoryIterator implements Iterator<Object> {
 
 
     memoryInfo.direct_current = context.getDrillbitContext().getAllocator().getAllocatedMemory();
-    memoryInfo.direct_max = TopLevelAllocator.MAXIMUM_DIRECT_MEMORY;
+    memoryInfo.direct_max = DrillConfig.getMaxDirectMemory();
     return memoryInfo;
   }
 

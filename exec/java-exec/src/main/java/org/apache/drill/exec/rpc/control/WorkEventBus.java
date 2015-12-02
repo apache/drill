@@ -17,17 +17,25 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.work.foreman.FragmentStatusListener;
+import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.drill.exec.work.foreman.FragmentStatusListener;
+import org.apache.drill.exec.work.fragment.AllocatorTree;
+import org.apache.drill.exec.work.fragment.AllocatorTree.CloseListener;
+import org.apache.drill.exec.work.fragment.AllocatorTree.QueryAllocator;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import com.google.common.cache.Cache;
@@ -37,12 +45,28 @@ import com.google.common.collect.Maps;
 public class WorkEventBus {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkEventBus.class);
   private final ConcurrentMap<FragmentHandle, FragmentManager> managers = Maps.newConcurrentMap();
-  private final ConcurrentMap<QueryId, FragmentStatusListener> listeners =
-      new ConcurrentHashMap<>(16, 0.75f, 16);
+  private final Map<QueryId, QueryAllocator> queryAllocators = Maps.newHashMap();
+
+  private final ConcurrentMap<QueryId, FragmentStatusListener> listeners = new ConcurrentHashMap<>(16, 0.75f, 16);
   private final Cache<FragmentHandle, Integer> recentlyFinishedFragments = CacheBuilder.newBuilder()
           .maximumSize(10000)
           .expireAfterWrite(10, TimeUnit.MINUTES)
           .build();
+
+  public final static RangeLongValidator MEMORY_MAX_PER_QUERY =
+      new RangeLongValidator("exec.memory.max.per_query_per_node.mb", 10, Long.MAX_VALUE, 1024 * 1024) {
+
+    @Override
+    public void validate(OptionValue v) {
+      if (v.type != OptionValue.OptionType.SYSTEM) {
+        throw UserException.unsupportedError()
+            .message("Query Memory Maximums can only be set at the SYSTEM level.")
+            .build(logger);
+      }
+      super.validate(v);
+    }
+
+  };
 
   public void removeFragmentStatusListener(final QueryId queryId) {
     if (logger.isDebugEnabled()) {
@@ -107,6 +131,34 @@ public class WorkEventBus {
     }
     throw new FragmentSetupException("Failed to receive plan fragment that was required for id: "
         + QueryIdHelper.getQueryIdentifier(handle));
+  }
+
+  public QueryAllocator getQueryAllocator(
+      BufferAllocator parentAllocator,
+      final QueryId queryId,
+      long queryReservation,
+      long queryMax){
+    // we don't want to be optimistic here since an allocator can reserve memory.
+    synchronized(queryAllocators){
+      {
+        final QueryAllocator allocator = queryAllocators.get(queryId);
+        if (allocator != null) {
+          return allocator;
+        }
+      }
+
+      final QueryAllocator newAllocator = AllocatorTree.newAllocator(parentAllocator, new CloseListener() {
+        @Override
+        public void closeEvent() {
+          synchronized (queryAllocators) {
+            QueryAllocator oldAllocator = queryAllocators.get(queryId);
+            oldAllocator.close();
+          }
+        }
+      }, queryId, queryReservation, queryMax);
+      queryAllocators.put(queryId, newAllocator);
+      return newAllocator;
+    }
   }
 
   /**

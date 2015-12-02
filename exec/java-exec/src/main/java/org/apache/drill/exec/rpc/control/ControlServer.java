@@ -46,7 +46,7 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   public ControlServer(ControlMessageHandler handler, BootStrapContext context, ConnectionManagerRegistry connectionRegistry) {
     super(
         ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getUnderlyingAllocator(),
+        context.getAllocator().getAsByteBufAllocator(),
         context.getBitLoopGroup());
     this.handler = handler;
     this.connectionRegistry = connectionRegistry;

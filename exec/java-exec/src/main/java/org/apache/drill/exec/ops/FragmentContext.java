@@ -35,7 +35,6 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.LimitConsumer;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -46,6 +45,7 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
@@ -56,6 +56,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.fragment.AllocatorTree.QueryAllocator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -156,12 +157,13 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
     executionControls = new ExecutionControls(fragmentOptions, dbContext.getEndpoint());
 
-    // Add the fragment context to the root allocator.
-    // The QueryManager will call the root allocator to recalculate all the memory limits for all the fragments
+    final long maxQueryMemory = context.getOptionManager().getOption(WorkEventBus.MEMORY_MAX_PER_QUERY) * 1024 * 1024;
+    final QueryAllocator queryAllocator = context.getWorkBus()
+        .getQueryAllocator(context.getAllocator(), fragment.getHandle().getQueryId(), 0, maxQueryMemory);
+
     try {
-      allocator = context.getAllocator().getChildAllocator(new AsLimitConsumer(), fragment.getMemInitial(),
-          fragment.getMemMax(), true);
-      Preconditions.checkNotNull(allocator, "Unable to acuqire allocator");
+      allocator = queryAllocator.newMinorFragmentAllocator(fragment.getHandle(), fragment.getMemInitial(),
+          fragment.getMemMax());
     } catch (final OutOfMemoryException e) {
       throw UserException.memoryError(e)
         .addContext("Fragment", getHandle().getMajorFragmentId() + ":" + getHandle().getMinorFragmentId())
@@ -172,31 +174,6 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
     stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
-  }
-
-  private class AsLimitConsumer implements LimitConsumer {
-    final String identifier = QueryIdHelper.getFragmentId(fragment.getHandle());
-
-    @Override
-    public String getIdentifier() {
-      return identifier;
-    }
-
-    @Override
-    public long getAllocated() {
-      return allocator.getAllocatedMemory();
-    }
-
-    @Override
-    public long getLimit() {
-      return allocator.getLimit();
-    }
-
-    @Override
-    public void setLimit(long limit) {
-      allocator.setLimit(limit);
-    }
-
   }
 
   /**
@@ -297,11 +274,6 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return frag;
   }
 
-  public LimitConsumer asLimitConsumer() {
-    return new AsLimitConsumer();
-  }
-
-
   /**
    * Get this fragment's allocator.
    * @return the allocator
@@ -314,11 +286,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return allocator;
   }
 
-  public BufferAllocator getNewChildAllocator(final long initialReservation,
-                                              final long maximumReservation,
-                                              final boolean applyFragmentLimit) throws OutOfMemoryException {
-    return allocator.getChildAllocator(new AsLimitConsumer(), initialReservation, maximumReservation,
-        applyFragmentLimit);
+  public BufferAllocator getNewChildAllocator(final String operatorName,
+      final int operatorId,
+      final long initialReservation,
+      final long maximumReservation,
+      final boolean applyFragmentLimit) throws OutOfMemoryException {
+    return allocator.newChildAllocator(
+        "op:" + QueryIdHelper.getFragmentId(fragment.getHandle()) + ":" + operatorId + ":" + operatorName,
+        initialReservation,
+        maximumReservation
+        );
   }
 
   public <T> T getImplementationClass(final ClassGenerator<T> cg)
@@ -463,6 +440,14 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public Executor getExecutor(){
     return context.getExecutor();
+  }
+
+  public long getFragmentMemoryLimit() {
+    return allocator.getLimit();
+  }
+
+  public void setFragmentMemoryLimit(long value) {
+    allocator.setLimit(value);
   }
 
   /**

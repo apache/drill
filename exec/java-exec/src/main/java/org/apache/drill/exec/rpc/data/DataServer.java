@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.data;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+import io.netty.buffer.DrillBuf.TransferResult;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -26,6 +27,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.io.IOException;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.memory.AllocatorClosedException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
@@ -43,7 +45,6 @@ import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import com.google.protobuf.MessageLite;
@@ -56,10 +57,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
 
-  public DataServer(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
+  public DataServer(BootStrapContext context, BufferAllocator alloc, WorkEventBus workBus,
+      DataResponseHandler dataHandler) {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getUnderlyingAllocator(),
+        alloc.getAsByteBufAllocator(),
         context.getBitLoopGroup());
     this.context = context;
     this.workBus = workBus;
@@ -167,11 +169,29 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     }
 
     final BufferAllocator allocator = manager.getFragmentContext().getAllocator();
-    final Pointer<DrillBuf> out = new Pointer<>();
-
     final boolean withinMemoryEnvelope;
-
-    withinMemoryEnvelope = allocator.takeOwnership(body, out);
+    final DrillBuf transferredBuffer;
+    try {
+      TransferResult result = body.transferOwnership(allocator);
+      withinMemoryEnvelope = result.allocationFit;
+      transferredBuffer = result.buffer;
+    } catch(final AllocatorClosedException e) {
+      /*
+       * It can happen that between the time we get the fragment manager and we
+       * try to transfer this buffer to it, the fragment may have been cancelled
+       * and closed. When that happens, the allocator will be closed when we
+       * attempt this. That just means we can drop this data on the floor, since
+       * the receiver no longer exists (and no longer needs it).
+       *
+       * Note that checking manager.isCancelled() before we attempt this isn't enough,
+       * because of timing: it may still be cancelled between that check and
+       * the attempt to do the memory transfer. To double check ourselves, we
+       * do check manager.isCancelled() here, after the fact; it shouldn't
+       * change again after its allocator has been closed.
+       */
+      assert manager.isCancelled();
+      return;
+    }
 
     if (!withinMemoryEnvelope) {
       // if we over reserved, we need to add poison pill before batch.
@@ -179,11 +199,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     }
 
     ack.increment();
-    dataHandler.handle(manager, fragmentBatch, out.value, ack);
+    dataHandler.handle(manager, fragmentBatch, transferredBuffer, ack);
 
     // make sure to release the reference count we have to the new buffer.
     // dataHandler.handle should have taken any ownership it needed.
-    out.value.release();
+    transferredBuffer.release();
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {
