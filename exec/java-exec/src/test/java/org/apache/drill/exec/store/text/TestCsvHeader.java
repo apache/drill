@@ -18,10 +18,14 @@
 package org.apache.drill.exec.store.text;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 
 import org.junit.Before;
@@ -160,6 +164,29 @@ public class TestCsvHeader extends BaseTestQuery{
         "1999|Venture \"Extended Edition, Very Large\"\n";
 
     validateResults (batches, expectedOutput);
+  }
+
+  @Test
+  public void testEmptyFinalColumn() throws Exception {
+    String dfs_temp = getDfsTestTmpSchemaLocation();
+    File table_dir = new File(dfs_temp, "emptyFinalColumn");
+    table_dir.mkdir();
+    BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.csvh")));
+    os.write("field1,field2\n".getBytes());
+    for (int i = 0; i < 10000; i++) {
+      os.write("a,\n".getBytes());
+    }
+    os.flush();
+    os.close();
+    String query = "select * from dfs_test.tmp.emptyFinalColumn";
+      TestBuilder builder = testBuilder()
+              .sqlQuery(query)
+              .ordered()
+              .baselineColumns("field1", "field2");
+      for (int i = 0; i < 10000; i++) {
+        builder.baselineValues("a", "");
+      }
+      builder.go();
   }
 
   private void validateResults (List<QueryDataBatch> batches, String expectedOutput) throws SchemaChangeException {
