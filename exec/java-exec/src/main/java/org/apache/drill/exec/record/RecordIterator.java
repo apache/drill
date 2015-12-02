@@ -93,7 +93,7 @@ public class RecordIterator implements VectorAccessible {
     // Release all batches before current batch. [0 to startBatchPosition).
     final Map<Range<Long>,RecordBatchData> oldBatches = batches.subRangeMap(Range.closedOpen(0l, startBatchPosition)).asMapOfRanges();
     for (Range<Long> range : oldBatches.keySet()) {
-      oldBatches.get(range.lowerEndpoint()).clear();
+      oldBatches.get(range).clear();
     }
     batches.remove(Range.closedOpen(0l, startBatchPosition));
     markedInnerPosition = innerPosition;
