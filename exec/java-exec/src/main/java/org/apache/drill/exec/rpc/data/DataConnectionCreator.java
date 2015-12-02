@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
@@ -40,6 +41,7 @@ public class DataConnectionCreator implements Closeable {
   private final DataResponseHandler dataHandler;
   private final boolean allowPortHunting;
   private ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
+  private final BufferAllocator dataAllocator;
 
   public DataConnectionCreator(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) {
     super();
@@ -47,10 +49,12 @@ public class DataConnectionCreator implements Closeable {
     this.workBus = workBus;
     this.dataHandler = dataHandler;
     this.allowPortHunting = allowPortHunting;
+    this.dataAllocator = context.getAllocator()
+        .newChildAllocator("rpc-data", 0, Long.MAX_VALUE);
   }
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {
-    server = new DataServer(context, workBus, dataHandler);
+    server = new DataServer(context, dataAllocator, workBus, dataHandler);
     int port = server.bind(partialEndpoint.getControlPort() + 1, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setDataPort(port).build();
     return completeEndpoint;
@@ -68,6 +72,7 @@ public class DataConnectionCreator implements Closeable {
   @Override
   public void close() {
     Closeables.closeQuietly(server);
+    dataAllocator.close();
   }
 
 }

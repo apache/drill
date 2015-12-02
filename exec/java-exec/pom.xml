@@ -289,7 +289,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill.memory</groupId>
-      <artifactId>drill-memory-impl</artifactId>
+      <artifactId>drill-memory-base</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

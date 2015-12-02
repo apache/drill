@@ -55,9 +55,8 @@ public class BufferManagerImpl implements BufferManager {
   }
 
   public DrillBuf getManagedBuffer(int size) {
-    DrillBuf newBuf = allocator.buffer(size);
+    DrillBuf newBuf = allocator.buffer(size, this);
     managedBuffers.put(newBuf.memoryAddress(), newBuf);
-    newBuf.setBufferManager(this);
     return newBuf;
   }
 }

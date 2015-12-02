@@ -52,7 +52,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
   public ControlClient(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localEndpoint, ControlMessageHandler handler,
       BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
-        context.getAllocator().getUnderlyingAllocator(),
+        context.getAllocator().getAsByteBufAllocator(),
         context.getBitLoopGroup(),
         RpcType.HANDSHAKE,
         BitControlHandshake.class,

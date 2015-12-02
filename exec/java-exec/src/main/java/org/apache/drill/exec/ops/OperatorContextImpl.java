@@ -62,7 +62,8 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) throws OutOfMemoryException {
     this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
     this.manager = new BufferManagerImpl(allocator);
 
@@ -74,7 +75,8 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
 
   public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) throws OutOfMemoryException {
     this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
     this.popConfig = popConfig;
     this.manager = new BufferManagerImpl(allocator);
     this.stats     = stats;

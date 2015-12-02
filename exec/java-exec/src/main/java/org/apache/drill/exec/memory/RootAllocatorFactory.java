@@ -17,27 +17,24 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.config.DrillConfig;
 
-public interface Accountor extends AutoCloseable{
+public class RootAllocatorFactory {
 
-  public boolean transferTo(Accountor target, DrillBuf buf, long size);
-  public boolean transferIn(DrillBuf buf, long size);
-  public long getAvailable();
-  public long getCapacity();
-  public long getAllocation();
-  public long getPeakMemoryAllocation();
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
 
-  public boolean reserve(long size);
-  public boolean forceAdditionalReservation(long size);
+  /**
+   * Constructor to prevent instantiation of this static utility class.
+   */
+  private RootAllocatorFactory() {}
 
-  public void reserved(long expected, DrillBuf buf);
-
-  public void release(DrillBuf buf, long size);
-  public void releasePartial(DrillBuf buf, long size);
-  public long resetFragmentLimits();
-  public void close();
-
-  public void setFragmentLimit(long add);
-  public long getFragmentLimit();
+  /**
+   * Create a new Root Allocator
+   * @param drillConfig
+   *          the DrillConfig
+   * @return a new root allocator
+   */
+  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
+    return new RootAllocator(0, Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
+  }
 }

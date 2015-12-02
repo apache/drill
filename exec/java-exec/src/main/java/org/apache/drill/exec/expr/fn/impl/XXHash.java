@@ -27,8 +27,6 @@ import com.google.common.primitives.UnsignedLongs;
 public final class XXHash {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XXHash.class);
 
-  private static final boolean BOUNDS_CHECKING_ENABLED = BoundsChecking.BOUNDS_CHECKING_ENABLED;
-
   static final long PRIME64_1 = UnsignedLongs.decode("11400714785074694791");
   static final long PRIME64_2 = UnsignedLongs.decode("14029467366897019727");
   static final long PRIME64_3 = UnsignedLongs.decode("1609587929392839161");
@@ -168,7 +166,7 @@ public final class XXHash {
   }
 
   public static long hash64(int start, int end, DrillBuf buffer, long seed){
-    if(BOUNDS_CHECKING_ENABLED){
+    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       buffer.checkBytes(start, end);
     }
 

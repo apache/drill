@@ -15,14 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ *  Memory Allocation, Account and Management
+ *
+ *  See the README.md file in this directory for detailed information about Drill's memory allocation subsystem.
+ *
+ */
 package org.apache.drill.exec.memory;
-
-public interface LimitConsumer {
-
-  public String getIdentifier();
-  public long getAllocated();
-
-  public long getLimit();
-
-  public void setLimit(long limit);
-}
