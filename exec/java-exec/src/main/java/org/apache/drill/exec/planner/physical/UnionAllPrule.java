@@ -61,7 +61,11 @@ public class UnionAllPrule extends Prule {
         convertedInputList.add(convertedInput);
       }
 
-      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
+      // output distribution trait is set to ANY since union-all inputs may be distributed in different ways
+      // and unlike a join there are no join keys that allow determining how the output would be distributed.
+      // Note that a downstream operator may impose a required distribution which would be satisfied by
+      // inserting an Exchange after the Union-All.
+      traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.ANY);
 
       Preconditions.checkArgument(convertedInputList.size() >= 2, "Union list must be at least two items.");
       RelNode left = convertedInputList.get(0);
