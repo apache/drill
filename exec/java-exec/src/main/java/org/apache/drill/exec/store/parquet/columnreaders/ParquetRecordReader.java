@@ -34,11 +34,13 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
@@ -105,13 +107,15 @@ public class ParquetRecordReader extends AbstractRecordReader {
   long totalRecordsRead;
   private final FragmentContext fragmentContext;
 
+  public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
+
   public ParquetRecordReader(FragmentContext fragmentContext,
       String path,
       int rowGroupIndex,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
-                             List<SchemaPath> columns) throws ExecutionSetupException {
+      List<SchemaPath> columns) throws ExecutionSetupException {
     this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactory, footer,
         columns);
   }
@@ -478,6 +482,30 @@ public class ParquetRecordReader extends AbstractRecordReader {
       }
       varLengthReader.columns.clear();
       varLengthReader = null;
+    }
+
+    if(parquetReaderStats != null) {
+      logger.trace("ParquetTrace,Summary,{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+          hadoopPath,
+          parquetReaderStats.numDictPageHeaders,
+          parquetReaderStats.numPageHeaders,
+          parquetReaderStats.numDictPageLoads,
+          parquetReaderStats.numPageLoads,
+          parquetReaderStats.numDictPagesDecompressed,
+          parquetReaderStats.numPagesDecompressed,
+          parquetReaderStats.totalDictPageHeaderBytes,
+          parquetReaderStats.totalPageHeaderBytes,
+          parquetReaderStats.totalDictPageReadBytes,
+          parquetReaderStats.totalPageReadBytes,
+          parquetReaderStats.totalDictDecompressedBytes,
+          parquetReaderStats.totalDecompressedBytes,
+          parquetReaderStats.timeDictPageHeaders,
+          parquetReaderStats.timePageHeaders,
+          parquetReaderStats.timeDictPageLoads,
+          parquetReaderStats.timePageLoads,
+          parquetReaderStats.timeDictPagesDecompressed,
+          parquetReaderStats.timePagesDecompressed);
+      parquetReaderStats=null;
     }
   }
 }
