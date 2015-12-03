@@ -105,7 +105,7 @@ public class MapRDBFormatPlugin implements FormatPlugin {
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
       List<SchemaPath> columns) throws IOException {
-    List<String> files = selection.getAsFiles();
+    List<String> files = selection.getFiles();
     assert (files.size() == 1);
     String tableName = files.get(0);
     HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);
