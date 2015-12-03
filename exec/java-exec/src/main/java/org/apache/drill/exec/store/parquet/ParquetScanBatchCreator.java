@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Stopwatch;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -122,9 +124,13 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       These fields will be added to the constructor below
       */
       try {
+        Stopwatch timer = new Stopwatch();
         if ( ! footers.containsKey(e.getPath())){
-          footers.put(e.getPath(),
-              ParquetFileReader.readFooter(conf, new Path(e.getPath())));
+          timer.start();
+          ParquetMetadata footer = ParquetFileReader.readFooter(conf, new Path(e.getPath()));
+          long timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
+          logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", e.getPath(), "", 0, 0, 0, timeToRead);
+          footers.put(e.getPath(), footer );
         }
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(
