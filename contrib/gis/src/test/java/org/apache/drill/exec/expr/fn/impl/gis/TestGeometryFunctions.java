@@ -96,7 +96,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
       .build()
       .run();
   }
-  
+
 
   @Test
   public void testSTX_STYGivesNaNForNonPointGeometry() throws Exception {
@@ -129,7 +129,7 @@ public class TestGeometryFunctions extends BaseTestQuery {
       .baselineValues(false)
       .build()
       .run();
-    
+
     testBuilder()
     .sqlQuery("SELECT ST_Intersects(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('LINESTRING(0 0,0 2)')) "
         + "from (VALUES(1))")

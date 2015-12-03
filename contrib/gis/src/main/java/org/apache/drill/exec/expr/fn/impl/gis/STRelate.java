@@ -40,7 +40,7 @@ public class STRelate implements DrillSimpleFunc {
 
   @Param
   VarCharHolder matrixParam;
-  
+
   @Output
   BitHolder out;
 
