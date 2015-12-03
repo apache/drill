@@ -152,7 +152,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
 
-    final DrillBuf svBuffer = reservation.buffer();
+    final DrillBuf svBuffer = reservation.allocateBuffer();
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }

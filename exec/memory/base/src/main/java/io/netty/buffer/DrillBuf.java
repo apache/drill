@@ -37,7 +37,6 @@ import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
-import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -157,7 +156,8 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
 
   /**
    * Create a new DrillBuf that is associated with an alternative allocator for the purposes of memory ownership and
-   * accounting. This has no impact on the reference counting for this allocator.
+   * accounting. This has no impact on the reference counting for the current DrillBuf except in the situation where the
+   * passed in Allocator is the same as the current buffer.
    *
    * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
    * reference count of 1 (in the case that this is the first time this memory is being associated with the new
@@ -258,11 +258,12 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
           decrement, toVerboseString()));
     }
 
+    final int refCnt = this.refCnt.addAndGet(-decrement);
+
     if (BaseAllocator.DEBUG) {
-      historicalLog.recordEvent("release(%d)", decrement);
+      historicalLog.recordEvent("release(%d). original value: %d", decrement, refCnt + decrement);
     }
 
-    final int refCnt = this.refCnt.addAndGet(-decrement);
     if (refCnt < 0) {
       throw new IllegalStateException(
           String.format("DrillBuf[%d] refCnt has gone negative. Buffer Info: %s", id, toVerboseString()));
@@ -816,14 +817,16 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   private final static int LOG_BYTES_PER_ROW = 10;
+
   /**
-   * Log this buffer's byte contents in the form of a hex dump.
-   *
-   * @param logger where to log to
-   * @param start the starting byte index
-   * @param length how many bytes to log
+   * Return the buffer's byte contents in the form of a hex dump.
+   * @param start
+   *          the starting byte index
+   * @param length
+   *          how many bytes to log
+   * @return A hex dump in a String.
    */
-  public void logBytes(final Logger logger, final int start, final int length) {
+  public String toHexString(final int start, final int length) {
     final int roundedStart = (start / LOG_BYTES_PER_ROW) * LOG_BYTES_PER_ROW;
 
     final StringBuilder sb = new StringBuilder("buffer byte dump\n");
@@ -840,7 +843,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       }
       sb.append('\n');
     }
-    logger.trace(sb.toString());
+    return sb.toString();
   }
 
   /**
@@ -852,18 +855,6 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
     return id;
   }
 
-  /**
-   * Log this buffer's history.
-   *
-   * @param logger the logger to use
-   */
-  public void logHistory(final Logger logger) {
-    if (historicalLog == null) {
-      logger.warn("DrillBuf[{}] historicalLog not available", id);
-    } else {
-      historicalLog.logHistory(logger);
-    }
-  }
 
   public String toVerboseString() {
     if (isEmpty) {

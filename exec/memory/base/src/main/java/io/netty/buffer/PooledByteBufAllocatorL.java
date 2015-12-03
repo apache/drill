@@ -31,6 +31,9 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 
+/**
+ * The base allocator that we use for all of Drill's memory management. Returns UnsafeDirectLittleEndian buffers.
+ */
 public class PooledByteBufAllocatorL {
   private static final org.slf4j.Logger memoryLogger = org.slf4j.LoggerFactory.getLogger("drill.allocator");
 
@@ -230,28 +233,6 @@ public class PooledByteBufAllocatorL {
         }
       }
 
-    }
-
-    public void checkAndReset() {
-      if (hugeBufferCount.get() != 0 || normalBufferCount.get() != 0) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("Large buffers outstanding: ");
-        buf.append(hugeBufferCount.get());
-        buf.append(" totaling ");
-        buf.append(hugeBufferSize.get());
-        buf.append(" bytes.");
-        buf.append('\n');
-        buf.append("Normal buffers outstanding: ");
-        buf.append(normalBufferCount.get());
-        buf.append(" totaling ");
-        buf.append(normalBufferSize.get());
-        buf.append(" bytes.");
-        hugeBufferCount.set(0);
-        normalBufferCount.set(0);
-        hugeBufferSize.set(0);
-        normalBufferSize.set(0);
-        throw new IllegalStateException(buf.toString());
-      }
     }
 
     public String toString() {

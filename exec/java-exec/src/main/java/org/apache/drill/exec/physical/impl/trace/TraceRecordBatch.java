@@ -73,7 +73,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     super(pop, context, incoming);
     this.traceTag = pop.traceTag;
     logLocation = context.getConfig().getString(ExecConstants.TRACE_DUMP_DIRECTORY);
-    localAllocator = context.getNewChildAllocator("trace", 200, 0, Long.MAX_VALUE, false);
+    localAllocator = context.getNewChildAllocator("trace", 200, 0, Long.MAX_VALUE);
     String fileName = getFileName();
 
     /* Create the log file we will dump to and initialize the file descriptors */

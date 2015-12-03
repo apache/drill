@@ -199,18 +199,18 @@ public class TestAllocators extends DrillTest {
 
       // Add a couple of Operator Contexts
       // Initial allocation = 1000000 bytes for all operators
-      OperatorContext oContext11 = fragmentContext1.newOperatorContext(physicalOperator1, true);
+      OperatorContext oContext11 = fragmentContext1.newOperatorContext(physicalOperator1);
       DrillBuf b11 = oContext11.getAllocator().buffer(1000000);
 
-      OperatorContext oContext12 = fragmentContext1.newOperatorContext(physicalOperator2, stats, true);
+      OperatorContext oContext12 = fragmentContext1.newOperatorContext(physicalOperator2, stats);
       DrillBuf b12 = oContext12.getAllocator().buffer(500000);
 
-      OperatorContext oContext21 = fragmentContext1.newOperatorContext(physicalOperator3, true);
+      OperatorContext oContext21 = fragmentContext1.newOperatorContext(physicalOperator3);
 
       def = new OpProfileDef(physicalOperator4.getOperatorId(), UserBitShared.CoreOperatorType.TEXT_WRITER_VALUE,
           OperatorContext.getChildCount(physicalOperator4));
       stats = fragmentContext2.getStats().newOperatorStats(def, fragmentContext2.getAllocator());
-      OperatorContext oContext22 = fragmentContext2.newOperatorContext(physicalOperator4, stats, true);
+      OperatorContext oContext22 = fragmentContext2.newOperatorContext(physicalOperator4, stats);
       DrillBuf b22 = oContext22.getAllocator().buffer(2000000);
 
       // New Fragment begins
@@ -224,7 +224,7 @@ public class TestAllocators extends DrillTest {
       def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE,
           OperatorContext.getChildCount(physicalOperator5));
       stats = fragmentContext3.getStats().newOperatorStats(def, fragmentContext3.getAllocator());
-      OperatorContext oContext31 = fragmentContext3.newOperatorContext(physicalOperator5, stats, true);
+      OperatorContext oContext31 = fragmentContext3.newOperatorContext(physicalOperator5, stats);
 
       DrillBuf b31a = oContext31.getAllocator().buffer(200000);
 
@@ -243,7 +243,7 @@ public class TestAllocators extends DrillTest {
       assertTrue(outOfMem);
 
       // Operator is Exempt from Fragment limits. Fragment 3 asks for more and succeeds
-      OperatorContext oContext32 = fragmentContext3.newOperatorContext(physicalOperator6, false);
+      OperatorContext oContext32 = fragmentContext3.newOperatorContext(physicalOperator6);
       try {
         DrillBuf b32 = oContext32.getAllocator().buffer(4400000);
         b32.release();

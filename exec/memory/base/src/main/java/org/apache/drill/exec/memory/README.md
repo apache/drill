@@ -26,7 +26,7 @@ Memory management can be broken into the following main components:
 - Memory chunk allocation and fragmentation management
   - `PooledByteBufAllocatorL` - A LittleEndian clone of Netty's jemalloc implementation
   - `UnsafeDirectLittleEndian` - A base level memory access interface
-  - `LargeBuffer` - A buffer backing implmentation used when working with data larger than one Netty chunk (default to 16mb)
+  - `LargeBuffer` - A buffer backing implementation used when working with data larger than one Netty chunk (default to 16mb)
 - Memory limits & Accounting
   - `Accountant` - A nestable class of lockfree memory accountors.
 - Application-level memory allocation
@@ -60,7 +60,7 @@ Drill provides a tree-based model for memory allocation. The RootAllocator is cr
 Drill provides two different ways to reserve memory:
 
   - BufferAllocator accounting reservations: 
-      When a new allocator (other than the `RootAllocator`) is initialized, it can set aside memory that it will keep locally for its lifetime. This is memory that will never be released back to its parent allocator until the allocator
+      When a new allocator (other than the `RootAllocator`) is initialized, it can set aside memory that it will keep locally for its lifetime. This is memory that will never be released back to its parent allocator until the allocator is closed.
   - `AllocationReservation` via BufferAllocator.newReservation(): Allows a short-term preallocation strategy so that a particular subsystem can ensure future memory is available to support a particular request.
   
 ## Memory Ownership, Reference Counts and Sharing
@@ -90,7 +90,7 @@ There are two main ways that someone can look at the object hierarchy for Drill'
   ` - DrillBuf 5
 </pre>
 
-In this picture, a piece of memory is owned by an allocator manager. An allocator manager is responsible for that piece of memory no matter which allocator(s) it is working with. An allocator manager will have relationships with a piece of raw memory (via its reference to UnsignedDirectLittleEndian) as well as references to each BufferAllocator it has a relationship to. When understanding the
+In this picture, a piece of memory is owned by an allocator manager. An allocator manager is responsible for that piece of memory no matter which allocator(s) it is working with. An allocator manager will have relationships with a piece of raw memory (via its reference to UnsignedDirectLittleEndian) as well as references to each BufferAllocator it has a relationship to. 
 
 ### Allocator Perspective
 <pre>

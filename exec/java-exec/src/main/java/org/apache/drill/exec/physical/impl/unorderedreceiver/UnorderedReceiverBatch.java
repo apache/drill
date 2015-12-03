@@ -79,7 +79,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
     // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
-    oContext = context.newOperatorContext(config, false);
+    oContext = context.newOperatorContext(config);
     this.batchLoader = new RecordBatchLoader(oContext.getAllocator());
 
     this.stats = oContext.getStats();

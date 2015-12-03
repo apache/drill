@@ -17,23 +17,24 @@
  */
 package org.apache.drill.exec.testing;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class TestExceptionInjection extends BaseTestQuery {
   private static final String NO_THROW_FAIL = "Didn't throw expected exception";
@@ -135,7 +136,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       + "}]}";
     ControlsInjectionUtil.setControls(session, jsonString);
 
-    final QueryContext context = new QueryContext(session, bits[0].getContext());
+    final QueryContext context = new QueryContext(session, bits[0].getContext(), QueryId.getDefaultInstance());
 
     // test that the exception gets thrown
     final DummyClass dummyClass = new DummyClass(context);
@@ -156,7 +157,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       .build();
     ControlsInjectionUtil.setControls(session, controls);
 
-    final QueryContext context = new QueryContext(session, bits[0].getContext());
+    final QueryContext context = new QueryContext(session, bits[0].getContext(), QueryId.getDefaultInstance());
 
     // test that the expected exception (checked) gets thrown
     final DummyClass dummyClass = new DummyClass(context);
@@ -185,7 +186,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       .build();
     ControlsInjectionUtil.setControls(session, controls);
 
-    final QueryContext context = new QueryContext(session, bits[0].getContext());
+    final QueryContext context = new QueryContext(session, bits[0].getContext(), QueryId.getDefaultInstance());
 
     final DummyClass dummyClass = new DummyClass(context);
 
@@ -246,7 +247,7 @@ public class TestExceptionInjection extends BaseTestQuery {
     ControlsInjectionUtil.setControls(session, controls);
 
     {
-      final QueryContext queryContext1 = new QueryContext(session, drillbitContext1);
+      final QueryContext queryContext1 = new QueryContext(session, drillbitContext1, QueryId.getDefaultInstance());
       final DummyClass class1 = new DummyClass(queryContext1);
 
       // these shouldn't throw
@@ -268,7 +269,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       }
     }
     {
-      final QueryContext queryContext2 = new QueryContext(session, drillbitContext2);
+      final QueryContext queryContext2 = new QueryContext(session, drillbitContext2, QueryId.getDefaultInstance());
       final DummyClass class2 = new DummyClass(queryContext2);
 
       // these shouldn't throw

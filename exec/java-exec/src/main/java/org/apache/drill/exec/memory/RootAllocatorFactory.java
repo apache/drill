@@ -35,6 +35,6 @@ public class RootAllocatorFactory {
    * @return a new root allocator
    */
   public static BufferAllocator newRoot(final DrillConfig drillConfig) {
-    return new RootAllocator(0, Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
+    return new RootAllocator(Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
   }
 }

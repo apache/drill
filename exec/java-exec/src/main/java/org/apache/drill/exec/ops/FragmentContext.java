@@ -288,8 +288,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   public BufferAllocator getNewChildAllocator(final String operatorName,
       final int operatorId,
       final long initialReservation,
-      final long maximumReservation,
-      final boolean applyFragmentLimit) throws OutOfMemoryException {
+      final long maximumReservation) throws OutOfMemoryException {
     return allocator.newChildAllocator(
         "op:" + QueryIdHelper.getFragmentId(fragment.getHandle()) + ":" + operatorId + ":" + operatorName,
         initialReservation,
@@ -337,16 +336,16 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
     return buffers;
   }
 
-  public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats, boolean applyFragmentLimit)
+  public OperatorContext newOperatorContext(PhysicalOperator popConfig, OperatorStats stats)
       throws OutOfMemoryException {
-    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats, applyFragmentLimit);
+    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, stats);
     contexts.add(context);
     return context;
   }
 
-  public OperatorContext newOperatorContext(PhysicalOperator popConfig, boolean applyFragmentLimit)
+  public OperatorContext newOperatorContext(PhysicalOperator popConfig)
       throws OutOfMemoryException {
-    OperatorContextImpl context = new OperatorContextImpl(popConfig, this, applyFragmentLimit);
+    OperatorContextImpl context = new OperatorContextImpl(popConfig, this);
     contexts.add(context);
     return context;
   }
@@ -439,14 +438,6 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
   public Executor getExecutor(){
     return context.getExecutor();
-  }
-
-  public long getFragmentMemoryLimit() {
-    return allocator.getLimit();
-  }
-
-  public void setFragmentMemoryLimit(long value) {
-    allocator.setLimit(value);
   }
 
   /**

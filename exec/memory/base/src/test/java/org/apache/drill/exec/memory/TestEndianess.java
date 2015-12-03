@@ -29,7 +29,7 @@ public class TestEndianess {
 
   @Test
   public void testLittleEndian() {
-    final BufferAllocator a = new RootAllocator(0, DrillConfig.getMaxDirectMemory());
+    final BufferAllocator a = new RootAllocator(DrillConfig.getMaxDirectMemory());
     final ByteBuf b = a.buffer(4);
     b.setInt(0, 35);
     assertEquals(b.getByte(0), 35);

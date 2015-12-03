@@ -189,7 +189,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
        * do check manager.isCancelled() here, after the fact; it shouldn't
        * change again after its allocator has been closed.
        */
-      assert manager.isCancelled();
+
+      if (!manager.isCancelled()) {
+        throw new IllegalStateException("Failure while transferring ownership when manager is not cancelled.");
+      }
+
       return;
     }
 

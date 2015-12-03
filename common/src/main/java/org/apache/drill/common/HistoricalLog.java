@@ -31,9 +31,11 @@ public class HistoricalLog {
   private static class Event {
     private final String note; // the event text
     private final StackTrace stackTrace; // where the event occurred
+    private final long time;
 
     public Event(final String note) {
       this.note = note;
+      this.time = System.nanoTime();
       stackTrace = new StackTrace();
     }
   }
@@ -141,6 +143,8 @@ public class HistoricalLog {
 
     if (firstEvent != null) {
       sb.append(innerIndentation)
+          .append(firstEvent.time)
+          .append(' ')
           .append(firstEvent.note)
           .append('\n');
       if (includeStackTrace) {
@@ -153,6 +157,8 @@ public class HistoricalLog {
         }
         sb.append(innerIndentation)
             .append("  ")
+            .append(event.time)
+            .append(' ')
             .append(event.note)
             .append('\n');
 

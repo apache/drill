@@ -134,7 +134,7 @@ public class ScanBatch implements CloseableRecordBatch {
                    Iterator<RecordReader> readers)
       throws ExecutionSetupException {
     this(subScanConfig, context,
-        context.newOperatorContext(subScanConfig, false /* ScanBatch is not subject to fragment memory limit */),
+        context.newOperatorContext(subScanConfig),
         readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
   }
 

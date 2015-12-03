@@ -41,7 +41,6 @@ import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -68,10 +67,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
     List<SchemaPath> columns = rowGroupScan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
-    OperatorContext oContext = context.newOperatorContext(rowGroupScan, false /*
-                                                                               * ScanBatch is not subject to fragment
-                                                                               * memory limit
-                                                                               */);
+    OperatorContext oContext = context.newOperatorContext(rowGroupScan);
 
     List<String[]> partitionColumns = Lists.newArrayList();
     List<Integer> selectedPartitionColumns = Lists.newArrayList();

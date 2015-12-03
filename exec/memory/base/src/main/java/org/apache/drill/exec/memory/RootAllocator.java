@@ -25,8 +25,8 @@ import com.google.common.annotations.VisibleForTesting;
  */
 public class RootAllocator extends BaseAllocator {
 
-  public RootAllocator(final long reservation, final long limit) {
-    super(null, "ROOT", reservation, limit);
+  public RootAllocator(final long limit) {
+    super(null, "ROOT", 0, limit);
   }
 
   /**

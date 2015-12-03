@@ -79,11 +79,6 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext {
    */
   private boolean closed = false;
 
-  @Deprecated
-  public QueryContext(final UserSession session, final DrillbitContext drillbitContext) {
-    this(session, drillbitContext, QueryId.getDefaultInstance());
-  }
-
   public QueryContext(final UserSession session, final DrillbitContext drillbitContext, QueryId queryId) {
     this.drillbitContext = drillbitContext;
     this.session = session;

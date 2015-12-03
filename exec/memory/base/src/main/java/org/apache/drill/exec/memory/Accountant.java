@@ -72,7 +72,9 @@ class Accountant implements AutoCloseable {
       // we will allocate a reservation from our parent.
       final AllocationOutcome outcome = parent.allocateBytes(reservation);
       if (!outcome.isOk()) {
-        throw new OutOfMemoryException("Failure trying to allocate initial reservation for Allocator.");
+        throw new OutOfMemoryException(String.format(
+            "Failure trying to allocate initial reservation for Allocator. "
+                + "Attempted to allocate %d bytes and received an outcome of %s.", reservation, outcome.name()));
       }
     }
   }
@@ -97,20 +99,15 @@ class Accountant implements AutoCloseable {
 
   private void updatePeak() {
     final long currentMemory = locallyHeldMemory.get();
-    while (true) {
-      final long previousPeak = peakAllocation.get();
-      if (currentMemory > previousPeak) {
-        if (peakAllocation.compareAndSet(previousPeak, currentMemory)) {
-          // if we're able to update peak, finish.
-          return;
-        } else {
-          // peak allocation changed underneath us. try again.
-          continue;
-        }
-      } else {
+
+    long previousPeak;
+    do {
+      previousPeak = peakAllocation.get();
+      if (peakAllocation.compareAndSet(previousPeak, currentMemory)) {
+        // if we're able to update peak, finish.
         return;
       }
-    }
+    } while (currentMemory > previousPeak);
   }
 
   /**

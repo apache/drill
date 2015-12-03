@@ -83,8 +83,8 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId, int bufferIndex) {
     super(context, fragmentCount);
-    this.allocator = context.getNewChildAllocator("SpoolingRawBatchBufer", 100, ALLOCATOR_INITIAL_RESERVATION,
-        ALLOCATOR_MAX_RESERVATION, true);
+    this.allocator = context.getNewChildAllocator(
+        "SpoolingRawBatchBufer", 100, ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
     this.oppositeId = oppositeId;
     this.bufferIndex = bufferIndex;

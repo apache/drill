@@ -34,7 +34,6 @@ import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.BufferManager;
 
-import com.carrotsearch.hppc.LongObjectOpenHashMap;
 import com.google.common.base.Preconditions;
 
 /**
@@ -64,7 +63,7 @@ public class AllocatorManager {
   private final int size;
   private final UnsafeDirectLittleEndian underlying;
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
-  private final LongObjectOpenHashMap<BufferLedger> map = new LongObjectOpenHashMap<>();
+  private final IdentityHashMap<BufferAllocator, BufferLedger> map = new IdentityHashMap<>();
   private final AutoCloseableLock readLock = new AutoCloseableLock(lock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(lock.writeLock());
   private final IdentityHashMap<DrillBuf, Object> buffers =
@@ -85,24 +84,23 @@ public class AllocatorManager {
    *          The target allocator to associate this buffer with.
    * @return The Ledger (new or existing) that associates the underlying buffer to this new ledger.
    */
-  public BufferLedger associate(BaseAllocator allocator) {
+  public BufferLedger associate(final BaseAllocator allocator) {
     if (root != allocator.root) {
       throw new IllegalStateException(
           "A buffer can only be associated between two allocators that share the same root.");
     }
 
-    final long allocatorId = allocator.getId();
     try (AutoCloseableLock read = readLock.open()) {
 
-      final BufferLedger ledger = map.get(allocatorId);
+      final BufferLedger ledger = map.get(allocator);
       if (ledger != null) {
         return ledger;
       }
 
     }
     try (AutoCloseableLock write = writeLock.open()) {
-      final BufferLedger ledger = new BufferLedger(allocator, new ReleaseListener(allocatorId));
-      map.put(allocatorId, ledger);
+      final BufferLedger ledger = new BufferLedger(allocator, new ReleaseListener(allocator));
+      map.put(allocator, ledger);
       allocator.associateLedger(ledger);
       return ledger;
     }
@@ -115,15 +113,15 @@ public class AllocatorManager {
    */
   private class ReleaseListener {
 
-    private final long allocatorId;
+    private final BufferAllocator allocator;
 
-    public ReleaseListener(long allocatorId) {
-      this.allocatorId = allocatorId;
+    public ReleaseListener(BufferAllocator allocator) {
+      this.allocator = allocator;
     }
 
     public void release() {
       try (AutoCloseableLock write = writeLock.open()) {
-        final BufferLedger oldLedger = map.remove(allocatorId);
+        final BufferLedger oldLedger = map.remove(allocator);
         oldLedger.allocator.dissociateLedger(oldLedger);
 
         if (oldLedger == owningLedger) {
@@ -133,12 +131,11 @@ public class AllocatorManager {
             underlying.release();
           } else {
             // we need to change the owning allocator. we've been removed so we'll get whatever is top of list
-            BufferLedger newLedger = map.iterator().next().value;
+            BufferLedger newLedger = map.values().iterator().next();
 
             // we'll forcefully transfer the ownership and not worry about whether we exceeded the limit
             // since this consumer can do anything with this.
             oldLedger.transferBalance(newLedger);
-            owningLedger = newLedger;
           }
         }
 
@@ -309,7 +306,6 @@ public class AllocatorManager {
      * @param retain
      *          Whether or not the newly created buffer should get an additional reference count added to it.
      * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
-     * @return
      */
     public DrillBuf newDrillBuf(int offset, int length, BufferManager manager, boolean retain) {
       final DrillBuf buf = new DrillBuf(
@@ -328,9 +324,9 @@ public class AllocatorManager {
 
       if (BaseAllocator.DEBUG) {
         historicalLog.recordEvent(
-            "DrillBuf(BufferLedger, BufferAllocator[%d], UnsafeDirectLittleEndian[identityHashCode == "
+            "DrillBuf(BufferLedger, BufferAllocator[%s], UnsafeDirectLittleEndian[identityHashCode == "
                 + "%d](%s)) => ledger hc == %d",
-            allocator.getId(), System.identityHashCode(buf), buf.toString(),
+            allocator.name, System.identityHashCode(buf), buf.toString(),
             System.identityHashCode(this));
 
         synchronized (buffers) {
