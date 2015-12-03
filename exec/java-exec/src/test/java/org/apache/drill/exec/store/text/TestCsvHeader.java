@@ -137,7 +137,6 @@ public class TestCsvHeader extends BaseTestQuery{
   public void testCsvHeaderMismatch() throws Exception {
     String ddir = FileUtils.getResourceAsFile("/store/text/data/d2").toURI().toString();
     String query = String.format("select `Year`, Model, Category from dfs_test.`%s` where Make = 'Chevy'", ddir);
-    
     testBuilder()
             .sqlQuery(query)
             .unOrdered()
