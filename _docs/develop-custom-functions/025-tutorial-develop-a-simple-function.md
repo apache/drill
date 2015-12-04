@@ -203,7 +203,19 @@ For simplicity, use maven to build your project in a pom.xml file as follows:
 ```
 
 ## Add a drill-module.conf File to Resources
-Add a `drill-module.conf` file in the resources folder of your project. The presence of this file tells Drill that your jar contains a custom function. If you have no specific configuration to set for your function, you can keep this file empty.
+Add a `drill-module.conf` file in the resources folder of your project. The presence of this file tells Drill that your jar contains a custom function. This file should contains the name of the package where your function is located.
+
+The file should look like:
+
+```
+drill {
+  classpath.scanning {
+    packages : ${?drill.classpath.scanning.packages} [
+      org.apache.drill.contrib.function
+    ]
+  }
+}
+```
 
 ## Build and Deploy the Function
 Build the function using mvn package:
