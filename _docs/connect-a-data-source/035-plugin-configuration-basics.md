@@ -155,8 +155,8 @@ In Drill version 1.4 and later, you can also set the formats attributes defined 
 The `table function name` is the table name, the type parameter is the format name, and the other parameters are the fields that the format plugin configuration accepts, as defined in the table above (except for `extensions` which do not apply in this context).
 
 For example, to read a CSV file and parse the header:  
-`select a, b from table(dfs.``path/to/data.csv``(type => 'text',
-fieldDelimiter => ',', extractHeader => true))`
+``select a, b from table(dfs.`path/to/data.csv`(type => 'text',
+fieldDelimiter => ',', extractHeader => true))``
 
 For more information about format plugin configuration see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).  
 
