@@ -29,7 +29,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
@@ -282,8 +281,8 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
     if (fieldIds.length == 1 && clazz != null && !clazz.isAssignableFrom(va.getVectorClass())) {
       throw new IllegalStateException(String.format(
-          "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
-          clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
+          "Failure while reading vector.  Expected vector class of %s but was holding vector class %s, field= %s ",
+          clazz.getCanonicalName(), va.getVectorClass().getCanonicalName(), va.getField()));
     }
 
     return va.getChildWrapper(fieldIds);

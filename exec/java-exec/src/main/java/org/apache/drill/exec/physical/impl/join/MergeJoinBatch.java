@@ -102,6 +102,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private JoinWorker worker;
   private boolean areNullsEqual = false; // whether nulls compare equal
 
+
   private static final String LEFT_INPUT = "LEFT INPUT";
   private static final String RIGHT_INPUT = "RIGHT INPUT";
 
@@ -381,13 +382,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   private void allocateBatch(boolean newSchema) {
-    // allocate new batch space.
-    container.zeroVectors();
-
     boolean leftAllowed = status.getLeftStatus() != IterOutcome.NONE;
     boolean rightAllowed = status.getRightStatus() != IterOutcome.NONE;
 
     if (newSchema) {
+      container.clear();
       // add fields from both batches
       if (leftAllowed) {
         for (VectorWrapper<?> w : leftIterator) {
@@ -423,6 +422,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           }
         }
       }
+    } else {
+      container.zeroVectors();
     }
     for (VectorWrapper w : container) {
       AllocationHelper.allocateNew(w.getValueVector(), Character.MAX_VALUE);
@@ -477,9 +478,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   private LogicalExpression materializeExpression(LogicalExpression expression, IterOutcome lastStatus,
                                                   VectorAccessible input, ErrorCollector collector) throws ClassTransformationException {
-    LogicalExpression materializedExpr = null;
+    LogicalExpression materializedExpr;
     if (lastStatus != IterOutcome.NONE) {
-      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry());
+      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry(), unionTypeEnabled);
     } else {
       materializedExpr = new TypedNullConstant(Types.optional(MinorType.INT));
     }
