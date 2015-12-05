@@ -29,3 +29,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Hanifi Gunes | hg |
 | Abdelhakim Deneche | adeneche |
 | Sudheesh Katkam | sudheesh |
+| Ellen Friedman | ellenf |
+

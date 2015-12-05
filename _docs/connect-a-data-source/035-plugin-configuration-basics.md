@@ -148,14 +148,13 @@ You set the formats attributes, such as skipFirstLine, in the `formats` area of 
 
 ## Using the Formats Attributes as Table Function Parameters
 
-You can also set the formats attributes defined above on a per query basis.
-To pass parameters to the format plugin you can use the table function syntax:  
+In Drill version 1.4 and later, you can also set the formats attributes defined above on a per query basis. To pass parameters to the format plugin, use the table function syntax:  
 
 `select a, b from table({table function name}(parameters))`
 
-The table function name is your table name, the type parameter is the format name and the other parameters are the fields that the configuration of the format plugin accepts as defined in the table above (except for `extensions` that does not apply in this context).
+The `table function name` is the table name, the type parameter is the format name, and the other parameters are the fields that the format plugin configuration accepts, as defined in the table above (except for `extensions` which do not apply in this context).
 
-For example to read a CSV file and parse its header:  
+For example, to read a CSV file and parse the header:  
 `select a, b from table(dfs.``path/to/data.csv``(type => 'text',
 fieldDelimiter => ',', extractHeader => true))`
 
