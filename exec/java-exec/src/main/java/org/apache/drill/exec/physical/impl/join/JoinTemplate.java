@@ -60,7 +60,7 @@ public abstract class JoinTemplate implements JoinWorker {
       if (status.left.finished()) {
         return true;
       }
-      final int comparison = doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition());
+      final int comparison = Integer.signum(doCompare(status.left.getCurrentPosition(), status.right.getCurrentPosition()));
       switch (comparison) {
         case -1:
           // left key < right key
