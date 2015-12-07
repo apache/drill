@@ -83,6 +83,12 @@ public abstract class JoinTemplate implements JoinWorker {
             doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
             status.incOutputPos();
           }
+          if (status.isOutgoingBatchFull()) {
+            // Leave iterators at their current positions and markers.
+            // Don't mark on all subsequent doJoin iterations.
+            status.disableMarking();
+            return true;
+          }
           // Move to next position in right iterator.
           status.right.next();
           while (!status.right.finished()) {
@@ -91,8 +97,6 @@ public abstract class JoinTemplate implements JoinWorker {
               doCopyRight(status.right.getCurrentPosition(), status.getOutPosition());
               status.incOutputPos();
               if (status.isOutgoingBatchFull()) {
-                // Leave iterators at their current positions and markers.
-                // Don't mark on all subsequent doJoin iterations.
                 status.disableMarking();
                 return true;
               }

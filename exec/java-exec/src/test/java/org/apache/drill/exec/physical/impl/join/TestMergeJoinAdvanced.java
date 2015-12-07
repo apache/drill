@@ -202,4 +202,16 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
     final long left = r.nextInt(10001) + 1l;
     testMultipleBatchJoin(left, right, "right", left * right + 3l);
   }
+
+  @Test
+  public void testDrill4165() throws Exception {
+    final String query1 = "select count(*) cnt from cp.`tpch/lineitem.parquet` l1, cp.`tpch/lineitem.parquet` l2 where l1.l_partkey = l2.l_partkey and l1.l_suppkey < 30 and l2.l_suppkey < 30";
+    testBuilder()
+      .sqlQuery(query1)
+      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(202452l)
+      .go();
+  }
 }

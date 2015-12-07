@@ -99,7 +99,7 @@ public final class JoinStatus {
   }
 
   public final boolean isOutgoingBatchFull() {
-    return outputPosition == OUTPUT_BATCH_SIZE;
+    return outputPosition >= OUTPUT_BATCH_SIZE;
   }
 
   public final void incOutputPos() {
