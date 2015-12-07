@@ -53,6 +53,11 @@ import java.util.concurrent.TimeUnit;
 public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveMetaStoreClient.class);
 
+  public final String HIVE_METASTORE_CACHE_TTL = "hive.metastore.cache-ttl-seconds";
+  public final String HIVE_METASTORE_CACHE_EXPIRE = "hive.metastore.cache-expire-after";
+  public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE = "write";
+  public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS = "access";
+
   protected final Map<String, String> hiveConfigOverride;
 
   protected final LoadingCache<String, List<String>> databases;
@@ -137,22 +142,38 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   private DrillHiveMetaStoreClient(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride)
       throws MetaException {
     super(hiveConf);
+
+    int hmsCacheTTL = 60; // default is 60 seconds
+    boolean expireAfterWrite = true; // default is expire after write.
+
+    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_TTL)) {
+      hmsCacheTTL = Integer.valueOf(hiveConfigOverride.get(HIVE_METASTORE_CACHE_TTL));
+      logger.warn("Hive metastore cache ttl is set to {} seconds.", hmsCacheTTL);
+    }
+
+    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_EXPIRE)) {
+      if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE)) {
+        expireAfterWrite = true;
+      } else if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS)) {
+        expireAfterWrite = false;
+      }
+      logger.warn("Hive metastore cache expire policy is set to {}", expireAfterWrite? "expireAfterWrite" : "expireAfterAccess");
+    }
+
     this.hiveConfigOverride = hiveConfigOverride;
 
-    databases = CacheBuilder //
-        .newBuilder() //
-        .expireAfterWrite(1, TimeUnit.MINUTES) //
-        .build(new DatabaseLoader());
+    final CacheBuilder cacheBuilder = CacheBuilder
+        .newBuilder();
 
-    tableNameLoader = CacheBuilder //
-        .newBuilder() //
-        .expireAfterWrite(1, TimeUnit.MINUTES) //
-        .build(new TableNameLoader());
+    if (expireAfterWrite) {
+      cacheBuilder.expireAfterWrite(hmsCacheTTL, TimeUnit.SECONDS);
+    } else {
+      cacheBuilder.expireAfterAccess(hmsCacheTTL, TimeUnit.SECONDS);
+    }
 
-    tableLoaders = CacheBuilder //
-        .newBuilder() //
-        .expireAfterWrite(1, TimeUnit.MINUTES) //
-        .build(new TableLoader());
+    databases = cacheBuilder.build(new DatabaseLoader());
+    tableNameLoader = cacheBuilder.build(new TableNameLoader());
+    tableLoaders = cacheBuilder.build(new TableLoader());
 
   }
 
