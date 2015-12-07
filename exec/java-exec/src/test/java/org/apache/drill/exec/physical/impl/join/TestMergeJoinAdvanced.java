@@ -208,7 +208,6 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
     final String query1 = "select count(*) cnt from cp.`tpch/lineitem.parquet` l1, cp.`tpch/lineitem.parquet` l2 where l1.l_partkey = l2.l_partkey and l1.l_suppkey < 30 and l2.l_suppkey < 30";
     testBuilder()
       .sqlQuery(query1)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
       .unOrdered()
       .baselineColumns("cnt")
       .baselineValues(202452l)
