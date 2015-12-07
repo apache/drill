@@ -16,6 +16,8 @@
  * limitations under the License.
  ******************************************************************************/
 
+import java.io.File;
+
 <@pp.dropOutputFile />
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/DirectoryExplorers.java" />
@@ -23,6 +25,8 @@
 <#include "/@includes/license.ftl" />
 
 package org.apache.drill.exec.expr.fn.impl;
+
+import java.io.File;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -38,7 +42,7 @@ import javax.inject.Inject;
  */
 public class DirectoryExplorers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectoryExplorers.class);
-  private static final String FILE_SEPARATOR = "/";
+  private static final String FILE_SEPARATOR = File.separator;
 
   <#list [ { "name" : "\"maxdir\"", "functionClassName" : "MaxDir", "comparison" : "compareTo(curr) < 0", "goal" : "maximum", "comparisonType" : "case-sensitive"},
            { "name" : "\"imaxdir\"", "functionClassName" : "IMaxDir", "comparison" : "compareToIgnoreCase(curr) < 0", "goal" : "maximum", "comparisonType" : "case-insensitive"},
@@ -94,7 +98,7 @@ public class DirectoryExplorers {
           subPartitionStr = curr;
         }
       }
-      String[] subPartitionParts = subPartitionStr.split(FILE_SEPARATOR);
+      String[] subPartitionParts = subPartitionStr.split(org.apache.drill.exec.expr.fn.impl.DirectoryExplorers.FILE_SEPARATOR);
       subPartitionStr = subPartitionParts[subPartitionParts.length - 1];
       byte[] result = subPartitionStr.getBytes();
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);
