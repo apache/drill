@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.RecordIterator;
@@ -99,7 +100,8 @@ public final class JoinStatus {
   }
 
   public final boolean isOutgoingBatchFull() {
-    return outputPosition >= OUTPUT_BATCH_SIZE;
+    Preconditions.checkArgument(outputPosition <= OUTPUT_BATCH_SIZE);
+    return outputPosition == OUTPUT_BATCH_SIZE;
   }
 
   public final void incOutputPos() {
