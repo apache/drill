@@ -445,4 +445,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   }
 
+  @Override
+  public void clear() {
+    this.valueCount = 0;
+    super.clear();
+  }
 }
