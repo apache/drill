@@ -1,26 +1,5 @@
 {
     "by_title": {
-        "ALTER SESSION": {
-            "breadcrumbs": [
-                {
-                    "title": "SQL Commands", 
-                    "url": "/docs/sql-commands/"
-                }, 
-                {
-                    "title": "SQL Reference", 
-                    "url": "/docs/sql-reference/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "ALTER SYSTEM", 
-            "next_url": "/docs/alter-system/", 
-            "parent": "SQL Commands", 
-            "previous_title": "Supported SQL Commands", 
-            "previous_url": "/docs/supported-sql-commands/", 
-            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
-            "title": "ALTER SESSION", 
-            "url": "/docs/alter-session/"
-        }, 
         "ALTER SYSTEM": {
             "breadcrumbs": [
                 {
@@ -36,8 +15,8 @@
             "next_title": "CREATE TABLE AS (CTAS)", 
             "next_url": "/docs/create-table-as-ctas/", 
             "parent": "SQL Commands", 
-            "previous_title": "ALTER SESSION", 
-            "previous_url": "/docs/alter-session/", 
+            "previous_title": "RESET", 
+            "previous_url": "/docs/reset/", 
             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
             "title": "ALTER SYSTEM", 
             "url": "/docs/alter-system/"
@@ -7672,6 +7651,27 @@
             "title": "REPEATED_COUNT", 
             "url": "/docs/repeated-count/"
         }, 
+        "RESET": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ALTER SYSTEM", 
+            "next_url": "/docs/alter-system/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SET", 
+            "previous_url": "/docs/set/", 
+            "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
+            "title": "RESET", 
+            "url": "/docs/reset/"
+        }, 
         "REST API": {
             "breadcrumbs": [
                 {
@@ -8041,6 +8041,27 @@
             "title": "SELECT List", 
             "url": "/docs/select-list/"
         }, 
+        "SET": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "RESET", 
+            "next_url": "/docs/reset/", 
+            "parent": "SQL Commands", 
+            "previous_title": "Supported SQL Commands", 
+            "previous_url": "/docs/supported-sql-commands/", 
+            "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
+            "title": "SET", 
+            "url": "/docs/set/"
+        }, 
         "SHOW DATABASES and SHOW SCHEMAS": {
             "breadcrumbs": [
                 {
@@ -8124,8 +8145,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ALTER SESSION", 
-                    "next_url": "/docs/alter-session/", 
+                    "next_title": "SET", 
+                    "next_url": "/docs/set/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SQL Commands", 
                     "previous_url": "/docs/sql-commands/", 
@@ -8145,14 +8166,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ALTER SYSTEM", 
-                    "next_url": "/docs/alter-system/", 
+                    "next_title": "RESET", 
+                    "next_url": "/docs/reset/", 
                     "parent": "SQL Commands", 
                     "previous_title": "Supported SQL Commands", 
                     "previous_url": "/docs/supported-sql-commands/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
-                    "title": "ALTER SESSION", 
-                    "url": "/docs/alter-session/"
+                    "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
+                    "title": "SET", 
+                    "url": "/docs/set/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ALTER SYSTEM", 
+                    "next_url": "/docs/alter-system/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "SET", 
+                    "previous_url": "/docs/set/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
+                    "title": "RESET", 
+                    "url": "/docs/reset/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8169,8 +8211,8 @@
                     "next_title": "CREATE TABLE AS (CTAS)", 
                     "next_url": "/docs/create-table-as-ctas/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "ALTER SESSION", 
-                    "previous_url": "/docs/alter-session/", 
+                    "previous_title": "RESET", 
+                    "previous_url": "/docs/reset/", 
                     "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                     "title": "ALTER SYSTEM", 
                     "url": "/docs/alter-system/"
@@ -9451,8 +9493,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SESSION", 
-                            "next_url": "/docs/alter-session/", 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -9472,14 +9514,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM", 
-                            "next_url": "/docs/alter-system/", 
+                            "next_title": "RESET", 
+                            "next_url": "/docs/reset/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
-                            "title": "ALTER SESSION", 
-                            "url": "/docs/alter-session/"
+                            "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
+                            "title": "SET", 
+                            "url": "/docs/set/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SET", 
+                            "previous_url": "/docs/set/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
+                            "title": "RESET", 
+                            "url": "/docs/reset/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -9496,8 +9559,8 @@
                             "next_title": "CREATE TABLE AS (CTAS)", 
                             "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SESSION", 
-                            "previous_url": "/docs/alter-session/", 
+                            "previous_title": "RESET", 
+                            "previous_url": "/docs/reset/", 
                             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                             "title": "ALTER SYSTEM", 
                             "url": "/docs/alter-system/"
@@ -10699,8 +10762,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ALTER SESSION", 
-            "next_url": "/docs/alter-session/", 
+            "next_title": "SET", 
+            "next_url": "/docs/set/", 
             "parent": "SQL Commands", 
             "previous_title": "SQL Commands", 
             "previous_url": "/docs/sql-commands/", 
@@ -15048,8 +15111,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SESSION", 
-                            "next_url": "/docs/alter-session/", 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -15069,14 +15132,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM", 
-                            "next_url": "/docs/alter-system/", 
+                            "next_title": "RESET", 
+                            "next_url": "/docs/reset/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/010-alter-session.md", 
-                            "title": "ALTER SESSION", 
-                            "url": "/docs/alter-session/"
+                            "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
+                            "title": "SET", 
+                            "url": "/docs/set/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "SET", 
+                            "previous_url": "/docs/set/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
+                            "title": "RESET", 
+                            "url": "/docs/reset/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -15093,8 +15177,8 @@
                             "next_title": "CREATE TABLE AS (CTAS)", 
                             "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ALTER SESSION", 
-                            "previous_url": "/docs/alter-session/", 
+                            "previous_title": "RESET", 
+                            "previous_url": "/docs/reset/", 
                             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
                             "title": "ALTER SYSTEM", 
                             "url": "/docs/alter-system/"
