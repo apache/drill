@@ -10,7 +10,7 @@ level settings override system level settings.
 
 ## Configuring Planning and Execution Options
 
-Use the ALTER SYSTEM or ALTER SESSION commands to set options. Typically,
+Use the [ALTER SYSTEM]({{site.baseurl}}/docs/alter-system/) or [SET]({{site.baseurl}}/docs/set/) commands to set planning and execution options. Typically,
 you set the options at the session level unless you want the setting to
 persist across all sessions.
 
