@@ -8,7 +8,7 @@ you can limit the access of certain users to Web Console functionality, such as 
 With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information. -->
 
 ## HTTPS Support
-Drill 1.2 uses the Linux Pluggable Authentication Module (PAM) and code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
+Drill 1.2 uses code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
 
 `drill.exec.http.ssl_enabled`
 

@@ -16,7 +16,7 @@ To start the Drill shell in embedded mode, use the `drill-embedded` command. Int
 
 To start Drill, you can also use the **sqlline** command and a custom connection string, as described in detail in ["Using an Ad-Hoc Connection to Drill"]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/#using-an-ad-hoc-connection-to-drill). For example, you can specify the default storage plugin configuration when you start the shell. Doing so eliminates the need to specify the storage plugin configuration in the query. For example, this command specifies the `dfs` storage plugin:
 
-`bin/sqlline –u jdbc:drill:schema=dfs;zk=local`
+`bin/sqlline –u jdbc:drill:zk=local;schema=dfs`
 
 If you start Drill on one network, and then want to use Drill on another network, such as your home network, restart Drill.
 

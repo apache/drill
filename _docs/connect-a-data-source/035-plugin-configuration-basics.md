@@ -84,13 +84,13 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats"</td>
-    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"*<br>"sequencefile"</td>
+    <td>"psv"<br>"csv"<br>"tsv"<br>"parquet"<br>"json"<br>"avro"<br>"maprdb"<br>"sequencefile"</td>
     <td>yes</td>
-    <td>One or more valid file formats for reading. Drill implicitly detects formats of some files based on extension or bits of data in the file; others require configuration.</td>
+    <td>One or more valid file formats for reading. Drill detects formats of some files; others require configuration. The maprdb format is in installations of the mapr-drill package.  </td>
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"*<br>"avro"<br>"sequencefile"</td>
+    <td>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"sequencefile"</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
@@ -135,12 +135,10 @@ The following table describes the attributes you configure for storage plugins i
     <td>"formats" . . . "extractHeader"</td>
     <td>true</td>
     <td>no</td>
-    <td>Set to true to extract and use headers as column names when reading a delimited text file, false otherwise. Ensure skipFirstLine=false when extractHeader=true.
+    <td>Set to true to extract and use headers as column names when reading a delimited text file, false otherwise. Ensure skipFirstLine is not true when extractHeader=false.
     </td>
   </tr>
 </table>
-
-\* Pertains only to distributed Drill installations using the mapr-drill package.  
 
 ## Using the Formats Attributes
 

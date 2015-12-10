@@ -16,7 +16,7 @@ The [Drill prompt]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/#a
 
 You can use the schema option in the **sqlline** command to specify a storage plugin. Specifying the storage plugin when you start up eliminates the need to specify the storage plugin in the query. For example, this command specifies the `dfs` storage plugin:
 
-`C:\bin\sqlline sqlline.bat –u "jdbc:drill:schema=dfs;zk=local"`
+`C:\bin\sqlline sqlline.bat –u "jdbc:drill:zk=local;schema=dfs"`
 
 If you start Drill on one network, and then want to use Drill on another network, such as your home network, restart Drill.
 

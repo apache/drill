@@ -35,8 +35,8 @@ drill-1.0.0.tar.gz](http://apache.osuosl.org/drill/drill-1.0.0/apache-drill-1.0.
 
 The format of the JDBC URL differs slightly, depending on the way you want to connect to the Drillbit: random, local, or direct. This section covers using the URL for a random or local connection. Using a URL to [directly connect to a Drillbit]({{site.baseurl}}/docs/using-the-jdbc-driver/#using-the-jdbc-url-format-for-a-direct-drillbit-connection) is covered later. If you want ZooKeeper to randomly choose a Drillbit in the cluster, or if you want to connect to the local Drillbit, the format of the driver URL is:
 
-`jdbc:drill:[schema=<storage plugin>;]zk=<zk name>[:<port>][,<zk name2>[:<port>]... `  
-  `]<directory>/<cluster ID>`
+`jdbc:drill:zk=<zk name>[:<port>][,<zk name2>[:<port>]... `  
+  `<directory>/<cluster ID>;[schema=<storage plugin>]`
 
 where
 
@@ -80,8 +80,8 @@ drill.exec: {
 
 If you want to connect directly to a Drillbit instead of using ZooKeeper to choose the Drillbit, replace `zk=<zk name>` with `drillbit=<node>` as shown in the following URL.
 
-`jdbc:drill:[schema=<storage plugin>;]drillbit=<node name>[:<port>][,<node name2>[:<port>]... `  
-  `]<directory>/<cluster ID>`
+`jdbc:drill:drillbit=<node name>[:<port>][,<node name2>[:<port>]... `  
+  `<directory>/<cluster ID>[schema=<storage plugin>]`
 
 where
 
