@@ -30,4 +30,5 @@ We welcome contributions to the project. If you're interested in contributing, t
 | Abdelhakim Deneche | adeneche |
 | Sudheesh Katkam | sudheesh |
 | Ellen Friedman | ellenf |
+| Kris Hahn | krishahn |
 
