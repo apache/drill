@@ -42,15 +42,25 @@ public class BatchPrinter {
     }
     int width = columns.size();
     for (int j = 0; j < sv4.getCount(); j++) {
+      if (j%50 == 0) {
+        System.out.println(StringUtils.repeat("-", width * 17 + 1));
+        for (String column : columns) {
+          System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
+        }
+        System.out.printf("|\n");
+        System.out.println(StringUtils.repeat("-", width*17 + 1));
+      }
       for (VectorWrapper vw : batch) {
         Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(sv4.get(j) & 65535);
-        if (o instanceof byte[]) {
-          String value = new String((byte[]) o);
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+        String value;
+        if (o == null) {
+          value = "null";
+        } else if (o instanceof byte[]) {
+          value = new String((byte[]) o);
         } else {
-          String value = o.toString();
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
+          value = o.toString();
         }
+        System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
       }
       System.out.printf("|\n");
     }
