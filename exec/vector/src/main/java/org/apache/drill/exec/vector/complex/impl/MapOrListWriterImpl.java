@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.avro;
+package org.apache.drill.exec.vector.complex.impl;
 
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapOrListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
 import org.apache.drill.exec.vector.complex.writer.BitWriter;
@@ -26,26 +27,22 @@ import org.apache.drill.exec.vector.complex.writer.IntWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
 
-/**
- * Impersonates a map writer or a list writer depending on construction type.
- * Perhaps this is a tragic misuse of polymorphism?
- */
-public class MapOrListWriter {
+public class MapOrListWriterImpl implements MapOrListWriter {
 
-  final BaseWriter.MapWriter map;
-  final BaseWriter.ListWriter list;
+  public final BaseWriter.MapWriter map;
+  public final BaseWriter.ListWriter list;
 
-  MapOrListWriter(final BaseWriter.MapWriter writer) {
+  public MapOrListWriterImpl(final BaseWriter.MapWriter writer) {
     this.map = writer;
     this.list = null;
   }
 
-  MapOrListWriter(final BaseWriter.ListWriter writer) {
+  public MapOrListWriterImpl(final BaseWriter.ListWriter writer) {
     this.map = null;
     this.list = writer;
   }
 
-  void start() {
+  public void start() {
     if (map != null) {
       map.start();
     } else {
@@ -53,7 +50,7 @@ public class MapOrListWriter {
     }
   }
 
-  void end() {
+  public void end() {
     if (map != null) {
       map.end();
     } else {
@@ -61,54 +58,55 @@ public class MapOrListWriter {
     }
   }
 
-  MapOrListWriter map(final String name) {
+  public MapOrListWriter map(final String name) {
     assert map != null;
-    return new MapOrListWriter(map.map(name));
+    return new MapOrListWriterImpl(map.map(name));
   }
 
-  MapOrListWriter listoftmap(final String name) {
+  public MapOrListWriter listoftmap(final String name) {
     assert list != null;
-    return new MapOrListWriter(list.map());
+    return new MapOrListWriterImpl(list.map());
   }
 
-  MapOrListWriter list(final String name) {
+  public MapOrListWriter list(final String name) {
     assert map != null;
-    return new MapOrListWriter(map.list(name));
+    return new MapOrListWriterImpl(map.list(name));
   }
 
-  boolean isMapWriter() {
+  public boolean isMapWriter() {
     return map != null;
   }
 
-  boolean isListWriter() {
+  public boolean isListWriter() {
     return list != null;
   }
 
-  VarCharWriter varChar(final String name) {
+  public VarCharWriter varChar(final String name) {
     return (map != null) ? map.varChar(name) : list.varChar();
   }
 
-  IntWriter integer(final String name) {
+  public IntWriter integer(final String name) {
     return (map != null) ? map.integer(name) : list.integer();
   }
 
-  BigIntWriter bigInt(final String name) {
+  public BigIntWriter bigInt(final String name) {
     return (map != null) ? map.bigInt(name) : list.bigInt();
   }
 
-  Float4Writer float4(final String name) {
+  public Float4Writer float4(final String name) {
     return (map != null) ? map.float4(name) : list.float4();
   }
 
-  Float8Writer float8(final String name) {
+  public Float8Writer float8(final String name) {
     return (map != null) ? map.float8(name) : list.float8();
   }
 
-  BitWriter bit(final String name) {
+  public BitWriter bit(final String name) {
     return (map != null) ? map.bit(name) : list.bit();
   }
 
-  VarBinaryWriter binary(final String name) {
+  public VarBinaryWriter binary(final String name) {
     return (map != null) ? map.varBinary(name) : list.varBinary();
   }
+
 }

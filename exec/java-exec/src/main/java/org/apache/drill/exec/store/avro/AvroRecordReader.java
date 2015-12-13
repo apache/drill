@@ -47,12 +47,14 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+
 import org.apache.hadoop.security.UserGroupInformation;
 
 /**
@@ -166,14 +168,14 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     switch (type) {
       case RECORD:
-        process(container, schema, null, new MapOrListWriter(writer.rootAsMap()));
+        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()));
         break;
       default:
         throw new DrillRuntimeException("Root object must be record type. Found: " + type);
     }
   }
 
-  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriter writer) {
+  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer) {
     if (value == null) {
       return;
     }
@@ -182,14 +184,14 @@ public class AvroRecordReader extends AbstractRecordReader {
     switch (type) {
       case RECORD:
         // list field of MapOrListWriter will be non null when we want to store array of maps/records.
-        MapOrListWriter _writer = writer;
+        MapOrListWriterImpl _writer = writer;
 
         for (final Schema.Field field : schema.getFields()) {
           if (field.schema().getType() == Schema.Type.RECORD ||
               (field.schema().getType() == Schema.Type.UNION &&
               field.schema().getTypes().get(0).getType() == Schema.Type.NULL &&
               field.schema().getTypes().get(1).getType() == Schema.Type.RECORD)) {
-            _writer = writer.map(field.name());
+              _writer = (MapOrListWriterImpl) writer.map(field.name());
           }
 
           process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer);
@@ -201,9 +203,9 @@ public class AvroRecordReader extends AbstractRecordReader {
         Schema elementSchema = array.getSchema().getElementType();
         Type elementType = elementSchema.getType();
         if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){
-          writer = writer.list(fieldName).listoftmap(fieldName);
+          writer = (MapOrListWriterImpl) writer.list(fieldName).listoftmap(fieldName);
         } else {
-          writer = writer.list(fieldName);
+          writer = (MapOrListWriterImpl) writer.list(fieldName);
         }
         writer.start();
         for (final Object o : array) {
@@ -222,7 +224,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         @SuppressWarnings("unchecked")
         final HashMap<Object, Object> map = (HashMap<Object, Object>) value;
         Schema valueSchema = schema.getValueType();
-        writer = writer.map(fieldName);
+        writer = (MapOrListWriterImpl) writer.map(fieldName);
         writer.start();
         for (Entry<Object, Object> entry : map.entrySet()) {
           process(entry.getValue(), valueSchema, entry.getKey().toString(), writer);
@@ -256,7 +258,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   }
 
   private void processPrimitive(final Object value, final Schema.Type type, final String fieldName,
-                                final MapOrListWriter writer) {
+                                final MapOrListWriterImpl writer) {
     if (value == null) {
       return;
     }

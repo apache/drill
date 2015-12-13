@@ -33,10 +33,12 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.bson.BsonRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.bson.Document;
+import org.bson.BsonDocument;
+import org.bson.BsonDocumentReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +56,11 @@ import com.mongodb.client.MongoDatabase;
 public class MongoRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
 
-  private MongoCollection<Document> collection;
-  private MongoCursor<Document> cursor;
+  private MongoCollection<BsonDocument> collection;
+  private MongoCursor<BsonDocument> cursor;
 
   private JsonReader jsonReader;
+  private BsonRecordReader bsonReader;
   private VectorContainerWriter writer;
 
   private BasicDBObject filters;
@@ -71,12 +74,10 @@ public class MongoRecordReader extends AbstractRecordReader {
   private final boolean enableAllTextMode;
   private final boolean readNumbersAsDouble;
   private boolean unionEnabled;
+  private final boolean isBsonRecordReader;
 
-  public MongoRecordReader(
-      MongoSubScan.MongoSubScanSpec subScanSpec,
-      List<SchemaPath> projectedColumns,
-      FragmentContext context,
-      MongoStoragePlugin plugin) {
+  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
+      FragmentContext context, MongoStoragePlugin plugin) {
 
     fields = new BasicDBObject();
     // exclude _id field, if not mentioned by user.
@@ -85,11 +86,13 @@ public class MongoRecordReader extends AbstractRecordReader {
     fragmentContext = context;
     this.plugin = plugin;
     filters = new BasicDBObject();
-    Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(
-        subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
+    Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(subScanSpec.getMinFilters(),
+        subScanSpec.getMaxFilters());
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
+    isBsonRecordReader = fragmentContext.getOptions().getOption(ExecConstants.MONGO_BSON_RECORD_READER).bool_val;
+    logger.debug("BsonRecordReader is enabled? " + isBsonRecordReader);
     init(subScanSpec);
   }
 
@@ -97,7 +100,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (!isStarQuery()) {
-      for (SchemaPath column : projectedColumns ) {
+      for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
         transformed.add(column);
         this.fields.put(fieldName, Integer.valueOf(1));
@@ -110,8 +113,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     return transformed;
   }
 
-  private void buildFilters(BasicDBObject pushdownFilters,
-      Map<String, List<BasicDBObject>> mergedFilters) {
+  private void buildFilters(BasicDBObject pushdownFilters, Map<String, List<BasicDBObject>> mergedFilters) {
     for (Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
       List<BasicDBObject> list = entry.getValue();
       if (list.size() == 1) {
@@ -124,8 +126,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     if (pushdownFilters != null && !pushdownFilters.toMap().isEmpty()) {
       if (!mergedFilters.isEmpty()) {
-        this.filters = MongoUtils.andFilterAtIndex(this.filters,
-            pushdownFilters);
+        this.filters = MongoUtils.andFilterAtIndex(this.filters, pushdownFilters);
       } else {
         this.filters = pushdownFilters;
       }
@@ -140,26 +141,34 @@ public class MongoRecordReader extends AbstractRecordReader {
     }
     MongoClient client = plugin.getClient(addresses);
     MongoDatabase db = client.getDatabase(subScanSpec.getDbName());
-    collection = db.getCollection(subScanSpec.getCollectionName());
     this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    collection = db.getCollection(subScanSpec.getCollectionName(), BsonDocument.class);
   }
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = context;
     this.writer = new VectorContainerWriter(output, unionEnabled);
-    this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()), enableAllTextMode, false, readNumbersAsDouble);
-
+    // Default is BsonReader and all text mode will not be honored in
+    // BsonRecordReader
+    if (isBsonRecordReader) {
+      this.bsonReader = new BsonRecordReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
+          readNumbersAsDouble);
+      logger.debug("Initialized BsonRecordReader. ");
+    } else {
+      this.jsonReader = new JsonReader(fragmentContext.getManagedBuffer(), Lists.newArrayList(getColumns()),
+          enableAllTextMode, false, readNumbersAsDouble);
+      logger.debug(" Intialized JsonRecordReader. ");
+    }
   }
 
   @Override
   public int next() {
-    if(cursor == null){
+    if (cursor == null) {
       logger.info("Filters Applied : " + filters);
       logger.info("Fields Selected :" + fields);
       cursor = collection.find(filters).projection(fields).batchSize(100).iterator();
     }
-
 
     writer.allocate();
     writer.reset();
@@ -171,17 +180,25 @@ public class MongoRecordReader extends AbstractRecordReader {
     try {
       while (docCount < BaseValueVector.INITIAL_VALUE_ALLOCATION && cursor.hasNext()) {
         writer.setPosition(docCount);
-        String doc = cursor.next().toJson();
-        jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
-        jsonReader.write(writer);
+        if (isBsonRecordReader) {
+          BsonDocument bsonDocument = cursor.next();
+          bsonReader.write(writer, new BsonDocumentReader(bsonDocument));
+        } else {
+          String doc = cursor.next().toJson();
+          jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
+          jsonReader.write(writer);
+        }
         docCount++;
       }
 
-      jsonReader.ensureAtLeastOneField(writer);
+      if (isBsonRecordReader) {
+        bsonReader.ensureAtLeastOneField(writer);
+      } else {
+        jsonReader.ensureAtLeastOneField(writer);
+      }
 
       writer.setValueCount(docCount);
-      logger.debug("Took {} ms to get {} records",
-          watch.elapsed(TimeUnit.MILLISECONDS), docCount);
+      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), docCount);
       return docCount;
     } catch (IOException e) {
       String msg = "Failure while reading document. - Parser was at record: " + (docCount + 1);
@@ -193,6 +210,5 @@ public class MongoRecordReader extends AbstractRecordReader {
   @Override
   public void close() {
   }
-
 
 }

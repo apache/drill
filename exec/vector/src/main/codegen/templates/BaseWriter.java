@@ -97,4 +97,21 @@ package org.apache.drill.exec.vector.complex.writer;
     void setValueCount(int count);
     void reset();
   }
+
+  public interface MapOrListWriter {
+    void start();
+    void end();
+    MapOrListWriter map(String name);
+    MapOrListWriter listoftmap(String name);
+    MapOrListWriter list(String name);
+    boolean isMapWriter();
+    boolean isListWriter();
+    VarCharWriter varChar(String name);
+    IntWriter integer(String name);
+    BigIntWriter bigInt(String name);
+    Float4Writer float4(String name);
+    Float8Writer float8(String name);
+    BitWriter bit(String name);
+    VarBinaryWriter binary(String name);
+  }
 }

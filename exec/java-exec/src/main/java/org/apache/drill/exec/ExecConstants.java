@@ -153,6 +153,8 @@ public interface ExecConstants {
   OptionValidator MONGO_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(MONGO_ALL_TEXT_MODE, false);
   String MONGO_READER_READ_NUMBERS_AS_DOUBLE = "store.mongo.read_numbers_as_double";
   OptionValidator MONGO_READER_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(MONGO_READER_READ_NUMBERS_AS_DOUBLE, false);
+  String MONGO_BSON_RECORD_READER = "store.mongo.bson.record.reader";
+  OptionValidator MONGO_BSON_RECORD_READER_VALIDATOR = new BooleanValidator(MONGO_BSON_RECORD_READER, true);
 
   BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator("exec.enable_union_type", false);
 
