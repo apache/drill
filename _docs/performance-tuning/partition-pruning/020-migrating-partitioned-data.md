@@ -39,8 +39,8 @@ To migrate Parquet data for use in Drill 1.3 that you partitioned and generated 
 4. If you use [Parquet metadata caching]({{site.baseurl}}/docs/optimizing-parquet-metadata-reading/#how-to-trigger-generation-of-the-parquet-metadata-cache-file):  
    * Delete the cache file you generated from all directories and subdirectories where you plan to run the upgrade tool.  
    * Run REFRESH TABLE METADATA on all the folders where a cache file previously existed.  
-5. Run the upgrade tool as shown in the following example:  
-   `java -Dlog.path=/home/rchallapalli/work/drill-upgrade/upgrade.log -cp drill-upgrade-1.0-jar-with-dependencies.jar org.apache.drill.upgrade.Upgrade_12_13 --tempDir=maprfs:///drill/upgrade-temp maprfs:///drill/testdata/`
+5. Run the upgrade tool as shown in the following example:    
+        java -Dlog.path=/<your path>/drill-upgrade/upgrade.log -cp drill-upgrade-1.0-jar-with-dependencies.jar org.apache.drill.upgrade.Upgrade_12_13 --tempDir=maprfs:///drill/upgrade-temp maprfs:///drill/testdata/
 
 ## Checking the Success of the Migration
 If you perform an unattended migration, check that the temp directory or directories are empty. Empty directories indicate success.
