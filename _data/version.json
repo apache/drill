@@ -1,7 +1,7 @@
 {
-  "display_version": "1.3",
-  "full_version": "1.3.0",
-  "release_date": "November 23, 2015",
-  "blog_post": "/blog/2015/11/23/drill-1.3-released/",
-  "release_notes": "https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12313820&version=12332946"
+  "display_version": "1.4",
+  "full_version": "1.4.0",
+  "release_date": "December 14, 2015",
+  // "blog_post": "/blog/2015/11/23/drill-1.3-released/",
+  "release_notes": "https://drill.apache.org/docs/apache-drill-1-4-0-release-notes/"
 }
