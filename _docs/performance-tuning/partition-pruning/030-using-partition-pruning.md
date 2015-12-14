@@ -7,7 +7,7 @@ In Drill 1.1.0 and later, if the data source is Parquet, no data organization ta
 
 ## How to Partition Data
 
-Write Parquet data using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement. 
+In Drill 1.1.0 and later, write Parquet data using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement. 
 
 The Parquet writer first sorts data by the partition keys, and then creates a new file when it encounters a new value for the partition columns. During partitioning, Drill creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there can be multiple files for the same partition value. 
 

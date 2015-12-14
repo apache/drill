@@ -16,14 +16,16 @@ The upgrade tool simply inserts a version number in the metadata to mark the fil
 
 <!-- The bug fix eliminated the risk of inaccurate metadata that could cause incorrect results when querying Hive- and Pig-generated Parquet files. No such risk exists with Drill-generated Parquet files. Querying Drill-generated Parquet files, regardless of the Drill version, yields accurate results. Drill-generated Parquet files, regardless of the Drill release, contain accurate metadata. -->
 
-## How to Migrate Data
-Use the [drill-upgrade tool](https://github.com/parthchandra/drill-upgrade)to modify one file at a time. The temp directory holds a copy of the file that is currently being modified for recovery in the event of a system failure. 
+
+## Preparing for the Migration
+Set aside sufficient time for the migration. In a test by Drill developers, it took 32 minutes to upgrade 1TB data in 840 files and 370 minutes to upgrade 100 GB data in 200k files. Although the size of files is a factor in the upgrade time, the number of files is the most significant factor.
 
 System administrators can write a shell script to run the upgrade tool simultaneously on multiple sub-directories.
 
-## Preparing for the Migration
-In a test by Drill developers, it took 32 minutes to upgrade 1TB data in 840 files and
-370 minutes to upgrade 100 GB data in 200k files. Although the size of files is a factor in the upgrade time, the number of files is the most significant factor.
+Back up the data to be migrated and create one or more `temp` directories as described in the next section before migrating the data.
+
+## How to Migrate Data
+Use the [drill-upgrade tool](https://github.com/parthchandra/drill-upgrade) to modify one file at a time. The `temp` directory or directories hold a copy for recovery of the file(s) currently being modified in the event of a system failure. Inspecting the `temp` directory can also indicate the success or failure of an unattended migration.
 
 To migrate Parquet data for use in Drill 1.3 that you partitioned and generated in Drill 1.1 or 1.2, follow these steps:
 
@@ -41,10 +43,16 @@ To migrate Parquet data for use in Drill 1.3 that you partitioned and generated 
    `java -Dlog.path=/home/rchallapalli/work/drill-upgrade/upgrade.log -cp drill-upgrade-1.0-jar-with-dependencies.jar org.apache.drill.upgrade.Upgrade_12_13 --tempDir=maprfs:///drill/upgrade-temp maprfs:///drill/testdata/`
 
 ## Checking the Success of the Migration
+If you perform an unattended migration, check that the temp directory or directories are empty. Empty directories indicate success.
 
 ## Handling of Migration Failure
 
-If a network connection goes down, or if a user cancels the operation, the file that was being processed at the time of cancellation could be corrupted. So we should always copy the file back from the temp directory. Now if we re-run the upgrade tool, it will skip the files that it has already processed and only updates the remaining files.
+If a network connection goes down, or if a user cancels the operation, the file that was being processed at the time of cancellation could be corrupted. To recover from such a situation, perform the following steps:
+
+1. Copy the file back from the temp directory to your directory of Parquet files. 
+2. Re-run the upgrade tool.
+
+The tool skips the files that it has already processed and only updates the remaining files.
 
 
 
