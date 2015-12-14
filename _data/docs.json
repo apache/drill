@@ -371,11 +371,28 @@
             "next_title": "Apache Drill 1.2.0 Release Notes", 
             "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
             "parent": "Release Notes", 
-            "previous_title": "Release Notes", 
-            "previous_url": "/docs/release-notes/", 
+            "previous_title": "Apache Drill 1.4.0 Release Notes", 
+            "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
             "relative_path": "_docs/rn/008-1.3.0-rn.md", 
             "title": "Apache Drill 1.3.0 Release Notes", 
             "url": "/docs/apache-drill-1-3-0-release-notes/"
+        }, 
+        "Apache Drill 1.4.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes", 
+                    "url": "/docs/release-notes/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Apache Drill 1.3.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
+            "parent": "Release Notes", 
+            "previous_title": "Release Notes", 
+            "previous_url": "/docs/release-notes/", 
+            "relative_path": "_docs/rn/007-1.4.0-rn.md", 
+            "title": "Apache Drill 1.4.0 Release Notes", 
+            "url": "/docs/apache-drill-1-4-0-release-notes/"
         }, 
         "Apache Drill Contribution Guidelines": {
             "breadcrumbs": [
@@ -4847,6 +4864,27 @@
             "title": "Math and Trig", 
             "url": "/docs/math-and-trig/"
         }, 
+        "Migrating Partitioned Data": {
+            "breadcrumbs": [
+                {
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Using Partition Pruning", 
+            "next_url": "/docs/using-partition-pruning/", 
+            "parent": "Partition Pruning", 
+            "previous_title": "Partition Pruning Introduction", 
+            "previous_url": "/docs/partition-pruning-introduction/", 
+            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
+            "title": "Migrating Partitioned Data", 
+            "url": "/docs/migrating-partitioned-data/"
+        }, 
         "Modify logback.xml": {
             "breadcrumbs": [
                 {
@@ -5731,8 +5769,8 @@
             "next_title": "Choosing a Storage Format", 
             "next_url": "/docs/choosing-a-storage-format/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Partition Pruning", 
-            "previous_url": "/docs/partition-pruning/", 
+            "previous_title": "Using Partition Pruning", 
+            "previous_url": "/docs/using-partition-pruning/", 
             "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
             "title": "Optimizing Parquet Metadata Reading", 
             "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -5782,15 +5820,100 @@
                     "url": "/docs/performance-tuning/"
                 }
             ], 
-            "children": [], 
-            "next_title": "Optimizing Parquet Metadata Reading", 
-            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Partition Pruning", 
+                            "url": "/docs/partition-pruning/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Migrating Partitioned Data", 
+                    "next_url": "/docs/migrating-partitioned-data/", 
+                    "parent": "Partition Pruning", 
+                    "previous_title": "Partition Pruning", 
+                    "previous_url": "/docs/partition-pruning/", 
+                    "relative_path": "_docs/performance-tuning/partition-pruning/010-partition-pruning-introduction.md", 
+                    "title": "Partition Pruning Introduction", 
+                    "url": "/docs/partition-pruning-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Partition Pruning", 
+                            "url": "/docs/partition-pruning/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Using Partition Pruning", 
+                    "next_url": "/docs/using-partition-pruning/", 
+                    "parent": "Partition Pruning", 
+                    "previous_title": "Partition Pruning Introduction", 
+                    "previous_url": "/docs/partition-pruning-introduction/", 
+                    "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
+                    "title": "Migrating Partitioned Data", 
+                    "url": "/docs/migrating-partitioned-data/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Partition Pruning", 
+                            "url": "/docs/partition-pruning/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Optimizing Parquet Metadata Reading", 
+                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "parent": "Partition Pruning", 
+                    "previous_title": "Migrating Partitioned Data", 
+                    "previous_url": "/docs/migrating-partitioned-data/", 
+                    "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
+                    "title": "Using Partition Pruning", 
+                    "url": "/docs/using-partition-pruning/"
+                }
+            ], 
+            "next_title": "Partition Pruning Introduction", 
+            "next_url": "/docs/partition-pruning-introduction/", 
             "parent": "Performance Tuning", 
             "previous_title": "Performance Tuning Introduction", 
             "previous_url": "/docs/performance-tuning-introduction/", 
             "relative_path": "_docs/performance-tuning/020-partition-pruning.md", 
             "title": "Partition Pruning", 
             "url": "/docs/partition-pruning/"
+        }, 
+        "Partition Pruning Introduction": {
+            "breadcrumbs": [
+                {
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Migrating Partitioned Data", 
+            "next_url": "/docs/migrating-partitioned-data/", 
+            "parent": "Partition Pruning", 
+            "previous_title": "Partition Pruning", 
+            "previous_url": "/docs/partition-pruning/", 
+            "relative_path": "_docs/performance-tuning/partition-pruning/010-partition-pruning-introduction.md", 
+            "title": "Partition Pruning Introduction", 
+            "url": "/docs/partition-pruning-introduction/"
         }, 
         "Performance": {
             "breadcrumbs": [
@@ -5836,9 +5959,73 @@
                             "url": "/docs/performance-tuning/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Optimizing Parquet Metadata Reading", 
-                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Migrating Partitioned Data", 
+                            "next_url": "/docs/migrating-partitioned-data/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Partition Pruning", 
+                            "previous_url": "/docs/partition-pruning/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/010-partition-pruning-introduction.md", 
+                            "title": "Partition Pruning Introduction", 
+                            "url": "/docs/partition-pruning-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Partition Pruning", 
+                            "next_url": "/docs/using-partition-pruning/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Partition Pruning Introduction", 
+                            "previous_url": "/docs/partition-pruning-introduction/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
+                            "title": "Migrating Partitioned Data", 
+                            "url": "/docs/migrating-partitioned-data/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Optimizing Parquet Metadata Reading", 
+                            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Migrating Partitioned Data", 
+                            "previous_url": "/docs/migrating-partitioned-data/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
+                            "title": "Using Partition Pruning", 
+                            "url": "/docs/using-partition-pruning/"
+                        }
+                    ], 
+                    "next_title": "Partition Pruning Introduction", 
+                    "next_url": "/docs/partition-pruning-introduction/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning Introduction", 
                     "previous_url": "/docs/performance-tuning-introduction/", 
@@ -5857,8 +6044,8 @@
                     "next_title": "Choosing a Storage Format", 
                     "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Partition Pruning", 
-                    "previous_url": "/docs/partition-pruning/", 
+                    "previous_title": "Using Partition Pruning", 
+                    "previous_url": "/docs/using-partition-pruning/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -7742,11 +7929,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.2.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+                    "next_title": "Apache Drill 1.3.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/007-1.4.0-rn.md", 
+                    "title": "Apache Drill 1.4.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-4-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.2.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.4.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
                     "relative_path": "_docs/rn/008-1.3.0-rn.md", 
                     "title": "Apache Drill 1.3.0 Release Notes", 
                     "url": "/docs/apache-drill-1-3-0-release-notes/"
@@ -7939,8 +8143,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.3.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
+            "next_title": "Apache Drill 1.4.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-4-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 
@@ -11625,6 +11829,27 @@
             "title": "Using MicroStrategy Analytics with Apache Drill", 
             "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
         }, 
+        "Using Partition Pruning": {
+            "breadcrumbs": [
+                {
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Optimizing Parquet Metadata Reading", 
+            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "parent": "Partition Pruning", 
+            "previous_title": "Migrating Partitioned Data", 
+            "previous_url": "/docs/migrating-partitioned-data/", 
+            "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
+            "title": "Using Partition Pruning", 
+            "url": "/docs/using-partition-pruning/"
+        }, 
         "Using Qlik Sense with Drill": {
             "breadcrumbs": [
                 {
@@ -14091,9 +14316,73 @@
                             "url": "/docs/performance-tuning/"
                         }
                     ], 
-                    "children": [], 
-                    "next_title": "Optimizing Parquet Metadata Reading", 
-                    "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Migrating Partitioned Data", 
+                            "next_url": "/docs/migrating-partitioned-data/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Partition Pruning", 
+                            "previous_url": "/docs/partition-pruning/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/010-partition-pruning-introduction.md", 
+                            "title": "Partition Pruning Introduction", 
+                            "url": "/docs/partition-pruning-introduction/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Using Partition Pruning", 
+                            "next_url": "/docs/using-partition-pruning/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Partition Pruning Introduction", 
+                            "previous_url": "/docs/partition-pruning-introduction/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
+                            "title": "Migrating Partitioned Data", 
+                            "url": "/docs/migrating-partitioned-data/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Partition Pruning", 
+                                    "url": "/docs/partition-pruning/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Optimizing Parquet Metadata Reading", 
+                            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+                            "parent": "Partition Pruning", 
+                            "previous_title": "Migrating Partitioned Data", 
+                            "previous_url": "/docs/migrating-partitioned-data/", 
+                            "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
+                            "title": "Using Partition Pruning", 
+                            "url": "/docs/using-partition-pruning/"
+                        }
+                    ], 
+                    "next_title": "Partition Pruning Introduction", 
+                    "next_url": "/docs/partition-pruning-introduction/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Performance Tuning Introduction", 
                     "previous_url": "/docs/performance-tuning-introduction/", 
@@ -14112,8 +14401,8 @@
                     "next_title": "Choosing a Storage Format", 
                     "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Partition Pruning", 
-                    "previous_url": "/docs/partition-pruning/", 
+                    "previous_title": "Using Partition Pruning", 
+                    "previous_url": "/docs/using-partition-pruning/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -16298,11 +16587,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Apache Drill 1.2.0 Release Notes", 
-                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+                    "next_title": "Apache Drill 1.3.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
                     "parent": "Release Notes", 
                     "previous_title": "Release Notes", 
                     "previous_url": "/docs/release-notes/", 
+                    "relative_path": "_docs/rn/007-1.4.0-rn.md", 
+                    "title": "Apache Drill 1.4.0 Release Notes", 
+                    "url": "/docs/apache-drill-1-4-0-release-notes/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes", 
+                            "url": "/docs/release-notes/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Apache Drill 1.2.0 Release Notes", 
+                    "next_url": "/docs/apache-drill-1-2-0-release-notes/", 
+                    "parent": "Release Notes", 
+                    "previous_title": "Apache Drill 1.4.0 Release Notes", 
+                    "previous_url": "/docs/apache-drill-1-4-0-release-notes/", 
                     "relative_path": "_docs/rn/008-1.3.0-rn.md", 
                     "title": "Apache Drill 1.3.0 Release Notes", 
                     "url": "/docs/apache-drill-1-3-0-release-notes/"
@@ -16495,8 +16801,8 @@
                     "url": "/docs/apache-drill-0-4-0-release-notes/"
                 }
             ], 
-            "next_title": "Apache Drill 1.3.0 Release Notes", 
-            "next_url": "/docs/apache-drill-1-3-0-release-notes/", 
+            "next_title": "Apache Drill 1.4.0 Release Notes", 
+            "next_url": "/docs/apache-drill-1-4-0-release-notes/", 
             "parent": "", 
             "previous_title": "Value Vectors", 
             "previous_url": "/docs/value-vectors/", 

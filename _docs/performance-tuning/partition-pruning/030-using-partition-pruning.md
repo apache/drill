@@ -1,5 +1,5 @@
 ---
-title: "Partition Pruning"
+title: "Using Partition Pruning"
 parent: "Partition Pruning"
 --- 
 

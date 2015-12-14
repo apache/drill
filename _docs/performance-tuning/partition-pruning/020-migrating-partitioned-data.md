@@ -1,6 +1,6 @@
 ---
 title: "Migrating Partitioned Data"
-parent: "Performance Pruning Introduction"
+parent: "Partition Pruning"
 --- 
 
 Migrating Parquet data that you partitioned and generated using Drill 1.1 and 1.2 is mandatory before using the data in Drill 1.3. The data in must be marked as Drill-generated. Use the [drill-upgrade tool](https://github.com/parthchandra/drill-upgrade) to migrate Parquet data that you partitioned and generated in Drill 1.1 or 1.2. 
