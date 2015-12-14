@@ -1,13 +1,9 @@
 ---
-title: "Using Partition Pruning"
+title: "How to Partition Data"
 parent: "Partition Pruning"
 --- 
 
-In Drill 1.1.0 and later, if the data source is Parquet, no data organization tasks are required to take advantage of partition pruning. To partition and query Parquet files generated from other tools, use Drill to read and rewrite the files and metadata using the CTAS command with the PARTITION BY clause, as described in the following section "How to Partition Data".
-
-## How to Partition Data
-
-In Drill 1.1.0 and later, write Parquet data using the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement. 
+In Drill 1.1.0 and later, if the data source is Parquet, no data organization tasks are required to take advantage of partition pruning. To partition and query Parquet files generated from other tools, use Drill to read and rewrite the files and metadata using the CTAS command with the [PARTITION BY]({{site.baseurl}}/docs/partition-by-clause/) clause in the CTAS statement. 
 
 The Parquet writer first sorts data by the partition keys, and then creates a new file when it encounters a new value for the partition columns. During partitioning, Drill creates separate files, but not separate directories, for different partitions. Each file contains exactly one partition value, but there can be multiple files for the same partition value. 
 

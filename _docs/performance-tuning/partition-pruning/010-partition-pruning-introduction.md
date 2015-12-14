@@ -13,7 +13,7 @@ Before using partitioned Drill 1.1-1.2 data in Drill 1.3, you need to migrate th
 {% include startimportant.html %}Migrate only Parquet files that Drill generated.{% include endimportant.html %}
 
 ## Partitioning Data
-Prior to the release of Drill 1.1, partition pruning involved time-consuming manual setup tasks. Using the PARTITION BY clause in the CTAS command simplifies the process. ["How to Partition Data"]{{site.baseurl}}(/docs/using-partition-pruning/#how-to-partition-data) describes this process.
+Prior to the release of Drill 1.1, partition pruning involved time-consuming manual setup tasks. Using the PARTITION BY clause in the CTAS command simplifies the process.
 
 
 
