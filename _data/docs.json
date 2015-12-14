@@ -3567,6 +3567,27 @@
             "title": "Hive-to-Drill Data Type Mapping", 
             "url": "/docs/hive-to-drill-data-type-mapping/"
         }, 
+        "How to Partition Data": {
+            "breadcrumbs": [
+                {
+                    "title": "Partition Pruning", 
+                    "url": "/docs/partition-pruning/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Optimizing Parquet Metadata Reading", 
+            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "parent": "Partition Pruning", 
+            "previous_title": "Migrating Partitioned Data", 
+            "previous_url": "/docs/migrating-partitioned-data/", 
+            "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
+            "title": "How to Partition Data", 
+            "url": "/docs/how-to-partition-data/"
+        }, 
         "Identifying Performance Issues": {
             "breadcrumbs": [
                 {
@@ -4876,8 +4897,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Using Partition Pruning", 
-            "next_url": "/docs/using-partition-pruning/", 
+            "next_title": "How to Partition Data", 
+            "next_url": "/docs/how-to-partition-data/", 
             "parent": "Partition Pruning", 
             "previous_title": "Partition Pruning Introduction", 
             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -5769,8 +5790,8 @@
             "next_title": "Choosing a Storage Format", 
             "next_url": "/docs/choosing-a-storage-format/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Using Partition Pruning", 
-            "previous_url": "/docs/using-partition-pruning/", 
+            "previous_title": "How to Partition Data", 
+            "previous_url": "/docs/how-to-partition-data/", 
             "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
             "title": "Optimizing Parquet Metadata Reading", 
             "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -5854,8 +5875,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Using Partition Pruning", 
-                    "next_url": "/docs/using-partition-pruning/", 
+                    "next_title": "How to Partition Data", 
+                    "next_url": "/docs/how-to-partition-data/", 
                     "parent": "Partition Pruning", 
                     "previous_title": "Partition Pruning Introduction", 
                     "previous_url": "/docs/partition-pruning-introduction/", 
@@ -5881,8 +5902,8 @@
                     "previous_title": "Migrating Partitioned Data", 
                     "previous_url": "/docs/migrating-partitioned-data/", 
                     "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
-                    "title": "Using Partition Pruning", 
-                    "url": "/docs/using-partition-pruning/"
+                    "title": "How to Partition Data", 
+                    "url": "/docs/how-to-partition-data/"
                 }
             ], 
             "next_title": "Partition Pruning Introduction", 
@@ -5993,8 +6014,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Partition Pruning", 
-                            "next_url": "/docs/using-partition-pruning/", 
+                            "next_title": "How to Partition Data", 
+                            "next_url": "/docs/how-to-partition-data/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning Introduction", 
                             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -6020,8 +6041,8 @@
                             "previous_title": "Migrating Partitioned Data", 
                             "previous_url": "/docs/migrating-partitioned-data/", 
                             "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
-                            "title": "Using Partition Pruning", 
-                            "url": "/docs/using-partition-pruning/"
+                            "title": "How to Partition Data", 
+                            "url": "/docs/how-to-partition-data/"
                         }
                     ], 
                     "next_title": "Partition Pruning Introduction", 
@@ -6044,8 +6065,8 @@
                     "next_title": "Choosing a Storage Format", 
                     "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Using Partition Pruning", 
-                    "previous_url": "/docs/using-partition-pruning/", 
+                    "previous_title": "How to Partition Data", 
+                    "previous_url": "/docs/how-to-partition-data/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
@@ -11829,27 +11850,6 @@
             "title": "Using MicroStrategy Analytics with Apache Drill", 
             "url": "/docs/using-microstrategy-analytics-with-apache-drill/"
         }, 
-        "Using Partition Pruning": {
-            "breadcrumbs": [
-                {
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
-                }, 
-                {
-                    "title": "Performance Tuning", 
-                    "url": "/docs/performance-tuning/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "Optimizing Parquet Metadata Reading", 
-            "next_url": "/docs/optimizing-parquet-metadata-reading/", 
-            "parent": "Partition Pruning", 
-            "previous_title": "Migrating Partitioned Data", 
-            "previous_url": "/docs/migrating-partitioned-data/", 
-            "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
-            "title": "Using Partition Pruning", 
-            "url": "/docs/using-partition-pruning/"
-        }, 
         "Using Qlik Sense with Drill": {
             "breadcrumbs": [
                 {
@@ -14350,8 +14350,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Using Partition Pruning", 
-                            "next_url": "/docs/using-partition-pruning/", 
+                            "next_title": "How to Partition Data", 
+                            "next_url": "/docs/how-to-partition-data/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning Introduction", 
                             "previous_url": "/docs/partition-pruning-introduction/", 
@@ -14377,8 +14377,8 @@
                             "previous_title": "Migrating Partitioned Data", 
                             "previous_url": "/docs/migrating-partitioned-data/", 
                             "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
-                            "title": "Using Partition Pruning", 
-                            "url": "/docs/using-partition-pruning/"
+                            "title": "How to Partition Data", 
+                            "url": "/docs/how-to-partition-data/"
                         }
                     ], 
                     "next_title": "Partition Pruning Introduction", 
@@ -14401,8 +14401,8 @@
                     "next_title": "Choosing a Storage Format", 
                     "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Using Partition Pruning", 
-                    "previous_url": "/docs/using-partition-pruning/", 
+                    "previous_title": "How to Partition Data", 
+                    "previous_url": "/docs/how-to-partition-data/", 
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md", 
                     "title": "Optimizing Parquet Metadata Reading", 
                     "url": "/docs/optimizing-parquet-metadata-reading/"
