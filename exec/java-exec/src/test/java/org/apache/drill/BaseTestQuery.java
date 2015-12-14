@@ -438,7 +438,7 @@ public class BaseTestQuery extends ExecTest {
    */
   public static String getTempDir(final String dirName) {
     final File dir = Files.createTempDir();
-    dir.deleteOnExit();
+    //dir.deleteOnExit();
 
     return dir.getAbsolutePath() + File.separator + dirName;
   }

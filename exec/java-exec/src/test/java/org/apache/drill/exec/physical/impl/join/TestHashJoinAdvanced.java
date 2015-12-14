@@ -20,10 +20,15 @@ package org.apache.drill.exec.physical.impl.join;
 
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 public class TestHashJoinAdvanced extends BaseTestQuery {
 

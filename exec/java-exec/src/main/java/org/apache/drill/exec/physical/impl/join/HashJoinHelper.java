@@ -165,13 +165,25 @@ public class HashJoinHelper {
   }
 
   public void setRecordMatched(int index) {
-    int batchIdx  = index >>> SHIFT_SIZE;
-    int recordIdx = index & HashTable.BATCH_MASK;
+    final int batchIdx  = index >>> SHIFT_SIZE;
+    final int recordIdx = index & HashTable.BATCH_MASK;
 
     // Get the BitVector for the appropriate batch and set the bit to indicate the record matched
-    BuildInfo info = buildInfoList.get(batchIdx);
-    BitSet bitVector = info.getKeyMatchBitVector();
+    final BuildInfo info = buildInfoList.get(batchIdx);
+    final BitSet bitVector = info.getKeyMatchBitVector();
 
+    bitVector.set(recordIdx);
+  }
+
+  public boolean isMatched(int batchIdx, int recordIdx) {
+    final BuildInfo info = buildInfoList.get(batchIdx);
+    final BitSet bitVector = info.getKeyMatchBitVector();
+    return bitVector.get(recordIdx);
+  }
+
+  public void setRecordMatched(int batchIdx, int recordIdx) {
+    final BuildInfo info = buildInfoList.get(batchIdx);
+    final BitSet bitVector = info.getKeyMatchBitVector();
     bitVector.set(recordIdx);
   }
 

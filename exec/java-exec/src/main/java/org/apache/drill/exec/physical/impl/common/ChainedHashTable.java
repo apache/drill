@@ -119,15 +119,15 @@ public class ChainedHashTable {
   private HashTableConfig htConfig;
   private final FragmentContext context;
   private final BufferAllocator allocator;
-  private final RecordBatch incomingBuild;
-  private final RecordBatch incomingProbe;
+  private final VectorAccessible incomingBuild;
+  private final VectorAccessible incomingProbe;
   private final RecordBatch outgoing;
   private final boolean areNullsEqual;
+  private final boolean unionTypeEnabled;
 
   public ChainedHashTable(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-                          RecordBatch incomingBuild, RecordBatch incomingProbe, RecordBatch outgoing,
-                          boolean areNullsEqual) {
-
+                          VectorAccessible incomingBuild, VectorAccessible incomingProbe, RecordBatch outgoing,
+                          boolean areNullsEqual, boolean unionTypeEnabled) {
     this.htConfig = htConfig;
     this.context = context;
     this.allocator = allocator;
@@ -135,6 +135,7 @@ public class ChainedHashTable {
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
     this.areNullsEqual = areNullsEqual;
+    this.unionTypeEnabled = unionTypeEnabled;
   }
 
   public HashTable createAndSetupHashTable(TypedFieldId[] outKeyFieldIds) throws ClassTransformationException,
@@ -157,7 +158,8 @@ public class ChainedHashTable {
 
     int i = 0;
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingBuild, collector, context.getFunctionRegistry());
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingBuild,
+        collector, context.getFunctionRegistry(), /*allowComplexWriterExpr*/ false, unionTypeEnabled);
       if (collector.hasErrors()) {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
@@ -171,7 +173,8 @@ public class ChainedHashTable {
     if (isProbe) {
       i = 0;
       for (NamedExpression ne : htConfig.getKeyExprsProbe()) {
-        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingProbe, collector, context.getFunctionRegistry());
+        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingProbe,
+          collector, context.getFunctionRegistry(), /*allowComplexWriterExpr*/ false, unionTypeEnabled);
         if (collector.hasErrors()) {
           throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
         }
@@ -181,7 +184,7 @@ public class ChainedHashTable {
         keyExprsProbe[i] = expr;
         i++;
       }
-      JoinUtils.addLeastRestrictiveCasts(keyExprsProbe, incomingProbe, keyExprsBuild, incomingBuild, context);
+      JoinUtils.addLeastRestrictiveCasts(keyExprsProbe, incomingProbe, keyExprsBuild, incomingBuild, context, unionTypeEnabled);
     }
 
     i = 0;
@@ -316,10 +319,9 @@ public class ChainedHashTable {
      */
     LogicalExpression hashExpression = HashPrelUtil.getHashExpression(Arrays.asList(keyExprs),
         incomingProbe != null ? true : false);
-    final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry());
+    final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materializeAndCheckErrors(hashExpression, batch, context.getFunctionRegistry(),
+      /*allowComplexWriterExpr */ false, unionTypeEnabled);
     HoldingContainer hash = cg.addExpr(materializedExpr);
     cg.getEvalBlock()._return(hash.getValue());
-
-
   }
 }

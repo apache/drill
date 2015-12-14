@@ -24,8 +24,11 @@ import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.common.HashTable;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.calcite.rel.core.JoinRelType;
 
@@ -46,9 +49,11 @@ public interface HashJoinProbe {
 
   public abstract void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
                                           int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable, HashJoinHelper hjHelper,
-                                          JoinRelType joinRelType);
-  public abstract void doSetup(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch, RecordBatch outgoing);
+                                          JoinRelType joinRelType, HashJoinProbeStatus probeStatus, boolean unionTypeEnabled,
+                                          OperatorContext oContext, BatchSchema coercedSchema, VectorContainer coercedContainer);
+  public abstract void doSetup(FragmentContext context, VectorAccessible buildBatch, VectorAccessible probeBatch, RecordBatch outgoing);
   public abstract int  probeAndProject() throws SchemaChangeException, ClassTransformationException, IOException;
   public abstract void projectBuildRecord(int buildIndex, int outIndex);
   public abstract void projectProbeRecord(int probeIndex, int outIndex);
+  public abstract boolean schemaChanged();
 }

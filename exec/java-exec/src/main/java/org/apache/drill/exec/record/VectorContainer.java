@@ -104,7 +104,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   /**
    * Transfer vectors from this to containerOut
    */
-  void transferOut(VectorContainer containerOut) {
+  public void transferOut(VectorContainer containerOut) {
     Preconditions.checkArgument(this.wrappers.size() == containerOut.wrappers.size());
     for (int i = 0; i < this.wrappers.size(); ++i) {
       this.wrappers.get(i).transfer(containerOut.wrappers.get(i));

@@ -147,18 +147,23 @@ public class SchemaUtil {
    * @return
    */
   public static VectorContainer coerceContainer(VectorAccessible in, BatchSchema toSchema, OperatorContext context) {
-    int recordCount = in.getRecordCount();
+    int recordCount = 0;
+    SelectionVectorMode svMode= SelectionVectorMode.NONE;
     boolean isHyper = false;
     Map<SchemaPath, Object> vectorMap = Maps.newHashMap();
-    for (VectorWrapper w : in) {
-      if (w.isHyper()) {
-        isHyper = true;
-        final ValueVector[] vvs = w.getValueVectors();
-        vectorMap.put(vvs[0].getField().getPath(), vvs);
-      } else {
-        assert !isHyper;
-        final ValueVector v = w.getValueVector();
-        vectorMap.put(v.getField().getPath(), v);
+    if (in != null) {
+      recordCount = in.getRecordCount();
+      svMode = in.getSchema().getSelectionVectorMode();
+      for (VectorWrapper w : in) {
+        if (w.isHyper()) {
+          isHyper = true;
+          final ValueVector[] vvs = w.getValueVectors();
+          vectorMap.put(vvs[0].getField().getPath(), vvs);
+        } else {
+          assert !isHyper;
+          final ValueVector v = w.getValueVector();
+          vectorMap.put(v.getField().getPath(), v);
+        }
       }
     }
 
@@ -183,7 +188,7 @@ public class SchemaUtil {
         c.add(coerceVector(v, c, field, recordCount, context));
       }
     }
-    c.buildSchema(in.getSchema().getSelectionVectorMode());
+    c.buildSchema(svMode);
     c.setRecordCount(recordCount);
     Preconditions.checkState(vectorMap.size() == 0, "Leftover vector from incoming batch");
     return c;

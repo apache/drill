@@ -150,7 +150,6 @@ public class JoinUtils {
         (input2 == TypeProtos.MinorType.VARCHAR || input2 == TypeProtos.MinorType.VARBINARY)) {
       return true;
     }
-
     return false;
   }
 
@@ -165,7 +164,7 @@ public class JoinUtils {
    */
   public static void addLeastRestrictiveCasts(LogicalExpression[] leftExpressions, VectorAccessible leftBatch,
                                               LogicalExpression[] rightExpressions, VectorAccessible rightBatch,
-                                              FragmentContext context) {
+                                              FragmentContext context, boolean unionTypeEnabled) {
     assert rightExpressions.length == leftExpressions.length;
 
     for (int i = 0; i < rightExpressions.length; i++) {
@@ -177,8 +176,8 @@ public class JoinUtils {
       if (rightType == TypeProtos.MinorType.UNION || leftType == TypeProtos.MinorType.UNION) {
         continue;
       }
-      if (rightType != leftType) {
 
+      if (rightType != leftType) {
         // currently we only support implicit casts if the input types are numeric or varchar/varbinary
         if (!allowImplicitCast(rightType, leftType)) {
           throw new DrillRuntimeException(String.format("Join only supports implicit casts between " +
@@ -203,14 +202,14 @@ public class JoinUtils {
           // Store the newly casted expression
           rightExpressions[i] =
               ExpressionTreeMaterializer.materialize(castExpr, rightBatch, errorCollector,
-                  context.getFunctionRegistry());
+                  context.getFunctionRegistry(), false, unionTypeEnabled);
         } else if (result != leftType) {
           // Add a cast expression on top of the left expression
           LogicalExpression castExpr = ExpressionTreeMaterializer.addCastExpression(leftExpression, rightExpression.getMajorType(), context.getFunctionRegistry(), errorCollector);
           // store the newly casted expression
           leftExpressions[i] =
               ExpressionTreeMaterializer.materialize(castExpr, leftBatch, errorCollector,
-                  context.getFunctionRegistry());
+                  context.getFunctionRegistry(), false, unionTypeEnabled);
         }
       }
     }

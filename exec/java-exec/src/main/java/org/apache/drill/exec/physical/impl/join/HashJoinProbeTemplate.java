@@ -18,17 +18,19 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.SchemaUtil;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -59,76 +61,86 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   // Underlying hashtable used by the hash join
   private HashTable hashTable = null;
 
-  // Number of records to process on the probe side
-  private int recordsToProcess = 0;
-
-  // Number of records processed on the probe side
-  private int recordsProcessed = 0;
-
   // Number of records in the output container
   private int outputRecords;
 
-  // Indicate if we should drain the next record from the probe side
-  private boolean getNextRecord = true;
+  private boolean unionTypeEnabled;
 
-  // Contains both batch idx and record idx of the matching record in the build side
-  private int currentCompositeIdx = -1;
+  // If schema changes during probe phase stop probe phase.
+  private  boolean schemaChanged = false;
 
-  // Current state the hash join algorithm is in
-  private ProbeState probeState = ProbeState.PROBE_PROJECT;
+  private OperatorContext oContext;
 
-  // For outer or right joins, this is a list of unmatched records that needs to be projected
-  private List<Integer> unmatchedBuildIndexes = null;
+  // to hold coerced left side schema and container.
+  private VectorContainer coercedContainer = null;
+  private BatchSchema coercedSchema = null;
+
+  private HashJoinProbeStatus probeStatus;
 
   @Override
   public void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
                                  int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable,
-                                 HashJoinHelper hjHelper, JoinRelType joinRelType) {
+                                 HashJoinHelper hjHelper, JoinRelType joinRelType,
+                                 HashJoinProbeStatus probeStatus,
+                                 boolean unionTypeEnabled, OperatorContext oContext,
+                                 BatchSchema coercedSchema, VectorContainer coercedContainer) {
 
     this.probeBatch = probeBatch;
     this.probeSchema = probeBatch.getSchema();
     this.buildBatch = buildBatch;
     this.joinType = joinRelType;
-    this.recordsToProcess = probeRecordCount;
     this.hashTable = hashTable;
     this.hjHelper = hjHelper;
     this.outgoingJoinBatch = outgoing;
-
-    doSetup(context, buildBatch, probeBatch, outgoing);
+    this.unionTypeEnabled = unionTypeEnabled;
+    this.coercedSchema = coercedSchema;
+    this.coercedContainer = coercedContainer;
+    this.oContext = oContext;
+    this.probeStatus = probeStatus;
+    this.probeStatus.recordsToProcess = probeRecordCount;
+    this.probeStatus.recordsProcessed = 0;
+    if (coercedContainer == null) {
+      doSetup(context, (VectorAccessible)buildBatch, (VectorAccessible)probeBatch, outgoing);
+    } else {
+      doSetup(context, (VectorAccessible)buildBatch, (VectorAccessible)coercedContainer, outgoing);
+    }
   }
 
   public void executeProjectRightPhase() {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsProcessed < recordsToProcess) {
-      projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed), outputRecords);
-      recordsProcessed++;
+    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeStatus.recordsProcessed < probeStatus.recordsToProcess) {
+      projectBuildRecord(probeStatus.unmatchedBuildIndexes.get(probeStatus.recordsProcessed), outputRecords);
+      probeStatus.recordsProcessed++;
       outputRecords++;
     }
   }
 
+  public boolean schemaChanged() {
+    return schemaChanged;
+  }
+
   public void executeProbePhase() throws SchemaChangeException {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeState != ProbeState.DONE && probeState != ProbeState.PROJECT_RIGHT) {
-
+    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeStatus.probeState != ProbeState.DONE && probeStatus.probeState != ProbeState.PROJECT_RIGHT) {
       // Check if we have processed all records in this batch we need to invoke next
-      if (recordsProcessed == recordsToProcess) {
-
+      if (probeStatus.recordsProcessed == probeStatus.recordsToProcess) {
         // Done processing all records in the previous batch, clean up!
         for (VectorWrapper<?> wrapper : probeBatch) {
           wrapper.getValueVector().clear();
         }
-
-        IterOutcome leftUpstream = outgoingJoinBatch.next(HashJoinHelper.LEFT_INPUT, probeBatch);
-
+        if (coercedContainer != null) {
+          coercedContainer.zeroVectors();
+        }
+        final IterOutcome leftUpstream = outgoingJoinBatch.next(HashJoinHelper.LEFT_INPUT, probeBatch);
         switch (leftUpstream) {
           case NONE:
           case NOT_YET:
           case STOP:
-            recordsProcessed = 0;
-            recordsToProcess = 0;
-            probeState = ProbeState.DONE;
+            probeStatus.recordsProcessed = 0;
+            probeStatus.recordsToProcess = 0;
+            probeStatus.probeState = ProbeState.DONE;
 
             // We are done with the probe phase. If its a RIGHT or a FULL join get the unmatched indexes from the build side
             if (joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) {
-                probeState = ProbeState.PROJECT_RIGHT;
+                probeStatus.probeState = ProbeState.PROJECT_RIGHT;
             }
 
             continue;
@@ -138,78 +150,83 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
               doSetup(outgoingJoinBatch.getContext(), buildBatch, probeBatch, outgoingJoinBatch);
               hashTable.updateBatches();
             } else {
-              throw new SchemaChangeException("Hash join does not support schema changes");
+              if (!unionTypeEnabled) {
+                throw new SchemaChangeException("Hash join does not support schema changes");
+              } else {
+                schemaChanged = true;
+                return;
+              }
             }
           case OK:
-            recordsToProcess = probeBatch.getRecordCount();
-            recordsProcessed = 0;
+            probeStatus.recordsToProcess = probeBatch.getRecordCount();
+            probeStatus.recordsProcessed = 0;
             // If we received an empty batch do nothing
-            if (recordsToProcess == 0) {
+            if (probeStatus.recordsToProcess == 0) {
               continue;
+            }
+            if (coercedSchema != null) {
+              coercedContainer.zeroVectors();
+              final VectorContainer promotedContainer = SchemaUtil.coerceContainer(probeBatch, coercedSchema, oContext);
+              promotedContainer.transferOut(coercedContainer);
             }
         }
       }
       int probeIndex = -1;
-
       // Check if we need to drain the next row in the probe side
-      if (getNextRecord) {
+      if (probeStatus.getNextRecord) {
         if (hashTable != null) {
-          probeIndex = hashTable.containsKey(recordsProcessed, true);
+          probeIndex = hashTable.containsKey(probeStatus.recordsProcessed, true);
         }
 
-          if (probeIndex != -1) {
-
-            /* The current probe record has a key that matches. Get the index
-             * of the first row in the build side that matches the current key
-             */
-            currentCompositeIdx = hjHelper.getStartIndex(probeIndex);
-
-            /* Record in the build side at currentCompositeIdx has a matching record in the probe
-             * side. Set the bit corresponding to this index so if we are doing a FULL or RIGHT
-             * join we keep track of which records we need to project at the end
-             */
-            hjHelper.setRecordMatched(currentCompositeIdx);
-
-            projectBuildRecord(currentCompositeIdx, outputRecords);
-            projectProbeRecord(recordsProcessed, outputRecords);
-            outputRecords++;
+        if (probeIndex != -1) {
+          /* The current probe record has a key that matches. Get the index
+           * of the first row in the build side that matches the current key
+           */
+          probeStatus.currentCompositeIdx = hjHelper.getStartIndex(probeIndex);
+          /* Record in the build side at probeStatus.currentCompositeIdx has a matching record in the probe
+           * side. Set the bit corresponding to this index so if we are doing a FULL or RIGHT
+           * join we keep track of which records we need to project at the end
+           */
+          hjHelper.setRecordMatched(probeStatus.currentCompositeIdx);
+          projectBuildRecord(probeStatus.currentCompositeIdx, outputRecords);
+          projectProbeRecord(probeStatus.recordsProcessed, outputRecords);
+          outputRecords++;
             /* Projected single row from the build side with matching key but there
              * may be more rows with the same key. Check if that's the case
              */
-            currentCompositeIdx = hjHelper.getNextIndex(currentCompositeIdx);
-            if (currentCompositeIdx == -1) {
+          probeStatus.currentCompositeIdx = hjHelper.getNextIndex(probeStatus.currentCompositeIdx);
+          if (probeStatus.currentCompositeIdx == -1) {
               /* We only had one row in the build side that matched the current key
                * from the probe side. Drain the next row in the probe side.
                */
-              recordsProcessed++;
-            } else {
+            probeStatus.recordsProcessed++;
+          } else {
               /* There is more than one row with the same key on the build side
                * don't drain more records from the probe side till we have projected
                * all the rows with this key
                */
-              getNextRecord = false;
-            }
-        } else { // No matching key
-
-            // If we have a left outer join, project the keys
-            if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
-              projectProbeRecord(recordsProcessed, outputRecords);
-              outputRecords++;
-            }
-            recordsProcessed++;
+            probeStatus.getNextRecord = false;
           }
+        } else { // No matching key
+          // If we have a left outer join, project the keys
+          if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
+            projectProbeRecord(probeStatus.recordsProcessed, outputRecords);
+            outputRecords++;
+          }
+          probeStatus.recordsProcessed++;
+        }
       } else {
-        hjHelper.setRecordMatched(currentCompositeIdx);
-        projectBuildRecord(currentCompositeIdx, outputRecords);
-        projectProbeRecord(recordsProcessed, outputRecords);
+        hjHelper.setRecordMatched(probeStatus.currentCompositeIdx);
+        projectBuildRecord(probeStatus.currentCompositeIdx, outputRecords);
+        projectProbeRecord(probeStatus.recordsProcessed, outputRecords);
         outputRecords++;
 
-        currentCompositeIdx = hjHelper.getNextIndex(currentCompositeIdx);
-
-        if (currentCompositeIdx == -1) {
+        probeStatus.currentCompositeIdx = hjHelper.getNextIndex(probeStatus.currentCompositeIdx);
+        //System.out.println("copying next idx " + probeStatus.currentCompositeIdx);
+        if (probeStatus.currentCompositeIdx == -1) {
           // We don't have any more rows matching the current key on the build side, move on to the next probe row
-          getNextRecord = true;
-          recordsProcessed++;
+          probeStatus.getNextRecord = true;
+          probeStatus.recordsProcessed++;
         }
       }
     }
@@ -219,18 +236,18 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
     outputRecords = 0;
 
-    if (probeState == ProbeState.PROBE_PROJECT) {
+    if (probeStatus.probeState == ProbeState.PROBE_PROJECT) {
       executeProbePhase();
     }
 
-    if (probeState == ProbeState.PROJECT_RIGHT) {
+    if (probeStatus.probeState == ProbeState.PROJECT_RIGHT) {
 
       // We are here because we have a RIGHT OUTER or a FULL join
-      if (unmatchedBuildIndexes == null) {
+      if (probeStatus.unmatchedBuildIndexes == null) {
         // Initialize list of build indexes that didn't match a record on the probe side
-        unmatchedBuildIndexes = hjHelper.getNextUnmatchedIndex();
-        recordsToProcess = unmatchedBuildIndexes.size();
-        recordsProcessed = 0;
+        probeStatus.unmatchedBuildIndexes = hjHelper.getNextUnmatchedIndex();
+        probeStatus.recordsToProcess = probeStatus.unmatchedBuildIndexes.size();
+        probeStatus.recordsProcessed = 0;
       }
 
       // Project the list of unmatched records on the build side
@@ -240,7 +257,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     return outputRecords;
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("buildBatch") VectorContainer buildBatch, @Named("probeBatch") RecordBatch probeBatch,
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("buildBatch") VectorAccessible buildBatch,
+                               @Named("probeBatch") VectorAccessible probeBatch,
                                @Named("outgoing") RecordBatch outgoing);
   public abstract void projectBuildRecord(@Named("buildIndex") int buildIndex, @Named("outIndex") int outIndex);
 

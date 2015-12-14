@@ -223,6 +223,7 @@ public class RecordIterator implements VectorAccessible {
         Preconditions.checkArgument(rbdOld != null);
         Preconditions.checkArgument(rbdOld != rbdNew);
         container.transferOut(rbdOld.getContainer());
+        // Get vectors from new position.
         container.transferIn(rbdNew.getContainer());
         innerPosition = 0;
         outerPosition = nextOuterPosition;
