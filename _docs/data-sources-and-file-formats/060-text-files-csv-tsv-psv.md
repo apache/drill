@@ -27,7 +27,21 @@ If your text file have headers, you can enable extractHeader and select particul
 
 ### Cast data
 
-You can also improve performance by casting the VARCHAR data to INT, FLOAT, DATETIME, and so on when you read the data from a text file. Drill performs better reading fixed-width than reading VARCHAR data. 
+You can also improve performance by casting the VARCHAR data in a text file to INT, FLOAT, DATETIME, and so on when you read the data from a text file. Drill performs better reading fixed-width than reading VARCHAR data. 
+
+Text files that include empty strings might produce unacceptable results. Common ways to deal with empty strings are:
+
+* Set the drill.exec.functions.cast_empty_string_to_null SESSION/SYSTEM option to true.  
+* Use a case statement to cast empty strings to values you want. For example, create a Parquet table named test from a CSV file named test.csv, and cast empty strings in the CSV to null in any column the empty string appears:  
+
+          CREATE TABLE test AS SELECT
+            case when COLUMNS[0] = '' then CAST(NULL AS INTEGER) else CAST(COLUMNS[0] AS INTEGER) end AS c1,
+            case when COLUMNS[1] = '' then CAST(NULL AS VARCHAR(20)) else CAST(COLUMNS[1] AS VARCHAR(20)) end AS c2,
+            case when COLUMNS[2] = '' then CAST(NULL AS DOUBLE) else CAST(COLUMNS[2] AS DOUBLE) end AS c3,
+            case when COLUMNS[3] = '' then CAST(NULL AS DATE) else CAST(COLUMNS[3] AS DATE) end AS c4,
+            case when COLUMNS[4] = '' then CAST(NULL AS VARCHAR(20)) else CAST(COLUMNS[4] AS VARCHAR(20)) end AS c5
+          FROM `test.csv`; 
+
 
 ### Use a Distributed File System
 Using a distributed file system, such as HDFS, instead of a local file system to query the files also improves performance because currently Drill does not split files on block splits.

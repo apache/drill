@@ -30,9 +30,9 @@ To register a new storage plugin configuration, enter a storage name, click **CR
 
 ## Storage Plugin Configuration Persistance
 
-Drill saves storage plugin configurations in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. The temporary directory clears when you quit the Drill shell. To save your storage plugin configurations from one session to the next, set the following option in the `drill-override.conf` file if you are running Drill in embedded mode.
+Drill saves storage plugin configurations in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. The temporary directory clears when you reboot. Copy storage plugin configurations to a secure location to save them when you run drill in embedded mode.
 
-`drill.exec.sys.store.provider.local.path = "/mypath"`
+<!-- `drill.exec.sys.store.provider.local.path = "/mypath"` -->
 
 <!-- Enabling authorization to protect this data through the Web Console and REST API does not include protection for the data in the tmp directory or in ZooKeeper. 
 
