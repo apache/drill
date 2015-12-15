@@ -3,7 +3,7 @@ title: "Migrating Parquet Data"
 parent: "Install Drill"
 --- 
 
-Migrating Parquet data that you generated using Drill 1.2 or earlier is mandatory before using the data in Drill 1.3. The data in must be marked as Drill-generated. Use the [drill-upgrade tool](https://github.com/parthchandra/drill-upgrade) to migrate Parquet data that you generated in Drill 1.2 or earlier as described in ["How to Migrate Data"]({{site.baseurl}}/docs/migrating-parquet-data/#how-to-migrate-data). 
+ [Migrating Parquet data]({{site.baseurl}}/docs/migrating-parquet-data/#how-to-migrate-data) that you generated using Drill 1.2 or earlier is mandatory before using the data in Drill 1.3. The data must be marked as Drill-generated. 
 
 {% include startimportant.html %} Run the upgrade tool only on Drill-generated Parquet files. {% include endimportant.html %}
 
