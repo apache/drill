@@ -138,7 +138,6 @@ final class PageReader {
       timer.start();
       final PageHeader pageHeader = Util.readPageHeader(f);
       long timeToRead = timer.elapsed(TimeUnit.MICROSECONDS);
-      timer.reset();
       long pageHeaderBytes=f.getPos()-start;
       this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
       assert pageHeader.type == PageType.DICTIONARY_PAGE;
