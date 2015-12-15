@@ -356,17 +356,29 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     return plugins.iterator();
   }
 
-  public RuleSet getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext) {
+  /**
+   * Return StoragePlugin rule sets.
+   * @param optimizerRulesContext
+   * @return Array of logical and physical rule sets.
+   */
+  public RuleSet[] getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext) {
     // query registered engines for optimizer rules and build the storage plugin RuleSet
-    Builder<RelOptRule> setBuilder = ImmutableSet.builder();
+    Builder<RelOptRule> logicalRulesBuilder = ImmutableSet.builder();
+    Builder<RelOptRule> physicalRulesBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.plugins()) {
-      Set<? extends RelOptRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
+      Set<? extends RelOptRule> rules = plugin.getLogicalOptimizerRules(optimizerRulesContext);
       if (rules != null && rules.size() > 0) {
-        setBuilder.addAll(rules);
+        logicalRulesBuilder.addAll(rules);
+      }
+      rules = plugin.getPhysicalOptimizerRules(optimizerRulesContext);
+      if (rules != null && rules.size() > 0) {
+        physicalRulesBuilder.addAll(rules);
       }
     }
 
-    return DrillRuleSets.create(setBuilder.build());
+    return new RuleSet[] {
+        DrillRuleSets.create(logicalRulesBuilder.build()),
+        DrillRuleSets.create(physicalRulesBuilder.build()) };
   }
 
   public DrillSchemaFactory getSchemaFactory() {

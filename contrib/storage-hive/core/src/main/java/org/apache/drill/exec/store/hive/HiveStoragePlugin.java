@@ -91,20 +91,24 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+  public Set<StoragePluginOptimizerRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
     final String defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(config.getHiveConfigOverride());
 
     ImmutableSet.Builder<StoragePluginOptimizerRule> ruleBuilder = ImmutableSet.builder();
 
-    ruleBuilder.add(HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerRulesContext, defaultPartitionValue));
-    ruleBuilder.add(HivePushPartitionFilterIntoScan.getFilterOnScan(optimizerRulesContext, defaultPartitionValue));
-
-    if(optimizerRulesContext.getPlannerSettings().getOptions()
-        .getOption(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS).bool_val) {
-      ruleBuilder.add(ConvertHiveParquetScanToDrillParquetScan.INSTANCE);
-    }
+    ruleBuilder.add(HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerContext, defaultPartitionValue));
+    ruleBuilder.add(HivePushPartitionFilterIntoScan.getFilterOnScan(optimizerContext, defaultPartitionValue));
 
     return ruleBuilder.build();
   }
 
+  @Override
+  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+    if(optimizerRulesContext.getPlannerSettings().getOptions()
+        .getOption(ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS).bool_val) {
+      return ImmutableSet.<StoragePluginOptimizerRule>of(ConvertHiveParquetScanToDrillParquetScan.INSTANCE);
+    }
+
+    return ImmutableSet.of();
+  }
 }
