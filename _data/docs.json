@@ -3582,8 +3582,8 @@
             "next_title": "Optimizing Parquet Metadata Reading", 
             "next_url": "/docs/optimizing-parquet-metadata-reading/", 
             "parent": "Partition Pruning", 
-            "previous_title": "Migrating Partitioned Data", 
-            "previous_url": "/docs/migrating-partitioned-data/", 
+            "previous_title": "Partition Pruning Introduction", 
+            "previous_url": "/docs/partition-pruning-introduction/", 
             "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
             "title": "How to Partition Data", 
             "url": "/docs/how-to-partition-data/"
@@ -3659,14 +3659,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing Drill in Embedded Mode", 
-                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
+                    "next_title": "Migrating Parquet Data", 
+                    "next_url": "/docs/migrating-parquet-data/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing Drill in Embedded Mode", 
+                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Install Drill Introduction", 
+                    "previous_url": "/docs/install-drill-introduction/", 
+                    "relative_path": "_docs/install/020-migrating-parquet-data.md", 
+                    "title": "Migrating Parquet Data", 
+                    "url": "/docs/migrating-parquet-data/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -3785,8 +3802,8 @@
                     "next_title": "Embedded Mode Prerequisites", 
                     "next_url": "/docs/embedded-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Install Drill Introduction", 
-                    "previous_url": "/docs/install-drill-introduction/", 
+                    "previous_title": "Migrating Parquet Data", 
+                    "previous_url": "/docs/migrating-parquet-data/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
@@ -3907,8 +3924,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Installing Drill in Embedded Mode", 
-            "next_url": "/docs/installing-drill-in-embedded-mode/", 
+            "next_title": "Migrating Parquet Data", 
+            "next_url": "/docs/migrating-parquet-data/", 
             "parent": "Install Drill", 
             "previous_title": "Install Drill", 
             "previous_url": "/docs/install-drill/", 
@@ -4114,8 +4131,8 @@
             "next_title": "Embedded Mode Prerequisites", 
             "next_url": "/docs/embedded-mode-prerequisites/", 
             "parent": "Install Drill", 
-            "previous_title": "Install Drill Introduction", 
-            "previous_url": "/docs/install-drill-introduction/", 
+            "previous_title": "Migrating Parquet Data", 
+            "previous_url": "/docs/migrating-parquet-data/", 
             "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
             "title": "Installing Drill in Embedded Mode", 
             "url": "/docs/installing-drill-in-embedded-mode/"
@@ -4885,26 +4902,22 @@
             "title": "Math and Trig", 
             "url": "/docs/math-and-trig/"
         }, 
-        "Migrating Partitioned Data": {
+        "Migrating Parquet Data": {
             "breadcrumbs": [
                 {
-                    "title": "Partition Pruning", 
-                    "url": "/docs/partition-pruning/"
-                }, 
-                {
-                    "title": "Performance Tuning", 
-                    "url": "/docs/performance-tuning/"
+                    "title": "Install Drill", 
+                    "url": "/docs/install-drill/"
                 }
             ], 
             "children": [], 
-            "next_title": "How to Partition Data", 
-            "next_url": "/docs/how-to-partition-data/", 
-            "parent": "Partition Pruning", 
-            "previous_title": "Partition Pruning Introduction", 
-            "previous_url": "/docs/partition-pruning-introduction/", 
-            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
-            "title": "Migrating Partitioned Data", 
-            "url": "/docs/migrating-partitioned-data/"
+            "next_title": "Installing Drill in Embedded Mode", 
+            "next_url": "/docs/installing-drill-in-embedded-mode/", 
+            "parent": "Install Drill", 
+            "previous_title": "Install Drill Introduction", 
+            "previous_url": "/docs/install-drill-introduction/", 
+            "relative_path": "_docs/install/020-migrating-parquet-data.md", 
+            "title": "Migrating Parquet Data", 
+            "url": "/docs/migrating-parquet-data/"
         }, 
         "Modify logback.xml": {
             "breadcrumbs": [
@@ -5854,8 +5867,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Migrating Partitioned Data", 
-                    "next_url": "/docs/migrating-partitioned-data/", 
+                    "next_title": "How to Partition Data", 
+                    "next_url": "/docs/how-to-partition-data/", 
                     "parent": "Partition Pruning", 
                     "previous_title": "Partition Pruning", 
                     "previous_url": "/docs/partition-pruning/", 
@@ -5875,32 +5888,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "How to Partition Data", 
-                    "next_url": "/docs/how-to-partition-data/", 
-                    "parent": "Partition Pruning", 
-                    "previous_title": "Partition Pruning Introduction", 
-                    "previous_url": "/docs/partition-pruning-introduction/", 
-                    "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
-                    "title": "Migrating Partitioned Data", 
-                    "url": "/docs/migrating-partitioned-data/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Partition Pruning", 
-                            "url": "/docs/partition-pruning/"
-                        }, 
-                        {
-                            "title": "Performance Tuning", 
-                            "url": "/docs/performance-tuning/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "Optimizing Parquet Metadata Reading", 
                     "next_url": "/docs/optimizing-parquet-metadata-reading/", 
                     "parent": "Partition Pruning", 
-                    "previous_title": "Migrating Partitioned Data", 
-                    "previous_url": "/docs/migrating-partitioned-data/", 
+                    "previous_title": "Partition Pruning Introduction", 
+                    "previous_url": "/docs/partition-pruning-introduction/", 
                     "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
                     "title": "How to Partition Data", 
                     "url": "/docs/how-to-partition-data/"
@@ -5927,8 +5919,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Migrating Partitioned Data", 
-            "next_url": "/docs/migrating-partitioned-data/", 
+            "next_title": "How to Partition Data", 
+            "next_url": "/docs/how-to-partition-data/", 
             "parent": "Partition Pruning", 
             "previous_title": "Partition Pruning", 
             "previous_url": "/docs/partition-pruning/", 
@@ -5993,8 +5985,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Migrating Partitioned Data", 
-                            "next_url": "/docs/migrating-partitioned-data/", 
+                            "next_title": "How to Partition Data", 
+                            "next_url": "/docs/how-to-partition-data/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning", 
                             "previous_url": "/docs/partition-pruning/", 
@@ -6014,32 +6006,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How to Partition Data", 
-                            "next_url": "/docs/how-to-partition-data/", 
-                            "parent": "Partition Pruning", 
-                            "previous_title": "Partition Pruning Introduction", 
-                            "previous_url": "/docs/partition-pruning-introduction/", 
-                            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
-                            "title": "Migrating Partitioned Data", 
-                            "url": "/docs/migrating-partitioned-data/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Partition Pruning", 
-                                    "url": "/docs/partition-pruning/"
-                                }, 
-                                {
-                                    "title": "Performance Tuning", 
-                                    "url": "/docs/performance-tuning/"
-                                }
-                            ], 
-                            "children": [], 
                             "next_title": "Optimizing Parquet Metadata Reading", 
                             "next_url": "/docs/optimizing-parquet-metadata-reading/", 
                             "parent": "Partition Pruning", 
-                            "previous_title": "Migrating Partitioned Data", 
-                            "previous_url": "/docs/migrating-partitioned-data/", 
+                            "previous_title": "Partition Pruning Introduction", 
+                            "previous_url": "/docs/partition-pruning-introduction/", 
                             "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
                             "title": "How to Partition Data", 
                             "url": "/docs/how-to-partition-data/"
@@ -12490,14 +12461,31 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Installing Drill in Embedded Mode", 
-                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
+                    "next_title": "Migrating Parquet Data", 
+                    "next_url": "/docs/migrating-parquet-data/", 
                     "parent": "Install Drill", 
                     "previous_title": "Install Drill", 
                     "previous_url": "/docs/install-drill/", 
                     "relative_path": "_docs/install/010-install-drill-introduction.md", 
                     "title": "Install Drill Introduction", 
                     "url": "/docs/install-drill-introduction/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Install Drill", 
+                            "url": "/docs/install-drill/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Installing Drill in Embedded Mode", 
+                    "next_url": "/docs/installing-drill-in-embedded-mode/", 
+                    "parent": "Install Drill", 
+                    "previous_title": "Install Drill Introduction", 
+                    "previous_url": "/docs/install-drill-introduction/", 
+                    "relative_path": "_docs/install/020-migrating-parquet-data.md", 
+                    "title": "Migrating Parquet Data", 
+                    "url": "/docs/migrating-parquet-data/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -12616,8 +12604,8 @@
                     "next_title": "Embedded Mode Prerequisites", 
                     "next_url": "/docs/embedded-mode-prerequisites/", 
                     "parent": "Install Drill", 
-                    "previous_title": "Install Drill Introduction", 
-                    "previous_url": "/docs/install-drill-introduction/", 
+                    "previous_title": "Migrating Parquet Data", 
+                    "previous_url": "/docs/migrating-parquet-data/", 
                     "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
                     "title": "Installing Drill in Embedded Mode", 
                     "url": "/docs/installing-drill-in-embedded-mode/"
@@ -14329,8 +14317,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Migrating Partitioned Data", 
-                            "next_url": "/docs/migrating-partitioned-data/", 
+                            "next_title": "How to Partition Data", 
+                            "next_url": "/docs/how-to-partition-data/", 
                             "parent": "Partition Pruning", 
                             "previous_title": "Partition Pruning", 
                             "previous_url": "/docs/partition-pruning/", 
@@ -14350,32 +14338,11 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "How to Partition Data", 
-                            "next_url": "/docs/how-to-partition-data/", 
-                            "parent": "Partition Pruning", 
-                            "previous_title": "Partition Pruning Introduction", 
-                            "previous_url": "/docs/partition-pruning-introduction/", 
-                            "relative_path": "_docs/performance-tuning/partition-pruning/020-migrating-partitioned-data.md", 
-                            "title": "Migrating Partitioned Data", 
-                            "url": "/docs/migrating-partitioned-data/"
-                        }, 
-                        {
-                            "breadcrumbs": [
-                                {
-                                    "title": "Partition Pruning", 
-                                    "url": "/docs/partition-pruning/"
-                                }, 
-                                {
-                                    "title": "Performance Tuning", 
-                                    "url": "/docs/performance-tuning/"
-                                }
-                            ], 
-                            "children": [], 
                             "next_title": "Optimizing Parquet Metadata Reading", 
                             "next_url": "/docs/optimizing-parquet-metadata-reading/", 
                             "parent": "Partition Pruning", 
-                            "previous_title": "Migrating Partitioned Data", 
-                            "previous_url": "/docs/migrating-partitioned-data/", 
+                            "previous_title": "Partition Pruning Introduction", 
+                            "previous_url": "/docs/partition-pruning-introduction/", 
                             "relative_path": "_docs/performance-tuning/partition-pruning/030-using-partition-pruning.md", 
                             "title": "How to Partition Data", 
                             "url": "/docs/how-to-partition-data/"
