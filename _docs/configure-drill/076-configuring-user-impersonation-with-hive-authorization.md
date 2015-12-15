@@ -29,7 +29,7 @@ Once you determine the Hive authorization model that you want to implement, enab
 ### Prerequisites  
 
 * Hive 1.0 installed
-* Drill 1.1 installed
+* Drill 1.1 or later installed
 * Hive remote metastore repository configured  
 
 ## Step 1: Enabling Drill Impersonation  

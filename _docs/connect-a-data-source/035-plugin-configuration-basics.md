@@ -26,7 +26,7 @@ name. Names are case-sensitive.
    Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
 6. Click **Create**.
 
-<!-- Add to step 3 when the feature goes into 1.3: The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.   -->
+<!-- Add to step 3 when the feature goes into 1.5: The Storage tab appears on the Web Console if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins.   -->
 
 ## Storage Plugin Attributes
 The following graphic shows key attributes of a typical `dfs`-based storage plugin configuration:  

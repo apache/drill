@@ -43,8 +43,9 @@ Get the status of threads.
 
 [**Options**]({{site.baseurl}}/docs/rest-api/#options)
 
-* List information about system/session options.  
-* Change the value or type of the named option.  
+List information about system/session options.  
+
+<!-- * Change the value or type of the named option.   -->
 
 
 ## Query
@@ -71,7 +72,7 @@ Submit a query and return results.
 
 **Example**
 
-     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
+     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.4.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
 
 **Response Body**
 
@@ -112,7 +113,7 @@ Get the profiles of running and completed queries.
             "time" : "11/18/2015 16:23:19",
             "location" : "http://localhost:8047/profile/29b2e988-35e7-4c85-3151-32c7d3347f15.json",
             "foreman" : "10.250.50.31",
-            "query" : "select * from dfs.`/Users/joe-user/apache-drill-1.3.0/sample-data/donuts.json` where name= 'Cake'",
+            "query" : "select * from dfs.`/Users/joe-user/apache-drill-1.4.0/sample-data/donuts.json` where name= 'Cake'",
             "state" : "COMPLETED",
             "user" : "anonymous"
           }, 
@@ -134,7 +135,7 @@ queryid--The UUID of the query in [standard UUID](https://en.wikipedia.org/wiki/
 
 **Response Body**
 
-        {"id":{"part1":3004720672638717061,"part2":3553677414795345685},"type":1,"start":1447892599827,"end":1447892599950,"query":"select * from dfs.`/Users/joe-user/drill/apache-drill-1.3.0/sample-data/donuts.json` where name= 'Cake'","plan":"00-00    Screen : rowType = RecordType(ANY *): 
+        {"id":{"part1":3004720672638717061,"part2":3553677414795345685},"type":1,"start":1447892599827,"end":1447892599950,"query":"select * from dfs.`/Users/joe-user/drill/apache-drill-1.4.0/sample-data/donuts.json` where name= 'Cake'","plan":"00-00    Screen : rowType = RecordType(ANY *): 
         . . ."lastUpdate":1447892599950,"lastProgress":1447892599950}]}],"user":"anonymous"}
 
 ----------
@@ -404,7 +405,7 @@ Get the status of threads.
         . . .
 
 ## Options
-These methods get and set system options.
+This method gets and sets system options.
 
 ----------
 

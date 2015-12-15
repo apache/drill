@@ -4,9 +4,9 @@ parent: "SQL Commands"
 ---
 The PARTITION BY clause in the CTAS command partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) to improve performance when you query the data. (Drill 1.1.0)
 
-{% include startnote.html %}Partitioned data generated in Drill 1.1-1.2 needs to be migrated to Drill 1.3 before attempting to use the data.{% include endnote.html %}
+{% include startnote.html %}Parquet data generated in Drill 1.2 and earlier needs to be migrated before attempting to use the data in later releases.{% include endnote.html %}
 
-See [Migrating Partitioned Data from Drill 1.1-1.2 to Drill 1.3]({{site.baseurl}}/docs/partition-pruning/#migrating-partitioned-parquet-data-from-drill-1-1-1-2-to-drill-1-3).
+See [Migrating Parquet Data]({{site.baseurl}}/docs/migrating-parquet-data/).
 
 <!-- Note: parquet files produced using Drill 1.1 and 1.2 will need to have their metadata rewritten to work with partition pruning in 1.3 and beyond, information on the simple migration process can be found on [Github](https://github.com/parthchandra/drill-upgrade). The need for this migration process came out of a bug fix included in the 1.3 release to accurately process parquet files produced by other tools (like Pig and Hive) that had a risk of inaccurate metadata that could cause inaccurate
 results. Drill results have been accurate on files it created, and the files all contain accurate metadata, the migration tool simply marks these files as having been produced by Drill. Unfortunately without this migration we cannot reliably tell them apart from files produced by other tools. The migration tool should only be used on files produced by Drill, not those produced with other software products. Data from other tools will need to be read in and completely rewritten to generate

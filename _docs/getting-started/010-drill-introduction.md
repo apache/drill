@@ -9,6 +9,16 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments. 
 
+## What's New in Apache Drill 1.3 and 1.4
+These releases fix issues and add a number of enhancements, including the following ones:
+
+* [Enhanced Amazon S3 support]({{site.baseurl}}/docs/s3-storage-plugin/)  
+* Hetrogeneous types  
+  Support for columns that evolve from one data type to another over time. 
+* [Text file headers]({{site.baseurl}}/docs/text-files-csv-tsv-psv/#using-a-header-in-a-file)
+* [Sequence files support]({{site.baseurl}}/docs/querying-sequence-files/)
+* Enhancements related to querying Hive tables, MongoDB collections, and Avro files
+
 ## What's New in Apache Drill 1.2
 
 This release of Drill fixes [many issues]({{site.baseurl}}/docs/apache-drill-1-2-0-release-notes/) and introduces a number of enhancements, including the following ones:
