@@ -37,8 +37,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
-import org.apache.drill.exec.rpc.data.DataResponseHandler;
-import org.apache.drill.exec.rpc.data.DataResponseHandlerImpl;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.sys.PStoreProvider;
@@ -75,7 +73,6 @@ public class WorkManager implements AutoCloseable {
   private DrillbitContext dContext;
 
   private final ControlMessageHandler controlMessageWorker;
-  private final DataResponseHandler dataHandler;
   private final UserWorker userWorker;
   private final WorkerBee bee;
   private final WorkEventBus workBus;
@@ -97,7 +94,6 @@ public class WorkManager implements AutoCloseable {
     controlMessageWorker = new ControlMessageHandler(bee); // TODO getFragmentRunner(), getForemanForQueryId()
     userWorker = new UserWorker(bee); // TODO should just be an interface? addNewForeman(), getForemanForQueryId()
     statusThread = new StatusThread();
-    dataHandler = new DataResponseHandlerImpl(bee); // TODO only uses startFragmentPendingRemote()
   }
 
   public void start(
@@ -130,10 +126,6 @@ public class WorkManager implements AutoCloseable {
 
   public WorkEventBus getWorkBus() {
     return workBus;
-  }
-
-  public DataResponseHandler getDataHandler() {
-    return dataHandler;
   }
 
   public ControlMessageHandler getControlMessageHandler() {

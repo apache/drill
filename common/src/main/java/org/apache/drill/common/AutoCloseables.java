@@ -47,6 +47,24 @@ public class AutoCloseables {
     }
   }
 
+  public static void close(Iterable<? extends AutoCloseable> ac) throws Exception {
+    Exception topLevelException = null;
+    for (AutoCloseable closeable : ac) {
+      try {
+        closeable.close();
+      } catch (Exception e) {
+        if (topLevelException == null) {
+          topLevelException = e;
+        } else {
+          topLevelException.addSuppressed(e);
+        }
+      }
+    }
+    if (topLevelException != null) {
+      throw topLevelException;
+    }
+  }
+
   public static void close(AutoCloseable... ac) throws Exception {
     Exception topLevelException = null;
     for (AutoCloseable closeable : ac) {

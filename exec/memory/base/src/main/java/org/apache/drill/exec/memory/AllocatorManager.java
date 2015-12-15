@@ -25,11 +25,11 @@ import io.netty.buffer.UnsafeDirectLittleEndian;
 import java.util.IdentityHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.drill.common.HistoricalLog;
+import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.BufferManager;
@@ -62,8 +62,8 @@ public class AllocatorManager {
   private volatile BufferLedger owningLedger;
   private final int size;
   private final UnsafeDirectLittleEndian underlying;
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final IdentityHashMap<BufferAllocator, BufferLedger> map = new IdentityHashMap<>();
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(lock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(lock.writeLock());
   private final IdentityHashMap<DrillBuf, Object> buffers =
@@ -145,29 +145,6 @@ public class AllocatorManager {
   }
 
   /**
-   * Simple wrapper class that allows Locks to be released via an try-with-resources block.
-   */
-  private class AutoCloseableLock implements AutoCloseable {
-
-    private final Lock lock;
-
-    public AutoCloseableLock(Lock lock) {
-      this.lock = lock;
-    }
-
-    public AutoCloseableLock open() {
-      lock.lock();
-      return this;
-    }
-
-    @Override
-    public void close() {
-      lock.unlock();
-    }
-
-  }
-
-  /**
    * The reference manager that binds an allocator manager to a particular BaseAllocator. Also responsible for creating
    * a set of DrillBufs that share a common fate and set of reference counts.
    *
@@ -213,6 +190,12 @@ public class AllocatorManager {
           target.historicalLog.recordEvent("incoming(from %s)", owningLedger.allocator.name);
         }
 
+        final BaseAllocator targetAllocator = target.allocator;
+
+        if (targetAllocator.isClosed()) {
+          throw new AllocatorClosedException("The allocator is closed and cannot accept transfer.");
+        }
+
         boolean overlimit = target.allocator.forceAllocate(size);
         allocator.releaseBytes(size);
         owningLedger = target;
@@ -244,15 +227,12 @@ public class AllocatorManager {
           .append('\n');
 
       if (BaseAllocator.DEBUG) {
-        // This doesn't seem as useful as the individual buffer logs below. Removing from default presentation.
-        // if (verbosity.includeHistoricalLog) {
-        // historicalLog.buildHistory(sb, indent + 2, verbosity.includeStackTraces);
-        // }
         synchronized (buffers) {
           indent(sb, indent + 1).append("BufferLedger[" + id + "] holds ").append(buffers.size())
               .append(" buffers. \n");
           for (DrillBuf buf : buffers.keySet()) {
             buf.print(sb, indent + 2, verbosity);
+            sb.append('\n');
           }
         }
       }

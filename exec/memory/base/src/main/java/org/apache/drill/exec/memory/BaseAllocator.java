@@ -477,7 +477,8 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   }
 
   public String toString() {
-    final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE : Verbosity.BASIC;
+    final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE
+        : Verbosity.BASIC;
     final StringBuilder sb = new StringBuilder();
     print(sb, 0, verbosity);
     return sb.toString();

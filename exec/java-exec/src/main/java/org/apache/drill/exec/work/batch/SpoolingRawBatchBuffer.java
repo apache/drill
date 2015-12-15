@@ -32,7 +32,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData;
-import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -224,11 +223,10 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
 
   @Override
   protected void upkeep(RawFragmentBatch batch) {
-    FragmentRecordBatch header = batch.getHeader();
-    if (header.getIsOutOfMemory()) {
+    if (context.isOverMemoryLimit()) {
       outOfMemory.set(true);
-      return;
     }
+
     DrillBuf body = batch.getBody();
     if (body != null) {
       currentSizeInMemory -= body.capacity();

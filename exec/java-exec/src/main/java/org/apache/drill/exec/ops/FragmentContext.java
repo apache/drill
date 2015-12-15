@@ -296,6 +296,10 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
         );
   }
 
+  public boolean isOverMemoryLimit() {
+    return allocator.isOverLimit();
+  }
+
   public <T> T getImplementationClass(final ClassGenerator<T> cg)
       throws ClassTransformationException, IOException {
     return getImplementationClass(cg.getCodeGenerator());
