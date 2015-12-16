@@ -190,12 +190,6 @@ public class AllocatorManager {
           target.historicalLog.recordEvent("incoming(from %s)", owningLedger.allocator.name);
         }
 
-        final BaseAllocator targetAllocator = target.allocator;
-
-        if (targetAllocator.isClosed()) {
-          throw new AllocatorClosedException("The allocator is closed and cannot accept transfer.");
-        }
-
         boolean overlimit = target.allocator.forceAllocate(size);
         allocator.releaseBytes(size);
         owningLedger = target;
