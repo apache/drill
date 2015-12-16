@@ -38,8 +38,6 @@ Drill saves storage plugin configurations in a temporary directory (embedded mod
      	sys.store.provider.local.path="/mypath"
      }
 
-
-
 <!-- Enabling authorization to protect this data through the Web Console and REST API does not include protection for the data in the tmp directory or in ZooKeeper. 
 
 DOCS NOTE: See Drill-3780 and 3949
