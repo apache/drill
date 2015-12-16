@@ -37,12 +37,13 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
 {
     public enum QueryState implements com.dyuproject.protostuff.EnumLite<QueryState>
     {
-        PENDING(0),
+        STARTING(0),
         RUNNING(1),
         COMPLETED(2),
         CANCELED(3),
         FAILED(4),
-        CANCELLATION_REQUESTED(5);
+        CANCELLATION_REQUESTED(5),
+        ENQUEUED(6);
         
         public final int number;
         
@@ -60,12 +61,13 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
         {
             switch(number) 
             {
-                case 0: return PENDING;
+                case 0: return STARTING;
                 case 1: return RUNNING;
                 case 2: return COMPLETED;
                 case 3: return CANCELED;
                 case 4: return FAILED;
                 case 5: return CANCELLATION_REQUESTED;
+                case 6: return ENQUEUED;
                 default: return null;
             }
         }
@@ -100,7 +102,7 @@ public final class QueryResult implements Externalizable, Message<QueryResult>, 
 
     public QueryState getQueryState()
     {
-        return queryState == null ? QueryState.PENDING : queryState;
+        return queryState == null ? QueryState.STARTING : queryState;
     }
 
     public QueryResult setQueryState(QueryState queryState)

@@ -152,12 +152,13 @@ message NodeStatus {
  */
 message QueryResult {
 	enum QueryState {
-	  PENDING = 0;
+	  STARTING = 0; // query has been scheduled for execution. This is post-enqueued.
 	  RUNNING = 1;
 	  COMPLETED = 2; // query has completed successfully
 	  CANCELED = 3; // query has been cancelled, and all cleanup is complete
 	  FAILED = 4;
 	  CANCELLATION_REQUESTED = 5; // cancellation has been requested, and is being processed
+	  ENQUEUED = 6; // query has been enqueued. this is pre-starting.
 	}
 
 	optional QueryState query_state = 1;

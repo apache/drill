@@ -92,7 +92,7 @@ public final class QueryInfo implements Externalizable, Message<QueryInfo>, Sche
 
     public QueryResult.QueryState getState()
     {
-        return state == null ? QueryResult.QueryState.PENDING : state;
+        return state == null ? QueryResult.QueryState.STARTING : state;
     }
 
     public QueryInfo setState(QueryResult.QueryState state)

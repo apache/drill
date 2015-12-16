@@ -135,6 +135,8 @@ public class Foreman implements Runnable {
   private final ForemanResult foremanResult = new ForemanResult();
   private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
   private final ChannelFuture closeFuture;
+  private final boolean queuingEnabled;
+
 
   private String queryText;
 
@@ -163,7 +165,11 @@ public class Foreman implements Runnable {
     queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
         stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
-    recordNewState(QueryState.PENDING);
+    final OptionManager optionManager = queryContext.getOptions();
+    queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
+
+    final QueryState initialState = queuingEnabled ? QueryState.ENQUEUED : QueryState.STARTING;
+    recordNewState(initialState);
   }
 
   private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
@@ -391,7 +397,10 @@ public class Foreman implements Runnable {
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
     setupSortMemoryAllocations(plan);
-    acquireQuerySemaphore(plan);
+    if (queuingEnabled) {
+      acquireQuerySemaphore(plan);
+      moveToState(QueryState.STARTING, null);
+    }
 
     final QueryWorkUnit work = getQueryWorkUnit(plan);
     final List<PlanFragment> planFragments = work.getFragments();
@@ -457,49 +466,45 @@ public class Foreman implements Runnable {
    */
   private void acquireQuerySemaphore(final PhysicalPlan plan) throws ForemanSetupException {
     final OptionManager optionManager = queryContext.getOptions();
-    final boolean queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
-    if (queuingEnabled) {
-      final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
-      double totalCost = 0;
-      for (final PhysicalOperator ops : plan.getSortedOperators()) {
-        totalCost += ops.getCost();
-      }
-
-      final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
-      final String queueName;
-
-      try {
-        @SuppressWarnings("resource")
-        final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
-        final DistributedSemaphore distributedSemaphore;
-
-        // get the appropriate semaphore
-        if (totalCost > queueThreshold) {
-          final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
-          distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
-          queueName = "large";
-        } else {
-          final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
-          distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
-          queueName = "small";
-        }
-
-
-        lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
-      } catch (final Exception e) {
-        throw new ForemanSetupException("Unable to acquire slot for query.", e);
-      }
-
-      if (lease == null) {
-        throw UserException
-            .resourceError()
-            .message(
-                "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
-                queueName, queueTimeout / 1000)
-            .build(logger);
-      }
-
+    final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
+    double totalCost = 0;
+    for (final PhysicalOperator ops : plan.getSortedOperators()) {
+      totalCost += ops.getCost();
     }
+
+    final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
+    final String queueName;
+
+    try {
+      @SuppressWarnings("resource")
+      final ClusterCoordinator clusterCoordinator = drillbitContext.getClusterCoordinator();
+      final DistributedSemaphore distributedSemaphore;
+
+      // get the appropriate semaphore
+      if (totalCost > queueThreshold) {
+        final int largeQueue = (int) optionManager.getOption(ExecConstants.LARGE_QUEUE_SIZE);
+        distributedSemaphore = clusterCoordinator.getSemaphore("query.large", largeQueue);
+        queueName = "large";
+      } else {
+        final int smallQueue = (int) optionManager.getOption(ExecConstants.SMALL_QUEUE_SIZE);
+        distributedSemaphore = clusterCoordinator.getSemaphore("query.small", smallQueue);
+        queueName = "small";
+      }
+
+      lease = distributedSemaphore.acquire(queueTimeout, TimeUnit.MILLISECONDS);
+    } catch (final Exception e) {
+      throw new ForemanSetupException("Unable to acquire slot for query.", e);
+    }
+
+    if (lease == null) {
+      throw UserException
+          .resourceError()
+          .message(
+              "Unable to acquire queue resources for query within timeout.  Timeout for %s queue was set at %d seconds.",
+              queueName, queueTimeout / 1000)
+          .build(logger);
+    }
+
   }
 
   Exception getCurrentException() {
@@ -796,7 +801,20 @@ public class Foreman implements Runnable {
       logger.debug(queryIdString + ": State change requested {} --> {}", state, newState,
           exception);
       switch (state) {
-      case PENDING:
+      case ENQUEUED:
+        switch (newState) {
+          case FAILED:
+            Preconditions.checkNotNull(exception, "exception cannot be null when new state is failed");
+            recordNewState(newState);
+            foremanResult.setFailed(exception);
+            foremanResult.close();
+            return;
+          case STARTING:
+            recordNewState(state);
+            return;
+        }
+        break;
+      case STARTING:
         if (newState == QueryState.RUNNING) {
           recordNewState(QueryState.RUNNING);
           return;
@@ -841,10 +859,8 @@ public class Foreman implements Runnable {
           return;
         }
 
-        default:
-          throw new IllegalStateException("illegal transition from RUNNING to "
-              + newState);
         }
+        break;
       }
 
       case CANCELLATION_REQUESTED:
