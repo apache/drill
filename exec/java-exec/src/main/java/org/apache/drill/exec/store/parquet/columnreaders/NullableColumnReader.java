@@ -73,6 +73,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         currentDefinitionLevel = -1;
         definitionLevelsRead = 0;
         recordsReadInThisIteration = 0;
+        readStartInBytes = 0;
       }
 
       nullRunLength = 0;
