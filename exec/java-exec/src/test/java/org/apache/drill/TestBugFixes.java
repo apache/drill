@@ -18,12 +18,15 @@
 package org.apache.drill;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestBugFixes extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
+  private static final String WORKING_PATH = TestTools.getWorkingPath();
+  private static final String TEST_RES_PATH = WORKING_PATH + "/src/test/resources";
 
   @Test
   public void leak1() throws Exception {
@@ -144,4 +147,24 @@ public class TestBugFixes extends BaseTestQuery {
             .build().run();
   }
 
+  @Test
+  public void testDRILL4192() throws Exception {
+    String query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192` order by dir1", TEST_RES_PATH));
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("dir0", "dir1")
+        .baselineValues("single_top_partition", "nested_partition_1")
+        .baselineValues("single_top_partition", "nested_partition_2")
+        .go();
+
+    query = (String.format("select dir0, dir1 from dfs_test.`%s/bugs/DRILL-4192/*/nested_partition_1` order by dir1", TEST_RES_PATH));
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("dir0", "dir1")
+        .baselineValues("single_top_partition", "nested_partition_1")
+        .go();
+  }
 }

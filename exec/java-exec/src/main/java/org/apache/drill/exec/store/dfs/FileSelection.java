@@ -28,6 +28,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -37,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 public class FileSelection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSelection.class);
   private static final String PATH_SEPARATOR = System.getProperty("file.separator");
+  private static final String WILD_CARD = "*";
 
   private List<FileStatus> statuses;
 
@@ -213,14 +215,20 @@ public class FileSelection {
     if (statuses == null || statuses.isEmpty()) {
       selectionRoot = commonPathForFiles(files);
     } else {
-      if (statuses.size() == 1 && !Strings.isNullOrEmpty(root)) {
-        final Path rootPath = new Path(root);
-        final URI uri = statuses.get(0).getPath().toUri();
-        final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
-        selectionRoot = path.toString();
-      } else {
-        selectionRoot = commonPath(statuses);
+      if (Strings.isNullOrEmpty(root)) {
+        throw new DrillRuntimeException("Selection root is null or empty" + root);
       }
+      // Handle wild card
+      final Path rootPath;
+      if (root.contains(WILD_CARD)) {
+        final String newRoot = root.substring(0, root.indexOf(WILD_CARD));
+        rootPath = new Path(newRoot);
+      } else {
+        rootPath = new Path(root);
+      }
+      final URI uri = statuses.get(0).getPath().toUri();
+      final Path path = new Path(uri.getScheme(), uri.getAuthority(), rootPath.toUri().getPath());
+      selectionRoot = path.toString();
     }
     return new FileSelection(statuses, files, selectionRoot);
   }
