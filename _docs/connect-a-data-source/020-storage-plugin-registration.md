@@ -28,7 +28,7 @@ To register a new storage plugin configuration, enter a storage name, click **CR
 
 <!-- In Drill 1.2 and later, updating a storage plugin configuration and other storage plugin tasks require [authorization]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) if security is enabled. -->
 
-## Storage Plugin Configuration Persistance
+## Storage Plugin Configuration Persistence
 
 Drill saves storage plugin configurations in a temporary directory (embedded mode) or in ZooKeeper (distributed mode). For example, on Mac OS X, Drill uses `/tmp/drill/sys.storage_plugins` to store storage plugin configurations. The temporary directory clears when you reboot. Copy storage plugin configurations to a secure location to save them when you run drill in embedded mode.
 

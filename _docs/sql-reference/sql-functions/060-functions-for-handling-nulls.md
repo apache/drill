@@ -26,13 +26,13 @@ returns a null value of the type of the first expression if the two expressions 
 
 ### NULLIF Syntax
 
-    NULLIF ( expr1[, expr2, ... expr_n] )
+    NULLIF ( expr1, expr2 )
 
-*expr1* to *expr_n* are any valid scalar expressions.
+*expr1* to *expr2* are any valid scalar expressions.
 
 This function returns the same type as the first expression.
 
-### NULLIF Example
+### NULLIF Examples
 
     SELECT d9, d18 FROM alltypes LIMIT 1;
     +------------+------------+
