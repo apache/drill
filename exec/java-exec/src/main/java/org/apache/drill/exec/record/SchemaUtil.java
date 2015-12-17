@@ -122,6 +122,8 @@ public class SchemaUtil {
         for (int i = 0; i < valueCount; i++) {
           if (!vv.getAccessor().isNull(i)) {
             u.getMutator().setType(i, type);
+          } else {
+            u.getMutator().setType(i, MinorType.LATE);
           }
         }
         for (MinorType t : field.getType().getSubTypeList()) {
