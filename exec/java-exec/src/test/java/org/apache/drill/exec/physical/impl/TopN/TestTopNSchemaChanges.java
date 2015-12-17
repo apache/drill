@@ -204,7 +204,7 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
       .baselineValues(null, null, null, null, "200", "200")
       .baselineValues(null, null, null, null, "201", "201")
       .baselineValues(null, null, null, null, "202", "202");
-    //builder.go();
+    builder.go();
 
     // Since client can't handle new columns which are not in first batch, we won't test output of query.
     // Query should run w/o any errors.
