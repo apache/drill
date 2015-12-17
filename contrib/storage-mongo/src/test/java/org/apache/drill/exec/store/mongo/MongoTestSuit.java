@@ -39,7 +39,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
-
+import com.mongodb.client.model.Indexes;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -226,7 +226,7 @@ public class MongoTestSuit implements MongoTestConstants {
     }
     IndexOptions indexOptions = new IndexOptions().unique(true)
         .background(false).name(indexFieldName);
-    Bson keys = new Document(indexFieldName, Integer.valueOf(1));
+    Bson keys = Indexes.ascending(indexFieldName);
     mongoCollection.createIndex(keys, indexOptions);
   }
 

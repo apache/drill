@@ -17,15 +17,16 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.bson.Document;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.BasicDBObject;
 
 public class MongoScanSpec {
   private String dbName;
   private String collectionName;
 
-  private BasicDBObject filters;
+  private Document filters;
 
   @JsonCreator
   public MongoScanSpec(@JsonProperty("dbName") String dbName,
@@ -35,7 +36,7 @@ public class MongoScanSpec {
   }
 
   public MongoScanSpec(String dbName, String collectionName,
-      BasicDBObject filters) {
+      Document filters) {
     this.dbName = dbName;
     this.collectionName = collectionName;
     this.filters = filters;
@@ -49,7 +50,7 @@ public class MongoScanSpec {
     return collectionName;
   }
 
-  public BasicDBObject getFilters() {
+  public Document getFilters() {
     return filters;
   }
 
