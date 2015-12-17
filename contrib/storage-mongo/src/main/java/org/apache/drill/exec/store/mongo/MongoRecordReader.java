@@ -44,7 +44,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
@@ -60,8 +59,8 @@ public class MongoRecordReader extends AbstractRecordReader {
   private JsonReader jsonReader;
   private VectorContainerWriter writer;
 
-  private BasicDBObject filters;
-  private final BasicDBObject fields;
+  private Document filters;
+  private final Document fields;
 
   private final FragmentContext fragmentContext;
   private OperatorContext operatorContext;
@@ -78,15 +77,16 @@ public class MongoRecordReader extends AbstractRecordReader {
       FragmentContext context,
       MongoStoragePlugin plugin) {
 
-    fields = new BasicDBObject();
+    fields = new Document();
     // exclude _id field, if not mentioned by user.
     fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
     setColumns(projectedColumns);
     fragmentContext = context;
     this.plugin = plugin;
-    filters = new BasicDBObject();
-    Map<String, List<BasicDBObject>> mergedFilters = MongoUtils.mergeFilters(
+    filters = new Document();
+    Map<String, List<Document>> mergedFilters = MongoUtils.mergeFilters(
         subScanSpec.getMinFilters(), subScanSpec.getMaxFilters());
+
     buildFilters(subScanSpec.getFilter(), mergedFilters);
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
@@ -110,19 +110,19 @@ public class MongoRecordReader extends AbstractRecordReader {
     return transformed;
   }
 
-  private void buildFilters(BasicDBObject pushdownFilters,
-      Map<String, List<BasicDBObject>> mergedFilters) {
-    for (Entry<String, List<BasicDBObject>> entry : mergedFilters.entrySet()) {
-      List<BasicDBObject> list = entry.getValue();
+  private void buildFilters(Document pushdownFilters,
+      Map<String, List<Document>> mergedFilters) {
+    for (Entry<String, List<Document>> entry : mergedFilters.entrySet()) {
+      List<Document> list = entry.getValue();
       if (list.size() == 1) {
-        this.filters.putAll(list.get(0).toMap());
+        this.filters.putAll(list.get(0));
       } else {
-        BasicDBObject andQueryFilter = new BasicDBObject();
+        Document andQueryFilter = new Document();
         andQueryFilter.put("$and", list);
-        this.filters.putAll(andQueryFilter.toMap());
+        this.filters.putAll(andQueryFilter);
       }
     }
-    if (pushdownFilters != null && !pushdownFilters.toMap().isEmpty()) {
+    if (pushdownFilters != null && !pushdownFilters.isEmpty()) {
       if (!mergedFilters.isEmpty()) {
         this.filters = MongoUtils.andFilterAtIndex(this.filters,
             pushdownFilters);

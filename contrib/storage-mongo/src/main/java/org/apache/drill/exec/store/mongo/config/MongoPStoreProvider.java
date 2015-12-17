@@ -18,24 +18,22 @@
 package org.apache.drill.exec.store.mongo.config;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
-import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
-import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
-import org.apache.drill.exec.store.sys.local.MapEStore;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Indexes;
 
 public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
 
@@ -46,7 +44,7 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
 
   private MongoClient client;
 
-  private DBCollection collection;
+  private MongoCollection<Document> collection;
 
   private final String mongoURL;
   private final LocalEStoreProvider localEStoreProvider;
@@ -60,10 +58,9 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   public void start() throws IOException {
     MongoClientURI clientURI = new MongoClientURI(mongoURL);
     client = new MongoClient(clientURI);
-    DB db = client.getDB(clientURI.getDatabase());
-    collection = db.getCollection(clientURI.getCollection());
-    collection.setWriteConcern(WriteConcern.JOURNALED);
-    DBObject index = new BasicDBObject(1).append(pKey, Integer.valueOf(1));
+    MongoDatabase db = client.getDatabase(clientURI.getDatabase());
+    collection = db.getCollection(clientURI.getCollection()).withWriteConcern(WriteConcern.JOURNALED);
+    Bson index = Indexes.ascending(pKey);
     collection.createIndex(index);
   }
 
