@@ -53,6 +53,3 @@ Best practices:
 
 * Prefix the filenames with `010-foo.md`, `020-bar.md`, `030-baz.md`, etc. This allows room to add files in-between (eg, `005-qux.md`).  
 * Use the slug of the title as the filename. For example, if the title is "Getting Started with Drill", name the file `...-getting-started-with-drill.md`. If you're not sure what the slug is, you should be able to see it in the URL and then adjust (the URLs are auto-generated based on the title attribute).  
-* Add a line in version.json to add a blog post to the download page. For example:  
-
-      "blog_post": "/blog/2015/11/23/drill-1.3-released/",
