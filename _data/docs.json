@@ -1813,8 +1813,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "MapR-DB Format", 
-                    "next_url": "/docs/mapr-db-format/", 
+                    "next_title": "S3 Storage Plugin", 
+                    "next_url": "/docs/s3-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "RDBMS Storage Plugin", 
                     "previous_url": "/docs/rdbms-storage-plugin/", 
@@ -1830,28 +1830,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "S3 Storage Plugin", 
-                    "next_url": "/docs/s3-storage-plugin/", 
-                    "parent": "Connect a Data Source", 
-                    "previous_title": "MongoDB Storage Plugin", 
-                    "previous_url": "/docs/mongodb-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
-                    "title": "MapR-DB Format", 
-                    "url": "/docs/mapr-db-format/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Connect a Data Source", 
-                            "url": "/docs/connect-a-data-source/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "MapR-DB Format", 
-                    "previous_url": "/docs/mapr-db-format/", 
+                    "previous_title": "MongoDB Storage Plugin", 
+                    "previous_url": "/docs/mongodb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
                     "title": "S3 Storage Plugin", 
                     "url": "/docs/s3-storage-plugin/"
@@ -4864,23 +4847,6 @@
             "title": "Log and Debug Introduction", 
             "url": "/docs/log-and-debug-introduction/"
         }, 
-        "MapR-DB Format": {
-            "breadcrumbs": [
-                {
-                    "title": "Connect a Data Source", 
-                    "url": "/docs/connect-a-data-source/"
-                }
-            ], 
-            "children": [], 
-            "next_title": "S3 Storage Plugin", 
-            "next_url": "/docs/s3-storage-plugin/", 
-            "parent": "Connect a Data Source", 
-            "previous_title": "MongoDB Storage Plugin", 
-            "previous_url": "/docs/mongodb-storage-plugin/", 
-            "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
-            "title": "MapR-DB Format", 
-            "url": "/docs/mapr-db-format/"
-        }, 
         "Math and Trig": {
             "breadcrumbs": [
                 {
@@ -4965,8 +4931,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "MapR-DB Format", 
-            "next_url": "/docs/mapr-db-format/", 
+            "next_title": "S3 Storage Plugin", 
+            "next_url": "/docs/s3-storage-plugin/", 
             "parent": "Connect a Data Source", 
             "previous_title": "RDBMS Storage Plugin", 
             "previous_url": "/docs/rdbms-storage-plugin/", 
@@ -8189,8 +8155,8 @@
             "next_title": "ODBC/JDBC Interfaces", 
             "next_url": "/docs/odbc-jdbc-interfaces/", 
             "parent": "Connect a Data Source", 
-            "previous_title": "MapR-DB Format", 
-            "previous_url": "/docs/mapr-db-format/", 
+            "previous_title": "MongoDB Storage Plugin", 
+            "previous_url": "/docs/mongodb-storage-plugin/", 
             "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
             "title": "S3 Storage Plugin", 
             "url": "/docs/s3-storage-plugin/"
@@ -13244,8 +13210,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "MapR-DB Format", 
-                    "next_url": "/docs/mapr-db-format/", 
+                    "next_title": "S3 Storage Plugin", 
+                    "next_url": "/docs/s3-storage-plugin/", 
                     "parent": "Connect a Data Source", 
                     "previous_title": "RDBMS Storage Plugin", 
                     "previous_url": "/docs/rdbms-storage-plugin/", 
@@ -13261,28 +13227,11 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "S3 Storage Plugin", 
-                    "next_url": "/docs/s3-storage-plugin/", 
-                    "parent": "Connect a Data Source", 
-                    "previous_title": "MongoDB Storage Plugin", 
-                    "previous_url": "/docs/mongodb-storage-plugin/", 
-                    "relative_path": "_docs/connect-a-data-source/plugins/100-mapr-db-format.md", 
-                    "title": "MapR-DB Format", 
-                    "url": "/docs/mapr-db-format/"
-                }, 
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Connect a Data Source", 
-                            "url": "/docs/connect-a-data-source/"
-                        }
-                    ], 
-                    "children": [], 
                     "next_title": "ODBC/JDBC Interfaces", 
                     "next_url": "/docs/odbc-jdbc-interfaces/", 
                     "parent": "Connect a Data Source", 
-                    "previous_title": "MapR-DB Format", 
-                    "previous_url": "/docs/mapr-db-format/", 
+                    "previous_title": "MongoDB Storage Plugin", 
+                    "previous_url": "/docs/mongodb-storage-plugin/", 
                     "relative_path": "_docs/connect-a-data-source/plugins/110-s3-storage-plugin.md", 
                     "title": "S3 Storage Plugin", 
                     "url": "/docs/s3-storage-plugin/"
