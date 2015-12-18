@@ -20,11 +20,13 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -73,13 +75,18 @@ public class FileSelection {
   }
 
   public List<FileStatus> getStatuses(final DrillFileSystem fs) throws IOException {
-    if (statuses == null) {
+    Stopwatch timer = Stopwatch.createStarted();
+
+    if (statuses == null)  {
       final List<FileStatus> newStatuses = Lists.newArrayList();
       for (final String pathStr:files) {
         newStatuses.add(fs.getFileStatus(new Path(pathStr)));
       }
       statuses = newStatuses;
     }
+    logger.debug("FileSelection.getStatuses() took {} ms, numFiles: {}",
+        timer.elapsed(TimeUnit.MILLISECONDS), statuses == null ? 0 : statuses.size());
+
     return statuses;
   }
 
@@ -104,6 +111,7 @@ public class FileSelection {
   }
 
   public FileSelection minusDirectories(DrillFileSystem fs) throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     final List<FileStatus> statuses = getStatuses(fs);
     final int total = statuses.size();
     final Path[] paths = new Path[total];
@@ -118,7 +126,10 @@ public class FileSelection {
       }
     }));
 
-    return create(nonDirectories, null, selectionRoot);
+    final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
+    logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}",
+        timer.elapsed(TimeUnit.MILLISECONDS), total);
+    return fileSel;
   }
 
   public FileStatus getFirstPath(DrillFileSystem fs) throws IOException {
@@ -183,12 +194,16 @@ public class FileSelection {
   }
 
   public static FileSelection create(final DrillFileSystem fs, final String parent, final String path) throws IOException {
+    Stopwatch timer = Stopwatch.createStarted();
     final Path combined = new Path(parent, removeLeadingSlash(path));
     final FileStatus[] statuses = fs.globStatus(combined);
     if (statuses == null) {
       return null;
     }
-    return create(Lists.newArrayList(statuses), null, combined.toUri().toString());
+    final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
+    logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    return fileSel;
+
   }
 
   /**
