@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.maprdb.json;
 
 import static org.ojai.DocumentConstants.ID_FIELD;
 import static org.ojai.DocumentConstants.ID_KEY;
-import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -63,10 +62,11 @@ import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;
 import com.mapr.db.exceptions.DBException;
 import com.mapr.db.impl.IdCodec;
-import com.mapr.db.ojai.DBDocumentReader;
 import com.mapr.db.ojai.DBDocumentReaderBase;
 import com.mapr.db.util.ByteBufs;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
+
+import io.netty.buffer.DrillBuf;
 
 public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MaprDBJsonRecordReader.class);
@@ -199,10 +199,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     outside: while (true) {
       EventType event = reader.next();
       if (event == null) break outside;
+      fieldName = reader.getFieldName();
       switch (event) {
-      case FIELD_NAME:
-        fieldName = reader.getFieldName();
-        break;
       case NULL:
         map.varChar(fieldName).write(null); // treat as VARCHAR for now
       case BINARY:
@@ -268,8 +266,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       EventType event = reader.next();
       if (event == null) break outside;
       switch (event) {
-      case FIELD_NAME:
-        throw new IllegalStateException("Shouldn't get a field name inside a list");
       case NULL:
         list.varChar().write(null); // treat as VARCHAR for now
       case BINARY:
