@@ -109,7 +109,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException{
     super();
-    this.oContext = context.newOperatorContext(writer, true);
+    this.oContext = context.newOperatorContext(writer);
     this.codecFactory = CodecFactory.createDirectCodecFactory(writer.getFormatPlugin().getFsConf(),
         new ParquetDirectByteBufferAllocator(oContext.getAllocator()), pageSize);
     this.partitionColumns = writer.getPartitionColumns();

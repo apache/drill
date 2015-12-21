@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -76,7 +77,6 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.calcite.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -126,8 +126,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   public MergingRecordBatch(final FragmentContext context,
                             final MergingReceiverPOP config,
                             final RawFragmentBatchProvider[] fragProviders) throws OutOfMemoryException {
-    super(config, context, true, context.newOperatorContext(config, false));
-    //super(config, context);
+    super(config, context, true, context.newOperatorContext(config));
     this.fragProviders = fragProviders;
     this.context = context;
     this.outgoingContainer = new VectorContainer(oContext);

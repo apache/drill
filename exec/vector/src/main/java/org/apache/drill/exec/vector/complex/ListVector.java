@@ -103,8 +103,8 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new TransferImpl(field.withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new TransferImpl(field.withPath(ref), allocator);
   }
 
   @Override
@@ -116,7 +116,7 @@ public class ListVector extends BaseRepeatedValueVector {
 
     ListVector to;
 
-    public TransferImpl(MaterializedField field) {
+    public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       to = new ListVector(field, allocator, null);
       to.addOrGetVector(new VectorDescriptor(vector.getField().getType()));
     }

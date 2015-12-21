@@ -174,13 +174,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public TransferPair getTransferPair(){
-    return new TransferImpl(getField());
+  public TransferPair getTransferPair(BufferAllocator allocator){
+    return new TransferImpl(getField(), allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref){
-    return new TransferImpl(getField().withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator){
+    return new TransferImpl(getField().withPath(ref), allocator);
   }
 
   @Override
@@ -191,8 +191,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public void transferTo(${minor.class}Vector target){
     target.clear();
     this.offsetVector.transferTo(target.offsetVector);
-    target.data = data;
-    target.data.retain(1);
+    target.data = data.transferOwnership(target.allocator).buffer;
+    target.data.writerIndex(data.writerIndex());
     clear();
   }
 
@@ -207,8 +207,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     for (int i = 0; i < length + 1; i++) {
       targetOffsetVectorMutator.set(i, offsetVectorAccessor.get(startIndex + i) - startPoint);
     }
-    target.data = data.slice(startPoint, sliceLength);
-    target.data.retain(1);
+    target.data = data.slice(startPoint, sliceLength).transferOwnership(target.allocator).buffer;
     target.getMutator().setValueCount(length);
 }
 
@@ -242,7 +241,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private class TransferImpl implements TransferPair{
     ${minor.class}Vector to;
 
-    public TransferImpl(MaterializedField field){
+    public TransferImpl(MaterializedField field, BufferAllocator allocator){
       to = new ${minor.class}Vector(field, allocator);
     }
 

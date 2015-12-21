@@ -157,8 +157,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SPILL_BATCH_GROUP_SIZE = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE);
     SPILL_THRESHOLD = config.getInt(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD);
     dirs = Iterators.cycle(config.getStringList(ExecConstants.EXTERNAL_SORT_SPILL_DIRS));
-    copierAllocator = oContext.getAllocator().getChildAllocator(
-        context.asLimitConsumer(), PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION, true);
+    copierAllocator = oContext.getAllocator().newChildAllocator(oContext.getAllocator().getName() + ":copier",
+        PriorityQueueCopier.INITIAL_ALLOCATION, PriorityQueueCopier.MAX_ALLOCATION);
     FragmentHandle handle = context.getHandle();
     fileName = String.format("%s/major_fragment_%s/minor_fragment_%s/operator_%s", QueryIdHelper.getQueryId(handle.getQueryId()),
         handle.getMajorFragmentId(), handle.getMinorFragmentId(), popConfig.getOperatorId());
@@ -211,18 +211,26 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (sv4 != null) {
         sv4.clear();
       }
-      if (copier != null) {
-        copier.close();
-      }
-      if (copierAllocator != null) {
-        copierAllocator.close();
-      }
-      super.close();
 
-      if(mSorter != null) {
-        mSorter.clear();
+      try {
+        if (copier != null) {
+          copier.close();
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      } finally {
+        copierAllocator.close();
+        super.close();
+
+        if (mSorter != null) {
+          mSorter.clear();
+        }
+
       }
+
     }
+
+
   }
 
   @Override
@@ -339,9 +347,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           SelectionVector2 sv2;
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
             sv2 = incoming.getSelectionVector2().clone();
-            if (sv2.getBuffer(false).isRootBuffer()) {
-              oContext.getAllocator().takeOwnership(sv2.getBuffer(false));
-            }
           } else {
             try {
               sv2 = newSV2();
@@ -361,7 +366,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           totalCount += count;
           sorter.setup(context, sv2, convertedBatch);
           sorter.sort(sv2);
-          RecordBatchData rbd = new RecordBatchData(convertedBatch);
+          RecordBatchData rbd = new RecordBatchData(convertedBatch, oContext.getAllocator());
           boolean success = false;
           try {
             rbd.setSv2(sv2);
@@ -441,7 +446,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         builder = new SortRecordBatchBuilder(oContext.getAllocator());
 
         for (BatchGroup group : batchGroups) {
-          RecordBatchData rbd = new RecordBatchData(group.getContainer());
+          RecordBatchData rbd = new RecordBatchData(group.getContainer(), oContext.getAllocator());
           rbd.setSv2(group.getSv2());
           builder.add(rbd);
         }
@@ -472,10 +477,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
         batchGroups.addAll(spilledBatchGroups);
         spilledBatchGroups = null; // no need to cleanup spilledBatchGroups, all it's batches are in batchGroups now
-
-        // copierAllocator is no longer needed now. Closing it will free memory for this operator
-        copierAllocator.close();
-        copierAllocator = null;
 
         logger.warn("Starting to merge. {} batch groups. Current allocated memory: {}", batchGroups.size(), oContext.getAllocator().getAllocatedMemory());
         VectorContainer hyperBatch = constructHyperBatch(batchGroups);
@@ -561,7 +562,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
     // 1 output container is kept in memory, so we want to hold on to it and transferClone
     // allows keeping ownership
-    VectorContainer c1 = VectorContainer.getTransferClone(outputContainer);
+    VectorContainer c1 = VectorContainer.getTransferClone(outputContainer, oContext);
     c1.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     c1.setRecordCount(count);
 
@@ -587,7 +588,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     } finally {
       hyperBatch.clear();
     }
-    takeOwnership(c1); // transfer ownership from copier allocator to external sort allocator
     long bufSize = getBufferSize(c1);
     totalSizeInMemory += bufSize;
     logger.debug("mergeAndSpill: final total size in memory = {}", totalSizeInMemory);
@@ -595,25 +595,12 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     return newGroup;
   }
 
-  private void takeOwnership(VectorAccessible batch) {
-    for (VectorWrapper<?> w : batch) {
-      DrillBuf[] bufs = w.getValueVector().getBuffers(false);
-      for (DrillBuf buf : bufs) {
-        if (buf.isRootBuffer()) {
-          oContext.getAllocator().takeOwnership(buf);
-        }
-      }
-    }
-  }
-
   private long getBufferSize(VectorAccessible batch) {
     long size = 0;
     for (VectorWrapper<?> w : batch) {
       DrillBuf[] bufs = w.getValueVector().getBuffers(false);
       for (DrillBuf buf : bufs) {
-        if (buf.isRootBuffer()) {
-          size += buf.capacity();
-        }
+        size += buf.getPossibleMemoryConsumed();
       }
     }
     return size;

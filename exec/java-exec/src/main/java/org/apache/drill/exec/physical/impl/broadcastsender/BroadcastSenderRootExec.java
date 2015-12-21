@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.broadcastsender;
 import java.util.List;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -61,7 +60,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
   public BroadcastSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
                                  BroadcastSender config) throws OutOfMemoryException {
-    super(context, context.newOperatorContext(config, null, false), config);
+    super(context, context.newOperatorContext(config, null), config);
     this.ok = true;
     this.incoming = incoming;
     this.config = config;
@@ -118,7 +117,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
 
       case OK_NEW_SCHEMA:
       case OK:
-        WritableBatch writableBatch = incoming.getWritableBatch();
+        WritableBatch writableBatch = incoming.getWritableBatch().transfer(oContext.getAllocator());
         if (tunnels.length > 1) {
           writableBatch.retainBuffers(tunnels.length - 1);
         }

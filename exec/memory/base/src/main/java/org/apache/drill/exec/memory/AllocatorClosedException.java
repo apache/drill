@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.memory;
 
-public interface LimitConsumer {
-
-  public String getIdentifier();
-  public long getAllocated();
-
-  public long getLimit();
-
-  public void setLimit(long limit);
+/**
+ * Exception thrown when a closed BufferAllocator is used. Note
+ * this is an unchecked exception.
+ *
+ * @param message string associated with the cause
+ */
+@SuppressWarnings("serial")
+public class AllocatorClosedException extends RuntimeException {
+  public AllocatorClosedException(String message) {
+    super(message);
+  }
 }

@@ -107,7 +107,7 @@ public class ScreenCreator implements RootCreator<Screen> {
 
         return false;
       case OK_NEW_SCHEMA:
-        materializer = new VectorRecordMaterializer(context, incoming);
+        materializer = new VectorRecordMaterializer(context, oContext, incoming);
         //$FALL-THROUGH$
       case OK:
         injector.injectPause(context.getExecutionControls(), "sending-data", logger);

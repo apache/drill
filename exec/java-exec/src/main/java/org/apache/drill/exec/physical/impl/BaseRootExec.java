@@ -42,7 +42,7 @@ public abstract class BaseRootExec implements RootExec {
   private List<CloseableRecordBatch> operators;
 
   public BaseRootExec(final FragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
-    this.oContext = fragmentContext.newOperatorContext(config, stats, true);
+    this.oContext = fragmentContext.newOperatorContext(config, stats);
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
         config.getOperatorType(), OperatorContext.getChildCount(config)),
         oContext.getAllocator());

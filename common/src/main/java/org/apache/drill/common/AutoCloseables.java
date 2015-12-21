@@ -68,7 +68,7 @@ public class AutoCloseables {
    * Closes all autoCloseables if not null and suppresses subsequent exceptions if more than one
    * @param autoCloseables the closeables to close
    */
-  public static void close(Collection<? extends AutoCloseable> ac) throws Exception {
+  public static void close(Iterable<? extends AutoCloseable> ac) throws Exception {
     Exception topLevelException = null;
     for (AutoCloseable closeable : ac) {
       try {

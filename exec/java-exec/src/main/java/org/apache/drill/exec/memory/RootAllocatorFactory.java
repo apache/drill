@@ -15,20 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.rpc.data;
+package org.apache.drill.exec.memory;
 
-import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.config.DrillConfig;
 
-import java.io.IOException;
+public class RootAllocatorFactory {
 
-import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
-import org.apache.drill.exec.work.fragment.FragmentManager;
+  public static final String TOP_LEVEL_MAX_ALLOC = "drill.memory.top.max";
 
-public interface DataResponseHandler {
+  /**
+   * Constructor to prevent instantiation of this static utility class.
+   */
+  private RootAllocatorFactory() {}
 
-  public void handle(FragmentManager manager, FragmentRecordBatch fragmentBatch,
-      DrillBuf data, AckSender sender) throws FragmentSetupException, IOException;
-
-  public void informOutOfMemory();
+  /**
+   * Create a new Root Allocator
+   * @param drillConfig
+   *          the DrillConfig
+   * @return a new root allocator
+   */
+  public static BufferAllocator newRoot(final DrillConfig drillConfig) {
+    return new RootAllocator(Math.min(DrillConfig.getMaxDirectMemory(), drillConfig.getLong(TOP_LEVEL_MAX_ALLOC)));
+  }
 }

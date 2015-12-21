@@ -143,8 +143,8 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new MapTransferPair(this, getField().getPath());
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new MapTransferPair(this, getField().getPath(), allocator);
   }
 
   @Override
@@ -153,8 +153,8 @@ public class MapVector extends AbstractMapVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new MapTransferPair(this, ref);
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new MapTransferPair(this, ref, allocator);
   }
 
   protected static class MapTransferPair implements TransferPair{
@@ -162,8 +162,8 @@ public class MapVector extends AbstractMapVector {
     private final MapVector from;
     private final MapVector to;
 
-    public MapTransferPair(MapVector from, SchemaPath path) {
-      this(from, new MapVector(MaterializedField.create(path, TYPE), from.allocator, from.callBack), false);
+    public MapTransferPair(MapVector from, SchemaPath path, BufferAllocator allocator) {
+      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
     }
 
     public MapTransferPair(MapVector from, MapVector to) {

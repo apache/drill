@@ -40,6 +40,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -247,6 +248,23 @@ public class BaseTestQuery extends ExecTest {
 
   public static TestBuilder testBuilder() {
     return new TestBuilder(allocator);
+  }
+
+  /**
+   * Utility function that can be used in tests to verify the state of drillbit
+   * allocators.
+   */
+  public static void verifyAllocators() {
+    if (bits != null) {
+      for(Drillbit bit : bits) {
+        if (bit != null) {
+          final DrillbitContext drillbitContext = bit.getContext();
+          final BufferAllocator bufferAllocator = drillbitContext.getAllocator();
+          final RootAllocator rootAllocator = (RootAllocator) bufferAllocator;
+          rootAllocator.verify();
+        }
+      }
+    }
   }
 
   @AfterClass

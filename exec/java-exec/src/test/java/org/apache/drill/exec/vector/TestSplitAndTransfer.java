@@ -51,7 +51,7 @@ public class TestSplitAndTransfer {
     }
     mutator.setValueCount(valueCount);
 
-    final TransferPair tp = varCharVector.getTransferPair();
+    final TransferPair tp = varCharVector.getTransferPair(allocator);
     final NullableVarCharVector newVarCharVector = (NullableVarCharVector) tp.getTo();
     final Accessor accessor = newVarCharVector.getAccessor();
     final int[][] startLengths = {{0, 201}, {201, 200}, {401, 99}};

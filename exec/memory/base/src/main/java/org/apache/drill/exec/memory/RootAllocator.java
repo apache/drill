@@ -17,27 +17,23 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.DrillBuf;
+import com.google.common.annotations.VisibleForTesting;
 
-public interface Accountor extends AutoCloseable{
+/**
+ * The root allocator for using direct memory inside a Drillbit. Supports creating a
+ * tree of descendant child allocators.
+ */
+public class RootAllocator extends BaseAllocator {
 
-  public boolean transferTo(Accountor target, DrillBuf buf, long size);
-  public boolean transferIn(DrillBuf buf, long size);
-  public long getAvailable();
-  public long getCapacity();
-  public long getAllocation();
-  public long getPeakMemoryAllocation();
+  public RootAllocator(final long limit) {
+    super(null, "ROOT", 0, limit);
+  }
 
-  public boolean reserve(long size);
-  public boolean forceAdditionalReservation(long size);
-
-  public void reserved(long expected, DrillBuf buf);
-
-  public void release(DrillBuf buf, long size);
-  public void releasePartial(DrillBuf buf, long size);
-  public long resetFragmentLimits();
-  public void close();
-
-  public void setFragmentLimit(long add);
-  public long getFragmentLimit();
+  /**
+   * Verify the accounting state of the allocation system.
+   */
+  @VisibleForTesting
+  public void verify() {
+    verifyAllocator();
+  }
 }

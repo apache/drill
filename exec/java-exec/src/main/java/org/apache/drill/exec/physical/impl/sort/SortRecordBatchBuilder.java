@@ -17,20 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -44,7 +39,6 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.vector.complex.UnionVector;
 
 public class SortRecordBatchBuilder implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
@@ -55,12 +49,11 @@ public class SortRecordBatchBuilder implements AutoCloseable {
   private long runningBatches;
   private SelectionVector4 sv4;
   private BufferAllocator allocator;
-  final PreAllocator svAllocator;
-  private boolean svAllocatorUsed = false;
+  final AllocationReservation reservation;
 
   public SortRecordBatchBuilder(BufferAllocator a) {
     this.allocator = a;
-    this.svAllocator = a.getNewPreAllocator();
+    this.reservation = a.newReservation();
   }
 
   private long getSize(VectorAccessible batch) {
@@ -93,12 +86,12 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     if (runningBatches >= Character.MAX_VALUE) {
       return false; // allowed in batch.
     }
-    if (!svAllocator.preAllocate(batch.getRecordCount()*4)) {
+    if (!reservation.add(batch.getRecordCount() * 4)) {
       return false;  // sv allocation available.
     }
 
 
-    RecordBatchData bd = new RecordBatchData(batch);
+    RecordBatchData bd = new RecordBatchData(batch, allocator);
     runningBatches++;
     batches.put(batch.getSchema(), bd);
     recordCount += bd.getRecordCount();
@@ -116,7 +109,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       logger.error(errMsg);
       throw new DrillRuntimeException(errMsg);
     }
-    if(!svAllocator.preAllocate(rbd.getRecordCount()*4)) {
+    if (!reservation.add(rbd.getRecordCount() * 4)) {
       final String errMsg = String.format("Failed to pre-allocate memory for SV. " + "Existing recordCount*4 = %d, " +
           "incoming batch recordCount*4 = %d", recordCount * 4, rbd.getRecordCount() * 4);
       logger.error(errMsg);
@@ -159,11 +152,10 @@ public class SortRecordBatchBuilder implements AutoCloseable {
       assert false : "Invalid to have an empty set of batches with no schemas.";
     }
 
-    final DrillBuf svBuffer = svAllocator.getAllocation();
+    final DrillBuf svBuffer = reservation.allocateBuffer();
     if (svBuffer == null) {
       throw new OutOfMemoryError("Failed to allocate direct memory for SV4 vector in SortRecordBatchBuilder.");
     }
-    svAllocatorUsed = true;
     sv4 = new SelectionVector4(svBuffer, recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
@@ -229,13 +221,7 @@ public class SortRecordBatchBuilder implements AutoCloseable {
 
   @Override
   public void close() {
-    // Don't leak unused pre-allocated memory.
-    if (!svAllocatorUsed) {
-      final DrillBuf drillBuf = svAllocator.getAllocation();
-      if (drillBuf != null) {
-        drillBuf.release();
-      }
-    }
+    reservation.close();
   }
 
   public List<VectorContainer> getHeldRecordBatches() {

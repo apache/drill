@@ -88,25 +88,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
         throw new IOException("Attempted to enqueue batch after finished");
       }
     }
-    if (batch.getHeader().getIsOutOfMemory()) {
-      handleOutOfMemory(batch);
-      return;
-    }
     enqueueInner(batch);
-  }
-
-  /**
-   * handle the out of memory case
-   *
-   * @param batch
-   */
-  protected void handleOutOfMemory(final RawFragmentBatch batch) {
-    if (!bufferQueue.checkForOutOfMemory()) {
-      logger.debug("Adding OOM message to front of queue. Current queue size: {}", bufferQueue.size());
-      bufferQueue.addOomBatch(batch);
-    } else {
-      logger.debug("ignoring duplicate OOM message");
-    }
   }
 
   /**
@@ -202,11 +184,11 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
       return null;
     }
 
+    if (context.isOverMemoryLimit()) {
+      outOfMemory.set(true);
+    }
+
     if (b != null) {
-      if (b.getHeader().getIsOutOfMemory()) {
-        outOfMemory.set(true);
-        return b;
-      }
 
       upkeep(b);
 
@@ -234,7 +216,7 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   }
 
   private void assertAckSent(RawFragmentBatch batch) {
-    assert batch == null || batch.isAckSent() || batch.getHeader().getIsOutOfMemory() : "Ack not sent for batch";
+    assert batch == null || batch.isAckSent() : "Ack not sent for batch";
   }
 
   private int decrementStreamCounter() {

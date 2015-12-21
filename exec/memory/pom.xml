@@ -30,6 +30,5 @@
 
   <modules>
     <module>base</module>
-    <module>impl</module>
   </modules>
 </project>

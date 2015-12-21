@@ -32,5 +32,4 @@ message FragmentRecordBatch{
   optional int32 sending_minor_fragment_id = 5;
   optional exec.shared.RecordBatchDef def = 6;
   optional bool isLastBatch = 7;
-  optional bool isOutOfMemory = 8 [ default = false ];
 }

@@ -62,6 +62,10 @@ public abstract class AbstractContainerVector implements ValueVector {
     }
   }
 
+  public BufferAllocator getAllocator() {
+    return allocator;
+  }
+
   /**
    * Returns the field definition of this instance.
    */

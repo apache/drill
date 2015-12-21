@@ -189,7 +189,7 @@ public class RepeatedListVector extends AbstractContainerVector
     }
 
     @Override
-    public TransferPair getTransferPair(FieldReference ref) {
+    public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
       return makeTransferPair(new DelegateRepeatedVector(ref, allocator));
     }
 
@@ -344,13 +344,13 @@ public class RepeatedListVector extends AbstractContainerVector
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new RepeatedListTransferPair(delegate.getTransferPair());
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new RepeatedListTransferPair(delegate.getTransferPair(allocator));
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new RepeatedListTransferPair(delegate.getTransferPair(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new RepeatedListTransferPair(delegate.getTransferPair(ref, allocator));
   }
 
   @Override

@@ -32,12 +32,11 @@ import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -120,7 +119,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         newVectors.add(vector);
       }
 
-      Preconditions.checkArgument(buf == null || bufOffset == buf.capacity());
 
       // rebuild the schema.
       final SchemaBuilder builder = BatchSchema.newBuilder();
