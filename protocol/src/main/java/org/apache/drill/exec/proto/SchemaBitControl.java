@@ -281,6 +281,9 @@ public final class SchemaBitControl
                 if(message.hasHandle())
                     output.writeObject(2, message.getHandle(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.WRITE, false);
 
+                for(org.apache.drill.exec.proto.UserBitShared.WarningMsg summaryWarnings : message.getSummaryWarningsList())
+                    output.writeObject(3, summaryWarnings, org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.WRITE, true);
+
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.FragmentStatus message)
             {
@@ -328,6 +331,10 @@ public final class SchemaBitControl
                             builder.setHandle(input.mergeObject(org.apache.drill.exec.proto.ExecProtos.FragmentHandle.newBuilder(), org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.MERGE));
 
                             break;
+                        case 3:
+                            builder.addSummaryWarnings(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.WarningMsg.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.MERGE));
+
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -370,6 +377,7 @@ public final class SchemaBitControl
             {
                 case 1: return "profile";
                 case 2: return "handle";
+                case 3: return "summaryWarnings";
                 default: return null;
             }
         }
@@ -383,6 +391,120 @@ public final class SchemaBitControl
         {
             fieldMap.put("profile", 1);
             fieldMap.put("handle", 2);
+            fieldMap.put("summaryWarnings", 3);
+        }
+    }
+
+    public static final class DrillWarning
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.DrillWarning>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.DrillWarning message) throws java.io.IOException
+            {
+                for(org.apache.drill.exec.proto.UserBitShared.WarningMsg warnings : message.getWarningsList())
+                    output.writeObject(1, warnings, org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.WRITE, true);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.DrillWarning message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.DrillWarning> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.DrillWarning message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitControl.DrillWarning newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.DrillWarning.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.DrillWarning.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.addWarnings(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.WarningMsg.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.WarningMsg.MERGE));
+
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.DrillWarning.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitControl.DrillWarning.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.DrillWarning.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.DrillWarning.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.DrillWarning.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.DrillWarning.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "warnings";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("warnings", 1);
         }
     }
 

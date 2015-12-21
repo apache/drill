@@ -3589,6 +3589,2095 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.DrillPBError)
   }
 
+  public interface WarningMsgOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional string message = 1;
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    boolean hasMessage();
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    java.lang.String getMessage();
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getMessageBytes();
+
+    // optional int32 count = 2;
+    /**
+     * <code>optional int32 count = 2;</code>
+     *
+     * <pre>
+     * keeps count of how many times this warning_code was raised
+     * </pre>
+     */
+    boolean hasCount();
+    /**
+     * <code>optional int32 count = 2;</code>
+     *
+     * <pre>
+     * keeps count of how many times this warning_code was raised
+     * </pre>
+     */
+    int getCount();
+
+    // optional string warning_code = 3;
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    boolean hasWarningCode();
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    java.lang.String getWarningCode();
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getWarningCodeBytes();
+
+    // optional string sql_state = 4;
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    boolean hasSqlState();
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    java.lang.String getSqlState();
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getSqlStateBytes();
+  }
+  /**
+   * Protobuf type {@code exec.shared.WarningMsg}
+   */
+  public static final class WarningMsg extends
+      com.google.protobuf.GeneratedMessage
+      implements WarningMsgOrBuilder {
+    // Use WarningMsg.newBuilder() to construct.
+    private WarningMsg(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private WarningMsg(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final WarningMsg defaultInstance;
+    public static WarningMsg getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public WarningMsg getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private WarningMsg(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              message_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              count_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              warningCode_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              sqlState_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_WarningMsg_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_WarningMsg_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.WarningMsg.class, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<WarningMsg> PARSER =
+        new com.google.protobuf.AbstractParser<WarningMsg>() {
+      public WarningMsg parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new WarningMsg(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<WarningMsg> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional string message = 1;
+    public static final int MESSAGE_FIELD_NUMBER = 1;
+    private java.lang.Object message_;
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    public boolean hasMessage() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    public java.lang.String getMessage() {
+      java.lang.Object ref = message_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          message_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string message = 1;</code>
+     *
+     * <pre>
+     * keeps last message for given warning_code
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getMessageBytes() {
+      java.lang.Object ref = message_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        message_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional int32 count = 2;
+    public static final int COUNT_FIELD_NUMBER = 2;
+    private int count_;
+    /**
+     * <code>optional int32 count = 2;</code>
+     *
+     * <pre>
+     * keeps count of how many times this warning_code was raised
+     * </pre>
+     */
+    public boolean hasCount() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int32 count = 2;</code>
+     *
+     * <pre>
+     * keeps count of how many times this warning_code was raised
+     * </pre>
+     */
+    public int getCount() {
+      return count_;
+    }
+
+    // optional string warning_code = 3;
+    public static final int WARNING_CODE_FIELD_NUMBER = 3;
+    private java.lang.Object warningCode_;
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    public boolean hasWarningCode() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    public java.lang.String getWarningCode() {
+      java.lang.Object ref = warningCode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          warningCode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string warning_code = 3;</code>
+     *
+     * <pre>
+     * drill_warning_type + major fragment id + minor fragment id + operator id
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getWarningCodeBytes() {
+      java.lang.Object ref = warningCode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        warningCode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string sql_state = 4;
+    public static final int SQL_STATE_FIELD_NUMBER = 4;
+    private java.lang.Object sqlState_;
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    public boolean hasSqlState() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    public java.lang.String getSqlState() {
+      java.lang.Object ref = sqlState_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          sqlState_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string sql_state = 4;</code>
+     *
+     * <pre>
+     * not in use, yet
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getSqlStateBytes() {
+      java.lang.Object ref = sqlState_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        sqlState_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      message_ = "";
+      count_ = 0;
+      warningCode_ = "";
+      sqlState_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getMessageBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, count_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getWarningCodeBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getSqlStateBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getMessageBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, count_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getWarningCodeBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getSqlStateBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.WarningMsg parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.WarningMsg prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.WarningMsg}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_WarningMsg_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_WarningMsg_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.WarningMsg.class, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.WarningMsg.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        message_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        count_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        warningCode_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        sqlState_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_WarningMsg_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.WarningMsg.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg build() {
+        org.apache.drill.exec.proto.UserBitShared.WarningMsg result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.WarningMsg result = new org.apache.drill.exec.proto.UserBitShared.WarningMsg(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.message_ = message_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.count_ = count_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.warningCode_ = warningCode_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.sqlState_ = sqlState_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.WarningMsg) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.WarningMsg)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.WarningMsg other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.WarningMsg.getDefaultInstance()) return this;
+        if (other.hasMessage()) {
+          bitField0_ |= 0x00000001;
+          message_ = other.message_;
+          onChanged();
+        }
+        if (other.hasCount()) {
+          setCount(other.getCount());
+        }
+        if (other.hasWarningCode()) {
+          bitField0_ |= 0x00000004;
+          warningCode_ = other.warningCode_;
+          onChanged();
+        }
+        if (other.hasSqlState()) {
+          bitField0_ |= 0x00000008;
+          sqlState_ = other.sqlState_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.WarningMsg parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.WarningMsg) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional string message = 1;
+      private java.lang.Object message_ = "";
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public boolean hasMessage() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public java.lang.String getMessage() {
+        java.lang.Object ref = message_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          message_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getMessageBytes() {
+        java.lang.Object ref = message_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          message_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public Builder setMessage(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        message_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public Builder clearMessage() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        message_ = getDefaultInstance().getMessage();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string message = 1;</code>
+       *
+       * <pre>
+       * keeps last message for given warning_code
+       * </pre>
+       */
+      public Builder setMessageBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        message_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 count = 2;
+      private int count_ ;
+      /**
+       * <code>optional int32 count = 2;</code>
+       *
+       * <pre>
+       * keeps count of how many times this warning_code was raised
+       * </pre>
+       */
+      public boolean hasCount() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 count = 2;</code>
+       *
+       * <pre>
+       * keeps count of how many times this warning_code was raised
+       * </pre>
+       */
+      public int getCount() {
+        return count_;
+      }
+      /**
+       * <code>optional int32 count = 2;</code>
+       *
+       * <pre>
+       * keeps count of how many times this warning_code was raised
+       * </pre>
+       */
+      public Builder setCount(int value) {
+        bitField0_ |= 0x00000002;
+        count_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 count = 2;</code>
+       *
+       * <pre>
+       * keeps count of how many times this warning_code was raised
+       * </pre>
+       */
+      public Builder clearCount() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        count_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string warning_code = 3;
+      private java.lang.Object warningCode_ = "";
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public boolean hasWarningCode() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public java.lang.String getWarningCode() {
+        java.lang.Object ref = warningCode_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          warningCode_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getWarningCodeBytes() {
+        java.lang.Object ref = warningCode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          warningCode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public Builder setWarningCode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        warningCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public Builder clearWarningCode() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        warningCode_ = getDefaultInstance().getWarningCode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string warning_code = 3;</code>
+       *
+       * <pre>
+       * drill_warning_type + major fragment id + minor fragment id + operator id
+       * </pre>
+       */
+      public Builder setWarningCodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        warningCode_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string sql_state = 4;
+      private java.lang.Object sqlState_ = "";
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public boolean hasSqlState() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public java.lang.String getSqlState() {
+        java.lang.Object ref = sqlState_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          sqlState_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getSqlStateBytes() {
+        java.lang.Object ref = sqlState_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          sqlState_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public Builder setSqlState(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        sqlState_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public Builder clearSqlState() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        sqlState_ = getDefaultInstance().getSqlState();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string sql_state = 4;</code>
+       *
+       * <pre>
+       * not in use, yet
+       * </pre>
+       */
+      public Builder setSqlStateBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        sqlState_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.WarningMsg)
+    }
+
+    static {
+      defaultInstance = new WarningMsg(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.WarningMsg)
+  }
+
+  public interface QueryWarningOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required .exec.shared.QueryId query_id = 1;
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    boolean hasQueryId();
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder();
+
+    // repeated .exec.shared.WarningMsg warnings = 2;
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg> 
+        getWarningsList();
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.WarningMsg getWarnings(int index);
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    int getWarningsCount();
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder> 
+        getWarningsOrBuilderList();
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder getWarningsOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code exec.shared.QueryWarning}
+   */
+  public static final class QueryWarning extends
+      com.google.protobuf.GeneratedMessage
+      implements QueryWarningOrBuilder {
+    // Use QueryWarning.newBuilder() to construct.
+    private QueryWarning(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private QueryWarning(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final QueryWarning defaultInstance;
+    public static QueryWarning getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public QueryWarning getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private QueryWarning(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = queryId_.toBuilder();
+              }
+              queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(queryId_);
+                queryId_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                warnings_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.WarningMsg>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              warnings_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.WarningMsg.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          warnings_ = java.util.Collections.unmodifiableList(warnings_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_QueryWarning_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_QueryWarning_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.QueryWarning.class, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<QueryWarning> PARSER =
+        new com.google.protobuf.AbstractParser<QueryWarning>() {
+      public QueryWarning parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new QueryWarning(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<QueryWarning> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required .exec.shared.QueryId query_id = 1;
+    public static final int QUERY_ID_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    public boolean hasQueryId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
+      return queryId_;
+    }
+    /**
+     * <code>required .exec.shared.QueryId query_id = 1;</code>
+     *
+     * <pre>
+     * to handover warnings to this query's result listner
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
+      return queryId_;
+    }
+
+    // repeated .exec.shared.WarningMsg warnings = 2;
+    public static final int WARNINGS_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg> warnings_;
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg> getWarningsList() {
+      return warnings_;
+    }
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder> 
+        getWarningsOrBuilderList() {
+      return warnings_;
+    }
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    public int getWarningsCount() {
+      return warnings_.size();
+    }
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.WarningMsg getWarnings(int index) {
+      return warnings_.get(index);
+    }
+    /**
+     * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+     *
+     * <pre>
+     * nested warnings
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder getWarningsOrBuilder(
+        int index) {
+      return warnings_.get(index);
+    }
+
+    private void initFields() {
+      queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      warnings_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasQueryId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, queryId_);
+      }
+      for (int i = 0; i < warnings_.size(); i++) {
+        output.writeMessage(2, warnings_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, queryId_);
+      }
+      for (int i = 0; i < warnings_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, warnings_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.QueryWarning parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.QueryWarning prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.QueryWarning}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_QueryWarning_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_QueryWarning_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.QueryWarning.class, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.QueryWarning.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getQueryIdFieldBuilder();
+          getWarningsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (queryIdBuilder_ == null) {
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+        } else {
+          queryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (warningsBuilder_ == null) {
+          warnings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          warningsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_QueryWarning_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarning getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarning build() {
+        org.apache.drill.exec.proto.UserBitShared.QueryWarning result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarning buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.QueryWarning result = new org.apache.drill.exec.proto.UserBitShared.QueryWarning(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (queryIdBuilder_ == null) {
+          result.queryId_ = queryId_;
+        } else {
+          result.queryId_ = queryIdBuilder_.build();
+        }
+        if (warningsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            warnings_ = java.util.Collections.unmodifiableList(warnings_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.warnings_ = warnings_;
+        } else {
+          result.warnings_ = warningsBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.QueryWarning) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.QueryWarning)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.QueryWarning other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance()) return this;
+        if (other.hasQueryId()) {
+          mergeQueryId(other.getQueryId());
+        }
+        if (warningsBuilder_ == null) {
+          if (!other.warnings_.isEmpty()) {
+            if (warnings_.isEmpty()) {
+              warnings_ = other.warnings_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureWarningsIsMutable();
+              warnings_.addAll(other.warnings_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.warnings_.isEmpty()) {
+            if (warningsBuilder_.isEmpty()) {
+              warningsBuilder_.dispose();
+              warningsBuilder_ = null;
+              warnings_ = other.warnings_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              warningsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getWarningsFieldBuilder() : null;
+            } else {
+              warningsBuilder_.addAllMessages(other.warnings_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasQueryId()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.QueryWarning parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.QueryWarning) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required .exec.shared.QueryId query_id = 1;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public boolean hasQueryId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
+        if (queryIdBuilder_ == null) {
+          return queryId_;
+        } else {
+          return queryIdBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public Builder setQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (queryIdBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          queryId_ = value;
+          onChanged();
+        } else {
+          queryIdBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public Builder setQueryId(
+          org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builderForValue) {
+        if (queryIdBuilder_ == null) {
+          queryId_ = builderForValue.build();
+          onChanged();
+        } else {
+          queryIdBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
+        if (queryIdBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
+            queryId_ =
+              org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(queryId_).mergeFrom(value).buildPartial();
+          } else {
+            queryId_ = value;
+          }
+          onChanged();
+        } else {
+          queryIdBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public Builder clearQueryId() {
+        if (queryIdBuilder_ == null) {
+          queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
+          onChanged();
+        } else {
+          queryIdBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryId.Builder getQueryIdBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getQueryIdFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
+        if (queryIdBuilder_ != null) {
+          return queryIdBuilder_.getMessageOrBuilder();
+        } else {
+          return queryId_;
+        }
+      }
+      /**
+       * <code>required .exec.shared.QueryId query_id = 1;</code>
+       *
+       * <pre>
+       * to handover warnings to this query's result listner
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          getQueryIdFieldBuilder() {
+        if (queryIdBuilder_ == null) {
+          queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>(
+                  queryId_,
+                  getParentForChildren(),
+                  isClean());
+          queryId_ = null;
+        }
+        return queryIdBuilder_;
+      }
+
+      // repeated .exec.shared.WarningMsg warnings = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg> warnings_ =
+        java.util.Collections.emptyList();
+      private void ensureWarningsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          warnings_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.WarningMsg>(warnings_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.WarningMsg, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder, org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder> warningsBuilder_;
+
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg> getWarningsList() {
+        if (warningsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(warnings_);
+        } else {
+          return warningsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public int getWarningsCount() {
+        if (warningsBuilder_ == null) {
+          return warnings_.size();
+        } else {
+          return warningsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg getWarnings(int index) {
+        if (warningsBuilder_ == null) {
+          return warnings_.get(index);
+        } else {
+          return warningsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder setWarnings(
+          int index, org.apache.drill.exec.proto.UserBitShared.WarningMsg value) {
+        if (warningsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWarningsIsMutable();
+          warnings_.set(index, value);
+          onChanged();
+        } else {
+          warningsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder setWarnings(
+          int index, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builderForValue) {
+        if (warningsBuilder_ == null) {
+          ensureWarningsIsMutable();
+          warnings_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          warningsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder addWarnings(org.apache.drill.exec.proto.UserBitShared.WarningMsg value) {
+        if (warningsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWarningsIsMutable();
+          warnings_.add(value);
+          onChanged();
+        } else {
+          warningsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder addWarnings(
+          int index, org.apache.drill.exec.proto.UserBitShared.WarningMsg value) {
+        if (warningsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureWarningsIsMutable();
+          warnings_.add(index, value);
+          onChanged();
+        } else {
+          warningsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder addWarnings(
+          org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builderForValue) {
+        if (warningsBuilder_ == null) {
+          ensureWarningsIsMutable();
+          warnings_.add(builderForValue.build());
+          onChanged();
+        } else {
+          warningsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder addWarnings(
+          int index, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder builderForValue) {
+        if (warningsBuilder_ == null) {
+          ensureWarningsIsMutable();
+          warnings_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          warningsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder addAllWarnings(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.WarningMsg> values) {
+        if (warningsBuilder_ == null) {
+          ensureWarningsIsMutable();
+          super.addAll(values, warnings_);
+          onChanged();
+        } else {
+          warningsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder clearWarnings() {
+        if (warningsBuilder_ == null) {
+          warnings_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          warningsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public Builder removeWarnings(int index) {
+        if (warningsBuilder_ == null) {
+          ensureWarningsIsMutable();
+          warnings_.remove(index);
+          onChanged();
+        } else {
+          warningsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder getWarningsBuilder(
+          int index) {
+        return getWarningsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder getWarningsOrBuilder(
+          int index) {
+        if (warningsBuilder_ == null) {
+          return warnings_.get(index);  } else {
+          return warningsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder> 
+           getWarningsOrBuilderList() {
+        if (warningsBuilder_ != null) {
+          return warningsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(warnings_);
+        }
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder addWarningsBuilder() {
+        return getWarningsFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserBitShared.WarningMsg.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder addWarningsBuilder(
+          int index) {
+        return getWarningsFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserBitShared.WarningMsg.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.shared.WarningMsg warnings = 2;</code>
+       *
+       * <pre>
+       * nested warnings
+       * </pre>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder> 
+           getWarningsBuilderList() {
+        return getWarningsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.WarningMsg, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder, org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder> 
+          getWarningsFieldBuilder() {
+        if (warningsBuilder_ == null) {
+          warningsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.WarningMsg, org.apache.drill.exec.proto.UserBitShared.WarningMsg.Builder, org.apache.drill.exec.proto.UserBitShared.WarningMsgOrBuilder>(
+                  warnings_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          warnings_ = null;
+        }
+        return warningsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.QueryWarning)
+    }
+
+    static {
+      defaultInstance = new QueryWarning(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.QueryWarning)
+  }
+
   public interface ExceptionWrapperOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -10032,6 +12121,32 @@ public final class UserBitShared {
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder(
         int index);
+
+    // optional .exec.shared.QueryWarning warning = 4;
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    boolean hasWarning();
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryWarning getWarning();
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder getWarningOrBuilder();
   }
   /**
    * Protobuf type {@code exec.shared.QueryResult}
@@ -10119,6 +12234,19 @@ public final class UserBitShared {
                 mutable_bitField0_ |= 0x00000004;
               }
               error_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry));
+              break;
+            }
+            case 34: {
+              org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = warning_.toBuilder();
+              }
+              warning_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryWarning.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(warning_);
+                warning_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
           }
@@ -10380,16 +12508,57 @@ public final class UserBitShared {
       return error_.get(index);
     }
 
+    // optional .exec.shared.QueryWarning warning = 4;
+    public static final int WARNING_FIELD_NUMBER = 4;
+    private org.apache.drill.exec.proto.UserBitShared.QueryWarning warning_;
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    public boolean hasWarning() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryWarning getWarning() {
+      return warning_;
+    }
+    /**
+     * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+     *
+     * <pre>
+     * vechicle to carry warnings
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder getWarningOrBuilder() {
+      return warning_;
+    }
+
     private void initFields() {
       queryState_ = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.PENDING;
       queryId_ = org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance();
       error_ = java.util.Collections.emptyList();
+      warning_ = org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
+      if (hasWarning()) {
+        if (!getWarning().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -10405,6 +12574,9 @@ public final class UserBitShared {
       }
       for (int i = 0; i < error_.size(); i++) {
         output.writeMessage(3, error_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(4, warning_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -10426,6 +12598,10 @@ public final class UserBitShared {
       for (int i = 0; i < error_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, error_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, warning_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -10542,6 +12718,7 @@ public final class UserBitShared {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getQueryIdFieldBuilder();
           getErrorFieldBuilder();
+          getWarningFieldBuilder();
         }
       }
       private static Builder create() {
@@ -10564,6 +12741,12 @@ public final class UserBitShared {
         } else {
           errorBuilder_.clear();
         }
+        if (warningBuilder_ == null) {
+          warning_ = org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance();
+        } else {
+          warningBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -10613,6 +12796,14 @@ public final class UserBitShared {
         } else {
           result.error_ = errorBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (warningBuilder_ == null) {
+          result.warning_ = warning_;
+        } else {
+          result.warning_ = warningBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10661,11 +12852,20 @@ public final class UserBitShared {
             }
           }
         }
+        if (other.hasWarning()) {
+          mergeWarning(other.getWarning());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
+        if (hasWarning()) {
+          if (!getWarning().isInitialized()) {
+            
+            return false;
+          }
+        }
         return true;
       }
 
@@ -11079,6 +13279,159 @@ public final class UserBitShared {
           error_ = null;
         }
         return errorBuilder_;
+      }
+
+      // optional .exec.shared.QueryWarning warning = 4;
+      private org.apache.drill.exec.proto.UserBitShared.QueryWarning warning_ = org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryWarning, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder, org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder> warningBuilder_;
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public boolean hasWarning() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarning getWarning() {
+        if (warningBuilder_ == null) {
+          return warning_;
+        } else {
+          return warningBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public Builder setWarning(org.apache.drill.exec.proto.UserBitShared.QueryWarning value) {
+        if (warningBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          warning_ = value;
+          onChanged();
+        } else {
+          warningBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public Builder setWarning(
+          org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder builderForValue) {
+        if (warningBuilder_ == null) {
+          warning_ = builderForValue.build();
+          onChanged();
+        } else {
+          warningBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public Builder mergeWarning(org.apache.drill.exec.proto.UserBitShared.QueryWarning value) {
+        if (warningBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              warning_ != org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance()) {
+            warning_ =
+              org.apache.drill.exec.proto.UserBitShared.QueryWarning.newBuilder(warning_).mergeFrom(value).buildPartial();
+          } else {
+            warning_ = value;
+          }
+          onChanged();
+        } else {
+          warningBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public Builder clearWarning() {
+        if (warningBuilder_ == null) {
+          warning_ = org.apache.drill.exec.proto.UserBitShared.QueryWarning.getDefaultInstance();
+          onChanged();
+        } else {
+          warningBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder getWarningBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getWarningFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder getWarningOrBuilder() {
+        if (warningBuilder_ != null) {
+          return warningBuilder_.getMessageOrBuilder();
+        } else {
+          return warning_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.QueryWarning warning = 4;</code>
+       *
+       * <pre>
+       * vechicle to carry warnings
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.QueryWarning, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder, org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder> 
+          getWarningFieldBuilder() {
+        if (warningBuilder_ == null) {
+          warningBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.QueryWarning, org.apache.drill.exec.proto.UserBitShared.QueryWarning.Builder, org.apache.drill.exec.proto.UserBitShared.QueryWarningOrBuilder>(
+                  warning_,
+                  getParentForChildren(),
+                  isClean());
+          warning_ = null;
+        }
+        return warningBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.shared.QueryResult)
@@ -20662,6 +23015,16 @@ public final class UserBitShared {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_DrillPBError_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_WarningMsg_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_WarningMsg_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_QueryWarning_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_QueryWarning_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_ExceptionWrapper_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -20764,103 +23127,109 @@ public final class UserBitShared {
       "ON\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDATA_WRITE\020\002\022\014\n\010F" +
       "UNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPERMISSION\020\005\022\010\n\004" +
       "PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SYSTEM\020\010\022\031\n\025UNSU" +
-      "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\"\246\001\n\020" +
-      "ExceptionWrapper\022\027\n\017exception_class\030\001 \001(" +
-      "\t\022\017\n\007message\030\002 \001(\t\022:\n\013stack_trace\030\003 \003(\0132" +
-      "%.exec.shared.StackTraceElementWrapper\022," +
-      "\n\005cause\030\004 \001(\0132\035.exec.shared.ExceptionWra" +
-      "pper\"\205\001\n\030StackTraceElementWrapper\022\022\n\ncla",
-      "ss_name\030\001 \001(\t\022\021\n\tfile_name\030\002 \001(\t\022\023\n\013line" +
-      "_number\030\003 \001(\005\022\023\n\013method_name\030\004 \001(\t\022\030\n\020is" +
-      "_native_method\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014" +
-      "start_column\030\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n" +
-      "\nend_column\030\004 \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016Re" +
-      "cordBatchDef\022\024\n\014record_count\030\001 \001(\005\022+\n\005fi" +
-      "eld\030\002 \003(\0132\034.exec.shared.SerializedField\022" +
-      ")\n!carries_two_byte_selection_vector\030\003 \001" +
-      "(\010\"\205\001\n\010NamePart\022(\n\004type\030\001 \001(\0162\032.exec.sha" +
-      "red.NamePart.Type\022\014\n\004name\030\002 \001(\t\022$\n\005child",
-      "\030\003 \001(\0132\025.exec.shared.NamePart\"\033\n\004Type\022\010\n" +
-      "\004NAME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017SerializedField\022%" +
-      "\n\nmajor_type\030\001 \001(\0132\021.common.MajorType\022(\n" +
-      "\tname_part\030\002 \001(\0132\025.exec.shared.NamePart\022" +
-      "+\n\005child\030\003 \003(\0132\034.exec.shared.SerializedF" +
-      "ield\022\023\n\013value_count\030\004 \001(\005\022\027\n\017var_byte_le" +
-      "ngth\030\005 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"7\n\nNod" +
-      "eStatus\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footp" +
-      "rint\030\002 \001(\003\"\206\002\n\013QueryResult\0228\n\013query_stat" +
-      "e\030\001 \001(\0162#.exec.shared.QueryResult.QueryS",
-      "tate\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.Que" +
-      "ryId\022(\n\005error\030\003 \003(\0132\031.exec.shared.DrillP" +
-      "BError\"k\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007RUN" +
-      "NING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006F" +
-      "AILED\020\004\022\032\n\026CANCELLATION_REQUESTED\020\005\"p\n\tQ" +
-      "ueryData\022&\n\010query_id\030\001 \001(\0132\024.exec.shared" +
-      ".QueryId\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\013" +
-      "2\033.exec.shared.RecordBatchDef\"\227\001\n\tQueryI" +
-      "nfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005sta" +
-      "te\030\003 \001(\0162#.exec.shared.QueryResult.Query",
-      "State\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132" +
-      "\026.exec.DrillbitEndpoint\"\272\003\n\014QueryProfile" +
-      "\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004ty" +
-      "pe\030\002 \001(\0162\026.exec.shared.QueryType\022\r\n\005star" +
-      "t\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004p" +
-      "lan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.Drillb" +
-      "itEndpoint\0222\n\005state\030\010 \001(\0162#.exec.shared." +
-      "QueryResult.QueryState\022\027\n\017total_fragment" +
-      "s\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020f" +
-      "ragment_profile\030\013 \003(\0132!.exec.shared.Majo",
-      "rFragmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005err" +
-      "or\030\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_" +
-      "id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\"t\n\024MajorFra" +
-      "gmentProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022" +
-      "A\n\026minor_fragment_profile\030\002 \003(\0132!.exec.s" +
-      "hared.MinorFragmentProfile\"\350\002\n\024MinorFrag" +
-      "mentProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared" +
-      ".FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.sha" +
-      "red.DrillPBError\022\031\n\021minor_fragment_id\030\003 " +
-      "\001(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.sha",
-      "red.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022" +
-      "\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027" +
-      "\n\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(" +
-      "\0132\026.exec.DrillbitEndpoint\022\023\n\013last_update" +
-      "\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\377\001\n\017Operat" +
-      "orProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec." +
-      "shared.StreamProfile\022\023\n\013operator_id\030\003 \001(" +
-      "\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_nanos\030" +
-      "\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_loc" +
-      "al_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(",
-      "\0132\030.exec.shared.MetricValue\022\022\n\nwait_nano" +
-      "s\030\t \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(" +
-      "\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013M" +
-      "etricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_va" +
-      "lue\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001*5\n\nRpcCh" +
-      "annel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004" +
-      "USER\020\002*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020" +
-      "\002\022\014\n\010PHYSICAL\020\003*\207\001\n\rFragmentState\022\013\n\007SEN" +
-      "DING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNI" +
-      "NG\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAI",
-      "LED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006*\335\005\n\020Co" +
-      "reOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BRO" +
-      "ADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGR" +
-      "EGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031" +
-      "\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020" +
-      "MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_" +
-      "SENDER\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEI" +
-      "VER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030S" +
-      "ELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_A" +
-      "GGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_S",
-      "ORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020" +
-      "\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SU" +
-      "B_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_" +
-      "SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT" +
-      "_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB" +
-      "_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEM" +
-      "A_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRO" +
-      "DUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006" +
-      "WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_S" +
-      "UB_SCAN\020$B.\n\033org.apache.drill.exec.proto",
-      "B\rUserBitSharedH\001"
+      "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\"U\n\nW" +
+      "arningMsg\022\017\n\007message\030\001 \001(\t\022\r\n\005count\030\002 \001(" +
+      "\005\022\024\n\014warning_code\030\003 \001(\t\022\021\n\tsql_state\030\004 \001" +
+      "(\t\"a\n\014QueryWarning\022&\n\010query_id\030\001 \002(\0132\024.e" +
+      "xec.shared.QueryId\022)\n\010warnings\030\002 \003(\0132\027.e" +
+      "xec.shared.WarningMsg\"\246\001\n\020ExceptionWrapp",
+      "er\022\027\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002" +
+      " \001(\t\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared." +
+      "StackTraceElementWrapper\022,\n\005cause\030\004 \001(\0132" +
+      "\035.exec.shared.ExceptionWrapper\"\205\001\n\030Stack" +
+      "TraceElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022" +
+      "\021\n\tfile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022" +
+      "\023\n\013method_name\030\004 \001(\t\022\030\n\020is_native_method" +
+      "\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002" +
+      " \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 " +
+      "\001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022\024",
+      "\n\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.ex" +
+      "ec.shared.SerializedField\022)\n!carries_two" +
+      "_byte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePar" +
+      "t\022(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart.T" +
+      "ype\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec." +
+      "shared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARR" +
+      "AY\020\001\"\324\001\n\017SerializedField\022%\n\nmajor_type\030\001" +
+      " \001(\0132\021.common.MajorType\022(\n\tname_part\030\002 \001" +
+      "(\0132\025.exec.shared.NamePart\022+\n\005child\030\003 \003(\013" +
+      "2\034.exec.shared.SerializedField\022\023\n\013value_",
+      "count\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\025\n\r" +
+      "buffer_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007nod" +
+      "e_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\262\002\n" +
+      "\013QueryResult\0228\n\013query_state\030\001 \001(\0162#.exec" +
+      ".shared.QueryResult.QueryState\022&\n\010query_" +
+      "id\030\002 \001(\0132\024.exec.shared.QueryId\022(\n\005error\030" +
+      "\003 \003(\0132\031.exec.shared.DrillPBError\022*\n\007warn" +
+      "ing\030\004 \001(\0132\031.exec.shared.QueryWarning\"k\n\n" +
+      "QueryState\022\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\t" +
+      "COMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n",
+      "\026CANCELLATION_REQUESTED\020\005\"p\n\tQueryData\022&" +
+      "\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\021" +
+      "\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.sh" +
+      "ared.RecordBatchDef\"\227\001\n\tQueryInfo\022\r\n\005que" +
+      "ry\030\001 \001(\t\022\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#" +
+      ".exec.shared.QueryResult.QueryState\022\017\n\004u" +
+      "ser\030\004 \001(\t:\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.Dri" +
+      "llbitEndpoint\"\272\003\n\014QueryProfile\022 \n\002id\030\001 \001" +
+      "(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001(\0162\026" +
+      ".exec.shared.QueryType\022\r\n\005start\030\003 \001(\003\022\013\n",
+      "\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022" +
+      "\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEndpoint" +
+      "\0222\n\005state\030\010 \001(\0162#.exec.shared.QueryResul" +
+      "t.QueryState\022\027\n\017total_fragments\030\t \001(\005\022\032\n" +
+      "\022finished_fragments\030\n \001(\005\022;\n\020fragment_pr" +
+      "ofile\030\013 \003(\0132!.exec.shared.MajorFragmentP" +
+      "rofile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001(\t\022\024" +
+      "\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030\017 \001(\t\022\022" +
+      "\n\nerror_node\030\020 \001(\t\"t\n\024MajorFragmentProfi" +
+      "le\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026minor_f",
+      "ragment_profile\030\002 \003(\0132!.exec.shared.Mino" +
+      "rFragmentProfile\"\350\002\n\024MinorFragmentProfil" +
+      "e\022)\n\005state\030\001 \001(\0162\032.exec.shared.FragmentS" +
+      "tate\022(\n\005error\030\002 \001(\0132\031.exec.shared.DrillP" +
+      "BError\022\031\n\021minor_fragment_id\030\003 \001(\005\0226\n\020ope" +
+      "rator_profile\030\004 \003(\0132\034.exec.shared.Operat" +
+      "orProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_tim" +
+      "e\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max_memo" +
+      "ry_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.D" +
+      "rillbitEndpoint\022\023\n\013last_update\030\n \001(\003\022\025\n\r",
+      "last_progress\030\013 \001(\003\"\377\001\n\017OperatorProfile\022" +
+      "1\n\rinput_profile\030\001 \003(\0132\032.exec.shared.Str" +
+      "eamProfile\022\023\n\013operator_id\030\003 \001(\005\022\025\n\ropera" +
+      "tor_type\030\004 \001(\005\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rp" +
+      "rocess_nanos\030\006 \001(\003\022#\n\033peak_local_memory_" +
+      "allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.s" +
+      "hared.MetricValue\022\022\n\nwait_nanos\030\t \001(\003\"B\n" +
+      "\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batch" +
+      "es\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue" +
+      "\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022",
+      "\024\n\014double_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013B" +
+      "IT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\t" +
+      "QueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSI" +
+      "CAL\020\003*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023" +
+      "AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FI" +
+      "NISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026C" +
+      "ANCELLATION_REQUESTED\020\006*\335\005\n\020CoreOperator" +
+      "Type\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SEN" +
+      "DER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n" +
+      "\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PAR",
+      "TITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RE" +
+      "CEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013" +
+      "\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014R" +
+      "ANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_V" +
+      "ECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017" +
+      "\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005T" +
+      "RACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQU" +
+      "ET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025" +
+      "\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030" +
+      "\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020",
+      "\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n" +
+      "\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN" +
+      "\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONS" +
+      "UMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024" +
+      "\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$B" +
+      ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
+      "haredH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -20885,98 +23254,110 @@ public final class UserBitShared {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_DrillPBError_descriptor,
               new java.lang.String[] { "ErrorId", "Endpoint", "ErrorType", "Message", "Exception", "ParsingError", });
-          internal_static_exec_shared_ExceptionWrapper_descriptor =
+          internal_static_exec_shared_WarningMsg_descriptor =
             getDescriptor().getMessageTypes().get(3);
+          internal_static_exec_shared_WarningMsg_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_WarningMsg_descriptor,
+              new java.lang.String[] { "Message", "Count", "WarningCode", "SqlState", });
+          internal_static_exec_shared_QueryWarning_descriptor =
+            getDescriptor().getMessageTypes().get(4);
+          internal_static_exec_shared_QueryWarning_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_QueryWarning_descriptor,
+              new java.lang.String[] { "QueryId", "Warnings", });
+          internal_static_exec_shared_ExceptionWrapper_descriptor =
+            getDescriptor().getMessageTypes().get(5);
           internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_ExceptionWrapper_descriptor,
               new java.lang.String[] { "ExceptionClass", "Message", "StackTrace", "Cause", });
           internal_static_exec_shared_StackTraceElementWrapper_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_StackTraceElementWrapper_descriptor,
               new java.lang.String[] { "ClassName", "FileName", "LineNumber", "MethodName", "IsNativeMethod", });
           internal_static_exec_shared_ParsingError_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_exec_shared_ParsingError_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_ParsingError_descriptor,
               new java.lang.String[] { "StartColumn", "StartRow", "EndColumn", "EndRow", });
           internal_static_exec_shared_RecordBatchDef_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
               new java.lang.String[] { "RecordCount", "Field", "CarriesTwoByteSelectionVector", });
           internal_static_exec_shared_NamePart_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_exec_shared_NamePart_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_NamePart_descriptor,
               new java.lang.String[] { "Type", "Name", "Child", });
           internal_static_exec_shared_SerializedField_descriptor =
-            getDescriptor().getMessageTypes().get(8);
+            getDescriptor().getMessageTypes().get(10);
           internal_static_exec_shared_SerializedField_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_SerializedField_descriptor,
               new java.lang.String[] { "MajorType", "NamePart", "Child", "ValueCount", "VarByteLength", "BufferLength", });
           internal_static_exec_shared_NodeStatus_descriptor =
-            getDescriptor().getMessageTypes().get(9);
+            getDescriptor().getMessageTypes().get(11);
           internal_static_exec_shared_NodeStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_NodeStatus_descriptor,
               new java.lang.String[] { "NodeId", "MemoryFootprint", });
           internal_static_exec_shared_QueryResult_descriptor =
-            getDescriptor().getMessageTypes().get(10);
+            getDescriptor().getMessageTypes().get(12);
           internal_static_exec_shared_QueryResult_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryResult_descriptor,
-              new java.lang.String[] { "QueryState", "QueryId", "Error", });
+              new java.lang.String[] { "QueryState", "QueryId", "Error", "Warning", });
           internal_static_exec_shared_QueryData_descriptor =
-            getDescriptor().getMessageTypes().get(11);
+            getDescriptor().getMessageTypes().get(13);
           internal_static_exec_shared_QueryData_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryData_descriptor,
               new java.lang.String[] { "QueryId", "RowCount", "Def", });
           internal_static_exec_shared_QueryInfo_descriptor =
-            getDescriptor().getMessageTypes().get(12);
+            getDescriptor().getMessageTypes().get(14);
           internal_static_exec_shared_QueryInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryInfo_descriptor,
               new java.lang.String[] { "Query", "Start", "State", "User", "Foreman", });
           internal_static_exec_shared_QueryProfile_descriptor =
-            getDescriptor().getMessageTypes().get(13);
+            getDescriptor().getMessageTypes().get(15);
           internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_QueryProfile_descriptor,
               new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", });
           internal_static_exec_shared_MajorFragmentProfile_descriptor =
-            getDescriptor().getMessageTypes().get(14);
+            getDescriptor().getMessageTypes().get(16);
           internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MajorFragmentProfile_descriptor,
               new java.lang.String[] { "MajorFragmentId", "MinorFragmentProfile", });
           internal_static_exec_shared_MinorFragmentProfile_descriptor =
-            getDescriptor().getMessageTypes().get(15);
+            getDescriptor().getMessageTypes().get(17);
           internal_static_exec_shared_MinorFragmentProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MinorFragmentProfile_descriptor,
               new java.lang.String[] { "State", "Error", "MinorFragmentId", "OperatorProfile", "StartTime", "EndTime", "MemoryUsed", "MaxMemoryUsed", "Endpoint", "LastUpdate", "LastProgress", });
           internal_static_exec_shared_OperatorProfile_descriptor =
-            getDescriptor().getMessageTypes().get(16);
+            getDescriptor().getMessageTypes().get(18);
           internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_OperatorProfile_descriptor,
               new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", });
           internal_static_exec_shared_StreamProfile_descriptor =
-            getDescriptor().getMessageTypes().get(17);
+            getDescriptor().getMessageTypes().get(19);
           internal_static_exec_shared_StreamProfile_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_StreamProfile_descriptor,
               new java.lang.String[] { "Records", "Batches", "Schemas", });
           internal_static_exec_shared_MetricValue_descriptor =
-            getDescriptor().getMessageTypes().get(18);
+            getDescriptor().getMessageTypes().get(20);
           internal_static_exec_shared_MetricValue_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_MetricValue_descriptor,

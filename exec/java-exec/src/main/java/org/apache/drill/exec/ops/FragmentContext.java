@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.exception.DrillWarningHelper;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -84,6 +85,7 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
   private final BufferManager bufferManager;
   private ExecutorState executorState;
   private final ExecutionControls executionControls;
+  private DrillWarningHelper warnings;
 
 
   private final SendingAccountor sendingAccountor = new SendingAccountor();
@@ -172,6 +174,14 @@ public class FragmentContext implements AutoCloseable, UdfUtilities {
 
     stats = new FragmentStats(allocator, dbContext.getMetrics(), fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
+    warnings = new DrillWarningHelper (getFragIdString());
+  }
+
+  /**
+   * used to add, get and clear warnings
+   */
+  public DrillWarningHelper getWarningHelper () {
+    return warnings;
   }
 
   private class AsLimitConsumer implements LimitConsumer {

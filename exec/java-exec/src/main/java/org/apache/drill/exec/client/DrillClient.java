@@ -47,6 +47,7 @@ import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -395,6 +396,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     @Override
     public void queryCompleted(QueryState state) {
       future.set(results);
+    }
+
+    @Override
+    public void warningsArrived(QueryWarning warning) {
     }
 
     private void fail(Exception ex) {

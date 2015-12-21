@@ -29,6 +29,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -72,6 +73,10 @@ public class ParquetResultListener implements UserResultsListener {
   @Override
   public void queryCompleted(QueryState state) {
     checkLastChunk();
+  }
+
+  @Override
+  public void warningsArrived(QueryWarning warning) {
   }
 
   private <T> void assertField(ValueVector valueVector, int index,

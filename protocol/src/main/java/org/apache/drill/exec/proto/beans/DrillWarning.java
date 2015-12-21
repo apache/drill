@@ -33,69 +33,41 @@ import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
 
-public final class FragmentStatus implements Externalizable, Message<FragmentStatus>, Schema<FragmentStatus>
+public final class DrillWarning implements Externalizable, Message<DrillWarning>, Schema<DrillWarning>
 {
 
-    public static Schema<FragmentStatus> getSchema()
+    public static Schema<DrillWarning> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static FragmentStatus getDefaultInstance()
+    public static DrillWarning getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final FragmentStatus DEFAULT_INSTANCE = new FragmentStatus();
+    static final DrillWarning DEFAULT_INSTANCE = new DrillWarning();
 
     
-    private MinorFragmentProfile profile;
-    private FragmentHandle handle;
-    private List<WarningMsg> summaryWarnings;
+    private List<WarningMsg> warnings;
 
-    public FragmentStatus()
+    public DrillWarning()
     {
         
     }
 
     // getters and setters
 
-    // profile
+    // warnings
 
-    public MinorFragmentProfile getProfile()
+    public List<WarningMsg> getWarningsList()
     {
-        return profile;
+        return warnings;
     }
 
-    public FragmentStatus setProfile(MinorFragmentProfile profile)
+    public DrillWarning setWarningsList(List<WarningMsg> warnings)
     {
-        this.profile = profile;
-        return this;
-    }
-
-    // handle
-
-    public FragmentHandle getHandle()
-    {
-        return handle;
-    }
-
-    public FragmentStatus setHandle(FragmentHandle handle)
-    {
-        this.handle = handle;
-        return this;
-    }
-
-    // summaryWarnings
-
-    public List<WarningMsg> getSummaryWarningsList()
-    {
-        return summaryWarnings;
-    }
-
-    public FragmentStatus setSummaryWarningsList(List<WarningMsg> summaryWarnings)
-    {
-        this.summaryWarnings = summaryWarnings;
+        this.warnings = warnings;
         return this;
     }
 
@@ -113,39 +85,39 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
 
     // message method
 
-    public Schema<FragmentStatus> cachedSchema()
+    public Schema<DrillWarning> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public FragmentStatus newMessage()
+    public DrillWarning newMessage()
     {
-        return new FragmentStatus();
+        return new DrillWarning();
     }
 
-    public Class<FragmentStatus> typeClass()
+    public Class<DrillWarning> typeClass()
     {
-        return FragmentStatus.class;
+        return DrillWarning.class;
     }
 
     public String messageName()
     {
-        return FragmentStatus.class.getSimpleName();
+        return DrillWarning.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return FragmentStatus.class.getName();
+        return DrillWarning.class.getName();
     }
 
-    public boolean isInitialized(FragmentStatus message)
+    public boolean isInitialized(DrillWarning message)
     {
         return true;
     }
 
-    public void mergeFrom(Input input, FragmentStatus message) throws IOException
+    public void mergeFrom(Input input, DrillWarning message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -154,17 +126,9 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
                 case 0:
                     return;
                 case 1:
-                    message.profile = input.mergeObject(message.profile, MinorFragmentProfile.getSchema());
-                    break;
-
-                case 2:
-                    message.handle = input.mergeObject(message.handle, FragmentHandle.getSchema());
-                    break;
-
-                case 3:
-                    if(message.summaryWarnings == null)
-                        message.summaryWarnings = new ArrayList<WarningMsg>();
-                    message.summaryWarnings.add(input.mergeObject(null, WarningMsg.getSchema()));
+                    if(message.warnings == null)
+                        message.warnings = new ArrayList<WarningMsg>();
+                    message.warnings.add(input.mergeObject(null, WarningMsg.getSchema()));
                     break;
 
                 default:
@@ -174,22 +138,14 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     }
 
 
-    public void writeTo(Output output, FragmentStatus message) throws IOException
+    public void writeTo(Output output, DrillWarning message) throws IOException
     {
-        if(message.profile != null)
-             output.writeObject(1, message.profile, MinorFragmentProfile.getSchema(), false);
-
-
-        if(message.handle != null)
-             output.writeObject(2, message.handle, FragmentHandle.getSchema(), false);
-
-
-        if(message.summaryWarnings != null)
+        if(message.warnings != null)
         {
-            for(WarningMsg summaryWarnings : message.summaryWarnings)
+            for(WarningMsg warnings : message.warnings)
             {
-                if(summaryWarnings != null)
-                    output.writeObject(3, summaryWarnings, WarningMsg.getSchema(), true);
+                if(warnings != null)
+                    output.writeObject(1, warnings, WarningMsg.getSchema(), true);
             }
         }
 
@@ -199,9 +155,7 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     {
         switch(number)
         {
-            case 1: return "profile";
-            case 2: return "handle";
-            case 3: return "summaryWarnings";
+            case 1: return "warnings";
             default: return null;
         }
     }
@@ -215,9 +169,7 @@ public final class FragmentStatus implements Externalizable, Message<FragmentSta
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("profile", 1);
-        __fieldMap.put("handle", 2);
-        __fieldMap.put("summaryWarnings", 3);
+        __fieldMap.put("warnings", 1);
     }
     
 }

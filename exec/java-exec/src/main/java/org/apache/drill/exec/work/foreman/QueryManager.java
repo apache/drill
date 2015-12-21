@@ -143,6 +143,9 @@ public class QueryManager {
       return false;
     }
 
+    // grab warnings from fragment and pass them over to foreman
+    foreman.addQueryWarnings(fragmentStatus.getSummaryWarningsList());
+
     data.setStatus(fragmentStatus);
     return oldState != currentState;
   }

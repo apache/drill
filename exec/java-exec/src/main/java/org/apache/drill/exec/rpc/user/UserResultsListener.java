@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.user;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.ConnectionThrottle;
@@ -51,4 +52,9 @@ public interface UserResultsListener {
    */
   void queryCompleted(QueryState state);
 
+  /**
+   * A {@link org.apache.drill.exec.proto.beans.QueryWarning QueryWarning} message was received
+   * @param warning warnings received
+   */
+  void warningsArrived (QueryWarning warning);
 }

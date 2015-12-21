@@ -27,6 +27,7 @@ enum RpcType {
   RESP_FUNCTION_LIST = 9;
 
   QUERY_RESULT = 10; // drillbit is reporting a query status change, most likely a terminal message, to the user
+  QUERY_WARNING = 12; // drillbit is sending a query warning to the user
 }
 
 message Property {

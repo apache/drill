@@ -42,6 +42,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -445,6 +446,10 @@ public class BaseTestQuery extends ExecTest {
     @Override
     public void queryCompleted(QueryState state) {
       logger.debug("Query completed successfully with row count: " + count.get());
+    }
+
+    @Override
+    public void warningsArrived(QueryWarning warning) {
     }
 
     @Override

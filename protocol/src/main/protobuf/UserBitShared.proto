@@ -91,6 +91,18 @@ message DrillPBError{
   repeated ParsingError parsing_error = 6; //optional, used when providing location of error within a piece of text.
 }
 
+message WarningMsg{
+  optional string message = 1; // keeps last message for given warning_code
+  optional int32 count = 2; // keeps count of how many times this warning_code was raised
+  optional string warning_code = 3; // drill_warning_type + major fragment id + minor fragment id + operator id
+  optional string sql_state = 4; // not in use, yet
+}
+
+message QueryWarning{
+  required QueryId query_id = 1; // to handover warnings to this query's result listner
+  repeated WarningMsg warnings = 2; // nested warnings
+}
+
 message ExceptionWrapper {
   optional string exception_class = 1;
   optional string message = 2;
@@ -105,7 +117,6 @@ message StackTraceElementWrapper {
     optional string method_name = 4;
     optional bool is_native_method = 5;
 }
-
 
 message ParsingError{
   optional int32 start_column = 2;
@@ -163,6 +174,7 @@ message QueryResult {
 	optional QueryState query_state = 1;
 	optional QueryId query_id = 2;
 	repeated DrillPBError error = 3;
+    optional QueryWarning warning = 4; // vechicle to carry warnings
 }
 
 /*

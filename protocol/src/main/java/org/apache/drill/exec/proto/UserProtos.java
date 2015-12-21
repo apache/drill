@@ -102,6 +102,14 @@ public final class UserProtos {
      * </pre>
      */
     QUERY_RESULT(11, 10),
+    /**
+     * <code>QUERY_WARNING = 12;</code>
+     *
+     * <pre>
+     * drillbit is sending a query warning to the user
+     * </pre>
+     */
+    QUERY_WARNING(12, 12),
     ;
 
     /**
@@ -172,6 +180,14 @@ public final class UserProtos {
      * </pre>
      */
     public static final int QUERY_RESULT_VALUE = 10;
+    /**
+     * <code>QUERY_WARNING = 12;</code>
+     *
+     * <pre>
+     * drillbit is sending a query warning to the user
+     * </pre>
+     */
+    public static final int QUERY_WARNING_VALUE = 12;
 
 
     public final int getNumber() { return value; }
@@ -190,6 +206,7 @@ public final class UserProtos {
         case 8: return REQ_META_FUNCTIONS;
         case 9: return RESP_FUNCTION_LIST;
         case 10: return QUERY_RESULT;
+        case 12: return QUERY_WARNING;
         default: return null;
       }
     }
@@ -5003,17 +5020,17 @@ public final class UserProtos {
       "n\030\003 \001(\t\"|\n\022BitToUserHandshake\022\023\n\013rpc_ver" +
       "sion\030\002 \001(\005\022*\n\006status\030\003 \001(\0162\032.exec.user.H" +
       "andshakeStatus\022\017\n\007errorId\030\004 \001(\t\022\024\n\014error" +
-      "Message\030\005 \001(\t*\341\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000",
+      "Message\030\005 \001(\t*\364\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000",
       "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n" +
       "\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\027\n\023" +
       "RESUME_PAUSED_QUERY\020\013\022\016\n\nQUERY_DATA\020\006\022\020\n" +
       "\014QUERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022" +
       "\026\n\022RESP_FUNCTION_LIST\020\t\022\020\n\014QUERY_RESULT\020" +
-      "\n*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001*^" +
-      "\n\017HandshakeStatus\022\013\n\007SUCCESS\020\001\022\030\n\024RPC_VE" +
-      "RSION_MISMATCH\020\002\022\017\n\013AUTH_FAILED\020\003\022\023\n\017UNK" +
-      "NOWN_FAILURE\020\004B+\n\033org.apache.drill.exec." +
-      "protoB\nUserProtosH\001"
+      "\n\022\021\n\rQUERY_WARNING\020\014*#\n\020QueryResultsMode" +
+      "\022\017\n\013STREAM_FULL\020\001*^\n\017HandshakeStatus\022\013\n\007" +
+      "SUCCESS\020\001\022\030\n\024RPC_VERSION_MISMATCH\020\002\022\017\n\013A" +
+      "UTH_FAILED\020\003\022\023\n\017UNKNOWN_FAILURE\020\004B+\n\033org" +
+      ".apache.drill.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

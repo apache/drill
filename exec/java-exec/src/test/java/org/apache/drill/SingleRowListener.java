@@ -24,6 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.UserBitShared.QueryWarning;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -46,6 +47,10 @@ public abstract class SingleRowListener implements UserResultsListener {
 
   @Override
   public void queryIdArrived(final QueryId queryId) {
+  }
+
+  @Override
+  public void warningsArrived(QueryWarning warning) {
   }
 
   @Override
