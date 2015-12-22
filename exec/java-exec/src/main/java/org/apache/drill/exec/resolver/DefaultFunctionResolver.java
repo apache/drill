@@ -30,7 +30,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFunctionResolver.class);
 
   @Override
-  public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods,FunctionCall call) {
+  public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
     int bestcost = Integer.MAX_VALUE;
     int currcost = Integer.MAX_VALUE;
@@ -39,7 +39,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
 
     for (DrillFuncHolder h : methods) {
 
-      currcost = TypeCastRules.getCost(call, h);
+      currcost = TypeCastRules.getCost(DrillFuncHolder.getResultType(call.args), h);
 
       // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
       if (currcost  < 0 ) {

@@ -27,7 +27,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import com.google.protobuf.TextFormat;
 
 public class Types {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 
   public static final MajorType NULL = required(MinorType.NULL);
   public static final MajorType LATE_BIND_TYPE = optional(MinorType.LATE);
@@ -591,4 +591,15 @@ public class Types {
     return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
   }
 
+  public static String toString(final MajorType[] types) {
+    final StringBuilder builder = new StringBuilder();
+    builder.append("[");
+    for (MajorType type : types) {
+      builder.append(toString(type));
+      builder.append(", ");
+    }
+    builder.setLength(Math.max(builder.length() - 2, 1));
+    builder.append("]");
+    return builder.toString();
+  }
 }

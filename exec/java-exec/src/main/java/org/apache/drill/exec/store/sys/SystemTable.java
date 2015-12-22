@@ -46,7 +46,7 @@ public enum SystemTable {
     }
   },
 
-  DRILLBITS("drillbits", false,DrillbitIterator.DrillbitInstance.class) {
+  DRILLBITS("drillbits", false, DrillbitIterator.DrillbitInstance.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
       return new DrillbitIterator(context);
@@ -60,6 +60,13 @@ public enum SystemTable {
     }
   },
 
+  FUNCTIONS("functions", false, FunctionIterator.FunctionInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(final FragmentContext context) {
+      return new FunctionIterator(context);
+    }
+  },
+
   MEMORY("memory", true, MemoryIterator.MemoryInfo.class) {
     @Override
     public Iterator<Object> getIterator(final FragmentContext context) {
@@ -69,7 +76,7 @@ public enum SystemTable {
 
   THREADS("threads", true, ThreadsIterator.ThreadsInfo.class) {
     @Override
-  public Iterator<Object> getIterator(final FragmentContext context) {
+    public Iterator<Object> getIterator(final FragmentContext context) {
       return new ThreadsIterator(context);
     }
   };

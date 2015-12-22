@@ -27,10 +27,15 @@ import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Implementation of {@link SqlOperatorTable} that contains standard operators and functions provided through
+ * {@link #inner SqlStdOperatorTable}, and Drill User Defined Functions.
+ */
 public class DrillOperatorTable extends SqlStdOperatorTable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOperatorTable.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOperatorTable.class);
 
   private static final SqlOperatorTable inner = SqlStdOperatorTable.instance();
   private List<SqlOperator> operators;
@@ -45,18 +50,26 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   public void add(String name, SqlOperator op) {
     operators.add(op);
-    opMap.put(name, op);
+    opMap.put(name.toLowerCase(), op);
   }
 
   @Override
-  public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax, List<SqlOperator> operatorList) {
+  public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category,
+                                      SqlSyntax syntax, List<SqlOperator> operatorList) {
+    // first look in Calcite functions
     inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
 
+    // if no function is found, check in Drill UDFs
+    System.out.println("LOOKING FOR: " + opName.getSimple() + " SIMPLE: " + opName.isSimple() + " SYNTAX: " + syntax);
     if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
       List<SqlOperator> drillOps = opMap.get(opName.getSimple().toLowerCase());
       if (drillOps != null) {
         operatorList.addAll(drillOps);
       }
+    }
+    System.out.println("OPERATOR LOOKUP: " + operatorList);
+    for (SqlOperator operator : operatorList) {
+      System.out.println("OPERATOR: " + operator.getAllowedSignatures());
     }
   }
 

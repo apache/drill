@@ -123,6 +123,38 @@ public class TestExampleQueries extends BaseTestQuery {
         .build().run();
   }
 
+  @Test
+  public void functionsTable() throws Exception {
+    test("SELECT names, COUNT(*) FROM sys.functions GROUP BY names ORDER BY names");
+  }
+
+  @Test
+  public void toTimeStamp() throws Exception {
+    test("SELECT TO_TIMESTAMP('2014-02-12 03:18:31:07 AM', 'YYYY-MM-dd HH:mm:ss:SS a') FROM (VALUES 1)");
+  }
+
+  @Test
+  public void convertToUTF8AndBack() throws Exception {
+    test("SELECT CONVERT_FROM(CONVERT_TO(name, 'UTF8'), 'UTF8') FROM (SELECT * FROM (VALUES ('what')) AS T(name))");
+  }
+
+  @Test
+  public void dateAdd() throws Exception {
+    test("SELECT date_add(d, 1) FROM (VALUES (DATE '2014-10-19')) AS T(d)");
+  }
+
+  @Test
+  public void jsonDateAdd() throws Exception {
+    test("SELECT * FROM cp.`employee.json` WHERE date_add(CAST(hire_date AS DATE), 1) = DATE '2014-10-19'");
+  }
+
+  @Test
+  public void compatibleTypesInINClause() throws Exception {
+    test("select l_orderkey, l_partkey, l_quantity, l_shipdate, l_shipinstruct, `year`, `month` " +
+        "from cp.`tpch/lineitem.parquet` where (`year` IN (negative(-1993)) and `month`=sqrt(100)) or " +
+        "(`year` IN (cast(abs(-1994.0) as int)) and `month`=cast('5' as int))");
+  }
+
   @Test // see DRILL-985
   public void testViewFileName() throws Exception {
     test("use dfs_test.tmp");

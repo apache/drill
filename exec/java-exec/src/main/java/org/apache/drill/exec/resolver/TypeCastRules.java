@@ -834,10 +834,10 @@ public class TypeCastRules {
    * implicit cast > 0: cost associated with implicit cast. ==0: parms are
    * exactly same type of arg. No need of implicit.
    */
-  public static int getCost(FunctionCall call, DrillFuncHolder holder) {
+  public static int getCost(List<MajorType> argumentTypes, DrillFuncHolder holder) {
     int cost = 0;
 
-    if (call.args.size() != holder.getParamCount()) {
+    if (argumentTypes.size() != holder.getParamCount()) {
       return -1;
     }
 
@@ -852,14 +852,15 @@ public class TypeCastRules {
      * the function can fit the precision that we need based on the input types.
      */
     if (holder.checkPrecisionRange() == true) {
-      if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) < holder.getReturnType(call.args).getPrecision()) {
+      if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) <
+          holder.getReturnType(Lists.newArrayList(argumentTypes)).getPrecision()) {
         return -1;
       }
     }
 
     final int numOfArgs = holder.getParamCount();
     for (int i = 0; i < numOfArgs; i++) {
-      final MajorType argType = call.args.get(i).getMajorType();
+      final MajorType argType = argumentTypes.get(i);
       final MajorType parmType = holder.getParmMajorType(i);
 
       //@Param FieldReader will match any type
