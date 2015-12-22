@@ -108,7 +108,7 @@ public class DrillFunctionRegistry {
       for (DrillFuncHolder func : function.getValue()) {
         if (argCounts.add(func.getParamCount())) {
           if (func.isAggregating()) {
-            op = new DrillSqlAggOperator(name, func.getParamCount());
+            op = new DrillSqlAggOperator(name, func.getParamCount(), func.getReturnType());
           } else {
             boolean isDeterministic;
             // prevent Drill from folding constant functions with types that cannot be materialized
