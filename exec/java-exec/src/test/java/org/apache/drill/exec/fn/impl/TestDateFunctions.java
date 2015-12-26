@@ -31,6 +31,9 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.LocalDateTime;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -133,9 +136,9 @@ public class TestDateFunctions extends PopUnitTestBase {
     @Test
     public void testToChar() throws Exception {
 
-        String expectedResults[] = {"2008-Feb-23",
-                                    "12 20 30",
-                                    "2008 Feb 23 12:00:00"};
+        String expectedResults[] = {(new LocalDate(2008, 2, 23)).toString("yyyy-MMM-dd"),
+                                    (new LocalTime(12, 20, 30)).toString("HH mm ss"),
+                                    (new LocalDateTime(2008, 2, 23, 12, 0, 0)).toString("yyyy MMM dd HH:mm:ss")};
         testCommon(expectedResults, "/functions/date/to_char.json", "/test_simple_date.json");
     }
 
