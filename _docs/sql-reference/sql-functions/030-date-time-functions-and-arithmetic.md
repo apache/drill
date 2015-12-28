@@ -1,5 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
+date: 2015-12-28 21:37:20 UTC
 parent: "SQL Functions"
 ---
 

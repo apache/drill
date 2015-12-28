@@ -1,5 +1,6 @@
 ---
 title: "Installing the Driver on Windows"
+date: 2015-12-28 21:37:19 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC Driver installer is available for 32- and 64-bit

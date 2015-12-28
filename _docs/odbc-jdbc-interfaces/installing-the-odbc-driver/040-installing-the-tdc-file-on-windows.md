@@ -1,5 +1,6 @@
 ---
 title: "Installing the TDC File on Windows"
+date: 2015-12-28 21:37:19 UTC
 parent: "Installing the ODBC Driver"
 ---
 The MapR Drill ODBC driver installer automatically installs the TDC file if the installer can find the Tableau installation. If you installed the MapR Drill ODBC driver first and then installed Tableau, the TDC file is not installed automatically, and you need to install the TDC file manually. 

@@ -1,5 +1,6 @@
 ---
 title: "UNION Set Operator"
+date: 2015-12-28 21:37:20 UTC
 parent: "SQL Commands"
 ---
 The UNION set operator combines the result sets of two separate query expressions. The result set of each query must have the same number of columns and compatible data types. UNION automatically removes duplicate records from the result set. UNION ALL returns all duplicate records.

@@ -1,5 +1,6 @@
 ---
 title: "PARTITION BY Clause"
+date: 2015-12-28 21:37:20 UTC
 parent: "SQL Commands"
 ---
 The PARTITION BY clause in the CTAS command partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) to improve performance when you query the data. (Drill 1.1.0)

@@ -1,5 +1,6 @@
 ---
 title: "Handling Different Data Types"
+date: 2015-12-28 21:37:20 UTC
 parent: "Data Types"
 ---
 ## Handling HBase Data

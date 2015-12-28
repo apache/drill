@@ -1,5 +1,6 @@
 ---
 title: "Tutorial: Develop a Simple Function"
+date: 2015-12-28 21:37:18 UTC
 parent: "Develop Custom Functions"
 ---
 

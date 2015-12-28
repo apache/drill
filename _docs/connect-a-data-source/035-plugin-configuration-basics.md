@@ -1,5 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
+date: 2015-12-28 21:37:18 UTC
 parent: "Storage Plugin Configuration"
 ---
 When you add or update storage plugin configurations on one Drill node in a 

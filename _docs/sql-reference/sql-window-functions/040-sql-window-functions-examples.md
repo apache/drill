@@ -1,5 +1,6 @@
 ---
 title: "SQL Window Functions Examples"
+date: 2015-12-28 21:37:20 UTC
 parent: "SQL Window Functions"
 ---
 

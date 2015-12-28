@@ -1,5 +1,6 @@
 ---
 title: "Configure Drill Introduction"
+date: 2015-12-28 21:37:18 UTC
 parent: "Configure Drill"
 ---
 

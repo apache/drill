@@ -1,5 +1,6 @@
 ---
 title: "Installing the Driver on Mac OS X"
+date: 2015-12-28 21:37:19 UTC
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to

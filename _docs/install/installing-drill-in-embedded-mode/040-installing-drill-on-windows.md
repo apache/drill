@@ -1,5 +1,6 @@
 ---
 title: "Installing Drill on Windows"
+date: 2015-12-28 21:37:19 UTC
 parent: "Installing Drill in Embedded Mode"
 ---
 First, check that you [meet the prerequisites]({{site.baseurl}}/docs/embedded-mode-prerequisites), including setting the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:

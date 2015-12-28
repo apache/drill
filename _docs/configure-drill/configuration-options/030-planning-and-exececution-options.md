@@ -1,5 +1,6 @@
 ---
 title: "Planning and Execution Options"
+date: 2015-12-28 21:37:18 UTC
 parent: "Configuration Options"
 ---
 You can set Drill query planning and execution options per cluster, at the

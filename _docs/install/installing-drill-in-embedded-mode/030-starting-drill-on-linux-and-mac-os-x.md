@@ -1,5 +1,6 @@
 ---
 title: "Starting Drill on Linux and Mac OS X"
+date: 2015-12-28 21:37:19 UTC
 parent: "Installing Drill in Embedded Mode"
 ---
 To start the Drill shell in embedded mode, use the `drill-embedded` command. Internally, the command uses a jdbc connection string and identifies the local node as the ZooKeeper node. Complete the following steps to start the Drill shell:

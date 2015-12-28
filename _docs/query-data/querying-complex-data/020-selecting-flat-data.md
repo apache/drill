@@ -1,5 +1,6 @@
 ---
 title: "Selecting Flat Data"
+date: 2015-12-28 21:37:19 UTC
 parent: "Querying Complex Data"
 ---
 A very simple query against the `donuts.json` file returns the values for the

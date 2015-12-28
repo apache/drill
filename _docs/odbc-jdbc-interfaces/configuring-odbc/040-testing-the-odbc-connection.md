@@ -1,5 +1,6 @@
 ---
 title: "Testing the ODBC Connection"
+date: 2015-12-28 21:37:19 UTC
 parent: "Configuring ODBC"
 ---
 The procedure for testing the ODBC connection differs depending on your platform, as described in the following sections:

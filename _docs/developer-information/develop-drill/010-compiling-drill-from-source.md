@@ -1,5 +1,6 @@
 ---
 title: "Compiling Drill from Source"
+date: 2015-12-28 21:37:19 UTC
 parent: "Develop Drill"
 ---
 To develop Drill, you compile Drill from source code and then set up a project

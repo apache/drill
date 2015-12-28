@@ -1,5 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
+date: 2015-12-28 21:37:20 UTC
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---

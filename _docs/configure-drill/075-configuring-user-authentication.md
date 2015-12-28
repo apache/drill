@@ -1,5 +1,6 @@
 ---
 title: "Configuring User Authentication"
+date: 2015-12-28 21:37:18 UTC
 parent: "Configure Drill"
 ---
 Authentication is the process of proving a user’s identity to access a process running on a system. Drill currently supports username/password based authentication through the use of the Linux Pluggable Authentication Module (PAM). The authentication option is available through JDBC and ODBC interfaces. Linux PAM provides authentication modules that interface with any installed PAM authentication entity, such as the local operating system password file (passwd or login) or LDAP. 

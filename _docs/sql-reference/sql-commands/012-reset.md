@@ -1,5 +1,6 @@
 ---
 title: "RESET"
+date: 2015-12-28 21:37:20 UTC
 parent: "SQL Commands"
 ---
 The RESET command is available in Drill version 1.3 and later. The RESET command resets a session level option back to its default system setting.

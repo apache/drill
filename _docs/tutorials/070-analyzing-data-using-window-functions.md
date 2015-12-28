@@ -1,5 +1,6 @@
 ---
 title: "Analyzing Data Using Window Functions"
+date: 2015-12-28 21:37:20 UTC
 parent: "Tutorials"
 ---
 

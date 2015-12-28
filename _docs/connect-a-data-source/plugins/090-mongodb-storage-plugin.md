@@ -1,5 +1,6 @@
 ---
 title: "MongoDB Storage Plugin"
+date: 2015-12-28 21:37:18 UTC
 parent: "Connect a Data Source"
 ---
 ## Overview
