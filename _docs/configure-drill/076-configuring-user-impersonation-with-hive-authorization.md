@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Impersonation with Hive Authorization"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Configure Drill"
 ---
 As of Drill 1.1, you can enable impersonation in Drill and configure authorization in Hive version 1.0 to authorize access to metadata in the Hive metastore repository and data in the Hive warehouse. Impersonation allows a service to act on behalf of a client while performing the action requested by the client. See [Configuring User Impersonation]({{site.baseurl}}/docs/configuring-user-impersonation).

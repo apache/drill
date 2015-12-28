@@ -1,6 +1,6 @@
 ---
 title: "Sequence Files"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Data Sources and File Formats"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "REPEATED_CONTAINS"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "Nested Data Functions"
 ---
 REPEATED CONTAINS searches for a keyword in an array. 

@@ -1,6 +1,6 @@
 ---
 title: "About SQL Function Examples"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Functions"
 ---
 You need to use a FROM clause in Drill queries. You can use the VALUES clause in the FROM clause to define rows of data in a derived table. The derived table has statement level scope.

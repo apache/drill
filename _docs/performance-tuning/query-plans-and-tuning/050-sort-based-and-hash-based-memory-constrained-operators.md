@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Query Plans and Tuning"
 --- 
 

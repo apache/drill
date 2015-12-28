@@ -1,6 +1,6 @@
 ---
 title: "Controlling Parallelization to Balance Performance with Multi-Tenancy"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Query Plans and Tuning"
 --- 
 

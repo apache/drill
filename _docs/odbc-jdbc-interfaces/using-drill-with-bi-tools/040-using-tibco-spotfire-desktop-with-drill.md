@@ -1,6 +1,6 @@
 ---
 title: "Using Tibco Spotfire Desktop with Drill"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Using Drill with BI Tools"
 ---
 Tibco Spotfire Desktop is a powerful analytic tool that enables SQL statements when connecting to data sources. Spotfire Desktop can utilize the powerful query capabilities of Apache Drill to query complex data structures. Use the MapR Drill ODBC Driver to configure Tibco Spotfire Desktop with Apache Drill.

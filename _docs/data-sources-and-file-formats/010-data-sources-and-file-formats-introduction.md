@@ -1,6 +1,6 @@
 ---
 title: "Data Sources and File Formats Introduction"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Data Sources and File Formats"
 ---
 Included in the data sources that  Drill supports are these key data sources:

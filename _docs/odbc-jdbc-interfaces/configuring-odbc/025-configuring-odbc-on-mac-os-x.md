@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Mac OS X"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data

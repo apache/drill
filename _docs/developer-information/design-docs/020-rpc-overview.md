@@ -1,6 +1,6 @@
 ---
 title: "RPC Overview"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Design Docs"
 ---
 Drill leverages the Netty 4 project as an RPC underlayment. From there, we

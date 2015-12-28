@@ -1,6 +1,6 @@
 ---
 title: "WITH Clause"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Commands"
 ---
 The WITH clause is an optional clause used to contain one or more common table

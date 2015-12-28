@@ -1,6 +1,6 @@
 ---
 title: "Developing a Simple Function"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Develop Custom Functions"
 ---
 The section presents a brief overview of developing a simple function. The [tutorial]({{site.baseurl}}/docs/tutorial-develop-a-simple-function/) in the next section covers how to create a simple function in more depth.

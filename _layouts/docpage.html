@@ -19,6 +19,8 @@ title: Documentation
 
     </div>
 
+    {% unless page.nodate %} {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
+
     <link href="{{ site.baseurl }}/css/docpage.css" rel="stylesheet" type="text/css">
 
     <div class="int_text" align="left">

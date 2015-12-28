@@ -1,6 +1,6 @@
 ---
 title: "Wikipedia Edit History"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Sample Datasets"
 ---
 ## Quick Stats

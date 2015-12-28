@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Configure Drill"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.

@@ -1,6 +1,6 @@
 ---
 title: "Custom Function Interfaces"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Develop Custom Functions"
 ---
 Implement the Drill interface appropriate for the type of function that you

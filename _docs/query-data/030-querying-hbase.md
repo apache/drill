@@ -1,6 +1,6 @@
 ---
 title: "Querying HBase"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Query Data"
 ---
 

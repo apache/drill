@@ -1,6 +1,6 @@
 ---
 title: "Configuration Options Introduction"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Configuration Options"
 ---
 Drill provides many configuration options that you can enable, disable, or

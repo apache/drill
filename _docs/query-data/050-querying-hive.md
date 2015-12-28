@@ -1,6 +1,6 @@
 ---
 title: "Querying Hive"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and

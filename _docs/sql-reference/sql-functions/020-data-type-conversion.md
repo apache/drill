@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:

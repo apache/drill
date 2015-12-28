@@ -1,6 +1,6 @@
 ---
 title: "Query Directory Functions"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Reference"
 ---
 You can use the following query directory functions when [querying multiple files or directories]({{site.baseurl}}/docs/querying-directories):

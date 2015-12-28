@@ -1,6 +1,6 @@
 ---
 title: "Querying System Tables"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Query Data"
 ---
 Drill has a sys database that contains system tables. You can query the system

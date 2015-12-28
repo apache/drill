@@ -1,6 +1,6 @@
 ---
 title: "EXPLAIN"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Commands"
 ---
 EXPLAIN is a useful tool for examining the steps that a query goes through

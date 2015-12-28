@@ -1,6 +1,6 @@
 ---
 title: "Using Custom Functions in Queries"
-date: 2015-12-28 21:37:18 UTC
+date: 
 parent: "Develop Custom Functions"
 ---
 When you issue a query with a custom function to Drill, Drill searches the

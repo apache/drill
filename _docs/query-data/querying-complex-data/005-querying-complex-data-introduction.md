@@ -1,6 +1,6 @@
 ---
 title: "Querying Complex Data Introduction"
-date: 2015-12-28 21:37:19 UTC
+date: 
 parent: "Querying Complex Data"
 ---
 Apache Drill queries do not require prior knowledge of the actual data you are

@@ -1,6 +1,6 @@
 ---
 title: "About the MapR Sandbox"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "Learn Drill with the MapR Sandbox"
 ---
 This tutorial uses the MapR Sandbox, which is a Hadoop environment pre-configured with Drill. MapR includes Drill as part of the Hadoop distribution. The MapR

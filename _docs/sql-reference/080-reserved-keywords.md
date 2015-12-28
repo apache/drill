@@ -1,6 +1,6 @@
 ---
 title: "Reserved Keywords"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Reference"
 ---
 When you use a reserved keyword in a Drill query, enclose the word in

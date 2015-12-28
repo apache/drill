@@ -1,6 +1,6 @@
 ---
 title: "CREATE TABLE AS (CTAS)"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Commands"
 ---
 You can create tables in Drill by using the CTAS command.

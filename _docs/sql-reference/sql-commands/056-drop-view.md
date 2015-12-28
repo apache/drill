@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 2015-12-28 21:37:20 UTC
+date: 
 parent: "SQL Commands"
 ---
 
