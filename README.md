@@ -28,13 +28,15 @@ To automatically add the last-modified-on date, a one-time local setup is requir
 
           chmod +x pre-commit
 
-In addition the title: and parent:, add date: to the front matter of any file you create. For example:
+In addition to the title: and parent:, you now need to add date: to the front matter of any file you create. For example:
 
           ---
           title: "Configuring Multitenant Resources"
           parent: "Configuring a Multitenant Cluster"
           date: 
           ---
+
+Do not fill in or alter the date: field. Jekyll and git take care of that when you commit the file. 
 
 # Compiling the Website
 
