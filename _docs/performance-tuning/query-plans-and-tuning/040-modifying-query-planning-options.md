@@ -1,6 +1,6 @@
 ---
 title: "Modifying Query Planning Options"
-date: 
+date: TBD 
 parent: "Query Plans and Tuning"
 --- 
 

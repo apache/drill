@@ -1,6 +1,6 @@
 ---
 title: Starting Drill in Distributed Mode
-date: 
+date: TBD 
 parent: "Installing Drill in Distributed Mode"
 ---
 

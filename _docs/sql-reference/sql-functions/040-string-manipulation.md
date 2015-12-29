@@ -1,6 +1,6 @@
 ---
 title: "String Manipulation"
-date: 
+date: TBD 
 parent: "SQL Functions"
 ---
 

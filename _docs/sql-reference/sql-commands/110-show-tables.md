@@ -1,6 +1,6 @@
 ---
 title: "SHOW TABLES"
-date: 
+date: TBD 
 parent: "SQL Commands"
 ---
 The SHOW TABLES command returns a list of views created within a schema. It

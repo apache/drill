@@ -1,6 +1,6 @@
 ---
 title: "Using JDBC with SQuirreL on Windows"
-date: 
+date: TBD 
 parent: "ODBC/JDBC Interfaces"
 ---
 To use the JDBC Driver to access Drill through SQuirreL, ensure that you meet the prerequisites and follow the steps in this section.

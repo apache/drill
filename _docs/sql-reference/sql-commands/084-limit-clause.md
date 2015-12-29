@@ -1,6 +1,6 @@
 ---
 title: "LIMIT Clause"
-date: 
+date: TBD 
 parent: "SQL Commands"
 ---
 The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.

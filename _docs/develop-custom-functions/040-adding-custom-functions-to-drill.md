@@ -1,6 +1,6 @@
 ---
 title: "Adding Custom Functions to Drill"
-date: 
+date: TBD 
 parent: "Develop Custom Functions"
 ---
 After you develop your custom function and generate the sources and classes

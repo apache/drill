@@ -1,6 +1,6 @@
 ---
 title: "Querying HBase"
-date: 
+date: TBD 
 parent: "Query Data"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Operators"
-date: 
+date: TBD 
 parent: "SQL Reference"
 ---
 You can use various types of operators in your Drill queries to perform

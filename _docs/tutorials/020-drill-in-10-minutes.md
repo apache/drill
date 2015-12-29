@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date: 
+date: TBD 
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---

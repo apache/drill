@@ -1,6 +1,6 @@
 ---
 title: "Handling Different Data Types"
-date: 
+date: TBD 
 parent: "Data Types"
 ---
 ## Handling HBase Data

@@ -1,6 +1,6 @@
 ---
 title: "Querying Directories"
-date: 
+date: TBD 
 parent: "Querying a File System"
 ---
 You can store multiple files in a directory and query them as if they were a

@@ -1,6 +1,6 @@
 ---
 title: "Guidelines for Optimizing Aggregation"
-date: 
+date: TBD 
 parent: "Query Plans and Tuning"
 --- 
 

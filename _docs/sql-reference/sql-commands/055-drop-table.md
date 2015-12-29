@@ -1,6 +1,6 @@
 ---
 title: "DROP TABLE"
-date: 
+date: TBD 
 parent: "SQL Commands"
 ---
 

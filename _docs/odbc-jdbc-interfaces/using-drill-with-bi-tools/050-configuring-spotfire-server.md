@@ -1,6 +1,6 @@
 ---
 title: "Configuring Tibco Spotfire Server with Drill"
-date: 
+date: TBD 
 parent: "Using Drill with BI Tools"
 ---
 

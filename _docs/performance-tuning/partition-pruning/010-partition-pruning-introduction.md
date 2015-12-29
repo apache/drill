@@ -1,6 +1,6 @@
 ---
 title: "Partition Pruning Introduction"
-date: 
+date: TBD 
 parent: "Partition Pruning"
 --- 
 

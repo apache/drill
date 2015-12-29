@@ -1,6 +1,6 @@
 ---
 title: "Configuring Web Console and REST API Security"
-date: 
+date: TBD 
 parent: "Configure Drill"
 ---
 <!-- Drill 1.2 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,

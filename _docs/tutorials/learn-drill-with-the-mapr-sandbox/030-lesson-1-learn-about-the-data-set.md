@@ -1,6 +1,6 @@
 ---
 title: "Lesson 1: Learn about the Data Set"
-date: 
+date: TBD 
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal

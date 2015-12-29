@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-date: 
+date: TBD 
 parent: "Connect a Data Source"
 ---
 Drill 1.1 and later supports Hive 1.0. To access Hive tables

@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 
+date: TBD 
 parent: "SQL Commands"
 ---
 

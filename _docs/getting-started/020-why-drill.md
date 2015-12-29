@@ -1,6 +1,6 @@
 ---
 title: "Why Drill"
-date: 
+date: TBD 
 parent: "Getting Started"
 ---
 

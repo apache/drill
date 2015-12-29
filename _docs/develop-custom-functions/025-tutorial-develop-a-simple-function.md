@@ -1,6 +1,6 @@
 ---
 title: "Tutorial: Develop a Simple Function"
-date: 
+date: TBD 
 parent: "Develop Custom Functions"
 ---
 

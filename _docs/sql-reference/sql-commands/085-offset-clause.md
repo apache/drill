@@ -1,6 +1,6 @@
 ---
 title: "OFFSET Clause"
-date: 
+date: TBD 
 parent: "SQL Commands"
 ---
 The OFFSET clause provides a way to skip a specified number of first rows in a result set before starting to return any rows.
