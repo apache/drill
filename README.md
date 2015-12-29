@@ -11,6 +11,31 @@ jekyll serve --config _config.yml,_config-prod.yml
 ```
 Note that you can skip the first two commands (and only run `jekyll serve`) if you haven't changed the title or path of any of the documentation pages.
 
+To automatically add the last-modified-on date, a one-time local setup is required:
+
+1.  In your cloned directory of Drill, in drill/.git/hooks, create a file named pre-commit (no extension) that contains this script:
+
+          #!/bin/sh
+          # Contents of .git/hooks/pre-commit
+
+          git diff --cached --name-status | grep "^M" | while read a b; do
+            cat $b | sed "/---.*/,/---.*/s/^date:.*$/date: $(date -u "+%Y-%m-%d %T %Z")/" > tmp
+            mv tmp $b
+            git add $b
+          done
+
+2. Make the file executable.
+
+          chmod +x pre-commit
+
+In addition the title: and parent:, add date: to the front matter of any file you create. For example:
+
+          ---
+          title: "Configuring Multitenant Resources"
+          parent: "Configuring a Multitenant Cluster"
+          date: 
+          ---
+
 # Compiling the Website
 
 Once the website is ready, you'll need to compile the site to static HTML so that it can then be published to Apache. This is as simple as running the `jekyll build` command. The _config-prod.yml configuration file causes a few changes to the site:

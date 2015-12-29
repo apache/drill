@@ -1,20 +1,21 @@
 ---
 title: "Configuring Multitenant Resources"
-date:  
+date: 2015-12-29 01:12:25 UTC
 parent: "Configuring a Multitenant Cluster"
 ---
 Drill operations are memory and CPU-intensive. Currently, Drill resources are managed outside of any cluster management service. In a multitenant or any other type of cluster, YARN-enabled or not, you configure memory and memory usage limits for Drill by modifying the `drill-env.sh` file as described in ["Configuring Drill Memory"]({{site.baseurl}}/docs/configuring-drill-memory).
 
 Configure a multitenant cluster manager to account for resources required for Drill. Configuring `drill-env.sh` allocates resources for Drill to use during query execution. It might be necessary to configure the cluster manager from committing the resources to other processes.
 
-## Configuring Drill in a YARN-enabled
+## Configuring Drill in a YARN-enabled cluster
 
-To add Drill to a YARN-enabled cluster, change memory resources to suit your application. For example, you have 120G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
+To add Drill to a YARN-enabled cluster, change memory resources to suit your application. For example, you have 128G of available memory that you allocate to following workloads in a Yarn-enabled cluster:
 
 File system = 20G  
 HBase = 20G  
-Yarn = 20G  
 OS = 8G  
+Yarn = ?
+Drill = ?
 
 If Yarn does most of the work, give Drill 20G, for example, and give Yarn 60G. If you expect a heavy query load, give Drill 60G and Yarn 20G.
 
