@@ -1,6 +1,6 @@
 ---
 title: "Configuring a Multitenant Cluster Introduction"
-date: TBD 
+date:  
 parent: "Configuring a Multitenant Cluster"
 ---
 

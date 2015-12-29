@@ -1,6 +1,6 @@
 ---
 title: "Project Bylaws"
-date: TBD 
+date:  
 ---
 ## Introduction
 

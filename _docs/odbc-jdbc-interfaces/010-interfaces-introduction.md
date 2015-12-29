@@ -1,6 +1,6 @@
 ---
 title: "Interfaces Introduction"
-date: TBD 
+date:  
 parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:

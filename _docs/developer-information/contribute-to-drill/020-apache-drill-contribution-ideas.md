@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Ideas"
-date: TBD 
+date:  
 parent: "Contribute to Drill"
 ---
   * Fixing JIRAs

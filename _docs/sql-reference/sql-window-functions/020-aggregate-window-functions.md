@@ -1,6 +1,6 @@
 ---
 title: "Aggregate Window Functions"
-date: TBD 
+date:  
 parent: "SQL Window Functions"
 ---
 

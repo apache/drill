@@ -1,6 +1,6 @@
 ---
 title: "How to Partition Data"
-date: TBD 
+date:  
 parent: "Partition Pruning"
 --- 
 

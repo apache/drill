@@ -1,6 +1,6 @@
 ---
 title: "Sequence Files"
-date: TBD 
+date:  
 parent: "Data Sources and File Formats"
 ---
 

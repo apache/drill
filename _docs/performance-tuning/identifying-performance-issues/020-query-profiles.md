@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-date: TBD 
+date:  
 parent: "Identifying Performance Issues"
 ---
 

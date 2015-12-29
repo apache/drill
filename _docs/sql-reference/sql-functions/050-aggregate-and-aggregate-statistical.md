@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: TBD 
+date:  
 parent: "SQL Functions"
 ---
 

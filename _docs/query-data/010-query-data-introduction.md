@@ -1,6 +1,6 @@
 ---
 title: "Query Data Introduction"
-date: TBD 
+date:  
 parent: "Query Data"
 ---
 You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 

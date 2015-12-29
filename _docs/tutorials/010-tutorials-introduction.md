@@ -1,6 +1,6 @@
 ---
 title: "Tutorials Introduction"
-date: TBD 
+date:  
 parent: "Tutorials"
 ---
 If you've never used Drill, use these tutorials to download, install, and start working with Drill. The tutorials include step-by-step procedures for the following tasks:

@@ -1,6 +1,6 @@
 ---
 title: "Develop Custom Functions Introduction"
-date: TBD 
+date:  
 parent: "Develop Custom Functions"
 ---
 Drill provides a high performance Java API with interfaces that you can

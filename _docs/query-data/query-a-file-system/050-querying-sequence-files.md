@@ -1,6 +1,6 @@
 ---
 title: "Querying Sequence Files"
-date: TBD 
+date:  
 parent: "Querying a File System"
 ---
 

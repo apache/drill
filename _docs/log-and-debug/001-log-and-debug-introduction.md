@@ -1,6 +1,6 @@
 ---
 title: "Log and Debug Introduction"
-date: TBD 
+date:  
 parent: "Log and Debug"
 ---
 

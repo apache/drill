@@ -1,6 +1,6 @@
 ---
 title: "Using Apache Drill with Tableau 9 Server"
-date: TBD 
+date:  
 parent: "Using Drill with BI Tools"
 ---
 

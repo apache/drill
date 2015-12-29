@@ -1,6 +1,6 @@
 ---
 title: "Enabling Query Queuing"
-date: TBD 
+date:  
 parent: "Query Plans and Tuning"
 --- 
 

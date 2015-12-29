@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: TBD 
+date:  
 parent: "SQL Functions"
 ---
 

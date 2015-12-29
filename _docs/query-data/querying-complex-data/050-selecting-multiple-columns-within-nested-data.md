@@ -1,6 +1,6 @@
 ---
 title: "Selecting Multiple Columns Within Nested Data"
-date: TBD 
+date:  
 parent: "Querying Complex Data"
 ---
 The following query goes one step further to extract the JSON data, selecting

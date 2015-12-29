@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: TBD 
+date:  
 parent: "Query Data"
 ---
 When you are using Drill to connect to multiple data sources, you need a

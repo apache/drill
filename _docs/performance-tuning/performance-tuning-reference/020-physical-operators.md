@@ -1,6 +1,6 @@
 ---
 title: "Physical Operators"
-date: TBD 
+date:  
 parent: "Performance Tuning Reference"
 --- 
 

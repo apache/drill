@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Data Using Window Functions"
-date: TBD 
+date:  
 parent: "Tutorials"
 ---
 

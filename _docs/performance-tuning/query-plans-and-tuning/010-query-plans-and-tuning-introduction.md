@@ -1,6 +1,6 @@
 ---
 title: "Query Plans and Tuning Introduction"
-date: TBD 
+date:  
 parent: "Query Plans and Tuning"
 ---
 

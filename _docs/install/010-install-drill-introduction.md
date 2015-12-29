@@ -1,6 +1,6 @@
 ---
 title: "Install Drill Introduction"
-date: TBD 
+date:  
 parent: "Install Drill"
 ---
 

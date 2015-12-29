@@ -1,6 +1,6 @@
 ---
 title: "Using Qlik Sense with Drill"
-date: TBD 
+date:  
 parent: "Using Drill with BI Tools"
 ---
 You can use the Qlik Sense BI tool with Apache Drill, the SQL query engine for Big Data exploration, to access and analyze structured and semi-structured data in multiple data stores.  

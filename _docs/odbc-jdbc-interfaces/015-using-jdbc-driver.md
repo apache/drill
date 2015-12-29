@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: TBD 
+date:  
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:

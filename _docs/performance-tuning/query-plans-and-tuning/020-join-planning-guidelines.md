@@ -1,6 +1,6 @@
 ---
 title: "Join Planning Guidelines"
-date: TBD 
+date:  
 parent: "Query Plans and Tuning"
 --- 
 

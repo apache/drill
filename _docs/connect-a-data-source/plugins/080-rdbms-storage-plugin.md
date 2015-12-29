@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date: TBD 
+date:  
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 

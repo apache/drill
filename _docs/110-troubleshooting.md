@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-date: TBD 
+date:  
 ---
 
 You may experience certain known issues when using Drill. This document lists some known issues and resolutions for each.

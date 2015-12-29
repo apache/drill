@@ -1,6 +1,6 @@
 ---
 title: "WHERE Clause"
-date: TBD 
+date:  
 parent: "SQL Commands"
 ---
 The WHERE clause selects rows based on a boolean expression. Only rows for which the expression evaluates to TRUE are returned in the result.

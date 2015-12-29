@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: TBD 
+date:  
 parent: "Configuration Options"
 ---
 Drill’s start-up options reside in a HOCON configuration file format, which is

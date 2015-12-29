@@ -1,6 +1,6 @@
 ---
 title: "Developing an Aggregate Function"
-date: TBD 
+date:  
 parent: "Develop Custom Functions"
 ---
 The API for developing aggregate custom functions is at the alpha stage and intended for experimental use only. To experiment with this API, create a class within a Java package that implements Drill’s aggregate

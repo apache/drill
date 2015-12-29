@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: TBD 
+date:  
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive

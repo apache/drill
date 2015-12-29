@@ -1,6 +1,6 @@
 ---
 title: "CASE"
-date: TBD 
+date:  
 parent: "SQL Conditional Expressions"
 ---
 Executes statements based on one or more equality conditions.

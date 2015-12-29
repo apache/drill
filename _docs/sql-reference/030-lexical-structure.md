@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: TBD 
+date:  
 parent: "SQL Reference"
 ---
 

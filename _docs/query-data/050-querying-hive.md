@@ -1,6 +1,6 @@
 ---
 title: "Querying Hive"
-date: TBD 
+date:  
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and

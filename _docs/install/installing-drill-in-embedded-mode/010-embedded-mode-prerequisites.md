@@ -1,6 +1,6 @@
 ---
 title: "Embedded Mode Prerequisites"
-date: TBD 
+date:  
 parent: "Installing Drill in Embedded Mode"
 ---
 Installing Drill in embedded mode installs Drill locally on your machine.

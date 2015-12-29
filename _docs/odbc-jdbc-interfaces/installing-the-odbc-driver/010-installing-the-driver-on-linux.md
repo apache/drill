@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: TBD 
+date:  
 parent: "Installing the ODBC Driver"
 ---
 Install the MapR Drill ODBC Driver on the machine from which you connect to

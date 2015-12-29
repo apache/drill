@@ -1,6 +1,6 @@
 ---
 title: "ODBC Configuration Reference"
-date: TBD 
+date:  
 parent: "Configuring ODBC"
 ---
 

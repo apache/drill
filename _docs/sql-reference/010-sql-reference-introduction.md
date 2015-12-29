@@ -1,6 +1,6 @@
 ---
 title: "SQL Reference Introduction"
-date: TBD 
+date:  
 parent: "SQL Reference"
 ---
 Drill supports the ANSI standard for SQL. You can use SQL to query your Hive,

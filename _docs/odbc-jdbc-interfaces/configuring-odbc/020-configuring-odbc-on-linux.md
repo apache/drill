@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: TBD 
+date:  
 parent: "Configuring ODBC"
 ---
 ODBC driver managers use configuration files to define and configure ODBC data

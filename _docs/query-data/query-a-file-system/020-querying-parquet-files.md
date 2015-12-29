@@ -1,6 +1,6 @@
 ---
 title: "Querying Parquet Files"
-date: TBD 
+date:  
 parent: "Querying a File System"
 ---
 

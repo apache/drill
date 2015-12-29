@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Windows"
-date: TBD 
+date:  
 parent: "Configuring ODBC"
 ---
 

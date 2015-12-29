@@ -1,6 +1,6 @@
 ---
 title: "Drill Patch Review Tool"
-date: TBD 
+date:  
 parent: "Develop Drill"
 ---
   * Drill JIRA and Reviewboard script

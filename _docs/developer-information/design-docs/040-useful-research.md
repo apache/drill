@@ -1,6 +1,6 @@
 ---
 title: "Useful Research"
-date: TBD 
+date:  
 parent: "Design Docs"
 ---
 ## Drill itself

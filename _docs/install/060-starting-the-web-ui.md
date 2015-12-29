@@ -1,6 +1,6 @@
 ---
 title: Starting the Web Console
-date: TBD 
+date:  
 parent: Install Drill
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Ports Used by Drill"
-date: TBD 
+date:  
 parent: "Configure Drill"
 ---
 The following table provides a list of the ports that Drill uses, the port

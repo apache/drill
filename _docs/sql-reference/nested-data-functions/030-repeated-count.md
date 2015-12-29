@@ -1,6 +1,6 @@
 ---
 title: "REPEATED_COUNT"
-date: TBD 
+date:  
 parent: "Nested Data Functions"
 ---
 This function counts the values in an array. 

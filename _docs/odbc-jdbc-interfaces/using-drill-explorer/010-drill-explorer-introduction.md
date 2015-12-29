@@ -1,6 +1,6 @@
 ---
 title: "Drill Explorer Introduction"
-date: TBD 
+date:  
 parent: "Using Drill Explorer"
 ---
 

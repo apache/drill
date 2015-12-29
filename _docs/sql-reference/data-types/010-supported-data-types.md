@@ -1,6 +1,6 @@
 ---
 title: "Supported Data Types"
-date: TBD 
+date:  
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 

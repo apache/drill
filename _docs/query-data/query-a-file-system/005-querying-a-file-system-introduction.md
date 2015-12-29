@@ -1,6 +1,6 @@
 ---
 title: "Querying a File System Introduction"
-date: TBD 
+date:  
 parent: "Querying a File System"
 ---
 Files and directories are like standard SQL tables to Drill. You can specify a

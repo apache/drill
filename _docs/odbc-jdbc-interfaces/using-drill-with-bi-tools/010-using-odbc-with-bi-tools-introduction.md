@@ -1,6 +1,6 @@
 ---
 title: "Using Drill with BI Tools Introduction"
-date: TBD 
+date:  
 parent: "Using Drill with BI Tools"
 ---
 The MapR Drill ODBC driver provides BI tools access to Drill’s flexible query

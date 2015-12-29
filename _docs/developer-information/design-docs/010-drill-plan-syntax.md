@@ -1,6 +1,6 @@
 ---
 title: "Drill Plan Syntax"
-date: TBD 
+date:  
 parent: "Design Docs"
 ---
 ### Whats the plan?

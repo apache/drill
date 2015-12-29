@@ -1,6 +1,6 @@
 ---
 title: "Optimizing Parquet Metadata Reading"
-date: TBD 
+date:  
 parent: "Performance Tuning"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "SQL Window Functions Introduction"
-date: TBD 
+date:  
 parent: "SQL Window Functions"
 ---
 
