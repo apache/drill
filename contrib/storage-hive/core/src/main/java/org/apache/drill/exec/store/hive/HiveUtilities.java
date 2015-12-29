@@ -368,16 +368,16 @@ public class HiveUtilities {
   }
 
   /**
-   * Utility method which sets table or partition {@link InputFormat} class in given {@link JobConf} object. First it
+   * Utility method which gets table or partition {@link InputFormat} class. First it
    * tries to get the class name from given StorageDescriptor object. If it doesn't contain it tries to get it from
    * StorageHandler class set in table properties. If not found throws an exception.
-   * @param job {@link JobConf} instance where InputFormat class is set.
+   * @param job {@link JobConf} instance needed incase the table is StorageHandler based table.
    * @param sd {@link StorageDescriptor} instance of currently reading partition or table (for non-partitioned tables).
    * @param table Table object
    * @throws Exception
    */
-  public static void setInputFormatClass(final JobConf job, final StorageDescriptor sd, final Table table)
-      throws Exception {
+  public static Class<? extends InputFormat> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
+      final Table table) throws Exception {
     final String inputFormatName = sd.getInputFormat();
     if (Strings.isNullOrEmpty(inputFormatName)) {
       final String storageHandlerClass = table.getParameters().get(META_TABLE_STORAGE);
@@ -386,9 +386,9 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
-      job.setInputFormat(storageHandler.getInputFormatClass());
+      return storageHandler.getInputFormatClass();
     } else {
-      job.setInputFormat((Class<? extends InputFormat>) Class.forName(inputFormatName));
+      return (Class<? extends InputFormat>) Class.forName(inputFormatName);
     }
   }
 
@@ -401,12 +401,14 @@ public class HiveUtilities {
    */
   public static void addConfToJob(final JobConf job, final Properties properties,
       final Map<String, String> hiveConfigOverride) {
+    final HiveConf hiveConf = new HiveConf();
     for (Object obj : properties.keySet()) {
-      job.set((String) obj, (String) properties.get(obj));
+      hiveConf.set((String) obj, (String) properties.get(obj));
     }
     for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-      job.set(entry.getKey(), entry.getValue());
+      hiveConf.set(entry.getKey(), entry.getValue());
     }
+    job.addResource(hiveConf);
   }
 
   /**

@@ -386,6 +386,22 @@ public class TestHiveStorage extends HiveTestBase {
         .go();
   }
 
+  @Test // DRILL-3739
+  public void readingFromStorageHandleBasedTable2() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+
+      testBuilder()
+          .sqlQuery("SELECT * FROM hive.kv_sh ORDER BY key LIMIT 2")
+          .ordered()
+          .baselineColumns("key", "value")
+          .expectsEmptyResultSet()
+          .go();
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
+  }
+
   @AfterClass
   public static void shutdownOptions() throws Exception {
     test(String.format("alter session set `%s` = false", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));

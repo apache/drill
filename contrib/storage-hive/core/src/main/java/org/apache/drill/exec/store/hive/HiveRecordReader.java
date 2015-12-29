@@ -126,29 +126,30 @@ public class HiveRecordReader extends AbstractRecordReader {
     defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(hiveConfigOverride);
 
     try {
-      Properties properties = MetaStoreUtils.getTableMetadata(table);
-      final SerDe tableSerDe = createSerDe(job, table.getSd().getSerdeInfo().getSerializationLib(), properties);
+      final Properties tableProperties = MetaStoreUtils.getTableMetadata(table);
+      final Properties partitionProperties =
+          (partition == null) ?  tableProperties :
+              HiveUtilities.getPartitionMetadata(partition, table);
+      HiveUtilities.addConfToJob(job, partitionProperties, hiveConfigOverride);
+
+      final SerDe tableSerDe = createSerDe(job, table.getSd().getSerdeInfo().getSerializationLib(), tableProperties);
       final StructObjectInspector tableOI = getStructOI(tableSerDe);
 
       if (partition != null) {
-        properties = HiveUtilities.getPartitionMetadata(partition, table);
-
-        partitionSerDe = createSerDe(job, partition.getSd().getSerdeInfo().getSerializationLib(), properties);
+        partitionSerDe = createSerDe(job, partition.getSd().getSerdeInfo().getSerializationLib(), partitionProperties);
         partitionOI = getStructOI(partitionSerDe);
 
         finalOI = (StructObjectInspector)ObjectInspectorConverters.getConvertedOI(partitionOI, tableOI);
         partTblObjectInspectorConverter = ObjectInspectorConverters.getConverter(partitionOI, finalOI);
-        HiveUtilities.setInputFormatClass(job, partition.getSd(), table);
+        job.setInputFormat(HiveUtilities.getInputFormatClass(job, partition.getSd(), table));
       } else {
         // For non-partitioned tables, there is no need to create converter as there are no schema changes expected.
         partitionSerDe = tableSerDe;
         partitionOI = tableOI;
         partTblObjectInspectorConverter = null;
         finalOI = tableOI;
-        HiveUtilities.setInputFormatClass(job, table.getSd(), table);
+        job.setInputFormat(HiveUtilities.getInputFormatClass(job, table.getSd(), table));
       }
-
-      HiveUtilities.addConfToJob(job, properties, hiveConfigOverride);
 
       // Get list of partition column names
       final List<String> partitionNames = Lists.newArrayList();
