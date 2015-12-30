@@ -285,27 +285,6 @@ public class DateTypeFunctions {
         }
     }
 
-    /* Dummy function template to allow Optiq to validate this function call.
-     * At DrillOptiq time we rewrite all date_part() functions to extract functions,
-     * since they are essentially the same
-     */
-    @SuppressWarnings("unused")
-    @FunctionTemplate(names = "date_part", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-    public static class DatePartFunction implements DrillSimpleFunc {
-        @Param VarCharHolder left;
-        @Param DateHolder right;
-        @Output BigIntHolder out;
-
-        public void setup() {
-        }
-
-        public void eval() {
-            if (1 == 1) {
-                throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
-            }
-        }
-    }
-
     @SuppressWarnings("unused")
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeTimeStampFunction implements DrillSimpleFunc {

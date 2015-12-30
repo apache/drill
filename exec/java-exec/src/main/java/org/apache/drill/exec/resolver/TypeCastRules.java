@@ -26,7 +26,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -853,7 +852,7 @@ public class TypeCastRules {
      */
     if (holder.checkPrecisionRange() == true) {
       if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) <
-          holder.getReturnType(Lists.newArrayList(argumentTypes)).getPrecision()) {
+          holder.getReturnTypeMajorType(Lists.newArrayList(argumentTypes)).getPrecision()) {
         return -1;
       }
     }

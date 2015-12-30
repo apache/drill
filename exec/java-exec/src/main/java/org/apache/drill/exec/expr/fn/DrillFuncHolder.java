@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.DumbLogicalExpression;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -42,6 +42,7 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionArgumentNumber;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -264,19 +265,24 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return this.parameters[i].isFieldReader;
   }
 
-  public static ArrayList<MajorType> getResultType(List<LogicalExpression> expressions) {
-    final ArrayList<MajorType> argumentTypes = Lists.newArrayList();
+  public static List<MajorType> getResultType(List<LogicalExpression> expressions) {
+    final List<MajorType> argumentTypes = Lists.newArrayList();
     for (LogicalExpression expression : expressions) {
       argumentTypes.add(expression.getMajorType());
     }
     return argumentTypes;
   }
 
-  public MajorType getReturnType(List<LogicalExpression> expressions) {
-    return getReturnType(getResultType(expressions));
+  public final MajorType getReturnTypeMajorType(final List<MajorType> types) {
+    final List<LogicalExpression> expressions = Lists.newArrayList();
+    for(final MajorType type : types) {
+      final LogicalExpression dumbExpr = new DumbLogicalExpression(type);
+      expressions.add(dumbExpr);
+    }
+    return getReturnType(expressions);
   }
 
-  public MajorType getReturnType(ArrayList<MajorType> argumentTypes) {
+  public MajorType getReturnType(List<LogicalExpression> expressions) {
     if (returnValue.type.getMinorType() == MinorType.UNION) {
       Set<MinorType> subTypes = Sets.newHashSet();
       for (ValueReference ref : parameters) {
@@ -290,8 +296,8 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     }
     if (nullHandling == NullHandling.NULL_IF_NULL) {
       // if any one of the input types is nullable, then return nullable return type
-      for (MajorType  type : argumentTypes) {
-        if (type.getMode() == TypeProtos.DataMode.OPTIONAL) {
+      for (LogicalExpression expr : expressions) {
+        if (expr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
           return Types.optional(returnValue.type.getMinorType());
         }
       }
@@ -302,6 +308,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   public NullHandling getNullHandling() {
     return attributes.getNullHandling();
+  }
+
+  public FunctionArgumentNumber getFunctionArgumentNumber() {
+    return attributes.getFunctionArgumentNumber();
   }
 
   private boolean softCompare(MajorType a, MajorType b) {
@@ -417,7 +427,6 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     public String getName() {
       return name;
     }
-
   }
 
   public boolean checkPrecisionRange() {
@@ -431,5 +440,4 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   public ValueReference getReturnValue() {
     return returnValue;
   }
-
 }

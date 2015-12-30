@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import java.util.Map.Entry;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionArgumentNumber;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
@@ -111,16 +111,13 @@ public class DrillFunctionRegistry {
       final ArrayListMultimap<Integer, DrillFuncHolder> functions = ArrayListMultimap.create();
       final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
       final String name = function.getKey().toUpperCase();
-      if(name.equalsIgnoreCase("CONVERT_TO")) {
-        System.out.println("CONVERT FUNC: " + Arrays.toString(function.getValue().toArray()));
-      }
-
       boolean isDeterministic = false;
       for (DrillFuncHolder func : function.getValue()) {
+        final int paramCount = func.getFunctionArgumentNumber() == FunctionArgumentNumber.VARIABLE ? -1 : func.getParamCount();
         if(func.isAggregating()) {
-          aggregateFunctions.put(func.getParamCount(), func);
+          aggregateFunctions.put(paramCount, func);
         } else {
-          functions.put(func.getParamCount(), func);
+          functions.put(paramCount, func);
         }
         // prevent Drill from folding constant functions with types that cannot be materialized
         // into literals
@@ -139,5 +136,4 @@ public class DrillFunctionRegistry {
       }
     }
   }
-
 }

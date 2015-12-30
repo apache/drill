@@ -19,12 +19,13 @@
 package org.apache.drill.exec.planner.sql;
 
 import com.google.common.collect.Lists;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import com.google.common.collect.Sets;
+
+import java.util.List;
+import java.util.Set;
+
+import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlFunction;
@@ -33,35 +34,56 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
+
+import org.apache.drill.common.expression.DumbLogicalExpression;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
-import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.exec.util.AssertionUtil;
-
-import java.util.LinkedList;
-import java.util.List;
+import org.apache.drill.exec.resolver.FunctionResolver;
+import org.apache.drill.exec.resolver.FunctionResolverFactory;
 
 public class DrillSqlOperator extends SqlFunction {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
+  // static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
 
+  public static final int MAX_VARCHAR_LENGTH = 65535;
   private static final MajorType NONE = MajorType.getDefaultInstance();
   private final boolean isDeterministic;
   private final List<DrillFuncHolder> functions;
 
+  private static final Set<String> setFnWithDynamicTypes = Sets.newHashSet();
+  static {
+    setFnWithDynamicTypes.add("FALTTEN");
+    setFnWithDynamicTypes.add("KVGEN");
+  }
+
+  @Deprecated
   public DrillSqlOperator(String name, int argCount, boolean isDeterministic) {
     this(name, null, argCount, isDeterministic);
   }
 
   public DrillSqlOperator(String name, int argCount, MajorType returnType, boolean isDeterministic) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), null, null, new Checker(argCount), null,
+    super(new SqlIdentifier(name, SqlParserPos.ZERO),
+        null,
+        null,
+        argCount >= 0 ? new Checker(argCount) : new Checker(),
+        null,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.isDeterministic = isDeterministic;
     this.functions = Lists.newArrayList();
   }
 
   public DrillSqlOperator(String name, List<DrillFuncHolder> functions, int argCount, boolean isDeterministic) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), null, null, new Checker(argCount), null,
+    super(new SqlIdentifier(name, SqlParserPos.ZERO),
+        null,
+        null,
+        argCount >= 0 ? new Checker(argCount) : new Checker(),
+        null,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.functions = functions;
     this.isDeterministic = isDeterministic;
@@ -72,16 +94,8 @@ public class DrillSqlOperator extends SqlFunction {
     return isDeterministic;
   }
 
-  private static List<MajorType> getMajorTypes(List<RelDataType> relTypes) {
-    List<MajorType> drillTypes = Lists.newArrayList();
-    for (RelDataType relType : relTypes) {
-      drillTypes.add(getMajorType(relType));
-    }
-    return drillTypes;
-  }
-
   private static MajorType getMajorType(RelDataType relDataType) {
-    final MinorType minorType = DrillConstExecutor.CALCITE_TO_DRILL_MAPPING.get(relDataType.getSqlTypeName());
+    final MinorType minorType = DrillConstExecutor.getDrillTypeFromCalcite(relDataType);
     if (relDataType.isNullable()) {
       return Types.optional(minorType);
     } else {
@@ -89,60 +103,9 @@ public class DrillSqlOperator extends SqlFunction {
     }
   }
 
-  /**
-   * Same as {@link org.apache.drill.exec.resolver.DefaultFunctionResolver#getBestMatch(List, FunctionCall)} for
-   * correctness.
-   */
-  private DrillFuncHolder getFunction(SqlOperatorBinding opBinding) {
-    int bestcost = Integer.MAX_VALUE;
-    int currcost = Integer.MAX_VALUE;
-    DrillFuncHolder bestmatch = null;
-    final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
+  private RelDataType getReturnType(final SqlOperatorBinding opBinding, final DrillFuncHolder func) {
+    final RelDataTypeFactory factory = opBinding.getTypeFactory();
 
-    for (DrillFuncHolder h : functions) {
-
-      currcost = TypeCastRules.getCost(getMajorTypes(opBinding.collectOperandTypes()), h);
-
-      // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
-      if (currcost < 0) {
-        continue;
-      }
-
-      if (currcost < bestcost) {
-        bestcost = currcost;
-        bestmatch = h;
-        bestMatchAlternatives.clear();
-      } else if (currcost == bestcost) {
-        // keep log of different function implementations that have the same best cost
-        bestMatchAlternatives.add(h);
-      }
-    }
-
-    if (bestcost < 0) {
-      //did not find a matched func implementation, either w/ or w/o implicit casts
-      //TODO: raise exception here?
-      return null;
-    } else {
-      if (AssertionUtil.isAssertionsEnabled() && bestMatchAlternatives.size() > 0) {
-        /*
-         * There are other alternatives to the best match function which could have been selected
-         * Log the possible functions and the chose implementation and raise an exception
-         */
-        logger.error("Chosen function impl: " + bestmatch);
-
-        // printing the possible matches
-        logger.error("Printing all the possible functions that could have matched: ");
-        for (DrillFuncHolder holder : bestMatchAlternatives) {
-          logger.error(holder.toString());
-        }
-
-        throw new AssertionError("Multiple functions with best cost found");
-      }
-      return bestmatch;
-    }
-  }
-
-  private RelDataType getReturnType(final RelDataTypeFactory factory, DrillFuncHolder func) {
     // least restrictive type (nullable ANY type)
     final RelDataType anyType = factory.createSqlType(SqlTypeName.ANY);
     final RelDataType nullableAnyType = factory.createTypeWithNullability(anyType, true);
@@ -158,35 +121,113 @@ public class DrillSqlOperator extends SqlFunction {
       return factory.createTypeWithNullability(nullableAnyType, true);
     }
 
-    final RelDataType relReturnType = factory.createSqlType(sqlTypeName);
-    switch (returnType.getMode()) {
-    case OPTIONAL:
-      return factory.createTypeWithNullability(relReturnType, true);
-    case REQUIRED:
-      return relReturnType;
-    case REPEATED:
-      return relReturnType;
-    default:
-      return nullableAnyType;
+    final RelDataType relReturnType;
+    switch (sqlTypeName) {
+      case INTERVAL_DAY_TIME:
+        relReturnType = factory.createSqlIntervalType(
+            new SqlIntervalQualifier(
+            TimeUnit.DAY,
+            TimeUnit.MINUTE,
+            SqlParserPos.ZERO));
+        break;
+      case INTERVAL_YEAR_MONTH:
+        relReturnType = factory.createSqlIntervalType(
+            new SqlIntervalQualifier(
+            TimeUnit.YEAR,
+            TimeUnit.MONTH,
+            SqlParserPos.ZERO));
+        break;
+      default:
+        relReturnType = factory.createSqlType(sqlTypeName);
+    }
+
+    switch(returnType.getMode()) {
+      case OPTIONAL:
+        return factory.createTypeWithNullability(relReturnType, true);
+      case REQUIRED:
+        if(func.getNullHandling() == NullHandling.INTERNAL
+            || (func.getNullHandling() == NullHandling.NULL_IF_NULL
+                && opBinding.getOperandCount() > 0
+                    && opBinding.getOperandType(0).isNullable())) {
+          return factory.createTypeWithNullability(relReturnType, true);
+        } else {
+          return relReturnType;
+        }
+      case REPEATED:
+        return relReturnType;
+      default:
+        throw new UnsupportedOperationException();
     }
   }
 
   @Override
   public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-    System.out.println("OP BINDING OPERATOR: " + opBinding.getOperator());
-    System.out.println("OP BINDING: " + opBinding.collectOperandTypes());
+    if(functions == null || functions.isEmpty()
+        || setFnWithDynamicTypes.contains(opBinding.getOperator().getName().toUpperCase())) {
+      return opBinding.getTypeFactory()
+          .createTypeWithNullability(opBinding.getTypeFactory().createSqlType(SqlTypeName.ANY), true);
+    }
+
+    final RelDataTypeFactory factory = opBinding.getTypeFactory();
+    final String name = opBinding.getOperator().getName().toUpperCase();
+    if(name.equals("CONCAT")) {
+      final RelDataType type = factory.createSqlType(SqlTypeName.VARCHAR, MAX_VARCHAR_LENGTH);
+      if(opBinding.getOperandType(0).isNullable()) {
+        return factory.createTypeWithNullability(type, true);
+      } else {
+        return type;
+      }
+    } else if(name.equals("CONVERT_FROM")) {
+      final RelDataType type = factory.createSqlType(SqlTypeName.ANY);
+      if(opBinding.getOperandType(0).isNullable()) {
+        return factory.createTypeWithNullability(type, true);
+      } else {
+        return type;
+      }
+    }
+
+    boolean allBooleanOutput = true;
+    for(DrillFuncHolder function : functions) {
+      if(function.getReturnType().getMinorType() != MinorType.BIT) {
+        allBooleanOutput = false;
+        break;
+      }
+    }
+    if(allBooleanOutput) {
+      return opBinding.getTypeFactory().createSqlType(SqlTypeName.BOOLEAN);
+    }
+
+    // The following logic is just a safe play:
+    // Even if any of the input arguments has ANY type,
+    // it "might" still be possible to determine the return type based on other non-ANY types
     for (RelDataType type : opBinding.collectOperandTypes()) {
-      if (type.getSqlTypeName() == SqlTypeName.ANY) {
+      if (type.getSqlTypeName() == SqlTypeName.ANY || type.getSqlTypeName() == SqlTypeName.DECIMAL) {
         return opBinding.getTypeFactory()
             .createTypeWithNullability(opBinding.getTypeFactory().createSqlType(SqlTypeName.ANY), true);
       }
     }
-    DrillFuncHolder func = getFunction(opBinding);
-    return getReturnType(opBinding.getTypeFactory(), func);
-  }
 
-  @Override
-  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    return super.deriveType(validator, scope, call);
+    final List<LogicalExpression> args = Lists.newArrayList();
+    for(final RelDataType type : opBinding.collectOperandTypes()) {
+      final MajorType majorType = getMajorType(type);
+      args.add(new DumbLogicalExpression(majorType));
+    }
+    final FunctionCall functionCall = new FunctionCall(opBinding.getOperator().getName(), args, ExpressionPosition.UNKNOWN);
+    final FunctionResolver functionResolver = FunctionResolverFactory.getResolver();
+    final DrillFuncHolder func = functionResolver.getBestMatch(functions, functionCall);
+
+    // If the return type is VarChar,
+    // set the precision as the maximum
+    RelDataType returnType = getReturnType(opBinding, func);
+    if(returnType.getSqlTypeName() == SqlTypeName.VARCHAR) {
+      final boolean isNullable = returnType.isNullable();
+      returnType = factory.createSqlType(SqlTypeName.VARCHAR, MAX_VARCHAR_LENGTH);
+
+      if(isNullable) {
+        returnType = factory.createTypeWithNullability(returnType, true);
+      }
+    }
+
+    return returnType;
   }
 }

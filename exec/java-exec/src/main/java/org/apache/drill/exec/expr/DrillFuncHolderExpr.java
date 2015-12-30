@@ -40,7 +40,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
 
   @Override
   public MajorType getMajorType() {
-    return holder.getReturnType(DrillFuncHolder.getResultType(args));
+    return holder.getReturnType(args);
   }
 
   @Override

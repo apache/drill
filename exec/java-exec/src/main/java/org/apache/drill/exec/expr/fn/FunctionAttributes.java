@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionArgumentNumber;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 public class FunctionAttributes {
   private final FunctionScope scope;
   private final NullHandling nullHandling;
+  private final FunctionArgumentNumber functionArgumentNumber;
   private final boolean isBinaryCommutative;
   private final boolean isDeterministic;
   private final String[] registeredNames;
@@ -38,12 +40,13 @@ public class FunctionAttributes {
   private final WorkspaceReference[] workspaceVars;
   private final FunctionCostCategory costCategory;
 
-  public FunctionAttributes(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative,
-      boolean isDeteministic, String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
+  public FunctionAttributes(FunctionScope scope, NullHandling nullHandling, FunctionArgumentNumber functionArgumentNumber,
+      boolean isBinaryCommutative, boolean isDeteministic, String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
       WorkspaceReference[] workspaceVars, FunctionCostCategory costCategory) {
     super();
     this.scope = scope;
     this.nullHandling = nullHandling;
+    this.functionArgumentNumber = functionArgumentNumber;
     this.isBinaryCommutative = isBinaryCommutative;
     this.isDeterministic = isDeteministic;
     this.registeredNames = registeredNames;
@@ -59,6 +62,10 @@ public class FunctionAttributes {
 
   public NullHandling getNullHandling() {
     return nullHandling;
+  }
+
+  public FunctionArgumentNumber getFunctionArgumentNumber() {
+    return functionArgumentNumber;
   }
 
   public boolean isBinaryCommutative() {

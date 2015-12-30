@@ -185,6 +185,7 @@ public class FunctionConverter {
       FunctionAttributes functionAttributes = new FunctionAttributes(
           template.scope(),
           template.nulls(),
+          template.argNumber(),
           template.isBinaryCommutative(),
           isDeteministic, registeredNames, ps, outputField, works, template.costCategory());
       switch (template.scope()) {

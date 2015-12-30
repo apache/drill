@@ -23,7 +23,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 /**
  * This and {@link DummyConvertFrom} class merely act as a placeholder so that Optiq
@@ -32,6 +34,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 @FunctionTemplate(name = "convert_to", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class DummyConvertTo implements DrillSimpleFunc {
 
+  @Param VarCharHolder in1;
+  @Param VarCharHolder in2;
   @Output VarBinaryHolder out;
 
   @Override
