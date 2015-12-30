@@ -1,25 +1,21 @@
 ---
 title: Starting Drill in Distributed Mode
-date: 2015-12-30 19:09:53 UTC
+date: 2015-12-30 21:59:31 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 
-You start Drill in distributed mode in one of the following ways:
+To use Drill in distributed mode, you first need to start a Drill daemon (Drillbit) on each node in the cluster. Start the Drillbit before attempting to connect a client. To start the Drillbit, use the **drillbit.sh** command.
 
-* Using the **drillbit.sh** command
-* Starting the Drill Shell
-* Using an Ad-Hoc Connection to Drill
+{% include startnote.html %} If you use Drill in embedded mode, do not use the drillbit.sh command. {% include endnote.html %}
 
 ## Using the drillbit.sh Command
-To use Drill in distributed mode, you need to control a Drillbit. If you use Drill in embedded mode, you do not use the **drillbit.sh** command. 
-
-Using the **drillbit.sh** command you can perform the following tasks:
+In addition to starting a Drillbit, you use the **drillbit.sh** command to perform the other tasks:
 
 * Check the status of the Drillbit
-* Start, stop, or restart a Drillbit
+* Stop or restart a Drillbit
 * Configure a Drillbit to restart by default
 
-You can use a configuration file to start Drill. Using such a file is handy for controlling Drillbits on multiple nodes.
+You can use a configuration file to start Drillbits. Using such a file is handy for controlling Drillbits on multiple nodes.
 
 ### drillbit.sh Command Syntax
 
@@ -30,7 +26,8 @@ For example, to restart a Drillbit on a tarball installation, navigate to the Dr
 `bin/drillbit.sh restart`
 
 ## Starting the Drill Shell
-Using the Drill shell, you can connect to data sources and execute SQL commands. To start the Drill shell, run one of the following scripts, which are located in the bin directory of the Drill installation:
+
+Using the Drill shell, you can interactively query data in connected data sources using SQL commands. To start the Drill shell, run one of the following scripts, which are located in the bin directory of the Drill installation:
 
 * `drill-conf`  
   Opens the Drill shell using the connection string to ZooKeeper nodes specified in `drill-override.conf` in `<installation directory>/conf`.  
