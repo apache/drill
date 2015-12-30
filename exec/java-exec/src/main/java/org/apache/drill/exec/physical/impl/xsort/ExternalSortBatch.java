@@ -610,14 +610,14 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SelectionVector2 sv2 = new SelectionVector2(oContext.getAllocator());
     if (!sv2.allocateNewSafe(incoming.getRecordCount())) {
       try {
-        // Not being able to allocate sv2 means this operator's allocator reached it's maximum capacity.
-        // Spilling this.batchGroups won't help here as they are owned by upstream operator,
-        // but spilling spilledBatchGroups may free enough memory
-        final BatchGroup merged = mergeAndSpill(spilledBatchGroups);
+        final BatchGroup merged = mergeAndSpill(batchGroups);
         if (merged != null) {
-          spilledBatchGroups.addFirst(merged);
+          spilledBatchGroups.add(merged);
         } else {
-          throw new OutOfMemoryException("Unable to allocate sv2, and not enough batchGroups to spill");
+          throw new OutOfMemoryException(
+            String.format("Unable to allocate sv2 for %d records, and not enough batchGroups to spill",
+              incoming.getRecordCount())
+          );
         }
       } catch (SchemaChangeException e) {
         throw new RuntimeException(e);
