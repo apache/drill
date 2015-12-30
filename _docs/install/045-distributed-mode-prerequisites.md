@@ -1,6 +1,6 @@
 ---
 title: "Distributed Mode Prerequisites"
-date: 2015-12-30 19:31:38 UTC
+date: 2015-12-30 19:09:53 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 You can install Apache Drill on one or more nodes to

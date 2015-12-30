@@ -1,6 +1,6 @@
 ---
 title: "Embedded Mode Prerequisites"
-date: 2015-12-30 19:31:38 UTC
+date: 2015-12-30 19:09:53 UTC
 parent: "Installing Drill in Embedded Mode"
 ---
 To use Drill only on a single node, install Drill in embedded mode. Installing Drill in embedded mode installs Drill locally on your machine. Embedded mode is a quick way to install and try Drill without having to
