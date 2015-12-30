@@ -1,11 +1,12 @@
 ---
 title: "Install Drill Introduction"
-date:  
+date: 2015-12-30 19:09:53 UTC
 parent: "Install Drill"
 ---
 
-If you installed Drill 1.2 or earlier and generated Parquet files, you need to [migrate the files]({{site.baseurl}}/docs/migrating-parquet-data) for use in later releases as explained in the next section.
+You can install Drill for use in either embedded mode or distributed mode. [Choose embedded mode]({{site.baseurl}}/docs/installing-drill-in-distributed-mode/) to use Drill only on a single node. Installing Drill for use in embedded mode does not require installation of ZooKeeper. Using Drill in embedded mode requires no configuration.
 
-You can install Drill in either embedded mode or distributed mode. Installing
-Drill in embedded mode does not require any configuration. To use Drill in a
-clustered Hadoop environment, install Drill in distributed mode. You need to perform some configuration after installing Drill in distributed mode. After you complete these tasks, connect Drill to your Hive, HBase, or distributed file system data sources, and run queries on them.
+[Choose distributed mode]({{site.baseurl}}/docs/installing-drill-in-distributed-mode/) to use Drill in a clustered Hadoop environment. A clustered (multi-server) installation of ZooKeeper is one of the [prerequisites]({{site.baseurl}}/docs/distributed-mode-prerequisites/). You also need to configure Drill for use in distributed mode. After you complete these tasks, connect Drill to your Hive, HBase, or distributed file system data sources, and run queries on them.
+
+## Using Parquet Files from a Previous Installation
+If you installed Drill 1.2 or earlier and generated Parquet files, you need to [migrate the files]({{site.baseurl}}/docs/migrating-parquet-data) for use in later releases as explained in the next section.

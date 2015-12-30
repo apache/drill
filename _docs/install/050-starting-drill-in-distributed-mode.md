@@ -1,6 +1,6 @@
 ---
 title: Starting Drill in Distributed Mode
-date:  
+date: 2015-12-30 19:09:53 UTC
 parent: "Installing Drill in Distributed Mode"
 ---
 
@@ -64,7 +64,7 @@ Specifying the storage plugin configuration name when you start up eliminates th
 
 The following command starts the Drill shell in a cluster configured to run ZooKeeper on three nodes:
 
-`bin/sqlline –u jdbc:drill:zk=cento23,zk=centos24,zk=centos26:5181`
+`bin/sqlline –u jdbc:drill:zk=cento23,centos24,centos26:5181`
 
 ## Making a Direct Drillbit Connection
 
