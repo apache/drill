@@ -50,7 +50,15 @@ public class UserException extends DrillRuntimeException {
    */
   public static Builder memoryError(final Throwable cause) {
     return UserException.resourceError(cause)
-      .message(MEMORY_ERROR_MSG);
+      .message(MEMORY_ERROR_MSG).addContext("cause", cause.getMessage());
+  }
+
+  public static Builder memoryError(final String message) {
+    Builder builder =  UserException.resourceError();
+    if (!message.isEmpty()) {
+      builder.message(MEMORY_ERROR_MSG).addContext("cause", message);
+    }
+    return builder;
   }
 
   /**
@@ -59,7 +67,7 @@ public class UserException extends DrillRuntimeException {
    * @return resource error builder
    */
   public static Builder memoryError() {
-    return memoryError(null);
+    return memoryError("");
   }
 
   /**
