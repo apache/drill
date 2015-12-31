@@ -95,7 +95,19 @@ public class ColumnReaderFactory {
           return new FixedByteAlignedReader.FixedBinaryReader(recordReader, allocateSize, descriptor, columnChunkMetaData, (VariableWidthVector) v, schemaElement);
         }
       } else if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT32 && convertedType == ConvertedType.DATE){
-        return new FixedByteAlignedReader.DateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+        switch(recordReader.getDateCorruptionStatus()) {
+          case META_SHOWS_CORRUPTION:
+            return new FixedByteAlignedReader.CorruptDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+          case META_SHOWS_NO_CORRUPTION:
+            return new FixedByteAlignedReader.DateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+          case META_UNCLEAR_TEST_VALUES:
+            return new FixedByteAlignedReader.CorruptionDetectingDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+          default:
+            throw new ExecutionSetupException(
+                String.format("Issue setting up parquet reader for date type, " +
+                        "unrecognized date corruption status %s. See DRILL-4203 for more info.",
+                recordReader.getDateCorruptionStatus()));
+        }
       } else{
         if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
           switch (columnChunkMetaData.getType()) {
@@ -144,7 +156,19 @@ public class ColumnReaderFactory {
         return new NullableBitReader(recordReader, allocateSize, descriptor, columnChunkMetaData,
             fixedLength, (NullableBitVector) v, schemaElement);
       } else if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT32 && convertedType == ConvertedType.DATE){
-        return new NullableFixedByteAlignedReaders.NullableDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDateVector) v, schemaElement);
+        switch(recordReader.getDateCorruptionStatus()) {
+          case META_SHOWS_CORRUPTION:
+            return new NullableFixedByteAlignedReaders.NullableCorruptDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDateVector)v, schemaElement);
+          case META_SHOWS_NO_CORRUPTION:
+            return new NullableFixedByteAlignedReaders.NullableDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDateVector) v, schemaElement);
+          case META_UNCLEAR_TEST_VALUES:
+            return new NullableFixedByteAlignedReaders.CorruptionDetectingNullableDateReader(recordReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, (NullableDateVector) v, schemaElement);
+          default:
+            throw new ExecutionSetupException(
+                String.format("Issue setting up parquet reader for date type, " +
+                        "unrecognized date corruption status %s. See DRILL-4203 for more info.",
+                    recordReader.getDateCorruptionStatus()));
+        }
       } else if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
         if (convertedType == ConvertedType.DECIMAL) {
           int length = schemaElement.type_length;

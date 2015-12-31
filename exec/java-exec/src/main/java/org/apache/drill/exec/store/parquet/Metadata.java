@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.TimedRunnable;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.MetadataContext;
@@ -80,6 +82,7 @@ public class Metadata {
   public static final String METADATA_DIRECTORIES_FILENAME = ".drill.parquet_metadata_directories";
 
   private final FileSystem fs;
+  private final ParquetFormatConfig formatConfig;
 
   private ParquetTableMetadataBase parquetTableMetadata;
   private ParquetTableMetadataDirs parquetTableMetadataDirs;
@@ -91,8 +94,8 @@ public class Metadata {
    * @param path
    * @throws IOException
    */
-  public static void createMeta(FileSystem fs, String path) throws IOException {
-    Metadata metadata = new Metadata(fs);
+  public static void createMeta(FileSystem fs, String path, ParquetFormatConfig formatConfig) throws IOException {
+    Metadata metadata = new Metadata(fs, formatConfig);
     metadata.createMetaFilesRecursively(path);
   }
 
@@ -104,9 +107,9 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  public static ParquetTableMetadata_v2 getParquetTableMetadata(FileSystem fs, String path)
+  public static ParquetTableMetadata_v2 getParquetTableMetadata(FileSystem fs, String path, ParquetFormatConfig formatConfig)
       throws IOException {
-    Metadata metadata = new Metadata(fs);
+    Metadata metadata = new Metadata(fs, formatConfig);
     return metadata.getParquetTableMetadata(path);
   }
 
@@ -119,8 +122,8 @@ public class Metadata {
    * @throws IOException
    */
   public static ParquetTableMetadata_v2 getParquetTableMetadata(FileSystem fs,
-      List<FileStatus> fileStatuses) throws IOException {
-    Metadata metadata = new Metadata(fs);
+      List<FileStatus> fileStatuses, ParquetFormatConfig formatConfig) throws IOException {
+    Metadata metadata = new Metadata(fs, formatConfig);
     return metadata.getParquetTableMetadata(fileStatuses);
   }
 
@@ -132,20 +135,21 @@ public class Metadata {
    * @return
    * @throws IOException
    */
-  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
-    Metadata metadata = new Metadata(fs);
+  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs, String path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
+    Metadata metadata = new Metadata(fs, formatConfig);
     metadata.readBlockMeta(path, false, metaContext);
     return metadata.parquetTableMetadata;
   }
 
-  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path, MetadataContext metaContext) throws IOException {
-    Metadata metadata = new Metadata(fs);
+  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs, String path, MetadataContext metaContext, ParquetFormatConfig formatConfig) throws IOException {
+    Metadata metadata = new Metadata(fs, formatConfig);
     metadata.readBlockMeta(path, true, metaContext);
     return metadata.parquetTableMetadataDirs;
   }
 
-  private Metadata(FileSystem fs) {
+  private Metadata(FileSystem fs, ParquetFormatConfig formatConfig) {
     this.fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fs.getConf());
+    this.formatConfig = formatConfig;
   }
 
   /**
@@ -345,6 +349,10 @@ public class Metadata {
 
     List<RowGroupMetadata_v2> rowGroupMetadataList = Lists.newArrayList();
 
+    ArrayList<SchemaPath> ALL_COLS = new ArrayList<>();
+    ALL_COLS.add(AbstractRecordReader.STAR_COLUMN);
+    boolean autoCorrectCorruptDates = formatConfig.autoCorrectCorruptDates;
+    ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS, autoCorrectCorruptDates);
     for (BlockMetaData rowGroup : metadata.getBlocks()) {
       List<ColumnMetadata_v2> columnMetadataList = Lists.newArrayList();
       long length = 0;
@@ -367,9 +375,13 @@ public class Metadata {
         if (statsAvailable) {
           // Write stats only if minVal==maxVal. Also, we then store only maxVal
           Object mxValue = null;
-          if (stats.genericGetMax() != null && stats.genericGetMin() != null && stats.genericGetMax()
-              .equals(stats.genericGetMin())) {
+          if (stats.genericGetMax() != null && stats.genericGetMin() != null &&
+              stats.genericGetMax().equals(stats.genericGetMin())) {
             mxValue = stats.genericGetMax();
+            if (containsCorruptDates == ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION
+                && columnTypeMetadata.originalType == OriginalType.DATE) {
+              mxValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) mxValue);
+            }
           }
           columnMetadata =
               new ColumnMetadata_v2(columnTypeMetadata.name, col.getType(), mxValue, stats.getNumNulls());
@@ -521,7 +533,6 @@ public class Metadata {
    * Check if the parquet metadata needs to be updated by comparing the modification time of the directories with
    * the modification time of the metadata file
    *
-   * @param tableMetadata
    * @param metaFilePath
    * @return
    * @throws IOException
@@ -585,6 +596,7 @@ public class Metadata {
     @JsonIgnore public abstract OriginalType getOriginalType(String[] columnName);
 
     @JsonIgnore public abstract ParquetTableMetadataBase clone();
+    @JsonIgnore public abstract String getDrillVersion();
   }
 
   public static abstract class ParquetFileMetadata {
@@ -617,6 +629,24 @@ public class Metadata {
     public abstract boolean hasSingleValue();
 
     public abstract Object getMaxValue();
+
+    /**
+     * Set the max value recorded in the parquet metadata statistics.
+     *
+     * This object would just be immutable, but due to Drill-4203 we need to correct
+     * date values that had been corrupted by earlier versions of Drill.
+     * @return
+     */
+    public abstract void setMax(Object newMax);
+
+    /**
+     * Set the max value recorded in the parquet metadata statistics.
+     *
+     * This object would just be immutable, but due to Drill-4203 we need to correct
+     * date values that had been corrupted by earlier versions of Drill.
+     * @return
+     */
+    public abstract void setMin(Object newMax);
 
     public abstract PrimitiveTypeName getPrimitiveType();
 
@@ -680,6 +710,10 @@ public class Metadata {
 
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v1(files, directories);
+    }
+    @Override
+    public String getDrillVersion() {
+      return null;
     }
   }
 
@@ -870,7 +904,6 @@ public class Metadata {
       return max;
     }
 
-
   }
 
   /**
@@ -885,9 +918,10 @@ public class Metadata {
     @JsonProperty public ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfo;
     @JsonProperty List<ParquetFileMetadata_v2> files;
     @JsonProperty List<String> directories;
+    @JsonProperty String drillVersion;
 
     public ParquetTableMetadata_v2() {
-      super();
+      this.drillVersion = DrillVersionInfo.getVersion();
     }
 
     public ParquetTableMetadata_v2(ParquetTableMetadataBase parquetTable,
@@ -895,6 +929,7 @@ public class Metadata {
       this.files = files;
       this.directories = directories;
       this.columnTypeInfo = ((ParquetTableMetadata_v2) parquetTable).columnTypeInfo;
+      this.drillVersion = DrillVersionInfo.getVersion();
     }
 
     public ParquetTableMetadata_v2(List<ParquetFileMetadata_v2> files, List<String> directories,
@@ -935,6 +970,11 @@ public class Metadata {
     @JsonIgnore @Override public ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v2(files, directories, columnTypeInfo);
     }
+    @Override
+    public String getDrillVersion() {
+      return drillVersion;
+    }
+
   }
 
 
@@ -1139,6 +1179,11 @@ public class Metadata {
 
     @Override public Object getMaxValue() {
       return mxValue;
+    }
+
+    @Override
+    public void setMin(Object newMin) {
+      // noop - min value not stored in this version of the metadata
     }
 
     @Override public PrimitiveTypeName getPrimitiveType() {

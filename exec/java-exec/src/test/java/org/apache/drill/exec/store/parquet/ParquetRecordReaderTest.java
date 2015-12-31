@@ -639,7 +639,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     for(int i = 0; i < 25; i++) {
       final ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           CodecFactory.createDirectCodecFactory(dfsConfig, new ParquetDirectByteBufferAllocator(allocator), 0),
-          f.getParquetMetadata(), columns);
+          f.getParquetMetadata(), columns, ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
       final Stopwatch watch = Stopwatch.createStarted();
