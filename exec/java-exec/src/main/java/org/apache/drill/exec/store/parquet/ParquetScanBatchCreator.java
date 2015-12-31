@@ -104,6 +104,9 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           logger.trace("ParquetTrace,Read Footer,{},{},{},{},{},{},{}", "", e.getPath(), "", 0, 0, 0, timeToRead);
           footers.put(e.getPath(), footer );
         }
+        boolean autoCorrectCorruptDates = rowGroupScan.formatConfig.autoCorrectCorruptDates;
+        ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footers.get(e.getPath()), rowGroupScan.getColumns(),
+                autoCorrectCorruptDates);
         if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
           readers.add(
               new ParquetRecordReader(
@@ -112,12 +115,13 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
                   fs.getConf(),
                   new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
                   footers.get(e.getPath()),
-                  rowGroupScan.getColumns()
+                  rowGroupScan.getColumns(),
+                  containsCorruptDates
               )
           );
         } else {
           ParquetMetadata footer = footers.get(e.getPath());
-          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs));
+          readers.add(new DrillParquetReader(context, footer, e, columnExplorer.getTableColumns(), fs, containsCorruptDates));
         }
 
         Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(e, rowGroupScan.getSelectionRoot());

@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
@@ -44,7 +45,6 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -87,16 +87,23 @@ public class DrillParquetGroupConverter extends GroupConverter {
   private MapWriter mapWriter;
   private final OutputMutator mutator;
   private final OptionManager options;
+  // See DRILL-4203
+  private final ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates;
 
-  public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema, Collection<SchemaPath> columns, OptionManager options) {
-    this(mutator, complexWriter.rootAsMap(), schema, columns, options);
+  public DrillParquetGroupConverter(OutputMutator mutator, ComplexWriterImpl complexWriter, MessageType schema,
+                                    Collection<SchemaPath> columns, OptionManager options,
+                                    ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+    this(mutator, complexWriter.rootAsMap(), schema, columns, options, containsCorruptedDates);
   }
 
   // This function assumes that the fields in the schema parameter are in the same order as the fields in the columns parameter. The
   // columns parameter may have fields that are not present in the schema, though.
-  public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema, Collection<SchemaPath> columns, OptionManager options) {
+  public DrillParquetGroupConverter(OutputMutator mutator, MapWriter mapWriter, GroupType schema,
+                                    Collection<SchemaPath> columns, OptionManager options,
+                                    ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
     this.mapWriter = mapWriter;
     this.mutator = mutator;
+    this.containsCorruptedDates = containsCorruptedDates;
     converters = Lists.newArrayList();
     this.options = options;
 
@@ -144,10 +151,12 @@ public class DrillParquetGroupConverter extends GroupConverter {
           c.add(s);
         }
         if (rep != Repetition.REPEATED) {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.map(name), type.asGroupType(), c, options);
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(
+              mutator, mapWriter.map(name), type.asGroupType(), c, options, containsCorruptedDates);
           converters.add(converter);
         } else {
-          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(mutator, mapWriter.list(name).map(), type.asGroupType(), c, options);
+          DrillParquetGroupConverter converter = new DrillParquetGroupConverter(
+              mutator, mapWriter.list(name).map(), type.asGroupType(), c, options, containsCorruptedDates);
           converters.add(converter);
         }
       } else {
@@ -173,7 +182,19 @@ public class DrillParquetGroupConverter extends GroupConverter {
           }
           case DATE: {
             DateWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).date() : mapWriter.date(name);
-            return new DrillDateConverter(writer);
+            switch(containsCorruptedDates) {
+              case META_SHOWS_CORRUPTION:
+                return new DrillCorruptedDateConverter(writer);
+              case META_SHOWS_NO_CORRUPTION:
+                return new DrillDateConverter(writer);
+              case META_UNCLEAR_TEST_VALUES:
+                return new CorruptionDetectingDateConverter(writer);
+              default:
+                throw new DrillRuntimeException(
+                    String.format("Issue setting up parquet reader for date type, " +
+                            "unrecognized date corruption status %s. See DRILL-4203 for more info.",
+                        containsCorruptedDates));
+            }
           }
           case TIME_MILLIS: {
             TimeWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).time() : mapWriter.time(name);
@@ -325,6 +346,40 @@ public class DrillParquetGroupConverter extends GroupConverter {
     }
   }
 
+  public static class CorruptionDetectingDateConverter extends PrimitiveConverter {
+    private DateWriter writer;
+    private DateHolder holder = new DateHolder();
+
+    public CorruptionDetectingDateConverter(DateWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addInt(int value) {
+      if (value > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+        holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT);
+      } else {
+        holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY);
+      }
+      writer.write(holder);
+    }
+  }
+
+  public static class DrillCorruptedDateConverter extends PrimitiveConverter {
+    private DateWriter writer;
+    private DateHolder holder = new DateHolder();
+
+    public DrillCorruptedDateConverter(DateWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addInt(int value) {
+      holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT);
+      writer.write(holder);
+    }
+  }
+
   public static class DrillDateConverter extends PrimitiveConverter {
     private DateWriter writer;
     private DateHolder holder = new DateHolder();
@@ -335,7 +390,7 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addInt(int value) {
-      holder.value = DateTimeUtils.fromJulianDay(value - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5);
+      holder.value = DateTimeUtils.fromJulianDay(value + ParquetReaderUtility.SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY);
       writer.write(holder);
     }
   }

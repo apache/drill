@@ -156,12 +156,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "Date">
     <#if mode.prefix == "Repeated" >
       reader.read(i, holder);
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) - JULIAN_DAY_EPOC));
     <#else>
       consumer.startField(fieldName, fieldId);
       reader.read(holder);
       // convert from internal Drill date format to Julian Day centered around Unix Epoc
-      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) + JULIAN_DAY_EPOC));
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(holder.value) - JULIAN_DAY_EPOC));
       consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif

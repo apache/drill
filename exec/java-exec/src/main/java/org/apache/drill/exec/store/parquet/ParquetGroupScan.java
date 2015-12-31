@@ -43,7 +43,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.DrillPathFilter;
@@ -81,10 +80,10 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.joda.time.DateTimeUtils;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
-import org.joda.time.DateTimeUtils;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -394,6 +393,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return columnTypeMap.get(schemaPath);
   }
 
+  // Map from file names to maps of column name to partition value mappings
   private Map<String, Map<SchemaPath, Object>> partitionValueMap = Maps.newHashMap();
 
   public void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
@@ -479,7 +479,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       case DATE: {
         NullableDateVector dateVector = (NullableDateVector) v;
         Integer value = (Integer) partitionValueMap.get(f).get(column);
-        dateVector.getMutator().setSafe(index, DateTimeUtils.fromJulianDay(value - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+        dateVector.getMutator().setSafe(index, DateTimeUtils.fromJulianDay(
+            value + ParquetReaderUtility.SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY));
         return;
       }
       case TIME: {
@@ -582,7 +583,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     // we only select the files that are part of selection (by setting fileSet appropriately)
 
     // get (and set internal field) the metadata for the directory by reading the metadata file
-    this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString(), selection.getMetaContext());
+    this.parquetTableMetadata = Metadata.readBlockMeta(fs, metaFilePath.toString(), selection.getMetaContext(), formatConfig);
+    if (formatConfig.autoCorrectCorruptDates) {
+      ParquetReaderUtility.correctDatesInMetadataCache(this.parquetTableMetadata);
+    }
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
     if (fileSet == null) {
@@ -616,7 +620,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         if (status.isDirectory()) {
           //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(status.getPath(), Metadata.METADATA_FILENAME);
-          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString(), selection.getMetaContext());
+          final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString(), selection.getMetaContext(), formatConfig);
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
             fileSet.add(file.getPath());
           }
@@ -664,9 +668,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       }
       if (metaPath != null && fs.exists(metaPath)) {
         usedMetadataCache = true;
-        parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext);
+        if (parquetTableMetadata == null) {
+          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
+        }
       } else {
-        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString());
+        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, p.toString(), formatConfig);
       }
     } else {
       Path p = Path.getPathWithoutSchemeAndAuthority(new Path(selectionRoot));
@@ -674,17 +680,25 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       if (fs.isDirectory(new Path(selectionRoot)) && fs.exists(metaPath)) {
         usedMetadataCache = true;
         if (parquetTableMetadata == null) {
-          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext);
+          parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
         }
         if (fileSet != null) {
-          parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+          if (parquetTableMetadata == null) {
+            parquetTableMetadata = removeUnneededRowGroups(Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig));
+          } else {
+            parquetTableMetadata = removeUnneededRowGroups(parquetTableMetadata);
+          }
+        } else {
+          if (parquetTableMetadata == null) {
+            parquetTableMetadata = Metadata.readBlockMeta(fs, metaPath.toString(), metaContext, formatConfig);
+          }
         }
       } else {
         final List<FileStatus> fileStatuses = Lists.newArrayList();
         for (ReadEntryWithPath entry : entries) {
           getFiles(entry.getPath(), fileStatuses);
         }
-        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses);
+        parquetTableMetadata = Metadata.getParquetTableMetadata(fs, fileStatuses, formatConfig);
       }
     }
 

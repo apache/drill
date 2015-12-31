@@ -732,8 +732,8 @@ public class DrillTestWrapper {
           sb.append(printRecord(actualRecords.get(actualRecordDisplayCount)));
         }
         String actualRecordExamples = sb.toString();
-        throw new Exception(String.format("After matching %d records, did not find expected record in result set: %s\n\n" +
-            "Some examples of expected records:%s\n\n Some examples of records returned by the test query:%s",
+        throw new Exception(String.format("After matching %d records, did not find expected record in result set:\n %s\n\n" +
+            "Some examples of expected records:\n%s\n\n Some examples of records returned by the test query:\n%s",
             counter, printRecord(expectedRecord), expectedRecordExamples, actualRecordExamples));
       } else {
         actualRecords.remove(i);
