@@ -27,6 +27,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -40,13 +41,19 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
+import org.apache.drill.exec.store.parquet.ParquetRecordWriter;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.SemanticVersion;
+import org.apache.parquet.VersionParser;
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.statistics.Statistics;
+import org.apache.parquet.format.ConvertedType;
 import org.apache.parquet.format.FileMetaData;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
@@ -109,18 +116,21 @@ public class ParquetRecordReader extends AbstractRecordReader {
   int rowGroupIndex;
   long totalRecordsRead;
   private final FragmentContext fragmentContext;
+  ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus;
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
 
   public ParquetRecordReader(FragmentContext fragmentContext,
-      String path,
-      int rowGroupIndex,
-      FileSystem fs,
-      CodecFactory codecFactory,
-      ParquetMetadata footer,
-      List<SchemaPath> columns) throws ExecutionSetupException {
+                             String path,
+                             int rowGroupIndex,
+                             FileSystem fs,
+                             CodecFactory codecFactory,
+                             ParquetMetadata footer,
+                             List<SchemaPath> columns,
+                             ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
+                             throws ExecutionSetupException {
     this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactory, footer,
-        columns);
+        columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(
@@ -131,15 +141,27 @@ public class ParquetRecordReader extends AbstractRecordReader {
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
-      List<SchemaPath> columns) throws ExecutionSetupException {
+      List<SchemaPath> columns,
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
     this.hadoopPath = new Path(path);
     this.fileSystem = fs;
     this.codecFactory = codecFactory;
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
     this.footer = footer;
+    this.dateCorruptionStatus = dateCorruptionStatus;
     this.fragmentContext = fragmentContext;
     setColumns(columns);
+  }
+
+  /**
+   * Flag indicating if the old non-standard data format appears
+   * in this file, see DRILL-4203.
+   *
+   * @return true if the dates are corrupted and need to be corrected
+   */
+  public ParquetReaderUtility.DateCorruptionStatus getDateCorruptionStatus() {
+    return dateCorruptionStatus;
   }
 
   public CodecFactory getCodecFactory() {
@@ -207,6 +229,31 @@ public class ParquetRecordReader extends AbstractRecordReader {
     return operatorContext;
   }
 
+  /**
+   * Returns data type length for a given {@see ColumnDescriptor} and it's corresponding
+   * {@see SchemaElement}. Neither is enough information alone as the max
+   * repetition level (indicating if it is an array type) is in the ColumnDescriptor and
+   * the length of a fixed width field is stored at the schema level.
+   *
+   * @param column
+   * @param se
+   * @return the length if fixed width, else -1
+   */
+  private int getDataTypeLength(ColumnDescriptor column, SchemaElement se) {
+    if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
+      if (column.getMaxRepetitionLevel() > 0) {
+        return -1;
+      }
+      if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+        return se.getType_length() * 8;
+      } else {
+        return getTypeLengthInBits(column.getType());
+      }
+    } else {
+      return -1;
+    }
+  }
+
   @Override
   public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = operatorContext;
@@ -233,16 +280,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
     // TODO - figure out how to deal with this better once we add nested reading, note also look where this map is used below
     // store a map from column name to converted types if they are non-null
-    HashMap<String, SchemaElement> schemaElements = new HashMap<>();
-    fileMetaData = new ParquetMetadataConverter().toParquetMetadata(ParquetFileWriter.CURRENT_VERSION, footer);
-    for (SchemaElement se : fileMetaData.getSchema()) {
-      schemaElements.put(se.getName(), se);
-    }
+    Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
 
     // loop to add up the length of the fixed width columns and build the schema
     for (int i = 0; i < columns.size(); ++i) {
       column = columns.get(i);
-      logger.debug("name: " + fileMetaData.getSchema().get(i).name);
       SchemaElement se = schemaElements.get(column.getPath()[0]);
       MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
           getDataMode(column), se, fragmentContext.getOptions());
@@ -251,18 +293,11 @@ public class ParquetRecordReader extends AbstractRecordReader {
         continue;
       }
       columnsToScan++;
-      // sum the lengths of all of the fixed length fields
-      if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
-        if (column.getMaxRepetitionLevel() > 0) {
-          allFieldsFixedLength = false;
-        }
-        if (column.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
-            bitWidthAllFixedFields += se.getType_length() * 8;
-        } else {
-          bitWidthAllFixedFields += getTypeLengthInBits(column.getType());
-        }
-      } else {
+      int dataTypeLength = getDataTypeLength(column, se);
+      if (dataTypeLength == -1) {
         allFieldsFixedLength = false;
+      } else {
+        bitWidthAllFixedFields += dataTypeLength;
       }
     }
 //    rowGroupOffset = footer.getBlocks().get(rowGroupIndex).getColumns().get(0).getFirstDataPageOffset();
