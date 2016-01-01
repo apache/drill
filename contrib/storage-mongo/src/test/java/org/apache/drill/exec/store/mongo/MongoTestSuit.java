@@ -115,6 +115,7 @@ public class MongoTestSuit implements MongoTestConstants {
         throw new Exception(" Error while starting shrded cluster. ", e);
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
     }
 
     private static IMongodConfig crateConfigServerConfig(int configServerPort,
@@ -187,6 +188,7 @@ public class MongoTestSuit implements MongoTestConstants {
       mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
+      createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
     }
 
     private static void cleanup() {
