@@ -17,6 +17,13 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -26,11 +33,15 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.FutureBitCommand;
 import org.apache.drill.exec.rpc.ListeningCommand;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.Parser;
 
 
 public class ControlTunnel {
@@ -176,4 +187,165 @@ public class ControlTunnel {
       connection.send(outcomeListener, RpcType.REQ_QUERY_CANCEL, queryId, Ack.class);
     }
   }
+
+  public <SEND extends Message, RECEIVE extends Message> CustomTunnel<SEND, RECEIVE> getCustomTunnel(
+      int messageTypeId, Class<SEND> clazz, Parser<RECEIVE> parser) {
+    return new CustomTunnel<SEND, RECEIVE>(messageTypeId, parser);
+  }
+
+  private static class CustomMessageSender extends ListeningCommand<CustomMessage, ControlConnection> {
+
+    private CustomMessage message;
+    private ByteBuf[] dataBodies;
+
+    public CustomMessageSender(RpcOutcomeListener<CustomMessage> listener, CustomMessage message, ByteBuf[] dataBodies) {
+      super(listener);
+      this.message = message;
+      this.dataBodies = dataBodies;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+    }
+
+  }
+
+  private static class SyncCustomMessageSender extends FutureBitCommand<CustomMessage, ControlConnection> {
+
+    private CustomMessage message;
+    private ByteBuf[] dataBodies;
+
+    public SyncCustomMessageSender(CustomMessage message, ByteBuf[] dataBodies) {
+      super();
+      this.message = message;
+      this.dataBodies = dataBodies;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<CustomMessage> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_CUSTOM, message, CustomMessage.class, dataBodies);
+    }
+  }
+
+  /**
+   * A class used to return a synchronous future when doing custom rpc messages.
+   * @param <RECEIVE>
+   *          The type of message that will be returned.
+   */
+  public class CustomFuture<RECEIVE> {
+
+    private Parser<RECEIVE> parser;
+    private DrillRpcFuture<CustomMessage> future;
+
+    public CustomFuture(Parser<RECEIVE> parser, DrillRpcFuture<CustomMessage> future) {
+      super();
+      this.parser = parser;
+      this.future = future;
+    }
+
+    public RECEIVE get() throws RpcException, InvalidProtocolBufferException {
+      CustomMessage message = future.checkedGet();
+      return parser.parseFrom(message.getMessage());
+    }
+
+    public RECEIVE get(long timeout, TimeUnit unit) throws RpcException, TimeoutException,
+        InvalidProtocolBufferException {
+      CustomMessage message = future.checkedGet(timeout, unit);
+      return parser.parseFrom(message.getMessage());
+    }
+
+    public DrillBuf getBuffer() throws RpcException {
+      return (DrillBuf) future.getBuffer();
+    }
+
+  }
+
+  /**
+   * A special tunnel that can be used for custom types of messages. Its lifecycle is tied to the underlying
+   * ControlTunnel.
+   * @param <SEND>
+   *          The type of message the control tunnel will be able to send.
+   * @param <RECEIVE>
+   *          The expected response the control tunnel expects to receive.
+   */
+  public class CustomTunnel<SEND extends Message, RECEIVE extends Message> {
+    private int messageTypeId;
+    private Parser<RECEIVE> parser;
+
+    private CustomTunnel(int messageTypeId, Parser<RECEIVE> parser) {
+      super();
+      this.messageTypeId = messageTypeId;
+      this.parser = parser;
+    }
+
+    /**
+     * Send a message and receive a future for monitoring the outcome.
+     * @param messageToSend
+     *          The structured message to send.
+     * @param dataBodies
+     *          One or more optional unstructured messages to append to the structure message.
+     * @return The CustomFuture that can be used to wait for the response.
+     */
+    public CustomFuture<RECEIVE> send(SEND messageToSend, ByteBuf... dataBodies) {
+      final CustomMessage customMessage = CustomMessage.newBuilder()
+          .setMessage(messageToSend.toByteString())
+          .setType(messageTypeId)
+          .build();
+      final SyncCustomMessageSender b = new SyncCustomMessageSender(customMessage, dataBodies);
+      manager.runCommand(b);
+      DrillRpcFuture<CustomMessage> innerFuture = b.getFuture();
+      return new CustomFuture<RECEIVE>(parser, innerFuture);
+    }
+
+    /**
+     * Send a message using a custom listener.
+     * @param listener
+     *          The listener to inform of the outcome of the sent message.
+     * @param messageToSend
+     *          The structured message to send.
+     * @param dataBodies
+     *          One or more optional unstructured messages to append to the structure message.
+     */
+    public void send(RpcOutcomeListener<RECEIVE> listener, SEND messageToSend, ByteBuf... dataBodies) {
+      final CustomMessage customMessage = CustomMessage.newBuilder()
+          .setMessage(messageToSend.toByteString())
+          .setType(messageTypeId)
+          .build();
+      manager.runCommand(new CustomMessageSender(new CustomTunnelListener(listener), customMessage, dataBodies));
+    }
+
+    private class CustomTunnelListener implements RpcOutcomeListener<CustomMessage> {
+      final RpcOutcomeListener<RECEIVE> innerListener;
+
+      public CustomTunnelListener(RpcOutcomeListener<RECEIVE> innerListener) {
+        super();
+        this.innerListener = innerListener;
+      }
+
+      @Override
+      public void failed(RpcException ex) {
+        innerListener.failed(ex);
+      }
+
+      @Override
+      public void success(CustomMessage value, ByteBuf buffer) {
+        try {
+          RECEIVE message = parser.parseFrom(value.getMessage());
+          innerListener.success(message, buffer);
+        } catch (InvalidProtocolBufferException e) {
+          innerListener.failed(new RpcException("Failure while parsing message locally.", e));
+        }
+
+      }
+
+      @Override
+      public void interrupted(InterruptedException e) {
+        innerListener.interrupted(e);
+      }
+
+    }
+  }
+
+
 }
