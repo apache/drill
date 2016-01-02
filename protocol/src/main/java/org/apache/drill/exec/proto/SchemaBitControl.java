@@ -499,6 +499,125 @@ public final class SchemaBitControl
         }
     }
 
+    public static final class CustomMessage
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.CustomMessage>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.CustomMessage message) throws java.io.IOException
+            {
+                if(message.hasType())
+                    output.writeInt32(1, message.getType(), false);
+                if(message.hasMessage())
+                    output.writeByteArray(2, message.getMessage().toByteArray(), false);
+
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.CustomMessage message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.CustomMessage> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.CustomMessage message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitControl.CustomMessage newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.BitControl.CustomMessage.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.BitControl.CustomMessage.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setType(input.readInt32());
+                            break;
+                        case 2:
+                            builder.setMessage(com.google.protobuf.ByteString.copyFrom(input.readByteArray()));
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitControl.CustomMessage.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitControl.CustomMessage.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitControl.CustomMessage.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitControl.CustomMessage.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitControl.CustomMessage.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.BitControl.CustomMessage.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "type";
+                case 2: return "message";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("type", 1);
+            fieldMap.put("message", 2);
+        }
+    }
+
     public static final class PlanFragment
     {
         public static final org.apache.drill.exec.proto.SchemaBitControl.PlanFragment.MessageSchema WRITE =
