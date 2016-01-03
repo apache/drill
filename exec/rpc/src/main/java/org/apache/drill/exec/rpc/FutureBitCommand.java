@@ -55,6 +55,7 @@ public abstract class FutureBitCommand<T extends MessageLite, C extends RemoteCo
 
     @Override
     public void success(T value, ByteBuf buf) {
+      parentFuture.setBuffer(buf);
       settableFuture.set(value);
     }
 
