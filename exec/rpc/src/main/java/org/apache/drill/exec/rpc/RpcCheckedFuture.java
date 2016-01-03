@@ -30,7 +30,7 @@ public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> 
     super(delegate);
   }
 
-  public void set(T obj, ByteBuf buffer){
+  public void setBuffer(ByteBuf buffer) {
     this.buffer = buffer;
   }
 
@@ -41,7 +41,7 @@ public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> 
 
   @Override
   public ByteBuf getBuffer() {
-    return null;
+    return buffer;
   }
 
 }
