@@ -44,6 +44,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
+import org.ojai.Document;
 import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
@@ -56,7 +57,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mapr.db.DBDocument;
 import com.mapr.db.MapRDB;
 import com.mapr.db.Table;
 import com.mapr.db.Table.TableOption;
@@ -83,7 +83,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   private DrillBuf buffer;
 
-  private DocumentStream<DBDocument> documentStream;
+  private DocumentStream<Document> documentStream;
 
   private Iterator<DocumentReader> documentReaderIterators;
   
@@ -237,12 +237,12 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         break;
       case DECIMAL:
         throw new UnsupportedOperationException("Decimals are currently not supported.");
-      //case DATE:
-      //  map.date(fieldName).writeDate(reader.getDate().getTime());
-      //  break;
-      //case TIME:
-      //  map.time(fieldName).writeTime(reader.getTimeInt());
-      //  break;
+      case DATE:
+        map.date(fieldName).writeDate(reader.getDate().toDate().getTime());
+        break;
+      case TIME:
+        map.time(fieldName).writeTime(reader.getTimeInt());
+        break;
       case TIMESTAMP:
         map.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
         break;
@@ -302,9 +302,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         break;
       case DECIMAL:
         throw new UnsupportedOperationException("Decimals are currently not supported.");
-      //case DATE:
-      //  list.date().writeDate(reader.getDate().getTime());
-      //  break;
+      case DATE:
+        list.date().writeDate(reader.getDate().toDate().getTime());
+        break;
       case TIME:
         list.time().writeTime(reader.getTimeInt());
         break;

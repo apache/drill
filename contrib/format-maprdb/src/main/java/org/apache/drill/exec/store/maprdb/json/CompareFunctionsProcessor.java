@@ -1,11 +1,5 @@
 package org.apache.drill.exec.store.maprdb.json;
 
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.TimeZone;
-
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -16,16 +10,15 @@ import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.ojai.Value;
-
-import static org.ojai.util.Constants.MILLISECONDSPERDAY;
+import org.ojai.types.ODate;
+import org.ojai.types.OTime;
+import org.ojai.types.OTimestamp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -141,19 +134,19 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     }
 /*
     if (valueArg instanceof DateExpression) {
-      this.value = KeyValueBuilder.initFrom(new Date(((DateExpression)valueArg).getDate()));
+      this.value = KeyValueBuilder.initFrom(new ODate(((DateExpression)valueArg).getDate()));
       this.path = path;
       return true;
     }
 
     if (valueArg instanceof TimeExpression) {
-      this.value = KeyValueBuilder.initFrom(new Time(((TimeExpression)valueArg).getTime()));
+      this.value = KeyValueBuilder.initFrom(new OTime(((TimeExpression)valueArg).getTime()));
       this.path = path;
       return true;
     }
 
     if (valueArg instanceof TimeStampExpression) {
-      this.value = KeyValueBuilder.initFrom(new Timestamp(((TimeStampExpression)valueArg).getTimeStamp()));
+      this.value = KeyValueBuilder.initFrom(new OTimestamp(((TimeStampExpression)valueArg).getTimeStamp()));
       this.path = path;
       return true;
     }
