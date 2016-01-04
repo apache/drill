@@ -32,6 +32,9 @@ import org.apache.drill.exec.compile.CodeCompilerTestFactory;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OpProfileDef;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -42,6 +45,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
@@ -80,8 +84,11 @@ public class TestRecordIterator extends PopUnitTestBase {
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 
     RecordBatch singleBatch = exec.getIncoming();
-    RecordIterator iter = new RecordIterator(singleBatch, null,
-      exec.getContext().newOperatorContext(operatorList.iterator().next(), true), 0, false);
+    PhysicalOperator dummyPop = operatorList.iterator().next();
+    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+      OperatorContext.getChildCount(dummyPop));
+    OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
+    RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, false);
     int totalRecords = 0;
     List<ValueVector> vectors = null;
 
@@ -140,9 +147,11 @@ public class TestRecordIterator extends PopUnitTestBase {
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) operatorList.iterator().next()));
 
     RecordBatch singleBatch = exec.getIncoming();
-    RecordIterator iter = new RecordIterator(singleBatch, null,
-      exec.getContext().newOperatorContext(operatorList.iterator().next(), true), 0);
-    int totalRecords = 0;
+    PhysicalOperator dummyPop = operatorList.iterator().next();
+    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+      OperatorContext.getChildCount(dummyPop));
+    OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
+    RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0);
     List<ValueVector> vectors = null;
     // batche sizes
     // 1, 100, 10, 10000, 1, 1000
