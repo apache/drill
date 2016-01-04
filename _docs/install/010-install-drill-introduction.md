@@ -1,10 +1,10 @@
 ---
 title: "Install Drill Introduction"
-date: 2015-12-30 19:09:53 UTC
+date: 2016-01-04 16:12:23 UTC
 parent: "Install Drill"
 ---
 
-You can install Drill for use in either embedded mode or distributed mode. [Choose embedded mode]({{site.baseurl}}/docs/installing-drill-in-distributed-mode/) to use Drill only on a single node. Installing Drill for use in embedded mode does not require installation of ZooKeeper. Using Drill in embedded mode requires no configuration.
+You can install Drill for use in either embedded mode or distributed mode. [Choose embedded mode]({{site.baseurl}}/docs/installing-drill-in-embedded-mode/) to use Drill only on a single node. Installing Drill for use in embedded mode does not require installation of ZooKeeper. Using Drill in embedded mode requires no configuration.
 
 [Choose distributed mode]({{site.baseurl}}/docs/installing-drill-in-distributed-mode/) to use Drill in a clustered Hadoop environment. A clustered (multi-server) installation of ZooKeeper is one of the [prerequisites]({{site.baseurl}}/docs/distributed-mode-prerequisites/). You also need to configure Drill for use in distributed mode. After you complete these tasks, connect Drill to your Hive, HBase, or distributed file system data sources, and run queries on them.
 
