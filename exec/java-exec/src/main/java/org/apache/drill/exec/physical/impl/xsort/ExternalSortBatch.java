@@ -374,7 +374,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 // If we haven't spilled so far, make sure we don't exceed the maximum number of batches SV4 can address
                 (spillCount == 0 && totalBatches > Character.MAX_VALUE) ||
                 // current memory used is more than 95% of memory usage limit of this operator
-                (oAllocator.getAllocatedMemory() > .95 * oAllocator.getLimit()) || //TODO should we just use oAllocator.isOverLimit() ?
+                (oAllocator.getAllocatedMemory() > .95 * oAllocator.getLimit()) ||
                 // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
                 // since the last spill exceed the defined limit
                 (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE)) {
