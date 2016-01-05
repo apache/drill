@@ -139,7 +139,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       this.path = path;
       return true;
     }
-
+/*
     if (valueArg instanceof DateExpression) {
       this.value = KeyValueBuilder.initFrom(new Date(((DateExpression)valueArg).getDate()));
       this.path = path;
@@ -157,7 +157,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       this.path = path;
       return true;
     }
-
+*/
     return false;
   }
 

@@ -232,12 +232,12 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         break;
       case DECIMAL:
         throw new UnsupportedOperationException("Decimals are currently not supported.");
-      case DATE:
-        map.date(fieldName).writeDate(reader.getDate().getTime());
-        break;
-      case TIME:
-        map.time(fieldName).writeTime(reader.getTimeInt());
-        break;
+      //case DATE:
+      //  map.date(fieldName).writeDate(reader.getDate().getTime());
+      //  break;
+      //case TIME:
+      //  map.time(fieldName).writeTime(reader.getTimeInt());
+      //  break;
       case TIMESTAMP:
         map.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
         break;
@@ -297,9 +297,9 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         break;
       case DECIMAL:
         throw new UnsupportedOperationException("Decimals are currently not supported.");
-      case DATE:
-        list.date().writeDate(reader.getDate().getTime());
-        break;
+      //case DATE:
+      //  list.date().writeDate(reader.getDate().getTime());
+      //  break;
       case TIME:
         list.time().writeTime(reader.getTimeInt());
         break;
