@@ -584,11 +584,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         if (merged != null) {
           spilledBatchGroups.add(merged);
         } else {
-          final String message = String.format(
-            "Unable to allocate sv2 for %d records, and not enough batchGroups to spill.",
-            incoming.getRecordCount());
-
-          throw UserException.memoryError(message)
+          throw UserException.memoryError("Unable to allocate sv2 for %d records, and not enough batchGroups to spill.",
+              incoming.getRecordCount())
             .addContext("batchGroups.size", batchGroups.size())
             .addContext("spilledBatchGroups.size", spilledBatchGroups.size())
             .addContext("allocated memory", oAllocator.getAllocatedMemory())
