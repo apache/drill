@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Impersonation with Hive Authorization"
-date:  
+date: 2016-01-05
 parent: "Configure Drill"
 ---
 As of Drill 1.1, you can enable impersonation in Drill and configure authorization in Hive version 1.0 to authorize access to metadata in the Hive metastore repository and data in the Hive warehouse. Impersonation allows a service to act on behalf of a client while performing the action requested by the client. See [Configuring User Impersonation]({{site.baseurl}}/docs/configuring-user-impersonation).
@@ -11,7 +11,7 @@ There are two types of Hive authorizations that you can configure to work with i
 
 You can configure Hive SQL standard based authorization in Hive version 1.0 to work with impersonation in Drill 1.1. The SQL standard based authorization model can control which users have access to columns, rows, and views. Users with the appropriate permissions can issue the GRANT and REVOKE statements to manage privileges from Hive.
 
-For more information, see [SQL Standard Based Hive Authorization](https://cwiki.apache.org/confluence/display/HELIX/SQL+Standard+Based+Hive+Authorization).  
+For more information, see [SQL Standard Based Hive Authorization](https://cwiki.apache.org/confluence/display/HIVE/SQL+Standard+Based+Hive+Authorization).  
 
 ## Storage Based Authorization  
   

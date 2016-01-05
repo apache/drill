@@ -19,7 +19,7 @@ To automatically add the last-modified-on date, a one-time local setup is requir
           # Contents of .git/hooks/pre-commit
 
           git diff --cached --name-status | grep "^M" | while read a b; do
-            cat $b | sed "/---.*/,/---.*/s/^date:.*$/date: $(date -u "+%Y-%m-%d %T %Z")/" > tmp
+            cat $b | sed "/---.*/,/---.*/s/^date:.*$/date: $(date -u "+%Y-%m-%d")/" > tmp
             mv tmp $b
             git add $b
           done
@@ -69,9 +69,10 @@ The updates should then be live: <http://drill.apache.org>.
 
 # Documentation Guidelines
 
-The documentation pages are under `_docs`. Each file, in its YAML front matter, has two important parameters:
+The documentation pages are under `_docs`. Most files, in the YAML front matter, have three important parameters:
 
-* title - This is the title of the page. Each page must have a *unique* title
+* title: - This is the title of the page enclosed in quotation marks. Each page must have a *unique* title
+* date: - This field is needed for Jekyll to write a last-modified date. Initially, leave this field blank.
 * parent - This is the title of the page's parent page. It should be empty for top-level sections/guides, and be identical to the title attribute of another page in all other cases.
 
 The name of the file itself doesn't matter except for the alphanumeric order of the filenames. Files that share the same parent are ordered alphanumerically. Note that the content of parent files is ignored, so add an overview/introduction child when needed.

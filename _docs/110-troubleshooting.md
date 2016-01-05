@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-date:  
+date: 2016-01-05
 ---
 
 You may experience certain known issues when using Drill. This document lists some known issues and resolutions for each.
@@ -17,7 +17,7 @@ Issue the following query to identify the node running as the Foreman:
 
 ### Identify the Drill Version
 Issue the following query to identify the version of Drill running in your cluster:  
-`SELECT commit_id FROM sys.version;`
+`SELECT version FROM sys.version;`
 
 ### Enable Verbose Errors
 You can enable the verbose errors option for a more detailed error print-out.
