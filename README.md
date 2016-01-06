@@ -11,6 +11,8 @@ jekyll serve --config _config.yml,_config-prod.yml
 ```
 Note that you can skip the first two commands (and only run `jekyll serve`) if you haven't changed the title or path of any of the documentation pages.
 
+## One Time Setup for Last-Modified-Date
+
 To automatically add the last-modified-on date, a one-time local setup is required:
 
 1.  In your cloned directory of Drill, in drill/.git/hooks, create a file named pre-commit (no extension) that contains this script:
@@ -28,7 +30,7 @@ To automatically add the last-modified-on date, a one-time local setup is requir
 
           chmod +x pre-commit
 
-In addition to the title: and parent:, you now need to add date: to the front matter of any file you create. For example:
+On any page you create, in addition to the title: and parent:, you now need to add date: to the front matter of any file you create. For example:
 
           ---
           title: "Configuring Multitenant Resources"
@@ -36,7 +38,23 @@ In addition to the title: and parent:, you now need to add date: to the front ma
           date: 
           ---
 
-Do not fill in or alter the date: field. Jekyll and git take care of that when you commit the file. 
+Do not fill in or alter the date: field. Jekyll and git take care of that when you commit the file.  
+
+## One Time Setup for Redirecting gh-pages
+
+Locally install the jekyll-redirect-from gem:
+
+     gem install jekyll-redirect-from
+
+On any page you want to redirect, add the redirect_to: and the URL to the front matter. For example:
+
+          ---
+          title: "Configuring Multitenant Resources"
+          parent: "Configuring a Multitenant Cluster"
+          date: 
+          redirect_to:
+            - http://<new_url>
+          ---
 
 # Compiling the Website
 
