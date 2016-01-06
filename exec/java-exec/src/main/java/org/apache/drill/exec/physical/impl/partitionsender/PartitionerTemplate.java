@@ -230,7 +230,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     private final OperatorStats stats;
 
     private boolean isLast = false;
-    private volatile boolean terminated = false;
     private boolean dropAll = false;
     private int recordCount;
     private int totalRecords;
@@ -256,7 +255,8 @@ public abstract class PartitionerTemplate implements Partitioner {
 
     @Override
     public void terminate() {
-      terminated = true;
+      // receiver already terminated, don't send anything to it from now on
+      dropAll = true;
     }
 
     @RuntimeOverridden
@@ -286,7 +286,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       //      sender has acknowledged the terminate request. After sending the last batch, all further batches are
       //      dropped.
       //   3. Partitioner thread is interrupted due to cancellation of fragment.
-      final boolean isLastBatch = isLast || terminated || Thread.currentThread().isInterrupted();
+      final boolean isLastBatch = isLast || Thread.currentThread().isInterrupted();
 
       // if the batch is not the last batch and the current recordCount is zero, then no need to send any RecordBatches
       if (!isLastBatch && recordCount == 0) {
