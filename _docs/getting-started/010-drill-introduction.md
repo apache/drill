@@ -19,7 +19,7 @@ Drill 1.4 introduces the following improvements:
 * A variable to set non-pretty, such as compact, printing of JSON
 * Better drillbit.log files that include query text
 
-Drill 1.4 fixes an error that occurred when using the HBaseStorageHandler in a Hive query ([DRILL-3739](https://issues.apache.org/jira/browse/DRILL-3739)). To successfully use the HBaseStorageHandler in a Hive query, you need to configure the Hive storage plugin as described in the [Hive storage plugin documentation]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore).
+Drill 1.4 fixes an error that occurred when you query a Hive table using the HBaseStorageHandler ([DRILL-3739](https://issues.apache.org/jira/browse/DRILL-3739)). To successfully query a Hive table using the HBaseStorageHandler, you need to configure the Hive storage plugin as described in the [Hive storage plugin documentation]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore).
 
 ## What's New in Apache Drill 1.3 
 This releases fix issues and add a number of enhancements, including the following ones:
