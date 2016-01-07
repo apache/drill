@@ -1,6 +1,6 @@
 ---
 title: "JSON Data Model"
-date:  
+date: 2016-01-07
 parent: "Data Sources and File Formats"
 ---
 Drill supports [JSON (JavaScript Object Notation)](http://www.json.org/), a self-describing data format. The data itself implies its schema and has the following characteristics:
@@ -50,7 +50,7 @@ The default setting of `store.json.all_text_mode` and `store.json.read_numbers_a
 ### Handling Type Differences
 Set the `store.json.read_numbers_as_double` property to true.
 
-    ALTER SYSTEM SET `store.json.read_numbers_as_double` = true;
+    ALTER SESSION SET `store.json.read_numbers_as_double` = true;
 
 When you set this option, Drill reads all numbers from the JSON files as DOUBLE. After reading the data, use a SELECT statement in Drill to cast data as follows:
 
@@ -230,7 +230,7 @@ FLATTEN breaks the list of key-value pairs into separate rows on which you can a
 ### Example: Aggregate Loosely Structured Data
 Use flatten and kvgen together to aggregate the data from the [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json). Make sure all text mode is set to false to sum numbers. Drill returns an error if you attempt to sum data in all text mode.
 
-    ALTER SYSTEM SET `store.json.all_text_mode` = false;
+    ALTER SESSION SET `store.json.all_text_mode` = false;
 
 Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in a single query.
 
@@ -529,7 +529,7 @@ Drill interprets numbers that do not have a decimal point as BigInt values. In t
 
 Workaround: Set the `store.json.read_numbers_as_double` property, described earlier, to true.
 
-    ALTER SYSTEM SET `store.json.read_numbers_as_double` = true;
+    ALTER SESSION SET `store.json.read_numbers_as_double` = true;
 
 ### Selecting all in a JSON directory query
 Drill currently returns only fields common to all the files in a [directory query]({{ site.baseurl }}/docs/querying-directories) that selects all (SELECT *) JSON files.

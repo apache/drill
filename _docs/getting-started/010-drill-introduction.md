@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date:  
+date: 2016-01-07
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -8,10 +8,21 @@ Drill is designed from the ground up to support high-performance analysis on
 the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
-with existing Apache Hive and Apache HBase deployments. 
+with existing Apache Hive and Apache HBase deployments.  
 
-## What's New in Apache Drill 1.3 and 1.4
-These releases fix issues and add a number of enhancements, including the following ones:
+## What's New in Apache Drill 1.4
+
+Drill 1.4 introduces the following improvements:
+
+* [select with options]({{site.baseurl}}/docs/plugin-configuration-basics/#using-the-formats-attributes-as-table-function-parameters) that you use in queries to change storage plugin settings
+* Improved behavior when parsing CSV file header names
+* A variable to set non-pretty, such as compact, printing of JSON
+* Better drillbit.log files that include query text
+
+Drill 1.4 fixes an error that occurred when using the HBaseStorageHandler in a Hive query ([DRILL-3739](https://issues.apache.org/jira/browse/DRILL-3739)). To successfully use the HBaseStorageHandler in a Hive query, you need to configure the Hive storage plugin as described in the [Hive storage plugin documentation]({{site.baseurl}}/docs/hive-storage-plugin/#connect-drill-to-the-hive-remote-metastore).
+
+## What's New in Apache Drill 1.3 
+This releases fix issues and add a number of enhancements, including the following ones:
 
 * [Enhanced Amazon S3 support]({{site.baseurl}}/docs/s3-storage-plugin/)  
 * Hetrogeneous types  
