@@ -35,7 +35,7 @@ metastore service communicates with the Hive database over JDBC.
 
 Follow the steps in the next section to point Drill
 to the Hive metastore service address. Provide the connection parameters
-in a Hive storage plugin configuration to configure a connection to Drill. At this point, if you your Hive queries do not use the HBaseStorageHandler, you are finished configuring the Hive storage plugin; otherwise, you need to add ZooKeeper quorum and port properties.  The HBaseStorageHandler requires these properties. Drill discovers HBase services using these properties. If you use the HBase storage plugin, use the same ZooKeeper quorum and port properties in the Hive storage plugin and the HBase storage plugin, assuming you want the Hive query access the same HBase source. 
+in a Hive storage plugin configuration to configure a connection to Drill. At this point, if your Hive queries do not use the HBaseStorageHandler, you are finished configuring the Hive storage plugin; otherwise, you need to add ZooKeeper quorum and port properties.  The HBaseStorageHandler requires these properties. Drill discovers HBase services using these properties. If you use the HBase storage plugin, use the same ZooKeeper quorum and port properties in the Hive storage plugin and the HBase storage plugin, assuming you want the Hive query access the same HBase source. 
 
 {% include startnote.html %}Verify that the Hive metastore service is running before you register the Hive metastore.{% include endnote.html %}  
 
