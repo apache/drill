@@ -96,7 +96,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
     for (PartitionLocation partitionLocation: partitions) {
       for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
         if (partitionLocation.getPartitionValue(partitionColumnIndex) == null) {
-          throw new DrillRuntimeException("Value for directory cannot be null");
+          // set null if dirX does not exist for the location.
+          ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setNull(record);
         } else {
           byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(Charsets.UTF_8);
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setSafe(record, bytes, 0, bytes.length);
