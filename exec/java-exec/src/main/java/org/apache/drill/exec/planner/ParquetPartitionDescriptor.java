@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -78,8 +80,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return partitionColumns.size();
   }
 
-  @Override
-  public GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
+  private GroupScan createNewGroupScan(List<String> newFiles) throws IOException {
     final FileSelection newSelection = FileSelection.create(null, newFiles, getBaseTableLocation());
     final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newSelection);
     return newScan;
@@ -128,4 +129,16 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     sublistsCreated = true;
   }
 
+  @Override
+  public TableScan createTableScan(List<String> newFiles) throws Exception {
+    final GroupScan newGroupScan = createNewGroupScan(newFiles);
+
+    return new DrillScanRel(scanRel.getCluster(),
+        scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+        scanRel.getTable(),
+        newGroupScan,
+        scanRel.getRowType(),
+        scanRel.getColumns(),
+        true /*filter pushdown*/);
+  }
 }

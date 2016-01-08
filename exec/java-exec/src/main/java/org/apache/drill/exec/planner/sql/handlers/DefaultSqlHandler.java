@@ -534,6 +534,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
 
   private RelNode doLogicalPlanning(RelNode relNode) throws RelConversionException, SqlUnsupportedException {
+    // 1. Call HepPlanner with directory-based partition pruning, in Calcite logical rel
+    // Partition pruning .
+    ImmutableSet<RelOptRule> dirPruneScanRules = ImmutableSet.<RelOptRule>builder()
+        .addAll(DrillRuleSets.getDirPruneScanRules(context))
+        .build();
+
+    relNode = doHepPlan(relNode, dirPruneScanRules, HepMatchOrder.BOTTOM_UP);
+    log("Post-Dir-Pruning", relNode, logger);
+
     if (! context.getPlannerSettings().isHepOptEnabled()) {
       return planner.transform(DrillSqlWorker.LOGICAL_RULES, relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
     } else {

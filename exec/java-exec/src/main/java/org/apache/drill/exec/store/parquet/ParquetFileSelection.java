@@ -59,4 +59,8 @@ public class ParquetFileSelection extends FileSelection {
     return new ParquetFileSelection(selection, metadata);
   }
 
+  @Override
+  public boolean supportDirPrunig() {
+    return false;
+  }
 }

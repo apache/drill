@@ -19,6 +19,7 @@
 package org.apache.drill.exec.planner.sql.logical;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PartitionDescriptor;
@@ -44,7 +45,7 @@ public abstract class HivePushPartitionFilterIntoScan {
         optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
         return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
@@ -63,9 +64,9 @@ public abstract class HivePushPartitionFilterIntoScan {
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
+        final DrillFilterRel filterRel =  call.rel(0);
+        final DrillProjectRel projectRel = call.rel(1);
+        final DrillScanRel scanRel = call.rel(2);
         doOnMatch(call, filterRel, projectRel, scanRel);
       }
     };
@@ -78,7 +79,7 @@ public abstract class HivePushPartitionFilterIntoScan {
         "HivePushPartitionFilterIntoScan:Filter_On_Scan_Hive", optimizerRulesContext) {
 
       @Override
-      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, RelNode scanRel) {
+      public PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel) {
         return new HivePartitionDescriptor(settings, (DrillScanRel) scanRel, getOptimizerRulesContext().getManagedBuffer(),
             defaultPartitionValue);
       }
@@ -97,8 +98,8 @@ public abstract class HivePushPartitionFilterIntoScan {
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+        final DrillFilterRel filterRel = call.rel(0);
+        final DrillScanRel scanRel = call.rel(1);
         doOnMatch(call, filterRel, null, scanRel);
       }
     };

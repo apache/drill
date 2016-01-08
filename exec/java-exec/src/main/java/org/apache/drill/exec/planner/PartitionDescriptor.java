@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -53,8 +54,6 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   // Maximum level of partition nesting/ hierarchy supported
   public int getMaxHierarchyLevel();
 
-  public GroupScan createNewGroupScan(List<String> newFiles) throws Exception;
-
   /**
    * Method creates an in memory representation of all the partitions. For each level of partitioning we
    * will create a value vector which this method will populate for all the partitions with the values of the
@@ -74,4 +73,13 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
    * @return
    */
   TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings);
+
+  /**
+   * Methods create a new TableScan rel node, given the lists of new partitions or new files to SCAN.
+   * @param newPartitions
+   * @return
+   * @throws Exception
+   */
+  public TableScan createTableScan(List<String> newPartitions) throws Exception;
+
 }

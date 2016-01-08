@@ -345,4 +345,20 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 1);
   }
 
+  @Test
+  public void testLogicalDirPruning() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test
+  public void testLogicalDirPruning2() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = String.format("select dir0, o_custkey from dfs_test.`%s/multilevel/parquetWithBadFormat` where dir0=1995 and o_custkey > 0", TEST_RES_PATH);
+    testIncludeFilter(query, 1, "Filter", 10);
+  }
+
 }

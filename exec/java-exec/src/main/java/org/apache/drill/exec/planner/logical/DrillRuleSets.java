@@ -204,14 +204,31 @@ public class DrillRuleSets {
   public static RuleSet getPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
     final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
         .add(
-            PruneScanRule.getFilterOnProject(optimizerRulesContext),
-            PruneScanRule.getFilterOnScan(optimizerRulesContext),
+            PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
+            PruneScanRule.getDirFilterOnScan(optimizerRulesContext),
             ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
             ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext)
         )
         .build();
 
     return new DrillRuleSet(pruneRules);
+  }
+
+  /**
+   *  Get an immutable list of directory-based partition pruing rules that will be used in Calcite logical planning.
+   * @param optimizerRulesContext
+   * @return
+   */
+  public static RuleSet getDirPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
+    final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+        .add(
+            PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
+            PruneScanRule.getDirFilterOnScan(optimizerRulesContext)
+        )
+        .build();
+
+    return new DrillRuleSet(pruneRules);
+
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.

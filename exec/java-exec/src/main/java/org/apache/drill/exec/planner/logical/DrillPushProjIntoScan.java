@@ -54,8 +54,14 @@ public class DrillPushProjIntoScan extends RelOptRule {
     try {
       ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
 
+      // get DrillTable, either wrapped in RelOptTable, or DrillTranslatableTable.
+      DrillTable table = scan.getTable().unwrap(DrillTable.class);
+      if (table == null) {
+        table = scan.getTable().unwrap(DrillTranslatableTable.class).getDrillTable();
+      }
+
       if (columnInfo == null || columnInfo.isStarQuery() //
-          || !scan.getTable().unwrap(DrillTable.class) //
+          || !table //
           .getGroupScan().canPushdownProjects(columnInfo.columns)) {
         return;
       }
