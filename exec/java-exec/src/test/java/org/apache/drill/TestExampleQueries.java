@@ -1195,8 +1195,4 @@ public class TestExampleQueries extends BaseTestQuery {
         .run();
   }
 
-  @Test
-  public void t() throws Exception {
-    test("explain plan for select a from dfs.tmp.foo where dir0 = 1");
-  }
 }
