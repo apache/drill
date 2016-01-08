@@ -86,11 +86,14 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private DocumentStream<DBDocument> documentStream;
 
   private Iterator<DocumentReader> documentReaderIterators;
+  
+  private boolean includeId;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
     tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
+    includeId = false;
     condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
     setColumns(projectedColumns);
   }
@@ -120,6 +123,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
           transformed.add(ID_PATH);
           projectedFieldsList.add(ID_FIELD);
+          includeId = true;
         } else {
           transformed.add(SchemaPath.getSimplePath(column.getRootSegment().getPath()));
           projectedFieldsList.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
@@ -128,6 +132,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       projectedFields = projectedFieldsList.toArray(new FieldPath[projectedFieldsList.size()]);
     } else {
       transformed.add(ID_PATH);
+      includeId = true;
     }
 
     return transformed;
@@ -167,7 +172,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       }
       try {
         MapWriter map = writer.rootAsMap();
-        if (reader.getId() != null) {
+        if (includeId && reader.getId() != null) {
           switch (reader.getId().getType()) {
           case BINARY:
             writeBinary(map.varBinary(ID_KEY), reader.getId().getBinary());
