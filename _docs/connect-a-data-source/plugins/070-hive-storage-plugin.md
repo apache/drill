@@ -66,7 +66,7 @@ To connect Drill to a remote Hive metastore:
             }
           }
 
-6. If you query a Hive table using the HBaseStorageHandler, skip this step; otherwise, add the names of the ZooKeeper quorum hosts and the ZooKeeper port, for example 2181.  
+6. If you do *not* query a Hive table using the HBaseStorageHandler, skip this step; otherwise, add the names of the ZooKeeper quorum hosts and the ZooKeeper port, for example 2181.  
 
         {
           "type": "hive",
