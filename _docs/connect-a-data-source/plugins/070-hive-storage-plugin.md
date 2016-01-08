@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-date: 2016-01-07
+date: 2016-01-08
 parent: "Connect a Data Source"
 ---
 Drill 1.1 and later supports Hive 1.0. To access Hive tables
@@ -35,7 +35,7 @@ metastore service communicates with the Hive database over JDBC.
 
 Follow the steps in the next section to point Drill
 to the Hive metastore service address. Provide the connection parameters
-in a Hive storage plugin configuration to configure a connection to Drill. At this point, if you query a Hive table using the HBaseStorageHandler, you are finished configuring the Hive storage plugin; otherwise, you need to add ZooKeeper quorum and port properties.  The HBaseStorageHandler requires these properties. Drill discovers HBase services using these properties. If you use the HBase storage plugin, use the same ZooKeeper quorum and port properties in the Hive storage plugin and the HBase storage plugin, assuming you want the Hive query access the same HBase source. 
+in a Hive storage plugin configuration to configure a connection to Drill. At this point, if you do *not* query a Hive table using the HBaseStorageHandler, you are finished configuring the Hive storage plugin; otherwise, if you query a Hive table using the HBaseStorageHandler, you need to add ZooKeeper quorum and port properties.  The HBaseStorageHandler requires these properties. Drill discovers HBase services using these properties. If you use the HBase storage plugin, use the same ZooKeeper quorum and port properties in the Hive storage plugin and the HBase storage plugin, assuming you want the Hive query access the same HBase source. 
 
 {% include startnote.html %}Verify that the Hive metastore service is running before you register the Hive metastore.{% include endnote.html %}  
 
