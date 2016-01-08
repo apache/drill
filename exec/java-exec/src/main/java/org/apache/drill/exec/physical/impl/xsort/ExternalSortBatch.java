@@ -356,6 +356,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
           int count = sv2.getCount();
           totalCount += count;
+          totalBatches++;
           sorter.setup(context, sv2, convertedBatch);
           sorter.sort(sv2);
           RecordBatchData rbd = new RecordBatchData(convertedBatch, oAllocator);
