@@ -47,6 +47,7 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.test.DrillTest;
@@ -182,7 +183,7 @@ public class TestAllocators extends DrillTest {
       bit.run();
       final DrillbitContext bitContext = bit.getContext();
       FunctionImplementationRegistry functionRegistry = bitContext.getFunctionImplementationRegistry();
-      StoragePluginRegistry storageRegistry = new StoragePluginRegistry(bitContext);
+      StoragePluginRegistry storageRegistry = new StoragePluginRegistryImpl(bitContext);
 
       // Create a few Fragment Contexts
 
