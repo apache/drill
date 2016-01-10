@@ -99,25 +99,33 @@ public final class BitControl {
      */
     REQ_UNPAUSE_FRAGMENT(10, 16),
     /**
+     * <code>REQ_CUSTOM = 17;</code>
+     */
+    REQ_CUSTOM(11, 17),
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
      * bit responses
      * </pre>
      */
-    RESP_FRAGMENT_HANDLE(11, 11),
+    RESP_FRAGMENT_HANDLE(12, 11),
     /**
      * <code>RESP_FRAGMENT_STATUS = 12;</code>
      */
-    RESP_FRAGMENT_STATUS(12, 12),
+    RESP_FRAGMENT_STATUS(13, 12),
     /**
      * <code>RESP_BIT_STATUS = 13;</code>
      */
-    RESP_BIT_STATUS(13, 13),
+    RESP_BIT_STATUS(14, 13),
     /**
      * <code>RESP_QUERY_STATUS = 14;</code>
      */
-    RESP_QUERY_STATUS(14, 14),
+    RESP_QUERY_STATUS(15, 14),
+    /**
+     * <code>RESP_CUSTOM = 18;</code>
+     */
+    RESP_CUSTOM(16, 18),
     ;
 
     /**
@@ -185,6 +193,10 @@ public final class BitControl {
      */
     public static final int REQ_UNPAUSE_FRAGMENT_VALUE = 16;
     /**
+     * <code>REQ_CUSTOM = 17;</code>
+     */
+    public static final int REQ_CUSTOM_VALUE = 17;
+    /**
      * <code>RESP_FRAGMENT_HANDLE = 11;</code>
      *
      * <pre>
@@ -204,6 +216,10 @@ public final class BitControl {
      * <code>RESP_QUERY_STATUS = 14;</code>
      */
     public static final int RESP_QUERY_STATUS_VALUE = 14;
+    /**
+     * <code>RESP_CUSTOM = 18;</code>
+     */
+    public static final int RESP_CUSTOM_VALUE = 18;
 
 
     public final int getNumber() { return value; }
@@ -221,10 +237,12 @@ public final class BitControl {
         case 10: return REQ_QUERY_STATUS;
         case 15: return REQ_QUERY_CANCEL;
         case 16: return REQ_UNPAUSE_FRAGMENT;
+        case 17: return REQ_CUSTOM;
         case 11: return RESP_FRAGMENT_HANDLE;
         case 12: return RESP_FRAGMENT_STATUS;
         case 13: return RESP_BIT_STATUS;
         case 14: return RESP_QUERY_STATUS;
+        case 18: return RESP_CUSTOM;
         default: return null;
       }
     }
@@ -2999,6 +3017,486 @@ public final class BitControl {
     }
 
     // @@protoc_insertion_point(class_scope:exec.bit.control.InitializeFragments)
+  }
+
+  public interface CustomMessageOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional int32 type = 1;
+    /**
+     * <code>optional int32 type = 1;</code>
+     */
+    boolean hasType();
+    /**
+     * <code>optional int32 type = 1;</code>
+     */
+    int getType();
+
+    // optional bytes message = 2;
+    /**
+     * <code>optional bytes message = 2;</code>
+     */
+    boolean hasMessage();
+    /**
+     * <code>optional bytes message = 2;</code>
+     */
+    com.google.protobuf.ByteString getMessage();
+  }
+  /**
+   * Protobuf type {@code exec.bit.control.CustomMessage}
+   */
+  public static final class CustomMessage extends
+      com.google.protobuf.GeneratedMessage
+      implements CustomMessageOrBuilder {
+    // Use CustomMessage.newBuilder() to construct.
+    private CustomMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private CustomMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final CustomMessage defaultInstance;
+    public static CustomMessage getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public CustomMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CustomMessage(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              type_ = input.readInt32();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              message_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_CustomMessage_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_CustomMessage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.BitControl.CustomMessage.class, org.apache.drill.exec.proto.BitControl.CustomMessage.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<CustomMessage> PARSER =
+        new com.google.protobuf.AbstractParser<CustomMessage>() {
+      public CustomMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CustomMessage(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CustomMessage> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional int32 type = 1;
+    public static final int TYPE_FIELD_NUMBER = 1;
+    private int type_;
+    /**
+     * <code>optional int32 type = 1;</code>
+     */
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int32 type = 1;</code>
+     */
+    public int getType() {
+      return type_;
+    }
+
+    // optional bytes message = 2;
+    public static final int MESSAGE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString message_;
+    /**
+     * <code>optional bytes message = 2;</code>
+     */
+    public boolean hasMessage() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes message = 2;</code>
+     */
+    public com.google.protobuf.ByteString getMessage() {
+      return message_;
+    }
+
+    private void initFields() {
+      type_ = 0;
+      message_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, type_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, message_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, type_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, message_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.BitControl.CustomMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.BitControl.CustomMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.bit.control.CustomMessage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.BitControl.CustomMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_CustomMessage_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_CustomMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.BitControl.CustomMessage.class, org.apache.drill.exec.proto.BitControl.CustomMessage.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.BitControl.CustomMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        type_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        message_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.BitControl.internal_static_exec_bit_control_CustomMessage_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.CustomMessage getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.BitControl.CustomMessage.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.BitControl.CustomMessage build() {
+        org.apache.drill.exec.proto.BitControl.CustomMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.BitControl.CustomMessage buildPartial() {
+        org.apache.drill.exec.proto.BitControl.CustomMessage result = new org.apache.drill.exec.proto.BitControl.CustomMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.message_ = message_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.BitControl.CustomMessage) {
+          return mergeFrom((org.apache.drill.exec.proto.BitControl.CustomMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.BitControl.CustomMessage other) {
+        if (other == org.apache.drill.exec.proto.BitControl.CustomMessage.getDefaultInstance()) return this;
+        if (other.hasType()) {
+          setType(other.getType());
+        }
+        if (other.hasMessage()) {
+          setMessage(other.getMessage());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.BitControl.CustomMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.BitControl.CustomMessage) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional int32 type = 1;
+      private int type_ ;
+      /**
+       * <code>optional int32 type = 1;</code>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 type = 1;</code>
+       */
+      public int getType() {
+        return type_;
+      }
+      /**
+       * <code>optional int32 type = 1;</code>
+       */
+      public Builder setType(int value) {
+        bitField0_ |= 0x00000001;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 type = 1;</code>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional bytes message = 2;
+      private com.google.protobuf.ByteString message_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes message = 2;</code>
+       */
+      public boolean hasMessage() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes message = 2;</code>
+       */
+      public com.google.protobuf.ByteString getMessage() {
+        return message_;
+      }
+      /**
+       * <code>optional bytes message = 2;</code>
+       */
+      public Builder setMessage(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        message_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes message = 2;</code>
+       */
+      public Builder clearMessage() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        message_ = getDefaultInstance().getMessage();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.bit.control.CustomMessage)
+    }
+
+    static {
+      defaultInstance = new CustomMessage(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.bit.control.CustomMessage)
   }
 
   public interface PlanFragmentOrBuilder
@@ -8440,6 +8938,11 @@ public final class BitControl {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_bit_control_InitializeFragments_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_bit_control_CustomMessage_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_bit_control_CustomMessage_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_control_PlanFragment_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -8485,41 +8988,43 @@ public final class BitControl {
       "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013",
       "2\030.exec.bit.FragmentHandle\"G\n\023Initialize" +
       "Fragments\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.c" +
-      "ontrol.PlanFragment\"\374\003\n\014PlanFragment\022(\n\006" +
-      "handle\030\001 \001(\0132\030.exec.bit.FragmentHandle\022\024" +
-      "\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021" +
-      "\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002\022\025" +
-      "\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fragment\030\t" +
-      " \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec.Drillbit" +
-      "Endpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec.Drillbi" +
-      "tEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\01020000000",
-      "\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n\013credent" +
-      "ials\030\016 \001(\0132\034.exec.shared.UserCredentials" +
-      "\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001(\0132" +
-      ").exec.bit.control.QueryContextInformati" +
-      "on\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.control" +
-      ".Collector\"\210\001\n\tCollector\022\"\n\032opposite_maj" +
-      "or_fragment_id\030\001 \001(\005\022#\n\027incoming_minor_f" +
-      "ragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_ord" +
-      "er\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n\027QueryCo" +
-      "ntextInformation\022\030\n\020query_start_time\030\001 \001",
-      "(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schema_" +
-      "name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n\010endpoin" +
-      "t\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014queue" +
-      "_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003\"h\n\020Fi" +
-      "nishedReceiver\022*\n\010receiver\030\001 \001(\0132\030.exec." +
-      "bit.FragmentHandle\022(\n\006sender\030\002 \001(\0132\030.exe" +
-      "c.bit.FragmentHandle*\323\002\n\007RpcType\022\r\n\tHAND" +
-      "SHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n\030REQ_INI" +
-      "TIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCEL_FRAGME" +
-      "NT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022\027\n\023REQ_F",
-      "RAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STATUS\020\t\022\024\n\020" +
-      "REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_CANCEL\020\017" +
-      "\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\030\n\024RESP_FRAGM" +
-      "ENT_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023" +
-      "\n\017RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS" +
-      "\020\016B+\n\033org.apache.drill.exec.protoB\nBitCo" +
-      "ntrolH\001"
+      "ontrol.PlanFragment\".\n\rCustomMessage\022\014\n\004" +
+      "type\030\001 \001(\005\022\017\n\007message\030\002 \001(\014\"\374\003\n\014PlanFrag" +
+      "ment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragment" +
+      "Handle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost" +
+      "\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost" +
+      "\030\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022\025\n\rleaf_fr" +
+      "agment\030\t \001(\010\022*\n\nassignment\030\n \001(\0132\026.exec." +
+      "DrillbitEndpoint\022\'\n\007foreman\030\013 \001(\0132\026.exec",
+      ".DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\010" +
+      "20000000\022\033\n\007mem_max\030\r \001(\003:\n2000000000\0221\n" +
+      "\013credentials\030\016 \001(\0132\034.exec.shared.UserCre" +
+      "dentials\022\024\n\014options_json\030\017 \001(\t\022:\n\007contex" +
+      "t\030\020 \001(\0132).exec.bit.control.QueryContextI" +
+      "nformation\022.\n\tcollector\030\021 \003(\0132\033.exec.bit" +
+      ".control.Collector\"\210\001\n\tCollector\022\"\n\032oppo" +
+      "site_major_fragment_id\030\001 \001(\005\022#\n\027incoming" +
+      "_minor_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_ou" +
+      "t_of_order\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"c\n",
+      "\027QueryContextInformation\022\030\n\020query_start_" +
+      "time\030\001 \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default" +
+      "_schema_name\030\003 \001(\t\"f\n\017WorkQueueStatus\022(\n" +
+      "\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndpoint\022" +
+      "\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001" +
+      "(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030\001 \001(\013" +
+      "2\030.exec.bit.FragmentHandle\022(\n\006sender\030\002 \001" +
+      "(\0132\030.exec.bit.FragmentHandle*\364\002\n\007RpcType" +
+      "\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n" +
+      "\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCE",
+      "L_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022" +
+      "\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STAT" +
+      "US\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_" +
+      "CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016\n\nRE" +
+      "Q_CUSTOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024" +
+      "RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_STATU" +
+      "S\020\r\022\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_CUSTO" +
+      "M\020\022B+\n\033org.apache.drill.exec.protoB\nBitC" +
+      "ontrolH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -8550,32 +9055,38 @@ public final class BitControl {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_InitializeFragments_descriptor,
               new java.lang.String[] { "Fragment", });
-          internal_static_exec_bit_control_PlanFragment_descriptor =
+          internal_static_exec_bit_control_CustomMessage_descriptor =
             getDescriptor().getMessageTypes().get(4);
+          internal_static_exec_bit_control_CustomMessage_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_bit_control_CustomMessage_descriptor,
+              new java.lang.String[] { "Type", "Message", });
+          internal_static_exec_bit_control_PlanFragment_descriptor =
+            getDescriptor().getMessageTypes().get(5);
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_PlanFragment_descriptor,
               new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "LeafFragment", "Assignment", "Foreman", "MemInitial", "MemMax", "Credentials", "OptionsJson", "Context", "Collector", });
           internal_static_exec_bit_control_Collector_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_bit_control_Collector_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_Collector_descriptor,
               new java.lang.String[] { "OppositeMajorFragmentId", "IncomingMinorFragment", "SupportsOutOfOrder", "IsSpooling", });
           internal_static_exec_bit_control_QueryContextInformation_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_exec_bit_control_QueryContextInformation_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_QueryContextInformation_descriptor,
               new java.lang.String[] { "QueryStartTime", "TimeZone", "DefaultSchemaName", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_WorkQueueStatus_descriptor,
               new java.lang.String[] { "Endpoint", "QueueLength", "ReportTime", });
           internal_static_exec_bit_control_FinishedReceiver_descriptor =
-            getDescriptor().getMessageTypes().get(8);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_exec_bit_control_FinishedReceiver_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_FinishedReceiver_descriptor,
