@@ -429,7 +429,7 @@ public class DrillTestWrapper {
     if (expectedNumBatches != EXPECTED_BATCH_COUNT_NOT_SET) {
       final int actualNumBatches = results.size();
       assertEquals(String.format("Expected %d batches but query returned %d non empty batch(es)%n", expectedNumBatches,
-          actualNumBatches), expectedNumBatches, actualNumBatches);
+        actualNumBatches), expectedNumBatches, actualNumBatches);
     }
   }
 
@@ -564,7 +564,9 @@ public class DrillTestWrapper {
    * @throws Exception
    */
   private void compareResults(List<Map> expectedRecords, List<Map> actualRecords) throws Exception {
-
+    for (Map<String, Object> actualRecord : actualRecords) {
+     // System.out.println(actualRecord);
+    }
     assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
 
     String missing = "";
@@ -594,14 +596,14 @@ public class DrillTestWrapper {
       if (!found) {
         StringBuilder sb = new StringBuilder();
         for (int expectedRecordDisplayCount = 0;
-             expectedRecordDisplayCount < 10 && expectedRecordDisplayCount < expectedRecords.size();
+             expectedRecordDisplayCount < 50 && expectedRecordDisplayCount < expectedRecords.size();
              expectedRecordDisplayCount++) {
           sb.append(printRecord(expectedRecords.get(expectedRecordDisplayCount)));
         }
         String expectedRecordExamples = sb.toString();
         sb.setLength(0);
         for (int actualRecordDisplayCount = 0;
-             actualRecordDisplayCount < 10 && actualRecordDisplayCount < actualRecords.size();
+             actualRecordDisplayCount < 50 && actualRecordDisplayCount < actualRecords.size();
              actualRecordDisplayCount++) {
           sb.append(printRecord(actualRecords.get(actualRecordDisplayCount)));
         }

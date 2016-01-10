@@ -21,6 +21,7 @@ import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 
 public interface HashTable {
@@ -55,10 +56,12 @@ public interface HashTable {
   public static final int VARIABLE_WIDTH_VECTOR_SIZE = 50 * BATCH_SIZE;
 
   public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-      RecordBatch incomingBuild, RecordBatch incomingProbe,
+      VectorAccessible incomingBuild, VectorAccessible incomingProbe,
       RecordBatch outgoing, VectorContainer htContainerOrig);
 
   public void updateBatches();
+
+  public void updateProbeBatch(VectorAccessible probeBatch);
 
   public void put(int incomingRowIdx, IndexPointer htIdxHolder, int retryCount);
 

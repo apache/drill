@@ -101,9 +101,16 @@ public class ExpressionTreeMaterializer {
     return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, functionLookupContext, false, false);
   }
 
-  public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr, VectorAccessible batch, FunctionLookupContext functionLookupContext) throws SchemaChangeException {
+  public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr, VectorAccessible batch,
+                                                            FunctionLookupContext functionLookupContext) throws SchemaChangeException {
+    return materializeAndCheckErrors(expr, batch, functionLookupContext, false, false);
+  }
+
+  public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr, VectorAccessible batch,
+                                                            FunctionLookupContext functionLookupContext,
+                                                            boolean allowComplexWriterExpr, boolean unionTypeEnabled) throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
-    LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false, false);
+    LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, allowComplexWriterExpr, unionTypeEnabled);
     if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }

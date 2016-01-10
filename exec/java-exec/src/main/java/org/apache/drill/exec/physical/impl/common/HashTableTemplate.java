@@ -33,6 +33,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -78,10 +79,10 @@ public abstract class HashTableTemplate implements HashTable {
   private BufferAllocator allocator;
 
   // The incoming build side record batch
-  private RecordBatch incomingBuild;
+  private VectorAccessible incomingBuild;
 
   // The incoming probe side record batch (may be null)
-  private RecordBatch incomingProbe;
+  private VectorAccessible incomingProbe;
 
   // The outgoing record batch
   private RecordBatch outgoing;
@@ -401,8 +402,8 @@ public abstract class HashTableTemplate implements HashTable {
 
     @RuntimeOverridden
     protected void setupInterior(
-        @Named("incomingBuild") RecordBatch incomingBuild,
-        @Named("incomingProbe") RecordBatch incomingProbe,
+        @Named("incomingBuild") VectorAccessible incomingBuild,
+        @Named("incomingProbe") VectorAccessible incomingProbe,
         @Named("outgoing") RecordBatch outgoing,
         @Named("htContainer") VectorContainer htContainer) {
     }
@@ -432,7 +433,7 @@ public abstract class HashTableTemplate implements HashTable {
 
   @Override
   public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
-      RecordBatch incomingBuild, RecordBatch incomingProbe,
+      VectorAccessible incomingBuild, VectorAccessible incomingProbe,
       RecordBatch outgoing, VectorContainer htContainerOrig) {
     float loadf = htConfig.getLoadFactor();
     int initialCap = htConfig.getInitialCapacity();
@@ -485,6 +486,11 @@ public abstract class HashTableTemplate implements HashTable {
     for (BatchHolder batchHolder : batchHolders) {
       batchHolder.setup();
     }
+  }
+
+  public void updateProbeBatch(VectorContainer incomingProbe) {
+    this.incomingProbe = incomingProbe;
+    updateBatches();
   }
 
   public int numBuckets() {
@@ -769,7 +775,7 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   // These methods will be code-generated in the context of the outer class
-  protected abstract void doSetup(@Named("incomingBuild") RecordBatch incomingBuild, @Named("incomingProbe") RecordBatch incomingProbe);
+  protected abstract void doSetup(@Named("incomingBuild") VectorAccessible incomingBuild, @Named("incomingProbe") VectorAccessible incomingProbe);
 
   protected abstract int getHashBuild(@Named("incomingRowIdx") int incomingRowIdx);
 

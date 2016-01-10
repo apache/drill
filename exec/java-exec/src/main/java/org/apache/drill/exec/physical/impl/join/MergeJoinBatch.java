@@ -314,7 +314,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // if right side is empty, rightExpr will most likely default to NULLABLE INT which may cause the following
     // call to throw an exception. In this case we can safely skip adding the casts
     if (lastRightStatus != IterOutcome.NONE) {
-      JoinUtils.addLeastRestrictiveCasts(leftExpr, leftIterator, rightExpr, rightIterator, context);
+      JoinUtils.addLeastRestrictiveCasts(leftExpr, leftIterator, rightExpr, rightIterator, context, false);
     }
     //generate doCompare() method
     /////////////////////////////////////////
