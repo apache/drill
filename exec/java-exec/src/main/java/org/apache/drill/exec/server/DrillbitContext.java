@@ -37,8 +37,8 @@ import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
@@ -80,7 +80,11 @@ public class DrillbitContext {
     this.endpoint = checkNotNull(endpoint);
     this.provider = provider;
     this.lpPersistence = new LogicalPlanPersistence(context.getConfig(), classpathScan);
-    this.storagePlugins = new StoragePluginRegistry(this); // TODO change constructor
+
+    // TODO remove escaping "this".
+    this.storagePlugins = context.getConfig()
+        .getInstance(StoragePluginRegistry.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
+
     this.reader = new PhysicalPlanReader(context.getConfig(), classpathScan, lpPersistence, endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
     this.systemOptions = new SystemOptionManager(lpPersistence, provider);
@@ -152,7 +156,7 @@ public class DrillbitContext {
     return provider;
   }
 
-  public DrillSchemaFactory getSchemaFactory() {
+  public SchemaFactory getSchemaFactory() {
     return storagePlugins.getSchemaFactory();
   }
 

@@ -36,6 +36,7 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.CachingStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
@@ -51,117 +52,14 @@ import com.google.common.base.Stopwatch;
  */
 public class Drillbit implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
+
   static {
     Environment.logEnv("Drillbit environment: ", logger);
   }
 
-  private boolean isClosed = false;
-
-  public static Drillbit start(final StartupOptions options) throws DrillbitStartupException {
-    return start(DrillConfig.create(options.getConfigLocation()), null);
-  }
-
-  public static Drillbit start(final DrillConfig config) throws DrillbitStartupException {
-    return start(config, null);
-  }
-
-  public static Drillbit start(final DrillConfig config, final RemoteServiceSet remoteServiceSet)
-      throws DrillbitStartupException {
-    logger.debug("Starting new Drillbit.");
-    // TODO: allow passing as a parameter
-    ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
-    Drillbit bit;
-    try {
-      bit = new Drillbit(config, remoteServiceSet, classpathScan);
-    } catch (final Exception ex) {
-      throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
-    }
-
-    try {
-      bit.run();
-    } catch (final Exception e) {
-      bit.close();
-      throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
-    }
-    logger.debug("Started new Drillbit.");
-    return bit;
-  }
-
   private final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
 
-  private static void throwInvalidSystemOption(final String systemProp, final String errorMessage) {
-    throw new IllegalStateException("Property \"" + SYSTEM_OPTIONS_NAME + "\" part \"" + systemProp
-        + "\" " + errorMessage + ".");
-  }
-
-  private static String stripQuotes(final String s, final String systemProp) {
-    if (s.isEmpty()) {
-      return s;
-    }
-
-    final char cFirst = s.charAt(0);
-    final char cLast = s.charAt(s.length() - 1);
-    if ((cFirst == '"') || (cFirst == '\'')) {
-      if (cLast != cFirst) {
-        throwInvalidSystemOption(systemProp, "quoted value does not have closing quote");
-      }
-
-      return s.substring(1, s.length() - 2); // strip the quotes
-    }
-
-    if ((cLast == '"') || (cLast == '\'')) {
-        throwInvalidSystemOption(systemProp, "value has unbalanced closing quote");
-    }
-
-    // return as-is
-    return s;
-  }
-
-  private void javaPropertiesToSystemOptions() {
-    // get the system options property
-    final String allSystemProps = System.getProperty(SYSTEM_OPTIONS_NAME);
-    if ((allSystemProps == null) || allSystemProps.isEmpty()) {
-      return;
-    }
-
-    final OptionManager optionManager = getContext().getOptionManager();
-
-    // parse out the properties, validate, and then set them
-    final String systemProps[] = allSystemProps.split(",");
-    for(final String systemProp : systemProps) {
-      final String keyValue[] = systemProp.split("=");
-      if (keyValue.length != 2) {
-        throwInvalidSystemOption(systemProp, "does not contain a key=value assignment");
-      }
-
-      final String optionName = keyValue[0].trim();
-      if (optionName.isEmpty()) {
-        throwInvalidSystemOption(systemProp, "does not contain a key before the assignment");
-      }
-
-      final String optionString = stripQuotes(keyValue[1].trim(), systemProp);
-      if (optionString.isEmpty()) {
-        throwInvalidSystemOption(systemProp, "does not contain a value after the assignment");
-      }
-
-      final OptionValue defaultValue = optionManager.getOption(optionName);
-      if (defaultValue == null) {
-        throwInvalidSystemOption(systemProp, "does not specify a valid option name");
-      }
-      if (defaultValue.type != OptionType.SYSTEM) {
-        throwInvalidSystemOption(systemProp, "does not specify a SYSTEM option ");
-      }
-
-      final OptionValue optionValue = OptionValue.createOption(
-          defaultValue.kind, OptionType.SYSTEM, optionName, optionString);
-      optionManager.setOption(optionValue);
-    }
-  }
-
-  public static void main(final String[] cli) throws DrillbitStartupException {
-    final StartupOptions options = StartupOptions.parse(cli);
-    start(options);
-  }
+  private boolean isClosed = false;
 
   private final ClusterCoordinator coord;
   private final ServiceEngine engine;
@@ -170,6 +68,7 @@ public class Drillbit implements AutoCloseable {
   private final BootStrapContext context;
   private final WebServer webServer;
   private RegistrationHandle registrationHandle;
+  private volatile StoragePluginRegistry storageRegistry;
 
   @VisibleForTesting
   public Drillbit(
@@ -210,7 +109,8 @@ public class Drillbit implements AutoCloseable {
     final DrillbitEndpoint md = engine.start();
     manager.start(md, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
     final DrillbitContext drillbitContext = manager.getContext();
-    drillbitContext.getStorage().init();
+    storageRegistry = drillbitContext.getStorage();
+    storageRegistry.init();
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     registrationHandle = coord.register(md);
@@ -252,6 +152,7 @@ public class Drillbit implements AutoCloseable {
           storeProvider,
           coord,
           manager,
+          storageRegistry,
           context);
     } catch(Exception e) {
       logger.warn("Failure on close()", e);
@@ -259,6 +160,47 @@ public class Drillbit implements AutoCloseable {
 
     logger.info("Shutdown completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
     isClosed = true;
+  }
+
+  private void javaPropertiesToSystemOptions() {
+    // get the system options property
+    final String allSystemProps = System.getProperty(SYSTEM_OPTIONS_NAME);
+    if ((allSystemProps == null) || allSystemProps.isEmpty()) {
+      return;
+    }
+
+    final OptionManager optionManager = getContext().getOptionManager();
+
+    // parse out the properties, validate, and then set them
+    final String systemProps[] = allSystemProps.split(",");
+    for (final String systemProp : systemProps) {
+      final String keyValue[] = systemProp.split("=");
+      if (keyValue.length != 2) {
+        throwInvalidSystemOption(systemProp, "does not contain a key=value assignment");
+      }
+
+      final String optionName = keyValue[0].trim();
+      if (optionName.isEmpty()) {
+        throwInvalidSystemOption(systemProp, "does not contain a key before the assignment");
+      }
+
+      final String optionString = stripQuotes(keyValue[1].trim(), systemProp);
+      if (optionString.isEmpty()) {
+        throwInvalidSystemOption(systemProp, "does not contain a value after the assignment");
+      }
+
+      final OptionValue defaultValue = optionManager.getOption(optionName);
+      if (defaultValue == null) {
+        throwInvalidSystemOption(systemProp, "does not specify a valid option name");
+      }
+      if (defaultValue.type != OptionType.SYSTEM) {
+        throwInvalidSystemOption(systemProp, "does not specify a SYSTEM option ");
+      }
+
+      final OptionValue optionValue = OptionValue.createOption(
+          defaultValue.kind, OptionType.SYSTEM, optionName, optionString);
+      optionManager.setOption(optionValue);
+    }
   }
 
   /**
@@ -308,6 +250,69 @@ public class Drillbit implements AutoCloseable {
 
   public DrillbitContext getContext() {
     return manager.getContext();
+  }
+
+  public static void main(final String[] cli) throws DrillbitStartupException {
+    final StartupOptions options = StartupOptions.parse(cli);
+    start(options);
+  }
+
+  public static Drillbit start(final StartupOptions options) throws DrillbitStartupException {
+    return start(DrillConfig.create(options.getConfigLocation()), null);
+  }
+
+  public static Drillbit start(final DrillConfig config) throws DrillbitStartupException {
+    return start(config, null);
+  }
+
+  public static Drillbit start(final DrillConfig config, final RemoteServiceSet remoteServiceSet)
+      throws DrillbitStartupException {
+    logger.debug("Starting new Drillbit.");
+    // TODO: allow passing as a parameter
+    ScanResult classpathScan = ClassPathScanner.fromPrescan(config);
+    Drillbit bit;
+    try {
+      bit = new Drillbit(config, remoteServiceSet, classpathScan);
+    } catch (final Exception ex) {
+      throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
+    }
+
+    try {
+      bit.run();
+    } catch (final Exception e) {
+      bit.close();
+      throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
+    }
+    logger.debug("Started new Drillbit.");
+    return bit;
+  }
+
+  private static void throwInvalidSystemOption(final String systemProp, final String errorMessage) {
+    throw new IllegalStateException("Property \"" + SYSTEM_OPTIONS_NAME + "\" part \"" + systemProp
+        + "\" " + errorMessage + ".");
+  }
+
+  private static String stripQuotes(final String s, final String systemProp) {
+    if (s.isEmpty()) {
+      return s;
+    }
+
+    final char cFirst = s.charAt(0);
+    final char cLast = s.charAt(s.length() - 1);
+    if ((cFirst == '"') || (cFirst == '\'')) {
+      if (cLast != cFirst) {
+        throwInvalidSystemOption(systemProp, "quoted value does not have closing quote");
+      }
+
+      return s.substring(1, s.length() - 2); // strip the quotes
+    }
+
+    if ((cLast == '"') || (cLast == '\'')) {
+      throwInvalidSystemOption(systemProp, "value has unbalanced closing quote");
+    }
+
+    // return as-is
+    return s;
   }
 
 }
