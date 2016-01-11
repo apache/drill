@@ -98,6 +98,14 @@ public class TestWindowFrame extends BaseTestQuery {
     runTest("b1.p2", 1);
   }
 
+  @Test
+  public void testMultipleFramers() throws Exception {
+    final String window = " OVER(PARTITION BY position_id ORDER by sub)";
+    test("SELECT COUNT(*)"+window+", SUM(salary)"+window+", ROW_NUMBER()"+window+", RANK()"+window+" " +
+      "FROM dfs_test.`"+TEST_RES_PATH+"/window/b1.p1`"
+    );
+  }
+
   /**
    * 2 batches with 2 partitions (position_id column), each batch contains a different partition
    */
