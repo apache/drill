@@ -45,46 +45,60 @@ import com.google.common.base.Preconditions;
  * The only reason that this isn't package private is we're forced to put DrillBuf in Netty's package which need access
  * to these objects or methods.
  *
- * Threading: AllocatorManager manages thread-safety internally. Operations within the context of a single BufferLedger
+ * Threading: AllocationManager manages thread-safety internally. Operations within the context of a single BufferLedger
  * are lockless in nature and can be leveraged by multiple threads. Operations that cross the context of two ledgers
- * will acquire a lock on the AllocatorManager instance. Important note, there is one AllocatorManager per
+ * will acquire a lock on the AllocationManager instance. Important note, there is one AllocationManager per
  * UnsafeDirectLittleEndian buffer allocation. As such, there will be thousands of these in a typical query. The
- * contention of acquiring a lock on AllocatorManager should be very low.
+ * contention of acquiring a lock on AllocationManager should be very low.
  *
  */
-public class AllocatorManager {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocatorManager.class);
+public class AllocationManager {
+  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AllocationManager.class);
 
+  private static final AtomicLong MANAGER_ID_GENERATOR = new AtomicLong(0);
   private static final AtomicLong LEDGER_ID_GENERATOR = new AtomicLong(0);
   static final PooledByteBufAllocatorL INNER_ALLOCATOR = new PooledByteBufAllocatorL(DrillMetrics.getInstance());
 
   private final RootAllocator root;
-  private volatile BufferLedger owningLedger;
+  private final long allocatorManagerId = MANAGER_ID_GENERATOR.incrementAndGet();
   private final int size;
   private final UnsafeDirectLittleEndian underlying;
   private final IdentityHashMap<BufferAllocator, BufferLedger> map = new IdentityHashMap<>();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(lock.readLock());
   private final AutoCloseableLock writeLock = new AutoCloseableLock(lock.writeLock());
-  private final IdentityHashMap<DrillBuf, Object> buffers =
-      BaseAllocator.DEBUG ? new IdentityHashMap<DrillBuf, Object>() : null;
+  private final long amCreationTime = System.nanoTime();
 
-  AllocatorManager(BaseAllocator accountingAllocator, int size) {
+  private volatile BufferLedger owningLedger;
+  private volatile long amDestructionTime = 0;
+
+  AllocationManager(BaseAllocator accountingAllocator, int size) {
     Preconditions.checkNotNull(accountingAllocator);
+    accountingAllocator.assertOpen();
+
     this.root = accountingAllocator.root;
     this.underlying = INNER_ALLOCATOR.allocate(size);
-    this.owningLedger = associate(accountingAllocator);
+
+    // we do a no retain association since our creator will want to retrieve the newly created ledger and will create a
+    // reference count at that point
+    this.owningLedger = associate(accountingAllocator, false);
     this.size = underlying.capacity();
   }
 
   /**
-   * Associate the existing underlying buffer with a new allocator.
-   *
+   * Associate the existing underlying buffer with a new allocator. This will increase the reference count to the
+   * provided ledger by 1.
    * @param allocator
    *          The target allocator to associate this buffer with.
    * @return The Ledger (new or existing) that associates the underlying buffer to this new ledger.
    */
-  public BufferLedger associate(final BaseAllocator allocator) {
+  BufferLedger associate(final BaseAllocator allocator) {
+    return associate(allocator, true);
+  }
+
+  private BufferLedger associate(final BaseAllocator allocator, final boolean retain) {
+    allocator.assertOpen();
+
     if (root != allocator.root) {
       throw new IllegalStateException(
           "A buffer can only be associated between two allocators that share the same root.");
@@ -94,13 +108,30 @@ public class AllocatorManager {
 
       final BufferLedger ledger = map.get(allocator);
       if (ledger != null) {
+        if (retain) {
+          ledger.inc();
+        }
         return ledger;
       }
 
     }
     try (AutoCloseableLock write = writeLock.open()) {
+      // we have to recheck existing ledger since a second reader => writer could be competing with us.
+
+      final BufferLedger existingLedger = map.get(allocator);
+      if (existingLedger != null) {
+        if (retain) {
+          existingLedger.inc();
+        }
+        return existingLedger;
+      }
+
       final BufferLedger ledger = new BufferLedger(allocator, new ReleaseListener(allocator));
-      map.put(allocator, ledger);
+      if (retain) {
+        ledger.inc();
+      }
+      BufferLedger oldLedger = map.put(allocator, ledger);
+      Preconditions.checkArgument(oldLedger == null);
       allocator.associateLedger(ledger);
       return ledger;
     }
@@ -108,8 +139,8 @@ public class AllocatorManager {
 
 
   /**
-   * The way that a particular BufferLedger communicates back to the AllocatorManager that it now longer needs to hold a
-   * reference to particular piece of memory.
+   * The way that a particular BufferLedger communicates back to the AllocationManager that it now longer needs to hold
+   * a reference to particular piece of memory.
    */
   private class ReleaseListener {
 
@@ -119,41 +150,55 @@ public class AllocatorManager {
       this.allocator = allocator;
     }
 
+    /**
+     * Can only be called when you already hold the writeLock.
+     */
     public void release() {
-      try (AutoCloseableLock write = writeLock.open()) {
-        final BufferLedger oldLedger = map.remove(allocator);
-        oldLedger.allocator.dissociateLedger(oldLedger);
+      allocator.assertOpen();
 
-        if (oldLedger == owningLedger) {
-          if (map.isEmpty()) {
-            // no one else owns, lets release.
-            oldLedger.allocator.releaseBytes(size);
-            underlying.release();
-          } else {
-            // we need to change the owning allocator. we've been removed so we'll get whatever is top of list
-            BufferLedger newLedger = map.values().iterator().next();
+      final BufferLedger oldLedger = map.remove(allocator);
+      oldLedger.allocator.dissociateLedger(oldLedger);
 
-            // we'll forcefully transfer the ownership and not worry about whether we exceeded the limit
-            // since this consumer can do anything with this.
-            oldLedger.transferBalance(newLedger);
-          }
+      if (oldLedger == owningLedger) {
+        if (map.isEmpty()) {
+          // no one else owns, lets release.
+          oldLedger.allocator.releaseBytes(size);
+          underlying.release();
+          amDestructionTime = System.nanoTime();
+          owningLedger = null;
+        } else {
+          // we need to change the owning allocator. we've been removed so we'll get whatever is top of list
+          BufferLedger newLedger = map.values().iterator().next();
+
+          // we'll forcefully transfer the ownership and not worry about whether we exceeded the limit
+          // since this consumer can't do anything with this.
+          oldLedger.transferBalance(newLedger);
         }
-
-
+      } else {
+        if (map.isEmpty()) {
+          throw new IllegalStateException("The final removal of a ledger should be connected to the owning ledger.");
+        }
       }
+
+
     }
   }
 
   /**
    * The reference manager that binds an allocator manager to a particular BaseAllocator. Also responsible for creating
    * a set of DrillBufs that share a common fate and set of reference counts.
-   *
-   * As with AllocatorManager, the only reason this is public is due to DrillBuf being in io.netty.buffer package.
+   * As with AllocationManager, the only reason this is public is due to DrillBuf being in io.netty.buffer package.
    */
   public class BufferLedger {
-    private final long id = LEDGER_ID_GENERATOR.incrementAndGet(); // unique ID assigned to each ledger
+
+    private final IdentityHashMap<DrillBuf, Object> buffers =
+        BaseAllocator.DEBUG ? new IdentityHashMap<DrillBuf, Object>() : null;
+
+    private final long ledgerId = LEDGER_ID_GENERATOR.incrementAndGet(); // unique ID assigned to each ledger
     private final AtomicInteger bufRefCnt = new AtomicInteger(0); // start at zero so we can manage request for retain
                                                                   // correctly
+    private final long lCreationTime = System.nanoTime();
+    private volatile long lDestructionTime = 0;
     private final BaseAllocator allocator;
     private final ReleaseListener listener;
     private final HistoricalLog historicalLog = BaseAllocator.DEBUG ? new HistoricalLog(BaseAllocator.DEBUG_LOG_LENGTH,
@@ -168,20 +213,26 @@ public class AllocatorManager {
     /**
      * Transfer any balance the current ledger has to the target ledger. In the case that the current ledger holds no
      * memory, no transfer is made to the new ledger.
-     *
      * @param target
      *          The ledger to transfer ownership account to.
      * @return Whether transfer fit within target ledgers limits.
      */
-    public boolean transferBalance(BufferLedger target) {
+    public boolean transferBalance(final BufferLedger target) {
       Preconditions.checkNotNull(target);
       Preconditions.checkArgument(allocator.root == target.allocator.root,
           "You can only transfer between two allocators that share the same root.");
+      allocator.assertOpen();
+
+      target.allocator.assertOpen();
+      // if we're transferring to ourself, just return.
+      if (target == this) {
+        return true;
+      }
 
       // since two balance transfers out from the allocator manager could cause incorrect accounting, we need to ensure
       // that this won't happen by synchronizing on the allocator manager instance.
-      synchronized (AllocatorManager.this) {
-        if (this != owningLedger || target == this) {
+      try (AutoCloseableLock write = writeLock.open()) {
+        if (owningLedger != this) {
           return true;
         }
 
@@ -200,7 +251,6 @@ public class AllocatorManager {
 
     /**
      * Print the current ledger state to a the provided StringBuilder.
-     *
      * @param sb
      *          The StringBuilder to populate.
      * @param indent
@@ -210,7 +260,9 @@ public class AllocatorManager {
      */
     public void print(StringBuilder sb, int indent, Verbosity verbosity) {
       indent(sb, indent)
-          .append("ledger (allocator: ")
+          .append("ledger[")
+          .append(ledgerId)
+          .append("] allocator: ")
           .append(allocator.name)
           .append("), isOwning: ")
           .append(owningLedger == this)
@@ -218,11 +270,23 @@ public class AllocatorManager {
           .append(size)
           .append(", references: ")
           .append(bufRefCnt.get())
-          .append('\n');
+          .append(", life: ")
+          .append(lCreationTime)
+          .append("..")
+          .append(lDestructionTime)
+          .append(", allocatorManager: [")
+          .append(AllocationManager.this.allocatorManagerId)
+          .append(", life: ")
+          .append(amCreationTime)
+          .append("..")
+          .append(amDestructionTime);
 
-      if (BaseAllocator.DEBUG) {
+      if (!BaseAllocator.DEBUG) {
+        sb.append("]\n");
+      } else {
         synchronized (buffers) {
-          indent(sb, indent + 1).append("BufferLedger[" + id + "] holds ").append(buffers.size())
+          sb.append("] holds ")
+              .append(buffers.size())
               .append(" buffers. \n");
           for (DrillBuf buf : buffers.keySet()) {
             buf.print(sb, indent + 2, verbosity);
@@ -233,21 +297,36 @@ public class AllocatorManager {
 
     }
 
+    private void inc() {
+      bufRefCnt.incrementAndGet();
+    }
+
     /**
-     * Release this ledger. This means that all reference counts associated with this ledger are no longer used. This
-     * will inform the AllocatorManager to make a decision about how to manage any memory owned by this particular
-     * BufferLedger
+     * Decrement the ledger's reference count. If the ledger is decremented to zero, this ledger should release its
+     * ownership back to the AllocationManager
      */
-    public void release() {
-      listener.release();
+    public int decrement(int decrement) {
+      allocator.assertOpen();
+
+      final int outcome;
+      try (AutoCloseableLock write = writeLock.open()) {
+        outcome = bufRefCnt.addAndGet(-decrement);
+        if (outcome == 0) {
+          lDestructionTime = System.nanoTime();
+          listener.release();
+        }
+      }
+
+      return outcome;
     }
 
     /**
      * Returns the ledger associated with a particular BufferAllocator. If the BufferAllocator doesn't currently have a
-     * ledger associated with this AllocatorManager, a new one is created. This is placed on BufferLedger rather than
-     * AllocatorManager direclty because DrillBufs don't have access to AllocatorManager and they are the ones
-     * responsible for exposing the ability to associate mutliple allocators with a particular piece of underlying
-     * memory.
+     * ledger associated with this AllocationManager, a new one is created. This is placed on BufferLedger rather than
+     * AllocationManager directly because DrillBufs don't have access to AllocationManager and they are the ones
+     * responsible for exposing the ability to associate multiple allocators with a particular piece of underlying
+     * memory. Note that this will increment the reference count of this ledger by one to ensure the ledger isn't
+     * destroyed before use.
      *
      * @param allocator
      * @return
@@ -257,7 +336,7 @@ public class AllocatorManager {
     }
 
     /**
-     * Create a new DrillBuf associated with this AllocatorManager and memory. Does not impact reference count.
+     * Create a new DrillBuf associated with this AllocationManager and memory. Does not impact reference count.
      * Typically used for slicing.
      * @param offset
      *          The offset in bytes to start this new DrillBuf.
@@ -266,11 +345,12 @@ public class AllocatorManager {
      * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
      */
     public DrillBuf newDrillBuf(int offset, int length) {
-      return newDrillBuf(offset, length, null, false);
+      allocator.assertOpen();
+      return newDrillBuf(offset, length, null);
     }
 
     /**
-     * Create a new DrillBuf associated with this AllocatorManager and memory.
+     * Create a new DrillBuf associated with this AllocationManager and memory.
      * @param offset
      *          The offset in bytes to start this new DrillBuf.
      * @param length
@@ -281,7 +361,9 @@ public class AllocatorManager {
      *          Whether or not the newly created buffer should get an additional reference count added to it.
      * @return A new DrillBuf that shares references with all DrillBufs associated with this BufferLedger
      */
-    public DrillBuf newDrillBuf(int offset, int length, BufferManager manager, boolean retain) {
+    public DrillBuf newDrillBuf(int offset, int length, BufferManager manager) {
+      allocator.assertOpen();
+
       final DrillBuf buf = new DrillBuf(
           bufRefCnt,
           this,
@@ -291,10 +373,6 @@ public class AllocatorManager {
           offset,
           length,
           false);
-
-      if (retain) {
-        buf.retain();
-      }
 
       if (BaseAllocator.DEBUG) {
         historicalLog.recordEvent(
