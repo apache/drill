@@ -92,6 +92,8 @@ public abstract class WindowFunction {
 
   abstract void generateCode(final ClassGenerator<WindowFramer> cg);
 
+  abstract boolean supportsCustomFrames();
+
   /**
    * @param hasOrderBy window definition contains an ORDER BY clause
    * @return true if this window function requires all batches of current partition to be available before processing
@@ -161,6 +163,11 @@ public abstract class WindowFunction {
     public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
       return partitionEndReached || (hasOrderBy && frameEndReached);
     }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return true;
+    }
   }
 
   static class Ranking extends WindowFunction {
@@ -217,6 +224,11 @@ public abstract class WindowFunction {
       // for CUME_DIST, PERCENT_RANK and NTILE we need the full partition
       // otherwise we can process the first batch immediately
       return partitionEndReached || ! requiresFullPartition(hasOrderBy);
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
     }
   }
 
@@ -315,6 +327,11 @@ public abstract class WindowFunction {
     public boolean canDoWork(int numBatchesAvailable, final boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
       return partitionEndReached || numBatchesAvailable > 1;
     }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
+    }
   }
 
   static class Lag extends WindowFunction {
@@ -381,6 +398,11 @@ public abstract class WindowFunction {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
       return true;
     }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return false;
+    }
   }
 
   static class LastValue extends WindowFunction {
@@ -419,9 +441,8 @@ public abstract class WindowFunction {
       // this will generate the the following, pseudo, code:
       //   write current.source_last_value[frameLastRow] to container.last_value[row]
 
-      final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupReadLastValue", "readLastValue", null, null);
-      final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
-      final MappingSet mappingSet = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+      final GeneratorMapping mapping = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
+      final MappingSet mappingSet = new MappingSet("index", "outIndex", mapping, mapping);
 
       cg.setMappingSet(mappingSet);
       cg.addExpr(writeSourceToLastValue);
@@ -435,6 +456,11 @@ public abstract class WindowFunction {
     @Override
     public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
       return partitionEndReached || (hasOrderBy && frameEndReached);
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
+      return true;
     }
   }
 
@@ -471,10 +497,10 @@ public abstract class WindowFunction {
     @Override
     void generateCode(final ClassGenerator<WindowFramer> cg) {
       {
-        // in DefaultFrameTemplate we call setupCopyFirstValue:
-        //   setupCopyFirstValue(current, internal)
-        // and copyFirstValueToInternal:
-        //   copyFirstValueToInternal(currentRow, 0)
+        // in DefaultFrameTemplate we call setupSaveFirstValue:
+        //   setupSaveFirstValue(current, internal)
+        // and saveFirstValue:
+        //   saveFirstValue(currentRow, 0)
         //
         // this will generate the the following, pseudo, code:
         //   write current.source[currentRow] to internal.first_value[0]
@@ -482,7 +508,7 @@ public abstract class WindowFunction {
         // so it basically copies the first value of current partition into the first row of internal.first_value
         // this is especially useful when handling multiple batches for the same partition where we need to keep
         // the first value of the partition somewhere after we release the first batch
-        final GeneratorMapping mapping = GeneratorMapping.create("setupCopyFirstValue", "copyFirstValueToInternal", null, null);
+        final GeneratorMapping mapping = GeneratorMapping.create("setupSaveFirstValue", "saveFirstValue", null, null);
         final MappingSet mappingSet = new MappingSet("index", "0", mapping, mapping);
 
         cg.setMappingSet(mappingSet);
@@ -490,8 +516,8 @@ public abstract class WindowFunction {
       }
 
       {
-        // in DefaultFrameTemplate we call setupPasteValues:
-        //   setupPasteValues(internal, container)
+        // in DefaultFrameTemplate we call setupWriteFirstValue:
+        //   setupWriteFirstValue(internal, container)
         // and outputRow:
         //   outputRow(outIndex)
         //
@@ -499,7 +525,7 @@ public abstract class WindowFunction {
         //   write internal.first_value[0] to container.first_value[outIndex]
         //
         // so it basically copies the value stored in internal.first_value's first row into all rows of container.first_value
-        final GeneratorMapping mapping = GeneratorMapping.create("setupPasteValues", "outputRow", "resetValues", "cleanup");
+        final GeneratorMapping mapping = GeneratorMapping.create("setupWriteFirstValue", "outputRow", "resetValues", "cleanup");
         final MappingSet mappingSet = new MappingSet("0", "outIndex", mapping, mapping);
         cg.setMappingSet(mappingSet);
         cg.addExpr(writeFirstValueToFirstValue);
@@ -514,6 +540,11 @@ public abstract class WindowFunction {
     @Override
     public boolean canDoWork(int numBatchesAvailable, boolean hasOrderBy, boolean frameEndReached, boolean partitionEndReached) {
       assert numBatchesAvailable > 0 : "canDoWork() should not be called when numBatchesAvailable == 0";
+      return true;
+    }
+
+    @Override
+    boolean supportsCustomFrames() {
       return true;
     }
   }
