@@ -102,69 +102,71 @@ public class KuduRecordReader extends AbstractRecordReader {
       while (iterator == null || !iterator.hasNext()) {
         if (!scanner.hasMoreRows()) {
           iterator = null;
-          break;
+          return 0;
         }
         iterator = scanner.nextRows();
-
-        for (; rowCount < 4095 && iterator.hasNext(); rowCount++) {
-          writer.setPosition(rowCount);
-          RowResult result = iterator.next();
-          int i = 0;
-          for (ColumnSchema column : result.getColumnProjection().getColumns()) {
-            switch (column.getType()) {
-            case STRING: {
-              final ByteBuffer buf = result.getBinary(i);
-              final int length = buf.remaining();
-              ensure(length);
-              buffer.setBytes(0, buf);
-              writer.varChar(column.getName()).writeVarChar(0, length, buffer);
-              break;
-            }
-            case BINARY: {
-              final ByteBuffer buf = result.getBinary(i);
-              final int length = buf.remaining();
-              ensure(length);
-              buffer.setBytes(0, buf);
-              writer.varBinary(column.getName()).writeVarBinary(0, length, buffer);
-              break;
-            }
-            case INT8:
-              writer.integer(column.getName()).writeInt(result.getByte(i));
-              break;
-            case INT16:
-              writer.integer(column.getName()).writeInt(result.getShort(i));
-              break;
-            case INT32:
-              writer.integer(column.getName()).writeInt(result.getInt(i));
-              break;
-            case INT64:
-              writer.bigInt(column.getName()).writeBigInt(result.getLong(i));
-              break;
-            case FLOAT:
-              writer.float4(column.getName()).writeFloat4(result.getFloat(i));
-              break;
-            case DOUBLE:
-              writer.float8(column.getName()).writeFloat8(result.getDouble(i));
-              break;
-            case BOOL:
-              writer.bit(column.getName()).writeBit(result.getBoolean(i) ? 1 : 0);
-              break;
-            case TIMESTAMP:
-              writer.timeStamp(column.getName()).writeTimeStamp(result.getLong(i) / 1000);
-              break;
-            default:
-              throw new UnsupportedOperationException("unsupported type " + column.getType());
-            }
-
-            i++;
-          }
-        }
+      }
+      for (; rowCount < 4095 && iterator.hasNext(); rowCount++) {
+        writer.setPosition(rowCount);
+        addRowResult(iterator.next());
       }
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
     containerWriter.setValueCount(rowCount);
     return rowCount;
+  }
+
+  private void addRowResult(RowResult result) {
+    int i = 0;
+    for (ColumnSchema column : result.getColumnProjection().getColumns()) {
+      switch (column.getType()) {
+      case STRING: {
+        final ByteBuffer buf = result.getBinary(i);
+        final int length = buf.remaining();
+        ensure(length);
+        buffer.setBytes(0, buf);
+        writer.varChar(column.getName()).writeVarChar(0, length, buffer);
+        break;
+      }
+      case BINARY: {
+        final ByteBuffer buf = result.getBinary(i);
+        final int length = buf.remaining();
+        ensure(length);
+        buffer.setBytes(0, buf);
+        writer.varBinary(column.getName()).writeVarBinary(0, length, buffer);
+        break;
+      }
+      case INT8:
+        writer.integer(column.getName()).writeInt(result.getByte(i));
+        break;
+      case INT16:
+        writer.integer(column.getName()).writeInt(result.getShort(i));
+        break;
+      case INT32:
+        writer.integer(column.getName()).writeInt(result.getInt(i));
+        break;
+      case INT64:
+        writer.bigInt(column.getName()).writeBigInt(result.getLong(i));
+        break;
+      case FLOAT:
+        writer.float4(column.getName()).writeFloat4(result.getFloat(i));
+        break;
+      case DOUBLE:
+        writer.float8(column.getName()).writeFloat8(result.getDouble(i));
+        break;
+      case BOOL:
+        writer.bit(column.getName()).writeBit(result.getBoolean(i) ? 1 : 0);
+        break;
+      case TIMESTAMP:
+        writer.timeStamp(column.getName()).writeTimeStamp(result.getLong(i) / 1000);
+        break;
+      default:
+        throw new UnsupportedOperationException("unsupported type " + column.getType());
+      }
+
+      i++;
+    }
   }
 
   private void ensure(final int length) {
