@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
 
 import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
@@ -40,16 +36,13 @@ public class HiveReadEntry {
   public HiveTable table;
   @JsonProperty("partitions")
   public List<HiveTable.HivePartition> partitions;
-  @JsonProperty("hiveConfigOverride")
-  public Map<String, String> hiveConfigOverride;
 
   @JsonIgnore
   private List<Partition> partitionsUnwrapped = Lists.newArrayList();
 
   @JsonCreator
   public HiveReadEntry(@JsonProperty("table") HiveTable table,
-                       @JsonProperty("partitions") List<HiveTable.HivePartition> partitions,
-                       @JsonProperty("hiveConfigOverride") Map<String, String> hiveConfigOverride) {
+                       @JsonProperty("partitions") List<HiveTable.HivePartition> partitions) {
     this.table = table;
     this.partitions = partitions;
     if (partitions != null) {
@@ -57,7 +50,6 @@ public class HiveReadEntry {
         partitionsUnwrapped.add(part.getPartition());
       }
     }
-    this.hiveConfigOverride = hiveConfigOverride;
   }
 
   @JsonIgnore

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.logical;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveScan;
 import org.apache.drill.exec.store.hive.HiveTable.HivePartition;
 import org.apache.drill.exec.store.hive.HiveUtilities;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -86,17 +88,18 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   @Override
   public boolean matches(RelOptRuleCall call) {
     final DrillScanRel scanRel = (DrillScanRel) call.rel(0);
-    final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
 
     if (!(scanRel.getGroupScan() instanceof HiveScan) || ((HiveScan) scanRel.getGroupScan()).isNativeReader()) {
       return false;
     }
 
     final HiveScan hiveScan = (HiveScan) scanRel.getGroupScan();
+    final HiveConf hiveConf = hiveScan.getHiveConf();
     final Table hiveTable = hiveScan.hiveReadEntry.getTable();
 
     final Class<? extends InputFormat> tableInputFormat =
-        getInputFormatFromSD(MetaStoreUtils.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd());
+        getInputFormatFromSD(MetaStoreUtils.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
+            hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
       return false;
     }
@@ -111,7 +114,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     for (HivePartition partition : partitions) {
       final StorageDescriptor partitionSD = partition.getPartition().getSd();
       Class<? extends InputFormat> inputFormat = getInputFormatFromSD(
-          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD);
+          HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD,
+          hiveConf);
       if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
         return false;
       }
@@ -139,11 +143,16 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
    * @return {@link InputFormat} class or null if a failure has occurred. Failure is logged as warning.
    */
   private Class<? extends InputFormat> getInputFormatFromSD(final Properties properties,
-      final HiveReadEntry hiveReadEntry, final StorageDescriptor sd) {
+      final HiveReadEntry hiveReadEntry, final StorageDescriptor sd, final HiveConf hiveConf) {
     final Table hiveTable = hiveReadEntry.getTable();
     try {
-      final JobConf job = new JobConf();
-      HiveUtilities.addConfToJob(job, properties, hiveReadEntry.hiveConfigOverride);
+      final String inputFormatName = sd.getInputFormat();
+      if (!Strings.isNullOrEmpty(inputFormatName)) {
+        return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+      }
+
+      final JobConf job = new JobConf(hiveConf);
+      HiveUtilities.addConfToJob(job, properties);
       return HiveUtilities.getInputFormatClass(job, sd, hiveTable);
     } catch (final Exception e) {
       logger.warn("Failed to get InputFormat class from Hive table '{}.{}'. StorageDescriptor [{}]",

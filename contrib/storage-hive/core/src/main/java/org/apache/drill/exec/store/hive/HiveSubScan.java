@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -35,6 +36,8 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputSplit;
@@ -58,17 +61,28 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   protected Table table;
   @JsonIgnore
   protected List<Partition> partitions;
+  @JsonIgnore
+  protected HiveStoragePlugin storagePlugin;
 
   private List<String> splits;
   private List<String> splitClasses;
   protected List<SchemaPath> columns;
 
   @JsonCreator
-  public HiveSubScan(@JsonProperty("userName") String userName,
+  public HiveSubScan(@JacksonInject StoragePluginRegistry registry,
+                     @JsonProperty("userName") String userName,
                      @JsonProperty("splits") List<String> splits,
                      @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                      @JsonProperty("splitClasses") List<String> splitClasses,
-                     @JsonProperty("columns") List<SchemaPath> columns) throws IOException, ReflectiveOperationException {
+                     @JsonProperty("columns") List<SchemaPath> columns,
+                     @JsonProperty("storagePluginName") String pluginName)
+      throws IOException, ExecutionSetupException, ReflectiveOperationException {
+    this(userName, splits, hiveReadEntry, splitClasses, columns, (HiveStoragePlugin)registry.getPlugin(pluginName));
+  }
+
+  public HiveSubScan(final String userName, final List<String> splits, final HiveReadEntry hiveReadEntry,
+      final List<String> splitClasses, final List<SchemaPath> columns, final HiveStoragePlugin plugin)
+    throws IOException, ReflectiveOperationException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
@@ -76,10 +90,22 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     this.splits = splits;
     this.splitClasses = splitClasses;
     this.columns = columns;
+    this.storagePlugin = plugin;
 
     for (int i = 0; i < splits.size(); i++) {
       inputSplits.add(deserializeInputSplit(splits.get(i), splitClasses.get(i)));
     }
+  }
+
+  @JsonProperty("storagePluginName")
+  @SuppressWarnings("unused")
+  public String getStoragePluginName() {
+    return storagePlugin.getName();
+  }
+
+  @JsonIgnore
+  public HiveStoragePlugin getStoragePlugin() {
+    return storagePlugin;
   }
 
   public List<String> getSplits() {
@@ -130,7 +156,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     try {
-      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns);
+      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns, storagePlugin);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -144,5 +170,10 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public int getOperatorType() {
     return CoreOperatorType.HIVE_SUB_SCAN_VALUE;
+  }
+
+  @JsonIgnore
+  public HiveConf getHiveConf() {
+    return storagePlugin.getHiveConf();
   }
 }

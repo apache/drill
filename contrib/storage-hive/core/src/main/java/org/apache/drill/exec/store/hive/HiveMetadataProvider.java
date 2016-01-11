@@ -26,6 +26,7 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.StatsSetupConst;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -58,15 +59,17 @@ public class HiveMetadataProvider {
   private final UserGroupInformation ugi;
   private final boolean isPartitionedTable;
   private final Map<Partition, List<InputSplitWrapper>> partitionInputSplitMap;
+  private final HiveConf hiveConf;
   private List<InputSplitWrapper> tableInputSplits;
 
   private final Stopwatch watch = new Stopwatch();
 
-  public HiveMetadataProvider(final String userName, final HiveReadEntry hiveReadEntry) {
+  public HiveMetadataProvider(final String userName, final HiveReadEntry hiveReadEntry, final HiveConf hiveConf) {
     this.hiveReadEntry = hiveReadEntry;
     this.ugi = ImpersonationUtil.createProxyUgi(userName);
     isPartitionedTable = hiveReadEntry.getTable().getPartitionKeysSize() > 0;
     partitionInputSplitMap = Maps.newHashMap();
+    this.hiveConf = hiveConf;
   }
 
   /**
@@ -238,8 +241,8 @@ public class HiveMetadataProvider {
       return ugi.doAs(new PrivilegedExceptionAction<List<InputSplitWrapper>>() {
         public List<InputSplitWrapper> run() throws Exception {
           final List<InputSplitWrapper> splits = Lists.newArrayList();
-          final JobConf job = new JobConf();
-          HiveUtilities.addConfToJob(job, properties, hiveReadEntry.hiveConfigOverride);
+          final JobConf job = new JobConf(hiveConf);
+          HiveUtilities.addConfToJob(job, properties);
           job.setInputFormat(HiveUtilities.getInputFormatClass(job, sd, hiveReadEntry.getTable()));
           final Path path = new Path(sd.getLocation());
           final FileSystem fs = path.getFileSystem(job);
