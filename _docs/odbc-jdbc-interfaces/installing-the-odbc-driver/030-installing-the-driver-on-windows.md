@@ -7,11 +7,7 @@ The MapR Drill ODBC Driver installer is available for 32- and 64-bit
 applications on Windows. Both versions of the driver can be installed on a 64-bit
 machine. 
 
-Install the MapR Drill ODBC Driver on a system that meets the [system requirements]({{site.baseurl}}/docs/installing-the-driver-on-windows/). Complete the following steps described in detail in this document:
-
-* [Step 1: Download the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-1:-download-the-mapr-drill-odbc-driver)
-* [Step 2: Install the MapR Drill ODBC Driver]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-2:-install-the-mapr-drill-odbc-driver)
-* [Step 3: Verify the installation]({{site.baseurl}}/docs/installing-the-driver-on-windows/#step-3:-verify-the-installation)
+Install the MapR Drill ODBC Driver on a system that meets the system requirements. 
 
 ##  System Requirements
 
@@ -29,6 +25,8 @@ If not, create an entry in `/etc/hosts` for each node in the following format:
 
     `<drill-machine-IP> <drill-machine-hostname>`  
     Example: `127.0.0.1 localhost`
+
+ {% include startnote.html %}Currently Drill does not support a 32-bit Windows machine; however, the 32- or 64-bit MapR Drill ODBC Driver is supported on a 64-bit machine.{% include endnote.html %}
 
 To install the driver, you need Administrator privileges on the computer.
 
