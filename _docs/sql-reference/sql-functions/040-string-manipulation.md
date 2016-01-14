@@ -1,6 +1,6 @@
 ---
 title: "String Manipulation"
-date:  
+date: 2016-01-14
 parent: "SQL Functions"
 ---
 
@@ -11,6 +11,7 @@ Function| Return Type
 [BYTE_SUBSTR]({{ site.baseurl }}/docs/string-manipulation/#byte_substr)|BINARY or VARCHAR
 [CHAR_LENGTH]({{ site.baseurl }}/docs/string-manipulation/#char_length)| INTEGER  
 [CONCAT]({{ site.baseurl }}/docs/string-manipulation/#concat)| VARCHAR
+[ILIKE]({{ site.baseurl }}/docs/string-manipulation/#ilike)| BOOLEAN
 [INITCAP]({{ site.baseurl }}/docs/string-manipulation/#initcap)| VARCHAR
 [LENGTH]({{ site.baseurl }}/docs/string-manipulation/#length)| INTEGER
 [LOWER]({{ site.baseurl }}/docs/string-manipulation/#lower)| VARCHAR
@@ -101,6 +102,36 @@ Concatenates arguments.
     1 row selected (0.134 seconds)
 
 Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators/#string-concatenate-operator) to concatenate strings.
+
+## ILIKE
+Compares argument one and two and returns true if values match.
+
+### ILIKE Syntax
+
+ILIKE( string, string )
+
+### ILIKE Examples
+
+```
+SELECT ILIKE('abc', 'abc') FROM (VALUES(1));
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+1 row selected (0.185 seconds)
+```
+```
+SELECT ILIKE(last_name, 'Spence') FROM cp.`employee.json` limit 3;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| true    |
++---------+
+3 rows selected (0.17 seconds)
+```
 
 ## INITCAP
 Returns the string using initial caps.

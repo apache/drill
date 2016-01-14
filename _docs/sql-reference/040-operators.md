@@ -1,6 +1,6 @@
 ---
 title: "Operators"
-date:  
+date: 2016-01-14
 parent: "SQL Reference"
 ---
 You can use various types of operators in your Drill queries to perform
@@ -14,7 +14,6 @@ You can use the following logical operators in your Drill queries:
   * BETWEEN
   * IN
   * LIKE
-  * ILIKE
   * NOT
   * OR 
 
@@ -37,13 +36,7 @@ You can use the following comparison operators in your Drill queries:
 
 ## Pattern Matching Operators
 
-You can use the following pattern matching operators in your Drill queries:
-
-  * LIKE
-  * ILIKE
-  * NOT LIKE
-  * SIMILAR TO
-  * NOT SIMILAR TO
+You can use the LIKE pattern matching operator in your Drill queries.
 
 ## Math Operators
 
