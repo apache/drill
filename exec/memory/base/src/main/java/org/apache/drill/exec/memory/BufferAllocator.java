@@ -146,4 +146,9 @@ public interface BufferAllocator extends AutoCloseable {
    */
   public String toVerboseString();
 
+  /**
+   * Asserts (using java assertions) that the provided allocator is currently open. If assertions are disabled, this is
+   * a no-op.
+   */
+  public void assertOpen();
 }

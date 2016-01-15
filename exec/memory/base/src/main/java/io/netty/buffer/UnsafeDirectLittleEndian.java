@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
   private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
+  private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
+
+  public final long id = ID_GENERATOR.incrementAndGet();
   private final AbstractByteBuf wrapped;
   private final long memoryAddress;
 
@@ -249,6 +252,11 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
       bufferSize.addAndGet(-initCap);
     }
     return released;
+  }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
   }
 
   public static final boolean ASSERT_ENABLED;
