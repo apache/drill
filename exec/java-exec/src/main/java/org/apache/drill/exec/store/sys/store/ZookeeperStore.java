@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys.zk;
+package org.apache.drill.exec.store.sys.store;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -31,7 +31,10 @@ import org.apache.curator.framework.api.ACLBackgroundPathAndBytesable;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
-import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreMode;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 
@@ -39,17 +42,16 @@ import org.apache.zookeeper.KeeperException;
  * This is the abstract class that is shared by ZkPStore (Persistent store) and ZkEStore (Ephemeral Store)
  * @param <V>
  */
-public abstract class ZkAbstractStore<V> implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkAbstractStore.class);
+public class ZookeeperStore<V> implements Store<V> {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperStore.class);
 
   protected final CuratorFramework framework;
-  protected final PStoreConfig<V> config;
+  protected final StoreConfig<V> config;
   private final PathChildrenCache childrenCache;
   private final String prefix;
   private final String parent;
 
-  public ZkAbstractStore(CuratorFramework framework, PStoreConfig<V> config)
-      throws IOException {
+  public ZookeeperStore(final CuratorFramework framework, final StoreConfig<V> config) throws StoreException {
     this.parent = "/" + config.getName();
     this.prefix = parent + "/";
     this.framework = framework;
@@ -61,8 +63,13 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
     try {
       childrenCache.start(StartMode.BUILD_INITIAL_CACHE);
     } catch (Exception e) {
-      throw new RuntimeException("Failure while initializing Zookeeper for PStore", e);
+      throw new StoreException("Failure while initializing Zookeeper", e);
     }
+  }
+
+  @Override
+  public StoreMode getMode() {
+    return config.getMode();
   }
 
   public Iterator<Entry<String, V>> iterator() {
@@ -139,7 +146,9 @@ public abstract class ZkAbstractStore<V> implements AutoCloseable {
    * @see #createOrUpdate(String, Object)
    * @see #createWithPrefix(String, Object)
    */
-  protected abstract CreateMode getCreateMode();
+  protected CreateMode getCreateMode() {
+    return getMode() == StoreMode.EPHEMERAL? CreateMode.EPHEMERAL : CreateMode.PERSISTENT;
+  }
 
 
   /**

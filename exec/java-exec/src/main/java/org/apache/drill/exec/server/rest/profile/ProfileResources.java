@@ -37,6 +37,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
@@ -44,8 +45,8 @@ import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.rest.ViewableWithPermissions;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.QueryManager;
@@ -119,8 +120,8 @@ public class ProfileResources {
 
   }
 
-  private PStoreProvider provider(){
-    return work.getContext().getPersistentStoreProvider();
+  private StoreProvider provider(){
+    return work.getContext().getStoreProvider();
   }
 
   @XmlRootElement
@@ -146,12 +147,12 @@ public class ProfileResources {
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
   public QProfiles getProfilesJSON() {
-    PStore<QueryProfile> completed = null;
-    PStore<QueryInfo> running = null;
+    Store<QueryProfile> completed = null;
+    Store<QueryInfo> running = null;
     try {
       completed = provider().getStore(QueryManager.QUERY_PROFILE);
       running = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
-    } catch (IOException e) {
+    } catch (StoreException e) {
       logger.debug("Failed to get profiles from persistent or ephemeral store.");
       return new QProfiles(new ArrayList<ProfileInfo>(), new ArrayList<ProfileInfo>());
     }
@@ -188,7 +189,7 @@ public class ProfileResources {
     return ViewableWithPermissions.create("/rest/profile/list.ftl", sc, profiles);
   }
 
-  private QueryProfile getQueryProfile(String queryId) throws IOException {
+  private QueryProfile getQueryProfile(String queryId) throws StoreException {
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
     // first check local running
@@ -201,7 +202,7 @@ public class ProfileResources {
 
     // then check remote running
     try{
-      PStore<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
+      Store<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
       QueryInfo info = runningQueries.get(queryId);
       if (info != null) {
         QueryProfile queryProfile = work.getContext()
@@ -217,7 +218,7 @@ public class ProfileResources {
     }
 
     // then check blob store
-    PStore<QueryProfile> profiles = provider().getStore(QueryManager.QUERY_PROFILE);
+    Store<QueryProfile> profiles = provider().getStore(QueryManager.QUERY_PROFILE);
     QueryProfile queryProfile = profiles.get(queryId);
     if (queryProfile != null) {
       checkOrThrowProfileViewAuthorization(queryProfile);
@@ -236,7 +237,7 @@ public class ProfileResources {
   public String getProfileJSON(@PathParam("queryid") String queryId) {
     try {
       return new String(QueryManager.QUERY_PROFILE.getSerializer().serialize(getQueryProfile(queryId)));
-    } catch (IOException e) {
+    } catch (StoreException|IOException e) {
       logger.debug("Failed to serialize profile for: " + queryId);
       return ("{ 'message' : 'error (unable to serialize profile)' }");
     }
@@ -245,7 +246,7 @@ public class ProfileResources {
   @GET
   @Path("/profiles/{queryid}")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfile(@PathParam("queryid") String queryId) throws IOException {
+  public Viewable getProfile(@PathParam("queryid") String queryId) throws StoreException {
     ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId));
     return ViewableWithPermissions.create("/rest/profile/profile.ftl", sc, wrapper);
   }
@@ -254,7 +255,7 @@ public class ProfileResources {
   @GET
   @Path("/profiles/cancel/{queryid}")
   @Produces(MediaType.TEXT_PLAIN)
-  public String cancelQuery(@PathParam("queryid") String queryId) throws IOException {
+  public String cancelQuery(@PathParam("queryid") String queryId) throws StoreException {
 
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
@@ -268,7 +269,7 @@ public class ProfileResources {
 
     // then check remote running
     try{
-      PStore<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
+      Store<QueryInfo> runningQueries = provider().getStore(QueryManager.RUNNING_QUERY_INFO);
       QueryInfo info = runningQueries.get(queryId);
       checkOrThrowQueryCancelAuthorization(info.getUser(), queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);

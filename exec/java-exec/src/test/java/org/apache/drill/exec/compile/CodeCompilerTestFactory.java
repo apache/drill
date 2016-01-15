@@ -24,14 +24,15 @@ import java.io.IOException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.server.options.SystemOptionManager;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalStoreProvider;
 
 public class CodeCompilerTestFactory {
-  public static CodeCompiler getTestCompiler(DrillConfig c) throws IOException {
+  public static CodeCompiler getTestCompiler(DrillConfig c) throws Exception {
     DrillConfig config = checkNotNull(c);
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config));
-    LocalPStoreProvider provider = new LocalPStoreProvider(config);
+    LocalStoreProvider provider = new LocalStoreProvider(config);
     SystemOptionManager systemOptionManager = new SystemOptionManager(persistence, provider);
     return new CodeCompiler(config, systemOptionManager.init());
   }

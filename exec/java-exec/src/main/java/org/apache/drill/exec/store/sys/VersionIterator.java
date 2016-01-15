@@ -19,10 +19,8 @@ package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.jar.Manifest;
 
 import com.google.common.io.Resources;
 import org.apache.drill.common.util.DrillVersionInfo;

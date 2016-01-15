@@ -20,16 +20,18 @@ package org.apache.drill.exec.store.hbase.config;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
-import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
-import org.apache.drill.exec.store.sys.zk.ZkEStoreProvider;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreRegistry;
+import org.apache.drill.exec.store.sys.store.provider.BaseStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.ZookeeperStoreProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -43,8 +45,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class HBasePStoreProvider implements PStoreProvider {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePStoreProvider.class);
+public class HBaseStoreProvider extends BaseStoreProvider {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoreProvider.class);
 
   static final byte[] FAMILY = Bytes.toBytes("s");
 
@@ -59,12 +61,12 @@ public class HBasePStoreProvider implements PStoreProvider {
   private HTableInterface table;
 
   private final boolean zkAvailable;
-  private final LocalEStoreProvider localEStoreProvider;
-  private final ZkEStoreProvider zkEStoreProvider;
+  private final LocalStoreProvider localStoreProvider;
+  private final ZookeeperStoreProvider zkStoreProvider;
 
-  public HBasePStoreProvider(PStoreRegistry registry) {
+  public HBaseStoreProvider(StoreRegistry registry) throws StoreException {
     @SuppressWarnings("unchecked")
-    Map<String, Object> config = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG);
+    final Map<String, Object> config = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG);
     this.hbaseConf = HBaseConfiguration.create();
     this.hbaseConf.set(HConstants.HBASE_CLIENT_INSTANCE_ID, "drill-hbase-persistent-store-client");
     if (config != null) {
@@ -74,43 +76,43 @@ public class HBasePStoreProvider implements PStoreProvider {
     }
     this.storeTableName = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE);
 
-    ClusterCoordinator coord = registry.getClusterCoordinator();
+    final ClusterCoordinator coord = registry.getCoordinator();
     if ((coord instanceof ZKClusterCoordinator)) {
-      this.localEStoreProvider = null;
-      this.zkEStoreProvider = new ZkEStoreProvider(((ZKClusterCoordinator)registry.getClusterCoordinator()).getCurator());
+      this.localStoreProvider = null;
+      this.zkStoreProvider = new ZookeeperStoreProvider((StoreRegistry<ZKClusterCoordinator>)registry);
       this.zkAvailable = true;
     } else {
-      this.localEStoreProvider = new LocalEStoreProvider();
-      this.zkEStoreProvider = null;
+      this.localStoreProvider = new LocalStoreProvider(registry);
+      this.zkStoreProvider = null;
       this.zkAvailable = false;
     }
 
   }
 
   @VisibleForTesting
-  public HBasePStoreProvider(Configuration conf, String storeTableName) {
+  public HBaseStoreProvider(Configuration conf, String storeTableName) throws StoreException {
     this.hbaseConf = conf;
     this.storeTableName = storeTableName;
-    this.localEStoreProvider = new LocalEStoreProvider();
-    this.zkEStoreProvider = null;
+    this.localStoreProvider = new LocalStoreProvider(DrillConfig.create());
+    this.zkStoreProvider = null;
     this.zkAvailable = false;
   }
 
 
 
   @Override
-  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
+  public <V> Store<V> getStore(StoreConfig<V> config) throws StoreException {
     switch(config.getMode()){
     case EPHEMERAL:
       if (this.zkAvailable) {
-        return zkEStoreProvider.getStore(config);
+        return zkStoreProvider.getStore(config);
       } else {
-        return localEStoreProvider.getStore(config);
+        return localStoreProvider.getStore(config);
       }
 
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      return new HBasePStore<V>(config, this.table);
+      return new HBasePersistentStore<V>(config, this.table);
 
     default:
       throw new IllegalStateException();

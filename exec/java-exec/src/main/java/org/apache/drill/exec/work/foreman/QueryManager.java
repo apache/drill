@@ -45,9 +45,9 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
@@ -62,14 +62,14 @@ import com.google.common.collect.Maps;
 public class QueryManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
 
-  public static final PStoreConfig<QueryProfile> QUERY_PROFILE = PStoreConfig.
+  public static final StoreConfig<QueryProfile> QUERY_PROFILE = StoreConfig.
           newProtoBuilder(SchemaUserBitShared.QueryProfile.WRITE, SchemaUserBitShared.QueryProfile.MERGE)
       .name("profiles")
       .blob()
-      .max(100)
+      .maxSize(100)
       .build();
 
-  public static final PStoreConfig<QueryInfo> RUNNING_QUERY_INFO = PStoreConfig.
+  public static final StoreConfig<QueryInfo> RUNNING_QUERY_INFO = StoreConfig.
           newProtoBuilder(SchemaUserBitShared.QueryInfo.WRITE, SchemaUserBitShared.QueryInfo.MERGE)
       .name("running")
       .ephemeral()
@@ -90,8 +90,8 @@ public class QueryManager {
       new IntObjectOpenHashMap<>();
   private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
-  private final PStore<QueryProfile> profilePStore;
-  private final PStore<QueryInfo> profileEStore;
+  private final Store<QueryProfile> profileStore;
+  private final Store<QueryInfo> profileEStore;
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
@@ -104,7 +104,7 @@ public class QueryManager {
   // How many fragments have finished their execution.
   private final AtomicInteger finishedFragments = new AtomicInteger(0);
 
-  public QueryManager(final QueryId queryId, final RunQuery runQuery, final PStoreProvider pStoreProvider,
+  public QueryManager(final QueryId queryId, final RunQuery runQuery, final StoreProvider storeProvider,
       final StateListener stateListener, final Foreman foreman) {
     this.queryId =  queryId;
     this.runQuery = runQuery;
@@ -113,9 +113,9 @@ public class QueryManager {
 
     stringQueryId = QueryIdHelper.getQueryId(queryId);
     try {
-      profilePStore = pStoreProvider.getStore(QUERY_PROFILE);
-      profileEStore = pStoreProvider.getStore(RUNNING_QUERY_INFO);
-    } catch (final IOException e) {
+      profileStore = storeProvider.getStore(QUERY_PROFILE);
+      profileEStore = storeProvider.getStore(RUNNING_QUERY_INFO);
+    } catch (final Exception e) {
       throw new DrillRuntimeException(e);
     }
   }
@@ -305,7 +305,7 @@ public class QueryManager {
   void writeFinalProfile(UserException ex) {
     try {
       // TODO(DRILL-2362) when do these ever get deleted?
-      profilePStore.put(stringQueryId, getQueryProfile(ex));
+      profileStore.put(stringQueryId, getQueryProfile(ex));
     } catch (Exception e) {
       logger.error("Failure while storing Query Profile", e);
     }

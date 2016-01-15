@@ -74,8 +74,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
 @JsonTypeName("mongo-scan")
-public class MongoGroupScan extends AbstractGroupScan implements
-    DrillMongoConstants {
+public class MongoGroupScan extends AbstractGroupScan {
 
   private static final Integer select = Integer.valueOf(1);
 
@@ -180,39 +179,39 @@ public class MongoGroupScan extends AbstractGroupScan implements
     chunksMapping = Maps.newHashMap();
     chunksInverseMapping = Maps.newLinkedHashMap();
     if (isShardedCluster(client)) {
-      MongoDatabase db = client.getDatabase(CONFIG);
-      MongoCollection<Document> chunksCollection = db.getCollection(CHUNKS);
+      MongoDatabase db = client.getDatabase(DrillMongoConstants.CONFIG);
+      MongoCollection<Document> chunksCollection = db.getCollection(DrillMongoConstants.CHUNKS);
       Document filter = new Document();
       filter
           .put(
-              NS,
+              DrillMongoConstants.NS,
               this.scanSpec.getDbName() + "."
                   + this.scanSpec.getCollectionName());
 
       Document projection = new Document();
-      projection.put(SHARD, select);
-      projection.put(MIN, select);
-      projection.put(MAX, select);
+      projection.put(DrillMongoConstants.SHARD, select);
+      projection.put(DrillMongoConstants.MIN, select);
+      projection.put(DrillMongoConstants.MAX, select);
 
       FindIterable<Document> chunkCursor = chunksCollection.find(filter).projection(projection);
       MongoCursor<Document> iterator = chunkCursor.iterator();
 
-      MongoCollection<Document> shardsCollection = db.getCollection(SHARDS);
+      MongoCollection<Document> shardsCollection = db.getCollection(DrillMongoConstants.SHARDS);
 
       projection = new Document();
-      projection.put(HOST, select);
+      projection.put(DrillMongoConstants.HOST, select);
 
       boolean hasChunks = false;
       while (iterator.hasNext()) {
         Document chunkObj = iterator.next();
-        String shardName = (String) chunkObj.get(SHARD);
-        String chunkId = (String) chunkObj.get(ID);
-        filter = new Document(ID, shardName);
+        String shardName = (String) chunkObj.get(DrillMongoConstants.SHARD);
+        String chunkId = (String) chunkObj.get(DrillMongoConstants.ID);
+        filter = new Document(DrillMongoConstants.ID, shardName);
         FindIterable<Document> hostCursor = shardsCollection.find(filter).projection(projection);
         MongoCursor<Document> hostIterator = hostCursor.iterator();
         while (hostIterator.hasNext()) {
           Document hostObj = hostIterator.next();
-          String hostEntry = (String) hostObj.get(HOST);
+          String hostEntry = (String) hostObj.get(DrillMongoConstants.HOST);
           String[] tagAndHost = StringUtils.split(hostEntry, '/');
           String[] hosts = tagAndHost.length > 1 ? StringUtils.split(
               tagAndHost[1], ',') : StringUtils.split(tagAndHost[0], ',');
@@ -237,7 +236,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
             chunkHostsList.add(serverAddr.toString());
           }
           ChunkInfo chunkInfo = new ChunkInfo(chunkHostsList, chunkId);
-          Document minMap = (Document) chunkObj.get(MIN);
+          Document minMap = (Document) chunkObj.get(DrillMongoConstants.MIN);
 
           Map<String, Object> minFilters = Maps.newHashMap();
           Set keySet = minMap.keySet();
@@ -250,7 +249,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
           chunkInfo.setMinFilters(minFilters);
 
           Map<String, Object> maxFilters = Maps.newHashMap();
-          Map maxMap = (Document) chunkObj.get(MAX);
+          Map maxMap = (Document) chunkObj.get(DrillMongoConstants.MAX);
           keySet = maxMap.keySet();
           for (Object keyObj : keySet) {
             Object object = maxMap.get(keyObj);
@@ -295,23 +294,23 @@ public class MongoGroupScan extends AbstractGroupScan implements
   }
 
   private List<String> getPrimaryShardInfo(MongoClient client) {
-    MongoDatabase database = storagePlugin.getClient().getDatabase(CONFIG);
+    MongoDatabase database = storagePlugin.getClient().getDatabase(DrillMongoConstants.CONFIG);
     //Identify the primary shard of the queried database.
-    MongoCollection<Document> collection = database.getCollection(DATABASES);
-    Bson filter = new Document(ID, this.scanSpec.getDbName());
-    Bson projection = new Document(PRIMARY, select);
+    MongoCollection<Document> collection = database.getCollection(DrillMongoConstants.DATABASES);
+    Bson filter = new Document(DrillMongoConstants.ID, this.scanSpec.getDbName());
+    Bson projection = new Document(DrillMongoConstants.PRIMARY, select);
     Document document = collection.find(filter).projection(projection).first();
     Preconditions.checkNotNull(document);
-    String shardName = document.getString(PRIMARY);
+    String shardName = document.getString(DrillMongoConstants.PRIMARY);
     Preconditions.checkNotNull(shardName);
 
     //Identify the host(s) on which this shard resides.
-    MongoCollection<Document> shardsCol = database.getCollection(SHARDS);
-    filter = new Document(ID, shardName);
-    projection = new Document(HOST, select);
+    MongoCollection<Document> shardsCol = database.getCollection(DrillMongoConstants.SHARDS);
+    filter = new Document(DrillMongoConstants.ID, shardName);
+    projection = new Document(DrillMongoConstants.HOST, select);
     Document hostInfo = shardsCol.find(filter).projection(projection).first();
     Preconditions.checkNotNull(hostInfo);
-    String hostEntry = hostInfo.getString(HOST);
+    String hostEntry = hostInfo.getString(DrillMongoConstants.HOST);
     Preconditions.checkNotNull(hostEntry);
 
     String[] tagAndHost = StringUtils.split(hostEntry, '/');

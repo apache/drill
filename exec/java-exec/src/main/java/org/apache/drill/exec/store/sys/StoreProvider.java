@@ -15,13 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.sys;
 
+import org.apache.drill.exec.exception.StoreException;
 
 /**
- * Interface to define the provider which return EStore.
+ * A factory used to create {@link Store store} instances.
+ *
  */
+public interface StoreProvider extends AutoCloseable {
+  /**
+   * Gets or craetes a {@link Store store} for the given configuration.
+   *
+   * Note that there is no guarantee of new instances being returned. Implementors may cache {@link Store stores}.
+   *
+   * @param config  store configuration
+   * @param <V>  store value type
+   */
+  <V> Store<V> getStore(StoreConfig<V> config) throws StoreException;
 
-public interface EStoreProvider extends PStoreProvider {
+
+  /**
+   * Sets up the provider.
+   */
+  void start() throws Exception;
 }

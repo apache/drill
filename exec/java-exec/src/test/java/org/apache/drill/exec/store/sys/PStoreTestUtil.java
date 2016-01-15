@@ -31,8 +31,8 @@ import com.google.common.collect.Maps;
 public class PStoreTestUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
-  public static void test(PStoreProvider provider) throws Exception{
-    PStore<String> store = provider.getStore(PStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
+  public static void test(StoreProvider provider) throws Exception{
+    Store<String> store = provider.getStore(StoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
     String[] keys = {"first", "second"};
     String[] values = {"value1", "value2"};
     Map<String, String> expectedMap = Maps.newHashMap();
