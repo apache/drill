@@ -138,7 +138,11 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
               doSetup(outgoingJoinBatch.getContext(), buildBatch, probeBatch, outgoingJoinBatch);
               hashTable.updateBatches();
             } else {
-              throw new SchemaChangeException("Hash join does not support schema changes");
+              String message = "Hash join does not support schema changes:";
+              for (String fieldDiscrepency : probeBatch.getSchema().diff(probeSchema)) {
+                message += "\n" + fieldDiscrepency;
+              }
+              throw new SchemaChangeException(message);
             }
           case OK:
             recordsToProcess = probeBatch.getRecordCount();
