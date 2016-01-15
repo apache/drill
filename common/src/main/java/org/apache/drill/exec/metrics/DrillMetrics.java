@@ -89,6 +89,14 @@ public class DrillMetrics {
     }
   }
 
+  public synchronized static <T extends Metric> void register(String name, T metric) {
+    boolean removed = RegistryHolder.REGISTRY.remove(name);
+    if (removed) {
+      logger.warn("Removing old metric since name matched newly registered metric. Metric name: {}", name);
+    }
+    RegistryHolder.REGISTRY.register(name, metric);
+  }
+
   private static void registerAll(String prefix, MetricSet metricSet, MetricRegistry registry) {
     for (Entry<String, Metric> entry : metricSet.getMetrics().entrySet()) {
       if (entry.getValue() instanceof MetricSet) {

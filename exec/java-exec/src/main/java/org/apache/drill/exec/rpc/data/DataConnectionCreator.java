@@ -44,14 +44,18 @@ public class DataConnectionCreator implements Closeable {
   private ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
   private final BufferAllocator dataAllocator;
 
-  public DataConnectionCreator(BootStrapContext context, WorkEventBus workBus, WorkerBee bee, boolean allowPortHunting) {
+  public DataConnectionCreator(
+      BootStrapContext context,
+      BufferAllocator allocator,
+      WorkEventBus workBus,
+      WorkerBee bee,
+      boolean allowPortHunting) {
     super();
     this.context = context;
     this.workBus = workBus;
     this.bee = bee;
     this.allowPortHunting = allowPortHunting;
-    this.dataAllocator = context.getAllocator()
-        .newChildAllocator("rpc-data", 0, Long.MAX_VALUE);
+    this.dataAllocator = allocator;
   }
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws DrillbitStartupException {

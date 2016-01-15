@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.control;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
@@ -34,18 +35,20 @@ public class ConnectionManagerRegistry implements Iterable<ControlConnectionMana
   private final ControlMessageHandler handler;
   private final BootStrapContext context;
   private volatile DrillbitEndpoint localEndpoint;
+  private final BufferAllocator allocator;
 
-  public ConnectionManagerRegistry(ControlMessageHandler handler, BootStrapContext context) {
+  public ConnectionManagerRegistry(BufferAllocator allocator, ControlMessageHandler handler, BootStrapContext context) {
     super();
     this.handler = handler;
     this.context = context;
+    this.allocator = allocator;
   }
 
   public ControlConnectionManager getConnectionManager(DrillbitEndpoint endpoint) {
     assert localEndpoint != null : "DrillbitEndpoint must be set before a connection manager can be retrieved";
     ControlConnectionManager m = registry.get(endpoint);
     if (m == null) {
-      m = new ControlConnectionManager(endpoint, localEndpoint, handler, context);
+      m = new ControlConnectionManager(allocator, endpoint, localEndpoint, handler, context);
       ControlConnectionManager m2 = registry.putIfAbsent(endpoint, m);
       if (m2 != null) {
         m = m2;

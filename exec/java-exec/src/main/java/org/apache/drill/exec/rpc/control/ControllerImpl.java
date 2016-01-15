@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc.control;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
@@ -40,11 +41,12 @@ public class ControllerImpl implements Controller {
   private final boolean allowPortHunting;
   private final CustomHandlerRegistry handlerRegistry;
 
-  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, boolean allowPortHunting) {
+  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, BufferAllocator allocator,
+      boolean allowPortHunting) {
     super();
     this.handler = handler;
     this.context = context;
-    this.connectionRegistry = new ConnectionManagerRegistry(handler, context);
+    this.connectionRegistry = new ConnectionManagerRegistry(allocator, handler, context);
     this.allowPortHunting = allowPortHunting;
     this.handlerRegistry = handler.getHandlerRegistry();
   }

@@ -84,9 +84,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     this.parentAllocator = parentAllocator;
     this.name = name;
 
-    // TODO: DRILL-4131
-    // this.thisAsByteBufAllocator = new DrillByteBufAllocator(this);
-    this.thisAsByteBufAllocator = AllocatorManager.INNER_ALLOCATOR.allocator;
+    this.thisAsByteBufAllocator = new DrillByteBufAllocator(this);
 
     if (DEBUG) {
       childAllocators = new IdentityHashMap<>();
@@ -598,7 +596,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         }
         buffersSeen.put(udle, this);
 
-        bufferTotal += udle.maxCapacity();
+        bufferTotal += udle.capacity();
       }
 
       // Preallocated space has to be accounted for
@@ -705,7 +703,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
       sb.append("UnsafeDirectLittleEndian[dentityHashCode == ");
       sb.append(Integer.toString(System.identityHashCode(udle)));
       sb.append("] size ");
-      sb.append(Integer.toString(udle.maxCapacity()));
+      sb.append(Integer.toString(udle.capacity()));
       sb.append('\n');
     }
   }
