@@ -159,16 +159,16 @@ public class BatchSchema implements Iterable<MaterializedField> {
       MajorType t2 = other.fields.get(i).getType();
       if (t1 == null) {
         if (t2 != null) {
-          difference.add("Field dow not exist: " + t2);
+          difference.add("Field does not exist: " + t2);
         }
       } else {
         if (!majorTypeEqual(t1, t2)) {
-          difference.add("Field `" + fields.get(i).getLastName() + "` (" + t1.getMinorType() + "), is not compateble with (" + t2.getMinorType() + ")");
+          difference.add("Field `" + fields.get(i).getLastName() + "` (" + t1.getMinorType() + ") is not compatible with (" + t2.getMinorType() + ")");
         }
       }
     }
     if (selectionVectorMode != other.selectionVectorMode) {
-      difference.add("Vectore modes are not comparable: " + selectionVectorMode + " and " + other.selectionVectorMode);
+      difference.add("Vector modes are not compatible: " + selectionVectorMode + " and " + other.selectionVectorMode);
     }
     return difference;
   }
