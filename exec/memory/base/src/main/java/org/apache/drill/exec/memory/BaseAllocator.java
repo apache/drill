@@ -84,9 +84,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     this.parentAllocator = parentAllocator;
     this.name = name;
 
-    // TODO: DRILL-4131
-    // this.thisAsByteBufAllocator = new DrillByteBufAllocator(this);
-    this.thisAsByteBufAllocator = AllocatorManager.INNER_ALLOCATOR.allocator;
+    this.thisAsByteBufAllocator = new DrillByteBufAllocator(this);
 
     if (DEBUG) {
       childAllocators = new IdentityHashMap<>();
