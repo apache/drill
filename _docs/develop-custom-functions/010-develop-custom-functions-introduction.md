@@ -1,6 +1,6 @@
 ---
 title: "Develop Custom Functions Introduction"
-date: 2016-01-14
+date: 2016-01-15
 parent: "Develop Custom Functions"
 ---
 Drill provides a high performance Java API with interfaces that you can
@@ -37,14 +37,7 @@ complete the following tasks:
 
   1. Create a Java program that implements Drill’s simple or aggregate interface.
   2. Add the following code to the drill-module.conf in your UDF project (src/main/resources/drill-module.conf). Replace com.yourgroupidentifier.udf with the package name(s) of your UDFs.  
-
-           drill {
-             classpath.scanning {
-               packages : ${?drill.classpath.scanning.packages} [
-                 com.yourgroupidentifier.udf
-               ]
-             }
-           }   
+           drill.classpath.scanning.packages += "com.yourgroupidentifier.udf"
 
   3. Compile the UDF and place both jar files (source + binary) in the Drill classpath on all the Drillbits.  
   4. Ensure that DRILL_HOME/conf/drill-override.conf does not contain any information regarding UDF packages.  
