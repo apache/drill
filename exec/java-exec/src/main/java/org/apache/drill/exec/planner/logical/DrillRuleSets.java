@@ -141,10 +141,10 @@ public class DrillRuleSets {
        */
       DrillPushProjectPastFilterRule.INSTANCE,
       DrillPushProjectPastJoinRule.INSTANCE,
-      DrillPushProjIntoScan.INSTANCE,
       // Due to infinite loop in planning (DRILL-3257), temporarily disable this rule
       //DrillProjectSetOpTransposeRule.INSTANCE,
       ProjectWindowTransposeRule.INSTANCE,
+      DrillPushProjIntoScan.INSTANCE,
 
       /*
        Convert from Calcite Logical to Drill Logical Rules.

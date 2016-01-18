@@ -85,6 +85,10 @@ public abstract class DrillTable implements Table {
     return selection;
   }
 
+  public void modifySelection(Object selection) {
+    this.selection = selection;
+  }
+
   public String getStorageEngineName() {
     return storageEngineName;
   }
