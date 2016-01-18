@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.BitSets;
 
@@ -50,6 +53,7 @@ import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
@@ -80,7 +84,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
   public static final RelOptRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
     return new PruneScanRule(
-        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))),
+        RelOptHelper.some(Filter.class, RelOptHelper.some(Project.class, RelOptHelper.any(EnumerableTableScan.class))),
         "PruneScanRule:Filter_On_Project",
         optimizerRulesContext) {
 
@@ -103,9 +107,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
       @Override
       public void onMatch(RelOptRuleCall call) {
-        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-        final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-        final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
+        final FilterRel filterRel = (DrillFilterRel) call.rel(0);
+        final ProjectRel projectRel = (DrillProjectRel) call.rel(1);
+        final ScanRel scanRel = (DrillScanRel) call.rel(2);
         doOnMatch(call, filterRel, projectRel, scanRel);
       }
     };
@@ -113,7 +117,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
   public static final RelOptRule getFilterOnScan(OptimizerRulesContext optimizerRulesContext) {
     return new PruneScanRule(
-        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
+        RelOptHelper.some(Filter.class, RelOptHelper.any(EnumerableTableScan.class)),
         "PruneScanRule:Filter_On_Scan", optimizerRulesContext) {
 
       @Override
@@ -142,7 +146,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     };
   }
 
-  protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
+  protected void doOnMatch(RelOptRuleCall call, Filter filterRel, Project projectRel,  DrillScanRel scanRel) {
+    final DrillTable table = scanRel.getTable().unwrap(DrillTable.class);
+
     final String pruningClassName = getClass().getName();
     logger.info("Beginning partition pruning, pruning class: {}", pruningClassName);
     Stopwatch totalPruningTime = new Stopwatch();
