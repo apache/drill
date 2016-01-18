@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -110,4 +111,17 @@ public interface GroupScan extends Scan, HasAffinity{
    *          null when either if row-based prune is not supported, or if prune is not successful.
    */
   public GroupScan applyLimit(long maxRecords);
+
+  /**
+   * Return true if this GroupScan can return its selection as a list of file names (retrieved by getFiles()).
+   */
+  @JsonIgnore
+  public boolean hasFiles();
+
+  /**
+   * Returns a collection of file names associated with this GroupScan. This should be called after checking
+   * hasFiles().  If this GroupScan cannot provide file names, it returns null.
+   */
+  public Collection<String> getFiles();
+
 }

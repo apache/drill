@@ -150,7 +150,13 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     return formatPlugin.getScanStats(settings, this);
   }
 
+  @Override
+  public boolean hasFiles() {
+    return true;
+  }
+
   @JsonProperty("files")
+  @Override
   public List<String> getFiles() {
     return selection.getFiles();
   }
