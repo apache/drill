@@ -130,7 +130,9 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   protected void createPartitionSublists() {
-    List<String> fileLocations = ((FormatSelection) scanRel.getDrillTable().getSelection()).getAsFiles();
+    // get the file selection from the GroupScan rather than DrillTable because GroupScan would have the
+    // updated version of the selection
+    List<String> fileLocations = ((FileGroupScan)scanRel.getGroupScan()).getFileSelection().getFiles();
     List<PartitionLocation> locations = new LinkedList<>();
     for (String file: fileLocations) {
       locations.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));

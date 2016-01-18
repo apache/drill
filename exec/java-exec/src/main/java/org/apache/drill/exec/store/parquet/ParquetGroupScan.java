@@ -112,7 +112,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final DrillFileSystem fs;
-  private final String selectionRoot;
+  private String selectionRoot;
+  private FileSelection fileSelection;
 
   private boolean usedMetadataCache = false;
   private List<EndpointAffinity> endpointAffinities;
@@ -182,10 +183,24 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     }
 
     this.selectionRoot = selectionRoot;
-    if (selection instanceof ParquetFileSelection) {
-      final ParquetFileSelection pfs = ParquetFileSelection.class.cast(selection);
-      this.parquetTableMetadata = pfs.getParquetMetadata();
+
+    FileSelection newSelection = null;
+    if (!selection.isExpanded()) {
+      FileStatus firstPath = selection.getFirstPath(fs);
+      Path p = new Path(firstPath.getPath(), Metadata.METADATA_FILENAME);
+      if (!fs.exists(p)) { // no metadata cache
+        if (selection.checkedForDirectories() && selection.hasDirectories()) {
+          newSelection = selection.minusDirectories(fs);
+        }
+      } else { // use metadata cache
+        newSelection = getSelectionFromMetadataCache(fs, selection);
+        // selectionRoot path format should be consistent with the path format of files
+        // in the selection as retrieved form the metadata cache
+        this.selectionRoot = newSelection.selectionRoot;
+        newSelection.setExpanded(true);
+      }
     }
+    this.fileSelection = newSelection != null ? newSelection : selection;
 
     init();
   }
@@ -205,6 +220,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     this.rowCount = that.rowCount;
     this.rowGroupInfos = that.rowGroupInfos == null ? null : Lists.newArrayList(that.rowGroupInfos);
     this.selectionRoot = that.selectionRoot;
+    this.fileSelection = that.fileSelection;
     this.columnValueCounts = that.columnValueCounts == null ? null : new HashMap(that.columnValueCounts);
     this.columnTypeMap = that.columnTypeMap == null ? null : new HashMap(that.columnTypeMap);
     this.partitionValueMap = that.partitionValueMap == null ? null : new HashMap(that.partitionValueMap);
@@ -338,8 +354,14 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     return (columnChunkMetaData != null) && (columnChunkMetaData.hasSingleValue());
   }
 
+  @Override
+  public FileSelection getFileSelection() {
+    return fileSelection;
+  }
+
   @Override public void modifyFileSelection(FileSelection selection) {
     entries.clear();
+    this.fileSelection = selection;
     fileSet = Sets.newHashSet();
     for (String fileName : selection.getFiles()) {
       entries.add(new ReadEntryWithPath(fileName));
@@ -519,6 +541,25 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     public void setEndpointByteMap(EndpointByteMap byteMap) {
       this.byteMap = byteMap;
     }
+  }
+
+  private FileSelection
+  getSelectionFromMetadataCache(DrillFileSystem fs, FileSelection selection) throws IOException {
+    FileStatus metaRootDir = selection.getFirstPath(fs);
+    Path metaFilePath = new Path(metaRootDir.getPath(), Metadata.METADATA_FILENAME);
+
+    // get the metadata for the directory by reading the metadata file
+    Metadata.ParquetTableMetadataBase metadata  = Metadata.readBlockMeta(fs, metaFilePath.toString());
+    List<String> fileNames = Lists.newArrayList();
+    for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
+      fileNames.add(file.getPath());
+    }
+    // when creating the file selection, set the selection root in the form /a/b instead of
+    // file:/a/b.  The reason is that the file names above have been created in the form
+    // /a/b/c.parquet and the format of the selection root must match that of the file names
+    // otherwise downstream operations such as partition pruning can break.
+    final Path metaRootPath = Path.getPathWithoutSchemeAndAuthority(metaRootDir.getPath());
+    return FileSelection.create(selection.getStatuses(fs), fileNames, metaRootPath.toString());
   }
 
   private void init() throws IOException {

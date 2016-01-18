@@ -20,14 +20,17 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -44,6 +47,10 @@ public class FileSelection {
 
   public List<String> files;
   public final String selectionRoot;
+
+  private boolean checkedForDirectories = false; // whether we have already checked for directories
+  private boolean hasDirectories = false;        // whether directories were found in the selection
+  private boolean expanded = false;              // whether this selection has been expanded to files
 
   /**
    * Creates a {@link FileSelection selection} out of given file statuses/files and selection root.
@@ -95,15 +102,23 @@ public class FileSelection {
   }
 
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
+    if (checkedForDirectories) {
+      return hasDirectories;
+    }
+
     for (final FileStatus status : getStatuses(fs)) {
       if (status.isDirectory()) {
-        return true;
+        hasDirectories = true;
+        break;
       }
     }
-    return false;
+    checkedForDirectories = true;
+    return hasDirectories;
   }
 
   public FileSelection minusDirectories(DrillFileSystem fs) throws IOException {
+    Stopwatch timer = new Stopwatch();
+    timer.start();
     final List<FileStatus> statuses = getStatuses(fs);
     final int total = statuses.size();
     final Path[] paths = new Path[total];
@@ -118,11 +133,32 @@ public class FileSelection {
       }
     }));
 
-    return create(nonDirectories, null, selectionRoot);
+    final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
+    logger.info("FileSelection.minusDirectories() took {} ms, numFiles: {}",
+        timer.elapsed(TimeUnit.MILLISECONDS), total);
+
+    fileSel.setExpanded(true);
+    return fileSel;
   }
 
   public FileStatus getFirstPath(DrillFileSystem fs) throws IOException {
     return getStatuses(fs).get(0);
+  }
+
+  public boolean checkedForDirectories() {
+    return checkedForDirectories;
+  }
+
+  public boolean hasDirectories() {
+    return hasDirectories;
+  }
+
+  public void setExpanded(boolean expanded) {
+    this.expanded = expanded;
+  }
+
+  public boolean isExpanded() {
+    return expanded;
   }
 
   private static String commonPath(final List<FileStatus> statuses) {

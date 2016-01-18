@@ -162,6 +162,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
 
   @JsonIgnore
+  @Override
   public FileSelection getFileSelection() {
     return selection;
   }
