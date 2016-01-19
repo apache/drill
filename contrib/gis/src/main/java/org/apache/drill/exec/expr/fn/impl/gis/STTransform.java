@@ -89,7 +89,7 @@ public class STTransform implements DrillSimpleFunc {
           new com.esri.core.geometry.Point(result.x, result.y), sr).asBinary();
     } else {
       com.esri.core.geometry.Geometry esriGeom = geomSrc.getEsriGeometry();
-      com.esri.core.geometry.MultiVertexGeometry vertexGeom = 
+      com.esri.core.geometry.MultiVertexGeometry vertexGeom =
           com.esri.core.geometry.VertexGeomAccessor.getVertexGeometry(esriGeom);
       for (int i = 0; i < vertexGeom.getPointCount(); i++){
         com.esri.core.geometry.Point point = vertexGeom.getPoint(i);
@@ -98,7 +98,7 @@ public class STTransform implements DrillSimpleFunc {
         vertexGeom.setPoint(i, point);
       }
 
-      com.esri.core.geometry.ogc.OGCGeometry tGeom = 
+      com.esri.core.geometry.ogc.OGCGeometry tGeom =
           com.esri.core.geometry.ogc.OGCGeometry.createFromEsriGeometry(esriGeom, sr);
       geomBytes = tGeom.asBinary();
     }
