@@ -50,6 +50,11 @@
       <artifactId>fmpp</artifactId>
       <version>${fmpp.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>${freemarker.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
