@@ -52,4 +52,7 @@ public abstract class FormatPluginConfigBase implements FormatPluginConfig{
   @Override
   public abstract boolean equals(Object o);
 
+  @Override
+  public abstract int hashCode();
+
 }
