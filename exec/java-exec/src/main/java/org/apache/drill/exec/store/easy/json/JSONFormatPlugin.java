@@ -105,21 +105,35 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     @Override
     public int hashCode() {
-      return 31;
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
+      return result;
     }
 
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
         return true;
-      } else if (obj == null) {
-        return false;
-      } else if (getClass() == obj.getClass()) {
-        return true;
       }
-
-      return false;
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      JSONFormatConfig other = (JSONFormatConfig) obj;
+      if (extensions == null) {
+        if (other.extensions != null) {
+          return false;
+        }
+      } else if (!extensions.equals(other.extensions)) {
+        return false;
+      }
+      return true;
     }
+
+
   }
 
   @Override

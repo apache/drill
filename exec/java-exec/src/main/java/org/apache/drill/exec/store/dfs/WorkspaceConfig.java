@@ -57,18 +57,45 @@ public class WorkspaceConfig {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((defaultInputFormat == null) ? 0 : defaultInputFormat.hashCode());
+    result = prime * result + ((location == null) ? 0 : location.hashCode());
+    result = prime * result + (writable ? 1231 : 1237);
+    return result;
+  }
+
+  @Override
   public boolean equals(Object obj) {
-    if (obj == this) {
+    if (this == obj) {
       return true;
     }
-
-    if (obj == null || !(obj instanceof WorkspaceConfig)) {
+    if (obj == null) {
       return false;
     }
-
-    WorkspaceConfig that = (WorkspaceConfig) obj;
-    return ((this.location == null && that.location == null) || this.location.equals(that.location)) &&
-        this.writable == that.writable &&
-        ((this.defaultInputFormat == null && that.defaultInputFormat == null) || this.defaultInputFormat.equals(that.defaultInputFormat));
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    WorkspaceConfig other = (WorkspaceConfig) obj;
+    if (defaultInputFormat == null) {
+      if (other.defaultInputFormat != null) {
+        return false;
+      }
+    } else if (!defaultInputFormat.equals(other.defaultInputFormat)) {
+      return false;
+    }
+    if (location == null) {
+      if (other.location != null) {
+        return false;
+      }
+    } else if (!location.equals(other.location)) {
+      return false;
+    }
+    if (writable != other.writable) {
+      return false;
+    }
+    return true;
   }
+
 }
