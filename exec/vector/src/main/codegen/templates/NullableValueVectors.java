@@ -243,13 +243,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
-  public TransferPair getTransferPair(){
-    return new TransferImpl(getField());
+  public TransferPair getTransferPair(BufferAllocator allocator){
+    return new TransferImpl(getField(), allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref){
-    return new TransferImpl(getField().withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator){
+    return new TransferImpl(getField().withPath(ref), allocator);
   }
 
   @Override
@@ -277,7 +277,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   private class TransferImpl implements TransferPair {
     Nullable${minor.class}Vector to;
 
-    public TransferImpl(MaterializedField field){
+    public TransferImpl(MaterializedField field, BufferAllocator allocator){
       to = new Nullable${minor.class}Vector(field, allocator);
     }
 

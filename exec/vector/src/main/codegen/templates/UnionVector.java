@@ -31,6 +31,7 @@ import java.util.Iterator;
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -79,12 +80,20 @@ public class UnionVector implements ValueVector {
     this.callBack = callBack;
   }
 
+  public BufferAllocator getAllocator() {
+    return allocator;
+  }
+
   public List<MinorType> getSubTypes() {
     return majorType.getSubTypeList();
   }
 
-  private void addSubType(MinorType type) {
+  public void addSubType(MinorType type) {
+    if (majorType.getSubTypeList().contains(type)) {
+      return;
+    }
     majorType =  MajorType.newBuilder(this.majorType).addSubType(type).build();
+    field = MaterializedField.create(field.getPath(), majorType);
     if (callBack != null) {
       callBack.doWork();
     }
@@ -193,13 +202,13 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new TransferImpl(field);
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new TransferImpl(field, allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new TransferImpl(field.withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new TransferImpl(field.withPath(ref), allocator);
   }
 
   @Override
@@ -225,8 +234,11 @@ public class UnionVector implements ValueVector {
 
   public void addVector(ValueVector v) {
     String name = v.getField().getType().getMinorType().name().toLowerCase();
+    MajorType type = v.getField().getType();
     Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
-    internalMap.putChild(name, v);
+    ValueVector newVector = internalMap.addOrGet(name, type, (Class<ValueVector>) BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+    v.makeTransferPair(newVector).transfer();
+    internalMap.putChild(name, newVector);
     addSubType(v.getField().getType().getMinorType());
   }
 
@@ -234,7 +246,7 @@ public class UnionVector implements ValueVector {
 
     UnionVector to;
 
-    public TransferImpl(MaterializedField field) {
+    public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       to = new UnionVector(field, allocator, null);
     }
 
@@ -390,9 +402,7 @@ public class UnionVector implements ValueVector {
     }
 
     public void get(int index, UnionHolder holder) {
-      if (reader == null) {
-        reader = new UnionReader(UnionVector.this);
-      }
+      FieldReader reader = new UnionReader(UnionVector.this);
       reader.setPosition(index);
       holder.reader = reader;
     }

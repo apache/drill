@@ -72,7 +72,8 @@ public class PlannerSettings implements Context{
   public static final OptionValidator HASH_JOIN_SWAP_MARGIN_FACTOR = new RangeDoubleValidator("planner.join.hash_join_swap_margin_factor", 0, 100, 10d);
   public static final String ENABLE_DECIMAL_DATA_TYPE_KEY = "planner.enable_decimal_data_type";
   public static final OptionValidator ENABLE_DECIMAL_DATA_TYPE = new BooleanValidator(ENABLE_DECIMAL_DATA_TYPE_KEY, false);
-  public static final OptionValidator HEP_JOIN_OPT = new BooleanValidator("planner.enable_hep_join_opt", true);
+  public static final OptionValidator HEP_OPT = new BooleanValidator("planner.enable_hep_opt", true);
+  public static final OptionValidator HEP_PARTITION_PRUNING = new BooleanValidator("planner.enable_hep_partition_pruning", true);
   public static final OptionValidator PLANNER_MEMORY_LIMIT = new RangeLongValidator("planner.memory_limit",
       INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES, MAX_OFF_HEAP_ALLOCATION_IN_BYTES, DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES);
 
@@ -172,7 +173,9 @@ public class PlannerSettings implements Context{
     return options.getOption(HASH_JOIN_SWAP.getOptionName()).bool_val;
   }
 
-  public boolean isHepJoinOptEnabled() { return options.getOption(HEP_JOIN_OPT.getOptionName()).bool_val;}
+  public boolean isHepPartitionPruningEnabled() { return options.getOption(HEP_PARTITION_PRUNING.getOptionName()).bool_val;}
+
+  public boolean isHepOptEnabled() { return options.getOption(HEP_OPT.getOptionName()).bool_val;}
 
   public double getHashJoinSwapMarginFactor() {
     return options.getOption(HASH_JOIN_SWAP_MARGIN_FACTOR.getOptionName()).float_val / 100d;

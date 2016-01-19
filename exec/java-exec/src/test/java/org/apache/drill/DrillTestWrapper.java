@@ -285,11 +285,6 @@ public class DrillTestWrapper {
                 System.out.println(w.getField());
               }
             }
-            else if (obj instanceof byte[]) {
-              // Borrowed from parquet-tools, allows printing of varbinary columns as readable strings
-              // and also matches the data output by 'parquet-tools cat'
-              obj= new BinaryNode((byte[]) obj).asText();
-            }
           }
           combinedVectors.get(field).add(obj);
         }
@@ -400,6 +395,8 @@ public class DrillTestWrapper {
     }
 
     compareMergedVectors(expectedSuperVectors, actualSuperVectors);
+    } catch (Exception e) {
+      throw new Exception(e.getMessage() + "\nFor query: " + query , e);
     } finally {
       cleanupBatches(expected, actual);
     }
@@ -629,7 +626,7 @@ public class DrillTestWrapper {
         missingCols += colName + ", ";
       }
     }
-    return "Expected column(s) " + missingCols + " not found in result set.";
+    return "Expected column(s) " + missingCols + " not found in result set: " + actual + ".";
   }
 
   private String printRecord(Map<String, Object> record) {

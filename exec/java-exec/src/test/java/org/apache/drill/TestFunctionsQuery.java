@@ -593,7 +593,7 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("hash_date", "hash_dec9", "hash_dec38")
-        .baselineValues(818600896, 262164233, 1799649913)
+        .baselineValues(312993367, 292570647, 337328302)
         .go();
   }
 
@@ -834,6 +834,29 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "hash64AsDouble(cast(employee_id as decimal(9, 0))) = hash64AsDouble(cast(employee_id as decimal(18, 0))) col5, " +
         "hash64AsDouble(cast(employee_id as decimal(18, 0))) = hash64AsDouble(cast(employee_id as decimal(28, 0))) col6, " +
         "hash64AsDouble(cast(employee_id as decimal(28, 0))) = hash64AsDouble(cast(employee_id as decimal(38, 0))) col7 " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5", "col6", "col7")
+        .baselineValues(true, true, true, true, true, true, true)
+        .go();
+  }
+
+  /*
+   * hash32 version of the above test
+   */
+  @Test
+  public void testHash32() throws Exception {
+    String query = "select " +
+        "hash32AsDouble(cast(employee_id as int)) = hash32AsDouble(cast(employee_id as bigint)) col1, " +
+        "hash32AsDouble(cast(employee_id as bigint)) = hash32AsDouble(cast(employee_id as float)) col2, " +
+        "hash32AsDouble(cast(employee_id as float)) = hash32AsDouble(cast(employee_id as double)) col3, " +
+        "hash32AsDouble(cast(employee_id as double)) = hash32AsDouble(cast(employee_id as decimal(9, 0))) col4, " +
+        "hash32AsDouble(cast(employee_id as decimal(9, 0))) = hash32AsDouble(cast(employee_id as decimal(18, 0))) col5, " +
+        "hash32AsDouble(cast(employee_id as decimal(18, 0))) = hash32AsDouble(cast(employee_id as decimal(28, 0))) col6, " +
+        "hash32AsDouble(cast(employee_id as decimal(28, 0))) = hash32AsDouble(cast(employee_id as decimal(38, 0))) col7 " +
         "from cp.`employee.json` where employee_id = 1";
 
     testBuilder()

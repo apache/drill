@@ -49,4 +49,27 @@ public class TestTools {
     return WORKING_PATH;
   }
 
+  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
+  private static final String[] STRUCTURE = {"drill", "exec", "java-exec", "src", "test", "resources"};
+
+  /**
+   * Returns fully qualified path where test resources reside if current working directory is at any level in the
+   * following root->exec->java-exec->src->test->resources, throws an {@link IllegalStateException} otherwise.
+   */
+  public static String getTestResourcesPath() {
+    final StringBuilder builder = new StringBuilder(WORKING_PATH);
+    for (int i=0; i< STRUCTURE.length; i++) {
+      if (WORKING_PATH.endsWith(STRUCTURE[i])) {
+        for (int j=i+1; j< STRUCTURE.length; j++) {
+          builder.append(PATH_SEPARATOR).append(STRUCTURE[j]);
+        }
+        return builder.toString();
+      }
+    }
+    final String msg = String.format("Unable to recognize working directory[%s]. The workspace must be root or exec " +
+        "module.", WORKING_PATH);
+    throw new IllegalStateException(msg);
+  }
+
+
 }

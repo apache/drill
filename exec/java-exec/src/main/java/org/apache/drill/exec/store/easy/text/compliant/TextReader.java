@@ -143,6 +143,7 @@ final class TextReader {
         if (ch != newLine) {
           ch = input.nextChar();
           if (ch == newLine) {
+            output.startField(fieldsWritten++);
             output.endEmptyField();
             break;
           }

@@ -15,7 +15,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
@@ -117,6 +117,16 @@
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
       <version>2.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-afterburner</artifactId>
+      <version>2.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
@@ -284,7 +294,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill.memory</groupId>
-      <artifactId>drill-memory-impl</artifactId>
+      <artifactId>drill-memory-base</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -583,6 +593,11 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
+<!--
+              <debugParser>true</debugParser>
+              <debugLookAhead>true</debugLookAhead>
+              <debugTokenManager>true</debugTokenManager>
+ -->
             </configuration>
           </execution>
         </executions>

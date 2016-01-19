@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.mongo.config;
 
-import static org.apache.drill.exec.store.mongo.config.MongoPStoreProvider.pKey;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -28,14 +26,19 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+
+import static org.apache.drill.exec.store.mongo.config.MongoPStoreProvider.pKey;
 
 public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
@@ -43,9 +46,9 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   private final PStoreConfig<V> config;
 
-  private final DBCollection collection;
+  private final MongoCollection<Document> collection;
 
-  public MongoPStore(PStoreConfig<V> config, DBCollection collection)
+  public MongoPStore(PStoreConfig<V> config, MongoCollection<Document> collection)
       throws IOException {
 //    this.config = config;
 //    this.collection = collection;
@@ -55,10 +58,10 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public V get(String key) {
     try {
-      DBObject get = new BasicDBObject().append(ID, key);
-      DBCursor cursor = collection.find(get);
-      if (cursor != null && cursor.hasNext()) {
-        return value((byte[]) cursor.next().get(pKey));
+      Bson query = Filters.eq(ID, key);
+      Document document = collection.find(query).first();
+      if (document != null) {
+        return value((byte[]) document.get(pKey));
       } else {
         return null;
       }
@@ -71,10 +74,8 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public void put(String key, V value) {
     try {
-      DBObject putObj = new BasicDBObject(2);
-      putObj.put(ID, key);
-      putObj.put(pKey, bytes(value));
-      collection.insert(putObj);
+      Document putObj = new Document(ID, key).append(pKey, bytes(value));
+      collection.insertOne(putObj);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -84,11 +85,10 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public boolean putIfAbsent(String key, V value) {
     try {
-      DBObject check = new BasicDBObject(1).append(ID, key);
-      DBObject putObj = new BasicDBObject(2);
-      putObj.put(pKey, bytes(value));
-      WriteResult wr = collection.update(check, putObj, true, false);
-      return wr.getN() == 1 ? true : false;
+      Bson query = Filters.eq(ID, key);
+      Bson update = Updates.set(pKey, bytes(value));
+      UpdateResult updateResult = collection.updateOne(query, update, new UpdateOptions().upsert(true));
+      return updateResult.getModifiedCount() == 1;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -98,8 +98,8 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public void delete(String key) {
     try {
-      DBObject delete = new BasicDBObject(1).append(ID, key);
-      collection.remove(delete);
+      Bson query = Filters.eq(ID, key);
+      collection.deleteOne(query);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
@@ -129,10 +129,10 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   private class MongoIterator implements Iterator<Entry<String, V>> {
 
-    private DBCursor cursor;
+    private MongoCursor<Document> cursor;
 
     public MongoIterator() {
-      cursor = collection.find();
+      cursor = collection.find().iterator();
     }
 
     @Override
@@ -156,9 +156,9 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   private class DeferredEntry implements Entry<String, V> {
 
-    private DBObject result;
+    private Document result;
 
-    public DeferredEntry(DBObject result) {
+    public DeferredEntry(Document result) {
       this.result = result;
     }
 

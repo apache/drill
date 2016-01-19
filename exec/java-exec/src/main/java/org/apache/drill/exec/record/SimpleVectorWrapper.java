@@ -26,9 +26,11 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.FieldIdUtil;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -73,8 +75,8 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   @SuppressWarnings("unchecked")
   @Override
-  public VectorWrapper<T> cloneAndTransfer() {
-    TransferPair tp = vector.getTransferPair();
+  public VectorWrapper<T> cloneAndTransfer(BufferAllocator allocator) {
+    TransferPair tp = vector.getTransferPair(allocator);
     tp.transfer();
     return new SimpleVectorWrapper<T>((T) tp.getTo());
   }
@@ -109,62 +111,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
   @Override
   public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
-    if (!expectedPath.getRootSegment().segmentEquals(vector.getField().getPath().getRootSegment())) {
-      return null;
-    }
-    PathSegment seg = expectedPath.getRootSegment();
-
-    if (vector instanceof UnionVector) {
-      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.addId(id).remainder(expectedPath.getRootSegment().getChild());
-      List<MinorType> minorTypes = ((UnionVector) vector).getSubTypes();
-      MajorType.Builder majorTypeBuilder = MajorType.newBuilder().setMinorType(MinorType.UNION);
-      for (MinorType type : minorTypes) {
-        majorTypeBuilder.addSubType(type);
-      }
-      MajorType majorType = majorTypeBuilder.build();
-      builder.intermediateType(majorType);
-      if (seg.isLastPath()) {
-        builder.finalType(majorType);
-        return builder.build();
-      } else {
-        return ((UnionVector) vector).getFieldIdIfMatches(builder, false, seg.getChild());
-      }
-    } else if (vector instanceof ListVector) {
-      ListVector list = (ListVector) vector;
-      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(vector.getField().getType());
-      builder.addId(id);
-      return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
-    } else
-    if (vector instanceof AbstractContainerVector) {
-      // we're looking for a multi path.
-      AbstractContainerVector c = (AbstractContainerVector) vector;
-      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(vector.getField().getType());
-      builder.addId(id);
-      return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
-
-    } else {
-      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
-      builder.intermediateType(vector.getField().getType());
-      builder.addId(id);
-      builder.finalType(vector.getField().getType());
-      if (seg.isLastPath()) {
-        return builder.build();
-      } else {
-        PathSegment child = seg.getChild();
-        if (child.isArray() && child.isLastPath()) {
-          builder.remainder(child);
-          builder.withIndex();
-          builder.finalType(vector.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
-          return builder.build();
-        } else {
-          return null;
-        }
-
-      }
-    }
+    return FieldIdUtil.getFieldId(getValueVector(), id, expectedPath, false);
   }
 
   public void transfer(VectorWrapper<?> destination) {

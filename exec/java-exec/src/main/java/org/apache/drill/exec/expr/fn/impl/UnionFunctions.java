@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import com.google.common.collect.Sets;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -32,15 +34,105 @@ import org.apache.drill.exec.expr.holders.NullableUInt1Holder;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.vector.complex.impl.UnionReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * The class contains additional functions for union types in addition to those in GUnionFunctions
  */
 public class UnionFunctions {
+
+  /**
+   * Returns zero if the inputs have equivalent types. Two numeric types are considered equivalent, as are a combination
+   * of date/timestamp. If not equivalent, returns a value determined by the numeric value of the MinorType enum
+   */
+  @FunctionTemplate(names = {"compareType"},
+          scope = FunctionTemplate.FunctionScope.SIMPLE,
+          nulls = NullHandling.INTERNAL)
+  public static class CompareType implements DrillSimpleFunc {
+
+    @Param
+    FieldReader input1;
+    @Param
+    FieldReader input2;
+    @Output
+    IntHolder out;
+
+    public void setup() {}
+
+    public void eval() {
+      org.apache.drill.common.types.TypeProtos.MinorType type1;
+      if (input1.isSet()) {
+        type1 = input1.getType().getMinorType();
+      } else {
+        type1 = org.apache.drill.common.types.TypeProtos.MinorType.NULL;
+      }
+      org.apache.drill.common.types.TypeProtos.MinorType type2;
+      if (input2.isSet()) {
+        type2 = input2.getType().getMinorType();
+      } else {
+        type2 = org.apache.drill.common.types.TypeProtos.MinorType.NULL;
+      }
+
+      out.value = org.apache.drill.exec.expr.fn.impl.UnionFunctions.compareTypes(type1, type2);
+    }
+  }
+
+  public static int compareTypes(MinorType type1, MinorType type2) {
+    int typeValue1 = getTypeValue(type1);
+    int typeValue2 = getTypeValue(type2);
+    return typeValue1 - typeValue2;
+  }
+
+  /**
+   * Gives a type ordering modeled after the behavior of MongoDB
+   * Numeric types are first, folowed by string types, followed by binary, then boolean, then date, then timestamp
+   * Any other times will be sorted after that
+   * @param type
+   * @return
+   */
+  private static int getTypeValue(MinorType type) {
+    if (TypeCastRules.isNumericType(type)) {
+      return 0;
+    }
+    switch (type) {
+    case TINYINT:
+    case SMALLINT:
+    case INT:
+    case BIGINT:
+    case UINT1:
+    case UINT2:
+    case UINT4:
+    case UINT8:
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28SPARSE:
+    case DECIMAL38SPARSE:
+    case FLOAT4:
+    case FLOAT8:
+      return 0;
+    case VARCHAR:
+    case VAR16CHAR:
+      return 1;
+    case VARBINARY:
+      return 2;
+    case BIT:
+      return 3;
+    case DATE:
+      return 4;
+    case TIMESTAMP:
+      return 5;
+    default:
+      return 6 + type.getNumber();
+    }
+  }
 
   @FunctionTemplate(names = {"typeOf"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,

@@ -18,15 +18,14 @@
 
 package org.apache.drill.exec.store.sys.zk;
 
+import java.io.IOException;
+
+import com.google.common.base.Preconditions;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.exec.store.sys.EStore;
 import org.apache.drill.exec.store.sys.EStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreConfig.Mode;
-
-import com.google.common.base.Preconditions;
-
-import java.io.IOException;
 
 public class ZkEStoreProvider implements EStoreProvider{
   private final CuratorFramework curator;

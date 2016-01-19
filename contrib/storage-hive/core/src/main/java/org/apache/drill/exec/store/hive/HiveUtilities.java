@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -52,12 +53,20 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -65,6 +74,9 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Properties;
+
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
@@ -353,6 +365,73 @@ public class HiveUtilities {
     // Create a HiveConf and get the configured value. If any hive-site.xml file on the classpath has the property
     // defined, it will be returned. Otherwise default value is returned.
     return new HiveConf().getVar(ConfVars.DEFAULTPARTITIONNAME);
+  }
+
+  /**
+   * Utility method which gets table or partition {@link InputFormat} class. First it
+   * tries to get the class name from given StorageDescriptor object. If it doesn't contain it tries to get it from
+   * StorageHandler class set in table properties. If not found throws an exception.
+   * @param job {@link JobConf} instance needed incase the table is StorageHandler based table.
+   * @param sd {@link StorageDescriptor} instance of currently reading partition or table (for non-partitioned tables).
+   * @param table Table object
+   * @throws Exception
+   */
+  public static Class<? extends InputFormat> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
+      final Table table) throws Exception {
+    final String inputFormatName = sd.getInputFormat();
+    if (Strings.isNullOrEmpty(inputFormatName)) {
+      final String storageHandlerClass = table.getParameters().get(META_TABLE_STORAGE);
+      if (Strings.isNullOrEmpty(storageHandlerClass)) {
+        throw new ExecutionSetupException("Unable to get Hive table InputFormat class. There is neither " +
+            "InputFormat class explicitly specified nor StorageHandler class");
+      }
+      final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
+      return storageHandler.getInputFormatClass();
+    } else {
+      return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+    }
+  }
+
+  /**
+   * Utility method which adds give configs to {@link JobConf} object.
+   *
+   * @param job {@link JobConf} instance.
+   * @param properties New config properties
+   * @param hiveConfigOverride HiveConfig override.
+   */
+  public static void addConfToJob(final JobConf job, final Properties properties,
+      final Map<String, String> hiveConfigOverride) {
+    final HiveConf hiveConf = new HiveConf();
+    for (Object obj : properties.keySet()) {
+      hiveConf.set((String) obj, (String) properties.get(obj));
+    }
+    for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
+      hiveConf.set(entry.getKey(), entry.getValue());
+    }
+    job.addResource(hiveConf);
+  }
+
+  /**
+   * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)} which also adds parameters from table
+   * to properties returned by {@link MetaStoreUtils#getPartitionMetadata(Partition, Table)}.
+   *
+   * @param partition
+   * @param table
+   * @return
+   */
+  public static Properties getPartitionMetadata(final Partition partition, final Table table) {
+    final Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+
+    // SerDe expects properties from Table, but above call doesn't add Table properties.
+    // Include Table properties in final list in order to not to break SerDes that depend on
+    // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
+    for (Map.Entry<String, String> entry : table.getParameters().entrySet()) {
+      if (entry.getKey() != null && entry.getKey() != null) {
+        properties.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return properties;
   }
 
   public static void throwUnsupportedHiveDataTypeError(String unsupportedType) {

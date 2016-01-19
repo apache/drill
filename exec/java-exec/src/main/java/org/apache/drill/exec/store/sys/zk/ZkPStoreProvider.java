@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.sys.zk;
 
 import java.io.IOException;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -32,8 +33,6 @@ import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.FilePStore;
 import org.apache.hadoop.fs.Path;
-
-import com.google.common.annotations.VisibleForTesting;
 
 public class ZkPStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkPStoreProvider.class);

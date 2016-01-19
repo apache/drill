@@ -79,7 +79,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
     this.context = context;
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
     // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
-    oContext = context.newOperatorContext(config, false);
+    oContext = context.newOperatorContext(config);
     this.batchLoader = new RecordBatchLoader(oContext.getAllocator());
 
     this.stats = oContext.getStats();
@@ -159,7 +159,8 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
         batch = getNextBatch();
 
         // skip over empty batches. we do this since these are basically control messages.
-        while (batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0 && (!first || batch.getHeader().getDef().getFieldCount() == 0)) {
+        while (batch != null && batch.getHeader().getDef().getRecordCount() == 0
+            && (!first || batch.getHeader().getDef().getFieldCount() == 0)) {
           batch = getNextBatch();
         }
       } finally {
@@ -176,7 +177,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
         return IterOutcome.NONE;
       }
 
-      if (batch.getHeader().getIsOutOfMemory()) {
+      if (context.isOverMemoryLimit()) {
         return IterOutcome.OUT_OF_MEMORY;
       }
 

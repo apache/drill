@@ -37,7 +37,7 @@ public class FormatSelection {
   @JsonCreator
   public FormatSelection(@JsonProperty("format") FormatPluginConfig format, @JsonProperty("files") List<String> files){
     this.format = format;
-    this.selection = new FileSelection(files, true);
+    this.selection = FileSelection.create(null, files, null);
   }
 
   public FormatSelection(FormatPluginConfig format, FileSelection selection) {
@@ -53,7 +53,7 @@ public class FormatSelection {
 
   @JsonProperty("files")
   public List<String> getAsFiles(){
-    return selection.getAsFiles();
+    return selection.getFiles();
   }
 
   @JsonIgnore

@@ -24,8 +24,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -54,6 +52,9 @@ import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @SuppressWarnings("unused")
 public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNativeParquetSubScan> {
@@ -94,11 +95,9 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
       }
     }
 
-    final OperatorContext oContext = context.newOperatorContext(config,
-        false /* ScanBatch is not subject to fragment memory limit */);
+    final OperatorContext oContext = context.newOperatorContext(config);
 
     int currentPartitionIndex = 0;
-    boolean success = false;
     final List<RecordReader> readers = Lists.newArrayList();
 
     final Configuration conf = getConf(hiveConfigOverride);
@@ -139,15 +138,9 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
         }
         currentPartitionIndex++;
       }
-      success = true;
-    } catch (final IOException e) {
+    } catch (final IOException|RuntimeException e) {
+      AutoCloseables.close(e, readers);
       throw new ExecutionSetupException("Failed to create RecordReaders. " + e.getMessage(), e);
-    } finally {
-      if (!success) {
-        for(RecordReader reader : readers) {
-          AutoCloseables.close(reader, logger);
-        }
-      }
     }
 
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),

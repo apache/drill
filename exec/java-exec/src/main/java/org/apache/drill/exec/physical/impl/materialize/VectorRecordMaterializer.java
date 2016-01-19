@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.materialize;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.record.BatchSchema;
@@ -29,10 +31,12 @@ public class VectorRecordMaterializer implements RecordMaterializer{
 
   private QueryId queryId;
   private RecordBatch batch;
+  private BufferAllocator allocator;
 
-  public VectorRecordMaterializer(FragmentContext context, RecordBatch batch) {
+  public VectorRecordMaterializer(FragmentContext context, OperatorContext oContext, RecordBatch batch) {
     this.queryId = context.getHandle().getQueryId();
     this.batch = batch;
+    this.allocator = oContext.getAllocator();
     BatchSchema schema = batch.getSchema();
     assert schema != null : "Schema must be defined.";
 
@@ -43,7 +47,7 @@ public class VectorRecordMaterializer implements RecordMaterializer{
 
   public QueryWritableBatch convertNext() {
     //batch.getWritableBatch().getDef().getRecordCount()
-    WritableBatch w = batch.getWritableBatch();
+    WritableBatch w = batch.getWritableBatch().transfer(allocator);
 
     QueryData header = QueryData.newBuilder() //
         .setQueryId(queryId) //

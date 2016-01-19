@@ -74,6 +74,24 @@ public class TestPartitionFilter extends PlanTestBase {
     testExcludeFilter(query, 1, "Filter", 10);
   }
 
+  @Test  //Json: basic test with dir0 and dir1 filters
+  public void testPartitionFilter1_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1='Q1'", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 10);
+  }
+
+  @Test  //Json: basic test with dir0 = and dir1 is null filters
+  public void testPartitionFilterIsNull_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1 is null", TEST_RES_PATH);
+    testExcludeFilter(query, 1, "Filter", 5);
+  }
+
+  @Test  //Json: basic test with dir0 = and dir1 is not null filters
+  public void testPartitionFilterIsNotNull_JsonFileMixDir() throws Exception {
+    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs_test.`%s/multilevel/jsonFileMixDir` where dir0=1995 and dir1 is not null", TEST_RES_PATH);
+    testExcludeFilter(query, 4, "Filter", 40);
+  }
+
   @Test  //CSV: basic test with dir0 and dir1 filters in
   public void testPartitionFilter1_Csv() throws Exception {
     String query = String.format("select * from dfs_test.`%s/multilevel/csv` where dir0=1994 and dir1='Q1'", TEST_RES_PATH);
@@ -309,5 +327,22 @@ public class TestPartitionFilter extends PlanTestBase {
     testIncludeFilter(query, 1, "Filter", 1);
   }
 
+  @Test  //DRILL-4021: Json with complex type and nested flatten functions: dir0 and dir1 filters plus filter involves filter refering to output from nested flatten functions.
+  public void testPartitionFilter_Json_WithFlatten() throws Exception {
+    // this query expects to have the partition filter pushded.
+    // With partition pruning, we will end with one file, and one row returned from the query.
+    final String query = String.format(
+        " select dir0, dir1, o_custkey, o_orderdate, provider from " +
+        "   ( select dir0, dir1, o_custkey, o_orderdate, flatten(items['providers']) as provider " +
+            " from (" +
+            "   select dir0, dir1, o_custkey, o_orderdate, flatten(o_items) items " +
+            "     from dfs_test.`%s/multilevel/jsoncomplex`) ) " +
+            " where dir0=1995 " +   // should be pushed down and used as partitioning filter
+            "   and dir1='Q1' " +   // should be pushed down and used as partitioning filter
+            "   and provider = 'BestBuy'", // should NOT be pushed down.
+        TEST_RES_PATH);
+
+    testIncludeFilter(query, 1, "Filter", 1);
+  }
 
 }

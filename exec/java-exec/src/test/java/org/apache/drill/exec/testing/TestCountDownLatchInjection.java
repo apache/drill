@@ -17,19 +17,20 @@
  */
 package org.apache.drill.exec.testing;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.util.Pointer;
 import org.junit.Test;
-
-import java.util.concurrent.CountDownLatch;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestCountDownLatchInjection extends BaseTestQuery {
 
@@ -132,7 +133,7 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
 
     ControlsInjectionUtil.setControls(session, controls);
 
-    final QueryContext queryContext = new QueryContext(session, bits[0].getContext());
+    final QueryContext queryContext = new QueryContext(session, bits[0].getContext(), QueryId.getDefaultInstance());
 
     final DummyClass dummyClass = new DummyClass(queryContext, trigger, threads);
     (new ThreadCreator(dummyClass, trigger, threads, countingDownTime)).start();

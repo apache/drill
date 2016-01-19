@@ -48,7 +48,6 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
   private final PhysicalOperator popConfig;
   private final OperatorStats stats;
   private final BufferManager manager;
-  private final boolean applyFragmentLimit;
   private DrillFileSystem fs;
   private final ExecutorService executor;
 
@@ -60,21 +59,23 @@ class OperatorContextImpl extends OperatorContext implements AutoCloseable {
    */
   private ListeningExecutorService delegatePool;
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
+    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
     this.popConfig = popConfig;
     this.manager = new BufferManagerImpl(allocator);
 
-    OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
+    OpProfileDef def =
+        new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
     stats = context.getStats().newOperatorStats(def, allocator);
     executionControls = context.getExecutionControls();
     executor = context.getDrillbitContext().getExecutor();
   }
 
-  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats, boolean applyFragmentLimit) throws OutOfMemoryException {
-    this.applyFragmentLimit=applyFragmentLimit;
-    this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation(), applyFragmentLimit);
+  public OperatorContextImpl(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats)
+      throws OutOfMemoryException {
+    this.allocator = context.getNewChildAllocator(popConfig.getClass().getSimpleName(),
+        popConfig.getOperatorId(), popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
     this.popConfig = popConfig;
     this.manager = new BufferManagerImpl(allocator);
     this.stats     = stats;

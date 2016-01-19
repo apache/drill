@@ -208,13 +208,13 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public TransferPair getTransferPair() {
-    return new TransferImpl(getField());
+  public TransferPair getTransferPair(BufferAllocator allocator) {
+    return new TransferImpl(getField(), allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref) {
-    return new TransferImpl(getField().withPath(ref));
+  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+    return new TransferImpl(getField().withPath(ref), allocator);
   }
 
   @Override
@@ -273,7 +273,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private class TransferImpl implements TransferPair {
     BitVector to;
 
-    public TransferImpl(MaterializedField field) {
+    public TransferImpl(MaterializedField field, BufferAllocator allocator) {
       this.to = new BitVector(field, allocator);
     }
 
@@ -445,4 +445,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   }
 
+  @Override
+  public void clear() {
+    this.valueCount = 0;
+    super.clear();
+  }
 }

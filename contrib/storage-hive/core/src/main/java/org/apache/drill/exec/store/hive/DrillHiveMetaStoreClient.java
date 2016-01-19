@@ -33,7 +33,7 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.api.UnknownTableException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
-import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 
@@ -42,6 +42,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -52,7 +53,17 @@ import java.util.concurrent.TimeUnit;
 public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveMetaStoreClient.class);
 
+  public final String HIVE_METASTORE_CACHE_TTL = "hive.metastore.cache-ttl-seconds";
+  public final String HIVE_METASTORE_CACHE_EXPIRE = "hive.metastore.cache-expire-after";
+  public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE = "write";
+  public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS = "access";
+
   protected final Map<String, String> hiveConfigOverride;
+
+  protected final LoadingCache<String, List<String>> databases;
+  protected final LoadingCache<String, List<String>> tableNameLoader;
+  protected final LoadingCache<TableName, HiveReadEntry> tableLoaders;
+
 
   /**
    * Create a DrillHiveMetaStoreClient for cases where:
@@ -71,8 +82,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @throws MetaException
    */
   public static DrillHiveMetaStoreClient createClientWithAuthz(final DrillHiveMetaStoreClient processUserMetaStoreClient,
-      final HiveConf hiveConf, final Map<String, String> hiveConfigOverride, final String userName,
-      final boolean ignoreAuthzErrors) throws MetaException {
+      final HiveConf hiveConf, final Map<String, String> hiveConfigOverride, final String userName) throws MetaException {
     try {
       boolean delegationTokenGenerated = false;
 
@@ -89,7 +99,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
           // delegation tokens).
           String delegationToken = processUserMetaStoreClient.getDelegationToken(userName, userName);
           try {
-            ShimLoader.getHadoopShims().setTokenStr(ugiForRpc, delegationToken, HiveClientWithAuthz.DRILL2HMS_TOKEN);
+            Utils.setTokenStr(ugiForRpc, delegationToken, HiveClientWithAuthzWithCaching.DRILL2HMS_TOKEN);
           } catch (IOException e) {
             throw new DrillRuntimeException("Couldn't setup delegation token in the UGI for Hive MetaStoreClient", e);
           }
@@ -100,7 +110,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       final HiveConf hiveConfForClient;
       if (delegationTokenGenerated) {
         hiveConfForClient = new HiveConf(hiveConf);
-        hiveConfForClient.set("hive.metastore.token.signature", HiveClientWithAuthz.DRILL2HMS_TOKEN);
+        hiveConfForClient.set("hive.metastore.token.signature", HiveClientWithAuthzWithCaching.DRILL2HMS_TOKEN);
       } else {
         hiveConfForClient = hiveConf;
       }
@@ -108,7 +118,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       return ugiForRpc.doAs(new PrivilegedExceptionAction<DrillHiveMetaStoreClient>() {
         @Override
         public DrillHiveMetaStoreClient run() throws Exception {
-          return new HiveClientWithAuthz(hiveConfForClient, hiveConfigOverride, ugiForRpc, userName, ignoreAuthzErrors);
+          return new HiveClientWithAuthzWithCaching(hiveConfForClient, hiveConfigOverride, ugiForRpc, userName);
         }
       });
     } catch (final Exception e) {
@@ -132,16 +142,47 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   private DrillHiveMetaStoreClient(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride)
       throws MetaException {
     super(hiveConf);
-    this.hiveConfigOverride = hiveConfigOverride;
-  }
 
+    int hmsCacheTTL = 60; // default is 60 seconds
+    boolean expireAfterWrite = true; // default is expire after write.
+
+    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_TTL)) {
+      hmsCacheTTL = Integer.valueOf(hiveConfigOverride.get(HIVE_METASTORE_CACHE_TTL));
+      logger.warn("Hive metastore cache ttl is set to {} seconds.", hmsCacheTTL);
+    }
+
+    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_EXPIRE)) {
+      if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE)) {
+        expireAfterWrite = true;
+      } else if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS)) {
+        expireAfterWrite = false;
+      }
+      logger.warn("Hive metastore cache expire policy is set to {}", expireAfterWrite? "expireAfterWrite" : "expireAfterAccess");
+    }
+
+    this.hiveConfigOverride = hiveConfigOverride;
+
+    final CacheBuilder cacheBuilder = CacheBuilder
+        .newBuilder();
+
+    if (expireAfterWrite) {
+      cacheBuilder.expireAfterWrite(hmsCacheTTL, TimeUnit.SECONDS);
+    } else {
+      cacheBuilder.expireAfterAccess(hmsCacheTTL, TimeUnit.SECONDS);
+    }
+
+    databases = cacheBuilder.build(new DatabaseLoader());
+    tableNameLoader = cacheBuilder.build(new TableNameLoader());
+    tableLoaders = cacheBuilder.build(new TableLoader());
+
+  }
 
   /**
    * Higher level API that returns the databases in Hive.
    * @return
    * @throws TException
    */
-  public abstract List<String> getDatabases() throws TException;
+  public abstract List<String> getDatabases(boolean ignoreAuthzErrors) throws TException;
 
   /**
    * Higher level API that returns the tables in given database.
@@ -149,7 +190,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @return
    * @throws TException
    */
-  public abstract List<String> getTableNames(final String dbName) throws TException;
+  public abstract List<String> getTableNames(final String dbName, boolean ignoreAuthzErrors) throws TException;
 
   /**
    * Higher level API that returns the {@link HiveReadEntry} for given database and table.
@@ -158,7 +199,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @return
    * @throws TException
    */
-  public abstract HiveReadEntry getHiveReadEntry(final String dbName, final String tableName) throws TException;
+  public abstract HiveReadEntry getHiveReadEntry(final String dbName, final String tableName, boolean ignoreAuthzErrors) throws TException;
 
   /** Helper method which gets database. Retries once if the first call to fetch the metadata fails */
   protected static List<String> getDatabasesHelper(final IMetaStoreClient mClient) throws TException {
@@ -222,19 +263,17 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * HiveMetaStoreClient to create and maintain (reconnection cases) connection to Hive metastore with given user
    * credentials and check authorization privileges if set.
    */
-  private static class HiveClientWithAuthz extends DrillHiveMetaStoreClient {
+  private static class HiveClientWithAuthzWithCaching extends DrillHiveMetaStoreClient {
     public static final String DRILL2HMS_TOKEN = "DrillDelegationTokenForHiveMetaStoreServer";
 
     private final UserGroupInformation ugiForRpc;
-    private final boolean ignoreAuthzErrors;
     private HiveAuthorizationHelper authorizer;
 
-    private HiveClientWithAuthz(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride,
-        final UserGroupInformation ugiForRpc, final String userName, final boolean ignoreAuthzErrors)
+    private HiveClientWithAuthzWithCaching(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride,
+        final UserGroupInformation ugiForRpc, final String userName)
         throws TException {
       super(hiveConf, hiveConfigOverride);
       this.ugiForRpc = ugiForRpc;
-      this.ignoreAuthzErrors = ignoreAuthzErrors;
       this.authorizer = new HiveAuthorizationHelper(this, hiveConf, userName);
     }
 
@@ -257,7 +296,8 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       super.reconnect();
     }
 
-    public List<String> getDatabases() throws TException {
+    @Override
+    public List<String> getDatabases(boolean ignoreAuthzErrors) throws TException {
       try {
         authorizer.authorizeShowDatabases();
       } catch (final HiveAccessControlException e) {
@@ -266,64 +306,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
         }
         throw UserException.permissionError(e).build(logger);
       }
-      return getDatabasesHelper(this);
-    }
 
-    public List<String> getTableNames(final String dbName) throws TException {
-      try {
-        authorizer.authorizeShowTables(dbName);
-      } catch (final HiveAccessControlException e) {
-        if (ignoreAuthzErrors) {
-          return Collections.emptyList();
-        }
-        throw UserException.permissionError(e).build(logger);
-      }
-      return getTableNamesHelper(this, dbName);
-    }
-
-    public HiveReadEntry getHiveReadEntry(final String dbName, final String tableName) throws TException {
-      try {
-        authorizer.authorizeReadTable(dbName, tableName);
-      } catch (final HiveAccessControlException e) {
-        if (!ignoreAuthzErrors) {
-          throw UserException.permissionError(e).build(logger);
-        }
-      }
-      return getHiveReadEntryHelper(this, dbName, tableName, hiveConfigOverride);
-    }
-  }
-
-  /**
-   * HiveMetaStoreClient that provides a shared MetaStoreClient implementation with caching.
-   */
-  private static class NonCloseableHiveClientWithCaching extends DrillHiveMetaStoreClient {
-    private final LoadingCache<String, List<String>> databases;
-    private final LoadingCache<String, List<String>> tableNameLoader;
-    private final LoadingCache<String, LoadingCache<String, HiveReadEntry>> tableLoaders;
-
-    private NonCloseableHiveClientWithCaching(final HiveConf hiveConf,
-        final Map<String, String> hiveConfigOverride) throws MetaException {
-      super(hiveConf, hiveConfigOverride);
-
-      databases = CacheBuilder //
-          .newBuilder() //
-          .expireAfterAccess(1, TimeUnit.MINUTES) //
-          .build(new DatabaseLoader());
-
-      tableNameLoader = CacheBuilder //
-          .newBuilder() //
-          .expireAfterAccess(1, TimeUnit.MINUTES) //
-          .build(new TableNameLoader());
-
-      tableLoaders = CacheBuilder //
-          .newBuilder() //
-          .expireAfterAccess(4, TimeUnit.HOURS) //
-          .maximumSize(20) //
-          .build(new TableLoaderLoader());
-    }
-
-    @Override
-    public List<String> getDatabases() throws TException {
       try {
         return databases.get("databases");
       } catch (final ExecutionException e) {
@@ -332,7 +315,16 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     }
 
     @Override
-    public List<String> getTableNames(final String dbName) throws TException {
+    public List<String> getTableNames(final String dbName, boolean ignoreAuthzErrors) throws TException {
+      try {
+        authorizer.authorizeShowTables(dbName);
+      } catch (final HiveAccessControlException e) {
+        if (ignoreAuthzErrors) {
+          return Collections.emptyList();
+        }
+        throw UserException.permissionError(e).build(logger);
+      }
+
       try {
         return tableNameLoader.get(dbName);
       } catch (final ExecutionException e) {
@@ -341,9 +333,55 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     }
 
     @Override
-    public HiveReadEntry getHiveReadEntry(final String dbName, final String tableName) throws TException {
+    public HiveReadEntry getHiveReadEntry(final String dbName, final String tableName, boolean ignoreAuthzErrors) throws TException {
       try {
-        return tableLoaders.get(dbName).get(tableName);
+        authorizer.authorizeReadTable(dbName, tableName);
+      } catch (final HiveAccessControlException e) {
+        if (!ignoreAuthzErrors) {
+          throw UserException.permissionError(e).build(logger);
+        }
+      }
+
+      try {
+        return tableLoaders.get(TableName.table(dbName,tableName));
+      } catch (final ExecutionException e) {
+        throw new TException(e);
+      }
+    }
+
+  }
+
+  /**
+   * HiveMetaStoreClient that provides a shared MetaStoreClient implementation with caching.
+   */
+  private static class NonCloseableHiveClientWithCaching extends DrillHiveMetaStoreClient {
+    private NonCloseableHiveClientWithCaching(final HiveConf hiveConf,
+        final Map<String, String> hiveConfigOverride) throws MetaException {
+      super(hiveConf, hiveConfigOverride);
+    }
+
+    @Override
+    public List<String> getDatabases(boolean ignoreAuthzErrors) throws TException {
+      try {
+        return databases.get("databases");
+      } catch (final ExecutionException e) {
+        throw new TException(e);
+      }
+    }
+
+    @Override
+    public List<String> getTableNames(final String dbName, boolean ignoreAuthzErrors) throws TException {
+      try {
+        return tableNameLoader.get(dbName);
+      } catch (final ExecutionException e) {
+        throw new TException(e);
+      }
+    }
+
+    @Override
+    public HiveReadEntry getHiveReadEntry(final String dbName, final String tableName, boolean ignoreAuthzErrors) throws TException {
+      try {
+        return tableLoaders.get(TableName.table(dbName,tableName));
       } catch (final ExecutionException e) {
         throw new TException(e);
       }
@@ -361,50 +399,82 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       // No-op.
     }
 
-    private class DatabaseLoader extends CacheLoader<String, List<String>> {
-      @Override
-      public List<String> load(String key) throws Exception {
-        if (!"databases".equals(key)) {
-          throw new UnsupportedOperationException();
-        }
-        synchronized (NonCloseableHiveClientWithCaching.this) {
-          return getDatabasesHelper(NonCloseableHiveClientWithCaching.this);
-        }
+  }
+
+  private class DatabaseLoader extends CacheLoader<String, List<String>> {
+    @Override
+    public List<String> load(String key) throws Exception {
+      if (!"databases".equals(key)) {
+        throw new UnsupportedOperationException();
       }
-    }
-
-    private class TableNameLoader extends CacheLoader<String, List<String>> {
-      @Override
-      public List<String> load(String dbName) throws Exception {
-        synchronized (NonCloseableHiveClientWithCaching.this) {
-          return getTableNamesHelper(NonCloseableHiveClientWithCaching.this, dbName);
-        }
-      }
-    }
-
-    private class TableLoaderLoader extends CacheLoader<String, LoadingCache<String, HiveReadEntry>> {
-      @Override
-      public LoadingCache<String, HiveReadEntry> load(String key) throws Exception {
-        return CacheBuilder
-            .newBuilder()
-            .expireAfterAccess(1, TimeUnit.MINUTES)
-            .build(new TableLoader(key));
-      }
-    }
-
-    private class TableLoader extends CacheLoader<String, HiveReadEntry> {
-      private final String dbName;
-
-      public TableLoader(final String dbName) {
-        this.dbName = dbName;
-      }
-
-      @Override
-      public HiveReadEntry load(String key) throws Exception {
-        synchronized (NonCloseableHiveClientWithCaching.this) {
-          return getHiveReadEntryHelper(NonCloseableHiveClientWithCaching.this, dbName, key, hiveConfigOverride);
-        }
+      synchronized (DrillHiveMetaStoreClient.this) {
+        return getDatabasesHelper(DrillHiveMetaStoreClient.this);
       }
     }
   }
+
+  private class TableNameLoader extends CacheLoader<String, List<String>> {
+    @Override
+    public List<String> load(String dbName) throws Exception {
+      synchronized (DrillHiveMetaStoreClient.this) {
+        return getTableNamesHelper(DrillHiveMetaStoreClient.this, dbName);
+      }
+    }
+  }
+
+  private class TableLoader extends CacheLoader<TableName, HiveReadEntry> {
+    @Override
+    public HiveReadEntry load(TableName key) throws Exception {
+      synchronized (DrillHiveMetaStoreClient.this) {
+        return getHiveReadEntryHelper(DrillHiveMetaStoreClient.this, key.getDatabaseName(), key.getTableName(), hiveConfigOverride);
+      }
+    }
+  }
+
+  static class TableName {
+    private final String databaseName;
+    private final String tableName;
+
+    private TableName(String databaseName, String tableName) {
+      this.databaseName = databaseName;
+      this.tableName = tableName;
+    }
+
+    public static TableName table(String databaseName, String tableName) {
+      return new TableName(databaseName, tableName);
+    }
+
+    public String getDatabaseName() {
+      return databaseName;
+    }
+
+    public String getTableName() {
+      return tableName;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("databaseName:%s, tableName:%s", databaseName, tableName).toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      TableName other = (TableName) o;
+      return Objects.equals(databaseName, other.databaseName) &&
+          Objects.equals(tableName, other.tableName);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(databaseName, tableName);
+    }
+  }
+
 }

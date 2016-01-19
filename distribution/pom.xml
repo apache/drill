@@ -15,7 +15,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -45,11 +45,6 @@
       <version>${project.version}</version>
     </dependency>    
     <dependency>
-      <groupId>org.apache.drill.memory</groupId>
-      <artifactId>drill-memory-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency> 
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-rpc</artifactId>
       <version>${project.version}</version>
@@ -72,6 +67,11 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-aws</artifactId>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -164,6 +164,11 @@
         <dependency>
           <groupId>org.apache.drill.contrib.data</groupId>
           <artifactId>tpch-sample-data</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-kudu-storage</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>

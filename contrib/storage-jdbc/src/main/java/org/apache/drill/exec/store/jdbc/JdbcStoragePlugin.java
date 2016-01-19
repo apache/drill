@@ -466,7 +466,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<RelOptRule> getOptimizerRules(OptimizerRulesContext context) {
+  public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
     return convention.getRules();
   }
 }

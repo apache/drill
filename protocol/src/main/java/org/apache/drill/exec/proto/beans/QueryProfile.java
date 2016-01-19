@@ -170,7 +170,7 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
 
     public QueryResult.QueryState getState()
     {
-        return state == null ? QueryResult.QueryState.PENDING : state;
+        return state == null ? QueryResult.QueryState.STARTING : state;
     }
 
     public QueryProfile setState(QueryResult.QueryState state)

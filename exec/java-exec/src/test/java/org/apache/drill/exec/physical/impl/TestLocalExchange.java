@@ -208,7 +208,7 @@ public class TestLocalExchange extends PlanTestBase {
     final String plan = getPlanInString("EXPLAIN PLAN FOR " + groupByMultipleQuery, JSON_FORMAT);
     System.out.println("Plan: " + plan);
 
-    jsonExchangeOrderChecker(plan, false, 1, "castint\\(hash64asdouble\\(.*, hash64asdouble\\(.*, hash64asdouble\\(.*\\) \\) \\) \\) ");
+    jsonExchangeOrderChecker(plan, false, 1, "hash32asdouble\\(.*, hash32asdouble\\(.*, hash32asdouble\\(.*\\) \\) \\) ");
 
     // Run the query and verify the output
     final TestBuilder testBuilder = testBuilder()
@@ -286,7 +286,7 @@ public class TestLocalExchange extends PlanTestBase {
     if ( isMuxOn ) {
       // # of hash exchanges should be = # of mux exchanges + # of demux exchanges
       assertEquals("HashExpr on the hash column should not happen", 2*expectedNumMuxes+expectedNumDeMuxes, StringUtils.countMatches(plan, HASH_EXPR_NAME));
-      jsonExchangeOrderChecker(plan, isDeMuxOn, expectedNumMuxes, "castint\\(hash64asdouble\\(.*\\) \\) ");
+      jsonExchangeOrderChecker(plan, isDeMuxOn, expectedNumMuxes, "hash32asdouble\\(.*\\) ");
     } else {
       assertEquals("HashExpr on the hash column should not happen", 0, StringUtils.countMatches(plan, HASH_EXPR_NAME));
     }

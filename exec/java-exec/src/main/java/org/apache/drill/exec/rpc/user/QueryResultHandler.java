@@ -92,7 +92,7 @@ public class QueryResultHandler {
     // CANCELED queries are handled the same way as COMPLETED
     final boolean isTerminalResult;
     switch ( queryState ) {
-      case PENDING:
+      case STARTING:
         isTerminalResult = false;
         break;
       case FAILED:

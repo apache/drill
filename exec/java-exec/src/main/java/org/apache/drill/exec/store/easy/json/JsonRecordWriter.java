@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter;
@@ -43,6 +44,7 @@ import com.google.common.collect.Lists;
 public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWriter {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordWriter.class);
+  private static final String LINE_FEED = String.format("%n");
 
   private String location;
   private String prefix;
@@ -70,6 +72,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     this.fieldDelimiter = writerOptions.get("separator");
     this.extension = writerOptions.get("extension");
     this.useExtendedOutput = Boolean.parseBoolean(writerOptions.get("extended"));
+    final boolean uglify = Boolean.parseBoolean(writerOptions.get("uglify"));
 
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
@@ -79,6 +82,9 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
     try {
       stream = fs.create(fileName);
       JsonGenerator generator = factory.createGenerator(stream).useDefaultPrettyPrinter();
+      if (uglify) {
+        generator = generator.setPrettyPrinter(new MinimalPrettyPrinter(LINE_FEED));
+      }
       if(useExtendedOutput){
         gen = new ExtendedJsonOutput(generator);
       }else{

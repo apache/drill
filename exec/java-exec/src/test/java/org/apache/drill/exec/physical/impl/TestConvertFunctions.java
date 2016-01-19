@@ -33,6 +33,7 @@ import mockit.Injectable;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -74,6 +75,40 @@ public class TestConvertFunctions extends BaseTestQuery {
   private static DateTime date = DateTime.parse("1980-01-01", DateUtility.getDateTimeFormatter());
 
   String textFileContent;
+
+  @Test // DRILL-3854
+  public void testConvertFromConvertToInt() throws Exception {
+    final OptionValue srOption = setupScalarReplacementOption(bits[0], ScalarReplacementOption.OFF);
+    try {
+      final String newTblName = "testConvertFromConvertToInt_tbl";
+      final String ctasQuery = String.format("CREATE TABLE %s.%s as \n" +
+          "SELECT convert_to(r_regionkey, 'INT') as ct \n" +
+          "FROM cp.`tpch/region.parquet`",
+          TEMP_SCHEMA, newTblName);
+      final String query = String.format("SELECT convert_from(ct, 'INT') as cf \n" +
+          "FROM %s.%s \n" +
+          "ORDER BY ct",
+          TEMP_SCHEMA, newTblName);
+
+      test("alter session set `planner.slice_target` = 1");
+      test(ctasQuery);
+      testBuilder()
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("cf")
+          .baselineValues(0)
+          .baselineValues(1)
+          .baselineValues(2)
+          .baselineValues(3)
+          .baselineValues(4)
+          .build()
+          .run();
+    } finally {
+      // restore the system option
+      restoreScalarReplacementOption(bits[0], srOption);
+      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
 
   @Test
   public void test_JSON_convertTo_empty_list_drill_1416() throws Exception {

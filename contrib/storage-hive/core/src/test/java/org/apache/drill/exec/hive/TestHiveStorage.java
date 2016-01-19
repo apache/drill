@@ -30,10 +30,27 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
+import static org.junit.Assert.assertFalse;
+
 public class TestHiveStorage extends HiveTestBase {
   @BeforeClass
   public static void setupOptions() throws Exception {
     test(String.format("alter session set `%s` = true", PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY));
+  }
+
+
+  @Test // DRILL-4083
+  public void testNativeScanWhenNoColumnIsRead() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+
+      String query = "SELECT count(*) FROM hive.readtest_parquet";
+      testPhysicalPlan(query, "hive-drill-native-parquet-scan");
+    } finally {
+      test(String.format("alter session set `%s` = %s",
+          ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS,
+              ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS_VALIDATOR.getDefault().bool_val ? "true" : "false"));
+    }
   }
 
   @Test
@@ -87,7 +104,8 @@ public class TestHiveStorage extends HiveTestBase {
             "varchar_field",
             "timestamp_field",
             "date_field",
-            "binary_part",
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            //"binary_part",
             "boolean_part",
             "tinyint_part",
             "decimal0_part",
@@ -122,7 +140,8 @@ public class TestHiveStorage extends HiveTestBase {
             "varcharfield",
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
             new DateTime(Date.valueOf("2013-07-05").getTime()),
-            "binary",
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            //"binary",
             true,
             64,
             new BigDecimal("37"),
@@ -141,7 +160,8 @@ public class TestHiveStorage extends HiveTestBase {
             new DateTime(Date.valueOf("2013-07-05").getTime()))
         .baselineValues( // All fields are null, but partition fields have non-null values
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            "binary",
+            // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
+            //"binary",
             true,
             64,
             new BigDecimal("37"),
@@ -178,6 +198,7 @@ public class TestHiveStorage extends HiveTestBase {
       testBuilder().sqlQuery(query)
           .unOrdered()
           .baselineColumns(
+              "binary_field",
               "boolean_field",
               "tinyint_field",
               "decimal0_field",
@@ -193,7 +214,8 @@ public class TestHiveStorage extends HiveTestBase {
               "string_field",
               "varchar_field",
               "timestamp_field",
-              "binary_part",
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary_part",
               "boolean_part",
               "tinyint_part",
               "decimal0_part",
@@ -211,6 +233,7 @@ public class TestHiveStorage extends HiveTestBase {
               "timestamp_part",
               "date_part")
           .baselineValues(
+              "binaryfield",
               false,
               34,
               new BigDecimal("66"),
@@ -226,7 +249,8 @@ public class TestHiveStorage extends HiveTestBase {
               "stringfield",
               "varcharfield",
               new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-              "binary",
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary",
               true,
               64,
               new BigDecimal("37"),
@@ -244,8 +268,9 @@ public class TestHiveStorage extends HiveTestBase {
               new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
               new DateTime(Date.valueOf("2013-07-05").getTime()))
           .baselineValues( // All fields are null, but partition fields have non-null values
-              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-              "binary",
+              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+              // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
+              //"binary",
               true,
               64,
               new BigDecimal("37"),
@@ -325,6 +350,56 @@ public class TestHiveStorage extends HiveTestBase {
         .baselineColumns("cnt")
         .baselineValues(1L)
         .go();
+  }
+
+  @Test // DRILL-3938
+  public void readFromAlteredPartitionedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT key, `value`, newcol FROM hive.kv_parquet ORDER BY key LIMIT 1")
+        .unOrdered()
+        .baselineColumns("key", "value", "newcol")
+        .baselineValues(1, " key_1", null)
+        .go();
+  }
+
+  @Test // DRILL-3938
+  public void nativeReaderIsDisabledForAlteredPartitionedTable() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+      final String query = "EXPLAIN PLAN FOR SELECT key, `value`, newcol FROM hive.kv_parquet ORDER BY key LIMIT 1";
+
+      // Make sure the HiveScan in plan has no native parquet reader
+      final String planStr = getPlanInString(query, JSON_FORMAT);
+      assertFalse("Hive native is not expected in the plan", planStr.contains("hive-drill-native-parquet-scan"));
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
+  }
+
+  @Test // DRILL-3739
+  public void readingFromStorageHandleBasedTable() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT * FROM hive.kv_sh ORDER BY key LIMIT 2")
+        .ordered()
+        .baselineColumns("key", "value")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  @Test // DRILL-3739
+  public void readingFromStorageHandleBasedTable2() throws Exception {
+    try {
+      test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+
+      testBuilder()
+          .sqlQuery("SELECT * FROM hive.kv_sh ORDER BY key LIMIT 2")
+          .ordered()
+          .baselineColumns("key", "value")
+          .expectsEmptyResultSet()
+          .go();
+    } finally {
+      test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
+    }
   }
 
   @AfterClass

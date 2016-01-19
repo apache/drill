@@ -70,12 +70,17 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
       newContainer.add(container.getValueAccessorById(field.getValueClass(), ids).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
+    // Cleanup before recreating hyperbatch and sv4.
+    cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
+    // Reset queue size (most likely to be set to limit).
+    queueSize = 0;
     for (int i = 0; i < v4.getTotalCount(); i++) {
       heapSv4.set(i, v4.get(i));
+      ++queueSize;
     }
     v4.clear();
     doSetup(context, hyperBatch, null);
@@ -146,8 +151,15 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void cleanup() {
-    heapSv4.clear();
-    hyperBatch.clear();
+    if (heapSv4 != null) {
+      heapSv4.clear();
+    }
+    if (hyperBatch != null) {
+      hyperBatch.clear();
+    }
+    if (finalSv4 != null) {
+      finalSv4.clear();
+    }
   }
 
   private void siftUp() {

@@ -164,7 +164,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     fs.setOwner(dfsFile, user, group);
     fs.setPermission(dfsFile, new FsPermission((short) 0700));
 
-    localFile = new Path(AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues());
+    localFile = new Path(AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues().getFilePath());
     dfsFile = new Path(getUserHome(user), "simple.avro");
     fs.copyFromLocalFile(localFile, dfsFile);
     fs.setOwner(dfsFile, user, group);

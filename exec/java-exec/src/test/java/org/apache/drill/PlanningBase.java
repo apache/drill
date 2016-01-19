@@ -47,6 +47,7 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.junit.Rule;
@@ -105,7 +106,7 @@ public class PlanningBase extends ExecTest{
       }
     };
 
-    final StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
+    final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);

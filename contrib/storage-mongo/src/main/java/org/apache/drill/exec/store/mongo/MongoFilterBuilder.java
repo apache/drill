@@ -26,11 +26,11 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.mongo.common.MongoCompareOp;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.mongodb.BasicDBObject;
 
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
@@ -58,7 +58,7 @@ public class MongoFilterBuilder extends
 
   private MongoScanSpec mergeScanSpecs(String functionName,
       MongoScanSpec leftScanSpec, MongoScanSpec rightScanSpec) {
-    BasicDBObject newFilter = null;
+    Document newFilter = new Document();
 
     switch (functionName) {
     case "booleanAnd":
@@ -199,15 +199,15 @@ public class MongoFilterBuilder extends
     }
 
     if (compareOp != null) {
-      BasicDBObject queryFilter = new BasicDBObject();
+      Document queryFilter = new Document();
       if (compareOp == MongoCompareOp.IFNULL) {
         queryFilter.put(fieldName,
-            new BasicDBObject(MongoCompareOp.EQUAL.getCompareOp(), null));
+            new Document(MongoCompareOp.EQUAL.getCompareOp(), null));
       } else if (compareOp == MongoCompareOp.IFNOTNULL) {
         queryFilter.put(fieldName,
-            new BasicDBObject(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
+            new Document(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
       } else {
-        queryFilter.put(fieldName, new BasicDBObject(compareOp.getCompareOp(),
+        queryFilter.put(fieldName, new Document(compareOp.getCompareOp(),
             fieldValue));
       }
       return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan

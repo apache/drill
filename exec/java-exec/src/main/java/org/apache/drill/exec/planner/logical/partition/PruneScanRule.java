@@ -94,7 +94,11 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for dfs based partition pruning
-        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
@@ -122,7 +126,11 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         final DrillScanRel scan = (DrillScanRel) call.rel(1);
         GroupScan groupScan = scan.getGroupScan();
         // this rule is applicable only for dfs based partition pruning
-        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
+        if (PrelUtil.getPlannerSettings(scan.getCluster().getPlanner()).isHepPartitionPruningEnabled()) {
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown() && !scan.partitionFilterPushdown();
+        } else {
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
+        }
       }
 
       @Override
@@ -319,7 +327,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
               scanRel.getTable(),
               descriptor.createNewGroupScan(newFiles),
               scanRel.getRowType(),
-              scanRel.getColumns());
+              scanRel.getColumns(),
+              true /*filter pushdown*/);
 
       RelNode inputRel = newScanRel;
 

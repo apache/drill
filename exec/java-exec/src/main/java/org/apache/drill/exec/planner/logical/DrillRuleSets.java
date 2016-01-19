@@ -31,12 +31,15 @@ import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
+import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
+import org.apache.commons.digester.Rules;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
@@ -67,6 +70,12 @@ import com.google.common.collect.ImmutableSet.Builder;
 public class DrillRuleSets {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
+  public static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE = new JoinToMultiJoinRule(DrillJoinRel.class);
+  public static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE = new LoptOptimizeJoinRule(
+      DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
+      DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
+      DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY);
+
   /**
    * Get a list of logical rules that can be turned on or off by session/system options.
    *
@@ -90,7 +99,6 @@ public class DrillRuleSets {
     if (ps.isConstantFoldingEnabled()) {
       // TODO - DRILL-2218
       userConfigurableRules.add(ReduceExpressionsRule.PROJECT_INSTANCE);
-
       userConfigurableRules.add(DrillReduceExpressionsRule.FILTER_INSTANCE_DRILL);
       userConfigurableRules.add(DrillReduceExpressionsRule.CALC_INSTANCE_DRILL);
     }
@@ -183,16 +191,27 @@ public class DrillRuleSets {
         .addAll(staticRuleSet)
         .add(
             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
-                optimizerRulesContext.getFunctionRegistry()),
-
-            PruneScanRule.getFilterOnProject(optimizerRulesContext),
-            PruneScanRule.getFilterOnScan(optimizerRulesContext),
-            ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
-            ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext)
+                optimizerRulesContext.getFunctionRegistry())
             )
         .build();
 
     return new DrillRuleSet(basicRules);
+  }
+
+  /**
+   *   Get an immutable list of partition pruning rules that will be used in logical planning.
+   */
+  public static RuleSet getPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
+    final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
+        .add(
+            PruneScanRule.getFilterOnProject(optimizerRulesContext),
+            PruneScanRule.getFilterOnScan(optimizerRulesContext),
+            ParquetPruneScanRule.getFilterOnProjectParquet(optimizerRulesContext),
+            ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext)
+        )
+        .build();
+
+    return new DrillRuleSet(pruneRules);
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.

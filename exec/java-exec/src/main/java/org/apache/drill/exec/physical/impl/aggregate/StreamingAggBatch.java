@@ -309,7 +309,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
 
     container.buildSchema(SelectionVectorMode.NONE);
     StreamingAggregator agg = context.getImplementationClass(cg);
-    agg.setup(context, incoming, this);
+    agg.setup(oContext, incoming, this);
     return agg;
   }
 

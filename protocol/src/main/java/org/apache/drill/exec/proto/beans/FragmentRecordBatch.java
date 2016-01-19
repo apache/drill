@@ -48,7 +48,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
 
     static final FragmentRecordBatch DEFAULT_INSTANCE = new FragmentRecordBatch();
 
-    static final Boolean DEFAULT_IS_OUT_OF_MEMORY = new Boolean(false);
     
     private QueryId queryId;
     private int receivingMajorFragmentId;
@@ -57,7 +56,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
     private int sendingMinorFragmentId;
     private RecordBatchDef def;
     private Boolean isLastBatch;
-    private Boolean isOutOfMemory = DEFAULT_IS_OUT_OF_MEMORY;
 
     public FragmentRecordBatch()
     {
@@ -157,19 +155,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
         return this;
     }
 
-    // isOutOfMemory
-
-    public Boolean getIsOutOfMemory()
-    {
-        return isOutOfMemory;
-    }
-
-    public FragmentRecordBatch setIsOutOfMemory(Boolean isOutOfMemory)
-    {
-        this.isOutOfMemory = isOutOfMemory;
-        return this;
-    }
-
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -249,9 +234,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
                 case 7:
                     message.isLastBatch = input.readBool();
                     break;
-                case 8:
-                    message.isOutOfMemory = input.readBool();
-                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -289,9 +271,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
 
         if(message.isLastBatch != null)
             output.writeBool(7, message.isLastBatch, false);
-
-        if(message.isOutOfMemory != null && message.isOutOfMemory != DEFAULT_IS_OUT_OF_MEMORY)
-            output.writeBool(8, message.isOutOfMemory, false);
     }
 
     public String getFieldName(int number)
@@ -305,7 +284,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
             case 5: return "sendingMinorFragmentId";
             case 6: return "def";
             case 7: return "isLastBatch";
-            case 8: return "isOutOfMemory";
             default: return null;
         }
     }
@@ -326,7 +304,6 @@ public final class FragmentRecordBatch implements Externalizable, Message<Fragme
         __fieldMap.put("sendingMinorFragmentId", 5);
         __fieldMap.put("def", 6);
         __fieldMap.put("isLastBatch", 7);
-        __fieldMap.put("isOutOfMemory", 8);
     }
     
 }

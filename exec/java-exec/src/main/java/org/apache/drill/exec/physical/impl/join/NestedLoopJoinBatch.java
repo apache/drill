@@ -340,7 +340,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   }
 
   private void addBatchToHyperContainer(RecordBatch inputBatch) {
-    final RecordBatchData batchCopy = new RecordBatchData(inputBatch);
+    final RecordBatchData batchCopy = new RecordBatchData(inputBatch, oContext.getAllocator());
     boolean success = false;
     try {
       rightCounts.addLast(inputBatch.getRecordCount());

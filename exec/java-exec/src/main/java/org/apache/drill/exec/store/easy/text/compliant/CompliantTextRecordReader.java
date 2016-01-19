@@ -146,6 +146,9 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
     assert (settings.isHeaderExtractionEnabled());
     assert (oContext != null);
 
+    // don't skip header in case skipFirstLine is set true
+    settings.setSkipFirstLine(false);
+
     // setup Output using OutputMutator
     // we should use a separate output mutator to avoid reshaping query output with header data
     HeaderOutputMutator hOutputMutator = new HeaderOutputMutator();

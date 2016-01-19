@@ -78,7 +78,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
         this(ImpersonationUtil.resolveUserName(userName),
-            new FileSelection(files, true),
+            FileSelection.create(null, files, selectionRoot),
             (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
             columns,
             selectionRoot);
@@ -130,7 +130,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
-    this.chunks = b.generateFileWork(selection.getFileStatusList(dfs), formatPlugin.isBlockSplittable());
+    this.chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
     this.maxWidth = chunks.size();
     this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
@@ -152,7 +152,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
 
   @JsonProperty("files")
   public List<String> getFiles() {
-    return selection.getAsFiles();
+    return selection.getFiles();
   }
 
   @JsonProperty("columns")

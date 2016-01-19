@@ -19,8 +19,10 @@ package org.apache.drill.exec.work.batch;
 
 import static org.apache.drill.exec.rpc.RpcBus.get;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.InitializeFragments;
@@ -39,6 +41,7 @@ import org.apache.drill.exec.rpc.UserRpcException;
 import org.apache.drill.exec.rpc.control.ControlConnection;
 import org.apache.drill.exec.rpc.control.ControlRpcConfig;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
+import org.apache.drill.exec.rpc.control.CustomHandlerRegistry;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -50,6 +53,7 @@ import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
 public class ControlMessageHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlMessageHandler.class);
   private final WorkerBee bee;
+  private final CustomHandlerRegistry handlerRegistry = new CustomHandlerRegistry();
 
   public ControlMessageHandler(final WorkerBee bee) {
     this.bee = bee;
@@ -67,6 +71,11 @@ public class ControlMessageHandler {
       final FragmentHandle handle = get(pBody, FragmentHandle.PARSER);
       cancelFragment(handle);
       return ControlRpcConfig.OK;
+    }
+
+    case RpcType.REQ_CUSTOM_VALUE: {
+      final CustomMessage customMessage = get(pBody, CustomMessage.PARSER);
+      return handlerRegistry.handle(customMessage, (DrillBuf) dBody);
     }
 
     case RpcType.REQ_RECEIVER_FINISHED_VALUE: {
@@ -228,4 +237,9 @@ public class ControlMessageHandler {
 
     return Acks.OK;
   }
+
+  public CustomHandlerRegistry getHandlerRegistry() {
+    return handlerRegistry;
+  }
+
 }

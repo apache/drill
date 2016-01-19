@@ -74,7 +74,7 @@ public abstract class DrillJoinRelBase extends Join implements DrillRelNode {
              *   - Such filter on top of join might be pushed into JOIN, when LOPT planner is called.
              *   - Return non-infinite cost will give LOPT planner a chance to try to push the filters.
              */
-            if (PrelUtil.getPlannerSettings(planner).isHepJoinOptEnabled()) {
+            if (PrelUtil.getPlannerSettings(planner).isHepOptEnabled()) {
              return computeCartesianJoinCost(planner);
             } else {
               return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();

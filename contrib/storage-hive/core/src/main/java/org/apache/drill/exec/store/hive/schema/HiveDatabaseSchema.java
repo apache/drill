@@ -17,30 +17,36 @@
  */
 package org.apache.drill.exec.store.hive.schema;
 
-import java.util.List;
 import java.util.Set;
 
 import org.apache.calcite.schema.Table;
 
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory.HiveSchema;
 
 import com.google.common.collect.Sets;
+import org.apache.thrift.TException;
 
 public class HiveDatabaseSchema extends AbstractSchema{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveDatabaseSchema.class);
 
   private final HiveSchema hiveSchema;
-  private final Set<String> tables;
+  private Set<String> tables;
+  private final DrillHiveMetaStoreClient mClient;
+  private final SchemaConfig schemaConfig;
 
   public HiveDatabaseSchema( //
-      List<String> tableList, //
       HiveSchema hiveSchema, //
-      String name) {
+      String name,
+      DrillHiveMetaStoreClient mClient,
+      SchemaConfig schemaConfig) {
     super(hiveSchema.getSchemaPath(), name);
     this.hiveSchema = hiveSchema;
-    this.tables = Sets.newHashSet(tableList);
+    this.mClient = mClient;
+    this.schemaConfig = schemaConfig;
   }
 
   @Override
@@ -50,6 +56,14 @@ public class HiveDatabaseSchema extends AbstractSchema{
 
   @Override
   public Set<String> getTableNames() {
+    if (tables == null) {
+      try {
+        tables = Sets.newHashSet(mClient.getTableNames(this.name, schemaConfig.getIgnoreAuthErrors()));
+      } catch (final TException e) {
+        logger.warn("Failure while attempting to access HiveDatabase '{}'.", this.name, e.getCause());
+        tables = Sets.newHashSet(); // empty set.
+      }
+    }
     return tables;
   }
 

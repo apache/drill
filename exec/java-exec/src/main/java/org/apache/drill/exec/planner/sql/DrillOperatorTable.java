@@ -50,22 +50,13 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   @Override
   public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax, List<SqlOperator> operatorList) {
-    if (syntax == SqlSyntax.FUNCTION) {
+    inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
 
-      // add optiq.
-      inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
-
-      if(!operatorList.isEmpty()){
-        return;
-      }
-
+    if (operatorList.isEmpty() && syntax == SqlSyntax.FUNCTION && opName.isSimple()) {
       List<SqlOperator> drillOps = opMap.get(opName.getSimple().toLowerCase());
-      if(drillOps != null){
+      if (drillOps != null) {
         operatorList.addAll(drillOps);
       }
-
-    } else {
-      inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
     }
   }
 

@@ -108,7 +108,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of(
         InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_PROJECT,
         InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_SCAN);

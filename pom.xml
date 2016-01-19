@@ -21,7 +21,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -38,10 +38,10 @@
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
 
     <!--
-      Currently Hive storage plugin only supports Apache Hive 1.0.0 or vendor specific variants of the
-      Apache Hive 1.0.0. If the version is changed, make sure the jars and their dependencies are updated.
+      Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
+      Apache Hive 1.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
-    <hive.version>1.0.0</hive.version>
+    <hive.version>1.2.1</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
     <fmpp.version>0.9.14</fmpp.version>
   </properties>
@@ -183,6 +183,7 @@
             <exclude>**/git.properties</exclude>
             <exclude>**/*.csv</exclude>
             <exclude>**/*.csvh</exclude>
+            <exclude>**/*.csvh-test</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.ssv</exclude>
@@ -589,6 +590,18 @@
   <!-- Managed Dependencies -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-aws</artifactId>
+        <version>${hadoop.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-api</artifactId>
@@ -1258,7 +1271,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r8</version>
+            <version>1.4.0-drill-r10</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>
@@ -1368,7 +1381,7 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.0.0-mapr-1504</hive.version>
+        <hive.version>1.2.0-mapr-1510</hive.version>
         <hbase.version>0.98.9-mapr-1503-m7-4.1.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1506</hadoop.version>
         <mapr.core.version>4.1.0-mapr</mapr.core.version>

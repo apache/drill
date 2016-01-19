@@ -43,10 +43,16 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   public boolean supportsWrite();
 
   /** An implementation of this method will return one or more specialized rules that Drill query
-   *  optimizer can leverage. Otherwise, it should return an empty set.
-   * @return an empty set or a set of plugin specific optimizer rules.
+   *  optimizer can leverage in <i>logical</i> space. Otherwise, it should return an empty set.
+   * @return an empty set or a set of plugin specific logical optimizer rules.
    */
-  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
+  public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext);
+
+  /** An implementation of this method will return one or more specialized rules that Drill query
+   *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
+   * @return an empty set or a set of plugin specific physical optimizer rules.
+   */
+  public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerContext);
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.

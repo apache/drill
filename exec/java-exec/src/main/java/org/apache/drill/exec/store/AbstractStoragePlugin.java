@@ -49,7 +49,12 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+  public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of();
   }
 

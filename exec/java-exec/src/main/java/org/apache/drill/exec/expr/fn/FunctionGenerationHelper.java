@@ -18,16 +18,25 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
+import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
@@ -46,7 +55,7 @@ public class FunctionGenerationHelper {
    * @return
    *     FunctionHolderExpression containing the found function implementation
    */
-  public static FunctionHolderExpression getOrderingComparator(
+  public static LogicalExpression getOrderingComparator(
       boolean null_high,
       HoldingContainer left,
       HoldingContainer right,
@@ -56,13 +65,20 @@ public class FunctionGenerationHelper {
 
     if (   ! isComparableType(left.getMajorType() )
         || ! isComparableType(right.getMajorType() )
-        || isUnionType(left.getMajorType())
-        || isUnionType(right.getMajorType()) ) {
+            ){
       throw new UnsupportedOperationException(
           formatCanNotCompareMsg(left.getMajorType(), right.getMajorType()));
     }
-    return getFunctionExpression(comparator_name, Types.required(MinorType.INT),
+    LogicalExpression comparisonFunctionExpression = getFunctionExpression(comparator_name, Types.required(MinorType.INT),
                                  registry, left, right);
+
+    ErrorCollector collector = new ErrorCollectorImpl();
+    if (!isUnionType(left.getMajorType()) && !isUnionType(right.getMajorType())) {
+      return ExpressionTreeMaterializer.materialize(comparisonFunctionExpression, null, collector, registry);
+    } else {
+      LogicalExpression typeComparisonFunctionExpression = getTypeComparisonFunction(comparisonFunctionExpression, left, right);
+      return ExpressionTreeMaterializer.materialize(typeComparisonFunctionExpression, null, collector, registry);
+    }
   }
 
   private static boolean isUnionType(MajorType majorType) {
@@ -76,16 +92,15 @@ public class FunctionGenerationHelper {
    * @param  right  ...
    * @param  registry  ...
    * @return FunctionHolderExpression containing the function implementation
-   * @see #getComparator
    */
-  public static FunctionHolderExpression getOrderingComparatorNullsHigh(
+  public static LogicalExpression getOrderingComparatorNullsHigh(
       HoldingContainer left,
       HoldingContainer right,
       FunctionImplementationRegistry registry) {
     return getOrderingComparator(true, left, right, registry);
   }
 
-  public static FunctionHolderExpression getFunctionExpression(
+  private static LogicalExpression getFunctionExpression(
       String name, MajorType returnType, FunctionImplementationRegistry registry, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
@@ -94,25 +109,34 @@ public class FunctionGenerationHelper {
       argExpressions.add(new HoldingContainerExpression(c));
     }
 
-    DrillFuncHolder holder = registry.findExactMatchingDrillFunction(name, argTypes, returnType);
-    if (holder != null) {
-      return holder.getExpr(name, argExpressions, ExpressionPosition.UNKNOWN);
-    }
+    return new FunctionCall(name, argExpressions, ExpressionPosition.UNKNOWN);
+  }
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("Failure finding function that runtime code generation expected.  Signature: ");
-    sb.append(name);
-    sb.append("( ");
-    for(int i =0; i < args.length; i++) {
-      MajorType mt = args[i].getMajorType();
-      if (i != 0) {
-        sb.append(", ");
-      }
-      appendType(mt, sb);
+  /**
+   * Wraps the comparison function in an If-statement which compares the types first, evaluating the comaprison function only
+   * if the types are equivialent
+   *
+   * @param comparisonFunction
+   * @param args
+   * @return
+   */
+  private static LogicalExpression getTypeComparisonFunction(LogicalExpression comparisonFunction, HoldingContainer... args) {
+    List<LogicalExpression> argExpressions = Lists.newArrayList();
+    List<MajorType> argTypes = Lists.newArrayList();
+    for(HoldingContainer c : args) {
+      argTypes.add(c.getMajorType());
+      argExpressions.add(new HoldingContainerExpression(c));
     }
-    sb.append(" ) returns ");
-    appendType(returnType, sb);
-    throw new UnsupportedOperationException(sb.toString());
+    FunctionCall call = new FunctionCall("compareType", argExpressions, ExpressionPosition.UNKNOWN);
+
+    List<LogicalExpression> newArgs = Lists.newArrayList();
+    newArgs.add(call);
+    newArgs.add(new IntExpression(0, ExpressionPosition.UNKNOWN));
+    FunctionCall notEqual = new FunctionCall("not_equal", newArgs, ExpressionPosition.UNKNOWN);
+
+    IfExpression.IfCondition ifCondition = new IfCondition(notEqual, call);
+    IfExpression ifExpression = IfExpression.newBuilder().setIfCondition(ifCondition).setElse(comparisonFunction).build();
+    return ifExpression;
   }
 
   private static final void appendType(MajorType mt, StringBuilder sb) {
@@ -121,7 +145,7 @@ public class FunctionGenerationHelper {
     sb.append(mt.getMode().name());
   }
 
-  protected static boolean isComparableType(MajorType type) {
+  private static boolean isComparableType(MajorType type) {
     if (type.getMinorType() == MinorType.MAP ||
         type.getMinorType() == MinorType.LIST ||
         type.getMode() == TypeProtos.DataMode.REPEATED ) {

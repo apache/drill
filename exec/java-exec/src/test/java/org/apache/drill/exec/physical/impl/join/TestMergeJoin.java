@@ -23,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import mockit.Injectable;
+import mockit.NonStrictExpectations;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
@@ -46,7 +49,7 @@ import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -55,9 +58,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
 
 public class TestMergeJoin extends PopUnitTestBase {
@@ -130,7 +130,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_single_batch.json"), Charsets.UTF_8)
@@ -186,7 +187,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_inner_single_batch.json"), Charsets.UTF_8)
@@ -242,7 +244,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getCompiler(); result = CodeCompilerTestFactory.getTestCompiler(c);
     }};
 
-    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c, new StoragePluginRegistry(bitContext));
+    final PhysicalPlanReader reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c,
+        new StoragePluginRegistryImpl(bitContext));
     final PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_multi_batch.json"), Charsets.UTF_8)

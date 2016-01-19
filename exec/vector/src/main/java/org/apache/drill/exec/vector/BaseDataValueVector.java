@@ -59,8 +59,8 @@ public abstract class BaseDataValueVector extends BaseValueVector {
       out = new DrillBuf[0];
     } else {
       out = new DrillBuf[]{data};
+      data.readerIndex(0);
       if (clear) {
-        data.readerIndex(0);
         data.retain(1);
       }
     }

@@ -162,7 +162,7 @@ public class Hash64WithSeedAsDouble {
   }
 
   @FunctionTemplate(name = "hash64AsDouble", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-  public static class HashBigInt implements DrillSimpleFunc {
+  public static class BigIntHash implements DrillSimpleFunc {
 
     @Param BigIntHolder in;
     @Param BigIntHolder seed;

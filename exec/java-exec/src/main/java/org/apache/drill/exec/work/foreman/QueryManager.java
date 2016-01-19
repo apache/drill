@@ -277,7 +277,8 @@ public class QueryManager {
 
   QueryState updateEphemeralState(final QueryState queryState) {
     switch (queryState) {
-      case PENDING:
+      case ENQUEUED:
+      case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
         profileEStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
