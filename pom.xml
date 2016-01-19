@@ -43,7 +43,8 @@
     -->
     <hive.version>1.2.1</hive.version>
     <hadoop.version>2.7.1</hadoop.version>
-    <fmpp.version>0.9.14</fmpp.version>
+    <fmpp.version>0.9.15</fmpp.version>
+    <freemarker.version>2.3.21</freemarker.version>
   </properties>
 
   <scm>
