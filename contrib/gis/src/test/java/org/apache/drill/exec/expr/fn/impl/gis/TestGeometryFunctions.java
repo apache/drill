@@ -256,4 +256,19 @@ public class TestGeometryFunctions extends BaseTestQuery {
     .run();
 
   }
+
+  @Test
+  public void testTransfromQuery() throws Exception {
+    double targetX = -71.1776848522251;
+    double targetY = 42.3902896512902;
+
+    testBuilder()
+      .sqlQuery("SELECT round(st_x(st_transform(st_geomfromtext('POINT (743238 2967416)'), 2249, 4326)), 13),"
+          + " round(st_y(st_transform(st_geomfromtext('POINT (743238 2967416)'), 2249, 4326)), 13) from (VALUES(1))")
+      .ordered().baselineColumns("EXPR$0", "EXPR$1")
+      .baselineValues(targetX, targetY)
+      .build()
+      .run();
+  }
+
 }
