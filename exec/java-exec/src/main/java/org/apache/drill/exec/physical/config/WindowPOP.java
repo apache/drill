@@ -18,8 +18,10 @@
 
 package org.apache.drill.exec.physical.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.calcite.rex.RexWindowBound;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.AbstractSingle;
@@ -33,26 +35,29 @@ public class WindowPOP extends AbstractSingle {
   private final NamedExpression[] withins;
   private final NamedExpression[] aggregations;
   private final Order.Ordering[] orderings;
-  private final long start;
-  private final long end;
+  private final boolean frameUnitsRows;
+  private final Bound start;
+  private final Bound end;
 
   public WindowPOP(@JsonProperty("child") PhysicalOperator child,
                    @JsonProperty("within") NamedExpression[] withins,
                    @JsonProperty("aggregations") NamedExpression[] aggregations,
                    @JsonProperty("orderings") Order.Ordering[] orderings,
-                   @JsonProperty("start") long start,
-                   @JsonProperty("end") long end) {
+                   @JsonProperty("frameUnitsRows") boolean frameUnitsRows,
+                   @JsonProperty("start") Bound start,
+                   @JsonProperty("end") Bound end) {
     super(child);
     this.withins = withins;
     this.aggregations = aggregations;
     this.orderings = orderings;
+    this.frameUnitsRows = frameUnitsRows;
     this.start = start;
     this.end = end;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new WindowPOP(child, withins, aggregations, orderings, start, end);
+    return new WindowPOP(child, withins, aggregations, orderings, frameUnitsRows, start, end);
   }
 
   @Override
@@ -65,11 +70,11 @@ public class WindowPOP extends AbstractSingle {
     return UserBitShared.CoreOperatorType.WINDOW_VALUE;
   }
 
-  public long getStart() {
+  public Bound getStart() {
     return start;
   }
 
-  public long getEnd() {
+  public Bound getEnd() {
     return end;
   }
 
@@ -83,5 +88,37 @@ public class WindowPOP extends AbstractSingle {
 
   public Order.Ordering[] getOrderings() {
     return orderings;
+  }
+
+  public boolean isFrameUnitsRows() {
+    return frameUnitsRows;
+  }
+
+  @JsonTypeName("windowBound")
+  public static class Bound {
+    private final boolean unbounded;
+    private final long offset;
+
+    public Bound(@JsonProperty("unbounded") boolean unbounded, @JsonProperty("offset") long offset) {
+      this.unbounded = unbounded;
+      this.offset = offset;
+    }
+
+    public boolean isUnbounded() {
+      return unbounded;
+    }
+
+    @JsonIgnore
+    public boolean isCurrent() {
+      return offset == 0;
+    }
+
+    public long getOffset() {
+      return offset;
+    }
+  }
+
+  public static Bound newBound(RexWindowBound windowBound) {
+    return new Bound(windowBound.isUnbounded(), windowBound.isCurrentRow() ? 0 : Long.MIN_VALUE); //TODO: Get offset to work
   }
 }

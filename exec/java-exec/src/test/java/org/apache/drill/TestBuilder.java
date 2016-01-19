@@ -367,6 +367,10 @@ public class TestBuilder {
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
+  public BaselineQueryTestBuilder sqlBaselineQuery(String query, String ...replacements) {
+    return sqlBaselineQuery(String.format(query, replacements));
+  }
+
   // provide a path to a file containing a SQL query to use as a baseline
   public BaselineQueryTestBuilder sqlBaselineQueryFromFile(String baselineQueryFilename) throws IOException {
     String baselineQuery = BaseTestQuery.getFile(baselineQueryFilename);
