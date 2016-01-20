@@ -1,6 +1,6 @@
 ---
 title: "Interfaces Introduction"
-date:  
+date: 2016-01-20 22:37:33 UTC
 parent: "ODBC/JDBC Interfaces"
 ---
 You can connect to Apache Drill through the following interfaces:
@@ -19,7 +19,7 @@ MapR provides an ODBC 3.8 driver that connects Windows, Mac OS X, and Linux to A
 
 Access the latest MapR Drill ODBC drivers in the following location:
 
-<http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc>
+<http://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.2.1.1000/>
 
 ## Using JDBC to Access Apache Drill from SQuirrel
 
