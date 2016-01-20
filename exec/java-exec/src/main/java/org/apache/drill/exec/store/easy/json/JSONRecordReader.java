@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -28,6 +29,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -138,6 +140,10 @@ public class JSONRecordReader extends AbstractRecordReader {
     }catch(final Exception e){
       handleAndRaise("Failure reading JSON file", e);
     }
+  }
+
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return ImmutableList.of();
   }
 
   private void setupParser() throws IOException {

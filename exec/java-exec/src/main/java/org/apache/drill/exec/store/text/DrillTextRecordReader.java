@@ -107,6 +107,11 @@ public class DrillTextRecordReader extends AbstractRecordReader {
   }
 
   @Override
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return DEFAULT_TEXT_COLS_TO_READ;
+  }
+
+  @Override
   public boolean isStarQuery() {
     return super.isStarQuery() || Iterables.tryFind(getColumns(), new Predicate<SchemaPath>() {
       private final SchemaPath COLUMNS = SchemaPath.getSimplePath("columns");
