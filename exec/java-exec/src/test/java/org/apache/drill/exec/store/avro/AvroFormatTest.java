@@ -262,4 +262,13 @@ public class AvroFormatTest extends BaseTestQuery {
     final String sql = "select * from dfs_test.`" + file + "`";
     test(sql);
   }
+
+  @Test
+  public void testCountStar() throws Exception {
+
+    final String file = AvroTestUtil.generateStringAndUtf8Data();
+    final String sql = "select count(*) from dfs_test.`" + file + "`";
+    test(sql);
+  }
+
 }

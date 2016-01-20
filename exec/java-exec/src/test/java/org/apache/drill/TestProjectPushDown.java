@@ -209,6 +209,61 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
+  public void testEmptyColProjectInTextScan() throws Exception {
+    final String sql = "SELECT count(*) cnt from cp.`store/text/data/d1/regions.csv`";
+    final String expected = "\"columns\" : [ ]";
+    // Verify plan
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long) 5)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyColProjectInJsonScan() throws Exception {
+    final String sql = "SELECT count(*) cnt from cp.`employee.json`";
+    final String expected = "\"columns\" : [ ]";
+
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues((long) 1155)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testEmptyColProjectInParquetScan() throws Exception {
+    final String sql = "SELECT 1 + 1 as val from cp.`tpch/region.parquet`";
+    final String expected = "\"columns\" : [ ]";
+
+    testPushDown(new PushDownTestInstance(sql, new String[] {expected}));
+
+    // Verify execution result.
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("val")
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .baselineValues(2)
+        .build()
+        .run();
+  }
+
+  @Test
   public void testSimpleProjectPastJoinPastFilterPastJoinPushDown() throws Exception {
 //    String sql = "select * " +
 //        "from cp.`%s` t0, cp.`%s` t1, cp.`%s` t2 " +
