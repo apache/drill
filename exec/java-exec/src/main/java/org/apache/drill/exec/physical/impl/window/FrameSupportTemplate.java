@@ -53,6 +53,8 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
   private Partition partition;
 
+  private boolean unboundedFollowing; // true if the frame is of the form RANGE BETWEEN X AND UNBOUNDED FOLLOWING
+
   @Override
   public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
                     final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException {
@@ -66,6 +68,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     partition = null;
 
     this.requireFullPartition = requireFullPartition;
+    unboundedFollowing = popConfig.getEnd().isUnbounded();
   }
 
   private void allocateInternal() {
@@ -218,6 +221,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     VectorAccessible last = current;
     long length = 0;
+    final long remaining = partition.getLength();
 
     // a single frame can include rows from multiple batches
     // start processing first batch and, if necessary, move to next batches
@@ -227,8 +231,14 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
       // for every remaining row in the partition, count it if it's a peer row
       for (int row = (batch == current) ? start : 0; row < recordCount; row++, length++) {
-        if (!isPeer(start, current, row, batch)) {
-          break;
+        if (unboundedFollowing) {
+          if (length >= remaining) {
+            break;
+          }
+        } else {
+          if (!isPeer(start, current, row, batch)) {
+            break;
+          }
         }
 
         evaluatePeer(row);

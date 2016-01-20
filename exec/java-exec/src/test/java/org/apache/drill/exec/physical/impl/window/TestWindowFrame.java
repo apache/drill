@@ -106,6 +106,16 @@ public class TestWindowFrame extends BaseTestQuery {
     );
   }
 
+  @Test
+  public void testUnboundedFollowing() throws Exception {
+    testBuilder()
+      .sqlQuery(String.format(getFile("window/q3.sql"), TEST_RES_PATH))
+      .ordered()
+      .sqlBaselineQuery(String.format(getFile("window/q3.sql"), TEST_RES_PATH))
+      .build()
+      .run();
+  }
+
   /**
    * 2 batches with 2 partitions (position_id column), each batch contains a different partition
    */
