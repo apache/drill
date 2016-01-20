@@ -28,7 +28,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -88,6 +87,11 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
       }).isPresent();
     }
     return super.isStarQuery();
+  }
+
+  @Override
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return DEFAULT_TEXT_COLS_TO_READ;
   }
 
   /**

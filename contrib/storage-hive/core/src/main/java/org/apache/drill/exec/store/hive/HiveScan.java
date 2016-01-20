@@ -240,7 +240,8 @@ public class HiveScan extends AbstractGroupScan {
       Table hiveTable = hiveReadEntry.getTable();
       projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
     } else {
-      projectedColumnCount = columns.size();
+      // In cost estimation, # of project columns should be >= 1, even for skipAll query.
+      projectedColumnCount = Math.max(columns.size(), 1);
     }
 
     return projectedColumnCount * HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN;
