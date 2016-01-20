@@ -157,7 +157,7 @@ public abstract class WindowFunction {
 
     @Override
     public boolean requiresFullPartition(final WindowPOP pop) {
-      return pop.getOrderings().length == 0;
+      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
     }
 
     @Override
@@ -451,7 +451,7 @@ public abstract class WindowFunction {
 
     @Override
     public boolean requiresFullPartition(final WindowPOP pop) {
-      return pop.getOrderings().length == 0;
+      return pop.getOrderings().length == 0 || pop.getEnd().isUnbounded();
     }
 
     @Override
