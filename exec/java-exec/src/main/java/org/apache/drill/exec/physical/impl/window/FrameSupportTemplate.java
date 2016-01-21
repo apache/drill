@@ -31,11 +31,12 @@ import java.util.List;
 
 
 /**
- * WindowFramer implementation that supports the FRAME clause. Can be used with FIRST_VALUE, LAST_VALUE and
- * all aggregate functions
+ * WindowFramer implementation that supports the FRAME clause.
+ * <br>According to the SQL specification, FIRST_VALUE, LAST_VALUE and all aggregate functions support the FRAME clause.
+ * This class will handle such functions even if the FRAME clause is not present.
  */
-public abstract class CustomFrameTemplate implements WindowFramer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFrameTemplate.class);
+public abstract class FrameSupportTemplate implements WindowFramer {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoFrameSupportTemplate.class);
 
   private VectorContainer container;
   private VectorContainer internal;

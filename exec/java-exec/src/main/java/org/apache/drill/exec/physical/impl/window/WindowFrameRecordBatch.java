@@ -325,7 +325,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       final List<WindowFunction> functions, boolean useCustomFrame) throws IOException, ClassTransformationException {
 
     TemplateClassDefinition<WindowFramer> definition = useCustomFrame ?
-      WindowFramer.CUSTOM_TEMPLATE_DEFINITION : WindowFramer.DEFAULT_TEMPLATE_DEFINITION;
+      WindowFramer.FRAME_TEMPLATE_DEFINITION : WindowFramer.NOFRAME_TEMPLATE_DEFINITION;
     final ClassGenerator<WindowFramer> cg = CodeGenerator.getRoot(definition, context.getFunctionRegistry());
 
     {

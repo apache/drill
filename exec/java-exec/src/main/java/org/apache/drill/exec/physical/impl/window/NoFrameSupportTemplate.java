@@ -31,11 +31,12 @@ import java.util.List;
 
 
 /**
- * WindowFramer implementation that only supports the default frame. Can be used with LEAD, LAG, ROW_NUMBER, and
- * all ranking functions
+ * WindowFramer implementation that doesn't support the FRAME clause (will assume the default frame).
+ * <br>According to the SQL standard, LEAD, LAG, ROW_NUMBER, NTILE and all ranking functions don't support the FRAME clause.
+ * This class will handle such functions.
  */
-public abstract class DefaultFrameTemplate implements WindowFramer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultFrameTemplate.class);
+public abstract class NoFrameSupportTemplate implements WindowFramer {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoFrameSupportTemplate.class);
 
   private VectorContainer container;
   private VectorContainer internal;
