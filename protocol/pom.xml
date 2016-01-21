@@ -51,6 +51,29 @@
       <build>
         <plugins>
           <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.0.0</version>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>src/main/java</directory>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                </fileset>
+              </filesets>
+            </configuration>
+            <executions>
+              <execution>
+                <id>clean-before-code-generation</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
             <groupId>com.dyuproject.protostuff</groupId>
             <artifactId>protostuff-maven-plugin</artifactId>
             <version>1.0.8</version>
