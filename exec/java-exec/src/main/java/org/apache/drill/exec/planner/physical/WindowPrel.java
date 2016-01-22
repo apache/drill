@@ -105,8 +105,8 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
         withins.toArray(new NamedExpression[withins.size()]),
         aggs.toArray(new NamedExpression[aggs.size()]),
         orderings.toArray(new Order.Ordering[orderings.size()]),
-        Long.MIN_VALUE, //TODO: Get first/last to work
-        Long.MIN_VALUE);
+        WindowPOP.newBound(window.lowerBound),
+        WindowPOP.newBound(window.upperBound));
 
     creator.addMetadata(this, windowPOP);
     return windowPOP;
