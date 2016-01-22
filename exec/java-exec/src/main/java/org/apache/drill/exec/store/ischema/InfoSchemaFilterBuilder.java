@@ -73,8 +73,14 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
       case "like": {
         ExprNode arg0 = call.args.get(0).accept(this, value);
         ExprNode arg1 = call.args.get(1).accept(this, value);
-
+        ExprNode arg2 = null;
+        if (call.args.size() > 2 && call.args.get(2) != null) {
+          arg2 = call.args.get(2).accept(this, value);
+        }
         if (arg0 != null && arg0 instanceof FieldExprNode && arg1 != null && arg1 instanceof ConstantExprNode) {
+          if (arg2 != null && arg2 instanceof ConstantExprNode) {
+            return new FunctionExprNode(funcName, ImmutableList.of(arg0, arg1, arg2));
+          }
           return new FunctionExprNode(funcName, ImmutableList.of(arg0, arg1));
         }
         break;

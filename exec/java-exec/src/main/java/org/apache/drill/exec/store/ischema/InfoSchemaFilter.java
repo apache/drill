@@ -146,7 +146,15 @@ public class InfoSchemaFilter {
       case "like": {
         FieldExprNode arg0 = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode arg1 = (ConstantExprNode) exprNode.args.get(1);
+        ConstantExprNode arg2 = null;
+        if (exprNode.args.size() > 2 && exprNode.args.get(2) != null) {
+          arg2 = (ConstantExprNode) exprNode.args.get(2);
+        }
         if (recordValues.get(arg0.field.toString()) != null) {
+          if (arg2 != null) {
+            return Pattern.matches(RegexpUtil.sqlToRegexLike(arg1.value,arg2.value), 
+                recordValues.get(arg0.field.toString())) ? Result.TRUE : Result.FALSE;
+          }
           return Pattern.matches(RegexpUtil.sqlToRegexLike(arg1.value), recordValues.get(arg0.field.toString())) ?
               Result.TRUE : Result.FALSE;
         }
