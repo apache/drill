@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -31,6 +32,9 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaFactory;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
@@ -104,15 +108,13 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of(
     /*
      * SolrQueryFilterRule.FILTER_ON_SCAN,
      * SolrQueryFilterRule.FILTER_ON_PROJECT,
-     */
-    SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT
-    /*
-     * SolrQueryFilterRule.AGG_PUSH_DOWN
-     */);
+     
+     SolrQueryFilterRule.FILTER_ON_PROJECT,*/SolrQueryFilterRule.AGG_PUSH_DOWN,SolrQueryLimitRule.LIMIT_ON_SCAN,
+        SolrQueryLimitRule.LIMIT_ON_PROJECT);
   }
 }

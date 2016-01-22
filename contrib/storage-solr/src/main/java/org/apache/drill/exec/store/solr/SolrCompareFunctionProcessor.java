@@ -43,7 +43,8 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -54,6 +55,7 @@ public class SolrCompareFunctionProcessor implements
   private boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
+  static final Logger logger = LoggerFactory.getLogger(SolrCompareFunctionProcessor.class);
 
   public static boolean isCompareFunction(String functionName) {
     return COMPARE_FUNCTIONS_TRANSPOSE_MAP.keySet().contains(functionName);
@@ -75,11 +77,14 @@ public class SolrCompareFunctionProcessor implements
         evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP
             .get(functionName);
       }
+
       evaluator.success = nameArg.accept(evaluator, valueArg);
+      logger.info(" this is a success "+evaluator.success);
     } else if (call.args.get(0) instanceof SchemaPath) {
       evaluator.success = true;
       evaluator.path = (SchemaPath) nameArg;
     }
+    logger.info(" call "+call.args.get(0));
 
     return evaluator;
   }
