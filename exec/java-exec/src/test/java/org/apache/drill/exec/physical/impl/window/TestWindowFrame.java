@@ -111,7 +111,7 @@ public class TestWindowFrame extends BaseTestQuery {
     testBuilder()
       .sqlQuery(String.format(getFile("window/q3.sql"), TEST_RES_PATH))
       .ordered()
-      .sqlBaselineQuery(String.format(getFile("window/q3.sql"), TEST_RES_PATH))
+      .sqlBaselineQuery(String.format(getFile("window/q4.sql"), TEST_RES_PATH))
       .build()
       .run();
   }
