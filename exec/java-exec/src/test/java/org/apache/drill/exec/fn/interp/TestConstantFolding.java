@@ -17,23 +17,19 @@
  ******************************************************************************/
 package org.apache.drill.exec.fn.interp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.List;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.hadoop.io.Text;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.List;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public class TestConstantFolding extends PlanTestBase {
 

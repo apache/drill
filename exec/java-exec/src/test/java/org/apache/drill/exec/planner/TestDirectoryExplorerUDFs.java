@@ -17,17 +17,18 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.util.JsonStringArrayList;
-import org.apache.hadoop.io.Text;
+import org.apache.drill.exec.util.Text;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class TestDirectoryExplorerUDFs extends PlanTestBase {
 

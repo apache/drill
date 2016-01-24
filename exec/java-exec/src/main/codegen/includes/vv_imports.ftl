@@ -71,7 +71,7 @@ import java.math.BigInteger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import org.apache.hadoop.io.Text;
+import org.apache.drill.exec.util.Text;
 
 import org.apache.drill.exec.vector.accessor.sql.TimePrintMillis;
 import javax.inject.Inject;
