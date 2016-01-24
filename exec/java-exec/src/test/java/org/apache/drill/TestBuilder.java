@@ -17,9 +17,14 @@
  ******************************************************************************/
 package org.apache.drill;
 
-import com.google.common.base.Joiner;
+import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -32,15 +37,10 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
-import org.apache.hadoop.io.Text;
+import org.apache.drill.exec.util.Text;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
 public class TestBuilder {
 
