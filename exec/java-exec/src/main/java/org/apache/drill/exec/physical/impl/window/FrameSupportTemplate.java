@@ -55,6 +55,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   private long remainingPeers; // num unprocessed peer rows in current frame
   private boolean partialPartition; // true if we remainingRows only account for the current batch and more batches are expected for the current partition
 
+  private boolean isRows; // true if ROWS frame
   private boolean unboundedFollowing; // true if the frame is of the form RANGE BETWEEN X AND UNBOUNDED FOLLOWING
 
   @Override
@@ -68,6 +69,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     outputCount = 0;
 
+    this.isRows = popConfig.isRows();
     this.requireFullPartition = requireFullPartition;
     unboundedFollowing = popConfig.getEnd().isUnbounded();
   }
@@ -146,29 +148,48 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     setupWriteFirstValue(internal, container);
 
-    int row = currentRow;
+    if (isRows) {
+      return processROWS(currentRow);
+    } else {
+      return processRANGE(currentRow);
+    }
+  }
 
-    // process all rows except the last one of the batch/partition
+  private int processROWS(int row) throws DrillException {
+    //TODO we only need to call these once per batch
+    setupEvaluatePeer(current, container);
+    setupReadLastValue(current, container);
+
     while (row < outputCount && !isPartitionDone()) {
-      processRow(row);
+      logger.trace("aggregating row {}", row);
+      evaluatePeer(row);
 
+      outputRow(row);
+      writeLastValue(row, row);
+
+      remainingRows--;
       row++;
     }
 
     return row;
   }
 
-  private void processRow(final int row) throws DrillException {
-    if (remainingPeers == 0) {
-      // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-      remainingPeers = aggregatePeers(row);
+  private int processRANGE(int row) throws DrillException {
+    while (row < outputCount && !isPartitionDone()) {
+      if (remainingPeers == 0) {
+        // because all peer rows share the same frame, we only need to compute and aggregate the frame once
+        remainingPeers = aggregatePeers(row);
+      }
+
+      outputRow(row);
+      writeLastValue(frameLastRow, row);
+
+      remainingRows--;
+      remainingPeers--;
+      row++;
     }
 
-    outputRow(row);
-    writeLastValue(frameLastRow, row);
-
-    remainingRows--;
-    remainingPeers--;
+    return row;
   }
 
   /**
