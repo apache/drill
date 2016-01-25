@@ -178,11 +178,20 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       // it is a default frame
       boolean isSupported = (lowerBound == null && upperBound == null);
 
-      // When OVER clause contain an ORDER BY clause the following frames are equivalent to the default frame:
+      // When OVER clause contain an ORDER BY clause the following frames are supported:
       // RANGE UNBOUNDED PRECEDING
       // RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      // RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
       if(window.getOrderList().size() != 0
           && !window.isRows()
+          && SqlWindow.isUnboundedPreceding(lowerBound)
+          && (upperBound == null || SqlWindow.isCurrentRow(upperBound) || SqlWindow.isUnboundedFollowing(upperBound))) {
+        isSupported = true;
+      }
+
+      // ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      // is supported with and without the ORDER BY clause
+      if (window.isRows()
           && SqlWindow.isUnboundedPreceding(lowerBound)
           && (upperBound == null || SqlWindow.isCurrentRow(upperBound))) {
         isSupported = true;
