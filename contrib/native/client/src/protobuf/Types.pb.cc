@@ -36,13 +36,14 @@ void protobuf_AssignDesc_Types_2eproto() {
       "Types.proto");
   GOOGLE_CHECK(file != NULL);
   MajorType_descriptor_ = file->message_type(0);
-  static const int MajorType_offsets_[6] = {
+  static const int MajorType_offsets_[7] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, minor_type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, mode_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, width_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, precision_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, scale_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, timezone_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MajorType, sub_type_),
   };
   MajorType_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -87,27 +88,28 @@ void protobuf_AddDesc_Types_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013Types.proto\022\006common\"\225\001\n\tMajorType\022%\n\nm"
+    "\n\013Types.proto\022\006common\"\272\001\n\tMajorType\022%\n\nm"
     "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo"
     "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001("
     "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t"
-    "imeZone\030\006 \001(\005*\220\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n"
-    "\003MAP\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT"
-    "\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL1"
-    "8\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPA"
-    "RSE\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n\n\006"
-    "TIMETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP\020\020"
-    "\022\014\n\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023\022\007"
-    "\n\003BIT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020\026\022"
-    "\017\n\013FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16CH"
-    "AR\020\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT2\020"
-    "\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENS"
-    "E\020!\022\022\n\016DECIMAL38DENSE\020\"\022\016\n\nDM_UNKNOWN\020%\022"
-    "\020\n\014INTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LI"
-    "ST\020(\022\022\n\016GENERIC_OBJECT\020)*=\n\010DataMode\022\017\n\013"
-    "DM_OPTIONAL\020\000\022\017\n\013DM_REQUIRED\020\001\022\017\n\013DM_REP"
-    "EATED\020\002B-\n\035org.apache.drill.common.types"
-    "B\nTypeProtosH\001", 814);
+    "imeZone\030\006 \001(\005\022#\n\010sub_type\030\007 \003(\0162\021.common"
+    ".MinorType*\233\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA"
+    "P\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022"
+    "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL18\020\010"
+    "\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPARSE"
+    "\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n\n\006TIM"
+    "ETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP\020\020\022\014\n"
+    "\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023\022\007\n\003B"
+    "IT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020\026\022\017\n\013"
+    "FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16CHAR\020"
+    "\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT2\020\036\022\t"
+    "\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENSE\020!"
+    "\022\022\n\016DECIMAL38DENSE\020\"\022\016\n\nDM_UNKNOWN\020%\022\020\n\014"
+    "INTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020"
+    "(\022\022\n\016GENERIC_OBJECT\020)\022\t\n\005UNION\020**=\n\010Data"
+    "Mode\022\017\n\013DM_OPTIONAL\020\000\022\017\n\013DM_REQUIRED\020\001\022\017"
+    "\n\013DM_REPEATED\020\002B-\n\035org.apache.drill.comm"
+    "on.typesB\nTypeProtosH\001", 862);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Types.proto", &protobuf_RegisterTypes);
   MajorType::default_instance_ = new MajorType();
@@ -164,6 +166,7 @@ bool MinorType_IsValid(int value) {
     case 39:
     case 40:
     case 41:
+    case 42:
       return true;
     default:
       return false;
@@ -195,6 +198,7 @@ const int MajorType::kWidthFieldNumber;
 const int MajorType::kPrecisionFieldNumber;
 const int MajorType::kScaleFieldNumber;
 const int MajorType::kTimeZoneFieldNumber;
+const int MajorType::kSubTypeFieldNumber;
 #endif  // !_MSC_VER
 
 MajorType::MajorType()
@@ -261,6 +265,7 @@ void MajorType::Clear() {
     scale_ = 0;
     timezone_ = 0;
   }
+  sub_type_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -372,6 +377,35 @@ bool MajorType::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(56)) goto parse_sub_type;
+        break;
+      }
+
+      // repeated .common.MinorType sub_type = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_sub_type:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::common::MinorType_IsValid(value)) {
+            add_sub_type(static_cast< ::common::MinorType >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(7, value);
+          }
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedEnumNoInline(
+                 input,
+                 &::common::MinorType_IsValid,
+                 this->mutable_sub_type())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(56)) goto parse_sub_type;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -426,6 +460,12 @@ void MajorType::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->timezone(), output);
   }
 
+  // repeated .common.MinorType sub_type = 7;
+  for (int i = 0; i < this->sub_type_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      7, this->sub_type(i), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -464,6 +504,12 @@ void MajorType::SerializeWithCachedSizes(
   // optional int32 timeZone = 6;
   if (has_timezone()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(6, this->timezone(), target);
+  }
+
+  // repeated .common.MinorType sub_type = 7;
+  for (int i = 0; i < this->sub_type_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      7, this->sub_type(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -518,6 +564,16 @@ int MajorType::ByteSize() const {
     }
 
   }
+  // repeated .common.MinorType sub_type = 7;
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->sub_type_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::EnumSize(
+        this->sub_type(i));
+    }
+    total_size += 1 * this->sub_type_size() + data_size;
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -543,6 +599,7 @@ void MajorType::MergeFrom(const ::google::protobuf::Message& from) {
 
 void MajorType::MergeFrom(const MajorType& from) {
   GOOGLE_CHECK_NE(&from, this);
+  sub_type_.MergeFrom(from.sub_type_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_minor_type()) {
       set_minor_type(from.minor_type());
@@ -591,6 +648,7 @@ void MajorType::Swap(MajorType* other) {
     std::swap(precision_, other->precision_);
     std::swap(scale_, other->scale_);
     std::swap(timezone_, other->timezone_);
+    sub_type_.Swap(&other->sub_type_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

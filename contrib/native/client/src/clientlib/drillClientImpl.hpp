@@ -28,6 +28,7 @@
 #define BOOST_ASIO_ENABLE_CANCELIO
 #endif //WIN32_SHUTDOWN_ON_TIMEOUT
 
+#include <algorithm>
 #include <stdlib.h>
 #include <time.h>
 #include <queue>
@@ -71,7 +72,7 @@ class DrillClientQueryResult{
         m_bHasSchemaChanged(false),
         m_bHasData(false),
         m_bHasError(false),
-        m_queryState(exec::shared::QueryResult_QueryState_PENDING),
+        m_queryState(exec::shared::QueryResult_QueryState_STARTING),
         m_pError(NULL),
         m_pQueryId(NULL),
         m_pSchemaListener(NULL),
@@ -205,7 +206,6 @@ class DrillClientImpl{
             m_rbuf(NULL),
             m_wbuf(MAX_SOCK_RD_BUFSIZE)
     {
-        srand(time(NULL));
         m_coordinationId=rand()%1729+1;
     };
 

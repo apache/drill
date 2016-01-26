@@ -352,13 +352,6 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
   inline bool islastbatch() const;
   inline void set_islastbatch(bool value);
 
-  // optional bool isOutOfMemory = 8 [default = false];
-  inline bool has_isoutofmemory() const;
-  inline void clear_isoutofmemory();
-  static const int kIsOutOfMemoryFieldNumber = 8;
-  inline bool isoutofmemory() const;
-  inline void set_isoutofmemory(bool value);
-
   // @@protoc_insertion_point(class_scope:exec.bit.data.FragmentRecordBatch)
  private:
   inline void set_has_query_id();
@@ -373,8 +366,6 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
   inline void clear_has_def();
   inline void set_has_islastbatch();
   inline void clear_has_islastbatch();
-  inline void set_has_isoutofmemory();
-  inline void clear_has_isoutofmemory();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -385,10 +376,9 @@ class FragmentRecordBatch : public ::google::protobuf::Message {
   ::exec::shared::RecordBatchDef* def_;
   ::google::protobuf::int32 sending_minor_fragment_id_;
   bool islastbatch_;
-  bool isoutofmemory_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitData_2eproto();
   friend void protobuf_AssignDesc_BitData_2eproto();
@@ -666,28 +656,6 @@ inline bool FragmentRecordBatch::islastbatch() const {
 inline void FragmentRecordBatch::set_islastbatch(bool value) {
   set_has_islastbatch();
   islastbatch_ = value;
-}
-
-// optional bool isOutOfMemory = 8 [default = false];
-inline bool FragmentRecordBatch::has_isoutofmemory() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void FragmentRecordBatch::set_has_isoutofmemory() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void FragmentRecordBatch::clear_has_isoutofmemory() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void FragmentRecordBatch::clear_isoutofmemory() {
-  isoutofmemory_ = false;
-  clear_has_isoutofmemory();
-}
-inline bool FragmentRecordBatch::isoutofmemory() const {
-  return isoutofmemory_;
-}
-inline void FragmentRecordBatch::set_isoutofmemory(bool value) {
-  set_has_isoutofmemory();
-  isoutofmemory_ = value;
 }
 
 
