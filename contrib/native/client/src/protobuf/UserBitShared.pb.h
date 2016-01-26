@@ -106,16 +106,17 @@ inline bool NamePart_Type_Parse(
     NamePart_Type_descriptor(), name, value);
 }
 enum QueryResult_QueryState {
-  QueryResult_QueryState_PENDING = 0,
+  QueryResult_QueryState_STARTING = 0,
   QueryResult_QueryState_RUNNING = 1,
   QueryResult_QueryState_COMPLETED = 2,
   QueryResult_QueryState_CANCELED = 3,
   QueryResult_QueryState_FAILED = 4,
-  QueryResult_QueryState_CANCELLATION_REQUESTED = 5
+  QueryResult_QueryState_CANCELLATION_REQUESTED = 5,
+  QueryResult_QueryState_ENQUEUED = 6
 };
 bool QueryResult_QueryState_IsValid(int value);
-const QueryResult_QueryState QueryResult_QueryState_QueryState_MIN = QueryResult_QueryState_PENDING;
-const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_CANCELLATION_REQUESTED;
+const QueryResult_QueryState QueryResult_QueryState_QueryState_MIN = QueryResult_QueryState_STARTING;
+const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_ENQUEUED;
 const int QueryResult_QueryState_QueryState_ARRAYSIZE = QueryResult_QueryState_QueryState_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* QueryResult_QueryState_descriptor();
@@ -1507,12 +1508,13 @@ class QueryResult : public ::google::protobuf::Message {
   // nested types ----------------------------------------------------
 
   typedef QueryResult_QueryState QueryState;
-  static const QueryState PENDING = QueryResult_QueryState_PENDING;
+  static const QueryState STARTING = QueryResult_QueryState_STARTING;
   static const QueryState RUNNING = QueryResult_QueryState_RUNNING;
   static const QueryState COMPLETED = QueryResult_QueryState_COMPLETED;
   static const QueryState CANCELED = QueryResult_QueryState_CANCELED;
   static const QueryState FAILED = QueryResult_QueryState_FAILED;
   static const QueryState CANCELLATION_REQUESTED = QueryResult_QueryState_CANCELLATION_REQUESTED;
+  static const QueryState ENQUEUED = QueryResult_QueryState_ENQUEUED;
   static inline bool QueryState_IsValid(int value) {
     return QueryResult_QueryState_IsValid(value);
   }

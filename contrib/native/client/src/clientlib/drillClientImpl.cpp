@@ -49,7 +49,7 @@
 namespace Drill{
 
 static std::map<exec::shared::QueryResult_QueryState, status_t> QUERYSTATE_TO_STATUS_MAP = boost::assign::map_list_of
-    (exec::shared::QueryResult_QueryState_PENDING, QRY_PENDING)
+    (exec::shared::QueryResult_QueryState_STARTING, QRY_PENDING)
     (exec::shared::QueryResult_QueryState_RUNNING, QRY_RUNNING)
     (exec::shared::QueryResult_QueryState_COMPLETED, QRY_COMPLETED)
     (exec::shared::QueryResult_QueryState_CANCELED, QRY_CANCELED)
@@ -647,7 +647,7 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
         
         if (qr.has_query_state() &&
                 qr.query_state() != exec::shared::QueryResult_QueryState_RUNNING &&
-                qr.query_state() != exec::shared::QueryResult_QueryState_PENDING) {
+                qr.query_state() != exec::shared::QueryResult_QueryState_STARTING) {
             pDrillClientQueryResult=findQueryResult(qid);
             //Queries that have been cancelled or whose resources are freed before completion 
             //do not have a DrillClientQueryResult object. We need not handle the terminal message 

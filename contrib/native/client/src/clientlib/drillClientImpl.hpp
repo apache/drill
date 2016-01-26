@@ -71,7 +71,7 @@ class DrillClientQueryResult{
         m_bHasSchemaChanged(false),
         m_bHasData(false),
         m_bHasError(false),
-        m_queryState(exec::shared::QueryResult_QueryState_PENDING),
+        m_queryState(exec::shared::QueryResult_QueryState_STARTING),
         m_pError(NULL),
         m_pQueryId(NULL),
         m_pSchemaListener(NULL),
