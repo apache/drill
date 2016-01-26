@@ -138,6 +138,28 @@ public class TestWindowFrame extends BaseTestQuery {
       .run();
   }
 
+  @Test
+  public void testAggregateRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/aggregate_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/aggregate_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
+  @Test
+  public void testFirstValueRangeCurrentAndCurrent() throws Exception {
+    final String table = "dfs_test.`"+TEST_RES_PATH+"/window/b4.p4`";
+    testBuilder()
+      .sqlQuery(getFile("window/first_value_range_current_current.sql"), table)
+      .unOrdered()
+      .sqlBaselineQuery(getFile("window/first_value_range_current_current_baseline.sql"), table)
+      .build()
+      .run();
+  }
+
   /**
    * 2 batches with 2 partitions (position_id column), each batch contains a different partition
    */

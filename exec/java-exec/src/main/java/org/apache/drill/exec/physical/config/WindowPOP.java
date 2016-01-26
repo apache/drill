@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.physical.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.calcite.rex.RexWindowBound;
@@ -107,12 +108,17 @@ public class WindowPOP extends AbstractSingle {
       return unbounded;
     }
 
+    @JsonIgnore
+    public boolean isCurrent() {
+      return offset == 0;
+    }
+
     public long getOffset() {
       return offset;
     }
   }
 
   public static Bound newBound(RexWindowBound windowBound) {
-    return new Bound(windowBound.isUnbounded(), Long.MIN_VALUE); //TODO: Get offset to work
+    return new Bound(windowBound.isUnbounded(), windowBound.isCurrentRow() ? 0 : Long.MIN_VALUE); //TODO: Get offset to work
   }
 }

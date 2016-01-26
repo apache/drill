@@ -55,8 +55,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   private long remainingPeers; // num unprocessed peer rows in current frame
   private boolean partialPartition; // true if we remainingRows only account for the current batch and more batches are expected for the current partition
 
-  private boolean isRows; // true if ROWS frame
-  private boolean unboundedFollowing; // true if the frame is of the form RANGE BETWEEN X AND UNBOUNDED FOLLOWING
+  private WindowPOP popConfig;
 
   @Override
   public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
@@ -69,9 +68,8 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     outputCount = 0;
 
-    this.isRows = popConfig.isRows();
     this.requireFullPartition = requireFullPartition;
-    unboundedFollowing = popConfig.getEnd().isUnbounded();
+    this.popConfig = popConfig;
   }
 
   private void allocateInternal() {
@@ -148,7 +146,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     setupWriteFirstValue(internal, container);
 
-    if (isRows) {
+    if (popConfig.isRows()) {
       return processROWS(currentRow);
     } else {
       return processRANGE(currentRow);
@@ -178,6 +176,11 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     while (row < outputCount && !isPartitionDone()) {
       if (remainingPeers == 0) {
         // because all peer rows share the same frame, we only need to compute and aggregate the frame once
+        if (popConfig.getStart().isCurrent()) {
+          resetValues();
+          saveFirstValue(row);
+        }
+
         remainingPeers = aggregatePeers(row);
       }
 
@@ -247,6 +250,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   private long aggregatePeers(final int start) throws SchemaChangeException {
     logger.trace("aggregating rows starting from {}", start);
 
+    final boolean unboundedFollowing = popConfig.getEnd().isUnbounded();
     VectorAccessible last = current;
     long length = 0;
 
