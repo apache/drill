@@ -28,6 +28,7 @@ import java.util.Map;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
@@ -123,6 +124,10 @@ public class TestBuilder {
     }
     return new DrillTestWrapper(this, allocator, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
         getValidationQueryType(), ordered, approximateEquality, highPerformanceComparison, baselineRecords, expectedNumBatches);
+  }
+
+  public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
+    return null;
   }
 
   public void go() throws Exception {
@@ -235,6 +240,20 @@ public class TestBuilder {
         expectedNumBatches);
   }
 
+  public SchemaTestBuilder schemaBaseLine(List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
+    assert expectedSchema != null : "The expected schema can be provided once";
+    assert baselineColumns == null : "The column information should be captured in expected schema, not baselineColumns";
+    assert baselineValues == null && baselineRecords == null : "Since only schema will be compared in this test, no record is expected";
+
+    return new SchemaTestBuilder(
+        allocator,
+        query,
+        queryType,
+        baselineOptionSettingQueries,
+        testOptionSettingQueries,
+        expectedSchema);
+  }
+
   public TestBuilder baselineTypes(Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap) {
     this.baselineTypeMap = baselineTypeMap;
     return this;
@@ -277,6 +296,7 @@ public class TestBuilder {
    * @return
    */
   public TestBuilder baselineValues(Object ... baselineValues) {
+    assert getExpectedSchema() == null : "The expected schema is not needed when baselineValues are provided ";
     if (ordered == null) {
       throw new RuntimeException("Ordering not set, before specifying baseline data you must explicitly call the ordered() or unOrdered() method on the " + this.getClass().getSimpleName());
     }
@@ -329,6 +349,7 @@ public class TestBuilder {
    * be used to create a map for the one record verification.
    */
   public TestBuilder baselineColumns(String... columns) {
+    assert getExpectedSchema() == null : "The expected schema is not needed when baselineColumns are provided ";
     for (int i = 0; i < columns.length; i++) {
       columns[i] = parsePath(columns[i]).toExpr();
     }
@@ -469,7 +490,43 @@ public class TestBuilder {
     protected UserBitShared.QueryType getValidationQueryType() throws Exception {
       return UserBitShared.QueryType.SQL;
     }
+  }
 
+  public class SchemaTestBuilder extends TestBuilder {
+    private List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema;
+    SchemaTestBuilder(BufferAllocator allocator, String query, UserBitShared.QueryType queryType,
+        String baselineOptionSettingQueries, String testOptionSettingQueries, List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
+      super(allocator, query, queryType, false, false, null, baselineOptionSettingQueries, testOptionSettingQueries, false, -1);
+      expectsEmptyResultSet();
+      this.expectedSchema = expectedSchema;
+    }
+
+    public TestBuilder baselineColumns(String... columns) {
+      assert false : "The column information should be captured in expected scheme, not baselineColumns";
+      return this;
+    }
+
+    @Override
+    public TestBuilder baselineRecords(List<Map> materializedRecords) {
+      assert false : "Since only schema will be compared in this test, no record is expected";
+      return this;
+    }
+
+    @Override
+    public TestBuilder baselineValues(Object[] objects) {
+      assert false : "Since only schema will be compared in this test, no record is expected";
+      return this;
+    }
+
+    @Override
+    protected UserBitShared.QueryType getValidationQueryType() throws Exception {
+      return null;
+    }
+
+    @Override
+    public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
+      return expectedSchema;
+    }
   }
 
   public class JSONTestBuilder extends TestBuilder {
