@@ -213,4 +213,38 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
       .baselineValues(202452l)
       .go();
   }
+
+  @Test
+  public void testDrill4196() throws Exception {
+    final String leftSide = BaseTestQuery.getTempDir("merge-join-left.json");
+    final String rightSide = BaseTestQuery.getTempDir("merge-join-right.json");
+    final BufferedWriter leftWriter = new BufferedWriter(new FileWriter(new File(leftSide)));
+    final BufferedWriter rightWriter = new BufferedWriter(new FileWriter(new File(rightSide)));
+
+    // output batch is 32k, create 60k left batch
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 9999, 9999));
+    for (int i=0; i < 6000; ++i) {
+      leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10000, 10000));
+    }
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10001, 10001));
+    leftWriter.write(String.format("{ \"k\" : %d , \"v\": %d }", 10002, 10002));
+
+    // Keep all values same. Jon will consume entire right side.
+    for (int i=0; i < 800; ++i) {
+      rightWriter.write(String.format("{ \"k1\" : %d , \"v1\": %d }", 10000, 10000));
+    }
+
+    leftWriter.close();
+    rightWriter.close();
+
+    final String query1 = String.format("select count(*) c1 from dfs_test.`%s` L %s join dfs_test.`%s` R on L.k=R.k1",
+      leftSide, "inner", rightSide);
+    testBuilder()
+      .sqlQuery(query1)
+      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+      .unOrdered()
+      .baselineColumns("c1")
+      .baselineValues(6000*800L)
+      .go();
+  }
 }
