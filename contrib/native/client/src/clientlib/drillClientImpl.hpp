@@ -28,6 +28,7 @@
 #define BOOST_ASIO_ENABLE_CANCELIO
 #endif //WIN32_SHUTDOWN_ON_TIMEOUT
 
+#include <algorithm>
 #include <stdlib.h>
 #include <time.h>
 #include <queue>
@@ -205,7 +206,6 @@ class DrillClientImpl{
             m_rbuf(NULL),
             m_wbuf(MAX_SOCK_RD_BUFSIZE)
     {
-        srand(time(NULL));
         m_coordinationId=rand()%1729+1;
     };
 
