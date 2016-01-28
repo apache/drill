@@ -17,9 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.ops;
 
-import com.google.common.collect.ImmutableMap;
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.store.PartitionExplorer;
+
+import com.google.common.collect.ImmutableMap;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Defines the query state and shared resources available to UDFs through
@@ -31,8 +33,8 @@ public interface UdfUtilities {
 
   // Map between injectable classes and their respective getter methods
   // used for code generation
-  public static final ImmutableMap<Class, String> INJECTABLE_GETTER_METHODS =
-      new ImmutableMap.Builder<Class, String>()
+  public static final ImmutableMap<Class<?>, String> INJECTABLE_GETTER_METHODS =
+      new ImmutableMap.Builder<Class<?>, String>()
           .put(DrillBuf.class, "getManagedBuffer")
           .put(PartitionExplorer.class, "getPartitionExplorer")
           .put(ContextInformation.class, "getContextInformation")

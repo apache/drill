@@ -112,7 +112,7 @@ public interface DistributedCache extends AutoCloseable{
       if (getClass() != obj.getClass()) {
         return false;
       }
-      CacheConfig other = (CacheConfig) obj;
+      CacheConfig<?, ?> other = (CacheConfig<?, ?>) obj;
       if (keyClass == null) {
         if (other.keyClass != null) {
           return false;

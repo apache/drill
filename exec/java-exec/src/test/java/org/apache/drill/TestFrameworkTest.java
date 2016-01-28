@@ -24,12 +24,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -37,6 +36,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 // TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
@@ -79,7 +80,7 @@ public class TestFrameworkTest extends BaseTestQuery{
     testBuilder()
         .sqlQuery(query)
         .schemaBaseLine(expectedSchema)
-        .baselineRecords(new ArrayList<Map>())
+        .baselineRecords(Collections.<Map<String, Object>>emptyList())
         .build()
         .run();
   }

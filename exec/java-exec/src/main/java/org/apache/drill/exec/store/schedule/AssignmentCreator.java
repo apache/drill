@@ -26,18 +26,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import com.carrotsearch.hppc.cursors.ObjectLongCursor;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.DrillbitContext;
 
+import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.server.DrillbitContext;
+import com.google.common.collect.Maps;
 
 /**
  * The AssignmentCreator is responsible for assigning a set of work units to the available slices.
@@ -96,7 +96,7 @@ public class AssignmentCreator<T extends CompleteWork> {
     if (useOldAssignmentCode) {
       return OldAssignmentCreator.getMappings(incomingEndpoints, units);
     } else {
-      AssignmentCreator<T> creator = new AssignmentCreator(incomingEndpoints, units);
+      AssignmentCreator<T> creator = new AssignmentCreator<>(incomingEndpoints, units);
       return creator.getMappings();
     }
   }
@@ -185,20 +185,20 @@ public class AssignmentCreator<T extends CompleteWork> {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : work.getByteMap()) {
         final DrillbitEndpoint ep = cursor.key;
         final Long val = cursor.value;
-        Map.Entry<DrillbitEndpoint,Long> entry = new Entry() {
+        Map.Entry<DrillbitEndpoint,Long> entry = new Entry<DrillbitEndpoint, Long>() {
 
           @Override
-          public Object getKey() {
+          public DrillbitEndpoint getKey() {
             return ep;
           }
 
           @Override
-          public Object getValue() {
+          public Long getValue() {
             return val;
           }
 
           @Override
-          public Object setValue(Object value) {
+          public Long setValue(Long value) {
             throw new UnsupportedOperationException();
           }
         };

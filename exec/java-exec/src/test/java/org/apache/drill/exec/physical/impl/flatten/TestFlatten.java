@@ -21,7 +21,8 @@ import static org.apache.drill.TestBuilder.listOf;
 import static org.apache.drill.TestBuilder.mapOf;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.TestBuilder;
 import org.apache.drill.common.util.FileUtils;
@@ -32,7 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class TestFlatten extends BaseTestQuery {
 
@@ -118,7 +119,7 @@ public class TestFlatten extends BaseTestQuery {
         mapOf("nested_list_col", 999,  "list_col", 9, "a", 1, "b",2)
     );
     int i = 0;
-    for (JsonStringHashMap record : result) {
+    for (JsonStringHashMap<String, Object> record : result) {
       assertEquals(record, expectedResult.get(i));
       i++;
     }
@@ -136,9 +137,9 @@ public class TestFlatten extends BaseTestQuery {
       String flattenedDataColName) {
     List<JsonStringHashMap<String,Object>> output = Lists.newArrayList();
     for (JsonStringHashMap<String, Object> incomingRecord : incomingRecords) {
-      List dataToFlatten = (List) incomingRecord.get(colToFlatten);
+      List<?> dataToFlatten = (List<?>) incomingRecord.get(colToFlatten);
       for (int i = 0; i < dataToFlatten.size(); i++) {
-        final JsonStringHashMap newRecord = new JsonStringHashMap();
+        final JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
         newRecord.put(flattenedDataColName, dataToFlatten.get(i));
         for (String s : incomingRecord.keySet()) {
           if (s.equals(colToFlatten)) {
