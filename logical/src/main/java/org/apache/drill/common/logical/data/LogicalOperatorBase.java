@@ -49,7 +49,7 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   @Override
-  public NodeBuilder nodeBuilder() {
+  public NodeBuilder<?> nodeBuilder() {
     // FIXME: Implement this on all logical operators
     throw new UnsupportedOperationException("Not yet implemented.");
   }

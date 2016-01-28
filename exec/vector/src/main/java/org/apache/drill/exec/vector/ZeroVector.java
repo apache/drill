@@ -107,7 +107,7 @@ public class ZeroVector implements ValueVector {
   }
 
   @Override
-  public Iterator iterator() {
+  public Iterator<ValueVector> iterator() {
     return Iterators.emptyIterator();
   }
 

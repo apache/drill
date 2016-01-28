@@ -265,7 +265,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u0_voter_all_755
         ));
 
-    showTablesHelper(db_u1g1_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u1g1_only, Collections.<String>emptyList());
   }
 
   @Test
@@ -289,7 +289,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u1g1_voter_u1_700
         ));
 
-    showTablesHelper(db_u0_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u0_only, Collections.<String>emptyList());
   }
 
   @Test
@@ -309,7 +309,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
             u1g1_voter_all_755
         ));
 
-    showTablesHelper(db_u0_only, Collections.EMPTY_LIST);
+    showTablesHelper(db_u0_only, Collections.<String>emptyList());
   }
 
   // Try to read the tables "user0" has access to read in db_general.

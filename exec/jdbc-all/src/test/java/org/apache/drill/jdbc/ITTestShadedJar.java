@@ -108,7 +108,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       return classes.size();
     } catch (Exception e) {
       System.out.println("Failure while loading class count.");
@@ -120,7 +120,7 @@ public class ITTestShadedJar {
     try {
       Field f = ClassLoader.class.getDeclaredField("classes");
       f.setAccessible(true);
-      Vector<Class> classes = (Vector<Class>) f.get(classLoader);
+      Vector<Class<?>> classes = (Vector<Class<?>>) f.get(classLoader);
       for (Class<?> c : classes) {
         System.out.println(prefix + ": " + c.getName());
       }

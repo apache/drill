@@ -102,7 +102,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             }
 
             pipe.addLast("message-handler", new InboundHandler(connection));
-            pipe.addLast("exception-handler", new RpcExceptionHandler(connection));
+            pipe.addLast("exception-handler", new RpcExceptionHandler<R>(connection));
           }
         }); //
 
