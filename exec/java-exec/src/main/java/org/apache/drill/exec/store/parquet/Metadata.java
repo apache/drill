@@ -326,7 +326,7 @@ public class Metadata {
 
         boolean statsAvailable = (col.getStatistics() != null && !col.getStatistics().isEmpty());
 
-        Statistics stats = col.getStatistics();
+        Statistics<?> stats = col.getStatistics();
         String[] columnName = col.getPath().toArray();
         SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
         ColumnTypeMetadata_v2 columnTypeMetadata =
@@ -1012,6 +1012,7 @@ public class Metadata {
       return nulls;
     }
 
+    @Override
     public boolean hasSingleValue() {
       return (mxValue != null);
     }

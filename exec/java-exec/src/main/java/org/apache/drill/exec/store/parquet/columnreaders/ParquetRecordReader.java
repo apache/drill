@@ -42,8 +42,8 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -278,13 +278,13 @@ public class ParquetRecordReader extends AbstractRecordReader {
     try {
       ValueVector vector;
       SchemaElement schemaElement;
-      final ArrayList<VarLengthColumn> varLengthColumns = new ArrayList<>();
+      final ArrayList<VarLengthColumn<? extends ValueVector>> varLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
       boolean fieldFixedLength;
       // the column chunk meta-data is not guaranteed to be in the same order as the columns in the schema
       // a map is constructed for fast access to the correct columnChunkMetadata to correspond
       // to an element in the schema
-      Map<String, Integer> columnChunkMetadataPositionsInList = new HashMap();
+      Map<String, Integer> columnChunkMetadataPositionsInList = new HashMap<>();
       BlockMetaData rowGroupMetadata = footer.getBlocks().get(rowGroupIndex);
 
       int colChunkIndex = 0;
@@ -309,7 +309,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
           if (column.getMaxRepetitionLevel() > 0) {
             final RepeatedValueVector repeatedVector = RepeatedValueVector.class.cast(vector);
-            ColumnReader dataReader = ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength,
+            ColumnReader<?> dataReader = ColumnReaderFactory.createFixedColumnReader(this, fieldFixedLength,
                 column, columnChunkMetaData, recordsPerBatch,
                 repeatedVector.getDataVector(), schemaElement);
             varLengthColumns.add(new FixedWidthRepeatedReader(this, dataReader,
@@ -470,7 +470,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
     // limit kills upstream operators once it has enough records, so this assert will fail
 //    assert totalRecordsRead == footer.getBlocks().get(rowGroupIndex).getRowCount();
     if (columnStatuses != null) {
-      for (final ColumnReader column : columnStatuses) {
+      for (final ColumnReader<?> column : columnStatuses) {
         column.clear();
       }
       columnStatuses.clear();

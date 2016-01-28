@@ -23,9 +23,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import mockit.Injectable;
-import mockit.NonStrictExpectations;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.FileUtils;
@@ -59,6 +56,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import mockit.Injectable;
+import mockit.NonStrictExpectations;
+
 
 public class TestMergeJoin extends PopUnitTestBase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
@@ -91,7 +91,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       }
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
-        final List<Object> row = new ArrayList();
+        final List<Object> row = new ArrayList<>();
         for (final ValueVector v : exec) {
            row.add(v.getAccessor().getObject(valueIdx));
         }

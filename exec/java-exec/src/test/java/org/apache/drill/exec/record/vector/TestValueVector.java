@@ -20,7 +20,6 @@ package org.apache.drill.exec.record.vector;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.netty.buffer.DrillBuf;
 
 import java.nio.charset.Charset;
 
@@ -66,6 +65,8 @@ import org.junit.Test;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+
+import io.netty.buffer.DrillBuf;
 
 public class TestValueVector extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
@@ -744,7 +745,7 @@ the interface to load has changed
     final VectorVerifier noChild = new ChildVerifier();
     final VectorVerifier offsetChild = new ChildVerifier(UInt4Holder.TYPE);
 
-    final ImmutableMap.Builder<Class, VectorVerifier> builder = ImmutableMap.builder();
+    final ImmutableMap.Builder<Class<? extends ValueVector>, VectorVerifier> builder = ImmutableMap.builder();
     builder.put(UInt4Vector.class, noChild);
     builder.put(BitVector.class, noChild);
     builder.put(VarCharVector.class, offsetChild);
@@ -752,14 +753,14 @@ the interface to load has changed
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
     builder.put(MapVector.class, noChild);
     builder.put(RepeatedMapVector.class, offsetChild);
-    final ImmutableMap<Class, VectorVerifier> children = builder.build();
+    final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
 
     testVectors(new VectorVerifier() {
 
       @Override
       public void verify(ValueVector vector) throws Exception {
 
-        final Class klazz = vector.getClass();
+        final Class<?> klazz = vector.getClass();
         final VectorVerifier verifier = children.get(klazz);
         verifier.verify(vector);
       }

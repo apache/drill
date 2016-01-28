@@ -108,7 +108,7 @@ public class TestDirectoryExplorerUDFs extends PlanTestBase {
           excludedPatterns.toArray(excludedArray));
     }
 
-    JsonStringArrayList list = new JsonStringArrayList();
+    JsonStringArrayList<Text> list = new JsonStringArrayList<>();
 
     list.add(new Text("1"));
     list.add(new Text("2"));

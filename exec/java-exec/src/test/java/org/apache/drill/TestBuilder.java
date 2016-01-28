@@ -67,9 +67,6 @@ public class TestBuilder {
   // while this does work faster and use less memory, it can be harder to debug as all of the elements are not in a
   // single list
   private boolean highPerformanceComparison;
-  // for cases where the result set is just a single record, test writers can avoid creating a lot of small baseline
-  // files by providing a list of baseline values
-  private Object[] baselineValues;
   // column names for use with the baseline values
   protected String[] baselineColumns;
   // In cases where we need to verify larger datasets without the risk of running the baseline data through
@@ -79,7 +76,7 @@ public class TestBuilder {
   // going with an approach of using this facility to validate the parts of the drill engine that could break in ways
   // that would affect the reading of baseline files (i.e. we need robust test for storage engines, project and casting that
   // use this interface) and then rely on the engine for the rest of the tests that will use the baseline queries.
-  private List<Map> baselineRecords;
+  private List<Map<String, Object>> baselineRecords;
 
   private int expectedNumBatches = DrillTestWrapper.EXPECTED_BATCH_COUNT_NOT_SET;
 
@@ -123,7 +120,7 @@ public class TestBuilder {
       throw new Exception("High performance comparison only available for ordered checks, to enforce this restriction, ordered() must be called first.");
     }
     return new DrillTestWrapper(this, allocator, query, queryType, baselineOptionSettingQueries, testOptionSettingQueries,
-        getValidationQueryType(), ordered, approximateEquality, highPerformanceComparison, baselineRecords, expectedNumBatches);
+        getValidationQueryType(), ordered, highPerformanceComparison, baselineRecords, expectedNumBatches);
   }
 
   public List<Pair<SchemaPath, TypeProtos.MajorType>> getExpectedSchema() {
@@ -243,7 +240,6 @@ public class TestBuilder {
   public SchemaTestBuilder schemaBaseLine(List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
     assert expectedSchema != null : "The expected schema can be provided once";
     assert baselineColumns == null : "The column information should be captured in expected schema, not baselineColumns";
-    assert baselineValues == null && baselineRecords == null : "Since only schema will be compared in this test, no record is expected";
 
     return new SchemaTestBuilder(
         allocator,
@@ -270,7 +266,7 @@ public class TestBuilder {
   // indicate that the tests query should be checked for an empty result set
   public TestBuilder expectsEmptyResultSet() {
     unOrdered();
-    baselineRecords = new ArrayList();
+    baselineRecords = new ArrayList<>();
     return this;
   }
 
@@ -301,9 +297,9 @@ public class TestBuilder {
       throw new RuntimeException("Ordering not set, before specifying baseline data you must explicitly call the ordered() or unOrdered() method on the " + this.getClass().getSimpleName());
     }
     if (baselineRecords == null) {
-      baselineRecords = new ArrayList();
+      baselineRecords = new ArrayList<>();
     }
-    Map<String, Object> ret = new HashMap();
+    Map<String, Object> ret = new HashMap<>();
     int i = 0;
     assertEquals("Must supply the same number of baseline values as columns.", baselineValues.length, baselineColumns.length);
     for (String s : baselineColumns) {
@@ -328,7 +324,7 @@ public class TestBuilder {
    * @param materializedRecords - a list of maps representing materialized results
    * @return
    */
-  public TestBuilder baselineRecords(List<Map> materializedRecords) {
+  public TestBuilder baselineRecords(List<Map<String, Object>> materializedRecords) {
     this.baselineRecords = materializedRecords;
     return this;
   }
@@ -439,6 +435,7 @@ public class TestBuilder {
       return this;
     }
 
+    @Override
     protected TestBuilder reset() {
       super.reset();
       baselineTypeMap = null;
@@ -447,6 +444,7 @@ public class TestBuilder {
       return this;
     }
 
+    @Override
     boolean typeInfoSet() {
       if (super.typeInfoSet() || baselineTypes != null) {
         return true;
@@ -455,6 +453,7 @@ public class TestBuilder {
       }
     }
 
+    @Override
     String getValidationQuery() throws Exception {
       if (baselineColumns.length == 0) {
         throw new Exception("Baseline CSV files require passing column names, please call the baselineColumns() method on the test builder.");
@@ -491,6 +490,7 @@ public class TestBuilder {
       return query;
     }
 
+    @Override
     protected UserBitShared.QueryType getValidationQueryType() throws Exception {
       return UserBitShared.QueryType.SQL;
     }
@@ -505,19 +505,20 @@ public class TestBuilder {
       this.expectedSchema = expectedSchema;
     }
 
+    @Override
     public TestBuilder baselineColumns(String... columns) {
       assert false : "The column information should be captured in expected scheme, not baselineColumns";
       return this;
     }
 
     @Override
-    public TestBuilder baselineRecords(List<Map> materializedRecords) {
+    public TestBuilder baselineRecords(List<Map<String, Object>> materializedRecords) {
       assert false : "Since only schema will be compared in this test, no record is expected";
       return this;
     }
 
     @Override
-    public TestBuilder baselineValues(Object[] objects) {
+    public TestBuilder baselineValues(Object... objects) {
       assert false : "Since only schema will be compared in this test, no record is expected";
       return this;
     }
@@ -548,10 +549,12 @@ public class TestBuilder {
       this.baselineColumns = new String[] {"*"};
     }
 
+    @Override
     String getValidationQuery() {
       return "select " + Joiner.on(", ").join(baselineColumns) + " from cp.`" + baselineFilePath + "`";
     }
 
+    @Override
     protected UserBitShared.QueryType getValidationQueryType() throws Exception {
       return UserBitShared.QueryType.SQL;
     }
@@ -574,10 +577,12 @@ public class TestBuilder {
       this.baselineQueryType = baselineQueryType;
     }
 
+    @Override
     String getValidationQuery() {
       return baselineQuery;
     }
 
+    @Override
     protected UserBitShared.QueryType getValidationQueryType() throws Exception {
       return baselineQueryType;
     }
@@ -585,6 +590,7 @@ public class TestBuilder {
     // This currently assumes that all explicit baseline queries will have fully qualified type information
     // if this changes, the baseline query can be run in a sub query with the implicit or explicit type passing
     // added on top of it, as is currently when done when reading a baseline file
+    @Override
     boolean typeInfoSet() {
       return true;
     }
@@ -594,8 +600,8 @@ public class TestBuilder {
   /**
    * Convenience method to create a {@link JsonStringArrayList list} from the given values.
    */
-  public static JsonStringArrayList listOf(Object... values) {
-    final JsonStringArrayList list = new JsonStringArrayList<>();
+  public static JsonStringArrayList<Object> listOf(Object... values) {
+    final JsonStringArrayList<Object> list = new JsonStringArrayList<>();
     for (Object value:values) {
       if (value instanceof CharSequence) {
         list.add(new Text(value.toString()));

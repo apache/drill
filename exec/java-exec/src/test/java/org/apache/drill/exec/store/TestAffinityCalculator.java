@@ -79,7 +79,7 @@ public class TestAffinityCalculator extends ExecTest {
   }
 
   public LinkedList<CoordinationProtos.DrillbitEndpoint> buildEndpoints(int numberOfEndpoints) {
-    LinkedList<CoordinationProtos.DrillbitEndpoint> endPoints = new LinkedList();
+    LinkedList<CoordinationProtos.DrillbitEndpoint> endPoints = new LinkedList<>();
 
     for (int i = 0; i < numberOfEndpoints; i++) {
       endPoints.add(CoordinationProtos.DrillbitEndpoint.newBuilder().setAddress("host" + i).build());
@@ -155,7 +155,7 @@ public class TestAffinityCalculator extends ExecTest {
     }
     ImmutableRangeMap<Long,BlockLocation> map = blockMapBuilder.build();
     long tB = System.nanoTime();
-    System.out.println(String.format("Took %f ms to build range map", (float)(tB - tA) / 1e6));
+    System.out.println(String.format("Took %f ms to build range map", (tB - tA) / 1e6));
   }
   /*
   @Test

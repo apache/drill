@@ -236,7 +236,7 @@ public class UnionVector implements ValueVector {
     String name = v.getField().getType().getMinorType().name().toLowerCase();
     MajorType type = v.getField().getType();
     Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
-    final ValueVector newVector = internalMap.addOrGet(name, type, (Class<ValueVector>) BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+    final ValueVector newVector = internalMap.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
     v.makeTransferPair(newVector).transfer();
     internalMap.putChild(name, newVector);
     addSubType(v.getField().getType().getMinorType());

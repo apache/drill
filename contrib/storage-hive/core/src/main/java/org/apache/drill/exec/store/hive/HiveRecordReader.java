@@ -102,7 +102,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   private Converter partTblObjectInspectorConverter;
 
   protected Object key;
-  protected RecordReader reader;
+  protected RecordReader<Object, Object> reader;
   protected List<ValueVector> vectors = Lists.newArrayList();
   protected List<ValueVector> pVectors = Lists.newArrayList();
   protected boolean empty;
@@ -223,7 +223,7 @@ public class HiveRecordReader extends AbstractRecordReader {
 
     if (!empty) {
       try {
-        reader = job.getInputFormat().getRecordReader(inputSplit, job, Reporter.NULL);
+        reader = (org.apache.hadoop.mapred.RecordReader<Object, Object>) job.getInputFormat().getRecordReader(inputSplit, job, Reporter.NULL);
       } catch (Exception e) {
         throw new ExecutionSetupException("Failed to get o.a.hadoop.mapred.RecordReader from Hive InputFormat", e);
       }
@@ -236,8 +236,8 @@ public class HiveRecordReader extends AbstractRecordReader {
    * Utility method which creates a SerDe object for given SerDe class name and properties.
    */
   private static SerDe createSerDe(final JobConf job, final String sLib, final Properties properties) throws Exception {
-    final Class<?> c = Class.forName(sLib);
-    final SerDe serde = (SerDe) c.getConstructor().newInstance();
+    final Class<? extends SerDe> c = Class.forName(sLib).asSubclass(SerDe.class);
+    final SerDe serde = c.getConstructor().newInstance();
     serde.initialize(job, properties);
 
     return serde;
@@ -252,7 +252,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(@SuppressWarnings("unused") OperatorContext context, OutputMutator output)
+  public void setup(OperatorContext context, OutputMutator output)
       throws ExecutionSetupException {
     // initializes "reader"
     final Callable<Void> readerInitializer = new Callable<Void>() {
@@ -279,14 +279,14 @@ public class HiveRecordReader extends AbstractRecordReader {
       for (int i = 0; i < selectedColumnNames.size(); i++) {
         MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedColumnTypes.get(i), options);
         MaterializedField field = MaterializedField.create(selectedColumnNames.get(i), type);
-        Class vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
+        Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode());
         vectors.add(output.addField(field, vvClass));
       }
 
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         MajorType type = HiveUtilities.getMajorTypeFromHiveTypeInfo(selectedPartitionTypes.get(i), options);
         MaterializedField field = MaterializedField.create(selectedPartitionNames.get(i), type);
-        Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        Class<? extends ValueVector> vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         pVectors.add(output.addField(field, vvClass));
       }
     } catch(SchemaChangeException e) {

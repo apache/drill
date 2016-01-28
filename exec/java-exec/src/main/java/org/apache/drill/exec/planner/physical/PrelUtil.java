@@ -224,7 +224,7 @@ public class PrelUtil {
   }
 
   // Simple visitor class to determine the last used reference in the expression
-  private static class LastUsedRefVisitor extends RexVisitorImpl {
+  private static class LastUsedRefVisitor extends RexVisitorImpl<Void> {
 
     int lastUsedRef = -1;
 

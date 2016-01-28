@@ -97,7 +97,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     final HiveConf hiveConf = hiveScan.getHiveConf();
     final Table hiveTable = hiveScan.hiveReadEntry.getTable();
 
-    final Class<? extends InputFormat> tableInputFormat =
+    final Class<? extends InputFormat<?,?>> tableInputFormat =
         getInputFormatFromSD(MetaStoreUtils.getTableMetadata(hiveTable), hiveScan.hiveReadEntry, hiveTable.getSd(),
             hiveConf);
     if (tableInputFormat == null || !tableInputFormat.equals(MapredParquetInputFormat.class)) {
@@ -113,7 +113,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     // Make sure all partitions have the same input format as the table input format
     for (HivePartition partition : partitions) {
       final StorageDescriptor partitionSD = partition.getPartition().getSd();
-      Class<? extends InputFormat> inputFormat = getInputFormatFromSD(
+      Class<? extends InputFormat<?, ?>> inputFormat = getInputFormatFromSD(
           HiveUtilities.getPartitionMetadata(partition.getPartition(), hiveTable), hiveScan.hiveReadEntry, partitionSD,
           hiveConf);
       if (inputFormat == null || !inputFormat.equals(tableInputFormat)) {
@@ -142,13 +142,13 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
    * @param sd
    * @return {@link InputFormat} class or null if a failure has occurred. Failure is logged as warning.
    */
-  private Class<? extends InputFormat> getInputFormatFromSD(final Properties properties,
+  private Class<? extends InputFormat<?, ?>> getInputFormatFromSD(final Properties properties,
       final HiveReadEntry hiveReadEntry, final StorageDescriptor sd, final HiveConf hiveConf) {
     final Table hiveTable = hiveReadEntry.getTable();
     try {
       final String inputFormatName = sd.getInputFormat();
       if (!Strings.isNullOrEmpty(inputFormatName)) {
-        return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+        return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName);
       }
 
       final JobConf job = new JobConf(hiveConf);
