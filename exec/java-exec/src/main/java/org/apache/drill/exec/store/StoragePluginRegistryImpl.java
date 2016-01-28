@@ -348,13 +348,21 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     Builder<RelOptRule> logicalRulesBuilder = ImmutableSet.builder();
     Builder<RelOptRule> physicalRulesBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.plugins()) {
-      Set<? extends RelOptRule> rules = plugin.getLogicalOptimizerRules(optimizerRulesContext);
-      if (rules != null && rules.size() > 0) {
-        logicalRulesBuilder.addAll(rules);
-      }
-      rules = plugin.getPhysicalOptimizerRules(optimizerRulesContext);
-      if (rules != null && rules.size() > 0) {
-        physicalRulesBuilder.addAll(rules);
+      if (plugin instanceof AbstractStoragePlugin) {
+        final AbstractStoragePlugin abstractPlugin = (AbstractStoragePlugin) plugin;
+        Set<? extends RelOptRule> rules = abstractPlugin.getLogicalOptimizerRules(optimizerRulesContext);
+        if (rules != null && rules.size() > 0) {
+          logicalRulesBuilder.addAll(rules);
+        }
+        rules = abstractPlugin.getPhysicalOptimizerRules(optimizerRulesContext);
+        if (rules != null && rules.size() > 0) {
+          physicalRulesBuilder.addAll(rules);
+        }
+      } else {
+        final Set<? extends RelOptRule> rules = plugin.getOptimizerRules(optimizerRulesContext);
+        if (rules != null && rules.size() > 0) {
+          physicalRulesBuilder.addAll(rules);
+        }
       }
     }
 

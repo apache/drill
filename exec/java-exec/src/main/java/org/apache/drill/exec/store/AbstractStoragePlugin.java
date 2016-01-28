@@ -48,14 +48,35 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
     return false;
   }
 
+  /**
+   * @deprecated Marking for deprecation in next major version release.
+   * Use {@link #getPhysicalOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext)}
+   */
   @Override
+  @Deprecated
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext) {
+    return ImmutableSet.of();
+  }
+
+  /** An implementation of this method will return one or more specialized rules that Drill query
+   *  optimizer can leverage in <i>logical</i> space. Otherwise, it should return an empty set.
+   * @return an empty set or a set of plugin specific logical optimizer rules.
+   *
+   * Note: Move this method to {@link StoragePlugin} interface in next major version release.
+   */
   public Set<? extends RelOptRule> getLogicalOptimizerRules(OptimizerRulesContext optimizerContext) {
     return ImmutableSet.of();
   }
 
-  @Override
+  /** An implementation of this method will return one or more specialized rules that Drill query
+   *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
+   * @return an empty set or a set of plugin specific physical optimizer rules.
+   *
+   * Note: Move this method to {@link StoragePlugin} interface in next major version release.
+   */
   public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of();
+    // To be backward compatible, by default call the getOptimizerRules() method.
+    return getOptimizerRules(optimizerRulesContext);
   }
 
   @Override
