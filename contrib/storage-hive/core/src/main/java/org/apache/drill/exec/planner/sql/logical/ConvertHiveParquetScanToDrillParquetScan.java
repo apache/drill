@@ -177,9 +177,12 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
           getPartitionColMapping(hiveTable, partitionColumnLabel);
 
       final DrillScanRel nativeScanRel = createNativeScanRel(partitionColMapping, hiveScanRel);
-      final DrillProjectRel projectRel = createProjectRel(hiveScanRel, partitionColMapping, nativeScanRel);
-
-      call.transformTo(projectRel);
+      if(hiveScanRel.getRowType().getFieldCount() == 0) {
+        call.transformTo(nativeScanRel);
+      } else {
+        final DrillProjectRel projectRel = createProjectRel(hiveScanRel, partitionColMapping, nativeScanRel);
+        call.transformTo(projectRel);
+      }
     } catch (final Exception e) {
       logger.warn("Failed to convert HiveScan to HiveDrillNativeParquetScan", e);
     }
