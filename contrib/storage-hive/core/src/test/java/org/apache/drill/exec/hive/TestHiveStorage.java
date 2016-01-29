@@ -44,8 +44,15 @@ public class TestHiveStorage extends HiveTestBase {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));
 
-      String query = "SELECT count(*) FROM hive.readtest_parquet";
+      String query = "SELECT count(*) as col FROM hive.countStar_Parquet";
       testPhysicalPlan(query, "hive-drill-native-parquet-scan");
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("col")
+          .baselineValues(200l)
+          .go();
     } finally {
       test(String.format("alter session set `%s` = %s",
           ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS,
