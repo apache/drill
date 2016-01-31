@@ -181,7 +181,7 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
 
     case CHAR:
       if (isLiteralNull(literal)) {
-        out.writeVarcharNull();
+        out.writeVarChar("");
       }else{
         // Since Calcite treats string literals as fixed char and adds trailing spaces to the strings to make them the
         // same length, here we do an rtrim() to get the string without the trailing spaces. If we don't rtrim, the comparison
@@ -235,7 +235,7 @@ public class DrillValuesRel extends AbstractRelNode implements DrillRel {
 
     case SYMBOL:
       if (isLiteralNull(literal)) {
-        out.writeVarcharNull();
+        out.writeVarChar("");
       }else{
         out.writeVarChar(literal.getValue().toString());
       }

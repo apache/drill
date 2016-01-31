@@ -28,6 +28,7 @@ import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
@@ -58,12 +59,16 @@ public class FindLimit0Visitor extends RelShuttleImpl {
    *   contain this type.
    */
   private static final ImmutableSet<SqlTypeName> TYPES = ImmutableSet.<SqlTypeName>builder()
-      .add(SqlTypeName.INTEGER, SqlTypeName.BIGINT, SqlTypeName.FLOAT, SqlTypeName.DOUBLE, SqlTypeName.VARCHAR,
-          SqlTypeName.BOOLEAN, SqlTypeName.DATE, SqlTypeName.DECIMAL, SqlTypeName.TIME, SqlTypeName.TIMESTAMP,
+      .add(SqlTypeName.INTEGER, SqlTypeName.BIGINT, /*SqlTypeName.FLOAT,*/ SqlTypeName.DOUBLE, SqlTypeName.VARCHAR,
+          SqlTypeName.BOOLEAN, SqlTypeName.DATE, /*SqlTypeName.DECIMAL, */SqlTypeName.TIME, SqlTypeName.TIMESTAMP,
           SqlTypeName.INTERVAL_YEAR_MONTH, SqlTypeName.INTERVAL_DAY_TIME, SqlTypeName.MAP, SqlTypeName.ARRAY,
           SqlTypeName.TINYINT, SqlTypeName.SMALLINT, SqlTypeName.CHAR)
       .build();
 
+  private static final ImmutableSet<SqlTypeName> EXTENDED_TYPES = ImmutableSet.<SqlTypeName>builder()
+          .add(SqlTypeName.INTEGER, SqlTypeName.DATE, SqlTypeName.DECIMAL, SqlTypeName.TIME, SqlTypeName.TIMESTAMP,
+                  SqlTypeName.INTERVAL_YEAR_MONTH, SqlTypeName.INTERVAL_DAY_TIME)
+          .build();
   private boolean contains = false;
 
   /**
@@ -90,7 +95,12 @@ public class FindLimit0Visitor extends RelShuttleImpl {
       if (!TYPES.contains(field.getType().getSqlTypeName())) {
         return null;
       } else {
-        tupleBuilder.add((RexLiteral) literalBuilder.makeLiteral(null, field.getType(), false));
+        RelDataType t = rel.getCluster().getTypeFactory().createTypeWithNullability(field.getType(), false);
+        if (!EXTENDED_TYPES.contains(field.getType().getSqlTypeName())) {
+          tupleBuilder.add((RexLiteral) literalBuilder.makeZeroLiteral(t));
+        } else {
+          tupleBuilder.add((RexLiteral) literalBuilder.makeLiteral(null, field.getType(), false));
+        }
       }
     }
 

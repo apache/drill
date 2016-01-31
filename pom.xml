@@ -21,7 +21,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.5.0-limit</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -1278,7 +1278,7 @@
           <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.4.0-drill-r10</version>
+            <version>1.4.0-drill-1.4.0-mapr-r1</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

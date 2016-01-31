@@ -17,23 +17,49 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.drill.TestBuilder.mapOf;
 
 public class TestLimit0 extends BaseTestQuery {
 
   @Test
   public void simpleLimit0() throws Exception {
-    testBuilder()
-        .sqlQuery("SELECT * FROM (" +
-        "SELECT * FROM (VALUES (1, 1.0, DATE '2008-2-23', TIME '12:23:34', TIMESTAMP '2008-2-23 12:23:34.456', " +
-        "INTERVAL '1' YEAR, INTERVAL '2' DAY), (1, 1.0, DATE '2008-2-23', TIME '12:23:34', " +
-        "TIMESTAMP '2008-2-23 12:23:34.456', INTERVAL '1' YEAR, INTERVAL '2' DAY)) AS " +
-        "Example(myInt, myFloat, myDate, myTime, myTimestamp, int1, int2)) T LIMIT 0")
-        .expectsEmptyResultSet()
-        .baselineColumns("myInt", "myFloat", "myDate", "myTime", "myTimestamp", "int1", "int2")
-        .go();
+    List<MajorType> expectedTypes = ImmutableList.of(
+            Types.optional(MinorType.VARCHAR),
+            Types.optional(MinorType.BIGINT),
+            Types.optional(MinorType.DATE),
+            Types.optional(MinorType.TIME),
+            Types.optional(MinorType.TIMESTAMP),
+            Types.optional(MinorType.INTERVAL), // I think these are incorrect, losing DAY/YEAR
+            Types.optional(MinorType.INTERVAL));
+
+
+    List<QueryDataBatch> results = testSqlWithResults("SELECT * FROM (" +
+                "SELECT * FROM (VALUES ('varchar', 1, DATE '2008-2-23', TIME '12:23:34', TIMESTAMP '2008-2-23 12:23:34.456', " +
+                "INTERVAL '1' YEAR, INTERVAL '2' DAY), ('varchar', 1, DATE '2008-2-23', TIME '12:23:34', " +
+                "TIMESTAMP '2008-2-23 12:23:34.456', INTERVAL '1' YEAR, INTERVAL '2' DAY)) AS " +
+                "Example(myVarChar, myInt, myDate, myTime, myTimestamp, int1, int2)) T LIMIT 0");
+    Assert.assertEquals(0, results.get(0).getHeader().getRowCount());
+    List<SerializedField> fields = results.get(0).getHeader().getDef().getFieldList();
+    Assert.assertEquals(expectedTypes.size(), fields.size());
+    for (int i = 0; i < fields.size(); i++) {
+      Assert.assertEquals(expectedTypes.get(i), fields.get(i).getMajorType());
+    }
   }
 
   @Test
