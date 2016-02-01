@@ -98,7 +98,8 @@ public abstract class AbstractSqlAccessor implements SqlAccessor {
 
   @Override
   public String getString(int rowOffset) throws InvalidAccessException{
-    return getObject(rowOffset).toString();
+    Object o = getObject(rowOffset);
+    return o != null ? o.toString() : null;
   }
 
   @Override
