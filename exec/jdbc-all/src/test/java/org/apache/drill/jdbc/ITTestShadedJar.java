@@ -63,7 +63,7 @@ public class ITTestShadedJar {
     try {
       Driver driver = (Driver) clazz.newInstance();
       try (Connection c = driver.connect("jdbc:drill:drillbit=localhost:31010", null)) {
-        String path = Paths.get("").toAbsolutePath().toString() + "/../src/test/resources/types.json";
+        String path = Paths.get("").toAbsolutePath().toString() + "/src/test/resources/types.json";
         printQuery(c, "select * from dfs.`" + path + "`");
       }
     } catch (Exception ex) {
