@@ -44,6 +44,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.ViewableWithPermissions;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -62,6 +63,7 @@ public class ProfileResources {
 
   public final static int MAX_PROFILES = 100;
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject DrillUserPrincipal principal;
   @Inject SecurityContext sc;
@@ -192,7 +194,7 @@ public class ProfileResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getProfiles() {
     QProfiles profiles = getProfilesJSON();
-    return ViewableWithPermissions.create("/rest/profile/list.ftl", sc, profiles);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
   }
 
   private QueryProfile getQueryProfile(String queryId) {
@@ -258,7 +260,7 @@ public class ProfileResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getProfile(@PathParam("queryid") String queryId){
     ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId));
-    return ViewableWithPermissions.create("/rest/profile/profile.ftl", sc, wrapper);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
   }
 
 

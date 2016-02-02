@@ -34,7 +34,9 @@ import javax.ws.rs.core.SecurityContext;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -44,6 +46,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 public class QueryResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResources.class);
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject WorkManager work;
   @Inject SecurityContext sc;
   @Inject DrillUserPrincipal principal;
@@ -52,7 +55,7 @@ public class QueryResources {
   @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
-    return ViewableWithPermissions.create("/rest/query/query.ftl", sc);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/query.ftl", sc);
   }
 
   @POST
@@ -60,8 +63,15 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public QueryWrapper.QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
-    final BufferAllocator allocator = work.getContext().getAllocator();
-    return query.run(principal.getDrillClient(), allocator);
+    DrillClient drillClient = null;
+
+    try {
+      final BufferAllocator allocator = work.getContext().getAllocator();
+      drillClient = principal.getDrillClient();
+      return query.run(drillClient, allocator);
+    } finally {
+      principal.recycleDrillClient(drillClient);
+    }
   }
 
   @POST
@@ -72,10 +82,10 @@ public class QueryResources {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
       final QueryWrapper.QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
-      return ViewableWithPermissions.create("/rest/query/result.ftl", sc, new TabularResult(result));
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result));
     } catch(Exception | Error e) {
       logger.error("Query from Web UI Failed", e);
-      return ViewableWithPermissions.create("/rest/query/errorMessage.ftl", sc, e);
+      return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/errorMessage.ftl", sc, e);
     }
   }
 
