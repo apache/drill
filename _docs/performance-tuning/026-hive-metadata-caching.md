@@ -1,6 +1,6 @@
 ---
 title: "Hive Metadata Caching"
-date:  
+date: 2016-02-02 21:21:09 UTC
 parent: "Performance Tuning"
 ---
 
@@ -36,7 +36,7 @@ Example:
 
        {
              "type": "hive",
-             "enabled": false,
+             "enabled": true,
              "configProps": {
                "hive.metastore.uris": "",
                "javax.jdo.option.ConnectionURL": "jdbc:derby:;databaseName=../sample-data/drill_hive_db;create=true",
