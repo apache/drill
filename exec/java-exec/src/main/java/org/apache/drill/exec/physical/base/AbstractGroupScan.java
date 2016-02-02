@@ -128,4 +128,25 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   public List<SchemaPath> getPartitionColumns() {
     return Lists.newArrayList();
   }
+
+  /**
+   * Default is not to support limit pushdown.
+   * @return
+   */
+  @Override
+  @JsonIgnore
+  public boolean supportsLimitPushdown() {
+    return false;
+  }
+
+  /**
+   * By default, return null to indicate rowcount based prune is not supported.
+   * Each groupscan subclass should override, if it supports rowcount based prune.
+   */
+  @Override
+  @JsonIgnore
+  public GroupScan applyLimit(long maxRecords) {
+    return null;
+  }
+
 }

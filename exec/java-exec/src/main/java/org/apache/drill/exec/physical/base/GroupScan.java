@@ -98,4 +98,16 @@ public interface GroupScan extends Scan, HasAffinity{
   @JsonIgnore
   public List<SchemaPath> getPartitionColumns();
 
+  /**
+   * Whether or not this GroupScan supports limit pushdown
+   */
+  public boolean supportsLimitPushdown();
+
+  /**
+   * Apply rowcount based prune for "LIMIT n" query.
+   * @param maxRecords : the number of rows requested from group scan.
+   * @return  a new instance of group scan if the prune is successful.
+   *          null when either if row-based prune is not supported, or if prune is not successful.
+   */
+  public GroupScan applyLimit(long maxRecords);
 }
