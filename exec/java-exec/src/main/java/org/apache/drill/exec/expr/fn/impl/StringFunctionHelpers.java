@@ -34,7 +34,7 @@ public class StringFunctionHelpers {
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varCharToLong(final int start, final int end, DrillBuf buffer){
+  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeL(start, end, buffer);
@@ -95,7 +95,7 @@ public class StringFunctionHelpers {
     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varCharToInt(final int start, final int end, DrillBuf buffer){
+  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
     if ((end - start) ==0) {
       //empty, not a valid number
       return nfeI(start, end, buffer);

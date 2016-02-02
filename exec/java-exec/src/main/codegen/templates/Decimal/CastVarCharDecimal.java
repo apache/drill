@@ -24,7 +24,7 @@
 <#if type.major == "VarCharDecimalSimple">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java"/>
 <#elseif type.major == "EmptyStringVarCharDecimalSimple">
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}ToNullable${type.to}.java"/>
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}To${type.to}.java"/>
 </#if>
 
 <#include "/@includes/license.ftl" />
@@ -53,8 +53,8 @@ import java.nio.ByteBuffer;
 @FunctionTemplate(name ="cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 <#elseif type.major == "EmptyStringVarCharDecimalSimple">
-@FunctionTemplate(name ="castEmptyString${type.from}ToNullable${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
-public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSimpleFunc {
+@FunctionTemplate(name ="castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc {
 </#if>
     @Param ${type.from}Holder in;
     @Param BigIntHolder precision;
@@ -63,7 +63,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
     <#if type.major == "VarCharDecimalSimple">
     @Output ${type.to}Holder out;
     <#elseif type.major == "EmptyStringVarCharDecimalSimple">
-    @Output Nullable${type.to}Holder out;
+    @Output ${type.to}Holder out;
     </#if>
 
     public void setup() {
@@ -198,7 +198,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
 <#if type.major == "VarCharDecimalComplex">
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java"/>
 <#elseif type.major == "EmptyStringVarCharDecimalComplex">
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}ToNullable${type.to}.java"/>
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/CastEmptyString${type.from}To${type.to}.java"/>
 </#if>
 
 <#include "/@includes/license.ftl" />
@@ -226,8 +226,8 @@ import java.nio.ByteBuffer;
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 <#elseif type.major == "EmptyStringVarCharDecimalComplex">
-@FunctionTemplate(name = "castEmptyString${type.from}ToNullable${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
-public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSimpleFunc {
+@FunctionTemplate(name = "castEmptyString${type.from}To${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.DECIMAL_CAST, nulls=NullHandling.INTERNAL)
+public class CastEmptyString${type.from}To${type.to} implements DrillSimpleFunc {
 </#if>
     @Param ${type.from}Holder in;
     @Inject DrillBuf buffer;
@@ -237,7 +237,7 @@ public class CastEmptyString${type.from}ToNullable${type.to} implements DrillSim
     <#if type.major == "VarCharDecimalComplex">
     @Output ${type.to}Holder out;
     <#elseif type.major == "EmptyStringVarCharDecimalComplex">
-    @Output Nullable${type.to}Holder out;
+    @Output ${type.to}Holder out;
     </#if>
 
     public void setup() {
