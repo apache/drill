@@ -1,6 +1,6 @@
 ---
 title: "Hive Metadata Caching"
-date: 2016-02-02 21:21:09 UTC
+date: 2016-02-02 23:56:57 UTC
 parent: "Performance Tuning"
 ---
 
@@ -12,7 +12,7 @@ Drill caches Hive metadata in a Hive metastore client cache that resides in Dril
 
 You can modify the TTL depending on how frequently the Hive metadata is updated. If the Hive metadata is updated frequently, decrease the cache TTL value. If Hive metadata is updated infrequently, increase the cache TTL value.
 
-For example, when you run a Drill query on a Hive table, Drill refreshes the cache 60 seconds after the read on the table. If the table is updated in Hive within that 60 second window and you issue another query on the table, the query would return incorrect results or an execution error due to a stale cache. In such a scenario where Hive metadata is changing so quickly, you may want to reduce the cache TTL to 2 seconds so that Drill refreshes the cache more frequently.  
+For example, when you run a Drill query on a Hive table, Drill refreshes the cache 60 seconds after the read on the table. If the table is updated in Hive within that 60 second window and you issue another query on the table, Drill may not be aware of the changes until the cache expires. In such a scenario where Hive metadata is changing so quickly, you could reduce the cache TTL to 2 seconds so that Drill refreshes the cache more frequently.  
 
 ## Configuring the Cache  
 
