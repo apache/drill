@@ -54,10 +54,10 @@ public abstract class AbstractRecordReader implements RecordReader {
         + ", isSkipQuery = " + isSkipQuery + "]";
   }
 
-  protected final void setColumns(List<SchemaPath> projected) {
+  protected final void setColumns(Collection<SchemaPath> projected) {
     Preconditions.checkNotNull(projected, COL_NULL_ERROR);
     isSkipQuery = projected.isEmpty();
-    List<SchemaPath> columnsToRead = projected;
+    Collection<SchemaPath> columnsToRead = projected;
 
     // If no column is required (SkipQuery), by default it will use DEFAULT_COLS_TO_READ .
     // Handling SkipQuery is storage-plugin specif : JSON, text reader, parquet will override, in order to
