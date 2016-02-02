@@ -25,6 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -33,12 +34,13 @@ import org.glassfish.jersey.server.mvc.Viewable;
 public class MetricsResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetricsResources.class);
 
+  @Inject UserAuthEnabled authEnabled;
   @Inject SecurityContext sc;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   public Viewable getMetrics() {
-    return ViewableWithPermissions.create("/rest/metrics/metrics.ftl", sc);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/metrics/metrics.ftl", sc);
   }
 
 }
