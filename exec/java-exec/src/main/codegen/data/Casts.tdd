@@ -188,5 +188,24 @@
     {from: "NullableVarChar", to: "Decimal28Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "5"},
     {from: "NullableVarChar", to: "Decimal38Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "6"},
 
+    {from: "NullableVar16Char", to: "Int", major: "EmptyString", javaType:"Integer", primeType:"int"},
+    {from: "NullableVar16Char", to: "BigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
+    {from: "NullableVar16Char", to: "Float4", major: "EmptyString", javaType:"Float", parse:"Float"},
+    {from: "NullableVar16Char", to: "Float8", major: "EmptyString", javaType:"Double", parse:"Double"},
+
+    {from: "NullableVar16Char", to: "Decimal9", major: "EmptyStringVarCharDecimalSimple", javatype: "int"},
+    {from: "NullableVar16Char", to: "Decimal18", major: "EmptyStringVarCharDecimalSimple", javatype: "long"},
+    {from: "NullableVar16Char", to: "Decimal28Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "5"},
+    {from: "NullableVar16Char", to: "Decimal38Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "6"},
+
+    {from: "NullableVarBinary", to: "Int", major: "EmptyString", javaType:"Integer", primeType:"int"},
+    {from: "NullableVarBinary", to: "BigInt", major: "EmptyString", javaType: "Long", primeType: "long"},
+    {from: "NullableVarBinary", to: "Float4", major: "EmptyString", javaType:"Float", parse:"Float"},
+    {from: "NullableVarBinary", to: "Float8", major: "EmptyString", javaType:"Double", parse:"Double"},
+
+    {from: "NullableVarBinary", to: "Decimal9", major: "EmptyStringVarCharDecimalSimple", javatype: "int"},
+    {from: "NullableVarBinary", to: "Decimal18", major: "EmptyStringVarCharDecimalSimple", javatype: "long"},
+    {from: "NullableVarBinary", to: "Decimal28Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "5"},
+    {from: "NullableVarBinary", to: "Decimal38Sparse", major: "EmptyStringVarCharDecimalComplex", arraySize: "6"},
   ]
 } 
