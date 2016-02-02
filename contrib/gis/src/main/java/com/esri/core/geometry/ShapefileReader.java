@@ -15,16 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.fn.impl.gis;
+package com.esri.core.geometry;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.nio.ByteBuffer;
 
-@RunWith(Suite.class)
-@SuiteClasses({ TestGeometryFunctions.class, TestShapefileFormatPlugin.class })
-public class GISTestSuite {
-  private static final Logger logger = LoggerFactory.getLogger(GISTestSuite.class);
+public class ShapefileReader  {
+
+  public GeometryCursor getGeometryCursor(ByteBuffer byteBuffer){
+    OperatorImportFromESRIShape op = (OperatorImportFromESRIShape) OperatorFactoryLocal.getInstance()
+        .getOperator(Operator.Type.ImportFromESRIShape);
+    ShapefileByteBufferCursor byteBufferCursor = new ShapefileByteBufferCursor(byteBuffer);
+    return op.execute(ShapeImportFlags.ShapeImportNonTrusted, Geometry.Type.Unknown,
+        byteBufferCursor);
+  }
 }

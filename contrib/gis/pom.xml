@@ -43,6 +43,11 @@
 			<version>1.2.1</version>
 		</dependency>
 
+        <dependency>
+          <groupId>org.jamel.dbf</groupId>
+          <artifactId>dbf-reader</artifactId>
+          <version>0.1.0</version>
+        </dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.apache.drill.exec</groupId>

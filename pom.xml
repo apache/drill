@@ -208,6 +208,9 @@
             <exclude>**/*.linux</exclude>
             <exclude>**/client/build/**</exclude>
             <exclude>**/*.tbl</exclude>
+            <exclude>**/*.prj</exclude>
+            <exclude>**/*.shp</exclude>
+            <exclude>**/*.dbf</exclude>
           </excludes>
         </configuration>
       </plugin>

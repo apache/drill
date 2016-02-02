@@ -48,6 +48,9 @@
           extensions: [ "csvh" ],
           delimiter: ",",
           extractHeader: true
+        },
+        "shp" : {
+          type: "shp"
         }
       }
     },
@@ -81,6 +84,9 @@
           extensions: [ "csvh" ],
           delimiter: ",",
           extractHeader: true
+        },
+        "shp" : {
+          type: "shp"
         }
       }
     }

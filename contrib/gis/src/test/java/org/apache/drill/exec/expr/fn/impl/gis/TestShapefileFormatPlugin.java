@@ -17,14 +17,33 @@
  */
 package org.apache.drill.exec.expr.fn.impl.gis;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.drill.BaseTestQuery;
+import org.junit.Test;
 
-@RunWith(Suite.class)
-@SuiteClasses({ TestGeometryFunctions.class, TestShapefileFormatPlugin.class })
-public class GISTestSuite {
-  private static final Logger logger = LoggerFactory.getLogger(GISTestSuite.class);
+public class TestShapefileFormatPlugin extends BaseTestQuery {
+
+  @Test
+  public void testRowCount() throws Exception {
+
+    testBuilder()
+    .sqlQuery("select count(*) "
+        + "from cp.`/sample-data/CA-cities.shp`")
+    .ordered().baselineColumns("EXPR$0")
+    .baselineValues(5727L)
+    .build()
+    .run();
+  }
+
+  @Test
+  public void testShpQuery() throws Exception {
+
+    testBuilder()
+    .sqlQuery("select gid, srid, shapeType, name, ST_AsText(geom) as wkt "
+        + "from cp.`/sample-data/CA-cities.shp` where gid = 100")
+    .ordered().baselineColumns("gid", "srid", "shapeType", "name", "wkt")
+    .baselineValues(100, 4326, "Point", "Jenny Lind", "POINT (-120.8699371 38.0949216)")
+    .build()
+    .run();
+  }
+
 }

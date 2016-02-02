@@ -15,16 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.fn.impl.gis;
+package org.apache.drill.exec.store.shp;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@RunWith(Suite.class)
-@SuiteClasses({ TestGeometryFunctions.class, TestShapefileFormatPlugin.class })
-public class GISTestSuite {
-  private static final Logger logger = LoggerFactory.getLogger(GISTestSuite.class);
+import org.apache.drill.common.logical.FormatPluginConfig;
+
+/**
+ * Format plugin config for shapefile data files.
+ */
+@JsonTypeName("shp")
+public class ShpFormatConfig implements FormatPluginConfig {
+
+  @Override
+  public int hashCode() {
+    return 202;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof ShpFormatConfig;
+  }
 }
