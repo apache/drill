@@ -67,10 +67,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " name = 'Sprint'"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(name = \"Sprint\"\\)"};
     final String[] excludedPlan = {};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -85,13 +85,13 @@ public class TestSimpleJson extends BaseTestQuery {
         + " name LIKE 'S%'"
         ;
     runSQLAndVerifyCount(sql, 3);
-    
+
     final String[] expectedPlan = {"condition=\\(name MATCHES \"\\^\\\\\\\\QS\\\\\\\\E\\.\\*\\$\"\\)"};
     final String[] excludedPlan = {};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
-    
+
   @Test
   public void testPushdownStringNotEqual() throws Exception {
     setColumnWidths(new int[] {25, 40, 40, 40});
@@ -103,10 +103,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " name <> 'Sprint'"
         ;
     runSQLAndVerifyCount(sql, 9);
-    
+
     final String[] expectedPlan = {"condition=\\(name != \"Sprint\"\\)"};
     final String[] excludedPlan = {};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -121,10 +121,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " zip = 85260"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(zip = \\{\"\\$numberLong\":85260\\}\\)"};
     final String[] excludedPlan = {};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -141,10 +141,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " city = 'Las Vegas'"
         ;
     runSQLAndVerifyCount(sql, 4);
-    
+
     final String[] expectedPlan = {"condition=\\(\\(zip = \\{\"\\$numberLong\":85260\\}\\) or \\(city = \"Las Vegas\"\\)\\)"};
     final String[] excludedPlan = {};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -159,10 +159,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " _id = 'jFTZmywe7StuZ2hEjxyA'"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(_id = \"jFTZmywe7StuZ2hEjxyA\"\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -179,10 +179,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " name = 'Subway'"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(\\(_id = \"jFTZmywe7StuZ2hEjxyA\"\\) and \\(name = \"Subway\"\\)\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -197,10 +197,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " b.`attributes.Ambience.casual` = false"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual = false\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -215,10 +215,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " b.`attributes.Attire` = 'casual'"
         ;
     runSQLAndVerifyCount(sql, 4);
-    
+
     final String[] expectedPlan = {"condition=\\(attributes.Attire = \"casual\"\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
   @Test
@@ -233,10 +233,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " business.`attributes.Ambience.casual` IS NULL"
         ;
     runSQLAndVerifyCount(sql, 7);
-    
+
     final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual = null\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -252,10 +252,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " b.`attributes.Ambience.casual` IS NOT NULL"
         ;
     runSQLAndVerifyCount(sql, 3);
-    
+
     final String[] expectedPlan = {"condition=\\(attributes.Ambience.casual != null\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -270,10 +270,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " b.`attributes.Accepts Credit Cards` IS NULL"
         ;
     runSQLAndVerifyCount(sql, 3);
-    
+
     final String[] expectedPlan = {"condition=\\(attributes.Accepts Credit Cards = null\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -287,10 +287,10 @@ public class TestSimpleJson extends BaseTestQuery {
         + " stars > 4.0"
         ;
     runSQLAndVerifyCount(sql, 2);
-    
+
     final String[] expectedPlan = {"condition=\\(stars > 4\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
@@ -305,13 +305,13 @@ public class TestSimpleJson extends BaseTestQuery {
         + " stars > 4.1"
         ;
     runSQLAndVerifyCount(sql, 1);
-    
+
     final String[] expectedPlan = {"condition=\\(\\(attributes.Good For.lunch = true\\) and \\(stars > 4.1\\)\\)"};
     final String[] excludedPlan ={};
-    
+
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
-  
+
   /*
   @Test
   public void testPushDownSubField5() throws Exception {
@@ -363,7 +363,7 @@ public class TestSimpleJson extends BaseTestQuery {
     runSQLAndVerifyCount(sql, 1);
   }
   */
-  
+
   protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
     System.out.println("Running query:\n" + sql);
     return testSqlWithResults(sql);

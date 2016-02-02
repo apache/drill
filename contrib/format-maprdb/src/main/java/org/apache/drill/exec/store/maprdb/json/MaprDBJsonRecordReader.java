@@ -37,7 +37,6 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.maprdb.MapRDBSubScanSpec;
-import org.apache.drill.exec.store.maprdb.util.CommonFns;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -49,9 +48,7 @@ import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
 import org.ojai.FieldPath;
-import org.ojai.Value;
 import org.ojai.store.QueryCondition;
-import org.ojai.store.QueryCondition.Op;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -86,8 +83,10 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private DocumentStream<Document> documentStream;
 
   private Iterator<DocumentReader> documentReaderIterators;
-  
+
   private boolean includeId;
+
+  private String currentFieldName;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
@@ -96,22 +95,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     includeId = false;
     condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
     setColumns(projectedColumns);
-  }
-
-  private void addKeyCondition(QueryCondition condition, Op op, byte[] key) {
-    if (!CommonFns.isNullOrEmpty(key)) {
-      Value value = IdCodec.decode(key);
-      switch (value.getType()) {
-      case STRING:
-        condition.is(ID_FIELD, op, value.getString());
-        return;
-      case BINARY:
-        condition.is(ID_FIELD, op, value.getBinary());
-        return;
-      default:
-        throw new UnsupportedOperationException("");
-      }
-    }
   }
 
   @Override
@@ -145,7 +128,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
     try {
       table = MapRDB.getTable(tableName);
-      table.setOption(TableOption.EXCLUDEID, true);
+      table.setOption(TableOption.EXCLUDEID, !includeId);
       documentStream = table.find(condition, projectedFields);
       documentReaderIterators = documentStream.documentReaders().iterator();
     } catch (DBException e) {
@@ -171,25 +154,11 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         throw new IllegalStateException("The document did not start with START_MAP!");
       }
       try {
-        MapWriter map = writer.rootAsMap();
-        if (includeId && reader.getId() != null) {
-          switch (reader.getId().getType()) {
-          case BINARY:
-            writeBinary(map.varBinary(ID_KEY), reader.getId().getBinary());
-            break;
-          case STRING:
-            writeString(map.varChar(ID_KEY), reader.getId().getString());
-            break;
-          default:
-            throw new UnsupportedOperationException(reader.getId().getType() +
-                " is not a supported type for _id field.");
-          }
-        }
-        writeToMap(reader, map);
+        writeToMap(reader, writer.rootAsMap());
         recordCount++;
-      } catch (IllegalStateException e) {
-        logger.warn(String.format("Possible schema change at _id: %s",
-            IdCodec.asString(reader.getId())), e);
+      } catch (IllegalArgumentException e) {
+        logger.warn(String.format("Possible schema change at _id: '%s', field: '%s'",
+            IdCodec.asString(reader.getId()), currentFieldName), e);
       }
     }
 
@@ -199,62 +168,60 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   }
 
   private void writeToMap(DBDocumentReaderBase reader, MapWriter map) {
-    String fieldName = null;
     map.start();
     outside: while (true) {
       EventType event = reader.next();
-      if (event == null) break outside;
-      fieldName = reader.getFieldName();
+      if (event == null || event == EventType.END_MAP) break outside;
+
+      currentFieldName = reader.getFieldName();
       switch (event) {
       case NULL:
-        map.varChar(fieldName).write(null); // treat as VARCHAR for now
+        map.varChar(currentFieldName).write(null); // treat as VARCHAR for now
       case BINARY:
-        writeBinary(map.varBinary(fieldName), reader.getBinary());
+        writeBinary(map.varBinary(currentFieldName), reader.getBinary());
         break;
       case BOOLEAN:
-        map.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
+        map.bit(currentFieldName).writeBit(reader.getBoolean() ? 1 : 0);
         break;
       case STRING:
-        writeString(map.varChar(fieldName), reader.getString());
+        writeString(map.varChar(currentFieldName), reader.getString());
         break;
       case BYTE:
-        map.tinyInt(fieldName).writeTinyInt(reader.getByte());
+        map.tinyInt(currentFieldName).writeTinyInt(reader.getByte());
         break;
       case SHORT:
-        map.smallInt(fieldName).writeSmallInt(reader.getShort());
+        map.smallInt(currentFieldName).writeSmallInt(reader.getShort());
         break;
       case INT:
-        map.integer(fieldName).writeInt(reader.getInt());
+        map.integer(currentFieldName).writeInt(reader.getInt());
         break;
       case LONG:
-        map.bigInt(fieldName).writeBigInt(reader.getLong());
+        map.bigInt(currentFieldName).writeBigInt(reader.getLong());
         break;
       case FLOAT:
-        map.float4(fieldName).writeFloat4(reader.getFloat());
+        map.float4(currentFieldName).writeFloat4(reader.getFloat());
         break;
       case DOUBLE:
-        map.float8(fieldName).writeFloat8(reader.getDouble());
+        map.float8(currentFieldName).writeFloat8(reader.getDouble());
         break;
       case DECIMAL:
         throw new UnsupportedOperationException("Decimals are currently not supported.");
       case DATE:
-        map.date(fieldName).writeDate(reader.getDate().toDate().getTime());
+        map.date(currentFieldName).writeDate(reader.getDate().toDate().getTime());
         break;
       case TIME:
-        map.time(fieldName).writeTime(reader.getTimeInt());
+        map.time(currentFieldName).writeTime(reader.getTimeInt());
         break;
       case TIMESTAMP:
-        map.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
+        map.timeStamp(currentFieldName).writeTimeStamp(reader.getTimestampLong());
         break;
       case INTERVAL:
         throw new UnsupportedOperationException("Interval is currently not supported.");
       case START_MAP:
-        writeToMap(reader, map.map(fieldName));
+        writeToMap(reader, map.map(currentFieldName));
         break;
-      case END_MAP:
-        break outside;
       case START_ARRAY:
-        writeToList(reader, map.list(fieldName));
+        writeToList(reader, map.list(currentFieldName));
         break;
       case END_ARRAY:
         throw new IllegalStateException("Shouldn't get a END_ARRAY inside a map");
@@ -269,7 +236,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     list.startList();
     outside: while (true) {
       EventType event = reader.next();
-      if (event == null) break outside;
+      if (event == null || event == EventType.END_ARRAY) break outside;
+
       switch (event) {
       case NULL:
         list.varChar().write(null); // treat as VARCHAR for now
@@ -321,8 +289,6 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       case START_ARRAY:
         writeToList(reader, list.list());
         break;
-      case END_ARRAY:
-        break outside;
       default:
         throw new UnsupportedOperationException("Unsupported type: " + event);
       }
@@ -331,14 +297,14 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   }
 
   private void writeBinary(VarBinaryWriter binaryWriter, ByteBuffer buf) {
-    buffer.reallocIfNeeded(buf.remaining());
+    buffer = buffer.reallocIfNeeded(buf.remaining());
     buffer.setBytes(0, buf, buf.position(), buf.remaining());
     binaryWriter.writeVarBinary(0, buf.remaining(), buffer);
   }
 
   private void writeString(VarCharWriter varCharWriter, String string) {
     final byte[] strBytes = Bytes.toBytes(string);
-    buffer.reallocIfNeeded(strBytes.length);
+    buffer = buffer.reallocIfNeeded(strBytes.length);
     buffer.setBytes(0, strBytes);
     varCharWriter.writeVarChar(0, strBytes.length, buffer);
   }

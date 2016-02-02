@@ -108,6 +108,11 @@ public class MaprDBTestsSuite {
               "      \"location\": \"/tmp\"," +
               "      \"writable\": false," +
               "      \"defaultInputFormat\": \"maprdb\"" +
+              "    }," +
+              "    \"root\": {" +
+              "      \"location\": \"/\"," +
+              "      \"writable\": false," +
+              "      \"defaultInputFormat\": \"maprdb\"" +
               "    }" +
               "  }," +
               "  \"formats\": {" +
