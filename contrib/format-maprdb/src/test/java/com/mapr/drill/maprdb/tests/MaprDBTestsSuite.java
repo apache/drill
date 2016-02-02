@@ -147,7 +147,7 @@ public class MaprDBTestsSuite {
 
     try (Table table = admin.createTable(TMP_BUSINESS_TABLE);
          InputStream in = getJsonStream("json/business.json");
-         DocumentStream<Document> stream = Json.newDocumentStream(in)) {
+         DocumentStream stream = Json.newDocumentStream(in)) {
       for (Document document : stream) {
         table.insert(document, "business_id");
       }

@@ -43,7 +43,6 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
-import org.ojai.Document;
 import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
@@ -80,7 +79,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   private DrillBuf buffer;
 
-  private DocumentStream<Document> documentStream;
+  private DocumentStream documentStream;
 
   private Iterator<DocumentReader> documentReaderIterators;
 
