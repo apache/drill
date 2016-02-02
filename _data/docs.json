@@ -646,8 +646,8 @@
             "next_title": "Query Plans and Tuning", 
             "next_url": "/docs/query-plans-and-tuning/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Optimizing Parquet Metadata Reading", 
-            "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "previous_title": "Hive Metadata Caching", 
+            "previous_url": "/docs/hive-metadata-caching/", 
             "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
             "title": "Choosing a Storage Format", 
             "url": "/docs/choosing-a-storage-format/"
@@ -3516,6 +3516,23 @@
             "title": "Handling Different Data Types", 
             "url": "/docs/handling-different-data-types/"
         }, 
+        "Hive Metadata Caching": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Choosing a Storage Format", 
+            "next_url": "/docs/choosing-a-storage-format/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Optimizing Parquet Metadata Reading", 
+            "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
+            "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+            "title": "Hive Metadata Caching", 
+            "url": "/docs/hive-metadata-caching/"
+        }, 
         "Hive Storage Plugin": {
             "breadcrumbs": [
                 {
@@ -5766,8 +5783,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Choosing a Storage Format", 
-            "next_url": "/docs/choosing-a-storage-format/", 
+            "next_title": "Hive Metadata Caching", 
+            "next_url": "/docs/hive-metadata-caching/", 
             "parent": "Performance Tuning", 
             "previous_title": "How to Partition Data", 
             "previous_url": "/docs/how-to-partition-data/", 
@@ -5999,8 +6016,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Hive Metadata Caching", 
+                    "next_url": "/docs/hive-metadata-caching/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "How to Partition Data", 
                     "previous_url": "/docs/how-to-partition-data/", 
@@ -6016,11 +6033,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Plans and Tuning", 
-                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Optimizing Parquet Metadata Reading", 
                     "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+                    "title": "Hive Metadata Caching", 
+                    "url": "/docs/hive-metadata-caching/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning", 
+                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Hive Metadata Caching", 
+                    "previous_url": "/docs/hive-metadata-caching/", 
                     "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
                     "title": "Choosing a Storage Format", 
                     "url": "/docs/choosing-a-storage-format/"
@@ -14314,8 +14348,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Choosing a Storage Format", 
-                    "next_url": "/docs/choosing-a-storage-format/", 
+                    "next_title": "Hive Metadata Caching", 
+                    "next_url": "/docs/hive-metadata-caching/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "How to Partition Data", 
                     "previous_url": "/docs/how-to-partition-data/", 
@@ -14331,11 +14365,28 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Query Plans and Tuning", 
-                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "next_title": "Choosing a Storage Format", 
+                    "next_url": "/docs/choosing-a-storage-format/", 
                     "parent": "Performance Tuning", 
                     "previous_title": "Optimizing Parquet Metadata Reading", 
                     "previous_url": "/docs/optimizing-parquet-metadata-reading/", 
+                    "relative_path": "_docs/performance-tuning/026-hive-metadata-caching.md", 
+                    "title": "Hive Metadata Caching", 
+                    "url": "/docs/hive-metadata-caching/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Query Plans and Tuning", 
+                    "next_url": "/docs/query-plans-and-tuning/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Hive Metadata Caching", 
+                    "previous_url": "/docs/hive-metadata-caching/", 
                     "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md", 
                     "title": "Choosing a Storage Format", 
                     "url": "/docs/choosing-a-storage-format/"
