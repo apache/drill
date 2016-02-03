@@ -36,6 +36,7 @@
     <forkCount>2</forkCount>
     <parquet.version>1.8.1-drill-r0</parquet.version>
     <sqlline.version>1.1.9-drill-r7</sqlline.version>
+    <jackson.version>2.7.1</jackson.version>
 
     <!--
       Currently Hive storage plugin only supports Apache Hive 1.2 or vendor specific variants of the
