@@ -122,7 +122,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
                                              funcName)) {
       org.apache.drill.common.types.TypeProtos.DataMode dataMode =
           functionCall.args.get(0).getMajorType().getMode();
-      funcName = CastFunctions.getReplacingCastFunction(funcName, dataMode);
+      funcName = CastFunctions.getReplacingCastFunction(functionCall.args.get(0).getMajorType().getMinorType(), funcName, dataMode);
     }
 
     return funcName;
