@@ -20,6 +20,7 @@ package org.apache.drill.exec;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -27,6 +28,7 @@ import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.PlanProperties;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Filter;
@@ -53,7 +55,7 @@ public class TestOpSerialization {
     f.setOperatorId(2);
     UnionExchange e = new UnionExchange(f);
     e.setOperatorId(1);
-    Screen screen = new Screen(e, CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    Screen screen = new Screen(e, CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new HashMap<String, TypeProtos.MinorType>());
     screen.setOperatorId(0);
 
     boolean reversed = false;

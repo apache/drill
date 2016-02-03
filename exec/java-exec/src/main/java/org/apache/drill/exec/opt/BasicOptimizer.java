@@ -19,6 +19,7 @@ package org.apache.drill.exec.opt;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -53,6 +54,7 @@ import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -64,6 +66,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -225,7 +228,7 @@ public class BasicOptimizer extends Optimizer {
       if (!iterator.hasNext()) {
         throw new OptimizerException("Store node in logical plan does not have a child.");
       }
-      return new Screen(iterator.next().accept(this, obj), queryContext.getCurrentEndpoint());
+      return new Screen(iterator.next().accept(this, obj), queryContext.getCurrentEndpoint(), new HashMap<String, MinorType>());
     }
 
     @Override
