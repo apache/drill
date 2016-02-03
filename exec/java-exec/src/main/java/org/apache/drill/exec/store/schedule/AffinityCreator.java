@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.carrotsearch.hppc.ObjectFloatOpenHashMap;
+import com.carrotsearch.hppc.ObjectFloatHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import com.google.common.base.Stopwatch;
@@ -40,7 +40,7 @@ public class AffinityCreator {
       totalBytes += entry.getTotalBytes();
     }
 
-    ObjectFloatOpenHashMap<DrillbitEndpoint> affinities = new ObjectFloatOpenHashMap<DrillbitEndpoint>();
+    ObjectFloatHashMap<DrillbitEndpoint> affinities = new ObjectFloatHashMap<DrillbitEndpoint>();
     for (CompleteWork entry : work) {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : entry.getByteMap()) {
         long bytes = cursor.value;

@@ -51,7 +51,7 @@ import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.IntObjectHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,8 +86,8 @@ public class QueryManager {
    * Doesn't need to be thread safe as fragmentDataMap is generated in a single thread and then
    * accessed by multiple threads for reads only.
    */
-  private final IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>> fragmentDataMap =
-      new IntObjectOpenHashMap<>();
+  private final IntObjectHashMap<IntObjectHashMap<FragmentData>> fragmentDataMap =
+      new IntObjectHashMap<>();
   private final List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
   private final PStore<QueryProfile> profilePStore;
@@ -163,9 +163,9 @@ public class QueryManager {
     final int majorFragmentId = fragmentHandle.getMajorFragmentId();
     final int minorFragmentId = fragmentHandle.getMinorFragmentId();
 
-    IntObjectOpenHashMap<FragmentData> minorMap = fragmentDataMap.get(majorFragmentId);
+    IntObjectHashMap<FragmentData> minorMap = fragmentDataMap.get(majorFragmentId);
     if (minorMap == null) {
-      minorMap = new IntObjectOpenHashMap<>();
+      minorMap = new IntObjectHashMap<>();
       fragmentDataMap.put(majorFragmentId, minorMap);
     }
     minorMap.put(minorFragmentId, fragmentData);
@@ -351,15 +351,15 @@ public class QueryManager {
       profileBuilder.setPlan(planText);
     }
 
-    for (int i = 0; i < fragmentDataMap.allocated.length; i++) {
-      if (fragmentDataMap.allocated[i]) {
+    for (int i = 0; i < fragmentDataMap.keys.length; i++) {
+      if (fragmentDataMap.keys[i] != 0) {
         final int majorFragmentId = fragmentDataMap.keys[i];
-        final IntObjectOpenHashMap<FragmentData> minorMap =
-            (IntObjectOpenHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
+        final IntObjectHashMap<FragmentData> minorMap =
+            (IntObjectHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
         final MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder()
             .setMajorFragmentId(majorFragmentId);
-        for (int v = 0; v < minorMap.allocated.length; v++) {
-          if (minorMap.allocated[v]) {
+        for (int v = 0; v < minorMap.keys.length; v++) {
+          if (minorMap.keys[v] != 0) {
             final FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
             fb.addMinorFragmentProfile(data.getProfile());
           }
