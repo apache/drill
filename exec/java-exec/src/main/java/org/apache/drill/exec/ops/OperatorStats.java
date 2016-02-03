@@ -24,8 +24,8 @@ import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 
-import com.carrotsearch.hppc.IntDoubleOpenHashMap;
-import com.carrotsearch.hppc.IntLongOpenHashMap;
+import com.carrotsearch.hppc.IntDoubleHashMap;
+import com.carrotsearch.hppc.IntLongHashMap;
 import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 import com.carrotsearch.hppc.cursors.IntLongCursor;
 
@@ -36,8 +36,8 @@ public class OperatorStats {
   protected final int operatorType;
   private final BufferAllocator allocator;
 
-  private IntLongOpenHashMap longMetrics = new IntLongOpenHashMap();
-  private IntDoubleOpenHashMap doubleMetrics = new IntDoubleOpenHashMap();
+  private IntLongHashMap longMetrics = new IntLongHashMap();
+  private IntDoubleHashMap doubleMetrics = new IntDoubleHashMap();
 
   public long[] recordsReceivedByInput;
   public long[] batchesReceivedByInput;
@@ -107,7 +107,7 @@ public class OperatorStats {
    * @return OperatorStats - for convenience so one can merge multiple stats in one go
    */
   public OperatorStats mergeMetrics(OperatorStats from) {
-    final IntLongOpenHashMap fromMetrics = from.longMetrics;
+    final IntLongHashMap fromMetrics = from.longMetrics;
 
     final Iterator<IntLongCursor> iter = fromMetrics.iterator();
     while (iter.hasNext()) {
@@ -115,7 +115,7 @@ public class OperatorStats {
       longMetrics.putOrAdd(next.key, next.value, next.value);
     }
 
-    final IntDoubleOpenHashMap fromDMetrics = from.doubleMetrics;
+    final IntDoubleHashMap fromDMetrics = from.doubleMetrics;
     final Iterator<IntDoubleCursor> iterD = fromDMetrics.iterator();
 
     while (iterD.hasNext()) {
@@ -217,16 +217,16 @@ public class OperatorStats {
   }
 
   public void addLongMetrics(OperatorProfile.Builder builder) {
-    for(int i =0; i < longMetrics.allocated.length; i++){
-      if(longMetrics.allocated[i]){
+    for (int i = 0; i < longMetrics.keys.length; i++) {
+      if (longMetrics.keys[i] != 0) {
         builder.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
       }
     }
   }
 
   public void addDoubleMetrics(OperatorProfile.Builder builder) {
-    for(int i =0; i < doubleMetrics.allocated.length; i++){
-      if(doubleMetrics.allocated[i]){
+    for (int i = 0; i < longMetrics.keys.length; i++) {
+      if (doubleMetrics.keys[i] != 0) {
         builder.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
       }
     }

@@ -33,7 +33,7 @@ import org.apache.drill.exec.rpc.UserRpcException;
 import org.apache.drill.exec.rpc.control.Controller.CustomMessageHandler;
 import org.apache.drill.exec.rpc.control.Controller.CustomResponse;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.IntObjectHashMap;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -46,7 +46,7 @@ public class CustomHandlerRegistry {
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock read = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock write = new AutoCloseableLock(readWriteLock.writeLock());
-  private final IntObjectOpenHashMap<ParsingHandler<?>> handlers = new IntObjectOpenHashMap<>();
+  private final IntObjectHashMap<ParsingHandler<?>> handlers = new IntObjectHashMap<>();
   private volatile DrillbitEndpoint endpoint;
 
   public CustomHandlerRegistry() {
