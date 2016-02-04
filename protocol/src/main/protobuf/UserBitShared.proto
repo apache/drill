@@ -18,6 +18,7 @@ enum QueryType {
   SQL = 1;
   LOGICAL = 2;
   PHYSICAL = 3;
+  EXECUTION = 4;
 }
 
 message UserCredentials {

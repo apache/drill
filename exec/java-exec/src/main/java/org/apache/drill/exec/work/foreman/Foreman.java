@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -45,14 +44,12 @@ import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
@@ -77,6 +74,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.apache.drill.exec.util.MemoryAllocationUtilities;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.QueryWorkUnit;
@@ -89,6 +87,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -250,6 +249,9 @@ public class Foreman implements Runnable {
       case SQL:
         runSQL(queryRequest.getPlan());
         break;
+      case EXECUTION:
+        runFragment(queryRequest.getFragmentsList());
+        break;
       default:
         throw new IllegalStateException();
       }
@@ -394,7 +396,7 @@ public class Foreman implements Runnable {
 
   private void runPhysicalPlan(final PhysicalPlan plan) throws ExecutionSetupException {
     validatePlan(plan);
-    setupSortMemoryAllocations(plan);
+    MemoryAllocationUtilities.setupSortMemoryAllocations(plan, queryContext);
     if (queuingEnabled) {
       acquireQuerySemaphore(plan);
       moveToState(QueryState.STARTING, null);
@@ -419,37 +421,65 @@ public class Foreman implements Runnable {
     logger.debug("Fragments running.");
   }
 
+  /**
+   * This is a helper method to run query based on the list of PlanFragment that were planned
+   * at some point of time
+   * @param fragmentsList
+   * @throws ExecutionSetupException
+   */
+  private void runFragment(List<PlanFragment> fragmentsList) throws ExecutionSetupException {
+    // need to set QueryId, MinorFragment for incoming Fragments
+    PlanFragment rootFragment = null;
+    boolean isFirst = true;
+    final List<PlanFragment> planFragments = Lists.newArrayList();
+    for (PlanFragment myFragment : fragmentsList) {
+      final FragmentHandle handle = myFragment.getHandle();
+      // though we have new field in the FragmentHandle - parentQueryId
+      // it can not be used until every piece of code that creates handle is using it, as otherwise
+      // comparisons on that handle fail that causes fragment runtime failure
+      final FragmentHandle newFragmentHandle = FragmentHandle.newBuilder().setMajorFragmentId(handle.getMajorFragmentId())
+          .setMinorFragmentId(handle.getMinorFragmentId()).setQueryId(queryId)
+          .build();
+      final PlanFragment newFragment = PlanFragment.newBuilder(myFragment).setHandle(newFragmentHandle).build();
+      if (isFirst) {
+        rootFragment = newFragment;
+        isFirst = false;
+      } else {
+        planFragments.add(newFragment);
+      }
+    }
+
+    final FragmentRoot rootOperator;
+    try {
+      rootOperator = drillbitContext.getPlanReader().readFragmentOperator(rootFragment.getFragmentJson());
+    } catch (IOException e) {
+      throw new ExecutionSetupException(String.format("Unable to parse FragmentRoot from fragment: %s", rootFragment.getFragmentJson()));
+    }
+    if (queuingEnabled) {
+      acquireQuerySemaphore(rootOperator.getCost());
+      moveToState(QueryState.STARTING, null);
+    }
+    drillbitContext.getWorkBus().addFragmentStatusListener(queryId, queryManager.getFragmentStatusListener());
+    drillbitContext.getClusterCoordinator().addDrillbitStatusListener(queryManager.getDrillbitStatusListener());
+
+    logger.debug("Submitting fragments to run.");
+
+    // set up the root fragment first so we'll have incoming buffers available.
+    setupRootFragment(rootFragment, rootOperator);
+
+    setupNonRootFragments(planFragments);
+
+    moveToState(QueryState.RUNNING, null);
+    logger.debug("Fragments running.");
+  }
+
+
+
   private static void validatePlan(final PhysicalPlan plan) throws ForemanSetupException {
     if (plan.getProperties().resultMode != ResultMode.EXEC) {
       throw new ForemanSetupException(String.format(
           "Failure running plan.  You requested a result mode of %s and a physical plan can only be output as EXEC",
           plan.getProperties().resultMode));
-    }
-  }
-
-  private void setupSortMemoryAllocations(final PhysicalPlan plan) {
-    // look for external sorts
-    final List<ExternalSort> sortList = new LinkedList<>();
-    for (final PhysicalOperator op : plan.getSortedOperators()) {
-      if (op instanceof ExternalSort) {
-        sortList.add((ExternalSort) op);
-      }
-    }
-
-    // if there are any sorts, compute the maximum allocation, and set it on them
-    if (sortList.size() > 0) {
-      final OptionManager optionManager = queryContext.getOptions();
-      final long maxWidthPerNode = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val;
-      long maxAllocPerNode = Math.min(DrillConfig.getMaxDirectMemory(),
-          queryContext.getConfig().getLong(RootAllocatorFactory.TOP_LEVEL_MAX_ALLOC));
-      maxAllocPerNode = Math.min(maxAllocPerNode,
-          optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY).num_val);
-      final long maxSortAlloc = maxAllocPerNode / (sortList.size() * maxWidthPerNode);
-      logger.debug("Max sort alloc: {}", maxSortAlloc);
-
-      for(final ExternalSort externalSort : sortList) {
-        externalSort.setMaxAllocation(maxSortAlloc);
-      }
     }
   }
 
@@ -463,12 +493,18 @@ public class Foreman implements Runnable {
    * @throws ForemanSetupException
    */
   private void acquireQuerySemaphore(final PhysicalPlan plan) throws ForemanSetupException {
-    final OptionManager optionManager = queryContext.getOptions();
-    final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
     double totalCost = 0;
     for (final PhysicalOperator ops : plan.getSortedOperators()) {
       totalCost += ops.getCost();
     }
+
+    acquireQuerySemaphore(totalCost);
+    return;
+  }
+
+  private void acquireQuerySemaphore(double totalCost) throws ForemanSetupException {
+    final OptionManager optionManager = queryContext.getOptions();
+    final long queueThreshold = optionManager.getOption(ExecConstants.QUEUE_THRESHOLD_SIZE);
 
     final long queueTimeout = optionManager.getOption(ExecConstants.QUEUE_TIMEOUT);
     final String queueName;
@@ -502,7 +538,6 @@ public class Foreman implements Runnable {
               queueName, queueTimeout / 1000)
           .build(logger);
     }
-
   }
 
   Exception getCurrentException() {
@@ -983,6 +1018,10 @@ public class Foreman implements Runnable {
    * @throws ForemanException
    */
   private void setupNonRootFragments(final Collection<PlanFragment> fragments) throws ForemanException {
+    if (fragments.isEmpty()) {
+      // nothing to do here
+      return;
+    }
     /*
      * We will send a single message to each endpoint, regardless of how many fragments will be
      * executed there. We need to start up the intermediate fragments first so that they will be

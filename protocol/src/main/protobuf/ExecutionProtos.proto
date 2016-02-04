@@ -11,5 +11,6 @@ message FragmentHandle {
 	optional exec.shared.QueryId query_id = 1;
 	optional int32 major_fragment_id = 2;
 	optional int32 minor_fragment_id = 3;
+	optional exec.shared.QueryId parent_query_id = 4;
 }
 

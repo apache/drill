@@ -123,7 +123,40 @@ public class SimpleParallelizer implements ParallelizationParameters {
       Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
 
-    final PlanningSet planningSet = new PlanningSet();
+    final PlanningSet planningSet = getFragmentsHelper(activeEndpoints, rootFragment);
+    return generateWorkUnit(
+        options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo);
+  }
+
+  /**
+   * Create multiple physical plans from original query planning, it will allow execute them eventually independently
+   * @param options
+   * @param foremanNode
+   * @param queryId
+   * @param activeEndpoints
+   * @param reader
+   * @param rootFragment
+   * @param session
+   * @param queryContextInfo
+   * @return
+   * @throws ExecutionSetupException
+   */
+  public List<QueryWorkUnit> getSplitFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
+      Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
+      UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
+    // no op
+    throw new UnsupportedOperationException("Use children classes");
+  }
+  /**
+   * Helper method to reuse the code for QueryWorkUnit(s) generation
+   * @param activeEndpoints
+   * @param rootFragment
+   * @return
+   * @throws ExecutionSetupException
+   */
+  protected PlanningSet getFragmentsHelper(Collection<DrillbitEndpoint> activeEndpoints, Fragment rootFragment) throws ExecutionSetupException {
+
+    PlanningSet planningSet = new PlanningSet();
 
     initFragmentWrappers(rootFragment, planningSet);
 
@@ -134,8 +167,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
       parallelizeFragment(wrapper, planningSet, activeEndpoints);
     }
 
-    return generateWorkUnit(
-        options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo);
+    return planningSet;
   }
 
   // For every fragment, create a Wrapper in PlanningSet.
@@ -221,7 +253,7 @@ public class SimpleParallelizer implements ParallelizationParameters {
         .parallelizeFragment(fragmentWrapper, this, activeEndpoints);
   }
 
-  private QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
+  protected QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
       PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
     List<PlanFragment> fragments = Lists.newArrayList();
@@ -297,10 +329,11 @@ public class SimpleParallelizer implements ParallelizationParameters {
     return new QueryWorkUnit(rootOperator, rootFragment, fragments);
   }
 
+
   /**
    * Designed to setup initial values for arriving fragment accounting.
    */
-  private static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
+  protected static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
     private static final CountRequiredFragments INSTANCE = new CountRequiredFragments();
 
     public static List<Collector> getCollectors(PhysicalOperator root) {

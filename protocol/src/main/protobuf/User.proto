@@ -6,6 +6,10 @@ option optimize_for = SPEED;
 
 import "SchemaDef.proto";
 import "UserBitShared.proto";
+import "BitData.proto";
+import "BitControl.proto";
+import "ExecutionProtos.proto";
+
 
 ////// UserToBit RPC ///////
 enum RpcType {
@@ -18,10 +22,12 @@ enum RpcType {
   CANCEL_QUERY = 4; // user is sending a query cancellation request to the drillbit
   REQUEST_RESULTS = 5;
   RESUME_PAUSED_QUERY = 11; // user is sending a query resume request to the drillbit
+  GET_QUERY_PLAN_FRAGMENTS = 12; // to get plan fragments from query
 
   // bit to user
   QUERY_DATA = 6; // drillbit is sending a query result data batch to the user
   QUERY_HANDLE = 7;
+  QUERY_PLAN_FRAGMENTS = 13; // return plan fragments 
 
   REQ_META_FUNCTIONS = 8;
   RESP_FUNCTION_LIST = 9;
@@ -57,6 +63,20 @@ message RunQuery {
   optional QueryResultsMode results_mode = 1;
   optional exec.shared.QueryType type = 2;
   optional string plan = 3;
+  repeated exec.bit.control.PlanFragment fragments = 4;
+}
+
+message GetQueryPlanFragments {
+  required string query = 1;
+  optional exec.shared.QueryType type = 2;
+  optional bool split_plan = 3 [default = false];
+}
+
+message QueryPlanFragments {
+  required exec.shared.QueryResult.QueryState status = 1;
+  optional exec.shared.QueryId query_id = 2;
+  repeated exec.bit.control.PlanFragment fragments = 3;
+  optional exec.shared.DrillPBError error = 4;
 }
 
 enum QueryResultsMode {

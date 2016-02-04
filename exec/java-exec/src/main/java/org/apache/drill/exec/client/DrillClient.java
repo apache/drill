@@ -18,6 +18,7 @@
 package org.apache.drill.exec.client;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 import io.netty.buffer.DrillBuf;
@@ -44,6 +45,7 @@ import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -51,7 +53,9 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.Property;
+import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -67,6 +71,9 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -78,6 +85,7 @@ import com.google.common.util.concurrent.SettableFuture;
 public class DrillClient implements Closeable, ConnectionThrottle {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
 
+  private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DrillConfig config;
   private UserClient client;
   private UserProperties props = null;
@@ -321,6 +329,53 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     return listener.getResults();
   }
 
+  /**
+   * API to just plan a query without execution
+   * @param type
+   * @param query
+   * @param isSplitPlan - option to tell whether to return single or split plans for a query
+   * @return list of PlanFragments that can be used later on in {@link #runQuery(QueryType, List, UserResultsListener)}
+   * to run a query without additional planning
+   */
+  public DrillRpcFuture<QueryPlanFragments> planQuery(QueryType type, String query, boolean isSplitPlan) {
+    GetQueryPlanFragments runQuery = GetQueryPlanFragments.newBuilder().setQuery(query).setType(type).setSplitPlan(isSplitPlan).build();
+    return client.planQuery(runQuery);
+  }
+
+  /**
+   * Run query based on list of fragments that were supposedly produced during query planning phase
+   * @param type
+   * @param planFragments
+   * @param resultsListener
+   * @throws RpcException
+   */
+  public void runQuery(QueryType type, List<PlanFragment> planFragments, UserResultsListener resultsListener)
+      throws RpcException {
+    // QueryType can be only executional
+    checkArgument((QueryType.EXECUTION == type), "Only EXECUTION type query is supported with PlanFragments");
+    // setting Plan on RunQuery will be used for logging purposes and therefore can not be null
+    // since there is no Plan string provided we will create a JsonArray out of individual fragment Plans
+    ArrayNode jsonArray = objectMapper.createArrayNode();
+    for (PlanFragment fragment : planFragments) {
+      try {
+        jsonArray.add(objectMapper.readTree(fragment.getFragmentJson()));
+      } catch (IOException e) {
+        logger.error("Exception while trying to read PlanFragment JSON for %s", fragment.getHandle().getQueryId(), e);
+        throw new RpcException(e);
+      }
+    }
+    final String fragmentsToJsonString;
+    try {
+      fragmentsToJsonString = objectMapper.writeValueAsString(jsonArray);
+    } catch (JsonProcessingException e) {
+      logger.error("Exception while trying to get JSONString from Array of individual Fragments Json for %s", e);
+      throw new RpcException(e);
+    }
+    final UserProtos.RunQuery query = newBuilder().setType(type).addAllFragments(planFragments)
+        .setPlan(fragmentsToJsonString)
+        .setResultsMode(STREAM_FULL).build();
+    client.submitQuery(resultsListener, query);
+  }
 
   /*
    * Helper method to generate the UserCredentials message from the properties.

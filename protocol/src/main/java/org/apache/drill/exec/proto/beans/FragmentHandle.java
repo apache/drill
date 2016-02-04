@@ -50,6 +50,7 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
     private QueryId queryId;
     private int majorFragmentId;
     private int minorFragmentId;
+    private QueryId parentQueryId;
 
     public FragmentHandle()
     {
@@ -94,6 +95,19 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
     public FragmentHandle setMinorFragmentId(int minorFragmentId)
     {
         this.minorFragmentId = minorFragmentId;
+        return this;
+    }
+
+    // parentQueryId
+
+    public QueryId getParentQueryId()
+    {
+        return parentQueryId;
+    }
+
+    public FragmentHandle setParentQueryId(QueryId parentQueryId)
+    {
+        this.parentQueryId = parentQueryId;
         return this;
     }
 
@@ -161,6 +175,10 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
                 case 3:
                     message.minorFragmentId = input.readInt32();
                     break;
+                case 4:
+                    message.parentQueryId = input.mergeObject(message.parentQueryId, QueryId.getSchema());
+                    break;
+
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -179,6 +197,10 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
 
         if(message.minorFragmentId != 0)
             output.writeInt32(3, message.minorFragmentId, false);
+
+        if(message.parentQueryId != null)
+             output.writeObject(4, message.parentQueryId, QueryId.getSchema(), false);
+
     }
 
     public String getFieldName(int number)
@@ -188,6 +210,7 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
             case 1: return "queryId";
             case 2: return "majorFragmentId";
             case 3: return "minorFragmentId";
+            case 4: return "parentQueryId";
             default: return null;
         }
     }
@@ -204,6 +227,7 @@ public final class FragmentHandle implements Externalizable, Message<FragmentHan
         __fieldMap.put("queryId", 1);
         __fieldMap.put("majorFragmentId", 2);
         __fieldMap.put("minorFragmentId", 3);
+        __fieldMap.put("parentQueryId", 4);
     }
     
 }
