@@ -38,6 +38,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
+import org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments;
 import org.apache.drill.exec.proto.UserProtos.HandshakeStatus;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
@@ -131,7 +132,13 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       } catch (final InvalidProtocolBufferException e) {
         throw new RpcException("Failure while decoding QueryId body.", e);
       }
-
+    case RpcType.GET_QUERY_PLAN_FRAGMENTS_VALUE:
+      try {
+        final GetQueryPlanFragments req = GetQueryPlanFragments.PARSER.parseFrom(new ByteBufInputStream(pBody));
+        return new Response(RpcType.QUERY_PLAN_FRAGMENTS, worker.getQueryPlan(connection, req));
+      } catch(final InvalidProtocolBufferException e) {
+        throw new RpcException("Failure while decoding GetQueryPlanFragments body.", e);
+      }
     default:
       throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
     }

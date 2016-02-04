@@ -24,7 +24,8 @@ public enum QueryType implements com.dyuproject.protostuff.EnumLite<QueryType>
 {
     SQL(1),
     LOGICAL(2),
-    PHYSICAL(3);
+    PHYSICAL(3),
+    EXECUTION(4);
     
     public final int number;
     
@@ -45,6 +46,7 @@ public enum QueryType implements com.dyuproject.protostuff.EnumLite<QueryType>
             case 1: return SQL;
             case 2: return LOGICAL;
             case 3: return PHYSICAL;
+            case 4: return EXECUTION;
             default: return null;
         }
     }

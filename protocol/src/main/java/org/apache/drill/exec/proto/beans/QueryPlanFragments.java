@@ -32,71 +32,66 @@ import com.dyuproject.protostuff.Input;
 import com.dyuproject.protostuff.Message;
 import com.dyuproject.protostuff.Output;
 import com.dyuproject.protostuff.Schema;
+import com.dyuproject.protostuff.UninitializedMessageException;
 
-public final class RunQuery implements Externalizable, Message<RunQuery>, Schema<RunQuery>
+public final class QueryPlanFragments implements Externalizable, Message<QueryPlanFragments>, Schema<QueryPlanFragments>
 {
 
-    public static Schema<RunQuery> getSchema()
+    public static Schema<QueryPlanFragments> getSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
-    public static RunQuery getDefaultInstance()
+    public static QueryPlanFragments getDefaultInstance()
     {
         return DEFAULT_INSTANCE;
     }
 
-    static final RunQuery DEFAULT_INSTANCE = new RunQuery();
+    static final QueryPlanFragments DEFAULT_INSTANCE = new QueryPlanFragments();
 
     
-    private QueryResultsMode resultsMode;
-    private QueryType type;
-    private String plan;
+    private QueryResult.QueryState status;
+    private QueryId queryId;
     private List<PlanFragment> fragments;
+    private DrillPBError error;
 
-    public RunQuery()
+    public QueryPlanFragments()
     {
         
     }
 
+    public QueryPlanFragments(
+        QueryResult.QueryState status
+    )
+    {
+        this.status = status;
+    }
+
     // getters and setters
 
-    // resultsMode
+    // status
 
-    public QueryResultsMode getResultsMode()
+    public QueryResult.QueryState getStatus()
     {
-        return resultsMode == null ? QueryResultsMode.STREAM_FULL : resultsMode;
+        return status;
     }
 
-    public RunQuery setResultsMode(QueryResultsMode resultsMode)
+    public QueryPlanFragments setStatus(QueryResult.QueryState status)
     {
-        this.resultsMode = resultsMode;
+        this.status = status;
         return this;
     }
 
-    // type
+    // queryId
 
-    public QueryType getType()
+    public QueryId getQueryId()
     {
-        return type == null ? QueryType.SQL : type;
+        return queryId;
     }
 
-    public RunQuery setType(QueryType type)
+    public QueryPlanFragments setQueryId(QueryId queryId)
     {
-        this.type = type;
-        return this;
-    }
-
-    // plan
-
-    public String getPlan()
-    {
-        return plan;
-    }
-
-    public RunQuery setPlan(String plan)
-    {
-        this.plan = plan;
+        this.queryId = queryId;
         return this;
     }
 
@@ -107,9 +102,22 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
         return fragments;
     }
 
-    public RunQuery setFragmentsList(List<PlanFragment> fragments)
+    public QueryPlanFragments setFragmentsList(List<PlanFragment> fragments)
     {
         this.fragments = fragments;
+        return this;
+    }
+
+    // error
+
+    public DrillPBError getError()
+    {
+        return error;
+    }
+
+    public QueryPlanFragments setError(DrillPBError error)
+    {
+        this.error = error;
         return this;
     }
 
@@ -127,39 +135,40 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
 
     // message method
 
-    public Schema<RunQuery> cachedSchema()
+    public Schema<QueryPlanFragments> cachedSchema()
     {
         return DEFAULT_INSTANCE;
     }
 
     // schema methods
 
-    public RunQuery newMessage()
+    public QueryPlanFragments newMessage()
     {
-        return new RunQuery();
+        return new QueryPlanFragments();
     }
 
-    public Class<RunQuery> typeClass()
+    public Class<QueryPlanFragments> typeClass()
     {
-        return RunQuery.class;
+        return QueryPlanFragments.class;
     }
 
     public String messageName()
     {
-        return RunQuery.class.getSimpleName();
+        return QueryPlanFragments.class.getSimpleName();
     }
 
     public String messageFullName()
     {
-        return RunQuery.class.getName();
+        return QueryPlanFragments.class.getName();
     }
 
-    public boolean isInitialized(RunQuery message)
+    public boolean isInitialized(QueryPlanFragments message)
     {
-        return true;
+        return 
+            message.status != null;
     }
 
-    public void mergeFrom(Input input, RunQuery message) throws IOException
+    public void mergeFrom(Input input, QueryPlanFragments message) throws IOException
     {
         for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
         {
@@ -168,18 +177,20 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
                 case 0:
                     return;
                 case 1:
-                    message.resultsMode = QueryResultsMode.valueOf(input.readEnum());
+                    message.status = QueryResult.QueryState.valueOf(input.readEnum());
                     break;
                 case 2:
-                    message.type = QueryType.valueOf(input.readEnum());
+                    message.queryId = input.mergeObject(message.queryId, QueryId.getSchema());
                     break;
+
                 case 3:
-                    message.plan = input.readString();
-                    break;
-                case 4:
                     if(message.fragments == null)
                         message.fragments = new ArrayList<PlanFragment>();
                     message.fragments.add(input.mergeObject(null, PlanFragment.getSchema()));
+                    break;
+
+                case 4:
+                    message.error = input.mergeObject(message.error, DrillPBError.getSchema());
                     break;
 
                 default:
@@ -189,25 +200,28 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     }
 
 
-    public void writeTo(Output output, RunQuery message) throws IOException
+    public void writeTo(Output output, QueryPlanFragments message) throws IOException
     {
-        if(message.resultsMode != null)
-             output.writeEnum(1, message.resultsMode.number, false);
+        if(message.status == null)
+            throw new UninitializedMessageException(message);
+        output.writeEnum(1, message.status.number, false);
 
-        if(message.type != null)
-             output.writeEnum(2, message.type.number, false);
+        if(message.queryId != null)
+             output.writeObject(2, message.queryId, QueryId.getSchema(), false);
 
-        if(message.plan != null)
-            output.writeString(3, message.plan, false);
 
         if(message.fragments != null)
         {
             for(PlanFragment fragments : message.fragments)
             {
                 if(fragments != null)
-                    output.writeObject(4, fragments, PlanFragment.getSchema(), true);
+                    output.writeObject(3, fragments, PlanFragment.getSchema(), true);
             }
         }
+
+
+        if(message.error != null)
+             output.writeObject(4, message.error, DrillPBError.getSchema(), false);
 
     }
 
@@ -215,10 +229,10 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     {
         switch(number)
         {
-            case 1: return "resultsMode";
-            case 2: return "type";
-            case 3: return "plan";
-            case 4: return "fragments";
+            case 1: return "status";
+            case 2: return "queryId";
+            case 3: return "fragments";
+            case 4: return "error";
             default: return null;
         }
     }
@@ -232,10 +246,10 @@ public final class RunQuery implements Externalizable, Message<RunQuery>, Schema
     private static final java.util.HashMap<String,Integer> __fieldMap = new java.util.HashMap<String,Integer>();
     static
     {
-        __fieldMap.put("resultsMode", 1);
-        __fieldMap.put("type", 2);
-        __fieldMap.put("plan", 3);
-        __fieldMap.put("fragments", 4);
+        __fieldMap.put("status", 1);
+        __fieldMap.put("queryId", 2);
+        __fieldMap.put("fragments", 3);
+        __fieldMap.put("error", 4);
     }
     
 }
