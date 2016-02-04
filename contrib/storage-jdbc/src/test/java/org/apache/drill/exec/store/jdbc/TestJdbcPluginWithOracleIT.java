@@ -84,5 +84,15 @@ public class TestJdbcPluginWithOracleIT extends PlanTestBase {
 
         testPlanMatchingPatterns(query, new String[] { "INNER JOIN" }, new String[] { "Join", "Filter" });
     }
+    
+    @Test
+    public void pushdownDrillFunc() throws Exception {
+        // Both subqueries use drill functions so join can not be pushed down to jdbc
+        final String query = "select x.first_name from " +
+                "(select CONVERT_TO(first_name, 'UTF8') first_name, person_id from oracle.`SYSTEM`.`person`) x join " +
+                "(select CONVERT_TO(first_name, 'UTF8') first_name, person_id from oracle.`SYSTEM`.`person`) y on x.person_id = y.person_id";
+
+        testPlanMatchingPatterns(query, new String[] { "Join" }, new String[] { "JOIN" });
+    }
 
 }
