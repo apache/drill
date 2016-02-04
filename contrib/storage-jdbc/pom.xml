@@ -80,6 +80,12 @@
       <version>${mysql.connector.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.oracle</groupId>
+      <artifactId>ojdbc7</artifactId>
+      <version>12.1.0.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
