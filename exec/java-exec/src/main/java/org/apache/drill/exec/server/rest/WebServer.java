@@ -44,6 +44,7 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -62,6 +63,9 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.joda.time.DateTime;
 
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -145,8 +149,8 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    servletContextHandler.setSessionHandler(createSessionHandler());
     servletContextHandler.setSecurityHandler(createSecurityHandler());
+    servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
 
     embeddedJetty.start();
   }
@@ -154,9 +158,31 @@ public class WebServer implements AutoCloseable {
   /**
    * @return A {@link SessionHandler} which contains a {@link HashSessionManager}
    */
-  private SessionHandler createSessionHandler() {
+  private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
     SessionManager sessionManager = new HashSessionManager();
     sessionManager.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
+    sessionManager.addEventListener(new HttpSessionListener() {
+      @Override
+      public void sessionCreated(HttpSessionEvent se) {
+        // No-op
+      }
+
+      @Override
+      public void sessionDestroyed(HttpSessionEvent se) {
+        final HttpSession session = se.getSession();
+        if (session == null) {
+          return;
+        }
+
+        final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        if (authCreds != null) {
+          final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
+          securityHandler.logout(sessionAuth);
+          session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        }
+      }
+    });
+
     return new SessionHandler(sessionManager);
   }
 
