@@ -16,7 +16,7 @@
             type    : "jdbc",
             enabled : true,
             driver  : "oracle.jdbc.OracleDriver",
-            url     : "jdbc:oracle:thin:@192.168.0.100:1521/DRILHR",
+            url     : "jdbc:oracle:thin:@localhost:1521/ORCL",
             username: "system",
             password: "1111"
         }
