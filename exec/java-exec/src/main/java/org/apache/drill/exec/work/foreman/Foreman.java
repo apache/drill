@@ -810,7 +810,7 @@ public class Foreman implements Runnable {
             foremanResult.close();
             return;
           case STARTING:
-            recordNewState(state);
+            recordNewState(newState);
             return;
         }
         break;
