@@ -17,14 +17,15 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.carrotsearch.hppc.ObjectIntOpenHashMap;
-import com.google.common.base.Preconditions;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.common.exceptions.UserException;
+import static org.apache.drill.exec.ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptTable.ToRelContext;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.exceptions.UserException;
 
-import static org.apache.drill.exec.ExecConstants.IMPERSONATION_MAX_CHAINED_USER_HOPS;
+import com.carrotsearch.hppc.ObjectIntHashMap;
+import com.google.common.base.Preconditions;
 
 /**
  * Contains context information about view expansion(s) in a query. Part of {@link org.apache.drill.exec.ops
@@ -72,7 +73,7 @@ public class ViewExpansionContext {
   private final QueryContext queryContext;
   private final int maxChainedUserHops;
   private final String queryUser;
-  private final ObjectIntOpenHashMap<String> userTokens = new ObjectIntOpenHashMap<>();
+  private final ObjectIntHashMap<String> userTokens = new ObjectIntHashMap<>();
 
   public ViewExpansionContext(QueryContext queryContext) {
     this.queryContext = queryContext;

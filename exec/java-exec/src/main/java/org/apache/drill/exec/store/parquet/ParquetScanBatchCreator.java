@@ -120,7 +120,7 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       These fields will be added to the constructor below
       */
       try {
-        Stopwatch timer = new Stopwatch();
+        Stopwatch timer = Stopwatch.createUnstarted();
         if ( ! footers.containsKey(e.getPath())){
           timer.start();
           ParquetMetadata footer = ParquetFileReader.readFooter(conf, new Path(e.getPath()));

@@ -178,8 +178,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
   @Override
   public int next() {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     if (rowKeyVector != null) {
       rowKeyVector.clear();
       rowKeyVector.allocateNew();

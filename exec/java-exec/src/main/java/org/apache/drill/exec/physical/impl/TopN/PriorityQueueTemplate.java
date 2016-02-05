@@ -88,8 +88,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException{
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     if (hyperBatch == null) {
       hyperBatch = new ExpandableHyperContainer(batch.getContainer());
     } else {
@@ -124,8 +123,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
 
   @Override
   public void generate() throws SchemaChangeException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
     finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {

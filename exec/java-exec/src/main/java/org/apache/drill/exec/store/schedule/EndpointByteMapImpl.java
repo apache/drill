@@ -21,13 +21,13 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.carrotsearch.hppc.ObjectLongOpenHashMap;
+import com.carrotsearch.hppc.ObjectLongHashMap;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 
 public class EndpointByteMapImpl implements EndpointByteMap{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EndpointByteMapImpl.class);
 
-  private final ObjectLongOpenHashMap<DrillbitEndpoint> map = new ObjectLongOpenHashMap<>();
+  private final ObjectLongHashMap<DrillbitEndpoint> map = new ObjectLongHashMap<>();
 
   private long maxBytes;
 

@@ -20,8 +20,6 @@ package org.apache.drill.exec.rpc.control;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
-import java.io.Closeable;
-
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.UserRpcException;
@@ -35,7 +33,7 @@ import com.google.protobuf.Parser;
  * making a connection. TODO: Controller should automatically straight route local BitCommunication rather than connecting to its
  * self.
  */
-public interface Controller extends Closeable {
+public interface Controller extends AutoCloseable {
 
   /**
    * Get a Bit to Bit communication tunnel. If the BitCom doesn't have a tunnel attached to the node already, it will

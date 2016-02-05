@@ -50,8 +50,7 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   @Override
   public void sort(SelectionVector2 vector2){
     QuickSort qs = new QuickSort();
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     if (vector2.getCount() > 0) {
       qs.sort(this, 0, vector2.getCount());
     }
