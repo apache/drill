@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.store.maprdb.json;
 
-import static org.ojai.DocumentConstants.ID_FIELD;
 import static org.ojai.DocumentConstants.ID_KEY;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -51,7 +49,6 @@ import org.ojai.store.QueryCondition;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mapr.db.MapRDB;
 import com.mapr.db.Table;
@@ -98,18 +95,27 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (!isStarQuery()) {
-      ArrayList<Object> projectedFieldsList = Lists.newArrayList();
+      Set<FieldPath> projectedFieldsSet = Sets.newTreeSet();
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ID_KEY)) {
+          /*
+           * we do not include _id field in the set of projected fields
+           * because the DB currently can not return a document if only
+           * the _id field was projected. This should really be fixed in
+           * the DB client (Bug 21708) to avoid transferring the entire
+           * document when only _id is requested.
+           */
+          // projectedFieldsList.add(ID_FIELD);
           transformed.add(ID_PATH);
-          projectedFieldsList.add(ID_FIELD);
           includeId = true;
         } else {
           transformed.add(SchemaPath.getSimplePath(column.getRootSegment().getPath()));
-          projectedFieldsList.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
+          projectedFieldsSet.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
         }
       }
-      projectedFields = projectedFieldsList.toArray(new FieldPath[projectedFieldsList.size()]);
+      if (projectedFieldsSet.size() > 0) {
+        projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
+      }
     } else {
       transformed.add(ID_PATH);
       includeId = true;
@@ -135,7 +141,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    Stopwatch watch = new Stopwatch();
+    Stopwatch watch = Stopwatch.createUnstarted();
     watch.start();
 
     writer.allocate();
@@ -230,7 +236,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         default:
           throw unsupportedError("Unsupported type: %s encountered during the query.", event);
         }
-      } catch (IllegalArgumentException e) {
+      } catch (IllegalStateException | IllegalArgumentException e) {
         logger.warn(String.format("Possible schema change at _id: '%s', field: '%s'",
             IdCodec.asString(reader.getId()), fieldName), e);
       }

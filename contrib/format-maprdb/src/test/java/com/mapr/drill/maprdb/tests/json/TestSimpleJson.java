@@ -48,9 +48,9 @@ public class TestSimpleJson extends BaseTestQuery {
 
   @Test
   public void testMe() throws Exception {
-    setColumnWidths(new int[] {25, 40, 40, 40});
+    setColumnWidths(new int[] {23});
     final String sql = "SELECT\n"
-        + "  _id, name, categories, full_address\n"
+        + "  _id\n"
         + "FROM\n"
         + "  hbase.`business` business";
     runSQLAndVerifyCount(sql, 10);

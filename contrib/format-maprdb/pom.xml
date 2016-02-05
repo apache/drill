@@ -35,6 +35,7 @@
     <mapr.version>${project.parent.version}</mapr.version>
     <drill.version>${project.version}</drill.version>
     <hbase.version>0.98.12-mapr-1506</hbase.version>
+    <guava.version>18.0</guava.version>
     <maprdb.TestSuite>**/MaprDBTestsSuite.class</maprdb.TestSuite>
   </properties>
 
@@ -116,6 +117,11 @@
           <groupId>org.slf4j</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>

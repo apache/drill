@@ -61,7 +61,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
 
   private boolean filterPushedDown = false;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<MapRDBSubScanSpec>>() {
     @Override

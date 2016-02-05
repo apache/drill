@@ -90,11 +90,11 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
 
       if (scan.getGroupScan() instanceof BinaryTableGroupScan) {
         BinaryTableGroupScan groupScan = (BinaryTableGroupScan)scan.getGroupScan();
-        doPushFilterIntoBinaryGroupScan(call, filter, null, scan, groupScan, condition);
+        doPushFilterIntoBinaryGroupScan(call, filter, project, scan, groupScan, condition);
       } else {
         assert(scan.getGroupScan() instanceof JsonTableGroupScan);
         JsonTableGroupScan groupScan = (JsonTableGroupScan)scan.getGroupScan();
-        doPushFilterIntoJsonGroupScan(call, filter, null, scan, groupScan, condition);
+        doPushFilterIntoJsonGroupScan(call, filter, project, scan, groupScan, condition);
       }
     }
 
