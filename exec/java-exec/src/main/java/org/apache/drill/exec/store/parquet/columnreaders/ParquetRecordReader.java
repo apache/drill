@@ -35,11 +35,9 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -196,7 +194,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
     int i = 0;
     for (SchemaPath expr : getColumns()) {
-      if ( field.matches(expr)) {
+      if ( field.getPath().equalsIgnoreCase(expr.getAsUnescapedPath())) {
         columnsFound[i] = true;
         return true;
       }
@@ -248,7 +246,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
       SchemaElement se = schemaElements.get(column.getPath()[0]);
       MajorType mt = ParquetToDrillTypeConverter.toMajorType(column.getType(), se.getType_length(),
           getDataMode(column), se, fragmentContext.getOptions());
-      field = MaterializedField.create(toFieldName(column.getPath()),mt);
+      field = MaterializedField.create(toFieldName(column.getPath()), mt);
       if ( ! fieldSelected(field)) {
         continue;
       }
@@ -336,7 +334,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
           col = projectedColumns.get(i);
           assert col!=null;
           if ( ! columnsFound[i] && !col.equals(STAR_COLUMN)) {
-            nullFilledVectors.add((NullableIntVector)output.addField(MaterializedField.create(col,
+            nullFilledVectors.add((NullableIntVector)output.addField(MaterializedField.create(col.getAsUnescapedPath(),
                     Types.optional(TypeProtos.MinorType.INT)),
                 (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT, DataMode.OPTIONAL)));
 
@@ -355,7 +353,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     try {
       for (final ValueVector v : vectorMap.values()) {
         AllocationHelper.allocate(v, recordsPerBatch, 50, 10);
@@ -366,8 +364,8 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
 
-  private SchemaPath toFieldName(String[] paths) {
-    return SchemaPath.getCompoundPath(paths);
+  private String toFieldName(String[] paths) {
+    return SchemaPath.getCompoundPath(paths).getAsUnescapedPath();
   }
 
   private TypeProtos.DataMode getDataMode(ColumnDescriptor column) {

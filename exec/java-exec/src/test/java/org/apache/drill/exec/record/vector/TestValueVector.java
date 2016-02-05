@@ -70,7 +70,7 @@ import com.google.common.collect.ImmutableMap;
 public class TestValueVector extends ExecTest {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestValueVector.class);
 
-  private final static SchemaPath EMPTY_SCHEMA_PATH = SchemaPath.getSimplePath("");
+  private final static String EMPTY_SCHEMA_PATH = "";
 
   private DrillConfig drillConfig;
   private BufferAllocator allocator;

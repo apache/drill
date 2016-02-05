@@ -31,7 +31,6 @@ package org.apache.drill.exec.vector.complex;
 import java.util.Iterator;
 import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.exec.util.CallBack;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 
 /*
@@ -94,7 +93,7 @@ public class UnionVector implements ValueVector {
       return;
     }
     majorType =  MajorType.newBuilder(this.majorType).addSubType(type).build();
-    field = MaterializedField.create(field.getPath(), majorType);
+    field = MaterializedField.create(field.getName(), majorType);
     if (callBack != null) {
       callBack.doWork();
     }
@@ -208,7 +207,7 @@ public class UnionVector implements ValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new TransferImpl(field.withPath(ref), allocator);
   }
 
@@ -349,24 +348,6 @@ public class UnionVector implements ValueVector {
     List<ValueVector> vectors = Lists.newArrayList(internalMap.iterator());
     vectors.add(typeVector);
     return vectors.iterator();
-  }
-
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg.isNamed()) {
-      ValueVector v = getMap();
-      if (v != null) {
-        return ((AbstractContainerVector) v).getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-      } else {
-        return null;
-      }
-    } else if (seg.isArray()) {
-      ValueVector v = getList();
-      if (v != null) {
-        return ((ListVector) v).getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-      }
-      else return null;
-    }
-    return null;
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {

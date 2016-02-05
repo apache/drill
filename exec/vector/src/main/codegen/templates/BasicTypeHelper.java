@@ -25,7 +25,6 @@ package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
 import org.apache.drill.exec.vector.complex.UnionVector;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -68,9 +67,8 @@ public class BasicTypeHelper {
     throw new UnsupportedOperationException(buildErrorMessage("get size", major));
   }
 
-  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type, CallBack callback){
-    SchemaPath child = parentPath.getChild(name);
-    MaterializedField field = MaterializedField.create(child, type);
+  public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback){
+    MaterializedField field = MaterializedField.create(name, type);
     return getNewVector(field, allocator, callback);
   }
   

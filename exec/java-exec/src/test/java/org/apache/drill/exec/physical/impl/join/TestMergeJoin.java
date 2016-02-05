@@ -87,7 +87,7 @@ public class TestMergeJoin extends PopUnitTestBase {
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
       for (final ValueVector v : exec) {
-        System.out.print("[" + v.getField().toExpr() + "]        ");
+        System.out.print("[" + v.getField().getPath() + "]        ");
       }
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
@@ -150,7 +150,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -207,7 +207,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {
@@ -263,7 +263,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         final List<Object> row = Lists.newArrayList();
         for (final ValueVector v : exec) {
-          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().getPath() + ":" + v.getAccessor().getObject(valueIdx));
         }
         for (final Object cell : row) {
           if (cell == null) {

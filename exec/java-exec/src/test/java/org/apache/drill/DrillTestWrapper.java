@@ -224,12 +224,12 @@ public class DrillTestWrapper {
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (VectorWrapper w : loader) {
-        String field = w.getField().toExpr();
+        String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
         if (!combinedVectors.containsKey(field)) {
           MaterializedField mf = w.getField();
           ValueVector[] vvList = (ValueVector[]) Array.newInstance(mf.getValueClass(), 1);
           vvList[0] = w.getValueVector();
-          combinedVectors.put(mf.getPath().toExpr(), new HyperVectorValueIterator(mf, new HyperVectorWrapper(mf,
+          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new HyperVectorValueIterator(mf, new HyperVectorWrapper(mf,
               vvList)));
         } else {
           combinedVectors.get(field).getHyperVector().addVector(w.getValueVector());
@@ -272,13 +272,13 @@ public class DrillTestWrapper {
       if (schema == null) {
         schema = loader.getSchema();
         for (MaterializedField mf : schema) {
-          combinedVectors.put(mf.getPath().toExpr(), new ArrayList());
+          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new ArrayList());
         }
       }
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (VectorWrapper w : loader) {
-        String field = w.getField().toExpr();
+        String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
         for (int j = 0; j < loader.getRecordCount(); j++) {
           Object obj = w.getValueVector().getAccessor().getObject(j);
           if (obj != null) {
@@ -317,13 +317,13 @@ public class DrillTestWrapper {
       }
 
       for(int i = 0; i < schema.getFieldCount(); ++i) {
-        final SchemaPath actualSchemaPath = schema.getColumn(i).getPath();
+        final String actualSchemaPath = schema.getColumn(i).getPath();
         final TypeProtos.MajorType actualMajorType = schema.getColumn(i).getType();
 
-        final SchemaPath expectedSchemaPath = schema.getColumn(i).getPath();
+        final String expectedSchemaPath = schema.getColumn(i).getPath();
         final TypeProtos.MajorType expectedlMajorType = schema.getColumn(i).getType();
 
-        if(!actualSchemaPath.equals(expectedSchemaPath)
+        if(!actualSchemaPath.equalsIgnoreCase(expectedSchemaPath)
             || !actualMajorType.equals(expectedlMajorType)) {
           throw new Exception("The type of the " + i + "-th column is '" + actualSchemaPath + "' mismatched, expected: '"
               + expectedlMajorType + "'");
@@ -486,7 +486,7 @@ public class DrillTestWrapper {
   private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
     Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap();
     for (int i = 0; i < batch.getHeader().getDef().getFieldCount(); i++) {
-      typeMap.put(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath(),
+      typeMap.put(SchemaPath.getSimplePath(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath()),
           batch.getHeader().getDef().getField(i).getMajorType());
     }
     return typeMap;
@@ -529,9 +529,9 @@ public class DrillTestWrapper {
             else if (obj instanceof byte[]) {
               obj = new String((byte[]) obj, "UTF-8");
             }
-            record.put(w.getField().toExpr(), obj);
+            record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
           }
-          record.put(w.getField().toExpr(), obj);
+          record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
         }
         materializedRecords.add(record);
       }

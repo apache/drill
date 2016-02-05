@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector;
 import java.util.Collection;
 
 import com.google.common.base.Preconditions;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -62,7 +61,7 @@ public class VectorDescriptor {
   }
 
   public VectorDescriptor withName(final String name) {
-    return new VectorDescriptor(field.withPath(new FieldReference(name)));
+    return new VectorDescriptor(field.withPath(name));
   }
 
   public VectorDescriptor withType(final TypeProtos.MajorType type) {

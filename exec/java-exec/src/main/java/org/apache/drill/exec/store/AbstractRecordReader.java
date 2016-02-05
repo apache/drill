@@ -26,7 +26,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
@@ -102,7 +102,7 @@ public abstract class AbstractRecordReader implements RecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     for (final ValueVector v : vectorMap.values()) {
       v.allocateNew();
     }

@@ -21,6 +21,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -99,9 +100,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
         final MaterializedField field = schema.getColumn(i);
         final MajorType type = field.getType();
         final ValueVector vOut = container.getValueAccessorById(TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()),
-                container.getValueVectorId(field.getPath()).getFieldIds()).getValueVector();
+                container.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds()).getValueVector();
         final ValueVector vIn = newContainer.getValueAccessorById(TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()),
-                newContainer.getValueVectorId(field.getPath()).getFieldIds()).getValueVector();
+                newContainer.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds()).getValueVector();
         final TransferPair tp = vIn.makeTransferPair(vOut);
         tp.transfer();
       }

@@ -29,7 +29,43 @@ import java.util.List;
 
 public class FieldIdUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldIdUtil.class);
+
+  public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (seg.isNamed()) {
+      ValueVector v = unionVector.getMap();
+      if (v != null) {
+        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+      } else {
+        return null;
+      }
+    } else if (seg.isArray()) {
+      ValueVector v = unionVector.getList();
+      if (v != null) {
+        return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
+      } else {
+        return null;
+      }
+    }
+    return null;
+  }
+
+
   public static TypedFieldId getFieldIdIfMatches(ValueVector vector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
+    if (vector instanceof RepeatedMapVector && seg != null && seg.isArray() && !seg.isLastPath()) {
+      if (addToBreadCrumb) {
+        addToBreadCrumb = false;
+        builder.remainder(seg);
+      }
+      // skip the first array segment as there is no corresponding child vector.
+      seg = seg.getChild();
+
+      // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
+      // segment.
+      if (seg.isArray()) {
+        return null;
+      }
+    }
+
     if (seg == null) {
       if (addToBreadCrumb) {
         builder.intermediateType(vector.getField().getType());
@@ -91,12 +127,12 @@ public class FieldIdUtil {
     if (v instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
-      return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+      return getFieldIdIfMatches(c, builder, addToBreadCrumb, seg.getChild());
     } else if(v instanceof ListVector) {
       ListVector list = (ListVector) v;
-      return list.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+      return getFieldIdIfMatches(list, builder, addToBreadCrumb, seg.getChild());
     } else if (v instanceof  UnionVector) {
-      return ((UnionVector) v).getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
+      return getFieldIdIfMatchesUnion((UnionVector) v, builder, addToBreadCrumb, seg.getChild());
     } else {
       if (seg.isNamed()) {
         if(addToBreadCrumb) {
@@ -127,7 +163,7 @@ public class FieldIdUtil {
   }
 
   public static TypedFieldId getFieldId(ValueVector vector, int id, SchemaPath expectedPath, boolean hyper) {
-    if (!expectedPath.getRootSegment().segmentEquals(vector.getField().getPath().getRootSegment())) {
+    if (!expectedPath.getRootSegment().getNameSegment().getPath().equalsIgnoreCase(vector.getField().getPath())) {
       return null;
     }
     PathSegment seg = expectedPath.getRootSegment();
@@ -149,20 +185,20 @@ public class FieldIdUtil {
         builder.finalType(majorType);
         return builder.build();
       } else {
-        return ((UnionVector) vector).getFieldIdIfMatches(builder, false, seg.getChild());
+        return getFieldIdIfMatchesUnion((UnionVector) vector, builder, false, seg.getChild());
       }
     } else if (vector instanceof ListVector) {
       ListVector list = (ListVector) vector;
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
-      return list.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+      return getFieldIdIfMatches(list, builder, true, expectedPath.getRootSegment().getChild());
     } else
     if (vector instanceof AbstractContainerVector) {
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) vector;
       builder.intermediateType(vector.getField().getType());
       builder.addId(id);
-      return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+      return getFieldIdIfMatches(c, builder, true, expectedPath.getRootSegment().getChild());
 
     } else {
       builder.intermediateType(vector.getField().getType());

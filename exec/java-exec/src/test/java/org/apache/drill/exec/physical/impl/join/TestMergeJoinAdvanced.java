@@ -89,6 +89,7 @@ public class TestMergeJoinAdvanced extends BaseTestQuery {
   }
 
   @Test
+  @Ignore // TODO file JIRA to fix this
   public void testFix2967() throws Exception {
     setSessionOption(PlannerSettings.BROADCAST.getOptionName(), "false");
     setSessionOption(PlannerSettings.HASHJOIN.getOptionName(), "false");

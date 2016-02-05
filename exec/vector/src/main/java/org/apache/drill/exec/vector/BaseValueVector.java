@@ -24,7 +24,6 @@ import java.util.Iterator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
@@ -66,13 +65,13 @@ public abstract class BaseValueVector implements ValueVector {
     return field;
   }
 
-  public MaterializedField getField(FieldReference ref){
+  public MaterializedField getField(String ref){
     return getField().withPath(ref);
   }
 
   @Override
   public TransferPair getTransferPair(BufferAllocator allocator) {
-    return getTransferPair(new FieldReference(getField().getPath()), allocator);
+    return getTransferPair(getField().getPath(), allocator);
   }
 
   @Override

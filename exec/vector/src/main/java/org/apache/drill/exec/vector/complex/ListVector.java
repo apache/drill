@@ -20,9 +20,6 @@ package org.apache.drill.exec.vector.complex;
 
 import com.google.common.collect.ObjectArrays;
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -30,7 +27,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AddOrGetResult;
@@ -103,7 +99,7 @@ public class ListVector extends BaseRepeatedValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new TransferImpl(field.withPath(ref), allocator);
   }
 
@@ -261,10 +257,6 @@ public class ListVector extends BaseRepeatedValueVector {
     replaceDataVector(vector);
     reader = new UnionListReader(this);
     return vector;
-  }
-
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    return FieldIdUtil.getFieldIdIfMatches(this, builder, addToBreadCrumb, seg);
   }
 
   private int lastSet;

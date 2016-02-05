@@ -84,7 +84,7 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator){
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator){
     return new TransferImpl(getField().withPath(ref), allocator);
   }
 

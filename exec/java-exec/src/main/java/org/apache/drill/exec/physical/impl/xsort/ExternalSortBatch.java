@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
@@ -628,7 +629,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       for (BatchGroup group : batchGroupList) {
         vectors[i++] = group.getValueAccessorById(
             field.getValueClass(),
-            group.getValueVectorId(field.getPath()).getFieldIds())
+            group.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds())
             .getValueVector();
       }
       cont.add(vectors);

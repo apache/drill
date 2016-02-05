@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -66,7 +67,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     BatchSchema schema = container.getSchema();
     VectorContainer newContainer = new VectorContainer();
     for (MaterializedField field : schema) {
-      int[] ids = container.getValueVectorId(field.getPath()).getFieldIds();
+      int[] ids = container.getValueVectorId(SchemaPath.getSimplePath(field.getPath())).getFieldIds();
       newContainer.add(container.getValueAccessorById(field.getValueClass(), ids).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);

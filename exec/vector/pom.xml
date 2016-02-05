@@ -33,11 +33,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-logical</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill.memory</groupId>
       <artifactId>drill-memory-base</artifactId>
       <version>${project.version}</version>

@@ -47,6 +47,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.exec.vector.complex.fn.FieldSelection;
 import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,6 +70,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   private final Path hadoop;
   private final long start;
   private final long end;
+  private final FieldSelection fieldSelection;
   private DrillBuf buffer;
   private VectorContainerWriter writer;
 
@@ -97,6 +99,7 @@ public class AvroRecordReader extends AbstractRecordReader {
     this.opUserName = userName;
     this.queryUserName = fragmentContext.getQueryUserName();
     setColumns(projectedColumns);
+    this.fieldSelection = FieldSelection.getFieldSelection(projectedColumns);
   }
 
   private DataFileReader getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
@@ -168,14 +171,14 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     switch (type) {
       case RECORD:
-        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()));
+        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()), fieldSelection);
         break;
       default:
         throw new DrillRuntimeException("Root object must be record type. Found: " + type);
     }
   }
 
-  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer) {
+  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer, FieldSelection fieldSelection) {
     if (value == null) {
       return;
     }
@@ -194,7 +197,7 @@ public class AvroRecordReader extends AbstractRecordReader {
               _writer = (MapOrListWriterImpl) writer.map(field.name());
           }
 
-          process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer);
+          process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer, fieldSelection.getChild(field.name()));
         }
         break;
       case ARRAY:
@@ -209,7 +212,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         }
         writer.start();
         for (final Object o : array) {
-          process(o, elementSchema, fieldName, writer);
+          process(o, elementSchema, fieldName, writer, fieldSelection.getChild(fieldName));
         }
         writer.end();
         break;
@@ -218,7 +221,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         if (schema.getTypes().get(0).getType() != Schema.Type.NULL) {
           throw new UnsupportedOperationException("Avro union type must be of the format : [\"null\", \"some-type\"]");
         }
-        process(value, schema.getTypes().get(1), fieldName, writer);
+        process(value, schema.getTypes().get(1), fieldName, writer, fieldSelection.getChild(fieldName));
         break;
       case MAP:
         @SuppressWarnings("unchecked")
@@ -227,7 +230,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         writer = (MapOrListWriterImpl) writer.map(fieldName);
         writer.start();
         for (Entry<Object, Object> entry : map.entrySet()) {
-          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer);
+          process(entry.getValue(), valueSchema, entry.getKey().toString(), writer, fieldSelection.getChild(entry.getKey().toString()));
         }
         writer.end();
         break;
@@ -239,14 +242,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         assert fieldName != null;
 
         if (writer.isMapWriter()) {
-          SchemaPath path;
-          if (writer.map.getField().getPath().getRootSegment().getPath().equals("")) {
-            path = new SchemaPath(new PathSegment.NameSegment(fieldName));
-          } else {
-            path = writer.map.getField().getPath().getChild(fieldName);
-          }
-
-          if (!selected(path)) {
+          if (fieldSelection.isNeverValid()) {
             break;
           }
         }

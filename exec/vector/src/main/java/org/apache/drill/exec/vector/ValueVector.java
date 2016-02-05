@@ -21,7 +21,6 @@ import java.io.Closeable;
 
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -104,7 +103,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    */
   TransferPair getTransferPair(BufferAllocator allocator);
 
-  TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator);
+  TransferPair getTransferPair(String ref, BufferAllocator allocator);
 
   /**
    * Returns a new {@link org.apache.drill.exec.record.TransferPair transfer pair} that is used to transfer underlying

@@ -70,7 +70,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private final VectorContainer container = new VectorContainer();
 
   /** Fields' value vectors indexed by fields' keys. */
-  private final Map<MaterializedField.Key, ValueVector> fieldVectorMap =
+  private final Map<String, ValueVector> fieldVectorMap =
       Maps.newHashMap();
 
   private int recordCount;
@@ -281,7 +281,7 @@ public class ScanBatch implements CloseableRecordBatch {
       partitionVectors = Lists.newArrayList();
       for (int i : selectedPartitionColumns) {
         final MaterializedField field =
-            MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i),
+            MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i).getAsUnescapedPath(),
                                      Types.optional(MinorType.VARCHAR));
         final ValueVector v = mutator.addField(field, NullableVarCharVector.class);
         partitionVectors.add(v);
@@ -341,7 +341,7 @@ public class ScanBatch implements CloseableRecordBatch {
     public <T extends ValueVector> T addField(MaterializedField field,
                                               Class<T> clazz) throws SchemaChangeException {
       // Check if the field exists.
-      ValueVector v = fieldVectorMap.get(field.key());
+      ValueVector v = fieldVectorMap.get(field.getPath());
       if (v == null || v.getClass() != clazz) {
         // Field does not exist--add it to the map and the output container.
         v = TypeHelper.getNewVector(field, oContext.getAllocator(), callBack);
@@ -353,7 +353,7 @@ public class ScanBatch implements CloseableRecordBatch {
                   clazz.getSimpleName(), v.getClass().getSimpleName()));
         }
 
-        final ValueVector old = fieldVectorMap.put(field.key(), v);
+        final ValueVector old = fieldVectorMap.put(field.getPath(), v);
         if (old != null) {
           old.clear();
           container.remove(old);

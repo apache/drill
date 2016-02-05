@@ -235,7 +235,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         for (int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)) {
           SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
           MajorType type = descriptor.getVectorType(column, settings);
-          MaterializedField field = MaterializedField.create(column, type);
+          MaterializedField field = MaterializedField.create(column.getAsUnescapedPath(), type);
           ValueVector v = TypeHelper.getNewVector(field, allocator);
           v.allocateNew();
           vectors[partitionColumnIndex] = v;

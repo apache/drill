@@ -59,7 +59,7 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
   private MaterializedField getField(int fieldId, String name, MajorType type) {
-    return MaterializedField.create(SchemaPath.getSimplePath(name), type);
+    return MaterializedField.create(name, type);
   }
 
   @Test

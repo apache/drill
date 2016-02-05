@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -157,7 +156,7 @@ public class ObjectVector extends BaseValueVector {
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 

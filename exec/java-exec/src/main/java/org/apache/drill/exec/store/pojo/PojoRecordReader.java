@@ -29,7 +29,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.record.MaterializedField.Key;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
 import org.apache.drill.exec.store.pojo.Writers.DoubleWriter;
@@ -122,7 +122,7 @@ public class PojoRecordReader<T> extends AbstractRecordReader {
   }
 
   @Override
-  public void allocate(Map<Key, ValueVector> vectorMap) throws OutOfMemoryException {
+  public void allocate(Map<String, ValueVector> vectorMap) throws OutOfMemoryException {
     for (final ValueVector v : vectorMap.values()) {
       AllocationHelper.allocate(v, Character.MAX_VALUE, 50, 10);
     }

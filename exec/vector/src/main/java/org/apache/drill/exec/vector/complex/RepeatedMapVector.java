@@ -24,9 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -39,7 +36,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.AddOrGetResult;
@@ -204,32 +200,12 @@ public class RepeatedMapVector extends AbstractMapVector
     }
   }
 
-  @Override
-  public TypedFieldId getFieldIdIfMatches(TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (seg != null && seg.isArray() && !seg.isLastPath()) {
-      if (addToBreadCrumb) {
-        addToBreadCrumb = false;
-        builder.remainder(seg);
-      }
-      // skip the first array segment as there is no corresponding child vector.
-      seg = seg.getChild();
-
-      // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
-      // segment.
-      if (seg.isArray()) {
-        return null;
-      }
-    }
-
-    return super.getFieldIdIfMatches(builder, addToBreadCrumb, seg);
-  }
-
-  public TransferPair getTransferPairToSingleMap(FieldReference reference, BufferAllocator allocator) {
+  public TransferPair getTransferPairToSingleMap(String reference, BufferAllocator allocator) {
     return new SingleMapTransferPair(this, reference, allocator);
   }
 
   @Override
-  public TransferPair getTransferPair(FieldReference ref, BufferAllocator allocator) {
+  public TransferPair getTransferPair(String ref, BufferAllocator allocator) {
     return new RepeatedMapTransferPair(this, ref, allocator);
   }
 
@@ -261,7 +237,7 @@ public class RepeatedMapVector extends AbstractMapVector
     private final MapVector to;
     private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
 
-    public SingleMapTransferPair(RepeatedMapVector from, SchemaPath path, BufferAllocator allocator) {
+    public SingleMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
       this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, from.callBack), false);
     }
 
@@ -326,7 +302,7 @@ public class RepeatedMapVector extends AbstractMapVector
     private final RepeatedMapVector to;
     private final RepeatedMapVector from;
 
-    public RepeatedMapTransferPair(RepeatedMapVector from, SchemaPath path, BufferAllocator allocator) {
+    public RepeatedMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
       this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, from.callBack), false);
     }
 

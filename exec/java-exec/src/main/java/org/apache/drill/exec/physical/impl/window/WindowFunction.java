@@ -136,7 +136,7 @@ public abstract class WindowFunction {
       }
 
       // add corresponding ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), aggregate.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), aggregate.getMajorType());
       batch.addOrGet(output).allocateNew();
       TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
       writeAggregationToOutput = new ValueVectorWriteExpression(outputId, aggregate, true);
@@ -205,7 +205,7 @@ public abstract class WindowFunction {
     @Override
     boolean materialize(final NamedExpression ne, final VectorContainer batch, FunctionLookupContext registry)
         throws SchemaChangeException {
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
       return true;
@@ -256,7 +256,7 @@ public abstract class WindowFunction {
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
       final LogicalExpression argument = call.args.get(0);
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), argument.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), argument.getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
 
@@ -310,7 +310,7 @@ public abstract class WindowFunction {
       }
 
       // add corresponding ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), majorType);
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId =  batch.getValueVectorId(ne.getRef());
 
@@ -358,7 +358,7 @@ public abstract class WindowFunction {
       }
 
       // add lag output ValueVector to container
-      final MaterializedField output = MaterializedField.create(ne.getRef(), majorType);
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), majorType);
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
@@ -422,7 +422,7 @@ public abstract class WindowFunction {
         return false;
       }
 
-      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
@@ -483,7 +483,7 @@ public abstract class WindowFunction {
         return false;
       }
 
-      final MaterializedField output = MaterializedField.create(ne.getRef(), input.getMajorType());
+      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 

@@ -140,7 +140,7 @@ public class TestBitRpc extends ExecTest {
     List<ValueVector> vectors = Lists.newArrayList();
     for (int i = 0; i < 5; i++) {
       Float8Vector v = (Float8Vector) TypeHelper.getNewVector(
-          MaterializedField.create(new SchemaPath("a", ExpressionPosition.UNKNOWN), Types.required(MinorType.FLOAT8)),
+          MaterializedField.create("a", Types.required(MinorType.FLOAT8)),
           allocator);
       v.allocateNew(records);
       v.getMutator().generateTestData(records);
