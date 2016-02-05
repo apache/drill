@@ -284,7 +284,9 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   @Override
   public void close() throws IOException {
     try {
-      authenticator.close();
+      if (authenticator != null) {
+        authenticator.close();
+      }
     } catch (Exception e) {
       logger.warn("Failure closing authenticator.", e);
     }

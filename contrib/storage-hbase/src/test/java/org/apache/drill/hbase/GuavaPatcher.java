@@ -74,14 +74,8 @@ public class GuavaPatcher {
     ClassPool cp = ClassPool.getDefault();
     CtClass cc = cp.get("com.google.common.io.Closeables");
 
-    // Expose the constructor for Stopwatch for old libraries who use the pattern new Stopwatch().start().
-    for (CtConstructor c : cc.getConstructors()) {
-      if (!Modifier.isStatic(c.getModifiers())) {
-        c.setModifiers(Modifier.PUBLIC);
-      }
-    }
 
-    // Add back the Stopwatch.elapsedMillis() method for old consumers.
+    // Add back the Closeables.closeQuietly() method for old consumers.
     CtMethod newmethod = CtNewMethod.make(
         "public static void closeQuietly(java.io.Closeable closeable) { try{closeable.close();}catch(Exception e){} }",
         cc);
