@@ -39,11 +39,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.Controller.CustomSerDe;
 
-import com.dyuproject.protostuff.JsonIOUtil;
-import com.dyuproject.protostuff.LinkedBuffer;
-import com.dyuproject.protostuff.ProtobufIOUtil;
-import com.dyuproject.protostuff.ProtostuffIOUtil;
-import com.dyuproject.protostuff.Schema;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -435,41 +430,4 @@ public class ControlTunnel {
 
   }
 
-  public static class ProtostuffBinarySerDe<MSG extends com.dyuproject.protostuff.Message<MSG>> implements
-      CustomSerDe<MSG> {
-    private Schema<MSG> schema;
-
-    @Override
-    public byte[] serializeToSend(MSG send) {
-      final LinkedBuffer buffer = LinkedBuffer.allocate(512);
-      return ProtostuffIOUtil.toByteArray(send, schema, buffer);
-    }
-
-    @Override
-    public MSG deserializeReceived(byte[] bytes) throws Exception {
-      MSG msg = schema.newMessage();
-      ProtobufIOUtil.mergeFrom(bytes, msg, schema);
-      return msg;
-    }
-
-  }
-
-  public static class ProtostuffJsonSerDe<MSG extends com.dyuproject.protostuff.Message<MSG>> implements
-      CustomSerDe<MSG> {
-    private Schema<MSG> schema;
-
-    @Override
-    public byte[] serializeToSend(MSG send) {
-      final LinkedBuffer buffer = LinkedBuffer.allocate(512);
-      return JsonIOUtil.toByteArray(send, schema, false, buffer);
-    }
-
-    @Override
-    public MSG deserializeReceived(byte[] bytes) throws Exception {
-      MSG msg = schema.newMessage();
-      JsonIOUtil.mergeFrom(bytes, msg, schema, false);
-      return msg;
-    }
-
-  }
 }
