@@ -28,6 +28,7 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
 import com.google.common.collect.Lists;
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -71,11 +72,25 @@ public class ControllerImpl implements Controller {
   }
 
 
+  @SuppressWarnings("unchecked")
   @Override
   public <REQUEST extends MessageLite, RESPONSE extends MessageLite> void registerCustomHandler(int messageTypeId,
       CustomMessageHandler<REQUEST, RESPONSE> handler, Parser<REQUEST> parser) {
-    handlerRegistry.registerCustomHandler(messageTypeId, handler, parser);
+    handlerRegistry.registerCustomHandler(
+        messageTypeId,
+        handler,
+        new ControlTunnel.ProtoSerDe<REQUEST>(parser),
+        (CustomSerDe<RESPONSE>) new ControlTunnel.ProtoSerDe<Message>(null));
   }
+
+  @Override
+  public <REQUEST, RESPONSE> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler,
+      CustomSerDe<REQUEST> requestSerde,
+      CustomSerDe<RESPONSE> responseSerde) {
+    handlerRegistry.registerCustomHandler(messageTypeId, handler, requestSerde, responseSerde);
+  }
+
 
   public void close() throws Exception {
     List<AutoCloseable> closeables = Lists.newArrayList();
