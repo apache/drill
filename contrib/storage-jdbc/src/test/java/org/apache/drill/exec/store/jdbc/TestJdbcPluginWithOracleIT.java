@@ -84,7 +84,7 @@ public class TestJdbcPluginWithOracleIT extends PlanTestBase {
 
         testPlanMatchingPatterns(query, new String[] { "INNER JOIN" }, new String[] { "Join", "Filter" });
     }
-    
+
     @Test
     public void pushdownDrillFunc() throws Exception {
         // Both subqueries use drill functions so join can not be pushed down to jdbc
