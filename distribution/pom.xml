@@ -238,6 +238,12 @@
         <dependency>
           <groupId>com.mapr.fs</groupId>
           <artifactId>mapr-hbase</artifactId>
+          <exclusions>
+            <exclusion>
+              <artifactId>log4j</artifactId>
+              <groupId>log4j</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
