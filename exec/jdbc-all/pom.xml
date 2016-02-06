@@ -172,6 +172,10 @@
           <groupId>commons-validator</groupId>
           <artifactId>commons-validator</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>metadata-extractor</artifactId>
+          <groupId>com.drewnoakes</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
