@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-date: 2016-01-05
+date: 2016-02-06 00:18:11 UTC
 ---
 
 You may experience certain known issues when using Drill. This document lists some known issues and resolutions for each.
@@ -55,9 +55,12 @@ If you have any of the following problems, try the suggested solution:
 * [Error Starting Drill in Embedded Mode]({{site.baseurl}}/docs/troubleshooting/#error-starting-drill-in-embedded-mode)
 
 ### Memory Issues
-Symptom: Memory problems occur when you run certain queries, such as those that perform window functions.
+Symptom: Memory problems occur when you run certain queries, such as those with sort operators.
 
-Solution: The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the memory limits per node for each running query, especially for those involving external sorts, such as window functions. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
+Solution: Increase the value of the [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) option, which sets the maximum amount of direct memory allocated to the sort operator in each query on a node. If a query plan contains multiple sort operators, they all share this memory. 
+If you continue to encounter memory issues after increasing the  `planner.memory.max_query_memory_per_node` value, you can also reduce the value of the `planner.width.max_per_node` option to reduce the level of parallelism per node. However, this may increase the amount of time required for a query to complete.
+See [Configuring Drill Memory]({{site.baseurl}}/docs/configuring-drill-memory/).
+
 
 ### Query Parsing Errors
 Symptom:  

@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date:  
+date: 2016-02-06 00:18:12 UTC
 parent: "Configure Drill"
 ---
 
@@ -15,7 +15,11 @@ The JVM’s heap memory does not limit the amount of direct memory available in
 a Drillbit. The on-heap memory for Drill is typically set at 4-8G (default is 4), which should
 suffice because Drill avoids having data sit in heap memory.
 
-The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value determines the memory limits per node for each running query, especially for those involving external sorts, such as window functions. When you have a large amount of direct memory allocated, but still encounter memory issues when running these queries, increase the value of the option.
+As of Drill 1.5, Drill uses a new allocator that improves an operator’s use of direct memory and tracks the memory use more accurately. Due to this change, the sort operator (in queries that ran successfully in previous releases) may not have enough memory, resulting in a failed query and out of memory error instead of spilling to disk.
+
+
+The [`planner.memory.max_query_memory_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/#system-options) system option value sets the maximum amount of direct memory allocated to the sort operator in each query on a node. If a query plan contains multiple sort operators, they all share this memory. If you encounter memory issues when running queries with sort operators, increase the value of this option. If you continue to encounter memory issues after increasing this value, you can also reduce the value of the [`planner.width.max_per_node`]({{site.baseurl}}/docs/configuration-options-introduction/) option to reduce the level of parallelism per node. However, this may increase the amount of time required for a query to complete.  
+
 
 ## Modifying Drillbit Memory
 

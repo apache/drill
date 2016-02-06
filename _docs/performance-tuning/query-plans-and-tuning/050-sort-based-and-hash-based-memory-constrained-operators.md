@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date:  
+date: 2016-02-06 00:18:13 UTC
 parent: "Query Plans and Tuning"
 --- 
 
@@ -36,5 +36,6 @@ The following options control the hash-based operators:
 
 
 * **planner.memory.max\_query\_memory\_per_node**  
-    Sets the maximum estimate of memory for a query per node. If the estimate is too low, Drill re-plans the query without memory-constrained operators.  
-    Default: 2147483648
+    Sets the maximum amount of direct memory allocated to the sort operator in each query on a node. If a query plan contains multiple sort operators, they all share this memory. If you encounter memory issues when running queries with sort operators, increase the value of this option.  
+    Default: 2147483648 
+
