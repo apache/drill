@@ -1,6 +1,6 @@
 ---
 title: "Optimizing Parquet Metadata Reading"
-date:  
+date: 2016-02-08 21:57:13 UTC
 parent: "Performance Tuning"
 ---
 
@@ -41,7 +41,10 @@ The elapsed time of the first query that triggers regeneration of metadata can b
 
 After running the REFRESH TABLE METADATA command, Drill traverses directories in the case of nested directories to find the Parquet files. From the footers of the files, Drill gathers metadata, such as row counts and node affinity based on HDFS block locations. For each directory level, Drill saves a summary of the information from the footers in a single Parquet metadata cache file. The summary at each level covers that particular level and all child levels; consequently, after generating metadata, you can query nested directories from any level. In order to leverage the metadata cache file for a table t, the file must exist at the root directory of that table. For example, you can query a subdirectory of Parquet files because Drill stores a Parquet metadata cache file at each level.
 
-At planning time, Drill reads only the metadata file. Parquet metadata caching has no effect on execution time. At execution time, Drill reads the actual files.
+At planning time, Drill reads only the metadata file. Parquet metadata caching has no effect on execution time. At execution time, Drill reads the actual files.  
 
+<!--
 ## Security Limitations
-TBD
+TBD  
+
+-->

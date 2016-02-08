@@ -1,12 +1,12 @@
 ---
 title: "Configuring Web Console and REST API Security"
-date:  
+date: 2016-02-08 21:57:12 UTC
 parent: "Configure Drill"
 ---
-<!-- Drill 1.2 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
+Drill 1.5 extends [Drill user authentication]({{site.baseurl}}/docs/configuring-user-authentication/) to the Web Console and underlying REST API. As administrator, you can control the extent of access to the Web Console and REST API client applications. For example,
 you can limit the access of certain users to Web Console functionality, such as viewing the in-progress or completed queries of other users. You can limit users from viewing other users' query profiles, who can cancel queries of other users, and other functionality.
 
-With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information. -->
+With Web Console security in place, users who do not have administrator privileges need to use the SHOW SCHEMAS command instead of the Web Console for storage plugin configuration information.
 
 ## HTTPS Support
 Drill 1.2 uses code-level support for transport layer security (TLS) to secure the Web Console and REST API. By default, the Web Console and REST API support the HTTP protocol. You set the following start-up option to TRUE to enable HTTPS support:
@@ -29,8 +29,7 @@ As cluster administrator, you can set the following SSL configuration parameters
   Path to the trusted CA certificates in a keystore file.  
 * javax.net.ssl.trustStorePassword  
   Password for accessing the trusted keystore file.
-
-<!-- 
+ 
 ## Prerequisites for Web Console and REST API Security
 
 You need to perform the following configuration tasks using Web Console and REST API security.  
@@ -109,4 +108,4 @@ The following table and subsections describe the privilege levels for accessing 
 ### GET /profiles/cancel/{queryid}
 
 * ADMIN - can cancel the query.  
-* USER - cancel the query only if the query is launched by the user requesting the cancellation. -->
+* USER - cancel the query only if the query is launched by the user requesting the cancellation. 
