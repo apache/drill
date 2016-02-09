@@ -314,6 +314,8 @@ public class DrillOptiq {
         int precision = call.getType().getPrecision();
         int scale = call.getType().getScale();
 
+        // TODO: this may eventually need changes for VARDECIMAL
+
         if (precision <= 9) {
           castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
         } else if (precision <= 18) {

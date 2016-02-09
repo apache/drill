@@ -69,6 +69,7 @@ public class TypeInferenceUtils {
       .put(TypeProtos.MinorType.DECIMAL18, SqlTypeName.DECIMAL)
       .put(TypeProtos.MinorType.DECIMAL28SPARSE, SqlTypeName.DECIMAL)
       .put(TypeProtos.MinorType.DECIMAL38SPARSE, SqlTypeName.DECIMAL)
+      .put(TypeProtos.MinorType.VARDECIMAL, SqlTypeName.DECIMAL)
       .put(TypeProtos.MinorType.TIME, SqlTypeName.TIME)
       .put(TypeProtos.MinorType.TIMESTAMP, SqlTypeName.TIMESTAMP)
       .put(TypeProtos.MinorType.VARBINARY, SqlTypeName.VARBINARY)

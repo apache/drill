@@ -44,6 +44,7 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
@@ -66,6 +67,7 @@ import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeWriter;
 import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
+import org.apache.drill.exec.vector.complex.writer.VarDecimalWriter;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
@@ -285,21 +287,22 @@ public class DrillParquetGroupConverter extends GroupConverter {
             VarCharWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varChar() : mapWriter.varChar(name);
             return new DrillVarCharConverter(writer, mutator.getManagedBuffer());
           }
-          //TODO not sure if BINARY/DECIMAL is actually supported
+          // TODO not sure if BINARY/DECIMAL is actually supported.
+          // See DRILL-4184 and DRILL-4834. Support for this is added using new VarDecimal type.
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
             DecimalMetadata metadata = type.getDecimalMetadata();
+            VarDecimalWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).varDecimal() : mapWriter.varDecimal(name);
+            return new DrillBinaryToVarDecimalConverter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
+            /* DAO 7/28/2016 this has previously used the following logic for fixed-width decimal vectors
             if (metadata.getPrecision() <= 28) {
-              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED
-                  ? mapWriter.list(name).decimal28Sparse()
-                  : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
+              Decimal28SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal28Sparse() : mapWriter.decimal28Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal28Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             } else {
-              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED
-                  ? mapWriter.list(name).decimal38Sparse()
-                  : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
+              Decimal38SparseWriter writer = type.getRepetition() == Repetition.REPEATED ? mapWriter.list(name).decimal38Sparse() : mapWriter.decimal38Sparse(name, metadata.getScale(), metadata.getPrecision());
               return new DrillBinaryToDecimal38Converter(writer, metadata.getPrecision(), metadata.getScale(), mutator.getManagedBuffer());
             }
+            */
           }
           default: {
             throw new UnsupportedOperationException("Unsupported type " + type.getOriginalType());
@@ -573,6 +576,32 @@ public class DrillParquetGroupConverter extends GroupConverter {
 
     @Override
     public void addBinary(Binary value) {
+      holder.buffer = buf = buf.reallocIfNeeded(value.length());
+      buf.setBytes(0, value.toByteBuffer());
+      holder.start = 0;
+      holder.end = value.length();
+      writer.write(holder);
+    }
+  }
+
+  public static class DrillBinaryToVarDecimalConverter extends PrimitiveConverter {
+    private VarDecimalWriter writer;
+    private VarDecimalHolder holder = new VarDecimalHolder();
+    private DrillBuf buf;
+
+    public DrillBinaryToVarDecimalConverter(VarDecimalWriter writer, int precision, int scale,  DrillBuf buf) {
+      this.writer = writer;
+      holder.scale = scale;
+    }
+
+    @Override
+    public void addBinary(Binary value) {
+      // NOTE: the following commented out line can be used later to produce a BigDecimal number from the binary value,
+      // with the scale information added from holder.scale.  For variable width decimal vectors, unlike for fixed width ones,
+      // we don't need to convert to a "sparse" representation (line after next, commented out) as the binary array is already
+      // "sparse" in the sense that it should only use a number of bytes needed to encode this particular numerical value.
+      //BigDecimal bigDecimal = DecimalUtility.getBigDecimalFromByteArray(value.getBytes(), 0, value.length(), holder.scale);
+      //DecimalUtility.getSparseFromBigDecimal(bigDecimal, buf, 0, holder.scale, holder.precision, Decimal28SparseHolder.nDecimalDigits);
       holder.buffer = buf = buf.reallocIfNeeded(value.length());
       buf.setBytes(0, value.toByteBuffer());
       holder.start = 0;

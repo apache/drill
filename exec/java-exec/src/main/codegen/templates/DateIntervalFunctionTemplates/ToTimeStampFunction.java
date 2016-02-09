@@ -59,8 +59,11 @@ public class G${numerics}ToTimeStamp implements DrillSimpleFunc {
     public void eval() {
         long inputMillis = 0;
 
-        <#if (numerics.startsWith("Decimal"))>
-        <#if (numerics == "Decimal9") || (numerics == "Decimal18")>
+        <#if (numerics.contains("Decimal"))>
+        <#if (numerics == "VarDecimal")>
+        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(left.buffer, left.start, left.end - left.start, left.scale);
+        inputMillis = input.multiply(new java.math.BigDecimal(1000)).longValue();
+        <#elseif (numerics == "Decimal9") || (numerics == "Decimal18")>
         java.math.BigInteger value = java.math.BigInteger.valueOf(left.value);
         value = value.multiply(millisConstant);
         inputMillis = (new java.math.BigDecimal(value, left.scale)).longValue();
