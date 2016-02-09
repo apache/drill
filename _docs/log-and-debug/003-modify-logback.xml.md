@@ -1,10 +1,10 @@
 ---
 title: "Modify logback.xml"
-date:  
+date: 2016-02-09 21:33:59 UTC
 parent: "Log and Debug"
 ---
 
-You can access logback.xml in ~<drill_installation_directory>/conf/. The default log level is set to INFO. You can enable debug logging and Lilith in logback.xml. Drill automatically picks up changes to logback.xml if you modify the file while Drill is running. You do not have to restart the cluster for Logback to pick up new settings.
+You can access `logback.xml` in `~<drill_installation_directory>/conf/`. The default log level is set to INFO. You can enable debug logging and Lilith in `logback.xml`. Drill should automatically pick up changes to `logback.xml` if you modify the file while Drill is running. If not, restart the cluster for Logback to pick up new settings.
 
 Logback.xml contains two appenders, STDOUT and FILE, that determine where Drill outputs logs. STDOUT output is directed to the console. FILE output is directed to drillbit.log and drillbit.out located in /var/log/drill/conf. You can modify these appenders to redirect log ouput to different locations.
 
