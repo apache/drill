@@ -152,22 +152,58 @@ public class DecimalUtility extends CoreDecimalUtility{
     return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
   }
 
+<<<<<<< HEAD
   public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
+=======
+    public static BigDecimal getBigDecimalFromSparse(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
+
+        // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
+        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
+    }
+
+    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
+>>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
 
     // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
     return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
   }
 
+<<<<<<< HEAD
   public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
     bytebuf.getBytes(start, value, 0, length);
     BigInteger unscaledValue = new BigInteger(value);
     return new BigDecimal(unscaledValue, scale);
   }
+=======
+    public static BigDecimal getBigDecimalFromDrillBuf(ByteBuf bytebuf, int start, int length, int scale) {
+      byte[] value = new byte[length];
+      bytebuf.getBytes(start, value, 0, length);
+      BigInteger unscaledValue = new BigInteger(value);
+      return new BigDecimal(unscaledValue, scale);
+    }
 
-  public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int start, int length, int scale) {
-    byte[] value = new byte[length];
-    bytebuf.get(value);
+    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
+      byte[] value = new byte[length];
+      bytebuf.getBytes(start, value, 0, length);
+      BigInteger unscaledValue = new BigInteger(value);
+      return new BigDecimal(unscaledValue, scale);
+    }
+>>>>>>> DRILL-4184: changes to support variable length decimal fields in parquet
+
+  public static BigDecimal getBigDecimalFromByteBuffer(ByteBuffer bytebuf, int scale) {
+    byte[] value;
+    if (bytebuf.hasArray()) {
+      value = bytebuf.array();
+    }
+    else {
+      // rewinding bytebuf gives extra bytes here, and an incorrect decimal.
+      // instead, we save position, get bytes through the end, and restore the position.
+      int savePosition = bytebuf.position();
+      value = new byte[bytebuf.remaining()];
+      bytebuf.get(value);
+      bytebuf.position(savePosition);  // restore bytebuf position, which may not be necessary
+    }
     BigInteger unscaledValue = new BigInteger(value);
     return new BigDecimal(unscaledValue, scale);
   }
