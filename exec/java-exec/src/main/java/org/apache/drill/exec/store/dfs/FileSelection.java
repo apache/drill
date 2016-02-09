@@ -84,7 +84,7 @@ public class FileSelection {
       }
       statuses = newStatuses;
     }
-    logger.info("FileSelection.getStatuses() took {} ms, numFiles: {}",
+    logger.debug("FileSelection.getStatuses() took {} ms, numFiles: {}",
         timer.elapsed(TimeUnit.MILLISECONDS), statuses == null ? 0 : statuses.size());
 
     return statuses;
@@ -127,7 +127,7 @@ public class FileSelection {
     }));
 
     final FileSelection fileSel = create(nonDirectories, null, selectionRoot);
-    logger.info("FileSelection.minusDirectories() took {} ms, numFiles: {}",
+    logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}",
         timer.elapsed(TimeUnit.MILLISECONDS), total);
     return fileSel;
   }
@@ -201,7 +201,7 @@ public class FileSelection {
       return null;
     }
     final FileSelection fileSel = create(Lists.newArrayList(statuses), null, combined.toUri().toString());
-    logger.info("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
+    logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
     return fileSel;
 
   }
