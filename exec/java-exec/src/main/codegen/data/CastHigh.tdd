@@ -24,5 +24,6 @@
     {value: false, from: "Decimal18"},
     {value: false, from: "Decimal28Sparse"},
     {value: false, from: "Decimal38Sparse"},
+    {value: false, from: "VarDecimal"}
   ]
 } 

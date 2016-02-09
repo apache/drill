@@ -917,6 +917,13 @@ public class ExpressionTreeMaterializer {
         }
         return false;
 
+      case VARDECIMAL:
+          // for VARDECIMAL, precision does not matter (it's variable precision, to fit the number), but scale matters
+          if (to.getScale() == from.getScale()) {
+              return true;
+          }
+          return false;
+
       case FIXED16CHAR:
       case FIXEDBINARY:
       case FIXEDCHAR:

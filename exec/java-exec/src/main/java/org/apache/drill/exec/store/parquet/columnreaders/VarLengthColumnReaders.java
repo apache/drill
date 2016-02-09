@@ -26,6 +26,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.VarDecimalVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
@@ -35,12 +37,84 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 
+
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
 public class VarLengthColumnReaders {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLengthColumnReaders.class);
+
+  /* DAO 7/28/2016 replace fixed width decimal columns for variable width parquet column, and instead use variable
+   * width decimal column (new code, VarDecimal*)
+   */
+  public static class VarDecimalColumn extends VarLengthValuesColumn<VarDecimalVector> {
+
+    protected VarDecimalVector varDecimalVector;
+    protected VarDecimalVector.Mutator mutator;
+
+    VarDecimalColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarDecimalVector v,
+                    SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      this.varDecimalVector = v;
+      this.mutator = v.getMutator();
+    }
+
+    @Override
+    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+      if (index >= varDecimalVector.getValueCapacity()) {
+        return false;
+      }
+      if (usingDictionary) {
+        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      } else {
+        mutator.setSafe(index, start, start + length, value);
+      }
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return varDecimalVector.getBuffer().capacity();
+    }
+  }
+
+  public static class NullableVarDecimalColumn extends NullableVarLengthValuesColumn<NullableVarDecimalVector> {
+
+    protected NullableVarDecimalVector nullableVarDecimalVector;
+    protected NullableVarDecimalVector.Mutator mutator;
+
+    NullableVarDecimalColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarDecimalVector v,
+                            SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      nullableVarDecimalVector = v;
+      this.mutator = v.getMutator();
+    }
+
+    @Override
+    public boolean setSafe(int index, DrillBuf value, int start, int length) {
+      if (index >= nullableVarDecimalVector.getValueCapacity()) {
+        return false;
+      }
+      if (usingDictionary) {
+        ByteBuffer buf = currDictValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      } else {
+        mutator.setSafe(index, 1, start, start + length, value);
+      }
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return nullableVarDecimalVector.getBuffer().capacity();
+    }
+  }
+  /* end DAO  VarDecimal changes */
 
   public static class Decimal28Column extends VarLengthValuesColumn<Decimal28SparseVector> {
 
@@ -164,6 +238,7 @@ public class VarLengthColumnReaders {
       return nullableDecimal38Vector.getBuffer().capacity();
     }
   }
+  /* DAO */
 
   public static class VarCharColumn extends VarLengthValuesColumn<VarCharVector> {
 

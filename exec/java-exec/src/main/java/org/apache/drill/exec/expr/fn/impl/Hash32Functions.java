@@ -27,6 +27,8 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
+import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
@@ -52,6 +54,8 @@ import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+
+import java.math.BigDecimal;
 
 public class Hash32Functions {
 
@@ -424,6 +428,58 @@ public class Hash32Functions {
         out.value = 0;
       } else {
         out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(in.value, 0);
+      }
+    }
+  }
+
+  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class VarDecimalHash implements DrillSimpleFunc {
+    @Param  VarDecimalHolder in;
+    @Output IntHolder out;
+
+    public void setup() {
+    }
+
+    public void eval() {
+      java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
+              in.start, in.end - in.start, in.scale);
+      out.value = hashBigDecimal(bd, 0);
+    }
+  }
+
+  public static int hashBigDecimal(BigDecimal bd, int seed) {
+    java.math.BigInteger bi = bd.unscaledValue();
+    byte[] barr = bi.toByteArray();
+    int shiftCount = 0;
+    int xor = 0;
+    for (int i = 0; i < barr.length; ++i) {
+      byte b = barr[i];
+      int ival = (int) b;
+      ival <<= shiftCount;
+      ++shiftCount;
+      if (shiftCount > 3) {
+        shiftCount = 0;
+      }
+      xor = xor ^ ival;
+    }
+    return org.apache.drill.exec.expr.fn.impl.HashHelper.hash32(xor, seed);
+  }
+
+  @FunctionTemplate(names = {"hash", "hash32"}, scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableVarDecimalHash implements DrillSimpleFunc {
+    @Param  NullableVarDecimalHolder in;
+    @Output IntHolder out;
+
+    public void setup() {
+    }
+
+    public void eval() {
+      if (in.isSet == 0) {
+        out.value = 0;
+      } else {
+        java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer,
+                in.start, in.end - in.start, in.scale);
+        out.value = hashBigDecimal(bd, 0);
       }
     }
   }

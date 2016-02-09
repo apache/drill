@@ -90,9 +90,20 @@ public final class ${className} implements ValueHolder{
     public static boolean getSign(int start, DrillBuf buffer) {
       return ((buffer.getInt(start) & 0x80000000) != 0);
     }
-    </#if></#if>
 
-    public MajorType getType() {return TYPE;}
+    public java.math.BigDecimal getBigDecimal() {
+        java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(buffer, start, nDecimalDigits, scale);
+        return currentValue;
+    }
+    </#if></#if>
+    
+    <#if minor.class.startsWith("VarDecimal")>
+    public java.math.BigDecimal getBigDecimal() {
+        //System.out.println("valueHolder start " + start + " end " + " end " + " scale " + scale);
+        java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(buffer, start, end-start, scale);
+        return currentValue;
+    }
+    </#if>
 
     @Deprecated
     public int hashCode(){

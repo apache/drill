@@ -39,6 +39,7 @@
     "VarBinary"
     "NullableVarBinary",
     "RepeatedVarBinary"
+    "VarDecimal",
     "Decimal9",
     "NullableDecimal9",
     "RepeatedDecimal9",

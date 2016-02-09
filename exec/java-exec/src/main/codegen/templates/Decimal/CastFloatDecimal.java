@@ -75,9 +75,24 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
 
         out.scale = (int) scale.value;
-        out.precision = (int) precision.value;
 
-        <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
+        <#if !type.to.endsWith("VarDecimal")>
+        out.precision = (int) precision.value;
+        </#if>
+
+        <#if type.to.endsWith("VarDecimal")>
+        // TODO: the entire set of logic, above, appears to be using BigDecimal constructors completely wrong!!!!
+        // for the time being, this new logic is added for VarDecimal only.
+        double d = in.value;
+        for (int i = 0; i < out.scale; ++i) {  // loop to compute unscaled value
+            d *= 10.0;
+        }
+        long lval = (long)(d >= 0.0 ? d + 0.5 : d - 0.5);  // round off unscaled integer, from float8 to nearest integer
+        java.math.BigInteger bi = new java.math.BigInteger(Long.toString(lval));
+        java.math.BigDecimal bd = new java.math.BigDecimal(bi, out.scale);
+        int len = org.apache.drill.exec.util.DecimalUtility.getVarDecimalFromBigDecimal(bd, out.buffer, out.start);
+        out.end = out.start + len;
+        <#elseif type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
         out.start = 0;
         out.buffer = buffer;
 

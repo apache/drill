@@ -101,6 +101,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void eval() {
 
+<#if type.from.contains("VarDecimal")>
+        java.math.BigDecimal bd = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
+        bd.setScale(0, java.math.BigDecimal.ROUND_HALF_UP);
+        long lval = bd.longValue();   // round off to nearest integer
+        out.value = (${type.javatype}) lval;
+<#else>
         int carry = (org.apache.drill.exec.util.DecimalUtility.getFirstFractionalDigit(in.buffer, in.scale, in.start, in.nDecimalDigits) > 4) ? 1 : 0;
 
         // Get the index, where the integer part of the decimal ends
@@ -116,6 +122,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         if (in.getSign(in.start, in.buffer) == true) {
             out.value *= -1;
         }
+</#if>
     }
 }
 

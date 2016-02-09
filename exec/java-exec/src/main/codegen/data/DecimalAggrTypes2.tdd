@@ -24,7 +24,9 @@
         {inputType: "Decimal28Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
         {inputType: "NullableDecimal28Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
         {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
-        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"}
+        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", countRunningType: "BigInt", major: "Numeric"},
+        {inputType: "VarDecimal", outputType: "VarDecimal", countRunningType: "BigInt", major: "Numeric"},
+        {inputType: "NullableVarDecimal", outputType: "VarDecimal", countRunningType: "BigInt", major: "Numeric"}
       ]
     }
   ]

@@ -178,6 +178,15 @@
       ]
     },
     {
+      major: "VarLen",
+      width: 4,
+      javaType: "int",
+      boxedType: "DrillBuf",
+      minor: [
+        { class: "VarDecimal", friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}] }
+      ]
+    },
+    {
       major: "Bit",
       width: 1,
       javaType: "int",

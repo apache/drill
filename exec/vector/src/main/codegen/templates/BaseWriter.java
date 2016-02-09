@@ -111,6 +111,7 @@ package org.apache.drill.exec.vector.complex.writer;
     UInt8Writer uInt8(String name);
     VarCharWriter varChar(String name);
     Var16CharWriter var16Char(String name);
+    VarDecimalWriter varDecimal(String name);
     TinyIntWriter tinyInt(String name);
     SmallIntWriter smallInt(String name);
     IntWriter integer(String name);

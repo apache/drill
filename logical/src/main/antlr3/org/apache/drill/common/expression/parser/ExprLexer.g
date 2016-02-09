@@ -62,6 +62,7 @@ DECIMAL28DENSE : 'decimal28dense' | 'DECIMAL28DENSE';
 DECIMAL28SPARSE : 'decimal28sparse' | 'DECIMAL28SPARSE';
 DECIMAL38DENSE : 'decimal38dense' | 'DECIMAL38DENSE';
 DECIMAL38SPARSE : 'decimal38sparse' | 'DECIMAL38SPARSE';
+VARDECIMAL : 'varDecimal' | 'VARDECIMAL';
 Or       : 'or' | 'OR' | 'Or';
 And      : 'and' | 'AND' ;
 Equals   : '==' | '=';

@@ -112,9 +112,9 @@ public class ColumnAccessors {
     <#if accessorType=="BigDecimal">
       <#assign label="Decimal">
     </#if>
-    <#assign varWidth = drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary" />
+    <#assign varWidth = drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary"  || drillType == "VarDecimal"/>
     <#assign decimal = drillType == "Decimal9" || drillType == "Decimal18" ||
-                       drillType == "Decimal28Sparse" || drillType == "Decimal38Sparse" />
+                       drillType == "Decimal28Sparse" || drillType == "Decimal38Sparse"  || drillType == "VarDecimal"/>
     <#if varWidth>
       <#assign accessorType = "byte[]">
       <#assign label = "Bytes">
@@ -135,15 +135,15 @@ public class ColumnAccessors {
 
     <#if varWidth>
   public static class ${drillType}ColumnReader extends BaseVarWidthReader {
-   
+
     <#else>
   public static class ${drillType}ColumnReader extends BaseFixedWidthReader {
-    
+
     private static final int VALUE_WIDTH = ${drillType}Vector.VALUE_WIDTH;
 
       <#if decimal>
     private MajorType type;
-    
+
       </#if>
     </#if>
     <#if decimal>
@@ -190,12 +190,12 @@ public class ColumnAccessors {
     <#elseif drillType == "IntervalDay">
       final int offset = ${getOffset};
       return DateUtilities.fromIntervalDay(
-          buf.getInt(offset), 
+          buf.getInt(offset),
           buf.getInt(offset + ${minor.millisecondsOffset}));
     <#elseif drillType == "Interval">
       final int offset = ${getOffset};
       return DateUtilities.fromInterval(
-          buf.getInt(offset), 
+          buf.getInt(offset),
           buf.getInt(offset + ${minor.daysOffset}),
           buf.getInt(offset + ${minor.millisecondsOffset}));
     <#elseif drillType == "Decimal28Sparse" || drillType == "Decimal38Sparse">
@@ -241,9 +241,9 @@ public class ColumnAccessors {
   public static class ${drillType}ColumnWriter extends BaseVarWidthWriter {
       <#else>
   public static class ${drillType}ColumnWriter extends BaseFixedWidthWriter {
-    
+
     private static final int VALUE_WIDTH = ${drillType}Vector.VALUE_WIDTH;
-    
+
         <#if decimal>
     private MajorType type;
         </#if>
@@ -272,7 +272,17 @@ public class ColumnAccessors {
 
     </#if>
     @Override
+    <#if drillType = "VarDecimal">
+    public final void setDecimal(final BigDecimal bd) {
+      byte[] barr = bd.unscaledValue().toByteArray();
+      int len = barr.length;
+      setBytes(barr, len);
+    }
+
+    public final void setBytes(final byte[] value, int len) {
+    <#else>
     public final void set${label}(final ${accessorType} value${putArgs}) {
+    </#if>
       <#-- Must compute the write offset first; can't be inline because the
            writeOffset() function has a side effect of possibly changing the buffer
            address (bufAddr). -->
@@ -355,7 +365,7 @@ import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader;
 import org.apache.drill.exec.vector.accessor.writer.BaseScalarWriter;
 
 public class ColumnAccessorUtils {
-  
+
   private ColumnAccessorUtils() { }
 
 <@build vv.types "Required" "Reader" />
