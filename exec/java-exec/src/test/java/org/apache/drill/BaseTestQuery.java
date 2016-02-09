@@ -175,11 +175,7 @@ public class BaseTestQuery extends ExecTest {
 
   private static void openClient() throws Exception {
     allocator = RootAllocatorFactory.newRoot(config);
-    if (config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)) {
-      serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
-    } else {
-      serviceSet = RemoteServiceSet.getLocalServiceSet();
-    }
+    serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     dfsTestTmpSchemaLocation = TestUtilities.createTempDir();
 
