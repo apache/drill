@@ -89,7 +89,7 @@ public class MapRDBGroupScan extends AbstractGroupScan implements DrillHBaseCons
 
   private MapRDBFormatPlugin formatPlugin;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private Map<Integer, List<HBaseSubScanSpec>> endpointFragmentMapping;
 
