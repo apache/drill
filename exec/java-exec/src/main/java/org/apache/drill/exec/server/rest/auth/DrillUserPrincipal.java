@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.rest.auth;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.eclipse.jetty.security.MappedLoginService.RolePrincipal;
 
 import java.security.Principal;
@@ -46,7 +45,7 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
 
   private final String userName;
   private final boolean isAdmin;
-  private final DrillClient drillClient;
+  private DrillClient drillClient;
 
   public DrillUserPrincipal(final String userName, final boolean isAdmin, final DrillClient drillClient) {
     this.userName = userName;
@@ -88,6 +87,7 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
   public void close() throws Exception {
     if (drillClient != null) {
       drillClient.close();
+      drillClient = null; // Reset it to null to avoid closing multiple times.
     }
   }
 }

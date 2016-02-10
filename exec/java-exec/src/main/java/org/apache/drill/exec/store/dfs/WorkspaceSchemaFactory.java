@@ -728,13 +728,13 @@ public class WorkspaceSchemaFactory {
         fs.delete(new Path(defaultLocation, tableRename), true);
       } catch (AccessControlException e) {
         throw UserException
-            .permissionError()
-            .message("Unauthorized to drop table", e)
+            .permissionError(e)
+            .message("Unauthorized to drop table")
             .build(logger);
       } catch (IOException e) {
         throw UserException
-            .dataWriteError()
-            .message("Failed to drop table", e)
+            .dataWriteError(e)
+            .message("Failed to drop table: " + e.getMessage())
             .build(logger);
       }
     }

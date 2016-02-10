@@ -383,7 +383,7 @@ public final class ClassPathScanner {
    * @return the merged scan
    */
   static ScanResult scan(Collection<URL> pathsToScan, Collection<String> packagePrefixes, Collection<String> scannedClasses, Collection<String> scannedAnnotations, ScanResult parentResult) {
-    Stopwatch watch = new Stopwatch().start();
+    Stopwatch watch = Stopwatch.createStarted();
     try {
       AnnotationScanner annotationScanner = new AnnotationScanner(scannedAnnotations);
       SubTypesScanner subTypesScanner = new SubTypesScanner(parentResult.getImplementations());

@@ -98,6 +98,14 @@ public class TestHiveProjectPushDown extends HiveTestBase {
   }
 
   @Test
+  public void testHiveCountStar() throws Exception {
+    String query = "SELECT count(*) as cnt FROM hive.`default`.kv";
+    String expectedColNames = "\"columns\" : [ ]";
+
+    testHelper(query, 1, expectedColNames);
+  }
+
+  @Test
   public void projectPushDownOnHiveParquetTable() throws Exception {
     try {
       test(String.format("alter session set `%s` = true", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));

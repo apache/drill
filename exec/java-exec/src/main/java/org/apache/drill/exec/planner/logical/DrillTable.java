@@ -89,6 +89,10 @@ public abstract class DrillTable implements Table {
     return storageEngineName;
   }
 
+  public String getUserName() {
+    return userName;
+  }
+
   @Override
   public Statistic getStatistic() {
     return Statistics.UNKNOWN;

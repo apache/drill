@@ -62,6 +62,7 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
 
   private static Connection connection;
   private static ResultSet testDataRow;
+  private static ResultSet testDataRowWithNulls;
 
   @BeforeClass
   public static void setUpConnectionAndMetadataToCheck() throws SQLException {
@@ -99,6 +100,33 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
         + "\nLIMIT 1 " );
     // Note: Assertions must be enabled (as they have been so far in tests).
     assertTrue( testDataRow.next() );
+
+    final Statement stmtForNulls = connection.createStatement();
+    testDataRowWithNulls = stmtForNulls.executeQuery(
+        ""
+            +   "SELECT  "
+            + "\n"
+            + "\n  CAST(null as boolean)                  AS  C_BOOLEAN_TRUE, "
+            // TODO(DRILL-2470): Uncomment when TINYINT is implemented:
+            //+ "\n  CAST(  null AS TINYINT            ) AS  C_TINYINT_1, "
+            // TODO(DRILL-2470): Uncomment when SMALLINT is implemented:
+            //+ "\n  CAST(  null AS SMALLINT           ) AS  C_SMALLINT_2, "
+            + "\n  CAST(  null AS INTEGER            ) AS  C_INTEGER_3, "
+            + "\n  CAST(  null AS BIGINT             ) AS  C_BIGINT_4, "
+            // TODO(DRILL-2683): Uncomment when REAL is implemented:
+            //+ "\n  CAST(  null AS REAL             ) AS `C_REAL_5.5`, "
+            + "\n  CAST(  null AS DOUBLE PRECISION ) AS `C_DOUBLE_PREC._6.6`, "
+            + "\n  CAST(  null AS FLOAT            ) AS `C_FLOAT_7.7`, "
+            + "\n  CAST( null AS DECIMAL         ) AS `C_DECIMAL_10.10`, "
+            + "\n  CAST( null  AS DECIMAL         ) AS `C_DECIMAL_10.5`, "
+            + "\n  CAST( null AS DECIMAL(9,2)    ) AS `C_DECIMAL(9,2)_11.11`, "
+            + "\n  CAST( null AS DECIMAL(18,2)   ) AS `C_DECIMAL(18,2)_12.12`, "
+            + "\n  CAST( null AS DECIMAL(28,2)   ) AS `C_DECIMAL(28,2)_13.13`, "
+            + "\n  CAST( null AS DECIMAL(38,2)   ) AS `C_DECIMAL(38,2)_14.14`, "
+            + "\n  '' "
+            + "\nFROM (VALUES(1))" );
+    // Note: Assertions must be enabled (as they have been so far in tests).
+    assertTrue( testDataRowWithNulls.next() );
   }
 
   @AfterClass
@@ -492,43 +520,51 @@ public class ResultSetGetMethodConversionsTest extends JdbcTestBase {
   @Test
   public void test_getString_handles_TINYINT() throws SQLException {
     assertThat( testDataRow.getString( "C_TINYINT_1" ), equalTo( "1" ) );
+    assertThat( testDataRowWithNulls.getString( "C_TINYINT_1" ), equalTo( null ) );
   }
 
   @Ignore( "TODO(DRILL-2470): unignore when SMALLINT is implemented" )
   @Test
   public void test_getString_handles_SMALLINT() throws SQLException {
     assertThat( testDataRow.getString( "C_SMALLINT_2" ), equalTo( "2" ) );
+    assertThat( testDataRowWithNulls.getString("C_SMALLINT_2"), equalTo( null ) );
   }
 
   @Test
   public void test_getString_handles_INTEGER() throws SQLException {
     assertThat( testDataRow.getString( "C_INTEGER_3" ), equalTo( "3" ) );
+    assertThat( testDataRowWithNulls.getString( "C_INTEGER_3" ), equalTo( null ) );
   }
 
   @Test
   public void test_getString_handles_BIGINT() throws SQLException {
     assertThat( testDataRow.getString( "C_BIGINT_4" ), equalTo( "4" ) );
+    assertThat( testDataRowWithNulls.getString( "C_BIGINT_4" ), equalTo( null ) );
   }
 
   @Ignore( "TODO(DRILL-2683): unignore when REAL is implemented" )
   @Test
   public void test_getString_handles_REAL() throws SQLException {
     assertThat( testDataRow.getString( "C_REAL_5.5" ), equalTo( "5.5????" ) );
+    assertThat( testDataRowWithNulls.getString( "C_REAL_5.5" ), equalTo( null ) );
   }
 
   @Test
   public void test_getString_handles_DOUBLE() throws SQLException {
     assertThat( testDataRow.getString( "C_DOUBLE_PREC._6.6" ), equalTo( "6.6" ) );
+    assertThat( testDataRowWithNulls.getString( "C_DOUBLE_PREC._6.6" ), equalTo( null ) );
   }
 
   @Test
   public void test_getString_handles_FLOAT() throws SQLException {
     assertThat( testDataRow.getString( "C_FLOAT_7.7" ), equalTo( "7.7" ) );
+    assertThat( testDataRowWithNulls.getString( "C_FLOAT_7.7" ), equalTo( null ) );
   }
 
   @Test
   public void test_getString_handles_DECIMAL() throws SQLException {
     assertThat( testDataRow.getString( "C_DECIMAL_10.10" ), equalTo( "10.1" ) );
+    assertThat( testDataRowWithNulls.getString( "C_DECIMAL_10.10" ), equalTo( null ) );
   }
 
 

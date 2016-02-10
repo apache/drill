@@ -53,12 +53,14 @@
 
   <logger name="org.apache.hadoop" additivity="false">
     <level value="info" />
-    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="SOCKET" />
   </logger>
 
   <root>
     <level value="error" />
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="SOCKET" />
   </root>
 
 </configuration>

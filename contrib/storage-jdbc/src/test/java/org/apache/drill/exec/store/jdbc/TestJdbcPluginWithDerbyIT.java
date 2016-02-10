@@ -32,6 +32,15 @@ import static org.junit.Assert.assertEquals;
 public class TestJdbcPluginWithDerbyIT extends PlanTestBase {
 
   @Test
+  public void testCrossSourceMultiFragmentJoin() throws Exception {
+    testNoResult("USE derby");
+    testNoResult("SET `planner.slice_target` = 1");
+    String query = "select x.person_id, y.salary from DRILL_DERBY_TEST.PERSON x "
+        + "join dfs.`${WORKING_PATH}/src/test/resources/jdbcmulti/` y on x.person_id = y.person_id ";
+    test(query);
+  }
+
+  @Test
   public void validateResult() throws Exception {
 
     // Skip date, time, and timestamp types since derby mangles these due to improper timezone support.

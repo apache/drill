@@ -80,7 +80,8 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    return new JdbcGroupScan(sql, convention.getPlugin(), rows);
+    JdbcGroupScan output = new JdbcGroupScan(sql, convention.getPlugin(), rows);
+    return creator.addMetadata(this, output);
   }
 
   @Override

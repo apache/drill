@@ -81,7 +81,7 @@ public class Drillbit implements AutoCloseable {
       final DrillConfig config,
       final RemoteServiceSet serviceSet,
       final ScanResult classpathScan) throws Exception {
-    final Stopwatch w = new Stopwatch().start();
+    final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Construction started.");
     final boolean allowPortHunting = serviceSet != null;
     context = new BootStrapContext(config, classpathScan);
@@ -102,7 +102,7 @@ public class Drillbit implements AutoCloseable {
   }
 
   public void run() throws Exception {
-    final Stopwatch w = new Stopwatch().start();
+    final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Startup begun.");
     coord.start(10000);
     storeProvider.start();
@@ -126,7 +126,7 @@ public class Drillbit implements AutoCloseable {
     if (isClosed) {
       return;
     }
-    final Stopwatch w = new Stopwatch().start();
+    final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Shutdown begun.");
 
     // wait for anything that is running to complete

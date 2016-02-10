@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -68,6 +69,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
   private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
+
+  // When no column is required by the downstrea operator, ask SCAN to return a DEFAULT column. If such column does not exist,
+  // it will return as a nullable-int column. If that column happens to exist, return that column.
+  protected static final List<SchemaPath> DEFAULT_COLS_TO_READ = ImmutableList.of(SchemaPath.getSimplePath("_DEFAULT_COL_TO_READ_"));
 
   // TODO - should probably find a smarter way to set this, currently 1 megabyte
   public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 1;
@@ -508,4 +513,10 @@ public class ParquetRecordReader extends AbstractRecordReader {
       parquetReaderStats=null;
     }
   }
+
+  @Override
+  protected List<SchemaPath> getDefaultColumnsToRead() {
+    return DEFAULT_COLS_TO_READ;
+  }
+
 }

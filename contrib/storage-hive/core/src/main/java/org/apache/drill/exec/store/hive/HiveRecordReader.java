@@ -40,6 +40,8 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -98,7 +100,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   protected List<ValueVector> vectors = Lists.newArrayList();
   protected List<ValueVector> pVectors = Lists.newArrayList();
   protected boolean empty;
-  private Map<String, String> hiveConfigOverride;
+  private HiveConf hiveConf;
   private FragmentContext fragmentContext;
   private String defaultPartitionValue;
   private final UserGroupInformation proxyUgi;
@@ -106,13 +108,13 @@ public class HiveRecordReader extends AbstractRecordReader {
   protected static final int TARGET_RECORD_COUNT = 4000;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-                          FragmentContext context, Map<String, String> hiveConfigOverride,
+                          FragmentContext context, final HiveConf hiveConf,
                           UserGroupInformation proxyUgi) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
     this.empty = (inputSplit == null && partition == null);
-    this.hiveConfigOverride = hiveConfigOverride;
+    this.hiveConf = hiveConf;
     this.fragmentContext = context;
     this.proxyUgi = proxyUgi;
     this.managedBuffer = fragmentContext.getManagedBuffer().reallocIfNeeded(256);
@@ -120,17 +122,17 @@ public class HiveRecordReader extends AbstractRecordReader {
   }
 
   private void init() throws ExecutionSetupException {
-    final JobConf job = new JobConf();
+    final JobConf job = new JobConf(hiveConf);
 
     // Get the configured default val
-    defaultPartitionValue = HiveUtilities.getDefaultPartitionValue(hiveConfigOverride);
+    defaultPartitionValue = hiveConf.get(ConfVars.DEFAULTPARTITIONNAME.varname);
 
     try {
       final Properties tableProperties = MetaStoreUtils.getTableMetadata(table);
       final Properties partitionProperties =
           (partition == null) ?  tableProperties :
               HiveUtilities.getPartitionMetadata(partition, table);
-      HiveUtilities.addConfToJob(job, partitionProperties, hiveConfigOverride);
+      HiveUtilities.addConfToJob(job, partitionProperties);
 
       final SerDe tableSerDe = createSerDe(job, table.getSd().getSerdeInfo().getSerializationLib(), tableProperties);
       final StructObjectInspector tableOI = getStructOI(tableSerDe);

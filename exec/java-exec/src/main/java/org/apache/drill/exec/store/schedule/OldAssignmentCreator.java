@@ -63,7 +63,7 @@ public class OldAssignmentCreator<T extends CompleteWork> {
 
    OldAssignmentCreator(List<DrillbitEndpoint> incomingEndpoints, List<T> units) {
     logger.debug("Assigning {} units to {} endpoints", units.size(), incomingEndpoints.size());
-    Stopwatch watch = new Stopwatch();
+    Stopwatch watch = Stopwatch.createUnstarted();
 
     Preconditions.checkArgument(incomingEndpoints.size() <= units.size(), String.format("Incoming endpoints %d "
         + "is greater than number of row groups %d", incomingEndpoints.size(), units.size()));

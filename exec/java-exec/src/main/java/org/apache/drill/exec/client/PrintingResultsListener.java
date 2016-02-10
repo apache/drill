@@ -44,7 +44,7 @@ public class PrintingResultsListener implements UserResultsListener {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrintingResultsListener.class);
 
   private final AtomicInteger count = new AtomicInteger();
-  private final Stopwatch w = new Stopwatch();
+  private final Stopwatch w = Stopwatch.createUnstarted();
   private final RecordBatchLoader loader;
   private final Format format;
   private final int columnWidth;

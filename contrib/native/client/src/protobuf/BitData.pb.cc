@@ -74,7 +74,7 @@ void protobuf_AssignDesc_BitData_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(BitServerHandshake));
   FragmentRecordBatch_descriptor_ = file->message_type(2);
-  static const int FragmentRecordBatch_offsets_[8] = {
+  static const int FragmentRecordBatch_offsets_[7] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, query_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, receiving_major_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, receiving_minor_fragment_id_),
@@ -82,7 +82,6 @@ void protobuf_AssignDesc_BitData_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, sending_minor_fragment_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, def_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, islastbatch_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentRecordBatch, isoutofmemory_),
   };
   FragmentRecordBatch_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -142,18 +141,17 @@ void protobuf_AddDesc_BitData_2eproto() {
     "itShared.proto\"]\n\022BitClientHandshake\022\023\n\013"
     "rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.exe"
     "c.shared.RpcChannel:\010BIT_DATA\")\n\022BitServ"
-    "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\252\002\n\023Fra"
+    "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\214\002\n\023Fra"
     "gmentRecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exe"
     "c.shared.QueryId\022#\n\033receiving_major_frag"
     "ment_id\030\002 \001(\005\022#\n\033receiving_minor_fragmen"
     "t_id\030\003 \003(\005\022!\n\031sending_major_fragment_id\030"
     "\004 \001(\005\022!\n\031sending_minor_fragment_id\030\005 \001(\005"
     "\022(\n\003def\030\006 \001(\0132\033.exec.shared.RecordBatchD"
-    "ef\022\023\n\013isLastBatch\030\007 \001(\010\022\034\n\risOutOfMemory"
-    "\030\010 \001(\010:\005false*D\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022"
-    "\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATC"
-    "H\020\003B(\n\033org.apache.drill.exec.protoB\007BitD"
-    "ataH\001", 645);
+    "ef\022\023\n\013isLastBatch\030\007 \001(\010*D\n\007RpcType\022\r\n\tHA"
+    "NDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_R"
+    "ECORD_BATCH\020\003B(\n\033org.apache.drill.exec.p"
+    "rotoB\007BitDataH\001", 615);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitData.proto", &protobuf_RegisterTypes);
   BitClientHandshake::default_instance_ = new BitClientHandshake();
@@ -660,7 +658,6 @@ const int FragmentRecordBatch::kSendingMajorFragmentIdFieldNumber;
 const int FragmentRecordBatch::kSendingMinorFragmentIdFieldNumber;
 const int FragmentRecordBatch::kDefFieldNumber;
 const int FragmentRecordBatch::kIsLastBatchFieldNumber;
-const int FragmentRecordBatch::kIsOutOfMemoryFieldNumber;
 #endif  // !_MSC_VER
 
 FragmentRecordBatch::FragmentRecordBatch()
@@ -687,7 +684,6 @@ void FragmentRecordBatch::SharedCtor() {
   sending_minor_fragment_id_ = 0;
   def_ = NULL;
   islastbatch_ = false;
-  isoutofmemory_ = false;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -735,7 +731,6 @@ void FragmentRecordBatch::Clear() {
       if (def_ != NULL) def_->::exec::shared::RecordBatchDef::Clear();
     }
     islastbatch_ = false;
-    isoutofmemory_ = false;
   }
   receiving_minor_fragment_id_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -857,22 +852,6 @@ bool FragmentRecordBatch::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(64)) goto parse_isOutOfMemory;
-        break;
-      }
-
-      // optional bool isOutOfMemory = 8 [default = false];
-      case 8: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_isOutOfMemory:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &isoutofmemory_)));
-          set_has_isoutofmemory();
-        } else {
-          goto handle_uninterpreted;
-        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -933,11 +912,6 @@ void FragmentRecordBatch::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->islastbatch(), output);
   }
 
-  // optional bool isOutOfMemory = 8 [default = false];
-  if (has_isoutofmemory()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->isoutofmemory(), output);
-  }
-
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -984,11 +958,6 @@ void FragmentRecordBatch::SerializeWithCachedSizes(
   // optional bool isLastBatch = 7;
   if (has_islastbatch()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->islastbatch(), target);
-  }
-
-  // optional bool isOutOfMemory = 8 [default = false];
-  if (has_isoutofmemory()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(8, this->isoutofmemory(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1039,11 +1008,6 @@ int FragmentRecordBatch::ByteSize() const {
 
     // optional bool isLastBatch = 7;
     if (has_islastbatch()) {
-      total_size += 1 + 1;
-    }
-
-    // optional bool isOutOfMemory = 8 [default = false];
-    if (has_isoutofmemory()) {
       total_size += 1 + 1;
     }
 
@@ -1103,9 +1067,6 @@ void FragmentRecordBatch::MergeFrom(const FragmentRecordBatch& from) {
     if (from.has_islastbatch()) {
       set_islastbatch(from.islastbatch());
     }
-    if (from.has_isoutofmemory()) {
-      set_isoutofmemory(from.isoutofmemory());
-    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1136,7 +1097,6 @@ void FragmentRecordBatch::Swap(FragmentRecordBatch* other) {
     std::swap(sending_minor_fragment_id_, other->sending_minor_fragment_id_);
     std::swap(def_, other->def_);
     std::swap(islastbatch_, other->islastbatch_);
-    std::swap(isoutofmemory_, other->isoutofmemory_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

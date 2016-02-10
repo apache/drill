@@ -46,8 +46,11 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected static HBaseStoragePluginConfig storagePluginConfig;
 
+
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public static void setupDefaultTestCluster() throws Exception {
+    GuavaPatcher.patch();
+
     /*
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
@@ -55,12 +58,15 @@ public class BaseHBaseTest extends BaseTestQuery {
     HBaseTestsSuite.configure(true, true);
     HBaseTestsSuite.initCluster();
 
+    BaseTestQuery.setupDefaultTestCluster();
+
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
     storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(HBASE_STORAGE_PLUGIN_NAME);
     storagePluginConfig = storagePlugin.getConfig();
     storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
     pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
+
   }
 
   @AfterClass
@@ -101,5 +107,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected String canonizeHBaseSQL(String sql) {
     return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
   }
+
+
 
 }

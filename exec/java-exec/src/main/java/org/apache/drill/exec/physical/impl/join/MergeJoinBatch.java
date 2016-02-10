@@ -113,7 +113,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
     this.left = left;
-    this.leftIterator = new RecordIterator(left, this, oContext, 0);
+    this.leftIterator = new RecordIterator(left, this, oContext, 0, false);
     this.right = right;
     this.rightIterator = new RecordIterator(right, this, oContext, 1);
     this.joinType = popConfig.getJoinType();

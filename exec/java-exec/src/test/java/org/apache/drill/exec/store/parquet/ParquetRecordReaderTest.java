@@ -56,26 +56,25 @@ import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.CallBack;
+import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
-import org.apache.parquet.hadoop.CodecFactory;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.page.DataPageV1;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.column.page.PageReader;
+import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.Footer;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
@@ -292,7 +291,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     TestFileGenerator.populateFieldInfoMap(props);
     final ParquetResultListener resultListener =
         new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
     testWithListener(type, planText, resultListener);
     resultListener.getResults();
     // batchLoader.clear();
@@ -433,8 +432,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
     HashMap<String, FieldInfo> fields2 = new HashMap<>();
     // pass strings instead of byte arrays
-    Object[] textVals = { new org.apache.hadoop.io.Text("b"), new org.apache.hadoop.io.Text("b2"),
-        new org.apache.hadoop.io.Text("b3")};
+    Object[] textVals = { new org.apache.drill.exec.util.Text("b"), new org.apache.drill.exec.util.Text("b2"),
+        new org.apache.drill.exec.util.Text("b3") };
     ParquetTestProperties props2 = new ParquetTestProperties(1, 30000, DEFAULT_BYTES_PER_PAGE, fields2);
     props2.fields.put("a", new FieldInfo("boolean", "a", 1, textVals, TypeProtos.MinorType.BIT, props2));
     testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
@@ -643,8 +642,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
           f.getParquetMetadata(), columns);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
-      final Stopwatch watch = new Stopwatch();
-      watch.start();
+      final Stopwatch watch = Stopwatch.createStarted();
 
       int rowCount = 0;
       while ((rowCount = rr.next()) > 0) {

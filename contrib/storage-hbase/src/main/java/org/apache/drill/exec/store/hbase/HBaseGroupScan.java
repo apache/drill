@@ -85,7 +85,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private HBaseStoragePlugin storagePlugin;
 
-  private Stopwatch watch = new Stopwatch();
+  private Stopwatch watch = Stopwatch.createUnstarted();
 
   private Map<Integer, List<HBaseSubScanSpec>> endpointFragmentMapping;
 

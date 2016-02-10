@@ -24,7 +24,7 @@ import java.util.List;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import com.carrotsearch.hppc.ObjectIntOpenHashMap;
+import com.carrotsearch.hppc.ObjectIntHashMap;
 import com.carrotsearch.hppc.cursors.ObjectIntCursor;
 import com.google.common.collect.Lists;
 
@@ -32,7 +32,7 @@ class ValueHolderIden {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderIden.class);
 
   // the index of a field is the number in which it appears within the holder
-  private final ObjectIntOpenHashMap<String> fieldMap; // field name -> index
+  private final ObjectIntHashMap<String> fieldMap; // field name -> index
   private final Type[] types; // the type of each field in the holder, by index
   private final String[] names; // the name of each field in the holder, by index
   private final int[] offsets; // the offset of each field in the holder, by index
@@ -54,7 +54,7 @@ class ValueHolderIden {
     this.types = new Type[fldList.size()];
     this.names = new String[fldList.size()];
     this.offsets = new int[fldList.size()];
-    fieldMap = new ObjectIntOpenHashMap<String>(fldList.size(), 1.0f);
+    fieldMap = new ObjectIntHashMap<String>(fldList.size());
     int i = 0; // index of the next holder member variable
     int offset = 0; // offset of the next holder member variable
     for (Field f : fldList) {

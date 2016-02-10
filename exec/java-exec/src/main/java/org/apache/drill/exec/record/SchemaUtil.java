@@ -117,10 +117,14 @@ public class SchemaUtil {
         ValueVector newVector = TypeHelper.getNewVector(field, context.getAllocator());
         Preconditions.checkState(field.getType().getMinorType() == MinorType.UNION, "Can only convert vector to Union vector");
         UnionVector u = (UnionVector) newVector;
-        u.addVector(tp.getTo());
+        final ValueVector vv = u.addVector(tp.getTo());
         MinorType type = v.getField().getType().getMinorType();
         for (int i = 0; i < valueCount; i++) {
-          u.getMutator().setType(i, type);
+          if (!vv.getAccessor().isNull(i)) {
+            u.getMutator().setType(i, type);
+          } else {
+            u.getMutator().setType(i, MinorType.LATE);
+          }
         }
         for (MinorType t : field.getType().getSubTypeList()) {
           if (u.getField().getType().getSubTypeList().contains(t)) {

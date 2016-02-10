@@ -37,6 +37,7 @@ public interface MongoTestConstants {
 
   public static final String DONUTS_COLLECTION = "donuts";
   public static final String EMPINFO_COLLECTION = "empinfo";
+  public static final String EMPTY_COLLECTION = "empty";
   public static final String SCHEMA_CHANGE_COLLECTION = "schema_change";
 
   public static final String DONUTS_DATA = "donuts.json";

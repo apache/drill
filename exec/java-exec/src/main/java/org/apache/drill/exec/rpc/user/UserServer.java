@@ -57,7 +57,6 @@ import org.apache.drill.exec.rpc.user.security.UserAuthenticator;
 import org.apache.drill.exec.rpc.user.security.UserAuthenticatorFactory;
 import org.apache.drill.exec.work.user.UserWorker;
 
-import com.google.common.io.Closeables;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 
@@ -284,7 +283,13 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   public void close() throws IOException {
-    Closeables.closeQuietly(authenticator);
+    try {
+      if (authenticator != null) {
+        authenticator.close();
+      }
+    } catch (Exception e) {
+      logger.warn("Failure closing authenticator.", e);
+    }
     super.close();
   }
 }

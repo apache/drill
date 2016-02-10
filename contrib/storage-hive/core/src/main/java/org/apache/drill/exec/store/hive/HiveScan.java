@@ -96,7 +96,7 @@ public class HiveScan extends AbstractGroupScan {
     this.columns = columns;
     this.storagePlugin = storagePlugin;
     if (metadataProvider == null) {
-      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry);
+      this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, storagePlugin.getHiveConf());
     } else {
       this.metadataProvider = metadataProvider;
     }
@@ -166,8 +166,8 @@ public class HiveScan extends AbstractGroupScan {
         parts = null;
       }
 
-      final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.table, parts, hiveReadEntry.hiveConfigOverride);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns);
+      final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.table, parts);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, storagePlugin);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -240,7 +240,8 @@ public class HiveScan extends AbstractGroupScan {
       Table hiveTable = hiveReadEntry.getTable();
       projectedColumnCount = hiveTable.getSd().getColsSize() + hiveTable.getPartitionKeysSize();
     } else {
-      projectedColumnCount = columns.size();
+      // In cost estimation, # of project columns should be >= 1, even for skipAll query.
+      projectedColumnCount = Math.max(columns.size(), 1);
     }
 
     return projectedColumnCount * HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN;
@@ -287,6 +288,11 @@ public class HiveScan extends AbstractGroupScan {
       return false;
     }
     return true;
+  }
+
+  @JsonIgnore
+  public HiveConf getHiveConf() {
+    return storagePlugin.getHiveConf();
   }
 
   @JsonIgnore

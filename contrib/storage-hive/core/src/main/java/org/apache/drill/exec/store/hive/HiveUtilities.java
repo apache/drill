@@ -355,18 +355,6 @@ public class HiveUtilities {
     return null;
   }
 
-  public static String getDefaultPartitionValue(final Map<String, String> hiveConfigOverride) {
-    // Check if the default partition config in given Hive config override in Hive storage pluging definition.
-    String defaultPartitionValue = hiveConfigOverride.get(ConfVars.DEFAULTPARTITIONNAME.varname);
-    if (!Strings.isNullOrEmpty(defaultPartitionValue)) {
-      return defaultPartitionValue;
-    }
-
-    // Create a HiveConf and get the configured value. If any hive-site.xml file on the classpath has the property
-    // defined, it will be returned. Otherwise default value is returned.
-    return new HiveConf().getVar(ConfVars.DEFAULTPARTITIONNAME);
-  }
-
   /**
    * Utility method which gets table or partition {@link InputFormat} class. First it
    * tries to get the class name from given StorageDescriptor object. If it doesn't contain it tries to get it from
@@ -397,18 +385,12 @@ public class HiveUtilities {
    *
    * @param job {@link JobConf} instance.
    * @param properties New config properties
-   * @param hiveConfigOverride HiveConfig override.
+   * @param hiveConf HiveConf of Hive storage plugin
    */
-  public static void addConfToJob(final JobConf job, final Properties properties,
-      final Map<String, String> hiveConfigOverride) {
-    final HiveConf hiveConf = new HiveConf();
+  public static void addConfToJob(final JobConf job, final Properties properties) {
     for (Object obj : properties.keySet()) {
-      hiveConf.set((String) obj, (String) properties.get(obj));
+      job.set((String) obj, (String) properties.get(obj));
     }
-    for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-      hiveConf.set(entry.getKey(), entry.getValue());
-    }
-    job.addResource(hiveConf);
   }
 
   /**

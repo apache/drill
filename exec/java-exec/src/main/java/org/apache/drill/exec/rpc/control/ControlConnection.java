@@ -29,7 +29,6 @@ import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.io.Closeables;
 import com.google.protobuf.MessageLite;
 
 public class ControlConnection extends RemoteConnection {
@@ -106,12 +105,6 @@ public class ControlConnection extends RemoteConnection {
       return false;
     }
     return true;
-  }
-
-  public void shutdownIfClient() {
-    if (bus.isClient()) {
-      Closeables.closeQuietly(bus);
-    }
   }
 
   @Override

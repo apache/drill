@@ -49,7 +49,7 @@
 namespace Drill{
 
 static std::map<exec::shared::QueryResult_QueryState, status_t> QUERYSTATE_TO_STATUS_MAP = boost::assign::map_list_of
-    (exec::shared::QueryResult_QueryState_PENDING, QRY_PENDING)
+    (exec::shared::QueryResult_QueryState_STARTING, QRY_PENDING)
     (exec::shared::QueryResult_QueryState_RUNNING, QRY_RUNNING)
     (exec::shared::QueryResult_QueryState_COMPLETED, QRY_COMPLETED)
     (exec::shared::QueryResult_QueryState_CANCELED, QRY_CANCELED)
@@ -647,7 +647,7 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
         
         if (qr.has_query_state() &&
                 qr.query_state() != exec::shared::QueryResult_QueryState_RUNNING &&
-                qr.query_state() != exec::shared::QueryResult_QueryState_PENDING) {
+                qr.query_state() != exec::shared::QueryResult_QueryState_STARTING) {
             pDrillClientQueryResult=findQueryResult(qid);
             //Queries that have been cancelled or whose resources are freed before completion 
             //do not have a DrillClientQueryResult object. We need not handle the terminal message 
@@ -1397,7 +1397,6 @@ char ZookeeperImpl::s_defaultCluster[]="drillbits1";
 
 ZookeeperImpl::ZookeeperImpl(){
     m_pDrillbits=new String_vector;
-    srand (time(NULL));
     m_bConnecting=true;
     memset(&m_id, 0, sizeof(m_id));
 }
@@ -1468,10 +1467,17 @@ int ZookeeperImpl::connectToZookeeper(const char* connectStr, const char* pathTo
 
     //Let's pick a random drillbit.
     if(m_pDrillbits && m_pDrillbits->count >0){
-        int r=rand()%(this->m_pDrillbits->count);
-        assert(r<this->m_pDrillbits->count);
-        char * bit=this->m_pDrillbits->data[r];
+
+        std::vector<std::string> randomDrillbits;
+        for(int i=0; i<m_pDrillbits->count; i++){
+            randomDrillbits.push_back(m_pDrillbits->data[i]);
+        }
+        //Use the same random shuffle as the Java client instead of picking a drillbit at random.
+        //Gives much better randomization when the size of the cluster is small.
+        std::random_shuffle(randomDrillbits.begin(), randomDrillbits.end());
+        const char * bit=randomDrillbits[0].c_str();
         std::string s;
+
         s=rootDir +  std::string("/") + bit;
         int buffer_len=MAX_CONNECT_STR;
         char buffer[MAX_CONNECT_STR+1];

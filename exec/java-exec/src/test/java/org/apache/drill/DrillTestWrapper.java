@@ -17,6 +17,19 @@
  ******************************************************************************/
 package org.apache.drill;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.HyperVectorValueIterator;
@@ -30,22 +43,8 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.hadoop.io.Text;
-import org.codehaus.jackson.node.BinaryNode;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * An object to encapsulate the options for a Drill unit test, as well as the execution methods to perform the tests and
@@ -120,10 +119,14 @@ public class DrillTestWrapper {
   }
 
   public void run() throws Exception {
-    if (ordered) {
-      compareOrderedResults();
+    if (testBuilder.getExpectedSchema() != null) {
+      compareSchemaOnly();
     } else {
-      compareUnorderedResults();
+      if (ordered) {
+        compareOrderedResults();
+      } else {
+        compareUnorderedResults();
+      }
     }
   }
 
@@ -296,6 +299,45 @@ public class DrillTestWrapper {
     return combinedVectors;
   }
 
+  protected void compareSchemaOnly() throws Exception {
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    List<QueryDataBatch> actual = Collections.EMPTY_LIST;
+
+
+    QueryDataBatch batch = null;
+    try {
+      BaseTestQuery.test(testOptionSettingQueries);
+      actual = BaseTestQuery.testRunAndReturn(queryType, query);
+      batch = actual.get(0);
+      loader.load(batch.getHeader().getDef(), batch.getData());
+
+      final BatchSchema schema = loader.getSchema();
+      if(schema.getFieldCount() != testBuilder.getExpectedSchema().size()) {
+        throw new Exception("The column numbers for actual schema and expected schema do not match");
+      }
+
+      for(int i = 0; i < schema.getFieldCount(); ++i) {
+        final SchemaPath actualSchemaPath = schema.getColumn(i).getPath();
+        final TypeProtos.MajorType actualMajorType = schema.getColumn(i).getType();
+
+        final SchemaPath expectedSchemaPath = schema.getColumn(i).getPath();
+        final TypeProtos.MajorType expectedlMajorType = schema.getColumn(i).getType();
+
+        if(!actualSchemaPath.equals(expectedSchemaPath)
+            || !actualMajorType.equals(expectedlMajorType)) {
+          throw new Exception("The type of the " + i + "-th column is '" + actualSchemaPath + "' mismatched, expected: '"
+              + expectedlMajorType + "'");
+        }
+      }
+
+    }  finally {
+      if(batch != null) {
+        batch.release();
+      }
+      loader.clear();
+    }
+  }
+
   /**
    * Use this method only if necessary to validate one query against another. If you are just validating against a
    * baseline file use one of the simpler interfaces that will write the validation query for you.
@@ -306,7 +348,7 @@ public class DrillTestWrapper {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     BatchSchema schema = null;
 
-    List<QueryDataBatch> actual = Collections.EMPTY_LIST;;
+    List<QueryDataBatch> actual = Collections.EMPTY_LIST;
     List<QueryDataBatch> expected = Collections.EMPTY_LIST;
     List<Map> expectedRecords = new ArrayList<>();
     List<Map> actualRecords = new ArrayList<>();

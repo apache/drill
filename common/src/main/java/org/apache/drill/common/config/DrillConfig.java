@@ -177,7 +177,7 @@ public class DrillConfig extends NestedConfig {
                                     final Properties overriderProps,
                                     final boolean enableServerConfigs) {
     final StringBuilder logString = new StringBuilder();
-    final Stopwatch watch = new Stopwatch().start();
+    final Stopwatch watch = Stopwatch.createStarted();
     overrideFileResourcePathname =
         overrideFileResourcePathname == null
             ? CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME

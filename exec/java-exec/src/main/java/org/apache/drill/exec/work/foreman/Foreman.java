@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.CatastrophicFailure;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -272,10 +273,7 @@ public class Foreman implements Runnable {
          * die here, they should get notified about that, and cancel themselves; we don't have to attempt to notify
          * them, which might not work under these conditions.
          */
-        System.out.println("Node ran out of Heap memory, exiting.");
-        e.printStackTrace();
-        System.out.flush();
-        System.exit(-1);
+        CatastrophicFailure.exit(e, "Unable to handle out of memory condition in Foreman.", -1);
       }
 
     } finally {
@@ -810,7 +808,7 @@ public class Foreman implements Runnable {
             foremanResult.close();
             return;
           case STARTING:
-            recordNewState(state);
+            recordNewState(newState);
             return;
         }
         break;

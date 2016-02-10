@@ -73,7 +73,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
 
-      formatCreator = new FormatCreator(context, fsConf, config, context.getClasspathScan());
+      formatCreator = newFormatCreator(config, context, fsConf);
       List<FormatMatcher> matchers = Lists.newArrayList();
       formatPluginsByConfig = Maps.newHashMap();
       for (FormatPlugin p : formatCreator.getConfiguredFormatPlugins()) {
@@ -98,6 +98,20 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }
+  }
+
+  /**
+   * Creates a new FormatCreator instance.
+   *
+   * To be used by subclasses to return custom formats if required.
+   * Note that this method is called by the constructor, which fields may not be initialized yet.
+   *
+   * @param config the plugin configuration
+   * @param context the drillbit context
+   * @return a new FormatCreator instance
+   */
+  protected FormatCreator newFormatCreator(FileSystemConfig config, DrillbitContext context, Configuration fsConf) {
+    return new FormatCreator(context, fsConf, config, context.getClasspathScan());
   }
 
   @Override

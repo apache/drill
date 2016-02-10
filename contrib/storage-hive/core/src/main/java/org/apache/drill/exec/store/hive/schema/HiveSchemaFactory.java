@@ -19,12 +19,10 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -60,33 +58,22 @@ public class HiveSchemaFactory implements SchemaFactory {
   private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
 
   private final HiveStoragePlugin plugin;
-  private final Map<String, String> hiveConfigOverride;
   private final String schemaName;
   private final HiveConf hiveConf;
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
-  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
+  public HiveSchemaFactory(final HiveStoragePlugin plugin, final String name, final HiveConf hiveConf) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
 
-    this.hiveConfigOverride = hiveConfigOverride;
-    hiveConf = new HiveConf();
-    if (hiveConfigOverride != null) {
-      for (Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
-        final String property = entry.getKey();
-        final String value = entry.getValue();
-        hiveConf.set(property, value);
-        logger.trace("HiveConfig Override {}={}", property, value);
-      }
-    }
-
+    this.hiveConf = hiveConf;
     isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf, hiveConfigOverride);
+          DrillHiveMetaStoreClient.createNonCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
@@ -105,8 +92,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
           @Override
           public DrillHiveMetaStoreClient load(String userName) throws Exception {
-            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf,
-                HiveSchemaFactory.this.hiveConfigOverride, userName);
+            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf, userName);
           }
         });
   }

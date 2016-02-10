@@ -28,7 +28,8 @@ import javax.inject.Named;
 import java.util.List;
 
 public interface WindowFramer {
-  TemplateClassDefinition<WindowFramer> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, DefaultFrameTemplate.class);
+  TemplateClassDefinition<WindowFramer> NOFRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, NoFrameSupportTemplate.class);
+  TemplateClassDefinition<WindowFramer> FRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, FrameSupportTemplate.class);
 
   void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext operatorContext,
              final boolean requireFullPartition) throws SchemaChangeException;

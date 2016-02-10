@@ -440,6 +440,22 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "INSERT INTO TABLE kv_parquet PARTITION(part1) SELECT key, value, key FROM default.kv");
     executeQuery(hiveDriver, "ALTER TABLE kv_parquet ADD COLUMNS (newcol string)");
 
+    executeQuery(hiveDriver,
+        "CREATE TABLE countStar_Parquet (int_field INT) STORED AS parquet");
+
+    final int numOfRows = 200;
+    final StringBuffer sb = new StringBuffer();
+    sb.append("VALUES ");
+    for(int i = 0; i < numOfRows; ++i) {
+      if(i != 0) {
+        sb.append(",");
+      }
+      sb.append("(").append(i).append(")");
+    }
+
+    executeQuery(hiveDriver, "INSERT INTO TABLE countStar_Parquet \n" +
+        sb.toString());
+
     // Create a StorageHandler based table (DRILL-3739)
     executeQuery(hiveDriver, "CREATE TABLE kv_sh(key INT, value STRING) STORED BY " +
         "'org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler'");

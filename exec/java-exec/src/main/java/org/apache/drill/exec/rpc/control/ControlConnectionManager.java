@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.BasicClient;
@@ -34,13 +35,16 @@ public class ControlConnectionManager extends ReconnectingConnection<ControlConn
   private final ControlMessageHandler handler;
   private final BootStrapContext context;
   private final DrillbitEndpoint localIdentity;
+  private final BufferAllocator allocator;
 
-  public ControlConnectionManager(DrillbitEndpoint remoteEndpoint, DrillbitEndpoint localIdentity, ControlMessageHandler handler, BootStrapContext context) {
+  public ControlConnectionManager(BufferAllocator allocator, DrillbitEndpoint remoteEndpoint,
+      DrillbitEndpoint localIdentity, ControlMessageHandler handler, BootStrapContext context) {
     super(BitControlHandshake.newBuilder().setRpcVersion(ControlRpcConfig.RPC_VERSION).setEndpoint(localIdentity).build(), remoteEndpoint.getAddress(), remoteEndpoint.getControlPort());
     assert remoteEndpoint != null : "Endpoint cannot be null.";
     assert remoteEndpoint.getAddress() != null && !remoteEndpoint.getAddress().isEmpty(): "Endpoint address cannot be null.";
     assert remoteEndpoint.getControlPort() > 0 : String.format("Bit Port must be set to a port between 1 and 65k.  Was set to %d.", remoteEndpoint.getControlPort());
 
+    this.allocator = allocator;
     this.endpoint = remoteEndpoint;
     this.localIdentity = localIdentity;
     this.handler = handler;
@@ -49,7 +53,7 @@ public class ControlConnectionManager extends ReconnectingConnection<ControlConn
 
   @Override
   protected BasicClient<?, ControlConnection, BitControlHandshake, ?> getNewClient() {
-    return new ControlClient(endpoint, localIdentity, handler, context, new CloseHandlerCreator());
+    return new ControlClient(allocator, endpoint, localIdentity, handler, context, new CloseHandlerCreator());
   }
 
 

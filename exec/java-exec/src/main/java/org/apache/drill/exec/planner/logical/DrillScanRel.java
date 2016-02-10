@@ -82,13 +82,8 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.rowType = rowType;
-    if (columns == null) { // planner asks to scan all of the columns
-      this.columns =  ColumnList.all();
-    } else if (columns.size() == 0) { // planner asks to skip all of the columns
-      this.columns = ColumnList.none();
-    } else { // planner asks to scan some columns
-      this.columns  = ColumnList.some(columns);
-    }
+    Preconditions.checkNotNull(columns);
+    this.columns = columns;
     this.partitionFilterPushdown = partitionFilterPushdown;
     try {
       this.groupScan = drillTable.getGroupScan().clone(this.columns);

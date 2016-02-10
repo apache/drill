@@ -51,7 +51,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   }
 
   public FunctionImplementationRegistry(DrillConfig config, ScanResult classpathScan){
-    Stopwatch w = new Stopwatch().start();
+    Stopwatch w = Stopwatch.createStarted();
 
     logger.debug("Generating function registry.");
     drillFuncRegistry = new DrillFunctionRegistry(classpathScan);

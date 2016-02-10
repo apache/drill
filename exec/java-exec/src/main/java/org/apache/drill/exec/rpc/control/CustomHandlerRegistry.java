@@ -33,12 +33,9 @@ import org.apache.drill.exec.rpc.UserRpcException;
 import org.apache.drill.exec.rpc.control.Controller.CustomMessageHandler;
 import org.apache.drill.exec.rpc.control.Controller.CustomResponse;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.IntObjectHashMap;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageLite;
-import com.google.protobuf.Parser;
 
 public class CustomHandlerRegistry {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CustomHandlerRegistry.class);
@@ -46,7 +43,7 @@ public class CustomHandlerRegistry {
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock read = new AutoCloseableLock(readWriteLock.readLock());
   private final AutoCloseableLock write = new AutoCloseableLock(readWriteLock.writeLock());
-  private final IntObjectOpenHashMap<ParsingHandler<?>> handlers = new IntObjectOpenHashMap<>();
+  private final IntObjectHashMap<ParsingHandler<?, ?>> handlers = new IntObjectHashMap<>();
   private volatile DrillbitEndpoint endpoint;
 
   public CustomHandlerRegistry() {
@@ -56,13 +53,15 @@ public class CustomHandlerRegistry {
     this.endpoint = endpoint;
   }
 
-  public <SEND extends MessageLite> void registerCustomHandler(int messageTypeId,
-      CustomMessageHandler<SEND, ?> handler,
-      Parser<SEND> parser) {
+  public <REQUEST, RESPONSE> void registerCustomHandler(int messageTypeId,
+      CustomMessageHandler<REQUEST, RESPONSE> handler,
+      Controller.CustomSerDe<REQUEST> requestSerde,
+      Controller.CustomSerDe<RESPONSE> responseSerde) {
     Preconditions.checkNotNull(handler);
-    Preconditions.checkNotNull(parser);
+    Preconditions.checkNotNull(requestSerde);
+    Preconditions.checkNotNull(responseSerde);
     try (AutoCloseableLock lock = write.open()) {
-      ParsingHandler<?> parsingHandler = handlers.get(messageTypeId);
+      ParsingHandler<?, ?> parsingHandler = handlers.get(messageTypeId);
       if (parsingHandler != null) {
         throw new IllegalStateException(String.format(
             "Only one handler can be registered for a given custom message type. You tried to register a handler for "
@@ -70,13 +69,13 @@ public class CustomHandlerRegistry {
             messageTypeId));
       }
 
-      parsingHandler = new ParsingHandler<SEND>(handler, parser);
+      parsingHandler = new ParsingHandler<REQUEST, RESPONSE>(handler, requestSerde, responseSerde);
       handlers.put(messageTypeId, parsingHandler);
     }
   }
 
   public Response handle(CustomMessage message, DrillBuf dBody) throws RpcException {
-    final ParsingHandler<?> handler;
+    final ParsingHandler<?, ?> handler;
     try (AutoCloseableLock lock = read.open()) {
       handler = handlers.get(message.getType());
     }
@@ -89,8 +88,12 @@ public class CustomHandlerRegistry {
               message.getType())));
     }
     final CustomResponse<?> customResponse = handler.onMessage(message.getMessage(), dBody);
+    @SuppressWarnings("unchecked")
     final CustomMessage responseMessage = CustomMessage.newBuilder()
-        .setMessage(customResponse.getMessage().toByteString())
+        .setMessage(
+            ByteString.copyFrom(((Controller.CustomSerDe<Object>) handler.getResponseSerDe())
+                .serializeToSend(customResponse
+                .getMessage())))
         .setType(message.getType())
         .build();
     // make sure we don't pass in a null array.
@@ -99,23 +102,32 @@ public class CustomHandlerRegistry {
 
   }
 
-  private class ParsingHandler<SEND extends MessageLite> {
-    private final CustomMessageHandler<SEND, ?> handler;
-    private final Parser<SEND> parser;
+  private class ParsingHandler<REQUEST, RESPONSE> {
+    private final CustomMessageHandler<REQUEST, ?> handler;
+    private final Controller.CustomSerDe<REQUEST> requestSerde;
+    private final Controller.CustomSerDe<RESPONSE> responseSerde;
 
-    public ParsingHandler(CustomMessageHandler<SEND, ?> handler, Parser<SEND> parser) {
+    public ParsingHandler(
+        CustomMessageHandler<REQUEST, RESPONSE> handler,
+        Controller.CustomSerDe<REQUEST> requestSerde,
+        Controller.CustomSerDe<RESPONSE> responseSerde) {
       super();
       this.handler = handler;
-      this.parser = parser;
+      this.requestSerde = requestSerde;
+      this.responseSerde = responseSerde;
+    }
+
+    public Controller.CustomSerDe<RESPONSE> getResponseSerDe() {
+      return responseSerde;
     }
 
     public CustomResponse<?> onMessage(ByteString pBody, DrillBuf dBody) throws UserRpcException {
 
       try {
-        final SEND message = parser.parseFrom(pBody);
+        final REQUEST message = requestSerde.deserializeReceived(pBody.toByteArray());
         return handler.onMessage(message, dBody);
 
-      } catch (InvalidProtocolBufferException e) {
+      } catch (Exception e) {
         throw new UserRpcException(endpoint, "Failure parsing message.", e);
       }
 

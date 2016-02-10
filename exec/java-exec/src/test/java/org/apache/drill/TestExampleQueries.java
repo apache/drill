@@ -1019,7 +1019,7 @@ public class TestExampleQueries extends BaseTestQuery {
         .sqlQuery(query)
         .expectsEmptyResultSet()
         .optionSettingQueriesForTestQuery("ALTER SESSION SET `planner.enable_hashjoin` = false; " +
-                                          "ALTER SESSION SET `planner.disable_exchanges` = true")
+            "ALTER SESSION SET `planner.disable_exchanges` = true")
         .build()
         .run();
 
@@ -1194,4 +1194,5 @@ public class TestExampleQueries extends BaseTestQuery {
         .build()
         .run();
   }
+
 }

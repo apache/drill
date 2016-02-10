@@ -38,6 +38,7 @@ DrillClientError* DrillClientError::getErrorObject(const exec::shared::DrillPBEr
 
 DrillClientInitializer::DrillClientInitializer(){
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+    srand(time(NULL));
 }
 
 DrillClientInitializer::~DrillClientInitializer(){

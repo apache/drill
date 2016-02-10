@@ -38,7 +38,6 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -66,7 +65,6 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     final List<InputSplit> splits = config.getInputSplits();
     final List<Partition> partitions = config.getPartitions();
     final List<SchemaPath> columns = config.getColumns();
-    final Map<String, String> hiveConfigOverride = config.getHiveReadEntry().hiveConfigOverride;
     final String partitionDesignator = context.getOptions()
         .getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
 
@@ -100,7 +98,7 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     int currentPartitionIndex = 0;
     final List<RecordReader> readers = Lists.newArrayList();
 
-    final Configuration conf = getConf(hiveConfigOverride);
+    final HiveConf conf = config.getHiveConf();
 
     // TODO: In future we can get this cache from Metadata cached on filesystem.
     final Map<String, ParquetMetadata> footerCache = Maps.newHashMap();
@@ -146,20 +144,11 @@ public class HiveDrillNativeScanBatchCreator implements BatchCreator<HiveDrillNa
     // If there are no readers created (which is possible when the table is empty or no row groups are matched),
     // create an empty RecordReader to output the schema
     if (readers.size() == 0) {
-      readers.add(new HiveRecordReader(table, null, null, columns, context, hiveConfigOverride,
+      readers.add(new HiveRecordReader(table, null, null, columns, context, conf,
         ImpersonationUtil.createProxyUgi(config.getUserName(), context.getQueryUserName())));
     }
 
     return new ScanBatch(config, context, oContext, readers.iterator(), partitionColumns, selectedPartitionColumns);
-  }
-
-  private Configuration getConf(final Map<String, String> hiveConfigOverride) {
-    final HiveConf hiveConf = new HiveConf();
-    for(Entry<String, String> prop : hiveConfigOverride.entrySet()) {
-      hiveConf.set(prop.getKey(), prop.getValue());
-    }
-
-    return hiveConf;
   }
 
   /**

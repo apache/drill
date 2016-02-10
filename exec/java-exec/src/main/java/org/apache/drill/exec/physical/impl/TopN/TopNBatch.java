@@ -180,8 +180,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
     try{
       outer: while (true) {
-        Stopwatch watch = new Stopwatch();
-        watch.start();
+        Stopwatch watch = Stopwatch.createStarted();
         IterOutcome upstream;
         if (first) {
           upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -284,8 +283,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   private void purge() throws SchemaChangeException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
+    Stopwatch watch = Stopwatch.createStarted();
     VectorContainer c = priorityQueue.getHyperBatch();
     VectorContainer newContainer = new VectorContainer(oContext);
     SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();
@@ -380,8 +378,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
    * @throws SchemaChangeException
    */
   public void purgeAndResetPriorityQueue() throws SchemaChangeException, ClassTransformationException, IOException {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     final VectorContainer c = priorityQueue.getHyperBatch();
     final VectorContainer newContainer = new VectorContainer(oContext);
     final SelectionVector4 selectionVector4 = priorityQueue.getHeapSv4();

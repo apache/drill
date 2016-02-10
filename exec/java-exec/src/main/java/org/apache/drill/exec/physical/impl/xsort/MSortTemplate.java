@@ -124,8 +124,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
 
   @Override
   public void sort(final VectorContainer container) {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     while (runStarts.size() > 1) {
 
       // check if we're cancelled/failed frequently

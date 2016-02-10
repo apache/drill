@@ -124,8 +124,7 @@ public class SequenceFileRecordReader extends AbstractRecordReader {
 
   @Override
   public int next() {
-    final Stopwatch watch = new Stopwatch();
-    watch.start();
+    final Stopwatch watch = Stopwatch.createStarted();
     if (keyVector != null) {
       keyVector.clear();
       keyVector.allocateNew();

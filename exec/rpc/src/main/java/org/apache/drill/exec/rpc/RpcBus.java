@@ -275,7 +275,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         logger.debug("Received message {}", msg);
       }
       final Channel channel = connection.getChannel();
-      final Stopwatch watch = new Stopwatch().start();
+      final Stopwatch watch = Stopwatch.createStarted();
 
       try{
 

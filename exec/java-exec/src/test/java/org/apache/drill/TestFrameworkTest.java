@@ -24,9 +24,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -41,6 +45,63 @@ import org.junit.Test;
 public class TestFrameworkTest extends BaseTestQuery{
 
   private static String CSV_COLS = " cast(columns[0] as bigint) employee_id, columns[1] as first_name, columns[2] as last_name ";
+
+  @Test(expected = AssertionError.class)
+  public void testSchemaTestBuilderSetInvalidBaselineValues() throws Exception {
+    final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.VARCHAR)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+            .sqlQuery(query)
+            .schemaBaseLine(expectedSchema)
+            .baselineValues(new Object[0])
+            .build()
+            .run();
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testSchemaTestBuilderSetInvalidBaselineRecords() throws Exception {
+    final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.VARCHAR)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .baselineRecords(new ArrayList<Map>())
+        .build()
+        .run();
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testSchemaTestBuilderSetInvalidBaselineColumns() throws Exception {
+    final String query = "SELECT ltrim('drill') as col FROM (VALUES(1)) limit 0";
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.VARCHAR)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .baselineColumns("col")
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
 
   @Test
   public void testCSVVerification() throws Exception {

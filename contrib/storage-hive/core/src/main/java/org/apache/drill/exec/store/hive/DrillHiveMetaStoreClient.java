@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,7 +42,6 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -58,8 +58,6 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
   public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE = "write";
   public final String HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS = "access";
 
-  protected final Map<String, String> hiveConfigOverride;
-
   protected final LoadingCache<String, List<String>> databases;
   protected final LoadingCache<String, List<String>> tableNameLoader;
   protected final LoadingCache<TableName, HiveReadEntry> tableLoaders;
@@ -73,16 +71,12 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * @param processUserMetaStoreClient MetaStoreClient of process user. Useful for generating the delegation tokens when
    *                                   SASL (KERBEROS or custom SASL implementations) is enabled.
    * @param hiveConf Conf including authorization configuration
-   * @param hiveConfigOverride
    * @param userName User who is trying to access the Hive metadata
-   * @param ignoreAuthzErrors When browsing info schema, we want to ignore permission denied errors. If a permission
-   *                          denied error occurs while accessing metadata for an object, it will not be shown in the
-   *                          info schema.
    * @return
    * @throws MetaException
    */
   public static DrillHiveMetaStoreClient createClientWithAuthz(final DrillHiveMetaStoreClient processUserMetaStoreClient,
-      final HiveConf hiveConf, final Map<String, String> hiveConfigOverride, final String userName) throws MetaException {
+      final HiveConf hiveConf, final String userName) throws MetaException {
     try {
       boolean delegationTokenGenerated = false;
 
@@ -118,7 +112,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       return ugiForRpc.doAs(new PrivilegedExceptionAction<DrillHiveMetaStoreClient>() {
         @Override
         public DrillHiveMetaStoreClient run() throws Exception {
-          return new HiveClientWithAuthzWithCaching(hiveConfForClient, hiveConfigOverride, ugiForRpc, userName);
+          return new HiveClientWithAuthzWithCaching(hiveConfForClient, ugiForRpc, userName);
         }
       });
     } catch (final Exception e) {
@@ -130,37 +124,35 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * Create a DrillMetaStoreClient that can be shared across multiple users. This is created when impersonation is
    * disabled.
    * @param hiveConf
-   * @param hiveConfigOverride
    * @return
    * @throws MetaException
    */
-  public static DrillHiveMetaStoreClient createNonCloseableClientWithCaching(final HiveConf hiveConf,
-      final Map<String, String> hiveConfigOverride) throws MetaException {
-    return new NonCloseableHiveClientWithCaching(hiveConf, hiveConfigOverride);
+  public static DrillHiveMetaStoreClient createNonCloseableClientWithCaching(final HiveConf hiveConf)
+      throws MetaException {
+    return new NonCloseableHiveClientWithCaching(hiveConf);
   }
 
-  private DrillHiveMetaStoreClient(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride)
-      throws MetaException {
+  private DrillHiveMetaStoreClient(final HiveConf hiveConf) throws MetaException {
     super(hiveConf);
 
     int hmsCacheTTL = 60; // default is 60 seconds
     boolean expireAfterWrite = true; // default is expire after write.
 
-    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_TTL)) {
-      hmsCacheTTL = Integer.valueOf(hiveConfigOverride.get(HIVE_METASTORE_CACHE_TTL));
+    final String ttl = hiveConf.get(HIVE_METASTORE_CACHE_TTL);
+    if (!Strings.isNullOrEmpty(ttl)) {
+      hmsCacheTTL = Integer.valueOf(ttl);
       logger.warn("Hive metastore cache ttl is set to {} seconds.", hmsCacheTTL);
     }
 
-    if (hiveConfigOverride.containsKey(HIVE_METASTORE_CACHE_EXPIRE)) {
-      if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE)) {
+    final String expiry = hiveConf.get(HIVE_METASTORE_CACHE_EXPIRE);
+    if (!Strings.isNullOrEmpty(expiry)) {
+      if (expiry.equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_WRITE)) {
         expireAfterWrite = true;
-      } else if (hiveConfigOverride.get(HIVE_METASTORE_CACHE_EXPIRE).equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS)) {
+      } else if (expiry.equalsIgnoreCase(HIVE_METASTORE_CACHE_EXPIRE_AFTER_ACCESS)) {
         expireAfterWrite = false;
       }
       logger.warn("Hive metastore cache expire policy is set to {}", expireAfterWrite? "expireAfterWrite" : "expireAfterAccess");
     }
-
-    this.hiveConfigOverride = hiveConfigOverride;
 
     final CacheBuilder cacheBuilder = CacheBuilder
         .newBuilder();
@@ -226,7 +218,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
 
   /** Helper method which gets table metadata. Retries once if the first call to fetch the metadata fails */
   protected static HiveReadEntry getHiveReadEntryHelper(final IMetaStoreClient mClient, final String dbName,
-      final String tableName, final Map<String, String> hiveConfigOverride) throws TException {
+      final String tableName) throws TException {
     Table t = null;
     try {
       t = mClient.getTable(dbName, tableName);
@@ -256,7 +248,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
       hivePartitions = null;
     }
 
-    return new HiveReadEntry(new HiveTable(t), hivePartitions, hiveConfigOverride);
+    return new HiveReadEntry(new HiveTable(t), hivePartitions);
   }
 
   /**
@@ -269,10 +261,9 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     private final UserGroupInformation ugiForRpc;
     private HiveAuthorizationHelper authorizer;
 
-    private HiveClientWithAuthzWithCaching(final HiveConf hiveConf, final Map<String, String> hiveConfigOverride,
-        final UserGroupInformation ugiForRpc, final String userName)
-        throws TException {
-      super(hiveConf, hiveConfigOverride);
+    private HiveClientWithAuthzWithCaching(final HiveConf hiveConf, final UserGroupInformation ugiForRpc,
+        final String userName) throws TException {
+      super(hiveConf);
       this.ugiForRpc = ugiForRpc;
       this.authorizer = new HiveAuthorizationHelper(this, hiveConf, userName);
     }
@@ -355,9 +346,8 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
    * HiveMetaStoreClient that provides a shared MetaStoreClient implementation with caching.
    */
   private static class NonCloseableHiveClientWithCaching extends DrillHiveMetaStoreClient {
-    private NonCloseableHiveClientWithCaching(final HiveConf hiveConf,
-        final Map<String, String> hiveConfigOverride) throws MetaException {
-      super(hiveConf, hiveConfigOverride);
+    private NonCloseableHiveClientWithCaching(final HiveConf hiveConf) throws MetaException {
+      super(hiveConf);
     }
 
     @Override
@@ -426,7 +416,7 @@ public abstract class DrillHiveMetaStoreClient extends HiveMetaStoreClient {
     @Override
     public HiveReadEntry load(TableName key) throws Exception {
       synchronized (DrillHiveMetaStoreClient.this) {
-        return getHiveReadEntryHelper(DrillHiveMetaStoreClient.this, key.getDatabaseName(), key.getTableName(), hiveConfigOverride);
+        return getHiveReadEntryHelper(DrillHiveMetaStoreClient.this, key.getDatabaseName(), key.getTableName());
       }
     }
   }

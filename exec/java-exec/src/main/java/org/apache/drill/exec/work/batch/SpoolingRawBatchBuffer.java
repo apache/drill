@@ -374,8 +374,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     }
 
     public void writeToStream(FSDataOutputStream stream) throws IOException {
-      Stopwatch watch = new Stopwatch();
-      watch.start();
+      Stopwatch watch = Stopwatch.createStarted();
       available = false;
       check = ThreadLocalRandom.current().nextLong();
       start = stream.getPos();
@@ -421,8 +420,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
           final long check = stream.readLong();
           pos = stream.getPos();
           assert check == this.check : String.format("Check values don't match: %d %d, Position %d", this.check, check, currentPos);
-          Stopwatch watch = new Stopwatch();
-          watch.start();
+          Stopwatch watch = Stopwatch.createStarted();
           BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
           pos = stream.getPos();
           assert header != null : "header null after parsing from stream";
