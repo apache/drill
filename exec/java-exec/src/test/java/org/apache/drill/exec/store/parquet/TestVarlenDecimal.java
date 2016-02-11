@@ -31,7 +31,7 @@ public class TestVarlenDecimal extends BaseTestQuery {
   }
 
   private static final String DATAFILE = "cp.`parquet/varlenDecimal.parquet`";
- 
+
   @Test
   public void testNullCount() throws Exception {
     String query = String.format("select count(*) as c from %s where department_id is null", DATAFILE);
