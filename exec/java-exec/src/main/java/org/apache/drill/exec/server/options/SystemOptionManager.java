@@ -34,9 +34,9 @@ import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -143,19 +143,19 @@ public class SystemOptionManager extends BaseOptionManager {
     VALIDATORS = CaseInsensitiveMap.newImmutableMap(tmp);
   }
 
-  private final PStoreConfig<OptionValue> config;
+  private final StoreConfig<OptionValue> config;
 
-  private final PStoreProvider provider;
+  private final StoreProvider provider;
 
   /**
    * Persistent store for options that have been changed from default.
    * NOTE: CRUD operations must use lowercase keys.
    */
-  private PStore<OptionValue> options;
+  private Store<OptionValue> options;
 
-  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PStoreProvider provider) {
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final StoreProvider provider) {
     this.provider = provider;
-    this.config =  PStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
+    this.config =  StoreConfig.newJacksonBuilder(lpPersistence.getMapper(), OptionValue.class)
         .name("sys.options")
         .build();
   }
@@ -166,7 +166,7 @@ public class SystemOptionManager extends BaseOptionManager {
    * @return this option manager
    * @throws IOException
    */
-  public SystemOptionManager init() throws IOException {
+  public SystemOptionManager init() throws Exception {
     options = provider.getStore(config);
     // if necessary, deprecate and replace options from persistent store
     for (final Entry<String, OptionValue> option : options) {

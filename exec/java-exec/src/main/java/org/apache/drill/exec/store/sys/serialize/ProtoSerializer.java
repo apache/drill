@@ -19,11 +19,10 @@ package org.apache.drill.exec.store.sys.serialize;
 
 import java.io.IOException;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import com.dyuproject.protostuff.JsonIOUtil;
 import com.dyuproject.protostuff.Schema;
 import com.google.protobuf.Message;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 
 public class ProtoSerializer<X, B extends Message.Builder> implements PClassSerializer<X> {
 

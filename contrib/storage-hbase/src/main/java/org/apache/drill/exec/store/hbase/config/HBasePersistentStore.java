@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.hbase.config;
 
-import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.FAMILY;
-import static org.apache.drill.exec.store.hbase.config.HBasePStoreProvider.QUALIFIER;
+import static org.apache.drill.exec.store.hbase.config.HBaseStoreProvider.FAMILY;
+import static org.apache.drill.exec.store.hbase.config.HBaseStoreProvider.QUALIFIER;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -26,9 +26,9 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreConfig.Mode;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreMode;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -38,24 +38,27 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
-public class HBasePStore<V> implements PStore<V> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePStore.class);
+public class HBasePersistentStore<V> implements Store<V> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStore.class);
 
-  private final PStoreConfig<V> config;
-
+  private final StoreConfig<V> config;
   private final HTableInterface table;
-
   private final String tableName;
   private final byte[] tableNameStartKey;
   private final byte[] tableNameStopKey;
 
-  public HBasePStore(PStoreConfig<V> config, HTableInterface table) throws IOException {
+  public HBasePersistentStore(StoreConfig<V> config, HTableInterface table) {
     this.tableName = config.getName() + '\0';
     this.tableNameStartKey = Bytes.toBytes(tableName); // "tableName\x00"
     this.tableNameStopKey = this.tableNameStartKey.clone();
     this.tableNameStopKey[tableNameStartKey.length-1] = 1;
     this.config = config;
     this.table = table;
+  }
+
+  @Override
+  public StoreMode getMode() {
+    return StoreMode.PERSISTENT;
   }
 
   @Override
@@ -163,7 +166,7 @@ public class HBasePStore<V> implements PStore<V> {
 
     @Override
     public boolean hasNext()  {
-      if (config.getMode() == Mode.BLOB_PERSISTENT
+      if (config.getMode() == StoreMode.BLOB_PERSISTENT
           && rowsRead >= config.getMaxIteratorSize()) {
         done = true;
       } else if (!done && current == null) {

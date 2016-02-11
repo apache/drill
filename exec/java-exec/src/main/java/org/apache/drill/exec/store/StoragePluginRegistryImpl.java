@@ -46,6 +46,7 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
@@ -54,8 +55,8 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 
@@ -82,7 +83,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
-  private final PStore<StoragePluginConfig> pluginSystemTable;
+  private final Store<StoragePluginConfig> pluginSystemTable;
   private final LogicalPlanPersistence lpPersistence;
   private final ScanResult classpathScan;
   private final LoadingCache<StoragePluginConfig, StoragePlugin> ephemeralPlugins;
@@ -93,12 +94,12 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     this.classpathScan = checkNotNull(context.getClasspathScan());
     try {
       this.pluginSystemTable = context //
-          .getPersistentStoreProvider() //
-          .getStore(PStoreConfig //
+          .getStoreProvider() //
+          .getStore(StoreConfig //
               .newJacksonBuilder(lpPersistence.getMapper(), StoragePluginConfig.class) //
               .name(PSTORE_NAME) //
               .build());
-    } catch (IOException | RuntimeException e) {
+    } catch (StoreException | RuntimeException e) {
       logger.error("Failure while loading storage plugin registry.", e);
       throw new RuntimeException("Failure while reading and loading storage plugin configuration.", e);
     }
@@ -120,7 +121,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         });
   }
 
-  public PStore<StoragePluginConfig> getStore() {
+  public Store<StoragePluginConfig> getStore() {
     return pluginSystemTable;
   }
 

@@ -20,26 +20,27 @@ package org.apache.drill.exec.store.sys;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import com.google.common.base.Preconditions;
+import com.typesafe.config.ConfigException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.store.sys.store.provider.CachingStoreProvider;
 
-import com.typesafe.config.ConfigException;
+public class StoreRegistry<C extends ClusterCoordinator> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoreRegistry.class);
 
-public class PStoreRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreRegistry.class);
+  private final DrillConfig config;
+  private final C coordinator;
 
-  private DrillConfig config;
-  private ClusterCoordinator coord;
-
-  public PStoreRegistry(ClusterCoordinator coord, DrillConfig config) {
-    this.coord = coord;
-    this.config = config;
+  public StoreRegistry(C coordinator, DrillConfig config) {
+    this.coordinator = Preconditions.checkNotNull(coordinator, "coordinator cannot be null");
+    this.config = Preconditions.checkNotNull(config, "config cannot be null");
   }
 
-  public ClusterCoordinator getClusterCoordinator() {
-    return this.coord;
+  public C getCoordinator() {
+    return this.coordinator;
   }
 
   public DrillConfig getConfig() {
@@ -47,12 +48,12 @@ public class PStoreRegistry {
   }
 
   @SuppressWarnings("unchecked")
-  public PStoreProvider newPStoreProvider() throws ExecutionSetupException {
+  public StoreProvider newPStoreProvider() throws ExecutionSetupException {
     try {
       String storeProviderClassName = config.getString(ExecConstants.SYS_STORE_PROVIDER_CLASS);
       logger.info("Using the configured PStoreProvider class: '{}'.", storeProviderClassName);
-      Class<? extends PStoreProvider> storeProviderClass = (Class<? extends PStoreProvider>) Class.forName(storeProviderClassName);
-      Constructor<? extends PStoreProvider> c = storeProviderClass.getConstructor(PStoreRegistry.class);
+      Class<? extends StoreProvider> storeProviderClass = (Class<? extends StoreProvider>) Class.forName(storeProviderClassName);
+      Constructor<? extends StoreProvider> c = storeProviderClass.getConstructor(StoreRegistry.class);
       return new CachingStoreProvider(c.newInstance(this));
     } catch (ConfigException.Missing | ClassNotFoundException | NoSuchMethodException | SecurityException
         | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

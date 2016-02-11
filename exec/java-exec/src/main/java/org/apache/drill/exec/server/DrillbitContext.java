@@ -39,7 +39,7 @@ import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.StoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -57,7 +57,7 @@ public class DrillbitContext {
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
   private final SystemOptionManager systemOptions;
-  private final PStoreProvider provider;
+  private final StoreProvider provider;
   private final CodeCompiler compiler;
   private final ScanResult classpathScan;
   private final LogicalPlanPersistence lpPersistence;
@@ -70,7 +70,7 @@ public class DrillbitContext {
       Controller controller,
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
-      PStoreProvider provider) {
+      StoreProvider provider) {
     this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
@@ -152,7 +152,7 @@ public class DrillbitContext {
     return reader;
   }
 
-  public PStoreProvider getPersistentStoreProvider() {
+  public StoreProvider getStoreProvider() {
     return provider;
   }
 

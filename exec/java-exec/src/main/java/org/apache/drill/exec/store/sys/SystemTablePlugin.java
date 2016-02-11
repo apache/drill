@@ -34,8 +34,8 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
-import org.apache.drill.exec.store.pojo.PojoDataType;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.pojo.PojoDataType;
 
 /**
  * A "storage" plugin for system tables.

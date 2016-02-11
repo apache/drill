@@ -6,36 +6,37 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys.zk;
+package org.apache.drill.exec.exception;
 
-import java.io.IOException;
+import org.apache.drill.common.exceptions.DrillException;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.sys.EStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.zookeeper.CreateMode;
-
-/**
- * Implementation of EStore using Zookeeper's EPHEMERAL node.
- * @param <V>
- */
-public class ZkEStore<V> extends ZkAbstractStore<V> implements EStore<V> {
-
-  public ZkEStore(CuratorFramework framework, PStoreConfig<V> config) throws IOException {
-    super(framework,config);
+public class StoreException extends DrillException {
+  public StoreException() {
+    super();
   }
 
-  @Override
-  protected CreateMode getCreateMode() {
-    return CreateMode.EPHEMERAL;
+  public StoreException(Throwable cause) {
+    super(cause);
+  }
+
+  public StoreException(String message) {
+    super(message);
+  }
+
+  public StoreException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public StoreException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 }

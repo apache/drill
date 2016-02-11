@@ -24,8 +24,9 @@ import java.util.NoSuchElementException;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreMode;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -38,27 +39,30 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 
-import static org.apache.drill.exec.store.mongo.config.MongoPStoreProvider.pKey;
+import static org.apache.drill.exec.store.mongo.config.MongoStoreProvider.pKey;
 
-public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
+public class MongoPersistentStore<V> implements Store<V> {
 
-  static final Logger logger = LoggerFactory.getLogger(MongoPStore.class);
+  static final Logger logger = LoggerFactory.getLogger(MongoPersistentStore.class);
 
-  private final PStoreConfig<V> config;
-
+  private final StoreConfig<V> config;
   private final MongoCollection<Document> collection;
 
-  public MongoPStore(PStoreConfig<V> config, MongoCollection<Document> collection)
-      throws IOException {
+  public MongoPersistentStore(StoreConfig<V> config, MongoCollection<Document> collection) {
 //    this.config = config;
 //    this.collection = collection;
     throw new UnsupportedOperationException("Mongo DB PStore not currently supported");
   }
 
   @Override
+  public StoreMode getMode() {
+    return StoreMode.PERSISTENT;
+  }
+
+  @Override
   public V get(String key) {
     try {
-      Bson query = Filters.eq(ID, key);
+      Bson query = Filters.eq(DrillMongoConstants.ID, key);
       Document document = collection.find(query).first();
       if (document != null) {
         return value((byte[]) document.get(pKey));
@@ -74,7 +78,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public void put(String key, V value) {
     try {
-      Document putObj = new Document(ID, key).append(pKey, bytes(value));
+      Document putObj = new Document(DrillMongoConstants.ID, key).append(pKey, bytes(value));
       collection.insertOne(putObj);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
@@ -85,7 +89,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public boolean putIfAbsent(String key, V value) {
     try {
-      Bson query = Filters.eq(ID, key);
+      Bson query = Filters.eq(DrillMongoConstants.ID, key);
       Bson update = Updates.set(pKey, bytes(value));
       UpdateResult updateResult = collection.updateOne(query, update, new UpdateOptions().upsert(true));
       return updateResult.getModifiedCount() == 1;
@@ -98,7 +102,7 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
   @Override
   public void delete(String key) {
     try {
-      Bson query = Filters.eq(ID, key);
+      Bson query = Filters.eq(DrillMongoConstants.ID, key);
       collection.deleteOne(query);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
@@ -164,12 +168,12 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
     @Override
     public String getKey() {
-      return result.get(ID).toString();
+      return result.get(DrillMongoConstants.ID).toString();
     }
 
     @Override
     public V getValue() {
-      return get(result.get(ID).toString());
+      return get(result.get(DrillMongoConstants.ID).toString());
     }
 
     @Override

@@ -15,52 +15,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys;
+package org.apache.drill.exec.store.sys.store.provider;
 
-import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.store.sys.PStoreConfig.Mode;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreProvider;
 
-public class CachingStoreProvider implements PStoreProvider, AutoCloseable {
+public class CachingStoreProvider extends BaseStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachingStoreProvider.class);
 
-  private final ConcurrentMap<PStoreConfig<?>, PStore<?>> storeCache = Maps.newConcurrentMap();
-  private final PStoreProvider provider;
+  private final ConcurrentMap<StoreConfig<?>, Store<?>> storeCache = Maps.newConcurrentMap();
+  private final StoreProvider provider;
 
-  public CachingStoreProvider(PStoreProvider provider) {
-    super();
+  public CachingStoreProvider(StoreProvider provider) {
     this.provider = provider;
   }
 
   @SuppressWarnings("unchecked")
-  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
-    PStore<?> s = storeCache.get(config);
-    if(s == null){
-      PStore<?> newStore = provider.getStore(config);
-      s = storeCache.putIfAbsent(config, newStore);
-      if(s == null){
-        s = newStore;
-      }else{
+  public <V> Store<V> getStore(final StoreConfig<V> config) throws StoreException {
+    final Store<?> store = storeCache.get(config);
+    if (store == null) {
+      final Store<?> newStore = provider.getStore(config);
+      final Store<?> finalStore = storeCache.putIfAbsent(config, newStore);
+      if (finalStore == null) {
+        return (Store<V>)newStore;
+      }
+      try {
         newStore.close();
+      } catch (Exception ex) {
+        throw new StoreException(ex);
       }
     }
 
-    return (PStore<V>) s;
+    return (Store<V>) store;
 
   }
 
   @Override
-  public void start() throws IOException {
+  public void start() throws Exception {
     provider.start();
   }
 
   @Override
   public void close() throws Exception {
-    for(PStore<?> store : storeCache.values()){
+    for(Store<?> store : storeCache.values()){
       store.close();
     }
     storeCache.clear();

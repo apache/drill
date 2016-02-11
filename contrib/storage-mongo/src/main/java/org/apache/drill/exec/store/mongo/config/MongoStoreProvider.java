@@ -19,12 +19,13 @@ package org.apache.drill.exec.store.mongo.config;
 
 import java.io.IOException;
 
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreProvider;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
-import org.apache.drill.exec.store.sys.local.LocalEStoreProvider;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreRegistry;
+import org.apache.drill.exec.store.sys.store.provider.BaseStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalStoreProvider;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -35,10 +36,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
 
-public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants {
+public class MongoStoreProvider extends BaseStoreProvider {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoPStoreProvider.class);
+      .getLogger(MongoStoreProvider.class);
 
   static final String pKey = "pKey";
 
@@ -47,11 +48,11 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   private MongoCollection<Document> collection;
 
   private final String mongoURL;
-  private final LocalEStoreProvider localEStoreProvider;
+  private final LocalStoreProvider localStoreProvider;
 
-  public MongoPStoreProvider(PStoreRegistry registry) {
-    mongoURL = registry.getConfig().getString(SYS_STORE_PROVIDER_MONGO_URL);
-    localEStoreProvider = new LocalEStoreProvider();
+  public MongoStoreProvider(StoreRegistry registry) throws StoreException {
+    mongoURL = registry.getConfig().getString(DrillMongoConstants.SYS_STORE_PROVIDER_MONGO_URL);
+    localStoreProvider = new LocalStoreProvider(registry.getConfig());
   }
 
   @Override
@@ -65,13 +66,13 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
   }
 
   @Override
-  public <V> PStore<V> getStore(PStoreConfig<V> config) throws IOException {
+  public <V> Store<V> getStore(StoreConfig<V> config) {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      return new MongoPStore<>(config, collection);
+      return new MongoPersistentStore<>(config, collection);
     case EPHEMERAL:
-      return localEStoreProvider.getStore(config);
+      return localStoreProvider.getStore(config);
     default:
       throw new IllegalStateException();
 

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys.local;
+package org.apache.drill.exec.store.sys.store;
 
 import static org.apache.drill.exec.ExecConstants.DRILL_SYS_FILE_SUFFIX;
 
@@ -28,28 +28,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.sys.PStore;
-import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreConfig;
+import org.apache.drill.exec.store.sys.StoreMode;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
-public class FilePStore<V> implements PStore<V> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilePStore.class);
-
+public class LocalPersistentStore<V> implements Store<V> {
+  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
 
   private final Path basePath;
-  private final PStoreConfig<V> config;
+  private final StoreConfig<V> config;
   private final DrillFileSystem fs;
 
-  public FilePStore(DrillFileSystem fs, Path base, PStoreConfig<V> config) {
+  public LocalPersistentStore(DrillFileSystem fs, Path base, StoreConfig<V> config) {
     super();
     this.basePath = new Path(base, config.getName());
     this.config = config;
@@ -60,6 +61,11 @@ public class FilePStore<V> implements PStore<V> {
     } catch (IOException e) {
       throw new RuntimeException("Failure setting pstore configuration path.");
     }
+  }
+
+  @Override
+  public StoreMode getMode() {
+    return StoreMode.PERSISTENT;
   }
 
   private void mkdirs(Path path) throws IOException{

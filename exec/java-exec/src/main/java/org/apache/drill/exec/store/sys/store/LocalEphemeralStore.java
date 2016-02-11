@@ -16,21 +16,26 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.sys.local;
+package org.apache.drill.exec.store.sys.store;
 
-import org.apache.drill.exec.store.sys.EStore;
-
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.drill.exec.store.sys.Store;
+import org.apache.drill.exec.store.sys.StoreMode;
 
 /**
  * Implementation of EStore using ConcurrentHashMap.
  * @param <V>
  */
-public class MapEStore<V> implements EStore<V> {
-  ConcurrentHashMap<String, V> store = new ConcurrentHashMap<>();
+public class LocalEphemeralStore<V> implements Store<V> {
+  private final ConcurrentHashMap<String, V> store = new ConcurrentHashMap<>();
+
+  @Override
+  public StoreMode getMode() {
+    return StoreMode.EPHEMERAL;
+  }
 
   @Override
   public V get(String key) {
@@ -54,7 +59,7 @@ public class MapEStore<V> implements EStore<V> {
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    V out = store.putIfAbsent(key, value);
+    final V out = store.putIfAbsent(key, value);
     return out == null;
   }
 

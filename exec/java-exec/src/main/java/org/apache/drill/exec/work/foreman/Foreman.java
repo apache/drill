@@ -163,7 +163,7 @@ public class Foreman implements Runnable {
     closeFuture.addListener(closeListener);
 
     queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
-    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
+    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
         stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
     final OptionManager optionManager = queryContext.getOptions();
