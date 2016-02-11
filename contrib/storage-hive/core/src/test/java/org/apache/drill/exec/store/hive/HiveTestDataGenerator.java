@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -35,6 +36,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.hive.serde.serdeConstants;
 
 import static org.apache.drill.BaseTestQuery.getTempDir;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -464,6 +466,32 @@ public class HiveTestDataGenerator {
     FileUtils.deleteQuietly(new File(whDir, "kv_sh"));
     //executeQuery(hiveDriver, "INSERT OVERWRITE TABLE kv_sh SELECT * FROM kv");
 
+    // Create text tables with skip header and footer table property
+    executeQuery(hiveDriver, "create database if not exists skipper");
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_small", "textfile", "1", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_small", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_text_large", "textfile", "2", "2"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_text_large", 5000, 2, 2));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_header", "textfile", "A", "1"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_header", 5, 1, 1));
+
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_incorrect_skip_footer", "textfile", "1", "A"));
+    executeQuery(hiveDriver, generateTestDataWithHeadersAndFooters("skipper.kv_incorrect_skip_footer", 5, 1, 1));
+
+    // Create rcfile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_rcfile_large", "rcfile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_rcfile_large select * from skipper.kv_text_large");
+
+    // Create parquet table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_parquet_large", "parquet", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_parquet_large select * from skipper.kv_text_large");
+
+    // Create sequencefile table with skip header and footer table property
+    executeQuery(hiveDriver, createTableWithHeaderFooterProperties("skipper.kv_sequencefile_large", "sequencefile", "1", "1"));
+    executeQuery(hiveDriver, "insert into table skipper.kv_sequencefile_large select * from skipper.kv_text_large");
+
     ss.close();
   }
 
@@ -519,5 +547,26 @@ public class HiveTestDataGenerator {
     printWriter.close();
 
     return file.getPath();
+  }
+
+  private String createTableWithHeaderFooterProperties(String tableName, String format, String headerValue, String footerValue) {
+    return String.format("create table %s (key int, value string) stored as %s tblproperties('%s'='%s', '%s'='%s')",
+        tableName, format, serdeConstants.HEADER_COUNT, headerValue, serdeConstants.FOOTER_COUNT, footerValue);
+  }
+
+  private String generateTestDataWithHeadersAndFooters(String tableName, int rowCount, int headerLines, int footerLines) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("insert into table ").append(tableName).append(" (key, value) values ");
+    int length = sb.length();
+    sb.append(StringUtils.repeat("('key_header', 'value_header')", ",", headerLines));
+    for (int i  = 1; i <= rowCount; i++) {
+        sb.append(",(").append(i).append(",").append("'key_").append(i).append("')");
+    }
+    if (headerLines <= 0) {
+      sb.deleteCharAt(length);
+    }
+    sb.append(StringUtils.repeat(",('key_footer', 'value_footer')", footerLines));
+
+    return sb.toString();
   }
 }

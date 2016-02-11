@@ -51,6 +51,19 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.db1", "kv_db1")
         .baselineValues("hive.db1", "avro")
         .go();
+
+    testBuilder()
+        .sqlQuery("SHOW TABLES IN hive.skipper")
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+        .baselineValues("hive.skipper", "kv_text_small")
+        .baselineValues("hive.skipper", "kv_text_large")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_header")
+        .baselineValues("hive.skipper", "kv_incorrect_skip_footer")
+        .baselineValues("hive.skipper", "kv_rcfile_large")
+        .baselineValues("hive.skipper", "kv_parquet_large")
+        .baselineValues("hive.skipper", "kv_sequencefile_large")
+        .go();
   }
 
   @Test
@@ -61,6 +74,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineColumns("SCHEMA_NAME")
         .baselineValues("hive.default")
         .baselineValues("hive.db1")
+        .baselineValues("hive.skipper")
         .baselineValues("dfs.default")
         .baselineValues("dfs.root")
         .baselineValues("dfs.tmp")
