@@ -260,7 +260,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     boolean useDefaultFrame = false; // at least one window function uses the DefaultFrameTemplate
     boolean useCustomFrame = false; // at least one window function uses the CustomFrameTemplate
 
-    hasOrderBy = popConfig.getOrderings().length > 0;
+    hasOrderBy = popConfig.getOrderings().size() > 0;
 
     // all existing vectors will be transferred to the outgoing container in framer.doWork()
     for (final VectorWrapper<?> wrapper : batch) {

@@ -78,7 +78,7 @@ public class UnionDistinctPrel extends UnionPrel {
     }
 
     ///TODO: change this to UnionDistinct once implemented end-to-end..
-    UnionAll unionAll = new UnionAll(inputPops.toArray(new PhysicalOperator[inputPops.size()]));
+    UnionAll unionAll = new UnionAll(inputPops);
     return creator.addMetadata(this, unionAll);
   }
 

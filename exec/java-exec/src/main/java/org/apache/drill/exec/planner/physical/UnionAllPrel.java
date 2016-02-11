@@ -79,7 +79,7 @@ public class UnionAllPrel extends UnionPrel {
       inputPops.add( ((Prel)this.getInputs().get(i)).getPhysicalOperator(creator));
     }
 
-    UnionAll unionall = new UnionAll(inputPops.toArray(new PhysicalOperator[inputPops.size()]));
+    UnionAll unionall = new UnionAll(inputPops);
     return creator.addMetadata(this, unionall);
   }
 

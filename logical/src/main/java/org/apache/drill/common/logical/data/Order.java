@@ -38,16 +38,16 @@ import com.google.common.collect.Lists;
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
 
-  private final Ordering[] orderings;
+  private final List<Ordering> orderings;
   private final FieldReference within;
 
   @JsonCreator
-  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") Ordering... orderings) {
+  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") List<Ordering> orderings) {
     this.orderings = orderings;
     this.within = within;
   }
 
-  public Ordering[] getOrderings() {
+  public List<Ordering> getOrderings() {
     return orderings;
   }
 
@@ -244,7 +244,7 @@ public class Order extends SingleInputOperator {
 
     @Override
     public Order internalBuild() {
-      return new Order(within, orderings.toArray(new Ordering[orderings.size()]));
+      return new Order(within, orderings);
     }
 
 

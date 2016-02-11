@@ -18,6 +18,7 @@
 package org.apache.drill.common.logical.data;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
@@ -31,10 +32,11 @@ import com.google.common.collect.Iterators;
 public class RunningAggregate extends SingleInputOperator{
 
   private final FieldReference within;
-  private final NamedExpression[]  aggregations;
+  private final List<NamedExpression> aggregations;
 
   @JsonCreator
-  public RunningAggregate(@JsonProperty("within") FieldReference within, @JsonProperty("aggregations") NamedExpression[] aggregations) {
+  public RunningAggregate(@JsonProperty("within") FieldReference within,
+                          @JsonProperty("aggregations") List<NamedExpression> aggregations) {
     super();
     this.within = within;
     this.aggregations = aggregations;
@@ -44,7 +46,7 @@ public class RunningAggregate extends SingleInputOperator{
     return within;
   }
 
-  public NamedExpression[] getAggregations() {
+  public List<NamedExpression> getAggregations() {
     return aggregations;
   }
 

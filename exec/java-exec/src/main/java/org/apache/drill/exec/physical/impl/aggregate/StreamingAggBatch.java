@@ -139,7 +139,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Next outcome of {}", outcome);
       switch (outcome) {
       case NONE:
-        if (first && popConfig.getKeys().length == 0) {
+        if (first && popConfig.getKeys().size() == 0) {
           // if we have a straight aggregate and empty input batch, we need to handle it in a different way
           constructSpecialBatch();
           first = false;
@@ -225,7 +225,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
            * buffer
            */
           throw new DrillRuntimeException("FixedWidth vectors is the expected output vector type. " +
-              "Corresponding expression: " + popConfig.getExprs()[exprIndex].toString());
+              "Corresponding expression: " + popConfig.getExprs().get(exprIndex).toString());
         }
       }
       exprIndex++;
@@ -260,14 +260,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     container.clear();
 
-    LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().length];
-    LogicalExpression[] valueExprs = new LogicalExpression[popConfig.getExprs().length];
-    TypedFieldId[] keyOutputIds = new TypedFieldId[popConfig.getKeys().length];
+    LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
+    LogicalExpression[] valueExprs = new LogicalExpression[popConfig.getExprs().size()];
+    TypedFieldId[] keyOutputIds = new TypedFieldId[popConfig.getKeys().size()];
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
     for (int i = 0; i < keyExprs.length; i++) {
-      final NamedExpression ne = popConfig.getKeys()[i];
+      final NamedExpression ne = popConfig.getKeys().get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector,context.getFunctionRegistry() );
       if (expr == null) {
         continue;
@@ -279,7 +279,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
 
     for (int i = 0; i < valueExprs.length; i++) {
-      final NamedExpression ne = popConfig.getExprs()[i];
+      final NamedExpression ne = popConfig.getExprs().get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
       if (expr instanceof IfExpression) {
         throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);

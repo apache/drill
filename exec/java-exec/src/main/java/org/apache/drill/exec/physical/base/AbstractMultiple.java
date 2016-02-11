@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.base;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.google.common.collect.Iterators;
 
@@ -27,19 +28,19 @@ import com.google.common.collect.Iterators;
 public abstract class AbstractMultiple extends AbstractBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractMultiple.class);
 
-  protected final PhysicalOperator[] children;
+  protected final List<PhysicalOperator> children;
 
-  protected AbstractMultiple(PhysicalOperator[] children) {
+  protected AbstractMultiple(List<PhysicalOperator> children) {
     this.children = children;
   }
 
-  public PhysicalOperator[] getChildren() {
+  public List<PhysicalOperator> getChildren() {
     return children;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.forArray(children);
+    return children.iterator();
   }
 
 

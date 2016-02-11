@@ -38,7 +38,7 @@ public class Join extends LogicalOperatorBase {
   private final LogicalOperator left;
   private final LogicalOperator right;
   private final JoinRelType type;
-  private final JoinCondition[] conditions;
+  private final List<JoinCondition> conditions;
 
   public static JoinRelType resolve(String val) {
     for (JoinRelType jt : JoinRelType.values()) {
@@ -49,14 +49,17 @@ public class Join extends LogicalOperatorBase {
     throw new ExpressionParsingException(String.format("Unable to determine join type for value '%s'.", val));
   }
 
+  // TODO - should not have two @JsonCreators, need to figure out which one is being used
+  // I'm guess this one, is the case insensitive match in resolve() actually needed?
   @JsonCreator
   public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right,
-      @JsonProperty("conditions") JoinCondition[] conditions, @JsonProperty("type") String type) {
+      @JsonProperty("conditions") List<JoinCondition> conditions, @JsonProperty("type") String type) {
     this(left, right, conditions, resolve(type));
   }
 
   @JsonCreator
-  public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right, @JsonProperty("conditions")JoinCondition[] conditions, @JsonProperty("type") JoinRelType type) {
+  public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right,
+              @JsonProperty("conditions") List<JoinCondition> conditions, @JsonProperty("type") JoinRelType type) {
     super();
     this.conditions = conditions;
     this.left = left;
@@ -75,7 +78,7 @@ public class Join extends LogicalOperatorBase {
     return right;
   }
 
-  public JoinCondition[] getConditions() {
+  public List<JoinCondition> getConditions() {
     return conditions;
   }
 
@@ -132,7 +135,7 @@ public class Join extends LogicalOperatorBase {
       Preconditions.checkNotNull(left);
       Preconditions.checkNotNull(right);
       Preconditions.checkNotNull(type);
-      return new Join(left, right, conditions.toArray(new JoinCondition[conditions.size()]), type);
+      return new Join(left, right, conditions, type);
     }
 
   }
