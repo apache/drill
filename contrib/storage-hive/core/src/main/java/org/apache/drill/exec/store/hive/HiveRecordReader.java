@@ -18,9 +18,13 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -46,6 +50,8 @@ import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -57,9 +63,9 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 import com.google.common.collect.Lists;
@@ -95,8 +101,8 @@ public class HiveRecordReader extends AbstractRecordReader {
   // Converter which converts data from partition schema to table schema.
   private Converter partTblObjectInspectorConverter;
 
-  protected Object key, value;
-  protected org.apache.hadoop.mapred.RecordReader reader;
+  protected Object key;
+  protected RecordReader reader;
   protected List<ValueVector> vectors = Lists.newArrayList();
   protected List<ValueVector> pVectors = Lists.newArrayList();
   protected boolean empty;
@@ -104,6 +110,7 @@ public class HiveRecordReader extends AbstractRecordReader {
   private FragmentContext fragmentContext;
   private String defaultPartitionValue;
   private final UserGroupInformation proxyUgi;
+  private SkipRecordsInspector skipRecordsInspector;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
@@ -127,8 +134,9 @@ public class HiveRecordReader extends AbstractRecordReader {
     // Get the configured default val
     defaultPartitionValue = hiveConf.get(ConfVars.DEFAULTPARTITIONNAME.varname);
 
+    Properties tableProperties;
     try {
-      final Properties tableProperties = MetaStoreUtils.getTableMetadata(table);
+      tableProperties = MetaStoreUtils.getTableMetadata(table);
       final Properties partitionProperties =
           (partition == null) ?  tableProperties :
               HiveUtilities.getPartitionMetadata(partition, table);
@@ -220,7 +228,7 @@ public class HiveRecordReader extends AbstractRecordReader {
         throw new ExecutionSetupException("Failed to get o.a.hadoop.mapred.RecordReader from Hive InputFormat", e);
       }
       key = reader.createKey();
-      value = reader.createValue();
+      skipRecordsInspector = new SkipRecordsInspector(tableProperties, reader);
     }
   }
 
@@ -286,6 +294,16 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
   }
 
+  /**
+   * To take into account Hive "skip.header.lines.count" property first N values from file are skipped.
+   * Since file can be read in batches (depends on TARGET_RECORD_COUNT), additional checks are made
+   * to determine if it's new file or continuance.
+   *
+   * To take into account Hive "skip.footer.lines.count" property values are buffered in queue
+   * until queue size exceeds number of footer lines to skip, then first value in queue is retrieved.
+   * Buffer of value objects is used to re-use value objects in order to reduce number of created value objects.
+   * For each new file queue is cleared to drop footer lines from previous file.
+   */
   @Override
   public int next() {
     for (ValueVector vv : vectors) {
@@ -297,18 +315,28 @@ public class HiveRecordReader extends AbstractRecordReader {
     }
 
     try {
+      skipRecordsInspector.reset();
       int recordCount = 0;
-      while (recordCount < TARGET_RECORD_COUNT && reader.next(key, value)) {
-        Object deSerializedValue = partitionSerDe.deserialize((Writable) value);
-        if (partTblObjectInspectorConverter != null) {
-          deSerializedValue = partTblObjectInspectorConverter.convert(deSerializedValue);
+      Object value;
+      while (recordCount < TARGET_RECORD_COUNT && reader.next(key, value = skipRecordsInspector.getNextValue())) {
+        if (skipRecordsInspector.doSkipHeader(recordCount++)) {
+          continue;
         }
-        readHiveRecordAndInsertIntoRecordBatch(deSerializedValue, recordCount);
-        recordCount++;
+        Object bufferedValue = skipRecordsInspector.bufferAdd(value);
+        if (bufferedValue != null) {
+          Object deSerializedValue = partitionSerDe.deserialize((Writable) bufferedValue);
+          if (partTblObjectInspectorConverter != null) {
+            deSerializedValue = partTblObjectInspectorConverter.convert(deSerializedValue);
+          }
+          readHiveRecordAndInsertIntoRecordBatch(deSerializedValue, skipRecordsInspector.getActualCount());
+          skipRecordsInspector.incrementActualCount();
+        }
+        skipRecordsInspector.incrementTempCount();
       }
 
-      setValueCountAndPopulatePartitionVectors(recordCount);
-      return recordCount;
+      setValueCountAndPopulatePartitionVectors(skipRecordsInspector.getActualCount());
+      skipRecordsInspector.updateContinuance();
+      return skipRecordsInspector.getActualCount();
     } catch (IOException | SerDeException e) {
       throw new DrillRuntimeException(e);
     }
@@ -360,6 +388,128 @@ public class HiveRecordReader extends AbstractRecordReader {
       }
 
       vector.getMutator().setValueCount(recordCount);
+    }
+  }
+
+  /**
+   * SkipRecordsInspector encapsulates logic to skip header and footer from file.
+   * Logic is applicable only for predefined in constructor file formats.
+   */
+  private class SkipRecordsInspector {
+
+    private final Set<Object> fileFormats;
+    private int headerCount;
+    private int footerCount;
+    private Queue<Object> footerBuffer;
+    // indicates if we continue reading the same file
+    private boolean continuance;
+    private int holderIndex;
+    private List<Object> valueHolder;
+    private int actualCount;
+    // actualCount without headerCount, used to determine holderIndex
+    private int tempCount;
+
+    private SkipRecordsInspector(Properties tableProperties, RecordReader reader) {
+      this.fileFormats = new HashSet<Object>(Arrays.asList(org.apache.hadoop.mapred.TextInputFormat.class.getName()));
+      this.headerCount = retrievePositiveIntProperty(tableProperties, serdeConstants.HEADER_COUNT, 0);
+      this.footerCount = retrievePositiveIntProperty(tableProperties, serdeConstants.FOOTER_COUNT, 0);
+      this.footerBuffer = Lists.newLinkedList();
+      this.continuance = false;
+      this.holderIndex = -1;
+      this.valueHolder = initializeValueHolder(reader, footerCount);
+      this.actualCount = 0;
+      this.tempCount = 0;
+    }
+
+    private boolean doSkipHeader(int recordCount) {
+      return !continuance && recordCount < headerCount;
+    }
+
+    private void reset() {
+      tempCount = holderIndex + 1;
+      actualCount = 0;
+      if (!continuance) {
+        footerBuffer.clear();
+      }
+    }
+
+    private Object bufferAdd(Object value) throws SerDeException {
+      footerBuffer.add(value);
+      if (footerBuffer.size() <= footerCount) {
+        return null;
+      }
+      return footerBuffer.poll();
+    }
+
+    private Object getNextValue() {
+      holderIndex = tempCount % getHolderSize();
+      return valueHolder.get(holderIndex);
+    }
+
+    private int getHolderSize() {
+      return valueHolder.size();
+    }
+
+    private void updateContinuance() {
+      this.continuance = actualCount != 0;
+    }
+
+    private int incrementTempCount() {
+      return ++tempCount;
+    }
+
+    private int getActualCount() {
+      return actualCount;
+    }
+
+    private int incrementActualCount() {
+      return ++actualCount;
+    }
+
+    /**
+     * Retrieves positive numeric property from Properties object by name.
+     * Return default value if
+     * 1. file format is absent in predefined file formats list
+     * 2. property doesn't exist in table properties
+     * 3. property value is negative
+     * otherwise casts value to int.
+     *
+     * @param tableProperties property holder
+     * @param propertyName    name of the property
+     * @param defaultValue    default value
+     * @return property numeric value
+     * @throws NumberFormatException if property value is non-numeric
+     */
+    private int retrievePositiveIntProperty(Properties tableProperties, String propertyName, int defaultValue) {
+      int propertyIntValue = defaultValue;
+      if (!fileFormats.contains(tableProperties.get(hive_metastoreConstants.FILE_INPUT_FORMAT))) {
+        return propertyIntValue;
+      }
+      Object propertyObject = tableProperties.get(propertyName);
+      if (propertyObject != null) {
+        try {
+          propertyIntValue = Integer.valueOf((String) propertyObject);
+        } catch (NumberFormatException e) {
+          throw new NumberFormatException(String.format("Hive table property %s value '%s' is non-numeric", propertyName, propertyObject.toString()));
+        }
+      }
+      return propertyIntValue < 0 ? defaultValue : propertyIntValue;
+    }
+
+    /**
+     * Creates buffer of objects to be used as values, so these values can be re-used.
+     * Objects number depends on number of lines to skip in the end of the file plus one object.
+     *
+     * @param reader          RecordReader to return value object
+     * @param skipFooterLines number of lines to skip at the end of the file
+     * @return list of objects to be used as values
+     */
+    private List<Object> initializeValueHolder(RecordReader reader, int skipFooterLines) {
+      List<Object> valueHolder = new ArrayList<>(skipFooterLines + 1);
+      for (int i = 0; i <= skipFooterLines; i++) {
+        valueHolder.add(reader.createValue());
+      }
+      return valueHolder;
     }
   }
 }
