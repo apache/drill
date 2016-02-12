@@ -54,6 +54,13 @@ public abstract class AbstractRecordReader implements RecordReader {
         + ", isSkipQuery = " + isSkipQuery + "]";
   }
 
+  /**
+   *
+   * @param projected : The column list to be returned from this RecordReader.
+   *                  1) empty column list: this is for skipAll query. It's up to each storage-plugin to
+   *                  choose different policy of handling skipAll query. By default, it will use * column.
+   *                  2) NULL : is NOT allowed. It requires the planner's rule, or GroupScan or ScanBatchCreator to handle NULL.
+   */
   protected final void setColumns(Collection<SchemaPath> projected) {
     Preconditions.checkNotNull(projected, COL_NULL_ERROR);
     isSkipQuery = projected.isEmpty();
