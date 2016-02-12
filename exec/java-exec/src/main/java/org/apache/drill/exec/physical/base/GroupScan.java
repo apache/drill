@@ -35,7 +35,13 @@ import com.google.common.collect.ImmutableList;
  */
 public interface GroupScan extends Scan, HasAffinity{
 
+  /**
+   * columns list in GroupScan : 1) empty_column is for skipAll query.
+   *                             2) NULL is interpreted as ALL_COLUMNS.
+   *  How to handle skipAll query is up to each storage plugin, with different policy in corresponding RecordReader.
+   */
   public static final List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.getSimplePath("*"));
+
   public static final long NO_COLUMN_STATS = -1;
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;

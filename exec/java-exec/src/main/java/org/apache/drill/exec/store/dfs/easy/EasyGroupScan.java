@@ -99,7 +99,7 @@ public class EasyGroupScan extends AbstractFileGroupScan{
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
-    this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
+    this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     initFromSelection(selection, formatPlugin);
   }
