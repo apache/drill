@@ -51,6 +51,62 @@
         }
       }
     },
+    s3: {
+      type: "file",
+      connection: "s3a://my.bucket.location.com",
+      enabled : false,
+      config : {
+        "fs.s3a.access.key": "ID",
+        "fs.s3a.secret.key": "SECRET"
+      },
+      workspaces: {
+        "root" : {
+          location: "/",
+          writable: false
+        },
+        "tmp" : {
+          location: "/tmp",
+          writable: true
+        }
+      },
+      formats: {
+        "psv" : {
+          type: "text",
+          extensions: [ "tbl" ],
+          delimiter: "|"
+        },
+        "csv" : {
+          type: "text",
+          extensions: [ "csv" ],
+          delimiter: ","
+        },
+        "tsv" : {
+          type: "text",
+          extensions: [ "tsv" ],
+          delimiter: "\t"
+        },
+        "parquet" : {
+          type: "parquet"
+        },
+        "json" : {
+          type: "json",
+          extensions: [ "json" ]
+        },
+        "avro" : {
+          type: "avro"
+        },
+        "sequencefile": {
+          type : "sequencefile",
+          extensions: [ "seq" ]
+        },
+        "csvh" : {
+          type: "text",
+          extensions: [ "csvh" ],
+          delimiter: ",",
+          extractHeader: true
+        }
+      }
+    },
 
     cp: {
       type: "file",
