@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.dfs;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
@@ -29,6 +30,7 @@ public class FileSystemConfig extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemConfig.class);
   public static final String NAME = "file";
   public String connection;
+  public Map<String, String> config;
   public Map<String, WorkspaceConfig> workspaces;
   public Map<String, FormatPluginConfig> formats;
 
@@ -36,6 +38,7 @@ public class FileSystemConfig extends StoragePluginConfig {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
+    result = prime * result + ((config == null) ? 0 : config.hashCode());
     result = prime * result + ((connection == null) ? 0 : connection.hashCode());
     result = prime * result + ((formats == null) ? 0 : formats.hashCode());
     result = prime * result + ((workspaces == null) ? 0 : workspaces.hashCode());
@@ -73,6 +76,13 @@ public class FileSystemConfig extends StoragePluginConfig {
         return false;
       }
     } else if (!workspaces.equals(other.workspaces)) {
+      return false;
+    }
+    if (config == null) {
+      if (other.config != null) {
+        return false;
+      }
+    } else if (!config.equals(other.config)) {
       return false;
     }
     return true;
