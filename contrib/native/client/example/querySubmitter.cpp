@@ -317,10 +317,16 @@ int main(int argc, char* argv[]) {
         std::vector<Drill::QueryHandle_t*>::iterator queryHandleIter;
 
         Drill::DrillClient client;
-        // To log to file
-        //DrillClient::initLogging("/var/log/drill/", l);
+#if defined _WIN32 || defined _WIN64
+		const char* logpathPrefix = "C:\\Users\\Administrator\\Documents\\temp\\drillclient";
+#else
+		const char* logpathPrefix = "/var/log/drill/drillclient";
+#endif
+		// To log to file
+        Drill::DrillClient::initLogging(logpathPrefix, l);
         // To log to stderr
-        Drill::DrillClient::initLogging(NULL, l);
+        //Drill::DrillClient::initLogging(NULL, l);
+
         //Drill::DrillClientConfig::setBufferLimit(2*1024*1024); // 2MB. Allows us to hold at least two record batches.
         int nQueries=queryInputs.size();
         Drill::DrillClientConfig::setBufferLimit(nQueries*2*1024*1024); // 2MB per query. Allows us to hold at least two record batches.
