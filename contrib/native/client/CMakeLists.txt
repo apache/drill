@@ -36,7 +36,7 @@ else()
     set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread )
+find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
 include_directories(${Boost_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)

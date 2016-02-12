@@ -34,13 +34,18 @@
 #include <queue>
 #include <vector>
 #include <boost/asio.hpp>
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/thread.hpp>
-#ifdef _WIN32
+
+#if defined _WIN32  || defined _WIN64
 #include <zookeeper.h>
+//Windows header files redefine 'random'
+#ifdef random
+#undef random
+#endif
 #else
 #include <zookeeper/zookeeper.h>
 #endif
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/thread.hpp>
 
 #include "drill/drillClient.hpp"
 #include "rpcEncoder.hpp"
@@ -61,9 +66,10 @@ class RpcDecoder;
 class DrillClientQueryResult{
     friend class DrillClientImpl;
     public:
-    DrillClientQueryResult(DrillClientImpl * pClient, uint64_t coordId):
+    DrillClientQueryResult(DrillClientImpl * pClient, uint64_t coordId, const std::string& query):
         m_pClient(pClient),
         m_coordinationId(coordId),
+        m_query(query),
         m_numBatches(0),
         m_columnDefs(new std::vector<Drill::FieldMetadata*>),
         m_bIsQueryPending(true),
@@ -116,6 +122,7 @@ class DrillClientQueryResult{
     bool isCancelled(){return this->m_bCancel;};
     bool hasSchemaChanged(){return this->m_bHasSchemaChanged;};
     int32_t getCoordinationId(){ return this->m_coordinationId;}
+    const std::string&  getQuery(){ return this->m_query;}
 
     void setQueryId(exec::shared::QueryId* q){this->m_pQueryId=q;}
     void* getListenerContext() {return this->m_pListenerCtx;}
@@ -147,6 +154,8 @@ class DrillClientQueryResult{
     DrillClientImpl* m_pClient;
 
     int32_t m_coordinationId;
+    const std::string& m_query;
+
     size_t m_numBatches; // number of record batches received so far
 
     // Vector of Buffers holding data returned by the server
@@ -275,7 +284,6 @@ class DrillClientImpl{
         void handleHeartbeatTimeout(const boost::system::error_code & err); // send a heartbeat. If send fails, broadcast error, close connection and bail out.
 
         int32_t getNextCoordinationId(){ return ++m_coordinationId; };
-        void parseConnectStr(const char* connectStr, std::string& pathToDrill, std::string& protocol, std::string& hostPortStr);
         // send synchronous messages
         //connectionStatus_t recvSync(InBoundRpcMessage& msg);
         connectionStatus_t sendSync(OutBoundRpcMessage& msg);
@@ -331,6 +339,9 @@ class DrillClientImpl{
         std::string m_handshakeErrorMsg;
         bool m_bIsConnected;
 
+        std::string m_connectStr; 
+
+        // 
         // number of outstanding read requests.
         // handleRead will keep asking for more results as long as this number is not zero.
         size_t m_pendingRequests;
@@ -356,6 +367,8 @@ class DrillClientImpl{
         boost::asio::deadline_timer m_deadlineTimer; // to timeout async queries that never return
         boost::asio::deadline_timer m_heartbeatTimer; // to send heartbeat messages
 
+        std::string m_connectedHost; // The hostname and port the socket is connected to.
+
         //for synchronous messages, like validate handshake
         ByteBuf_t m_rbuf; // buffer for receiving synchronous messages
         DataBuf m_wbuf; // buffer for sending synchronous message
@@ -372,6 +385,7 @@ class DrillClientImpl{
         // Condition variable to signal completion of all queries. 
         boost::condition_variable m_cv;
 
+        bool m_bIsDirectConnection;
 };
 
 inline bool DrillClientImpl::Active() {
@@ -391,6 +405,11 @@ class ZookeeperImpl{
         void debugPrint();
         std::string& getError(){return m_err;}
         const exec::DrillbitEndpoint& getEndPoint(){ return m_drillServiceInstance.endpoint();}
+        // return unshuffled list of drillbits
+        int getAllDrillbits(const char* connectStr, const char* pathToDrill, std::vector<std::string>& drillbits);
+        // picks the index drillbit and returns the corresponding endpoint object
+        int getEndPoint(std::vector<std::string>& drillbits, size_t index, exec::DrillbitEndpoint& endpoint);
+        
 
     private:
         static char s_drillRoot[];
@@ -407,6 +426,7 @@ class ZookeeperImpl{
         boost::condition_variable m_cv;
         bool m_bConnecting;
         exec::DrillServiceInstance m_drillServiceInstance;
+        std::string m_rootDir;
 };
 
 } // namespace Drill
