@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-
+#include <stdlib.h>
 #include <boost/assign.hpp>
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
@@ -317,7 +317,12 @@ void DrillClient::initLogging(const char* path, logLevel_t l){
 }
 
 DrillClient::DrillClient(){
-    this->m_pImpl=new DrillClientImpl;
+    const char* enablePooledClient=std::getenv(ENABLE_CONNECTION_POOL_ENV);
+    if(enablePooledClient!=NULL && atoi(enablePooledClient)!=0){
+        this->m_pImpl=new PooledDrillClientImpl;
+    }else{
+        this->m_pImpl=new DrillClientImpl;
+    }
 }
 
 DrillClient::~DrillClient(){

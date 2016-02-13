@@ -63,6 +63,43 @@ class RecordBatch;
 class RpcEncoder;
 class RpcDecoder;
 
+/*
+ * Defines the interface used by DrillClient and implemented by DrillClientImpl and PooledDrillClientImpl
+ * */
+class DrillClientImplBase{
+    public:
+        DrillClientImplBase(){
+        }
+
+        virtual ~DrillClientImplBase(){
+        }
+
+        //Connect via Zookeeper or directly.
+        //Makes an initial connection to a drillbit. successful connect adds the first drillbit to the pool.
+        virtual connectionStatus_t connect(const char* connStr)=0;
+
+        // Test whether the client is active. Returns true if any one of the underlying connections is active
+        virtual bool Active()=0;
+
+        // Closes all open connections. 
+        virtual void Close()=0;
+
+        // Returns the last error encountered by any of the underlying executing queries or connections
+        virtual DrillClientError* getError()=0;
+
+        // Submits a query to a drillbit. 
+        virtual DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx)=0;
+
+        //Waits as a connection has results pending
+        virtual void waitForResults()=0;
+
+        //Validates handshake at connect time.
+        virtual connectionStatus_t validateHandshake(DrillUserProperties* props)=0;
+
+        virtual void freeQueryResources(DrillClientQueryResult* pQryResult)=0;
+
+};
+
 class DrillClientQueryResult{
     friend class DrillClientImpl;
     public:
@@ -198,7 +235,7 @@ class DrillClientQueryResult{
     void * m_pListenerCtx;
 };
 
-class DrillClientImpl{
+class DrillClientImpl : public DrillClientImplBase{
     public:
         DrillClientImpl():
             m_coordinationId(1),
@@ -265,9 +302,14 @@ class DrillClientImpl{
         DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
         void waitForResults();
         connectionStatus_t validateHandshake(DrillUserProperties* props);
+        void freeQueryResources(DrillClientQueryResult* pQryResult){
+            // Doesn't need to do anything
+            return;
+        };
 
     private:
         friend class DrillClientQueryResult;
+        friend class PooledDrillClientImpl;
 
         struct compareQueryId{
             bool operator()(const exec::shared::QueryId* q1, const exec::shared::QueryId* q2) const {
@@ -392,6 +434,98 @@ inline bool DrillClientImpl::Active() {
     return this->m_bIsConnected;;
 }
 
+
+/* *
+ *  Provides the same public interface as a DrillClientImpl but holds a pool of DrillClientImpls.
+ *  Every submitQuery uses a different DrillClientImpl to distribute the load.
+ *  DrillClient can use this class instead of DrillClientImpl to get better load balancing.
+ * */
+class PooledDrillClientImpl : public DrillClientImplBase{
+    public:
+        PooledDrillClientImpl(){
+            m_bIsDirectConnection=false;
+            m_maxConcurrentConnections = DEFAULT_MAX_CONCURRENT_CONNECTIONS;
+            char* maxConn=std::getenv(MAX_CONCURRENT_CONNECTIONS_ENV);
+            if(maxConn!=NULL){
+                m_maxConcurrentConnections=atoi(maxConn);
+            }
+            m_lastConnection=-1;
+            m_pError=NULL;
+            m_queriesExecuted=0;
+            m_pUserProperties=NULL;
+        }
+
+        ~PooledDrillClientImpl(){
+            for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
+                delete *it;
+            }
+            m_clientConnections.clear();
+            if(m_pUserProperties!=NULL){ delete m_pUserProperties; m_pUserProperties=NULL;}
+            if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
+        }
+
+        //Connect via Zookeeper or directly.
+        //Makes an initial connection to a drillbit. successful connect adds the first drillbit to the pool.
+        connectionStatus_t connect(const char* connStr);
+
+        // Test whether the client is active. Returns true if any one of the underlying connections is active
+        bool Active();
+
+        // Closes all open connections. 
+        void Close() ;
+
+        // Returns the last error encountered by any of the underlying executing queries or connections
+        DrillClientError* getError();
+
+        // Submits a query to a drillbit. If more than one query is to be sent, we may choose a
+        // a different drillbit in the pool. No more than m_maxConcurrentConnections will be allowed.
+        // Connections once added to the pool will be removed only when the DrillClient is closed.
+        DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
+
+        //Waits as long as any one drillbit connection has results pending
+        void waitForResults();
+
+        //Validates handshake only against the first drillbit connected to.
+        connectionStatus_t validateHandshake(DrillUserProperties* props);
+
+        void freeQueryResources(DrillClientQueryResult* pQryResult);
+
+        int getDrillbitCount(){ return m_drillbits.size();};
+
+    private:
+        
+        std::string m_connectStr; 
+        std::string m_lastQuery;
+        
+        // A list of all the current client connections. We choose a new one for every query. 
+        // When picking a drillClientImpl to use, we see how many queries each drillClientImpl
+        // is currently executing. If none,  
+        std::vector<DrillClientImpl*> m_clientConnections; 
+        
+        //ZookeeperImpl zook;
+        
+        // Use this to decide which drillbit to select next from the list of drillbits.
+        size_t m_lastConnection;
+		boost::mutex m_cMutex;
+
+        // Number of queries executed so far. Can be used to select a new Drillbit from the pool.
+        size_t m_queriesExecuted;
+
+        size_t m_maxConcurrentConnections;
+
+        bool m_bIsDirectConnection;
+
+        DrillClientError* m_pError;
+
+        connectionStatus_t handleConnError(connectionStatus_t status, std::string msg);
+        // get a connection from the pool or create a new one. Return NULL if none is found
+        DrillClientImpl* getOneConnection();
+
+        std::vector<std::string> m_drillbits;
+
+        DrillUserProperties* m_pUserProperties;//Keep a copy of user properties
+};
+
 class ZookeeperImpl{
     public:
         ZookeeperImpl();
@@ -399,7 +533,7 @@ class ZookeeperImpl{
         static ZooLogLevel getZkLogLevel();
         // comma separated host:port pairs, each corresponding to a zk
         // server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002
-        int connectToZookeeper(const char* connectStr, const char* pathToDrill);
+        DEPRECATED int connectToZookeeper(const char* connectStr, const char* pathToDrill);
         void close();
         static void watcher(zhandle_t *zzh, int type, int state, const char *path, void* context);
         void debugPrint();

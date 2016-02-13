@@ -16,6 +16,7 @@
 * limitations under the License.
 */
 
+#include <limits.h>
 #include <stdlib.h>
 #include "utils.hpp"
 #include "logger.hpp"

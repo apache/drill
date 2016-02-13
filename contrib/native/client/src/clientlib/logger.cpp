@@ -53,19 +53,19 @@ void Logger::init(const char* path){
         if (lastindex != std::string::npos){
             filename = fullname.substr(0, lastindex)
                 + "-"
-                + std::to_string(Utils::s_randomNumber())
+                + Utils::to_string(Utils::s_randomNumber())
                 + fullname.substr(lastindex, fullname.length());
         }
         else{
             filename = fullname.substr(0, fullname.length())
                 + "-"
-                + std::to_string(Utils::s_randomNumber())
+                + Utils::to_string(Utils::s_randomNumber())
                 + ".log";
         }
         //m_filepath=path;
         m_filepath = filename.c_str();
         m_pOutFileStream = new std::ofstream;
-        m_pOutFileStream->open(m_filepath, std::ofstream::out | std::ofstream::app);
+        m_pOutFileStream->open(m_filepath.c_str(), std::ios_base::out | std::ios_base::app);
         if (!m_pOutFileStream->is_open()){
             std::cerr << "Logfile could not be opened. Logging to stdout" << std::endl;
             m_filepath.erase();

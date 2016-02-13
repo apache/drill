@@ -53,6 +53,7 @@ namespace exec{
 namespace Drill{
 
 //struct UserServerEndPoint;
+class  DrillClientImplBase;
 class  DrillClientImpl;
 class  DrillClientQueryResult;
 class  FieldMetadata;
@@ -373,7 +374,7 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         static DrillClientInitializer s_init;
         static DrillClientConfig s_config;
 
-        DrillClientImpl * m_pImpl;
+        DrillClientImplBase * m_pImpl;
 };
 
 } // namespace Drill

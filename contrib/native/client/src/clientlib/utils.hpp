@@ -96,7 +96,6 @@ class Utils{
             return stream.str();
         }
 
-        
 }; // Utils
 
 } // namespace Drill

@@ -112,5 +112,7 @@ set_property(
 link_directories(/usr/local/lib)
 
 add_executable(querySubmitter example/querySubmitter.cpp )
+add_executable(pooledConnections example/pooledConnections.cpp )
 
 target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs y2038)
+target_link_libraries(pooledConnections ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs y2038)
