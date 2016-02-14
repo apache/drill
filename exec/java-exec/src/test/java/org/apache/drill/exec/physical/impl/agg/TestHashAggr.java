@@ -19,12 +19,13 @@
 package org.apache.drill.exec.physical.impl.agg;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
 
 public class TestHashAggr extends BaseTestQuery{
-
   @Test
   public void testQ6() throws Exception{
     testPhysicalFromFile("agg/hashagg/q6.json");

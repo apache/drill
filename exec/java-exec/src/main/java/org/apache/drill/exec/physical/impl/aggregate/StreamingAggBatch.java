@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.io.IOException;
-
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -54,6 +52,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
+import java.io.IOException;
+import java.util.List;
 
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
@@ -91,8 +91,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   public int getRecordCount() {
     if (done || aggregator == null) {
       return 0;
+    } else {
+      return recordCount;
     }
-    return recordCount;
   }
 
   @Override
@@ -260,14 +261,19 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     container.clear();
 
-    LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().length];
+    LogicalExpression[] keyExprs;
+    TypedFieldId[] keyOutputIds;
+
+    List<NamedExpression> groupKeys = AggregateUtils.expandGroupByColumns(popConfig.getKeys(), incoming.getSchema());
+    keyExprs = new LogicalExpression[groupKeys.size()];
+    keyOutputIds = new TypedFieldId[groupKeys.size()];
+
     LogicalExpression[] valueExprs = new LogicalExpression[popConfig.getExprs().length];
-    TypedFieldId[] keyOutputIds = new TypedFieldId[popConfig.getKeys().length];
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
     for (int i = 0; i < keyExprs.length; i++) {
-      final NamedExpression ne = popConfig.getKeys()[i];
+      final NamedExpression ne = groupKeys.get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector,context.getFunctionRegistry() );
       if (expr == null) {
         continue;
