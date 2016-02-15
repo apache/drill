@@ -55,7 +55,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.junit.Ignore;
@@ -112,7 +112,7 @@ public class TestOptiqPlans extends ExecTest {
         controller,
         com,
         workBus,
-        new LocalPStoreProvider(config));
+        new LocalPersistentStoreProvider(config));
     final QueryContext qc = new QueryContext(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(),
         bitContext, QueryId.getDefaultInstance());
     final PhysicalPlanReader reader = bitContext.getPlanReader();

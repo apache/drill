@@ -39,11 +39,11 @@ import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
 
-public class DrillbitContext {
+public class DrillbitContext implements AutoCloseable {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
@@ -57,7 +57,7 @@ public class DrillbitContext {
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
   private final SystemOptionManager systemOptions;
-  private final PStoreProvider provider;
+  private final PersistentStoreProvider provider;
   private final CodeCompiler compiler;
   private final ScanResult classpathScan;
   private final LogicalPlanPersistence lpPersistence;
@@ -70,7 +70,7 @@ public class DrillbitContext {
       Controller controller,
       DataConnectionCreator connectionsPool,
       WorkEventBus workBus,
-      PStoreProvider provider) {
+      PersistentStoreProvider provider) {
     this.classpathScan = context.getClasspathScan();
     this.workBus = workBus;
     this.controller = checkNotNull(controller);
@@ -152,7 +152,7 @@ public class DrillbitContext {
     return reader;
   }
 
-  public PStoreProvider getPersistentStoreProvider() {
+  public PersistentStoreProvider getStoreProvider() {
     return provider;
   }
 
@@ -180,4 +180,8 @@ public class DrillbitContext {
     return classpathScan;
   }
 
+  @Override
+  public void close() throws Exception {
+    getOptionManager().close();
+  }
 }

@@ -163,8 +163,8 @@ public class Foreman implements Runnable {
     closeFuture.addListener(closeListener);
 
     queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
-    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getPersistentStoreProvider(),
-        stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
+    queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),
+        drillbitContext.getClusterCoordinator(), stateListener, this); // TODO reference escapes before ctor is complete via stateListener, this
 
     final OptionManager optionManager = queryContext.getOptions();
     queuingEnabled = optionManager.getOption(ExecConstants.ENABLE_QUEUE);
@@ -766,6 +766,12 @@ public class Foreman implements Runnable {
 
       // Remove the Foreman from the running query list.
       bee.retireForeman(Foreman.this);
+
+      try {
+        queryManager.close();
+      } catch (final Exception e) {
+        logger.warn("unable to close query manager", e);
+      }
 
       try {
         releaseLease();

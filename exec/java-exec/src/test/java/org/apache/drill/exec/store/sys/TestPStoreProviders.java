@@ -23,18 +23,18 @@ import org.apache.curator.retry.RetryNTimes;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.TestWithZookeeper;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
-import org.apache.drill.exec.store.sys.zk.ZkPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.junit.Test;
 
 public class TestPStoreProviders extends TestWithZookeeper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPStoreProviders.class);
 
-  static LocalPStoreProvider provider;
+  static LocalPersistentStoreProvider provider;
 
   @Test
   public void verifyLocalStore() throws Exception {
-    try(LocalPStoreProvider provider = new LocalPStoreProvider(DrillConfig.create())){
+    try(LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(DrillConfig.create())){
       PStoreTestUtil.test(provider);
     }
   }
@@ -51,7 +51,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
 
     try(CuratorFramework curator = builder.build()){
       curator.start();
-      ZkPStoreProvider provider = new ZkPStoreProvider(config, curator);
+      ZookeeperPersistentStoreProvider provider = new ZookeeperPersistentStoreProvider(config, curator);
       PStoreTestUtil.test(provider);
     }
   }

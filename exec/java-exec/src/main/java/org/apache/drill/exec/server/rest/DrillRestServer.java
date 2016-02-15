@@ -22,7 +22,7 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.profile.ProfileResources;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -80,7 +80,7 @@ public class DrillRestServer extends ResourceConfig {
       protected void configure() {
         bind(workManager).to(WorkManager.class);
         bind(workManager.getContext().getLpPersistence().getMapper()).to(ObjectMapper.class);
-        bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
+        bind(workManager.getContext().getStoreProvider()).to(PersistentStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
         bindFactory(DrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
       }

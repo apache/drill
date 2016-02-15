@@ -336,6 +336,12 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <version>2.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
       <version>1.0.5-M3</version>

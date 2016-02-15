@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
-import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
@@ -51,7 +50,7 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.server.options.SystemOptionManager;
-import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,7 +72,7 @@ public class TestHashJoin extends PopUnitTestBase {
   private final DrillConfig c = DrillConfig.create();
 
   private void testHJMockScanCommon(final DrillbitContext bitContext, UserServer.UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
-    final LocalPStoreProvider provider = new LocalPStoreProvider(c);
+    final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(c);
     provider.start();
     final SystemOptionManager opt = new SystemOptionManager(PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(c), provider);
     opt.init();

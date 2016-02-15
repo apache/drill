@@ -39,7 +39,7 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.QueryManager;
@@ -101,7 +101,7 @@ public class WorkManager implements AutoCloseable {
       final Controller controller,
       final DataConnectionCreator data,
       final ClusterCoordinator coord,
-      final PStoreProvider provider) {
+      final PersistentStoreProvider provider) {
     dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider);
     statusThread.start();
 
@@ -153,6 +153,8 @@ public class WorkManager implements AutoCloseable {
         }
       }
     }
+
+    getContext().close();
   }
 
   public DrillbitContext getContext() {

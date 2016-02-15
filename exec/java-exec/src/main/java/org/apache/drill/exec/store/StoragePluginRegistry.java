@@ -26,7 +26,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PersistentStore;
 
 public interface StoragePluginRegistry extends Iterable<Map.Entry<String, StoragePlugin>>, AutoCloseable {
   final String SYS_PLUGIN = "sys";
@@ -104,7 +104,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * Get the PStore for this StoragePluginRegistry. (Used in the management layer.)
    * @return PStore for StoragePlugin configuration objects.
    */
-  PStore<StoragePluginConfig> getStore();
+  PersistentStore<StoragePluginConfig> getStore();
 
   /**
    * Return StoragePlugin rule sets.

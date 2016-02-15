@@ -288,7 +288,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
         try {
           clusterCoordinator.close();
           clusterCoordinator = null;
-        } catch (IOException e) {
+        } catch (Exception e) {
           logger.warn("Error while closing Cluster Coordinator.", e);
         }
       }

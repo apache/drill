@@ -73,7 +73,7 @@ public class StorageResources {
   public List<PluginConfigWrapper> getStoragePluginsJSON() {
 
     List<PluginConfigWrapper> list = Lists.newArrayList();
-    for (Map.Entry<String, StoragePluginConfig> entry : storage.getStore()) {
+    for (Map.Entry<String, StoragePluginConfig> entry : Lists.newArrayList(storage.getStore().getAll())) {
       PluginConfigWrapper plugin = new PluginConfigWrapper(entry.getKey(), entry.getValue());
       list.add(plugin);
     }

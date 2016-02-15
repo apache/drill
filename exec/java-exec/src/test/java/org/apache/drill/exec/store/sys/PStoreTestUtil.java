@@ -31,8 +31,8 @@ import com.google.common.collect.Maps;
 public class PStoreTestUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
-  public static void test(PStoreProvider provider) throws Exception{
-    PStore<String> store = provider.getStore(PStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
+  public static void test(PersistentStoreProvider provider) throws Exception{
+    PersistentStore<String> store = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
     String[] keys = {"first", "second"};
     String[] values = {"value1", "value2"};
     Map<String, String> expectedMap = Maps.newHashMap();
@@ -43,7 +43,7 @@ public class PStoreTestUtil {
     }
     // allow one second for puts to propagate back to cache
     {
-      Iterator<Map.Entry<String, String>> iter = store.iterator();
+      Iterator<Map.Entry<String, String>> iter = store.getAll();
       for(int i =0; i < keys.length; i++){
         Entry<String, String> e = iter.next();
         assertTrue(expectedMap.containsKey(e.getKey()));
@@ -54,15 +54,15 @@ public class PStoreTestUtil {
     }
 
     {
-      Iterator<Map.Entry<String, String>> iter = store.iterator();
+      Iterator<Map.Entry<String, String>> iter = store.getAll();
       while(iter.hasNext()){
-        iter.next();
-        iter.remove();
+        final String key = iter.next().getKey();
+        store.delete(key);
       }
     }
 
     // allow one second for deletes to propagate back to cache
 
-    assertFalse(store.iterator().hasNext());
+    assertFalse(store.getAll().hasNext());
   }
 }
