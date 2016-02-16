@@ -46,9 +46,11 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
@@ -65,6 +67,7 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.PrimitiveType;
 
 import com.google.common.collect.Lists;
+import org.apache.regexp.RE;
 
 public class ParquetRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
@@ -118,48 +121,47 @@ public class ParquetRecordReader extends AbstractRecordReader {
   private final FragmentContext fragmentContext;
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
-  public static final List<Pair<String, ? extends Function<ParquetRecordReader, String>>> RECORD_CONTEXT
+  public static final List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> RECORD_CONTEXT
       = Lists.newArrayList();
 
   static {
     RECORD_CONTEXT.add(
         Pair.of(
             RecordContextVisitor.FILE_NAME,
-            new Function<ParquetRecordReader, String>() {
+            new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(ParquetRecordReader parquetRecordReader) {
-                return parquetRecordReader.hadoopPath.toUri().getPath();
+              public void populate(RecordReader parquetRecordReader, VarCharVector varCharVector, int index) {
+                final String file_name = ((ParquetRecordReader) parquetRecordReader).hadoopPath.toUri().getPath();
+
+                final byte[] bytes = file_name.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
 
     RECORD_CONTEXT.add(
-            Pair.of(
-            "RowGroup",
-            new Function<ParquetRecordReader, String>() {
+        Pair.of(
+            RecordContextVisitor.PARQUET_ROW_GROUP,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(ParquetRecordReader parquetRecordReader) {
-                return String.valueOf(parquetRecordReader.rowGroupIndex);
+              public void populate(RecordReader parquetRecordReader, VarCharVector varCharVector, int index) {
+                final String row_group = String.valueOf(((ParquetRecordReader)parquetRecordReader).getRowGroupIndex());
+                final byte[] bytes = row_group.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
 
     RECORD_CONTEXT.add(
             Pair.of(
             RecordContextVisitor.ROW_NUMBER,
-            new Function<ParquetRecordReader, String>() {
+            new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(ParquetRecordReader parquetRecordReader) {
-                return "";
+              public void populate(RecordReader parquetRecordReader, VarCharVector varCharVector, int index) {
+                final String rowNumber = String.valueOf(index);
+                final byte[] bytes = rowNumber.getBytes();
+                  varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
   }
-
-  public static final Map<String, Pair<String, ? extends Function<ParquetRecordReader, String>>> mappedRoles
-      = Maps.uniqueIndex(RECORD_CONTEXT,
-      new Function<Pair<String, ? extends Function<ParquetRecordReader, String>>, String>() {
-        public String apply(Pair<String, ? extends Function<ParquetRecordReader, String>> p) {
-          return p.getKey(); // or something else
-        }
-      });
 
   public ParquetRecordReader(FragmentContext fragmentContext,
       String path,
@@ -567,7 +569,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public List<Pair<String, ? extends Function<ParquetRecordReader, String>>> addReaderContextField() {
+  public List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> addReaderContextField() {
     return RECORD_CONTEXT;
   }
 }

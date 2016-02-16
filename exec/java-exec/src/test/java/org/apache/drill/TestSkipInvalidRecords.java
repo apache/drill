@@ -19,12 +19,6 @@ package org.apache.drill;
 
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.compile.ClassTransformer;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,11 +27,12 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
   @BeforeClass
   public static void setupOptions() throws Exception {
     test(String.format("alter session set `%s` = true", ExecConstants.ENABLE_SKIP_INVALID_RECORD_KEY));
+    test(String.format("alter session set `%s` = 'SKIP'", ExecConstants.SKIP_INVALID_RECORD_LOG_NAME_KEY));
   }
 
   @Test
   public void testCastFailAtSomeRecords_Project() throws Exception {
-    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
+    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords_1.csv").toURI().toString();
     String query = String.format("select cast(columns[0] as Integer) as col0, cast(columns[1] as Integer) as col1 \n" +
         "from dfs_test.tmp.`%s`", root);
 
@@ -54,7 +49,7 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
 
   @Test
   public void testCastFailAtSomeRecords_Filter() throws Exception {
-    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
+    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords_1.csv").toURI().toString();
     String query = String.format("select cast(columns[0] as integer) as c0, cast(columns[1] as integer) as c1 \n" +
             "from dfs_test.`%s` \n" +
             "where columns[0] > 1", root);
@@ -72,7 +67,7 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
 
   @Test
   public void testCTAS_CastFailAtSomeRecords_Project() throws Exception {
-    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords/testCastFailAtSomeRecords.csv").toURI().toString();
+    String root = FileUtils.getResourceAsFile("/testSkipInvalidRecords").toURI().toString();
     String query = String.format("select cast(columns[0] as integer) c0, cast(columns[1] as integer) c1 \n" +
         "from dfs_test.`%s`", root);
 
@@ -83,13 +78,16 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
         .baselineValues(2, 2)
         .baselineValues(3, 3)
         .baselineValues(4, 4)
+        .baselineValues(2, 2)
+        .baselineValues(3, 3)
+        .baselineValues(4, 4)
         .build()
         .run();
   }
 
   @Test
   public void testStar() throws Exception {
-    test("select * from cp.`tpch/region.parquet`");
+    test("select cast('a' as integer) from (values(1))");
   }
 
   @AfterClass
@@ -97,5 +95,9 @@ public class TestSkipInvalidRecords extends BaseTestQuery {
     test(String.format("alter session set `%s` = %s",
         ExecConstants.ENABLE_SKIP_INVALID_RECORD_KEY,
             ExecConstants.ENABLE_SKIP_INVALID_RECORD.getDefault().bool_val));
+
+    test(String.format("alter session set `%s` = '%s'",
+        ExecConstants.SKIP_INVALID_RECORD_LOG_NAME_KEY,
+            ExecConstants.SKIP_INVALID_RECORD_LOG_NAME.getDefault().string_val));
   }
 }

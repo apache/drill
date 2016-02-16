@@ -37,10 +37,12 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
 import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
@@ -68,38 +70,33 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final boolean readNumbersAsDouble;
   private final boolean unionEnabled;
 
-  public static final List<Pair<String, ? extends Function<JSONRecordReader, String>>> RECORD_CONTEXT
-          = Lists.newArrayList();
+  public static final List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> RECORD_CONTEXT
+      = Lists.newArrayList();
   static {
     RECORD_CONTEXT.add(
         Pair.of(
             RecordContextVisitor.FILE_NAME,
-            new Function<JSONRecordReader, String>() {
-              @Override
-              public String apply(JSONRecordReader jSONRecordReader) {
-                return jSONRecordReader.hadoopPath.toUri().getPath();
-              }
-            }));
-
+                new RecordContextVisitor.RecordReaderContextPopulator() {
+                  @Override
+                  public void populate(RecordReader jSONRecordReader, VarCharVector varCharVector, int index) {
+                    final String file_name = ((JSONRecordReader) jSONRecordReader).hadoopPath.toUri().getPath();
+                    final byte[] bytes = file_name.getBytes();
+                    varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+                  }
+                }));
 
     RECORD_CONTEXT.add(
         Pair.of(
             RecordContextVisitor.ROW_NUMBER,
-            new Function<JSONRecordReader, String>() {
-              @Override
-              public String apply(JSONRecordReader jSONRecordReader) {
-                return "";
-              }
-            }));
+                new RecordContextVisitor.RecordReaderContextPopulator () {
+                  @Override
+                  public void populate(RecordReader compliantTextRecordReader, VarCharVector varCharVector, int index) {
+                    final String rowNumber = String.valueOf(index);
+                    final byte[] bytes = rowNumber.getBytes();
+                    varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+                  }
+                }));
   }
-
-  public static final Map<String, Pair<String, ? extends Function<JSONRecordReader, String>>> mappedRoles
-      = Maps.uniqueIndex(RECORD_CONTEXT,
-          new Function<Pair<String, ? extends Function<JSONRecordReader, String>>, String>() {
-            public String apply(Pair<String, ? extends Function<JSONRecordReader, String>> p) {
-              return p.getKey(); // or something else
-            }
-          });
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -265,7 +262,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public List<Pair<String, ? extends Function<JSONRecordReader, String>>> addReaderContextField() {
+  public List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> addReaderContextField(){
     return RECORD_CONTEXT;
   }
 

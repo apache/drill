@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -62,8 +63,10 @@ public class SkippingRecordLogger {
 
   private int numSkippedRecords;
 
-  private final FSDataOutputStream os;
-  private final JsonFactory jsonFactory;
+  private final FileSystem fs;
+  private final String logDestination;
+  private FSDataOutputStream os;
+  private JsonFactory jsonFactory;
 
   public static SkippingRecordLogger createLogger(FragmentContext context, RecordBatch incoming) throws ExecutionSetupException {
     if(!context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
@@ -71,7 +74,9 @@ public class SkippingRecordLogger {
     }
 
     try {
-      final String dfs_name = context.getOptions().getOption(ExecConstants.ROOT_SKIP_INVALID_RECORD_DFS_KEY).string_val;
+      final String dfs_name = context.getOptions().getOption(ExecConstants.SKIP_INVALID_RECORD_DFS);
+      final String work_space_name = context.getOptions().getOption(ExecConstants.SKIP_INVALID_RECORD_WORKSPACE);
+
       final StoragePlugin storagePlugin = context.getDrillbitContext().getStorage().getPlugin(dfs_name);
       if (!(storagePlugin instanceof FileSystemPlugin)) {
         throw new UnsupportedOperationException();
@@ -81,10 +86,10 @@ public class SkippingRecordLogger {
 
       String root = null;
       for(Map.Entry<String, WorkspaceConfig> entry : ((FileSystemConfig) fileSystemPlugin.getConfig()).workspaces.entrySet()) {
-        if(entry.getKey().toUpperCase().equals("SKIP_RECORD")) {
+        if(entry.getKey().toUpperCase().equals(work_space_name.toUpperCase())) {
           final WorkspaceConfig skip = entry.getValue();
           if(!skip.isWritable()) {
-            throw new UnsupportedOptionsException();
+            throw new IOException("The selected workspace `" + dfs_name + '.' + work_space_name + "` is not writable");
           }
 
           root = skip.getLocation();
@@ -92,22 +97,37 @@ public class SkippingRecordLogger {
         }
       }
 
+      if(root == null) {
+        throw new IOException("The destination for logging offending records needs to be registered under distributed file system storage plugin");
+      }
+
       if(root.charAt(root.length() - 1) == '/') {
         root = root.substring(0, root.length() - 1);
       }
 
+      final String subroot;
       final String qid = QueryIdHelper.getQueryId(context.getHandle().getQueryId());
+      final String logFileName = context.getOptions().getOption(ExecConstants.SKIP_INVALID_RECORD_LOG_NAME);
+      if(logFileName.isEmpty()) {
+        subroot = qid;
+      } else {
+        subroot = logFileName; // + "/" + qid;
+      }
       final String minorFrag = context.getHandle().getMajorFragmentId() + "-" + context.getHandle().getMinorFragmentId();
       final String address = context.getDrillbitContext().getEndpoint().getAddress();
       return new SkippingRecordLogger(
           incoming,
           fs,
-          root + "/" + qid + "/" + minorFrag + ".json",
+          root + "/" + subroot + "/" + minorFrag + ".json",
           qid,
           minorFrag,
           address);
+    } catch (IOException ioe) {
+      throw UserException
+        .dataWriteError(ioe)
+        .build(logger);
     } catch (Exception e) {
-      throw new ExecutionSetupException();
+      throw new ExecutionSetupException(e.getCause());
     }
   }
 
@@ -118,13 +138,10 @@ public class SkippingRecordLogger {
     this.qid = qid;
     this.minorFrag = minorFrag;
     this.address = address;
-    numSkippedRecords = 0;
 
-    final Path p = new Path(path);
-    os = fs.create(p);
-    jsonFactory = new JsonFactory();
-    jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-    jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
+    this.fs = fs;
+    this.numSkippedRecords = 0;
+    this.logDestination = path;
   }
 
   public void addExpr(Pair<Integer, String> pair) {
@@ -148,7 +165,7 @@ public class SkippingRecordLogger {
 
         append(column, varCharVector.getAccessor().getObject(index).toString());
         append("Query_ID", qid);
-        append("Minor_Fragment", minorFrag);
+        append("Fragment_ID", minorFrag);
         append("Drillbit_Address", address);
       }
     }
@@ -169,6 +186,14 @@ public class SkippingRecordLogger {
   }
 
   public void write() throws IOException {
+    if(os == null) {
+      final Path p = new Path(logDestination);
+      os = fs.create(p);
+      jsonFactory = new JsonFactory();
+      jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+      jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
+    }
+
     final ObjectMapper mapper = new ObjectMapper(jsonFactory);
     final Map<String, String> map = Maps.newHashMap();
     for(Map.Entry<String, String> entry : recordInfo.entrySet()) {
@@ -179,6 +204,10 @@ public class SkippingRecordLogger {
   }
 
   public void flush() {
+    if(os == null) {
+      return;
+    }
+
     try {
       os.flush();
       os.close();

@@ -11,6 +11,10 @@
         "tmp" : {
           location: "/tmp",
           writable: true
+        },
+        "skip_record" : {
+          location: "/Users/hyichu/Desktop/skip",
+          writable: true
         }
       },
       formats: {

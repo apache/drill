@@ -33,6 +33,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.VarCharVector;
 
 import java.util.List;
 
@@ -40,7 +42,13 @@ public class RecordContextVisitor extends RelShuttleImpl {
   public static final int MAX_VARCHAR_LENGTH = 65535;
   public static final String VIRTUAL_COLUMN_PREFIX = "$";
   public static final String FILE_NAME = "File_Name";
+  public static final String TABLE_NAME = "Table_Name";
   public static final String ROW_NUMBER = "Row_Number";
+
+  public static final String HBASE_ROW_KEY = "Row_Key";
+  public static final String PARQUET_ROW_GROUP = "RowGroup";
+  public static final String OFF_SET = "Off_set";
+
   private int[] rangeVirtualCols;
 
   public RecordContextVisitor() {
@@ -134,5 +142,9 @@ public class RecordContextVisitor extends RelShuttleImpl {
 
     ++rangeVirtualCols[1];
     return newDrillScanRel;
+  }
+
+  public interface RecordReaderContextPopulator {
+    void populate(RecordReader recordReader, VarCharVector varCharVector, int index);
   }
 }

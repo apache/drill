@@ -235,7 +235,11 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
           context.getPlannerSettings().forceSingleMode();
         }
 
-        return convertedRelNode;
+        if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
+          return addVirtualCoumnsForSkippingRecords(convertedRelNode);
+        } else {
+          return convertedRelNode;
+        }
       }
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
@@ -259,11 +263,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    */
   protected DrillRel convertToDrel(RelNode relNode, RelDataType validatedRowType) throws RelConversionException, SqlUnsupportedException {
     DrillRel convertedRelNode = convertToDrel(relNode);
-
-    if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
-      convertedRelNode = addVirtualCoumnsForSkippingRecords(convertedRelNode);
-    }
-
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
     DrillRel topPreservedNameProj;
     if(isRemoveVirColumns) {

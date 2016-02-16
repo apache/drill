@@ -42,7 +42,7 @@ public class UnsupportedOperatorsVisitorForSkipRecord extends UnsupportedOperato
       if(sqlSelect.isDistinct()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "Select Distinct is not supported in skipping records\n" +
-            "See Apache Drill JIRA: DRILL-");
+            "See Apache Drill JIRA: DRILL-3764");
         throw new UnsupportedOperationException();
       }
 
@@ -50,7 +50,7 @@ public class UnsupportedOperatorsVisitorForSkipRecord extends UnsupportedOperato
           && !sqlSelect.getGroup().getList().isEmpty()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "Group By is not supported in skipping records\n" +
-            "See Apache Drill JIRA: DRILL-");
+            "See Apache Drill JIRA: DRILL-3764");
         throw new UnsupportedOperationException();
       }
 
@@ -58,7 +58,7 @@ public class UnsupportedOperatorsVisitorForSkipRecord extends UnsupportedOperato
           && !sqlSelect.getOrderList().getList().isEmpty()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "Order By is not supported in skipping records\n" +
-            "See Apache Drill JIRA: DRILL-");
+            "See Apache Drill JIRA: DRILL-3764");
         throw new UnsupportedOperationException();
       }
 
@@ -66,14 +66,14 @@ public class UnsupportedOperatorsVisitorForSkipRecord extends UnsupportedOperato
           && !sqlSelect.getWindowList().getList().isEmpty()) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "Window function is not supported in skipping records\n" +
-            "See Apache Drill JIRA: DRILL-");
+            "See Apache Drill JIRA: DRILL-3764");
         throw new UnsupportedOperationException();
       }
 
       if(sqlSelect.getFrom().getKind() == SqlKind.JOIN) {
         unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
             "Join is not supported in skipping records\n" +
-            "See Apache Drill JIRA: DRILL-");
+            "See Apache Drill JIRA: DRILL-3764");
         throw new UnsupportedOperationException();
       }
 
@@ -86,7 +86,7 @@ public class UnsupportedOperatorsVisitorForSkipRecord extends UnsupportedOperato
         if(nodeInSelectList.getKind() == SqlKind.OVER) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
               "Window function is not supported in skipping records\n" +
-              "See Apache Drill JIRA: DRILL-");
+              "See Apache Drill JIRA: DRILL-3764");
           throw new UnsupportedOperationException();
         }
       }

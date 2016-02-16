@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +25,15 @@ import java.util.Map;
 import com.google.common.base.Function;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.schema.Record;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 
 public interface RecordReader extends AutoCloseable {
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
@@ -56,7 +60,7 @@ public interface RecordReader extends AutoCloseable {
    */
   int next();
 
-  List<Pair<String, String>> getReaderContext();
-
-  <T extends RecordReader> List<Pair<String, ? extends Function<T, String>>> addReaderContextField();
+  Collection<SchemaPath> getVirtualColumns();
+  List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> addReaderContextField();
+  void populateRecordContextVectors(List<VarCharVector> virtualColumnVector, int recordCount);
 }

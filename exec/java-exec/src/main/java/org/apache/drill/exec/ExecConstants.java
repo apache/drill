@@ -249,9 +249,17 @@ public interface ExecConstants {
   String ENABLE_SKIP_INVALID_RECORD_KEY = "exec.enable_skip_invalid_record";
   BooleanValidator ENABLE_SKIP_INVALID_RECORD = new BooleanValidator(ENABLE_SKIP_INVALID_RECORD_KEY, false);
 
-  String ROOT_SKIP_INVALID_RECORD_DFS_KEY = "exec.skip_invalid_record.dfs";
-  OptionValidator ROOT_SKIP_INVALID_RECORD_DFS =
-      new StringValidator(ROOT_SKIP_INVALID_RECORD_DFS_KEY, "dfs");
+  String SKIP_INVALID_RECORD_DFS_KEY = "exec.skip_invalid_record.dfs";
+  StringValidator SKIP_INVALID_RECORD_DFS =
+      new StringValidator(SKIP_INVALID_RECORD_DFS_KEY, "dfs");
+
+  String SKIP_INVALID_RECORD_WORKSPACE_KEY = "exec.skip_invalid_record.workspace";
+  StringValidator SKIP_INVALID_RECORD_WORKSPACE =
+      new StringValidator(SKIP_INVALID_RECORD_WORKSPACE_KEY, "SKIP_RECORD");
+
+  String SKIP_INVALID_RECORD_LOG_NAME_KEY = "exec.skip_invalid_record.log_name";
+  StringValidator SKIP_INVALID_RECORD_LOG_NAME =
+      new StringValidator(SKIP_INVALID_RECORD_LOG_NAME_KEY, "");
 
   String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
   String MAX_LOADING_CACHE_SIZE_CONFIG = "drill.exec.compile.cache_max_size";

@@ -81,8 +81,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
   private RecordReader currentReader;
-  private int rowNumber = 1;
-  private Map<String, VarCharVector> recordContext;
+  private List<VarCharVector> recordContext;
   private BatchSchema schema;
   private final Mutator mutator = new Mutator();
   private Iterator<String[]> partitionColumns;
@@ -230,7 +229,6 @@ public class ScanBatch implements CloseableRecordBatch {
 
           currentReader.close();
           currentReader = readers.next();
-          rowNumber = 1;
 
           partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
           currentReader.setup(oContext, mutator);
@@ -263,8 +261,8 @@ public class ScanBatch implements CloseableRecordBatch {
       final boolean isNewSchema = mutator.isNewSchema();
       oContext.getStats().batchReceived(0, getRecordCount(), isNewSchema);
 
-      if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD)) {
-        populateRecordContextVectors();
+      if(context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD) && !recordContext.isEmpty()) {
+        currentReader.populateRecordContextVectors(recordContext, recordCount);
       }
 
       if (isNewSchema) {
@@ -326,44 +324,18 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void addRecordContextVectors() throws ExecutionSetupException {
-    recordContext = Maps.newHashMap();
+    recordContext = Lists.newArrayList();
     try {
-      for(Pair<String, String> entry : currentReader.getReaderContext()) {
-        final String key = entry.getKey();
+      for(SchemaPath schemaPath : currentReader.getVirtualColumns()) {
+        final String key = schemaPath.getRootSegment().getPath();
         final MaterializedField field =
             MaterializedField.create(SchemaPath.getSimplePath(key),
         Types.required(MinorType.VARCHAR));
-        final VarCharVector v = mutator.addField(field, VarCharVector.class);
-        recordContext.put(key, v);
+        final VarCharVector varCharVector = mutator.addField(field, VarCharVector.class);
+        recordContext.add(varCharVector);
       }
     } catch(SchemaChangeException e) {
       throw new ExecutionSetupException(e);
-    }
-  }
-
-  private void populateRecordContextVectors() {
-    for(Pair<String, String> entry : currentReader.getReaderContext()) {
-      final String key = entry.getKey();
-      final VarCharVector v = recordContext.get(key);
-
-      if(key.startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX + RecordContextVisitor.ROW_NUMBER)) {
-        final int bytesPerValue = String.valueOf(rowNumber + recordCount).getBytes().length;
-        AllocationHelper.allocate(v, recordCount, bytesPerValue);
-
-        for (int j = 0; j < recordCount; ++j, ++rowNumber) {
-          final byte[] bytes = String.valueOf(rowNumber).getBytes();
-          v.getMutator().setSafe(j, bytes, 0, bytes.length);
-        }
-      } else {
-        final String val = entry.getValue();
-        final int bytesPerValue = val.getBytes().length;
-        AllocationHelper.allocate(v, recordCount, bytesPerValue);
-        final byte[] bytes = val.getBytes();
-        for (int j = 0; j < recordCount; ++j) {
-          v.getMutator().setSafe(j, bytes, 0, bytes.length);
-        }
-      }
-      v.getMutator().setValueCount(recordCount);
     }
   }
 

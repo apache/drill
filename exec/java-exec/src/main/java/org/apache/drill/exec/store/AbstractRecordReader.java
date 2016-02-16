@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.PathSegment;
@@ -34,11 +35,13 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.skiprecord.RecordContextVisitor;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import org.apache.drill.exec.vector.VarCharVector;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractRecordReader.class);
@@ -79,8 +82,13 @@ public abstract class AbstractRecordReader implements RecordReader {
     logger.debug("columns to read : {}", columns);
   }
 
-  protected Collection<SchemaPath> getVirtualColumns() {
-    List<SchemaPath> schemaPaths = Lists.newArrayList();
+  @Override
+  public Collection<SchemaPath> getVirtualColumns() {
+    if(columns == null || columns.isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    final List<SchemaPath> schemaPaths = Lists.newArrayList();
     for(SchemaPath schemaPath : columns) {
       if(schemaPath.getRootSegment().getPath().startsWith(RecordContextVisitor.VIRTUAL_COLUMN_PREFIX)) {
         schemaPaths.add(schemaPath);
@@ -136,29 +144,31 @@ public abstract class AbstractRecordReader implements RecordReader {
   }
 
   @Override
-  public <T extends RecordReader> List<Pair<String, ? extends Function<T, String>>> addReaderContextField() {
-    return Lists.newArrayList();
+  public List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> addReaderContextField() {
+    return ImmutableList.of();
   }
 
   @Override
-  public final List<Pair<String, String>> getReaderContext() {
-    final List<Pair<String, String>> recordContext = Lists.newArrayList();
-    for(Pair<String, ? extends Function<RecordReader, String>> pair : addReaderContextField()) {
+  public void populateRecordContextVectors(final List<VarCharVector> virtualColumnVector, final int recordCount) {
+    for(Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator> pair : addReaderContextField()) {
       String key = pair.getKey();
 
       boolean isMatch = false;
       Pattern p = Pattern.compile("\\$" + key + "[0-9]+");
-      for(SchemaPath schemaPath : getVirtualColumns()) {
-        Matcher m = p.matcher(schemaPath.getRootSegment().getPath());
+      for(VarCharVector varCharVector : virtualColumnVector) {
+        final SchemaPath schemaPath = varCharVector.getField().getPath();
+        final String col = schemaPath.getRootSegment().getPath();
+        Matcher m = p.matcher(col);
         if(m.matches()) {
-          recordContext.add(Pair.of(schemaPath.getRootSegment().getPath(), pair.getValue().apply(this)));
+          AllocationHelper.allocateNew(varCharVector, recordCount);
+          for(int i = 0; i < recordCount; ++i) {
+            pair.getValue().populate(this, varCharVector, i);
+          }
           isMatch = true;
           break;
         }
       }
       assert isMatch;
     }
-
-    return recordContext;
   }
 }

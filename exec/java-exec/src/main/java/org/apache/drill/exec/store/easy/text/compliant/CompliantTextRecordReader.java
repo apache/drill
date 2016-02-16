@@ -41,9 +41,11 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.mapred.FileSplit;
 
 import com.google.common.base.Predicate;
@@ -72,46 +74,45 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   // operator context for OutputMutator
   private OperatorContext oContext;
 
-  public static final List<Pair<String, ? extends Function<CompliantTextRecordReader, String>>> RECORD_CONTEXT
+  public static final List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> RECORD_CONTEXT
       = Lists.newArrayList();
   static {
     RECORD_CONTEXT.add(
         Pair.of(
             RecordContextVisitor.FILE_NAME,
-            new Function<CompliantTextRecordReader, String>() {
+            new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
-                return compliantTextRecordReader.split.getPath().toUri().getPath();
+              public void populate(RecordReader compliantTextRecordReader, VarCharVector varCharVector, int index) {
+                final String file_name = ((CompliantTextRecordReader) compliantTextRecordReader).split.getPath().toUri().getPath();
+                final byte[] bytes = file_name.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
 
     RECORD_CONTEXT.add(
         Pair.of(
-            "Off_set",
-            new Function<CompliantTextRecordReader, String>() {
+            RecordContextVisitor.OFF_SET,
+              new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
-                return "" + compliantTextRecordReader.split.getStart();
+              public void populate(RecordReader compliantTextRecordReader, VarCharVector varCharVector, int index) {
+                final String offset = "" + ((CompliantTextRecordReader) compliantTextRecordReader).split.getStart();
+                final byte[] bytes = offset.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
 
     RECORD_CONTEXT.add(
         Pair.of(
             RecordContextVisitor.ROW_NUMBER,
-            new Function<CompliantTextRecordReader, String>() {
+            new RecordContextVisitor.RecordReaderContextPopulator () {
               @Override
-              public String apply(CompliantTextRecordReader compliantTextRecordReader) {
-                return "";
+              public void populate(RecordReader compliantTextRecordReader, VarCharVector varCharVector, int index) {
+                final String rowNumber = String.valueOf(index);
+                final byte[] bytes = rowNumber.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
               }
             }));
   }
-
-  public static final Map<String, Pair<String, ? extends Function<CompliantTextRecordReader, String>>> mappedRoles
-      = Maps.uniqueIndex(RECORD_CONTEXT,
-          new Function<Pair<String, ? extends Function<CompliantTextRecordReader, String>>, String>() {
-            public String apply(Pair<String, ? extends Function<CompliantTextRecordReader, String>> p) {
-              return p.getKey(); // or something else
-            }});
 
   public CompliantTextRecordReader(FileSplit split, DrillFileSystem dfs, FragmentContext context, TextParsingSettings settings, List<SchemaPath> columns) {
     this.split = split;
@@ -324,7 +325,7 @@ public class CompliantTextRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public List<Pair<String, ? extends Function<CompliantTextRecordReader, String>>> addReaderContextField() {
+  public List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> addReaderContextField(){
     return RECORD_CONTEXT;
   }
 }

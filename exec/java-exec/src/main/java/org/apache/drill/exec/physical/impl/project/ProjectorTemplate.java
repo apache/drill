@@ -144,9 +144,8 @@ public abstract class ProjectorTemplate implements Projector {
       int[] errorCode = errorCodeList.get(i);
       if(errorCode[0] != 0) {
         skipRecordLogging.append("Error_Type", "Parsing Error");
-        skipRecordLogging.append("Column Number", ""+ skipRecordLogging.getExprList().get(i).getLeft());
         skipRecordLogging.append("Expression", skipRecordLogging.getExprList().get(i).getRight());
-        skipRecordLogging.appendContext(i);
+        skipRecordLogging.appendContext(inputline);
 
         skipRecordLogging.incrementNumSkippedRecord();
         try {
