@@ -23,6 +23,18 @@
     "org": "Intuit India (IDC)",
     "email": "akumarb2010@gmail.com"
   },
+  "jaltekruse": {
+    "name": "Jason Altekruse",
+    "title": "PMC Member and Committer",
+    "org": "Apache Drill",
+    "email": "json@apache.org"
+  },
+  "bbevens": {
+    "name": "Bridget Bevens",
+    "title": "Comitter",
+    "org": "MapR Technologies",
+    "email": "bbevens@mapr.com"
+  },
   "kbhallamudi": {
     "name": "Kamesh Bhallamudi",
     "title": "SSE",
