@@ -44,7 +44,7 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
         this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, startVal.getBinary());
         break;
       case STRING:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, startVal.getString());
+        this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, startVal.getString());
         break;
       default:
         throw new IllegalStateException("Encountered an unsupported type " + startVal.getType()
@@ -58,7 +58,7 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
       
       switch(stopVal.getType()) {
       case BINARY:
-        this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, stopVal.getBinary());
+        this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, stopVal.getBinary());
         break;
       case STRING:
         this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, stopVal.getString());
