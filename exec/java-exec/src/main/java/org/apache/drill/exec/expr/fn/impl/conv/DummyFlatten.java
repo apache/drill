@@ -23,6 +23,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 /**
@@ -32,6 +34,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 @FunctionTemplate(name = "flatten", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class DummyFlatten implements DrillSimpleFunc {
 
+  @Param VarCharHolder in;
   @Output BaseWriter.ComplexWriter out;
 
   @Override

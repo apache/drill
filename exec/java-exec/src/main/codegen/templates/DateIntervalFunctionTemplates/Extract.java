@@ -31,8 +31,52 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class ${className} {
 
+/* Dummy function template to allow Optiq to validate this function call.
+ * At DrillOptiq time we rewrite all date_part() functions to extract functions,
+ * since they are essentially the same
+ */
+@FunctionTemplate(name = "DATE_PART", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+public static class DummyDATE_PARTFromVarChar implements DrillSimpleFunc {
+  @Param VarCharHolder in1;
+  @Param VarCharHolder in;
+  @Output BigIntHolder out;
+
+  public void setup() {
+  }
+
+  public void eval() {
+    if (1 == 1) {
+      throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
+    }
+  }
+}
+
+<#list extract.fromTypes as dummyFromUnit>
+/* Dummy function template to allow Optiq to validate this function call.
+ * At DrillOptiq time we rewrite all date_part() functions to extract functions,
+ * since they are essentially the same
+ */
+@FunctionTemplate(name = "DATE_PART", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+public static class DummyDATE_PARTFrom${dummyFromUnit} implements DrillSimpleFunc {
+  @Param VarCharHolder in1;
+  @Param ${dummyFromUnit}Holder in;
+  @Output BigIntHolder out;
+
+  public void setup() {
+  }
+
+  public void eval() {
+    if (1 == 1) {
+      throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
+    }
+  }
+}
+</#list>
+
+
 <#list extract.fromTypes as fromUnit>
 <#list extract.toTypes as toUnit>
+
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp">
 <#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Month" || toUnit == "Day"))>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,

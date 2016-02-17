@@ -18,9 +18,11 @@
 package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingUserConnection;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -29,8 +31,11 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
+import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
@@ -57,6 +62,7 @@ public class ScreenCreator implements RootCreator<Screen> {
     private final FragmentContext context;
     private final AccountingUserConnection userConnection;
     private RecordMaterializer materializer;
+    private final Map<String, TypeProtos.MinorType> schemaInPlanning;
 
     private boolean firstBatch = true;
 
@@ -74,6 +80,7 @@ public class ScreenCreator implements RootCreator<Screen> {
       this.context = context;
       this.incoming = incoming;
       userConnection = context.getUserDataTunnel();
+      this.schemaInPlanning = config.getSchemaInPlanning();
     }
 
     @Override
@@ -107,6 +114,18 @@ public class ScreenCreator implements RootCreator<Screen> {
 
         return false;
       case OK_NEW_SCHEMA:
+        if(schemaInPlanning.size() > 0) {
+          for(int i = 0; i < incoming.getSchema().getFieldCount(); ++i) {
+            final String col = incoming.getSchema().getColumn(i).getPath().getRootSegment().getPath();
+            if(schemaInPlanning.containsKey(col) && schemaInPlanning.get(col) != TypeProtos.MinorType.LATE) {
+              assert schemaInPlanning.get(col) == incoming.getSchema().getColumn(i).getType().getMinorType()
+                  : "Types for column `" + col + "` do not match \n "
+                  + "Planning: " + schemaInPlanning.get(col) + "\n"
+                  + "Execution: " +  incoming.getSchema().getColumn(i).getType().getMinorType();
+            }
+          }
+        }
+
         materializer = new VectorRecordMaterializer(context, oContext, incoming);
         //$FALL-THROUGH$
       case OK:

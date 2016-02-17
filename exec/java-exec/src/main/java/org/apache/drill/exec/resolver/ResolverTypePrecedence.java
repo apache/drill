@@ -27,10 +27,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class ResolverTypePrecedence {
 
-
   public static final Map<MinorType, Integer> precedenceMap;
   public static final Map<MinorType, Set<MinorType>> secondaryImplicitCastRules;
-  public static int MAX_IMPLICIT_CAST_COST;
+  public static final int MAX_IMPLICIT_CAST_COST;
 
   static {
     /* The precedenceMap is used to decide whether it's allowed to implicitly "promote"
@@ -43,7 +42,7 @@ public class ResolverTypePrecedence {
      * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).
      */
     int i = 0;
-    precedenceMap = new HashMap<MinorType, Integer>();
+    precedenceMap = new HashMap<>();
     precedenceMap.put(MinorType.NULL, i += 2);       // NULL is legal to implicitly be promoted to any other type
     precedenceMap.put(MinorType.FIXEDBINARY, i += 2); // Fixed-length is promoted to var length
     precedenceMap.put(MinorType.VARBINARY, i += 2);

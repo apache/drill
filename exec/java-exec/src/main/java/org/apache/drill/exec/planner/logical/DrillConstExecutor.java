@@ -98,11 +98,37 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
       //      - CHAR, SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST
       .build();
 
+  private static ImmutableMap<SqlTypeName, TypeProtos.MinorType> CALCITE_TO_DRILL_MAPPING =
+      ImmutableMap.<SqlTypeName, TypeProtos.MinorType> builder()
+          .put(SqlTypeName.INTEGER, TypeProtos.MinorType.INT)
+          .put(SqlTypeName.BIGINT, TypeProtos.MinorType.BIGINT)
+          .put(SqlTypeName.FLOAT, TypeProtos.MinorType.FLOAT4)
+          .put(SqlTypeName.DOUBLE, TypeProtos.MinorType.FLOAT8)
+          .put(SqlTypeName.VARCHAR, TypeProtos.MinorType.VARCHAR)
+          .put(SqlTypeName.BOOLEAN, TypeProtos.MinorType.BIT)
+          .put(SqlTypeName.DATE, TypeProtos.MinorType.DATE)
+          .put(SqlTypeName.TIME, TypeProtos.MinorType.TIME)
+          .put(SqlTypeName.TIMESTAMP, TypeProtos.MinorType.TIMESTAMP)
+          .put(SqlTypeName.VARBINARY, TypeProtos.MinorType.VARBINARY)
+          .put(SqlTypeName.INTERVAL_YEAR_MONTH, TypeProtos.MinorType.INTERVALYEAR)
+          .put(SqlTypeName.INTERVAL_DAY_TIME, TypeProtos.MinorType.INTERVALDAY)
+          //.put(SqlTypeName.MAP, TypeProtos.MinorType.MAP)
+          //.put(SqlTypeName.ARRAY, TypeProtos.MinorType.LIST)
+          .put(SqlTypeName.CHAR, TypeProtos.MinorType.VARCHAR)
+          // (2) Avoid late binding
+          .put(SqlTypeName.ANY, TypeProtos.MinorType.LATE)
+          // (3) These 2 types are defined in the Drill type system but have been turned off for now
+          // .put(SqlTypeName.TINYINT, TypeProtos.MinorType.TINYINT)
+          // .put(SqlTypeName.SMALLINT, TypeProtos.MinorType.SMALLINT)
+          // (4) Calcite types currently not supported by Drill, nor defined in the Drill type list:
+          //      - SYMBOL, MULTISET, DISTINCT, STRUCTURED, ROW, OTHER, CURSOR, COLUMN_LIST
+          .build();
+
   // This is a list of all types that cannot be folded at planning time for various reasons, most of the types are
   // currently not supported at all. The reasons for the others can be found in the evaluation code in the reduce method
   public static final List<Object> NON_REDUCIBLE_TYPES = ImmutableList.builder().add(
       // cannot represent this as a literal according to calcite
-      TypeProtos.MinorType.INTERVAL,
+      // TypeProtos.MinorType.INTERVAL,
 
       // TODO - map and list are used in Drill but currently not expressible as literals, these can however be
       // outputs of functions that take literals as inputs (such as a convert_fromJSON with a literal string
@@ -130,6 +156,15 @@ public class DrillConstExecutor implements RelOptPlanner.Executor {
     this.funcImplReg = funcImplReg;
     this.udfUtilities = udfUtilities;
     this.plannerSettings = plannerSettings;
+  }
+
+  public static TypeProtos.MinorType getDrillTypeFromCalcite(final RelDataType relDataType) {
+    final SqlTypeName sqlTypeName = relDataType.getSqlTypeName();
+    TypeProtos.MinorType minorType = CALCITE_TO_DRILL_MAPPING.get(sqlTypeName);
+    if(minorType == null) {
+      minorType = TypeProtos.MinorType.LATE;
+    }
+    return minorType;
   }
 
   private RelDataType createCalciteTypeWithNullability(RelDataTypeFactory typeFactory,

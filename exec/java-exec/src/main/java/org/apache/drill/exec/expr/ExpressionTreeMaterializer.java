@@ -279,7 +279,7 @@ public class ExpressionTreeMaterializer {
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
-      FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
+      FunctionResolver resolver = FunctionResolverFactory.getResolver();
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
 
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {

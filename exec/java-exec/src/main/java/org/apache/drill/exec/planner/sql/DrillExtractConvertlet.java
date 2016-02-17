@@ -20,11 +20,13 @@ package org.apache.drill.exec.planner.sql;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexContext;
@@ -51,17 +53,38 @@ public class DrillExtractConvertlet implements SqlRexConvertlet {
     final List<RexNode> exprs = new LinkedList<>();
 
     RelDataTypeFactory typeFactory = cx.getTypeFactory();
-
-    //RelDataType nullableReturnType =
-
     for (SqlNode node: operands) {
        exprs.add(cx.convertExpression(node));
     }
-
-    // Determine NULL-able using 2nd argument's Null-able.
-    RelDataType returnType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT), exprs.get(1).getType().isNullable());
-
+    TimeUnit timeUnit = ((SqlIntervalQualifier) call.getOperandList().get(0)).getStartUnit();
+    boolean isNullable = exprs.get(1).getType().isNullable();
+    RelDataType returnType = inferReturnType(typeFactory, timeUnit, isNullable);
     return rexBuilder.makeCall(returnType, call.getOperator(), exprs);
+  }
+
+  public static RelDataType inferReturnType(RelDataTypeFactory factory, TimeUnit timeUnit, boolean isNullable) {
+    final SqlTypeName sqlTypeName;
+    switch (timeUnit){
+      case YEAR:
+      case MONTH:
+      case DAY:
+      case HOUR:
+      case MINUTE:
+        sqlTypeName = SqlTypeName.BIGINT;
+        break;
+      case SECOND:
+        sqlTypeName = SqlTypeName.DOUBLE;
+        break;
+      default:
+        throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+    }
+
+    final RelDataType type = factory.createSqlType(sqlTypeName);
+      if(isNullable) {
+      return factory.createTypeWithNullability(type, true);
+    } else {
+      return type;
+    }
   }
 }
 

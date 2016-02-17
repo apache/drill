@@ -19,7 +19,13 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractStore;
@@ -33,17 +39,26 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.store.ischema.Records;
 
 @JsonTypeName("screen")
 public class Screen extends AbstractStore {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Screen.class);
 
   private final DrillbitEndpoint endpoint;
+  private final Map<String, TypeProtos.MinorType> schemaInPlanning;
 
-  public Screen(@JsonProperty("child") PhysicalOperator child, @JacksonInject DrillbitEndpoint endpoint) {
+  public Screen(@JsonProperty("child") PhysicalOperator child, @JacksonInject DrillbitEndpoint endpoint,
+      @JsonProperty("schemaInPlanning") Map<String, TypeProtos.MinorType> schemaInPlanning) {
     super(child);
     assert (endpoint!=null);
     this.endpoint = endpoint;
+    if(schemaInPlanning == null) {
+      this.schemaInPlanning = Maps.newHashMap();
+    } else {
+      this.schemaInPlanning = schemaInPlanning;
+    }
   }
 
   @Override
@@ -74,7 +89,7 @@ public class Screen extends AbstractStore {
 
   @Override
   public Store getSpecificStore(PhysicalOperator child, int minorFragmentId) {
-    return new Screen(child, endpoint);
+    return new Screen(child, endpoint, schemaInPlanning);
   }
 
   @JsonIgnore
@@ -89,7 +104,7 @@ public class Screen extends AbstractStore {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new Screen(child, endpoint);
+    return new Screen(child, endpoint, schemaInPlanning);
   }
 
   @Override
@@ -102,4 +117,7 @@ public class Screen extends AbstractStore {
     return CoreOperatorType.SCREEN_VALUE;
   }
 
+  public final Map<String, TypeProtos.MinorType> getSchemaInPlanning() {
+    return schemaInPlanning;
+  }
 }

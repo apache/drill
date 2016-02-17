@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionArgumentNumber;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -212,6 +213,20 @@ public class StringFunctions{
       out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
       out.buffer.setBytes(out.start, bytea);
       out.end = bytea.length;
+    }
+  }
+
+  @FunctionTemplate(names = {"char_length", "character_length", "length"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class DummyCharLength implements DrillSimpleFunc {
+    @Param  VarCharHolder input1;
+    @Param  VarCharHolder input2;
+    @Output BigIntHolder out;
+
+    @Override
+    public void setup() {}
+
+    @Override
+    public void eval() {
     }
   }
 
@@ -695,6 +710,24 @@ public class StringFunctions{
     } // end of eval()
   }
 
+  @FunctionTemplate(names = {"lpad", "rpad"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class DummyPad implements DrillSimpleFunc {
+    @Param  VarCharHolder text;
+    @Param  BigIntHolder length;
+    @Output VarCharHolder out;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+      if (1 == 1) {
+        throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
+      }
+    }
+  }
+
   /*
    * Fill up the string to length 'length' by prepending the characters 'fill' in the beginning of 'text'.
    * If the string is already longer than length, then it is truncated (on the right).
@@ -848,6 +881,22 @@ public class StringFunctions{
     } // end of eval
   }
 
+  @FunctionTemplate(names = {"ltrim", "rtrim", "btrim"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Dummytrim implements DrillSimpleFunc {
+    @Param  VarCharHolder text;
+    @Output VarCharHolder out;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+      if (1 == 1) {
+        throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
+      }
+    }
+  }
   /**
    * Remove the longest string containing only characters from "from"  from the start of "text"
    */
@@ -993,7 +1042,7 @@ public class StringFunctions{
 
   //Concatenate the text representations of the arguments. NULL arguments are ignored.
   //TODO: NullHanding.INTERNAL for DrillSimpleFunc requires change in code generation.
-  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL, argNumber = FunctionArgumentNumber.VARIABLE)
   public static class Concat implements DrillSimpleFunc {
     @Param  VarCharHolder left;
     @Param  VarCharHolder right;
@@ -1020,7 +1069,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL, argNumber = FunctionArgumentNumber.VARIABLE)
   public static class ConcatRightNullInput implements DrillSimpleFunc {
     @Param  VarCharHolder left;
     @Param  NullableVarCharHolder right;
@@ -1049,7 +1098,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL, argNumber = FunctionArgumentNumber.VARIABLE)
   public static class ConcatLeftNullInput implements DrillSimpleFunc {
     @Param  NullableVarCharHolder left;
     @Param  VarCharHolder right;
@@ -1078,7 +1127,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL, argNumber = FunctionArgumentNumber.VARIABLE)
   public static class ConcatBothNullInput implements DrillSimpleFunc {
     @Param  NullableVarCharHolder left;
     @Param  NullableVarCharHolder right;

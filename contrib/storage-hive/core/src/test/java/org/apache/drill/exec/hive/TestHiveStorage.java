@@ -301,6 +301,11 @@ public class TestHiveStorage extends HiveTestBase {
   }
 
   @Test
+  public void dateAdd() throws Exception {
+    test("SELECT COUNT(*) FROM hive.readtest WHERE date_field = date_add(date '2014-10-19', 1)");
+  }
+
+  @Test
   public void orderByOnHiveTable() throws Exception {
     testBuilder()
         .sqlQuery("SELECT * FROM hive.kv ORDER BY `value` DESC")

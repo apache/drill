@@ -38,7 +38,7 @@ public class ExactFunctionResolver implements FunctionResolver {
 
     for (DrillFuncHolder h : methods) {
 
-      currcost = TypeCastRules.getCost(call, h);
+      currcost = TypeCastRules.getCost(DrillFuncHolder.getResultType(call.args), h);
 
       // Return if we found a function that has an exact match with the input arguments
       if (currcost  == 0){

@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +39,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+/**
+ *
+ */
 public class FunctionImplementationRegistry implements FunctionLookupContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
@@ -110,6 +114,10 @@ public class FunctionImplementationRegistry implements FunctionLookupContext {
   @Override
   public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
     return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionReplacement(functionCall)), functionCall);
+  }
+
+  public Collection<DrillFuncHolder> getAllMethods() {
+    return drillFuncRegistry.getAllMethods();
   }
 
   // Check if this Function Replacement is needed; if yes, return a new name. otherwise, return the original name
