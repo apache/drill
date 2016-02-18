@@ -19,6 +19,7 @@
 package org.apache.drill.exec.vector.complex.writer;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,6 +31,8 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static org.apache.drill.TestBuilder.listOf;
 
 public class TestComplexTypeReader extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
@@ -252,37 +255,44 @@ public class TestComplexTypeReader extends BaseTestQuery{
   @Test  // DRILL-4410
   // ListVector allocation
   public void test_array() throws Exception{
+
+    long numRecords = 100000;
     String file1 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays1.json";
     String file2 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays2.json";
     Path path1 = Paths.get(file1);
     Path path2 = Paths.get(file2);
 
+    String arrayString = "[ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] ";
     Files.deleteIfExists(path1);
     Files.deleteIfExists(path2);
     Files.createFile(path1);
     Files.createFile(path2);
 
     try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file1, true)))) {
-      for (int i = 0; i < 1000000; i++) {
-        out.println("{ \"id\" : " + i +
-                ", \"array\": [ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] }");
+      for (long i = 0; i < numRecords; i++) {
+        out.println("{ \"id\" : " + i + ", \"array\" : " + arrayString + "}");
       }
     }catch (IOException e) {
       throw e;
     }
 
     try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file2, true)))) {
-      for (int i = 0; i < 1000000; i++) {
-        out.println("{ \"id\" : " + i +
-                ", \"array\": [ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] }");
+      for (long i = 0; i < numRecords; i++) {
+        out.println("{ \"id\" : " + i + ", \"array\" : " + arrayString + "}");
       }
     }catch (IOException e) {
       throw e;
     }
 
-
-    test("select * from dfs.`" + file1 + "` `arrays1` INNER JOIN dfs.`" + file2 + "` `arrays2` ON "
-      + "(`arrays1`.id = `arrays2`.id)");
+    String queryString = "select * from dfs.`" + file1 + "` `arrays1` INNER JOIN dfs.`" + file2 + "` `arrays2` ON "
+            + "(`arrays1`.id = `arrays2`.id)";
+    TestBuilder testBuilder = testBuilder().sqlQuery(queryString).unOrdered();
+    testBuilder.baselineColumns("id", "id0", "array", "array0");
+    for (long i = 0; i < numRecords; i++) {
+      testBuilder.baselineValues(i, i, listOf("abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"),
+              listOf("abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"));
+    }
+    testBuilder.go();
 
     Files.deleteIfExists(path1);
     Files.deleteIfExists(path2);
