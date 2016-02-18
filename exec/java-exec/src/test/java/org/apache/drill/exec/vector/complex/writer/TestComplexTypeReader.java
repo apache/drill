@@ -23,6 +23,14 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class TestComplexTypeReader extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
 
@@ -244,7 +252,39 @@ public class TestComplexTypeReader extends BaseTestQuery{
   @Test  // DRILL-4410
   // ListVector allocation
   public void test_array() throws Exception{
-    test("select * from cp.`jsoninput/arrays1.json` `arrays1` INNER JOIN cp.`jsoninput/arrays2.json` `arrays2` ON "
+    String file1 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays1.json";
+    String file2 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays2.json";
+    Path path1 = Paths.get(file1);
+    Path path2 = Paths.get(file2);
+
+    Files.deleteIfExists(path1);
+    Files.deleteIfExists(path2);
+    Files.createFile(path1);
+    Files.createFile(path2);
+
+    try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file1, true)))) {
+      for (int i = 0; i < 1000000; i++) {
+        out.println("{ \"id\" : " + i +
+                ", \"array\": [ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] }");
+      }
+    }catch (IOException e) {
+      throw e;
+    }
+
+    try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file2, true)))) {
+      for (int i = 0; i < 1000000; i++) {
+        out.println("{ \"id\" : " + i +
+                ", \"array\": [ \"abcdef\", \"ghijkl\", \"mnopqr\", \"stuvwx\", \"yz1234\", \"567890\" ] }");
+      }
+    }catch (IOException e) {
+      throw e;
+    }
+
+
+    test("select * from dfs.`" + file1 + "` `arrays1` INNER JOIN dfs.`" + file2 + "` `arrays2` ON "
       + "(`arrays1`.id = `arrays2`.id)");
+
+    Files.deleteIfExists(path1);
+    Files.deleteIfExists(path2);
   }
 }
