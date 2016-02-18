@@ -213,6 +213,31 @@ public class TestCTAS extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-4392
+  public void ctasWithPartition() throws Exception {
+    final String newTblName = "nation_ctas";
+
+    try {
+      final String ctasQuery = String.format("CREATE TABLE %s.%s   " +
+          "partition by (n_regionkey) AS SELECT n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1",
+          TEMP_SCHEMA, newTblName);
+
+      test(ctasQuery);
+
+      final String selectFromCreatedTable = String.format(" select * from %s.%s", TEMP_SCHEMA, newTblName);
+      final String baselineQuery = "select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_nationkey limit 1";
+
+      testBuilder()
+          .sqlQuery(selectFromCreatedTable)
+          .ordered()
+          .sqlBaselineQuery(baselineQuery)
+          .build()
+          .run();
+    } finally {
+      FileUtils.deleteQuietly(new File(getDfsTestTmpSchemaLocation(), newTblName));
+    }
+  }
+
   private static void ctasErrorTestHelper(final String ctasSql, final String expErrorMsg) throws Exception {
     final String createTableSql = String.format(ctasSql, TEMP_SCHEMA, "testTableName");
     errorMsgTestHelper(createTableSql, expErrorMsg);
