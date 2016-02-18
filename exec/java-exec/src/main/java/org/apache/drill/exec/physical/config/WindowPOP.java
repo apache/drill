@@ -35,7 +35,7 @@ public class WindowPOP extends AbstractSingle {
   private final NamedExpression[] withins;
   private final NamedExpression[] aggregations;
   private final Order.Ordering[] orderings;
-  private final boolean rows;
+  private final boolean frameUnitsRows;
   private final Bound start;
   private final Bound end;
 
@@ -43,21 +43,21 @@ public class WindowPOP extends AbstractSingle {
                    @JsonProperty("within") NamedExpression[] withins,
                    @JsonProperty("aggregations") NamedExpression[] aggregations,
                    @JsonProperty("orderings") Order.Ordering[] orderings,
-                   @JsonProperty("rows") boolean rows,
+                   @JsonProperty("frameUnitsRows") boolean frameUnitsRows,
                    @JsonProperty("start") Bound start,
                    @JsonProperty("end") Bound end) {
     super(child);
     this.withins = withins;
     this.aggregations = aggregations;
     this.orderings = orderings;
-    this.rows = rows;
+    this.frameUnitsRows = frameUnitsRows;
     this.start = start;
     this.end = end;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new WindowPOP(child, withins, aggregations, orderings, rows, start, end);
+    return new WindowPOP(child, withins, aggregations, orderings, frameUnitsRows, start, end);
   }
 
   @Override
@@ -90,8 +90,8 @@ public class WindowPOP extends AbstractSingle {
     return orderings;
   }
 
-  public boolean isRows() {
-    return rows;
+  public boolean isFrameUnitsRows() {
+    return frameUnitsRows;
   }
 
   @JsonTypeName("windowBound")

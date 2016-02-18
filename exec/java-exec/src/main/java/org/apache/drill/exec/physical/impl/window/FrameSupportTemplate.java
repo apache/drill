@@ -146,7 +146,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
 
     setupWriteFirstValue(internal, container);
 
-    if (popConfig.isRows()) {
+    if (popConfig.isFrameUnitsRows()) {
       return processROWS(currentRow);
     } else {
       return processRANGE(currentRow);
@@ -154,7 +154,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   }
 
   private int processROWS(int row) throws DrillException {
-    //TODO we only need to call these once per batch
+    //TODO (DRILL-4413) we only need to call these once per batch
     setupEvaluatePeer(current, container);
     setupReadLastValue(current, container);
 
