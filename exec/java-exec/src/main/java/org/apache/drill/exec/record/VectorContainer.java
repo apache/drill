@@ -46,6 +46,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   private int recordCount = -1;
   private OperatorContext oContext;
   private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
+  private BufferAllocator allocator;
 
   public VectorContainer() {
     this.oContext = null;
@@ -53,6 +54,11 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   public VectorContainer( OperatorContext oContext) {
     this.oContext = oContext;
+    allocator = this.oContext.getAllocator();
+  }
+
+  public void setAllocator(BufferAllocator allocator) {
+    this.allocator = allocator;
   }
 
   @Override
@@ -122,13 +128,13 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     if (id != null) {
       vector = getValueAccessorById(id.getFieldIds()).getValueVector();
       if (id.getFieldIds().length == 1 && clazz != null && !clazz.isAssignableFrom(vector.getClass())) {
-        final ValueVector newVector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+        final ValueVector newVector = TypeHelper.getNewVector(field, this.allocator, callBack);
         replace(vector, newVector);
         return (T) newVector;
       }
     } else {
 
-      vector = TypeHelper.getNewVector(field, this.oContext.getAllocator(), callBack);
+      vector = TypeHelper.getNewVector(field, this.allocator, callBack);
       add(vector);
     }
     return (T) vector;
@@ -199,7 +205,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
-    wrappers.add(wrapper.cloneAndTransfer(oContext.getAllocator()));
+    wrappers.add(wrapper.cloneAndTransfer(allocator));
   }
 
   public void addCollection(Iterable<ValueVector> vectors) {
