@@ -18,6 +18,7 @@
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/thread.hpp"
+#include "env.h"
 #include "utils.hpp"
 #include "logger.hpp"
 
@@ -79,12 +80,14 @@ void Logger::init(const char* path){
         GetModuleFileName(NULL, szFile, MAX_PATH);
 #endif
         *m_pOutStream
-            << " DRILL CLIENT LIBRARY " << std::endl
+            << "Drill Client Library" << std::endl
+            << "Build Info :" <<  GIT_COMMIT_PROP << std::endl 
+
 #if defined _WIN32 || defined _WIN64
-            << " Loaded by process : " << szFile << std::endl
-            << " Current Process Id is: " << ::GetCurrentProcessId() << std::endl
+            << "Loaded by process : " << szFile << std::endl
+            << "Current Process Id is: " << ::GetCurrentProcessId() << std::endl
 #endif
-            << " Initialized Logging to file (" << path << "). "
+            << "Initialized Logging to file (" << path << "). "
             << std::endl;
     }
 }
