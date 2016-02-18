@@ -70,6 +70,7 @@ public class ListVector extends BaseRepeatedValueVector {
   @Override
   public void allocateNew() throws OutOfMemoryException {
     super.allocateNewSafe();
+    bits.allocateNewSafe();
   }
 
   public void transferTo(ListVector target) {

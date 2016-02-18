@@ -25,7 +25,7 @@ import java.nio.charset.Charset;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
@@ -47,6 +47,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -56,6 +57,7 @@ import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
@@ -789,4 +791,23 @@ the interface to load has changed
       }
     });
   }
+
+  @Test
+  public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
+    final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
+            Types.optional(TypeProtos.MinorType.LIST));
+    ListVector vector = new ListVector(field, allocator, null);
+    ListVector vectorFrom = new ListVector(field, allocator, null);
+    vectorFrom.allocateNew();
+
+    for (int i = 0; i < 10000; i++) {
+      vector.allocateNew();
+      vector.copyFromSafe(0, 0, vectorFrom);
+      vector.clear();
+    }
+
+    vectorFrom.clear();
+    vector.clear();
+  }
+
 }
