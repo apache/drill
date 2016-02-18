@@ -241,4 +241,10 @@ public class TestComplexTypeReader extends BaseTestQuery{
             .go();
   }
 
+  @Test  // DRILL-4410
+  // ListVector allocation
+  public void test_array() throws Exception{
+    test("select * from cp.`jsoninput/arrays1.json` `arrays1` INNER JOIN cp.`jsoninput/arrays2.json` `arrays2` ON "
+      + "(`arrays1`.id = `arrays2`.id)");
+  }
 }
