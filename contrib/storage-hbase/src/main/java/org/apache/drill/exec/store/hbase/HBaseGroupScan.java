@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -360,6 +361,15 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     // the following calculation is not precise since 'columns' could specify CFs while getColsPerRow() returns the number of qualifier.
     float diskCost = scanSizeInBytes * ((columns == null || columns.isEmpty()) ? 1 : columns.size()/statsCalculator.getColsPerRow());
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, diskCost);
+  }
+
+  @Override
+  public List<String> getRecordContextInScan() {
+    final List<String> virtualColumns = Lists.newArrayList();
+    for(Pair<String, ?> pair: HBaseRecordReader.RECORD_CONTEXT) {
+      virtualColumns.add(pair.getKey());
+    }
+    return virtualColumns;
   }
 
   @Override

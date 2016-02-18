@@ -27,26 +27,31 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -77,6 +82,42 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
   private boolean rowKeyOnly;
 
+  // Skip Record Flags
+  private boolean hasRowKey = false;
+  private final boolean isSkipRecord;
+
+  public static final List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> RECORD_CONTEXT
+      = Lists.newArrayList();
+  static {
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.TABLE_NAME,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hBaseRecordReader, VarCharVector varCharVector, int index) {
+                final String hbaseTableName = ((HBaseRecordReader) hBaseRecordReader).hbaseTableName;
+                final byte[] bytes = hbaseTableName.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.HBASE_ROW_KEY,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hBaseRecordReader, VarCharVector varCharVector, int index) {
+                final String row_key = ((HBaseRecordReader) hBaseRecordReader)
+                    .rowKeyVector
+                    .getAccessor()
+                    .getObject(index)
+                    .toString();
+                final byte[] bytes = row_key.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+  }
+
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
     hbaseConf = conf;
@@ -87,6 +128,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         .setCaching(TARGET_RECORD_COUNT);
 
     setColumns(projectedColumns);
+    isSkipRecord = context.getOptions().getOption(ExecConstants.ENABLE_SKIP_INVALID_RECORD);
   }
 
   @Override
@@ -97,6 +139,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().equalsIgnoreCase(ROW_KEY)) {
           transformed.add(ROW_KEY_PATH);
+          hasRowKey = true;
           continue;
         }
         rowKeyOnly = false;
@@ -123,6 +166,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     } else {
       rowKeyOnly = false;
       transformed.add(ROW_KEY_PATH);
+      hasRowKey = true;
     }
 
 
@@ -150,6 +194,11 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         } else {
           getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
         }
+      }
+
+      if(isSkipRecord && !hasRowKey) {
+        MaterializedField field = MaterializedField.create(ROW_KEY_PATH, ROW_KEY_TYPE);
+        rowKeyVector = outputMutator.addField(field, VarBinaryVector.class);
       }
 
       // Add map and child vectors for any HBase column families and/or HBase
