@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -298,5 +299,14 @@ public class HiveScan extends AbstractGroupScan {
   @JsonIgnore
   public boolean isNativeReader() {
     return false;
+  }
+
+  @Override
+  public List<String> getRecordContextInScan() {
+    final List<String> virtualColumns = Lists.newArrayList();
+    for(Pair<String, ?> pair: HiveRecordReader.RECORD_CONTEXT) {
+      virtualColumns.add(pair.getKey());
+    }
+    return virtualColumns;
   }
 }

@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -37,9 +38,12 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.skiprecord.RecordContextVisitor;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
@@ -57,6 +61,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -106,6 +111,74 @@ public class HiveRecordReader extends AbstractRecordReader {
   private final UserGroupInformation proxyUgi;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
+
+  public static final List<Pair<String, ? extends RecordContextVisitor.RecordReaderContextPopulator>> RECORD_CONTEXT
+      = Lists.newArrayList();
+  static {
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.HIVE_DATABASE,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hiveRecordReader, VarCharVector varCharVector, int index) {
+                final String hiveDBName = ((HiveRecordReader) hiveRecordReader)
+                    .table
+                    .getDbName();
+                final byte[] bytes = hiveDBName.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.TABLE_NAME,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hiveRecordReader, VarCharVector varCharVector, int index) {
+                final String hiveTableName = ((HiveRecordReader) hiveRecordReader)
+                    .table
+                    .getTableName();
+                final byte[] bytes = hiveTableName.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.FILE_NAME,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hiveRecordReader, VarCharVector varCharVector, int index) {
+                final String file_name = ((FileSplit) ((HiveRecordReader) hiveRecordReader).inputSplit).getPath().toUri().getPath();
+                final byte[] bytes = file_name.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.OFF_SET,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hiveRecordReader, VarCharVector varCharVector, int index) {
+                final String offset = "" + ((FileSplit) ((HiveRecordReader) hiveRecordReader).inputSplit).getStart();
+                final byte[] bytes = offset.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+
+    RECORD_CONTEXT.add(
+        Pair.of(
+            RecordContextVisitor.ROW_NUMBER,
+            new RecordContextVisitor.RecordReaderContextPopulator () {
+              @Override
+              public void populate(RecordReader hiveRecordReader, VarCharVector varCharVector, int index) {
+                final String rowNumber = String.valueOf(index);
+                final byte[] bytes = rowNumber.getBytes();
+                varCharVector.getMutator().setSafe(index, bytes, 0, bytes.length);
+              }
+            }));
+  }
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
                           FragmentContext context, final HiveConf hiveConf,

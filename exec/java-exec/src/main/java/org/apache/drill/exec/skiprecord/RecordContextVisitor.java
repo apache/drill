@@ -44,10 +44,12 @@ public class RecordContextVisitor extends RelShuttleImpl {
   public static final String FILE_NAME = "File_Name";
   public static final String TABLE_NAME = "Table_Name";
   public static final String ROW_NUMBER = "Row_Number";
+  public static final String OFF_SET = "Off_set";
 
   public static final String HBASE_ROW_KEY = "Row_Key";
   public static final String PARQUET_ROW_GROUP = "RowGroup";
-  public static final String OFF_SET = "Off_set";
+
+  public static final String HIVE_DATABASE = "Data_base";
 
   private int[] rangeVirtualCols;
 
