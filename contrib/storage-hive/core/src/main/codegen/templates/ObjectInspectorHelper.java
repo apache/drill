@@ -48,8 +48,10 @@ public class ObjectInspectorHelper {
   private static Map<MinorType, Class> OIMAP_OPTIONAL = new HashMap<>();
   static {
 <#list drillOI.map as entry>
+    <#if entry.needOIForDrillType == true>
     OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Required.class);
     OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Optional.class);
+    </#if>
 </#list>
   }
 
@@ -85,7 +87,7 @@ public class ObjectInspectorHelper {
             JType holderClass = TypeHelper.getHolderType(m, returnType, TypeProtos.DataMode.OPTIONAL);
             block.assign(returnValueHolder, JExpr._new(holderClass));
 
-          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
+          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY" || entry.hiveType == "CHAR">
             block.assign( //
                 returnValueHolder.ref("buffer"), //
                 g
@@ -168,6 +170,19 @@ public class ObjectInspectorHelper {
 
             jc._else().add(returnValueHolder.ref("buffer")
               .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
+
+
+            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
+            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+
+            <#elseif entry.hiveType == "CHAR">
+                JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+                castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
+                    .invoke("getStrippedValue")
+                    .invoke("getBytes"));
+
+            jc._else().add(returnValueHolder.ref("buffer")
+                .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
 
 
             jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));

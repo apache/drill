@@ -70,6 +70,8 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
   private static final DrillSqlOperator INT96_TO_TIMESTAMP =
       new DrillSqlOperator("convert_fromTIMESTAMP_IMPALA", 1, true);
 
+  private static final DrillSqlOperator RTRIM = new DrillSqlOperator("RTRIM", 1, true);
+
   private ConvertHiveParquetScanToDrillParquetScan() {
     super(RelOptHelper.any(DrillScanRel.class), "ConvertHiveScanToHiveDrillNativeScan:Parquet");
   }
@@ -311,6 +313,9 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
     final RelDataTypeField inputField = nativeScanRel.getRowType().getField(dirColName, false, false);
     final RexInputRef inputRef =
         rb.makeInputRef(rb.getTypeFactory().createSqlType(SqlTypeName.VARCHAR), inputField.getIndex());
+    if (outputType.getSqlTypeName() == SqlTypeName.CHAR) {
+      return rb.makeCall(RTRIM, inputRef);
+    }
 
     return rb.makeCast(outputType, inputRef);
   }

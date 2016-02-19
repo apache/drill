@@ -35,9 +35,7 @@ import org.apache.drill.exec.vector.NullableDecimal9Vector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableSmallIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
-import org.apache.drill.exec.vector.NullableTinyIntVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -49,6 +47,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.ByteObjectInspect
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DateObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.FloatObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveCharObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveDecimalObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.HiveVarcharObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.IntObjectInspector;
@@ -92,6 +91,7 @@ public abstract class HiveFieldConverter {
     primMap.put(PrimitiveCategory.VARCHAR, VarChar.class);
     primMap.put(PrimitiveCategory.TIMESTAMP, Timestamp.class);
     primMap.put(PrimitiveCategory.DATE, Date.class);
+    primMap.put(PrimitiveCategory.CHAR, Char.class);
   }
 
 
@@ -309,6 +309,16 @@ public abstract class HiveFieldConverter {
       final java.sql.Date value = ((DateObjectInspector)oi).getPrimitiveJavaObject(hiveFieldValue);
       final DateTime date = new DateTime(value.getTime()).withZoneRetainFields(DateTimeZone.UTC);
       ((NullableDateVector) outputVV).getMutator().setSafe(outputIndex, date.getMillis());
+    }
+  }
+
+  public static class Char extends HiveFieldConverter {
+    @Override
+    public void setSafeValue(ObjectInspector oi, Object hiveFieldValue, ValueVector outputVV, int outputIndex) {
+      final Text value = ((HiveCharObjectInspector)oi).getPrimitiveWritableObject(hiveFieldValue).getStrippedValue();
+      final byte[] valueBytes = value.getBytes();
+      final int valueLen = value.getLength();
+      ((NullableVarCharVector) outputVV).getMutator().setSafe(outputIndex, valueBytes, 0, valueLen);
     }
   }
 

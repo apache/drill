@@ -18,6 +18,7 @@
 <@pp.dropOutputFile />
 
 <#list drillOI.map as entry>
+<#if entry.needOIForDrillType == true>
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}ObjectInspector.java" />
 
 <#include "/@includes/license.ftl" />
@@ -305,6 +306,6 @@ public class Drill${entry.drillType}ObjectInspector {
   }
 </#list>
 }
-
+</#if>
 </#list>
 
