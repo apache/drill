@@ -257,8 +257,10 @@ public class TestComplexTypeReader extends BaseTestQuery{
   public void test_array() throws Exception{
 
     long numRecords = 100000;
-    String file1 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays1.json";
-    String file2 = "/tmp/" + TestComplexTypeReader.class.getName() + "arrays2.json";
+
+    String tempDir = BaseTestQuery.getTempDir("ComplexTypeWriter");
+    String file1 = tempDir + TestComplexTypeReader.class.getName() + "arrays1.json";
+    String file2 = tempDir + TestComplexTypeReader.class.getName() + "arrays2.json";
     Path path1 = Paths.get(file1);
     Path path2 = Paths.get(file2);
 
