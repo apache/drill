@@ -115,6 +115,7 @@ public class TestHiveStorage extends HiveTestBase {
             "varchar_field",
             "timestamp_field",
             "date_field",
+            "char_field",
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             //"binary_part",
             "boolean_part",
@@ -132,7 +133,8 @@ public class TestHiveStorage extends HiveTestBase {
             "string_part",
             "varchar_part",
             "timestamp_part",
-            "date_part")
+            "date_part",
+            "char_part")
         .baselineValues(
             "binaryfield".getBytes(),
             false,
@@ -151,6 +153,7 @@ public class TestHiveStorage extends HiveTestBase {
             "varcharfield",
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
             new DateTime(Date.valueOf("2013-07-05").getTime()),
+            "charfield",
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             //"binary",
             true,
@@ -168,9 +171,10 @@ public class TestHiveStorage extends HiveTestBase {
             "string",
             "varchar",
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()))
+            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            "char")
         .baselineValues( // All fields are null, but partition fields have non-null values
-            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             // There is a regression in Hive 1.2.1 in binary type partition columns. Disable for now.
             //"binary",
             true,
@@ -188,7 +192,8 @@ public class TestHiveStorage extends HiveTestBase {
             "string",
             "varchar",
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-            new DateTime(Date.valueOf("2013-07-05").getTime()))
+            new DateTime(Date.valueOf("2013-07-05").getTime()),
+            "char")
         .go();
   }
 
@@ -225,6 +230,7 @@ public class TestHiveStorage extends HiveTestBase {
               "string_field",
               "varchar_field",
               "timestamp_field",
+              "char_field",
               // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
               //"binary_part",
               "boolean_part",
@@ -242,7 +248,8 @@ public class TestHiveStorage extends HiveTestBase {
               "string_part",
               "varchar_part",
               "timestamp_part",
-              "date_part")
+              "date_part",
+              "char_part")
           .baselineValues(
               "binaryfield".getBytes(),
               false,
@@ -260,6 +267,7 @@ public class TestHiveStorage extends HiveTestBase {
               "stringfield",
               "varcharfield",
               new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
+              "charfield",
               // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
               //"binary",
               true,
@@ -277,9 +285,10 @@ public class TestHiveStorage extends HiveTestBase {
               "string",
               "varchar",
               new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-              new DateTime(Date.valueOf("2013-07-05").getTime()))
+              new DateTime(Date.valueOf("2013-07-05").getTime()),
+              "char")
           .baselineValues( // All fields are null, but partition fields have non-null values
-              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
               // There is a regression in Hive 1.2.1 in binary and boolean partition columns. Disable for now.
               //"binary",
               true,
@@ -297,7 +306,8 @@ public class TestHiveStorage extends HiveTestBase {
               "string",
               "varchar",
               new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
-              new DateTime(Date.valueOf("2013-07-05").getTime()))
+              new DateTime(Date.valueOf("2013-07-05").getTime()),
+              "char")
           .go();
     } finally {
         test(String.format("alter session set `%s` = false", ExecConstants.HIVE_OPTIMIZE_SCAN_WITH_NATIVE_READERS));

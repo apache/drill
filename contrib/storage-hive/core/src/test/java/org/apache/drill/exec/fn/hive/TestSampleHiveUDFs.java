@@ -116,6 +116,17 @@ public class TestSampleHiveUDFs extends HiveTestBase {
   }
 
   @Test
+  public void varcharInCharOut() throws Exception {
+    String query = "SELECT " +
+        "testHiveUDFChar(cast ('This is a char' as char(20))) as col1," +
+        "testHiveUDFChar(cast(null as char)) as col2 " +
+        "FROM hive.kv LIMIT 1";
+
+    String expected = "col1,col2\n" + "This is a char,null\n";
+    helper(query, expected);
+  }
+
+  @Test
   @Ignore("doesn't work across timezones")
   public void dateInOut() throws Exception{
     String query = "SELECT " +
