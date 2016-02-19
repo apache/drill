@@ -46,6 +46,7 @@ import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
 import org.ojai.FieldPath;
 import org.ojai.store.QueryCondition;
+import org.ojai.Value;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -81,12 +82,16 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private Iterator<DocumentReader> documentReaderIterators;
 
   private boolean includeId;
+  private boolean idOnly;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
+    projectedFields = null;
     tableName = Preconditions.checkNotNull(subScanSpec, "MapRDB reader needs a sub-scan spec").getTableName();
+    documentReaderIterators = null;
     includeId = false;
+    idOnly    = false;
     condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
     setColumns(projectedColumns);
   }
@@ -121,6 +126,10 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       includeId = true;
     }
 
+    /*
+     * (Bug 21708) if we are projecting only the id field, save that condition here.
+     */
+    idOnly = !isStarQuery() && (projectedFields == null);
     return transformed;
   }
 
@@ -155,11 +164,35 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         reader = nextDocumentReader();
         if (reader == null) break;
         writer.setPosition(recordCount);
-        if (reader.next() != EventType.START_MAP) {
-          throw dataReadError("The document did not start with START_MAP!");
+        if (idOnly) {
+          Value id = reader.getId();
+          MapWriter map = writer.rootAsMap();
+
+          try {
+            switch(id.getType()) {
+            case STRING:
+              writeString(map.varChar(ID_KEY), id.getString());
+              recordCount++;
+              break;
+            case BINARY:
+              writeBinary(map.varBinary(ID_KEY), id.getBinary());
+              recordCount++;
+              break;
+            default:
+              throw new UnsupportedOperationException(id.getType() +
+                  " is not a supported type for _id field.");
+            }
+          } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.warn(String.format("Possible schema change at _id: '%s'",
+                IdCodec.asString(id)), e);
+          }
+        } else {
+          if (reader.next() != EventType.START_MAP) {
+            throw dataReadError("The document did not start with START_MAP!");
+          }
+          writeToMap(reader, writer.rootAsMap());
+          recordCount++;
         }
-        writeToMap(reader, writer.rootAsMap());
-        recordCount++;
       } catch (UserException e) {
         throw UserException.unsupportedError(e)
             .addContext(String.format("Table: %s, document id: '%s'",
