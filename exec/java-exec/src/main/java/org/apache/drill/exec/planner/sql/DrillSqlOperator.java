@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 
 public class DrillSqlOperator extends SqlFunction {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
@@ -45,7 +46,8 @@ public class DrillSqlOperator extends SqlFunction {
   }
 
   public DrillSqlOperator(String name, int argCount, MajorType returnType, boolean isDeterminisitic) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null,
+        SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.returnType = Preconditions.checkNotNull(returnType);
     this.isDeterministic = isDeterminisitic;
   }
@@ -54,33 +56,47 @@ public class DrillSqlOperator extends SqlFunction {
     return isDeterministic;
   }
 
-  protected RelDataType getReturnDataType(final RelDataTypeFactory factory) {
-    if (MinorType.BIT.equals(returnType.getMinorType())) {
-      return factory.createSqlType(SqlTypeName.BOOLEAN);
-    }
-    return factory.createTypeWithNullability(factory.createSqlType(SqlTypeName.ANY), true);
-  }
+  private RelDataType getReturnType(final RelDataTypeFactory factory) {
+    // least restrictive type (nullable ANY type)
+    final RelDataType anyType = factory.createSqlType(SqlTypeName.ANY);
+    final RelDataType nullableAnyType = factory.createTypeWithNullability(anyType, true);
 
-  private RelDataType getNullableReturnDataType(final RelDataTypeFactory factory) {
-    return factory.createTypeWithNullability(getReturnDataType(factory), true);
+    if (NONE.equals(returnType)) {
+      return nullableAnyType;
+    }
+
+    final MinorType minorType = returnType.getMinorType();
+    final SqlTypeName sqlTypeName = DrillConstExecutor.DRILL_TO_CALCITE_TYPE_MAPPING.get(minorType);
+    if (sqlTypeName == null) {
+      return factory.createTypeWithNullability(nullableAnyType, true);
+    }
+
+    final RelDataType relReturnType = factory.createSqlType(sqlTypeName);
+    switch (returnType.getMode()) {
+    case OPTIONAL:
+      return factory.createTypeWithNullability(relReturnType, true);
+    case REQUIRED:
+      return relReturnType;
+    case REPEATED:
+      return relReturnType;
+    default:
+      return nullableAnyType;
+    }
   }
 
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    if (NONE.equals(returnType)) {
-      return validator.getTypeFactory().createSqlType(SqlTypeName.ANY);
-    }
     /*
      * We return a nullable output type both in validation phase and in
      * Sql to Rel phase. We don't know the type of the output until runtime
      * hence have to choose the least restrictive type to avoid any wrong
      * results.
      */
-    return getNullableReturnDataType(validator.getTypeFactory());
+    return getReturnType(validator.getTypeFactory());
   }
 
   @Override
   public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-    return getNullableReturnDataType(opBinding.getTypeFactory());
+    return getReturnType(opBinding.getTypeFactory());
   }
 }
