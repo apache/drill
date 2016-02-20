@@ -159,8 +159,8 @@ public class ClassTransformer {
 
     public ClassNames(String className) {
       dot = className;
-      slash = className.replace('.', FileUtils.separatorChar);
-      clazz = FileUtils.separatorChar + slash + ".class";
+      slash = className.replace(".", FileUtils.UNIX_FILE_SEPARATOR);
+      clazz = FileUtils.UNIX_FILE_SEPARATOR + slash + ".class";
     }
 
     @Override
@@ -286,7 +286,7 @@ public class ClassTransformer {
         }
 
         for (String s : result.innerClasses) {
-          s = s.replace(FileUtils.separatorChar, '.');
+          s = s.replace(FileUtils.UNIX_FILE_SEPARATOR, ".");
           names.add(nextSet.getChild(s));
         }
         classLoader.injectByteCode(nextGenerated.dot, result.bytes);

@@ -49,7 +49,6 @@ public class TestTools {
     return WORKING_PATH;
   }
 
-  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
   private static final String[] STRUCTURE = {"drill", "exec", "java-exec", "src", "test", "resources"};
 
   /**
@@ -61,7 +60,7 @@ public class TestTools {
     for (int i=0; i< STRUCTURE.length; i++) {
       if (WORKING_PATH.endsWith(STRUCTURE[i])) {
         for (int j=i+1; j< STRUCTURE.length; j++) {
-          builder.append(PATH_SEPARATOR).append(STRUCTURE[j]);
+          builder.append(FileUtils.FILE_SEPARATOR).append(STRUCTURE[j]);
         }
         return builder.toString();
       }

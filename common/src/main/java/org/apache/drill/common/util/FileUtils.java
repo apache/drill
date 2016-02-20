@@ -21,16 +21,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class FileUtils {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtils.class);
-
-  public static final char separatorChar = '/';
-
-  public static final String separator = "" + separatorChar;
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtils.class);
+  public static final String UNIX_FILE_SEPARATOR = "/";
+  public static final String FILE_SEPARATOR = File.separator;
+  // pattern string for path separator to use with string splitting etc. it is important to use quoted string for
+  // cross platform functionality ie mind shitty windows!
+  public static final String PATH_SEPARATOR_QUOTED = Pattern.quote(FILE_SEPARATOR);
 
   public static File getResourceAsFile(String fileName) throws IOException {
     URL u = FileUtils.class.getResource(fileName);

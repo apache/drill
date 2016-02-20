@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -41,7 +41,6 @@ import org.apache.hadoop.fs.Path;
  */
 public class FileSelection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSelection.class);
-  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
   private static final String WILD_CARD = "*";
 
   private List<FileStatus> statuses;
@@ -194,7 +193,7 @@ public class FileSelection {
     int shortest = Integer.MAX_VALUE;
     for (int i = 0; i < total; i++) {
       final Path path = new Path(files.get(i));
-      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(PATH_SEPARATOR);
+      folders[i] = Path.getPathWithoutSchemeAndAuthority(path).toString().split(FileUtils.PATH_SEPARATOR_QUOTED);
       shortest = Math.min(shortest, folders[i].length);
     }
 
@@ -217,7 +216,7 @@ public class FileSelection {
   private static String buildPath(final String[] path, final int folderIndex) {
     final StringBuilder builder = new StringBuilder();
     for (int i=0; i<folderIndex; i++) {
-      builder.append(path[i]).append(PATH_SEPARATOR);
+      builder.append(path[i]).append(FileUtils.FILE_SEPARATOR);
     }
     builder.deleteCharAt(builder.length()-1);
     return builder.toString();

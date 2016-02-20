@@ -116,7 +116,9 @@ public class FunctionInitializer {
   private CompilationUnit get(Class<?> c) throws IOException {
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
-    path = path.replace(".", FileUtils.separator);
+    // classpath file system relies on unix like file separator regardless the underlying platform. make sure to use
+    // unix file separator.
+    path = path.replace(".", FileUtils.UNIX_FILE_SEPARATOR);
     path = "/" + path + ".java";
     CompilationUnit cu = functionUnits.get(path);
     if (cu != null) {
