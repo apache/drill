@@ -488,11 +488,6 @@ public abstract class HashTableTemplate implements HashTable {
     }
   }
 
-  public void updateProbeBatch(VectorContainer incomingProbe) {
-    this.incomingProbe = incomingProbe;
-    updateBatches();
-  }
-
   public int numBuckets() {
     return startIndices.getAccessor().getValueCount();
   }

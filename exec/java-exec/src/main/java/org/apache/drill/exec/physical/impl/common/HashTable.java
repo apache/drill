@@ -61,8 +61,6 @@ public interface HashTable {
 
   public void updateBatches();
 
-  public void updateProbeBatch(VectorAccessible probeBatch);
-
   public void put(int incomingRowIdx, IndexPointer htIdxHolder, int retryCount);
 
   public int containsKey(int incomingRowIdx, boolean isProbe);

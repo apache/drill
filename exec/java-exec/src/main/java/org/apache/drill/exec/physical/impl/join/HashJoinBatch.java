@@ -252,7 +252,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       if (!hashTable.isEmpty() || joinType != JoinRelType.INNER) {
         while (true) {
           if (probeSideSchemaChanged) {
-            //System.out.println("reset hash table " + probeStatus);
             resetHashJoinProbe();
             probeSideSchemaChanged = false;
             outputSchemaChanged = true;
@@ -260,7 +259,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           // Allocate the memory for the vectors in the output container
           allocateVectors();
           outputRecords = hashJoinProbe.probeAndProject();
-          //System.out.println("AH p&p " + outputRecords + " schema " + hashJoinProbe.schemaChanged());
           if (outputRecords == 0) {
             if (hashJoinProbe.schemaChanged()) {
               probeSideSchemaChanged = true;
@@ -282,8 +280,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             container.setRecordCount(outputRecords);
             // Remember to reset hash probe and table on next call.
             probeSideSchemaChanged = hashJoinProbe.schemaChanged();
-            // AH TODO BatchPrinter.printBatch(container);
-            final IterOutcome result = first || outputSchemaChanged ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
+            final IterOutcome result = outputSchemaChanged ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
             // This is the first batch after schema change, reset outputSchemaChanged until next schema change.
             outputSchemaChanged = false;
             return result;
@@ -391,7 +388,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         hashTable.put(i, htIndex, 1 /* retry count */);
         newHjHelper.setCurrentIndex(htIndex.value, buildBatchIndex, i);
         if (hjHelper.isMatched(buildBatchIndex, i)) {
-          //System.out.println("alread matched " + buildBatchIndex + " rindex" + i);
           newHjHelper.setRecordMatched(buildBatchIndex, i);
         }
       }
@@ -443,7 +439,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     finalBuildSideVectorContainer = SchemaUtil.coerceContainer(null, rightSchema, oContext);
     // Create hash table with current left and finalBuildSideVectorContainer.
     rightSchema = finalBuildSideVectorContainer.getSchema();
-    //System.out.println("AH right schema final " + rightSchema);
     if (hashTable != null) {
       hashTable.clear();
     }
@@ -463,7 +458,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       // transfer from batch container to container accessed by hash table.
       batchVectorContainer.transferOut(finalBuildSideVectorContainer);
       finalBuildSideVectorContainer.setRecordCount(batchVectorContainer.getRecordCount());
-      //System.out.println("AH recordcount build side" + batchVectorContainer.getRecordCount() + " " + currentRecordCount);
       hjHelper.addNewBatch(currentRecordCount);
       // Holder contains the global index where the key is hashed into using the hash table
       final IndexPointer htIndex = new IndexPointer();
