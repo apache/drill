@@ -43,7 +43,7 @@
       Apache Hive 1.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
     <hive.version>1.2.1</hive.version>
-    <hadoop.version>2.7.1</hadoop.version>
+    <hadoop.version>3.0.0-SNAPSHOT</hadoop.version>
     <fmpp.version>0.9.15</fmpp.version>
     <freemarker.version>2.3.21</freemarker.version>
   </properties>
