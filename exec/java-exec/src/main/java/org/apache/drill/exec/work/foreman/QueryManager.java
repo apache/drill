@@ -42,6 +42,7 @@ import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -55,6 +56,7 @@ import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.foreman.Foreman.StateListener;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.predicates.IntObjectPredicate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -355,24 +357,41 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setPlan(planText);
     }
 
-    for (int i = 0; i < fragmentDataMap.keys.length; i++) {
-      if (fragmentDataMap.keys[i] != 0) {
-        final int majorFragmentId = fragmentDataMap.keys[i];
-        final IntObjectHashMap<FragmentData> minorMap =
-            (IntObjectHashMap<FragmentData>) ((Object[]) fragmentDataMap.values)[i];
-        final MajorFragmentProfile.Builder fb = MajorFragmentProfile.newBuilder()
-            .setMajorFragmentId(majorFragmentId);
-        for (int v = 0; v < minorMap.keys.length; v++) {
-          if (minorMap.keys[v] != 0) {
-            final FragmentData data = (FragmentData) ((Object[]) minorMap.values)[v];
-            fb.addMinorFragmentProfile(data.getProfile());
-          }
-        }
-        profileBuilder.addFragmentProfile(fb);
-      }
-    }
+    fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
     return profileBuilder.build();
+  }
+
+  private class OuterIter implements IntObjectPredicate<IntObjectHashMap<FragmentData>> {
+    private final QueryProfile.Builder profileBuilder;
+
+    public OuterIter(Builder profileBuilder) {
+      this.profileBuilder = profileBuilder;
+    }
+
+    @Override
+    public boolean apply(final int majorFragmentId, final IntObjectHashMap<FragmentData> minorMap) {
+      final MajorFragmentProfile.Builder builder = MajorFragmentProfile.newBuilder().setMajorFragmentId(majorFragmentId);
+      minorMap.forEach(new InnerIter(builder));
+      profileBuilder.addFragmentProfile(builder);
+      return true;
+    }
+
+  }
+
+  private class InnerIter implements IntObjectPredicate<FragmentData> {
+    private final MajorFragmentProfile.Builder builder;
+
+    public InnerIter(MajorFragmentProfile.Builder fb) {
+      this.builder = fb;
+    }
+
+    @Override
+    public boolean apply(int key, FragmentData data) {
+      builder.addMinorFragmentProfile(data.getProfile());
+      return true;
+    }
+
   }
 
   void setPlanText(final String planText) {
