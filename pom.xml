@@ -45,7 +45,7 @@
     <hive.version>1.2.1</hive.version>
     <hadoop.version>3.0.0-SNAPSHOT</hadoop.version>
     <fmpp.version>0.9.15</fmpp.version>
-    <freemarker.version>2.3.21</freemarker.version>
+    <freemarker.version>2.3.23</freemarker.version>
   </properties>
 
   <scm>
@@ -309,7 +309,7 @@
                   <version>[3.0.4,4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.7,1.8)</version>
+                  <version>[1.7,1.9)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
