@@ -340,6 +340,10 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         std::string& getError();
 
         /*
+         * Returns the error message associated with the query handle
+         */
+        const std::string& getError(QueryHandle_t handle);
+        /*
          * Applications using the async query submit method can register a listener for schema changes
          *
          */

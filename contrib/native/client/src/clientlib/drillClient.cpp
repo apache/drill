@@ -391,6 +391,9 @@ std::string& DrillClient::getError(){
     return m_pImpl->getError()->msg;
 }
 
+const std::string& DrillClient::getError(QueryHandle_t handle){
+    return ((DrillClientQueryResult*)handle)->getError()->msg;
+}
 
 void DrillClient::waitForResults(){
     this->m_pImpl->waitForResults();
