@@ -284,9 +284,6 @@ public class DrillTestWrapper {
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
             }
           }
           combinedVectors.get(field).add(obj);
@@ -522,9 +519,6 @@ public class DrillTestWrapper {
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
             }
             else if (obj instanceof byte[]) {
               obj = new String((byte[]) obj, "UTF-8");
@@ -609,7 +603,6 @@ public class DrillTestWrapper {
 
     assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
 
-    String missing = "";
     int i = 0;
     int counter = 0;
     boolean found;
@@ -656,8 +649,6 @@ public class DrillTestWrapper {
         counter++;
       }
     }
-    logger.debug(missing);
-    System.out.println(missing);
     assertEquals(0, actualRecords.size());
   }
 
