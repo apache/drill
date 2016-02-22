@@ -284,9 +284,6 @@ public class DrillTestWrapper {
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
             }
           }
           combinedVectors.get(field).add(obj);
@@ -522,9 +519,6 @@ public class DrillTestWrapper {
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
-              if (obj.equals("")) {
-                System.out.println(w.getField());
-              }
             }
             else if (obj instanceof byte[]) {
               obj = new String((byte[]) obj, "UTF-8");
