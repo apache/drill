@@ -1,5 +1,6 @@
 package org.apache.drill.exec.store.maprdb.json;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -41,6 +42,11 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     return COMPARE_FUNCTIONS_TRANSPOSE_MAP.keySet().contains(functionName);
   }
 
+  @Override
+  public Boolean visitUnknown(LogicalExpression e, LogicalExpression valueArg) throws RuntimeException {
+    return false;
+  }
+ 
   public static CompareFunctionsProcessor process(FunctionCall call) {
     String functionName = call.getName();
     LogicalExpression nameArg = call.args.get(0);
