@@ -66,7 +66,7 @@ public class HiveTable {
   public String tableType;
 
   @JsonIgnore
-  public final Map<String, String> partitionNameTypeMap = new HashMap();
+  public final Map<String, String> partitionNameTypeMap = new HashMap<>();
 
   @JsonCreator
   public HiveTable(@JsonProperty("tableName") String tableName, @JsonProperty("dbName") String dbName, @JsonProperty("owner") String owner, @JsonProperty("createTime") int createTime,

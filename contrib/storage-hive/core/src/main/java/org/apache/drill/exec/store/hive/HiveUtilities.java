@@ -364,7 +364,7 @@ public class HiveUtilities {
    * @param table Table object
    * @throws Exception
    */
-  public static Class<? extends InputFormat> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
+  public static Class<? extends InputFormat<?, ?>> getInputFormatClass(final JobConf job, final StorageDescriptor sd,
       final Table table) throws Exception {
     final String inputFormatName = sd.getInputFormat();
     if (Strings.isNullOrEmpty(inputFormatName)) {
@@ -374,9 +374,9 @@ public class HiveUtilities {
             "InputFormat class explicitly specified nor StorageHandler class");
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
-      return storageHandler.getInputFormatClass();
+      return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
-      return (Class<? extends InputFormat>) Class.forName(inputFormatName);
+      return (Class<? extends InputFormat<?, ?>>) Class.forName(inputFormatName) ;
     }
   }
 

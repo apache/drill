@@ -73,7 +73,7 @@ public class BasicTypeHelper {
   }
   
   
-  public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
+  public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
     case UNION:
       return UnionVector.class;

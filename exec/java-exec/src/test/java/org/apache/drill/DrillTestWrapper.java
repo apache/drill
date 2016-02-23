@@ -81,8 +81,6 @@ public class DrillTestWrapper {
   private UserBitShared.QueryType baselineQueryType;
   // should ordering be enforced in the baseline check
   private boolean ordered;
-  // TODO - implement this
-  private boolean approximateEquality;
   private BufferAllocator allocator;
   // queries to run before the baseline or test queries, can be used to set options
   private String baselineOptionSettingQueries;
@@ -96,21 +94,20 @@ public class DrillTestWrapper {
   // if the baseline is a single option test writers can provide the baseline values and columns
   // without creating a file, these are provided to the builder in the baselineValues() and baselineColumns() methods
   // and translated into a map in the builder
-  private List<Map> baselineRecords;
+  private List<Map<String, Object>> baselineRecords;
 
   private int expectedNumBatches;
 
   public DrillTestWrapper(TestBuilder testBuilder, BufferAllocator allocator, String query, QueryType queryType,
                           String baselineOptionSettingQueries, String testOptionSettingQueries,
-                          QueryType baselineQueryType, boolean ordered, boolean approximateEquality,
-                          boolean highPerformanceComparison, List<Map> baselineRecords, int expectedNumBatches) {
+                          QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
+                          List<Map<String, Object>> baselineRecords, int expectedNumBatches) {
     this.testBuilder = testBuilder;
     this.allocator = allocator;
     this.query = query;
     this.queryType = queryType;
     this.baselineQueryType = baselineQueryType;
     this.ordered = ordered;
-    this.approximateEquality = approximateEquality;
     this.baselineOptionSettingQueries = baselineOptionSettingQueries;
     this.testOptionSettingQueries = testOptionSettingQueries;
     this.highPerformanceComparison = highPerformanceComparison;
@@ -159,13 +156,13 @@ public class DrillTestWrapper {
     }
   }
 
-  private void compareMergedVectors(Map<String, List> expectedRecords, Map<String, List> actualRecords) throws Exception {
+  private void compareMergedVectors(Map<String, List<Object>> expectedRecords, Map<String, List<Object>> actualRecords) throws Exception {
 
     for (String s : actualRecords.keySet()) {
       assertNotNull("Unexpected extra column " + s + " returned by query.", expectedRecords.get(s));
       assertEquals("Incorrect number of rows returned by query.", expectedRecords.get(s).size(), actualRecords.get(s).size());
-      List expectedValues = expectedRecords.get(s);
-      List actualValues = actualRecords.get(s);
+      List<?> expectedValues = expectedRecords.get(s);
+      List<?> actualValues = actualRecords.get(s);
       assertEquals("Different number of records returned", expectedValues.size(), actualValues.size());
 
       for (int i = 0; i < expectedValues.size(); i++) {
@@ -181,24 +178,24 @@ public class DrillTestWrapper {
     }
   }
 
-  private String printNearbyRecords(Map<String, List> expectedRecords, Map<String, List> actualRecords, int offset) {
+  private String printNearbyRecords(Map<String, List<Object>> expectedRecords, Map<String, List<Object>> actualRecords, int offset) {
     StringBuilder expected = new StringBuilder();
     StringBuilder actual = new StringBuilder();
     expected.append("Expected Records near verification failure:\n");
     actual.append("Actual Records near verification failure:\n");
     int firstRecordToPrint = Math.max(0, offset - 5);
-    List<Object> expectedValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
-    List<Object> actualValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    List<?> expectedValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
+    List<?> actualValuesInFirstColumn = expectedRecords.get(expectedRecords.keySet().iterator().next());
     int numberOfRecordsToPrint = Math.min(Math.min(10, expectedValuesInFirstColumn.size()), actualValuesInFirstColumn.size());
     for (int i = firstRecordToPrint; i < numberOfRecordsToPrint; i++) {
       expected.append("Record Number: ").append(i).append(" { ");
       actual.append("Record Number: ").append(i).append(" { ");
       for (String s : actualRecords.keySet()) {
-        List actualValues = actualRecords.get(s);
+        List<?> actualValues = actualRecords.get(s);
         actual.append(s).append(" : ").append(actualValues.get(i)).append(",");
       }
       for (String s : expectedRecords.keySet()) {
-        List expectedValues = expectedRecords.get(s);
+        List<?> expectedValues = expectedRecords.get(s);
         expected.append(s).append(" : ").append(expectedValues.get(i)).append(",");
       }
       expected.append(" }\n");
@@ -212,7 +209,7 @@ public class DrillTestWrapper {
   private Map<String, HyperVectorValueIterator> addToHyperVectorMap(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                                       BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, HyperVectorValueIterator> combinedVectors = new HashMap();
+    Map<String, HyperVectorValueIterator> combinedVectors = new HashMap<>();
 
     long totalRecords = 0;
     QueryDataBatch batch;
@@ -223,14 +220,13 @@ public class DrillTestWrapper {
       loader.load(batch.getHeader().getDef(), batch.getData());
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
-      for (VectorWrapper w : loader) {
+      for (VectorWrapper<?> w : loader) {
         String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
         if (!combinedVectors.containsKey(field)) {
           MaterializedField mf = w.getField();
           ValueVector[] vvList = (ValueVector[]) Array.newInstance(mf.getValueClass(), 1);
           vvList[0] = w.getValueVector();
-          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new HyperVectorValueIterator(mf, new HyperVectorWrapper(mf,
-              vvList)));
+          combinedVectors.put(field, new HyperVectorValueIterator(mf, new HyperVectorWrapper<>(mf, vvList)));
         } else {
           combinedVectors.get(field).getHyperVector().addVector(w.getValueVector());
         }
@@ -256,10 +252,10 @@ public class DrillTestWrapper {
    * @throws SchemaChangeException
    * @throws UnsupportedEncodingException
    */
-   private Map<String, List> addToCombinedVectorResults(List<QueryDataBatch> records, RecordBatchLoader loader,
+   private Map<String, List<Object>> addToCombinedVectorResults(List<QueryDataBatch> records, RecordBatchLoader loader,
                                                          BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     // TODO - this does not handle schema changes
-    Map<String, List> combinedVectors = new HashMap();
+    Map<String, List<Object>> combinedVectors = new HashMap<>();
 
     long totalRecords = 0;
     QueryDataBatch batch;
@@ -272,12 +268,12 @@ public class DrillTestWrapper {
       if (schema == null) {
         schema = loader.getSchema();
         for (MaterializedField mf : schema) {
-          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new ArrayList());
+          combinedVectors.put(SchemaPath.getSimplePath(mf.getPath()).toExpr(), new ArrayList<Object>());
         }
       }
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
-      for (VectorWrapper w : loader) {
+      for (VectorWrapper<?> w : loader) {
         String field = SchemaPath.getSimplePath(w.getField().getPath()).toExpr();
         for (int j = 0; j < loader.getRecordCount(); j++) {
           Object obj = w.getValueVector().getAccessor().getObject(j);
@@ -345,10 +341,10 @@ public class DrillTestWrapper {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     BatchSchema schema = null;
 
-    List<QueryDataBatch> actual = Collections.EMPTY_LIST;
-    List<QueryDataBatch> expected = Collections.EMPTY_LIST;
-    List<Map> expectedRecords = new ArrayList<>();
-    List<Map> actualRecords = new ArrayList<>();
+    List<QueryDataBatch> actual = Collections.emptyList();
+    List<QueryDataBatch> expected = Collections.emptyList();
+    List<Map<String, Object>> expectedRecords = new ArrayList<>();
+    List<Map<String, Object>> actualRecords = new ArrayList<>();
 
     try {
       BaseTestQuery.test(testOptionSettingQueries);
@@ -396,10 +392,10 @@ public class DrillTestWrapper {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     BatchSchema schema = null;
 
-    List<QueryDataBatch> actual = Collections.EMPTY_LIST;;
-    List<QueryDataBatch> expected = Collections.EMPTY_LIST;
-    Map<String, List> actualSuperVectors;
-    Map<String, List> expectedSuperVectors;
+    List<QueryDataBatch> actual = Collections.emptyList();
+    List<QueryDataBatch> expected = Collections.emptyList();
+    Map<String, List<Object>> actualSuperVectors;
+    Map<String, List<Object>> expectedSuperVectors;
 
     try {
     BaseTestQuery.test(testOptionSettingQueries);
@@ -421,10 +417,10 @@ public class DrillTestWrapper {
     } else {
       // data is built in the TestBuilder in a row major format as it is provided by the user
       // translate it here to vectorized, the representation expected by the ordered comparison
-      expectedSuperVectors = new HashMap();
-      expected = new ArrayList();
-      for (String s : ((Map<String, Object>)baselineRecords.get(0)).keySet()) {
-        expectedSuperVectors.put(s, new ArrayList());
+      expectedSuperVectors = new HashMap<>();
+      expected = new ArrayList<>();
+      for (String s : baselineRecords.get(0).keySet()) {
+        expectedSuperVectors.put(s, new ArrayList<>());
       }
       for (Map<String, Object> m : baselineRecords) {
         for (String s : m.keySet()) {
@@ -481,7 +477,7 @@ public class DrillTestWrapper {
   }
 
   private Map<SchemaPath, TypeProtos.MajorType> getTypeMapFromBatch(QueryDataBatch batch) {
-    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap();
+    Map<SchemaPath, TypeProtos.MajorType> typeMap = new HashMap<>();
     for (int i = 0; i < batch.getHeader().getDef().getFieldCount(); i++) {
       typeMap.put(SchemaPath.getSimplePath(MaterializedField.create(batch.getHeader().getDef().getField(i)).getPath()),
           batch.getHeader().getDef().getField(i).getMajorType());
@@ -489,7 +485,8 @@ public class DrillTestWrapper {
     return typeMap;
   }
 
-  private void cleanupBatches(List<QueryDataBatch>... results) {
+  @SafeVarargs
+  private final void cleanupBatches(List<QueryDataBatch>... results) {
     for (List<QueryDataBatch> resultList : results ) {
       for (QueryDataBatch result : resultList) {
         result.release();
@@ -497,7 +494,7 @@ public class DrillTestWrapper {
     }
   }
 
-  protected void addToMaterializedResults(List<Map> materializedRecords,  List<QueryDataBatch> records, RecordBatchLoader loader,
+  protected void addToMaterializedResults(List<Map<String, Object>> materializedRecords, List<QueryDataBatch> records, RecordBatchLoader loader,
                                           BatchSchema schema) throws SchemaChangeException, UnsupportedEncodingException {
     long totalRecords = 0;
     QueryDataBatch batch;
@@ -514,7 +511,7 @@ public class DrillTestWrapper {
       totalRecords += loader.getRecordCount();
       for (int j = 0; j < loader.getRecordCount(); j++) {
         HashMap<String, Object> record = new HashMap<>();
-        for (VectorWrapper w : loader) {
+        for (VectorWrapper<?> w : loader) {
           Object obj = w.getValueVector().getAccessor().getObject(j);
           if (obj != null) {
             if (obj instanceof Text) {
@@ -599,7 +596,7 @@ public class DrillTestWrapper {
    * @param actualRecords - list of records from test query, WARNING - this list is destroyed in this method
    * @throws Exception
    */
-  private void compareResults(List<Map> expectedRecords, List<Map> actualRecords) throws Exception {
+  private void compareResults(List<Map<String, Object>> expectedRecords, List<Map<String, Object>> actualRecords) throws Exception {
 
     assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
 
@@ -662,7 +659,7 @@ public class DrillTestWrapper {
     return "Expected column(s) " + missingCols + " not found in result set: " + actual + ".";
   }
 
-  private String printRecord(Map<String, Object> record) {
+  private String printRecord(Map<String, ?> record) {
     String ret = "";
     for (String s : record.keySet()) {
       ret += s + " : "  + record.get(s) + ", ";

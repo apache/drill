@@ -42,8 +42,6 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
-
 @Path("/")
 @PermitAll
 public class StatusResources {
@@ -63,7 +61,7 @@ public class StatusResources {
   @Path("/options.json")
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.APPLICATION_JSON)
-  public List getSystemOptionsJSON() {
+  public List<OptionWrapper> getSystemOptionsJSON() {
     List<OptionWrapper> options = new LinkedList<>();
     for (OptionValue option : work.getContext().getOptionManager()) {
       options.add(new OptionWrapper(option.name, option.getValue(), option.type, option.kind));

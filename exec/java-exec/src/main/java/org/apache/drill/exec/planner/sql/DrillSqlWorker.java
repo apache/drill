@@ -22,14 +22,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.config.Lex;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptCostFactory;
+import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.rules.ProjectToWindowRule;
+import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.ValidationException;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -47,22 +57,10 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-import org.apache.calcite.rel.RelCollationTraitDef;
-import org.apache.calcite.rel.rules.ReduceExpressionsRule;
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.RelOptCostFactory;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -80,7 +78,9 @@ public class DrillSqlWorker {
   private final QueryContext context;
 
   public DrillSqlWorker(QueryContext context) {
-    final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
+    // Calcite is not fully generified
+    @SuppressWarnings("rawtypes")
+    final List<RelTraitDef> traitDefs = new ArrayList<>();
 
     traitDefs.add(ConventionTraitDef.INSTANCE);
     traitDefs.add(DrillDistributionTraitDef.INSTANCE);

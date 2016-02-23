@@ -17,16 +17,14 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import java.security.PrivilegedExceptionAction;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -52,11 +50,12 @@ import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 
-import org.apache.hadoop.security.UserGroupInformation;
+import io.netty.buffer.DrillBuf;
 
 /**
  * A RecordReader implementation for Avro data files.
@@ -75,7 +74,6 @@ public class AvroRecordReader extends AbstractRecordReader {
   private VectorContainerWriter writer;
 
   private DataFileReader<GenericContainer> reader = null;
-  private OperatorContext operatorContext;
   private FileSystem fs;
 
   private final String opUserName;
@@ -102,12 +100,12 @@ public class AvroRecordReader extends AbstractRecordReader {
     this.fieldSelection = FieldSelection.getFieldSelection(projectedColumns);
   }
 
-  private DataFileReader getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
+  private DataFileReader<GenericContainer> getReader(final Path hadoop, final FileSystem fs) throws ExecutionSetupException {
     try {
       final UserGroupInformation ugi = ImpersonationUtil.createProxyUgi(this.opUserName, this.queryUserName);
-      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader>() {
+      return ugi.doAs(new PrivilegedExceptionAction<DataFileReader<GenericContainer>>() {
         @Override
-        public DataFileReader run() throws Exception {
+        public DataFileReader<GenericContainer> run() throws Exception {
           return new DataFileReader<>(new FsInput(hadoop, fs.getConf()), new GenericDatumReader<GenericContainer>());
         }
       });
@@ -119,7 +117,6 @@ public class AvroRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
-    operatorContext = context;
     writer = new VectorContainerWriter(output);
 
     try {
@@ -202,7 +199,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         break;
       case ARRAY:
         assert fieldName != null;
-        final GenericArray array = (GenericArray) value;
+        final GenericArray<?> array = (GenericArray<?>) value;
         Schema elementSchema = array.getSchema().getElementType();
         Type elementType = elementSchema.getType();
         if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){

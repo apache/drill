@@ -19,8 +19,6 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.vector.ValueVector;
 
-import java.util.LinkedList;
-
 public class ExpandableHyperContainer extends VectorContainer {
 
   public ExpandableHyperContainer() {
@@ -30,12 +28,12 @@ public class ExpandableHyperContainer extends VectorContainer {
   public ExpandableHyperContainer(VectorAccessible batch) {
     super();
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
-      for (VectorWrapper w : batch) {
+      for (VectorWrapper<?> w : batch) {
         ValueVector[] hyperVector = w.getValueVectors();
         this.add(hyperVector, true);
       }
     } else {
-      for (VectorWrapper w : batch) {
+      for (VectorWrapper<?> w : batch) {
         ValueVector[] hyperVector = { w.getValueVector() };
         this.add(hyperVector, true);
       }
@@ -45,12 +43,12 @@ public class ExpandableHyperContainer extends VectorContainer {
   public void addBatch(VectorAccessible batch) {
     if (wrappers.size() == 0) {
       if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
-        for (VectorWrapper w : batch) {
+        for (VectorWrapper<?> w : batch) {
           ValueVector[] hyperVector = w.getValueVectors();
           this.add(hyperVector, true);
         }
       } else {
-        for (VectorWrapper w : batch) {
+        for (VectorWrapper<?> w : batch) {
           ValueVector[] hyperVector = { w.getValueVector() };
           this.add(hyperVector, true);
         }
@@ -59,14 +57,14 @@ public class ExpandableHyperContainer extends VectorContainer {
     }
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
       int i = 0;
-      for (VectorWrapper w : batch) {
-        HyperVectorWrapper hyperVectorWrapper = (HyperVectorWrapper) wrappers.get(i++);
+      for (VectorWrapper<?> w : batch) {
+        HyperVectorWrapper<?> hyperVectorWrapper = (HyperVectorWrapper<?>) wrappers.get(i++);
         hyperVectorWrapper.addVectors(w.getValueVectors());
       }
     } else {
       int i = 0;
-      for (VectorWrapper w : batch) {
-        HyperVectorWrapper hyperVectorWrapper = (HyperVectorWrapper) wrappers.get(i++);
+      for (VectorWrapper<?> w : batch) {
+        HyperVectorWrapper<?> hyperVectorWrapper = (HyperVectorWrapper<?>) wrappers.get(i++);
         hyperVectorWrapper.addVector(w.getValueVector());
       }
     }
