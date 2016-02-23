@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date:  
+date: 2016-02-23 01:58:28 UTC
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---
@@ -46,10 +46,10 @@ Complete the following steps to install Drill:
 
 1. In a terminal window, change to the directory where you want to install Drill.
 
-2. To download the latest version of Apache Drill, download Drill from the [Drill web site](http://getdrill.org/drill/download/apache-drill-1.4.0.tar.gz) or run one of the following commands, depending on which you have installed on your system:
+2. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.5.0/apache-drill-1.5.0.tar.gz&action=download) or go to the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz) and the command appropriate for your system with a download link from the mirror site. Example:
 
-   * `wget http://getdrill.org/drill/download/apache-drill-1.4.0.tar.gz`  
-   *  `curl -o apache-drill-1.4.0.tar.gz http://getdrill.org/drill/download/apache-drill-1.4.0.tar.gz`  
+   * `wget http://mirrors.sonic.net/apache/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz`
+   * `curl -o apache-drill-1.5.0.tar.gz http://mirrors.sonic.net/apache/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz`
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
@@ -80,7 +80,7 @@ Start Drill in embedded mode using the `drill-embedded` command:
 
 You can install Drill on Windows. First, set the JAVA_HOME environment variable, and then install Drill. Complete the following steps to install Drill:
 
-1. Click the following link to download the latest version of Apache Drill:  [http://getdrill.org/drill/download/apache-drill-1.4.0.tar.gz](http://getdrill.org/drill/download/apache-drill-1.4.0.tar.gz)  
+1. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.5.0/apache-drill-1.5.0.tar.gz&action=download) or go to the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz).  
 2. Move the `apache-drill-<version>.tar.gz` file to a directory where you want to install Drill.  
 3. Unzip the `TAR.GZ` file using a third-party tool. If the tool you use does not unzip the TAR file as well as the `TAR.GZ` file, unzip the `apache-drill-<version>.tar` to extract the Drill software. The extraction process creates the installation directory named apache-drill-<version> containing the Drill software. 
 
