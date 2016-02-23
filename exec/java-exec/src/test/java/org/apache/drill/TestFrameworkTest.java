@@ -321,7 +321,7 @@ public class TestFrameworkTest extends BaseTestQuery{
           .build().run();
     } catch (Exception ex) {
       assertThat(ex.getMessage(), CoreMatchers.containsString(
-          "at position 0 column '`first_name`' mismatched values, expected: Jewel(String) but received Peggy(String)"));
+          "at position 0 column '`employee_id`' mismatched values, expected: 12(String) but received 16(String)"));
       // this indicates successful completion of the test
       return;
     }
