@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date: 2016-02-23 02:32:13 UTC
+date: 2016-02-23 02:39:25 UTC
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---
@@ -53,7 +53,7 @@ Complete the following steps to install Drill:
 
 3. Copy the downloaded file to the directory where you want to install Drill. 
 
-4. Extract the contents of the Drill .tar.gz file. Use sudo if necessary:  
+4. Extract the contents of the Drill .tar.gz file. Use `sudo` if necessary:  
 
     `tar -xvzf <.tar.gz file name>`  
 
