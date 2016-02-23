@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -37,6 +36,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 // TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
 // currently using it with the assumption that the csv and json readers are well tested, and handling diverse
@@ -320,7 +321,7 @@ public class TestFrameworkTest extends BaseTestQuery{
           .build().run();
     } catch (Exception ex) {
       assertThat(ex.getMessage(), CoreMatchers.containsString(
-          "at position 0 column '`first_name`' mismatched values, expected: Jewel(String) but received Peggy(String)"));
+          "at position 0 column '`employee_id`' mismatched values, expected: 12(String) but received 16(String)"));
       // this indicates successful completion of the test
       return;
     }
