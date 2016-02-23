@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date: 2016-02-23 01:58:28 UTC
+date: 2016-02-23 02:32:13 UTC
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---
@@ -46,7 +46,7 @@ Complete the following steps to install Drill:
 
 1. In a terminal window, change to the directory where you want to install Drill.
 
-2. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.5.0/apache-drill-1.5.0.tar.gz&action=download) or go to the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz) and the command appropriate for your system with a download link from the mirror site. Example:
+2. Download the latest version of Apache Drill [here](http://www.apache.org/dyn/closer.lua?filename=drill/drill-1.5.0/apache-drill-1.5.0.tar.gz&action=download) or from the [Apache Drill mirror site](http://www.apache.org/dyn/closer.cgi/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz) with the command appropriate for your system:
 
    * `wget http://mirrors.sonic.net/apache/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz`
    * `curl -o apache-drill-1.5.0.tar.gz http://mirrors.sonic.net/apache/drill/drill-1.5.0/apache-drill-1.5.0.tar.gz`
