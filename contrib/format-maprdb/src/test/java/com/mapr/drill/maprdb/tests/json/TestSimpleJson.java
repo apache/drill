@@ -19,32 +19,17 @@ package com.mapr.drill.maprdb.tests.json;
 
 import java.util.List;
 
-import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;
 import com.mapr.tests.annotations.ClusterTest;
 
 @Category(ClusterTest.class)
-public class TestSimpleJson extends BaseTestQuery {
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    MaprDBTestsSuite.setupTests();
-    MaprDBTestsSuite.createPluginAndGetConf(getDrillbitContext());
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    MaprDBTestsSuite.cleanupTests();
-  }
+public class TestSimpleJson extends BaseJsonTest {
 
   @Test
   public void testMe() throws Exception {

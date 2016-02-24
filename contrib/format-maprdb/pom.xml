@@ -21,23 +21,66 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.mapr</groupId>
-    <artifactId>mapr-release</artifactId>
-    <version>5.1.0-mapr-SNAPSHOT</version>
+    <artifactId>drill-root</artifactId>
+    <groupId>org.apache.drill</groupId>
+    <version>1.6.0-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <artifactId>drill-storage-maprdb</artifactId>
   <name>maprdb-storage-plugin</name>
-  <version>1.5.0-SNAPSHOT</version>
 
   <properties>
-    <mapr.version>${project.parent.version}</mapr.version>
-    <drill.version>${project.version}</drill.version>
-    <hbase.version>0.98.12-mapr-1506</hbase.version>
-    <guava.version>18.0</guava.version>
+    <maprdb-storage-plugin.mapr.version>5.1.0-mapr</maprdb-storage-plugin.mapr.version>
+    <maprdb-storage-plugin.hbase.version>0.98.12-mapr-1506</maprdb-storage-plugin.hbase.version>
+    <maprdb-storage-plugin.hadoop.version>2.7.0-mapr-1602</maprdb-storage-plugin.hadoop.version>
     <maprdb.TestSuite>**/MaprDBTestsSuite.class</maprdb.TestSuite>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.mapr.hadoop</groupId>
+        <artifactId>maprfs</artifactId>
+        <version>${maprdb-storage-plugin.mapr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mapr.fs</groupId>
+        <artifactId>mapr-hbase</artifactId>
+        <version>${maprdb-storage-plugin.mapr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mapr.db</groupId>
+        <artifactId>maprdb</artifactId>
+        <version>${maprdb-storage-plugin.mapr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-client</artifactId>
+        <version>${maprdb-storage-plugin.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-server</artifactId>
+        <version>${maprdb-storage-plugin.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-annotations</artifactId>
+        <version>${maprdb-storage-plugin.hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client</artifactId>
+        <version>${maprdb-storage-plugin.hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${maprdb-storage-plugin.hadoop.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <plugins>
@@ -60,6 +103,7 @@
   </build>
 
   <dependencies>
+
     <dependency>
       <groupId>com.mapr.hadoop</groupId>
       <artifactId>maprfs</artifactId>
@@ -67,6 +111,10 @@
         <exclusion>
           <artifactId>commons-logging</artifactId>
           <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
         </exclusion>
         <exclusion>
           <artifactId>slf4j-log4j12</artifactId>
@@ -79,54 +127,27 @@
       <artifactId>mapr-hbase</artifactId>
       <exclusions>
         <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-server</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-json</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
         </exclusion>
         <exclusion>
-          <groupId>asm</groupId>
-          <artifactId>asm</artifactId>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
         </exclusion>
         <exclusion>
-          <groupId>org.mortbay.jetty</groupId>
           <artifactId>servlet-api-2.5</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>com.mapr.db</groupId>
       <artifactId>maprdb</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
-      <version>${drill.version}</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>log4j-over-slf4j</artifactId>
@@ -137,57 +158,38 @@
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>
-      <version>${drill.version}</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>log4j-over-slf4j</artifactId>
           <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>hbase-client</artifactId>
-          <groupId>org.apache.hbase</groupId>
         </exclusion>
       </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.huxhorn.lilith</groupId>
-      <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-      <version>0.9.44</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>com.mapr</groupId>
       <artifactId>mapr-java-utils</artifactId>
+      <version>${maprdb-storage-plugin.mapr.version}</version>
       <classifier>tests</classifier>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.mapr</groupId>
+      <artifactId>mapr-test-annotations</artifactId>
+      <version>${maprdb-storage-plugin.mapr.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
-      <version>${drill.version}</version>
+      <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
-      <version>${drill.version}</version>
+      <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
       <exclusions>
@@ -200,13 +202,14 @@
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>
-      <version>${drill.version}</version>
+      <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-server</artifactId>
+      <version>${maprdb-storage-plugin.hbase.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
       <exclusions>
@@ -225,6 +228,10 @@
         <exclusion>
           <artifactId>slf4j-log4j12</artifactId>
           <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
         </exclusion>
       </exclusions>
     </dependency>
