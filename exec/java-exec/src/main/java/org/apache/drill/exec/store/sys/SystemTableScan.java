@@ -98,12 +98,6 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
     return table.isDistributed() ? plugin.getContext().getBits().size() : 1;
   }
 
-  // This enforces maximum parallelization width for distributed tables
-  @Override
-  public boolean enforceWidth() {
-    return table.isDistributed();
-  }
-
   @Override
   public long getInitialAllocation() {
     return initialAllocation;

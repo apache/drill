@@ -63,8 +63,12 @@ public interface GroupScan extends Scan, HasAffinity{
    * Check if GroupScan enforces width to be maximum parallelization width.
    * Currently, this is used in {@link org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier}
    * @return if maximum width should be enforced
+   *
+   * @deprecated Use {@link #getMinParallelizationWidth()} to determine whether this GroupScan spans more than one
+   * fragment.
    */
   @JsonIgnore
+  @Deprecated
   public boolean enforceWidth();
 
   /**

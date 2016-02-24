@@ -85,8 +85,9 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   @JsonIgnore
+  @Deprecated
   public boolean enforceWidth() {
-    return false;
+    return getMinParallelizationWidth() > 1;
   }
 
   @Override
