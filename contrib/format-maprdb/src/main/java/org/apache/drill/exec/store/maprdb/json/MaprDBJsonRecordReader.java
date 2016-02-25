@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -86,6 +87,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   private boolean includeId;
   private boolean idOnly;
+  private boolean unionEnabled;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) {
@@ -97,6 +99,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     idOnly    = false;
     condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
     setColumns(projectedColumns);
+    unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
   }
 
   @Override
@@ -137,7 +140,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-    this.writer = new VectorContainerWriter(output);
+    this.writer = new VectorContainerWriter(output, unionEnabled);
     this.operatorContext = context;
 
     try {
