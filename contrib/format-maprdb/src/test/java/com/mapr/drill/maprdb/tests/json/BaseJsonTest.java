@@ -17,9 +17,14 @@
  */
 package com.mapr.drill.maprdb.tests.json;
 
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.hbase.GuavaPatcher;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 
 import com.mapr.drill.maprdb.tests.MaprDBTestsSuite;
@@ -42,6 +47,24 @@ public class BaseJsonTest extends BaseTestQuery {
   @AfterClass
   public static void tearDownAfterClass() throws Exception {
     MaprDBTestsSuite.cleanupTests();
+  }
+
+
+  protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
+    System.out.println("Running query:\n" + sql);
+    return testSqlWithResults(sql);
+  }
+
+  protected void runSQLAndVerifyCount(String sql, int expectedRowCount) throws Exception{
+    List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
+    printResultAndVerifyRowCount(results, expectedRowCount);
+  }
+
+  private void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
+    int rowCount = printResult(results);
+    if (expectedRowCount != -1) {
+      Assert.assertEquals(expectedRowCount, rowCount);
+    }
   }
 
 }

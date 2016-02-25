@@ -24,10 +24,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -45,8 +47,9 @@ import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.DocumentStream;
 import org.ojai.FieldPath;
-import org.ojai.store.QueryCondition;
+import org.ojai.FieldSegment;
 import org.ojai.Value;
+import org.ojai.store.QueryCondition;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -111,18 +114,17 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
            * document when only _id is requested.
            */
           // projectedFieldsList.add(ID_FIELD);
-          transformed.add(ID_PATH);
           includeId = true;
         } else {
-          transformed.add(SchemaPath.getSimplePath(column.getRootSegment().getPath()));
-          projectedFieldsSet.add(FieldPath.parseFrom(column.getAsUnescapedPath()));
+          projectedFieldsSet.add(getFieldPathForProjection(column));
         }
+        transformed.add(column);
       }
       if (projectedFieldsSet.size() > 0) {
         projectedFields = projectedFieldsSet.toArray(new FieldPath[projectedFieldsSet.size()]);
       }
     } else {
-      transformed.add(ID_PATH);
+      transformed.add(AbstractRecordReader.STAR_COLUMN);
       includeId = true;
     }
 
@@ -386,6 +388,28 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     } catch (DBException e) {
       throw UserException.dataReadError(e).build(logger);
     }
+  }
+
+  /*
+   * Extracts contiguous named segments from the SchemaPath, starting from the
+   * root segment and build the FieldPath from it for projection.
+   *
+   * This is due to bug 22726 and 22727, which cause DB's DocumentReaders to
+   * behave incorrectly for sparse lists, hence we avoid projecting beyond the
+   * first encountered ARRAY field and let Drill handle the projection.
+   */
+  private static FieldPath getFieldPathForProjection(SchemaPath column) {
+    Stack<PathSegment.NameSegment> pathSegments = new Stack<PathSegment.NameSegment>();
+    PathSegment seg = column.getRootSegment();
+    while (seg != null && seg.isNamed()) {
+      pathSegments.push((PathSegment.NameSegment) seg);
+      seg = seg.getChild();
+    }
+    FieldSegment.NameSegment child = null;
+    while (!pathSegments.isEmpty()) {
+      child = new FieldSegment.NameSegment(pathSegments.pop().getPath(), child, false);
+    }
+    return new FieldPath(child);
   }
 
   @Override

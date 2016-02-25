@@ -17,15 +17,22 @@
  */
 package com.mapr.drill.maprdb.tests.json;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.SingleRowListener;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.junit.Assert;
+import org.apache.drill.exec.util.VectorUtil;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.ojai.Document;
 
+import com.mapr.db.MapRDB;
 import com.mapr.tests.annotations.ClusterTest;
 
 @Category(ClusterTest.class)
@@ -45,13 +52,39 @@ public class TestSimpleJson extends BaseJsonTest {
   public void testPushdownStringEqual() throws Exception {
     setColumnWidths(new int[] {25, 40, 40, 40});
     final String sql = "SELECT\n"
-        + "  _id, name, categories, full_address\n"
+        + "  _id, name, business.hours.Monday.`open`, categories[1], years[2], full_address\n"
         + "FROM\n"
         + "  hbase.`business` business\n"
         + "WHERE\n"
         + " name = 'Sprint'"
         ;
-    runSQLAndVerifyCount(sql, 1);
+
+    final Document queryResult = MapRDB.newDocument();
+    SingleRowListener listener = new SingleRowListener() {
+      @Override
+      protected void rowArrived(QueryDataBatch result) {
+        try {
+          final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+          loader.load(result.getHeader().getDef(), result.getData());
+          StringBuilder sb = new StringBuilder();
+          VectorUtil.appendVectorAccessibleContent(loader, sb, "|", false);
+          loader.clear();
+          queryResult.set("result", sb.toString());
+        } catch (SchemaChangeException e) {
+          queryResult.set("error", "true");
+        }
+      }
+    };
+    testWithListener(QueryType.SQL, sql, listener);
+    listener.waitForCompletion();
+
+    assertNull(queryResult.getString("error"));
+    assertNotNull(queryResult.getString("result"));
+
+    String[] fields = queryResult.getString("result").split("\\|");
+    assertEquals("1970-01-01T11:00:00.000", fields[2]);
+    assertEquals("Mobile Phones", fields[3]);
+    assertEquals("2016.0", fields[4]);
 
     final String[] expectedPlan = {"condition=\\(name = \"Sprint\"\\)"};
     final String[] excludedPlan = {};
@@ -348,22 +381,5 @@ public class TestSimpleJson extends BaseJsonTest {
     runSQLAndVerifyCount(sql, 1);
   }
   */
-
-  protected List<QueryDataBatch> runHBaseSQLlWithResults(String sql) throws Exception {
-    System.out.println("Running query:\n" + sql);
-    return testSqlWithResults(sql);
-  }
-
-  protected void runSQLAndVerifyCount(String sql, int expectedRowCount) throws Exception{
-    List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
-    printResultAndVerifyRowCount(results, expectedRowCount);
-  }
-
-  private void printResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
-    int rowCount = printResult(results);
-    if (expectedRowCount != -1) {
-      Assert.assertEquals(expectedRowCount, rowCount);
-    }
-  }
 
 }
