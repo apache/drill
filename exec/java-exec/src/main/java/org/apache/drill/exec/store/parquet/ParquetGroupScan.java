@@ -715,8 +715,10 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
         newFileMetadataList.add(file);
       }
     }
-    parquetTableMetadata.assignFiles(newFileMetadataList);
-    return parquetTableMetadata;
+
+    ParquetTableMetadataBase metadata = parquetTableMetadata.clone();
+    metadata.assignFiles(newFileMetadataList);
+    return metadata;
   }
 
   /**

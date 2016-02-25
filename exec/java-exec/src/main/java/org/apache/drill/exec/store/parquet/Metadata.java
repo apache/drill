@@ -493,6 +493,8 @@ public class Metadata {
     @JsonIgnore public abstract PrimitiveTypeName getPrimitiveType(String[] columnName);
 
     @JsonIgnore public abstract OriginalType getOriginalType(String[] columnName);
+
+    @JsonIgnore public abstract ParquetTableMetadataBase clone();
   }
 
   public static abstract class ParquetFileMetadata {
@@ -542,8 +544,7 @@ public class Metadata {
       super();
     }
 
-    public ParquetTableMetadata_v1(ParquetTableMetadataBase p, List<ParquetFileMetadata_v1> files,
-        List<String> directories) {
+    public ParquetTableMetadata_v1(List<ParquetFileMetadata_v1> files, List<String> directories) {
       this.files = files;
       this.directories = directories;
     }
@@ -570,6 +571,10 @@ public class Metadata {
 
     @JsonIgnore @Override public OriginalType getOriginalType(String[] columnName) {
       return null;
+    }
+
+    @JsonIgnore @Override public ParquetTableMetadataBase clone() {
+      return new ParquetTableMetadata_v1(files, directories);
     }
   }
 
@@ -787,6 +792,13 @@ public class Metadata {
       this.columnTypeInfo = ((ParquetTableMetadata_v2) parquetTable).columnTypeInfo;
     }
 
+    public ParquetTableMetadata_v2(List<ParquetFileMetadata_v2> files, List<String> directories,
+        ConcurrentHashMap<ColumnTypeMetadata_v2.Key, ColumnTypeMetadata_v2> columnTypeInfo) {
+      this.files = files;
+      this.directories = directories;
+      this.columnTypeInfo = columnTypeInfo;
+    }
+
     public ColumnTypeMetadata_v2 getColumnTypeInfo(String[] name) {
       return columnTypeInfo.get(new ColumnTypeMetadata_v2.Key(name));
     }
@@ -815,6 +827,9 @@ public class Metadata {
       return getColumnTypeInfo(columnName).originalType;
     }
 
+    @JsonIgnore @Override public ParquetTableMetadataBase clone() {
+      return new ParquetTableMetadata_v2(files, directories, columnTypeInfo);
+    }
   }
 
 
