@@ -150,8 +150,7 @@ public class PlanningBase extends ExecTest{
       if (sql.trim().isEmpty()) {
         continue;
       }
-      final DrillSqlWorker worker = new DrillSqlWorker(context);
-      final PhysicalPlan p = worker.getPlan(sql);
+      final PhysicalPlan p = DrillSqlWorker.getPlan(context, sql);
     }
   }
 

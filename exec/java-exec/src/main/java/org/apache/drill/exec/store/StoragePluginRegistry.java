@@ -19,12 +19,10 @@ package org.apache.drill.exec.store;
 
 import java.util.Map;
 
-import org.apache.calcite.tools.RuleSet;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.sys.PersistentStore;
 
@@ -105,14 +103,6 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * @return PStore for StoragePlugin configuration objects.
    */
   PersistentStore<StoragePluginConfig> getStore();
-
-  /**
-   * Return StoragePlugin rule sets.
-   *
-   * @param optimizerRulesContext
-   * @return Array of logical and physical rule sets.
-   */
-  RuleSet[] getStoragePluginRuleSet(OptimizerRulesContext optimizerRulesContext);
 
   /**
    * Get the Schema factory associated with this storage plugin registry.

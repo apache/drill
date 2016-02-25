@@ -923,9 +923,8 @@ public class Foreman implements Runnable {
     // them together such that it is easy to search based on query id
     logger.info("Query text for query id {}: {}", this.queryIdString, sql);
 
-    final DrillSqlWorker sqlWorker = new DrillSqlWorker(queryContext);
     final Pointer<String> textPlan = new Pointer<>();
-    final PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
+    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
     queryManager.setPlanText(textPlan.value);
     runPhysicalPlan(plan);
   }

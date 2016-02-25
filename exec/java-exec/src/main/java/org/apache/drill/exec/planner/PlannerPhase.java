@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.logical;
+package org.apache.drill.exec.planner;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.calcite.plan.RelOptRule;
@@ -28,19 +28,40 @@ import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
 import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
 import org.apache.calcite.rel.rules.FilterMergeRule;
-import org.apache.calcite.rel.rules.FilterSetOpTransposeRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
 import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
+import org.apache.calcite.rel.rules.ProjectToWindowRule;
 import org.apache.calcite.rel.rules.ProjectWindowTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.calcite.tools.RuleSet;
-import org.apache.commons.digester.Rules;
+import org.apache.calcite.tools.RuleSets;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.logical.DrillAggregateRule;
+import org.apache.drill.exec.planner.logical.DrillFilterJoinRules;
+import org.apache.drill.exec.planner.logical.DrillFilterRule;
+import org.apache.drill.exec.planner.logical.DrillJoinRel;
+import org.apache.drill.exec.planner.logical.DrillJoinRule;
+import org.apache.drill.exec.planner.logical.DrillLimitRule;
+import org.apache.drill.exec.planner.logical.DrillMergeProjectRule;
+import org.apache.drill.exec.planner.logical.DrillProjectRule;
+import org.apache.drill.exec.planner.logical.DrillPushFilterPastProjectRule;
+import org.apache.drill.exec.planner.logical.DrillPushLimitToScanRule;
+import org.apache.drill.exec.planner.logical.DrillPushProjIntoScan;
+import org.apache.drill.exec.planner.logical.DrillPushProjectPastFilterRule;
+import org.apache.drill.exec.planner.logical.DrillPushProjectPastJoinRule;
+import org.apache.drill.exec.planner.logical.DrillReduceAggregatesRule;
+import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.logical.DrillScanRule;
+import org.apache.drill.exec.planner.logical.DrillSortRule;
+import org.apache.drill.exec.planner.logical.DrillUnionAllRule;
+import org.apache.drill.exec.planner.logical.DrillValuesRule;
+import org.apache.drill.exec.planner.logical.DrillWindowRule;
 import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
 import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
@@ -63,15 +84,110 @@ import org.apache.drill.exec.planner.physical.UnionAllPrule;
 import org.apache.drill.exec.planner.physical.ValuesPrule;
 import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.StoragePlugin;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
-public class DrillRuleSets {
+public enum PlannerPhase {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
-  public static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE = new JoinToMultiJoinRule(DrillJoinRel.class);
-  public static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE = new LoptOptimizeJoinRule(
+  LOGICAL_PRUNE_AND_JOIN("Loigcal Planning (with join and partition pruning)") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          getDrillBasicRules(context),
+          getPruneScanRules(context),
+          getJoinPermRules(context),
+          getDrillUserConfigurableLogicalRules(context),
+          getStorageRules(context, plugins, this));
+    }
+  },
+
+  WINDOW_REWRITE("Window Function rewrites") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return RuleSets.ofList(
+          ReduceExpressionsRule.CALC_INSTANCE,
+          ProjectToWindowRule.PROJECT
+          );
+    }
+  },
+
+  LOGICAL_PRUNE("Logical Planning (with partition pruning)") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          getDrillBasicRules(context),
+          getPruneScanRules(context),
+          getDrillUserConfigurableLogicalRules(context),
+          getStorageRules(context, plugins, this));
+    }
+  },
+
+  JOIN_PLANNING("LOPT Join Planning") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          RuleSets.ofList(
+              DRILL_JOIN_TO_MULTIJOIN_RULE,
+              DRILL_LOPT_OPTIMIZE_JOIN_RULE,
+              ProjectRemoveRule.INSTANCE),
+          getStorageRules(context, plugins, this)
+          );
+    }
+  },
+
+  PARTITION_PRUNING("Partition Prune Planning") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(getPruneScanRules(context), getStorageRules(context, plugins, this));
+    }
+  },
+
+  DIRECTORY_PRUNING("Directory Prune Planning") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(getDirPruneScanRules(context), getStorageRules(context, plugins, this));
+    }
+  },
+
+  LOGICAL("Logical Planning (no pruning or join).") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          PlannerPhase.getDrillBasicRules(context),
+          PlannerPhase.getDrillUserConfigurableLogicalRules(context),
+          getStorageRules(context, plugins, this));
+    }
+  },
+
+  PHYSICAL("Physical Planning") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          PlannerPhase.getPhysicalRules(context),
+          getStorageRules(context, plugins, this));
+    }
+  };
+
+  public final String description;
+
+  PlannerPhase(String description) {
+    this.description = description;
+  }
+
+  public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins);
+
+  private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,
+      PlannerPhase phase) {
+    final Builder<RelOptRule> rules = ImmutableSet.builder();
+    for(StoragePlugin plugin : plugins){
+      if(plugin instanceof AbstractStoragePlugin){
+        rules.addAll(((AbstractStoragePlugin) plugin).getOptimizerRules(context, phase));
+      }else{
+        rules.addAll(plugin.getOptimizerRules(context));
+      }
+    }
+    return RuleSets.ofList(rules.build());
+  }
+
+
+  static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE = new JoinToMultiJoinRule(DrillJoinRel.class);
+  static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE = new LoptOptimizeJoinRule(
       DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
       DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
       DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY);
@@ -89,7 +205,7 @@ public class DrillRuleSets {
    * @return - a list of rules that have been filtered to leave out
    *         rules that have been turned off by system or session settings
    */
-  public static RuleSet getDrillUserConfigurableLogicalRules(OptimizerRulesContext optimizerRulesContext) {
+  static RuleSet getDrillUserConfigurableLogicalRules(OptimizerRulesContext optimizerRulesContext) {
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
     // This list is used to store rules that can be turned on an off
@@ -103,14 +219,14 @@ public class DrillRuleSets {
       userConfigurableRules.add(DrillReduceExpressionsRule.CALC_INSTANCE_DRILL);
     }
 
-    return new DrillRuleSet(userConfigurableRules.build());
+    return RuleSets.ofList(userConfigurableRules.build());
   }
 
   /*
    * These basic rules don't require any context, so singleton instances can be used.
    * These are merged with per-query rules in getDrillBasicRules() below.
    */
-  private final static ImmutableSet<RelOptRule> staticRuleSet = ImmutableSet.<RelOptRule>builder().add(
+  final static ImmutableSet<RelOptRule> staticRuleSet = ImmutableSet.<RelOptRule> builder().add(
       // Add support for Distinct Union (by using Union-All followed by Distinct)
       UnionToDistinctRule.INSTANCE,
 
@@ -182,7 +298,7 @@ public class DrillRuleSets {
    *
    * Note : Join permutation rule is excluded here.
    */
-  public static RuleSet getDrillBasicRules(OptimizerRulesContext optimizerRulesContext) {
+  static RuleSet getDrillBasicRules(OptimizerRulesContext optimizerRulesContext) {
     /*
      * We have to create another copy of the ruleset with the context dependent elements;
      * this cannot be reused across queries.
@@ -195,13 +311,13 @@ public class DrillRuleSets {
             )
         .build();
 
-    return new DrillRuleSet(basicRules);
+    return RuleSets.ofList(basicRules);
   }
 
   /**
    *   Get an immutable list of partition pruning rules that will be used in logical planning.
    */
-  public static RuleSet getPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
+  static RuleSet getPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
     final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
         .add(
             PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
@@ -213,7 +329,7 @@ public class DrillRuleSets {
         )
         .build();
 
-    return new DrillRuleSet(pruneRules);
+    return RuleSets.ofList(pruneRules);
   }
 
   /**
@@ -221,7 +337,7 @@ public class DrillRuleSets {
    * @param optimizerRulesContext
    * @return
    */
-  public static RuleSet getDirPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
+  static RuleSet getDirPruneScanRules(OptimizerRulesContext optimizerRulesContext) {
     final ImmutableSet<RelOptRule> pruneRules = ImmutableSet.<RelOptRule>builder()
         .add(
             PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
@@ -229,23 +345,23 @@ public class DrillRuleSets {
         )
         .build();
 
-    return new DrillRuleSet(pruneRules);
+    return RuleSets.ofList(pruneRules);
 
   }
 
   // Ruleset for join permutation, used only in VolcanoPlanner.
-  public static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
-    return new DrillRuleSet(ImmutableSet.<RelOptRule> builder().add( //
+  static RuleSet getJoinPermRules(OptimizerRulesContext optimizerRulesContext) {
+    return RuleSets.ofList(ImmutableSet.<RelOptRule> builder().add( //
         JoinPushThroughJoinRule.RIGHT,
         JoinPushThroughJoinRule.LEFT
         ).build());
   }
 
-  public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of(
+  static final RuleSet DRILL_PHYSICAL_DISK = RuleSets.ofList(ImmutableSet.of(
       ProjectPrule.INSTANCE
     ));
 
-  public static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
+  static final RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
     final List<RelOptRule> ruleList = new ArrayList<RelOptRule>();
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
 
@@ -297,33 +413,21 @@ public class DrillRuleSets {
       ruleList.add(NestedLoopJoinPrule.INSTANCE);
     }
 
-    return new DrillRuleSet(ImmutableSet.copyOf(ruleList));
+    return RuleSets.ofList(ImmutableSet.copyOf(ruleList));
   }
 
-  public static RuleSet create(ImmutableSet<RelOptRule> rules) {
-    return new DrillRuleSet(rules);
+  static RuleSet create(ImmutableSet<RelOptRule> rules) {
+    return RuleSets.ofList(rules);
   }
 
-  public static RuleSet mergedRuleSets(RuleSet...ruleSets) {
+  static RuleSet mergedRuleSets(RuleSet... ruleSets) {
     final Builder<RelOptRule> relOptRuleSetBuilder = ImmutableSet.builder();
     for (final RuleSet ruleSet : ruleSets) {
       for (final RelOptRule relOptRule : ruleSet) {
         relOptRuleSetBuilder.add(relOptRule);
       }
     }
-    return new DrillRuleSet(relOptRuleSetBuilder.build());
+    return RuleSets.ofList(relOptRuleSetBuilder.build());
   }
 
-  private static class DrillRuleSet implements RuleSet{
-    final ImmutableSet<RelOptRule> rules;
-
-    public DrillRuleSet(ImmutableSet<RelOptRule> rules) {
-      this.rules = rules;
-    }
-
-    @Override
-    public Iterator<RelOptRule> iterator() {
-      return rules.iterator();
-    }
-  }
 }

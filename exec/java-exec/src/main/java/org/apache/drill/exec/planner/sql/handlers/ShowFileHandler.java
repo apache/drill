@@ -22,21 +22,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
 
 
 public class ShowFileHandler extends DefaultSqlHandler {
@@ -55,7 +54,7 @@ public class ShowFileHandler extends DefaultSqlHandler {
     String defaultLocation = null;
     String fromDir = "./";
 
-    SchemaPlus defaultSchema = context.getNewDefaultSchema();
+    SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     SchemaPlus drillSchema = defaultSchema;
 
     // Show files can be used without from clause, in which case we display the files in the default schema

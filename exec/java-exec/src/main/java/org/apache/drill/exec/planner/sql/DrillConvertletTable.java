@@ -31,6 +31,8 @@ public class DrillConvertletTable implements SqlRexConvertletTable{
 
   public static HashMap<SqlOperator, SqlRexConvertlet> map = new HashMap<>();
 
+  public static SqlRexConvertletTable INSTANCE = new DrillConvertletTable();
+
   static {
     // Use custom convertlet for extract function
     map.put(SqlStdOperatorTable.EXTRACT, DrillExtractConvertlet.INSTANCE);
@@ -55,5 +57,8 @@ public class DrillConvertletTable implements SqlRexConvertletTable{
     }
 
     return StandardConvertletTable.INSTANCE.get(call);
+  }
+
+  private DrillConvertletTable() {
   }
 }
