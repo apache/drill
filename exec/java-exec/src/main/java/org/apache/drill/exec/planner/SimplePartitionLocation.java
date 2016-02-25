@@ -15,30 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.sql;
+
+package org.apache.drill.exec.planner;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.drill.exec.planner.PartitionLocation;
-import org.apache.drill.exec.planner.SimplePartitionLocation;
 
 import java.util.List;
 
-public class HivePartitionLocation extends SimplePartitionLocation {
-  private final String partitionLocation;
-  private final List<String> partitionValues;
-
-  public HivePartitionLocation(final List<String> partitionValues, final String partitionLocation) {
-    this.partitionValues = ImmutableList.copyOf(partitionValues);
-    this.partitionLocation = partitionLocation;
-  }
+/**
+ * Abstract class for simple partition. It contains the
+ * location of the entire partition and also stores the
+ * value of the individual partition keys for this partition.
+ */
+public abstract  class SimplePartitionLocation implements PartitionLocation{
   @Override
-  public String getPartitionValue(int index) {
-    assert index < partitionValues.size();
-    return partitionValues.get(index);
+  public boolean isCompositePartition() {
+    return false;
   }
 
   @Override
-  public String getEntirePartitionLocation() {
-    return partitionLocation;
+  public List<SimplePartitionLocation> getPartitionLocationRecursive() {
+    return ImmutableList.of(this);
   }
+
 }

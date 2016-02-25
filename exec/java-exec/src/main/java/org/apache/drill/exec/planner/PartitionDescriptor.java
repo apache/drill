@@ -80,6 +80,6 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
    * @return
    * @throws Exception
    */
-  public TableScan createTableScan(List<String> newPartitions) throws Exception;
+  public TableScan createTableScan(List<PartitionLocation> newPartitions) throws Exception;
 
 }

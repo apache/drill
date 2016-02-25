@@ -130,7 +130,12 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public TableScan createTableScan(List<String> newFiles) throws Exception {
+  public TableScan createTableScan(List<PartitionLocation> newPartitionLocation) throws Exception {
+    List<String> newFiles = Lists.newArrayList();
+    for (final PartitionLocation location : newPartitionLocation) {
+      newFiles.add(location.getEntirePartitionLocation());
+    }
+
     final GroupScan newGroupScan = createNewGroupScan(newFiles);
 
     return new DrillScanRel(scanRel.getCluster(),

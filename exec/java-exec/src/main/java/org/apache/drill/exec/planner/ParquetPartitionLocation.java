@@ -24,7 +24,7 @@ package org.apache.drill.exec.planner;
  * partitioning scheme) we throw UnsupportedOperationException when getPartitionValue() is
  * invoked.
  */
-public class ParquetPartitionLocation implements PartitionLocation {
+public class ParquetPartitionLocation extends SimplePartitionLocation {
   private final String file;
 
   public ParquetPartitionLocation(String file) {

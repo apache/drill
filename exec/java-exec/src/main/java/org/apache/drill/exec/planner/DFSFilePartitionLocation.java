@@ -22,11 +22,11 @@ import org.apache.hadoop.fs.Path;
 /**
  * Class defines a single partition in a DFS table.
  */
-public class DFSPartitionLocation implements PartitionLocation {
+public class DFSFilePartitionLocation extends SimplePartitionLocation {
   private final String[] dirs;
   private final String file;
 
-  public DFSPartitionLocation(int max, String selectionRoot, String file) {
+  public DFSFilePartitionLocation(int max, String selectionRoot, String file) {
     this.file = file;
     this.dirs = new String[max];
 
@@ -66,6 +66,10 @@ public class DFSPartitionLocation implements PartitionLocation {
   @Override
   public String getEntirePartitionLocation() {
     return file;
+  }
+
+  public String[] getDirs() {
+    return dirs;
   }
 }
 

@@ -17,19 +17,41 @@
  */
 package org.apache.drill.exec.planner;
 
-/*
- * Interface to define a single partition. It contains the
- * location of the entire partition and also stores the
- * value of the individual partition keys for this partition.
+import java.util.List;
+
+/**
+ * Interface to define a partition. Partition could be simple,
+ * which represents a basic unit for partition, determined by
+ * the underlying storage plugin. On file system, a simple partition
+ * represents a file. Partition could be composite, consisting of
+ * other partitions. On file system storage plugin, a composite
+ * partition corresponds to a directory.
+ *
+ * Simple partition location keeps track the string representation of
+ * partition and also stores the value of the individual partition keys
+ * for this partition. Composite partition location keeps track the common
+ * partition keys, but does not keep track the the string representation of
+ * partition and leave it to each individual simple partition it consists of.
  */
 public interface PartitionLocation {
-  /*
+  /**
    * Returns the value of the 'index' partition column
    */
   public String getPartitionValue(int index);
 
-  /*
-   * Returns the string representation of this partition
+  /**
+   * Returns the string representation of this partition.
+   * Only a non-composite partition supports this.
    */
   public String getEntirePartitionLocation();
+
+  /**
+   * Returns the list of the non-composite partitions that this partition consists of.
+   */
+  public List<SimplePartitionLocation> getPartitionLocationRecursive();
+
+  /**
+   * Returns if this is a simple or composite partition.
+   */
+  public boolean isCompositePartition();
 }
