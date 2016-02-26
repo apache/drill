@@ -18,6 +18,8 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 // TODO javadoc
 public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
@@ -50,4 +52,10 @@ public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
    * @return number of records
    */
   public int getRecordCount();
+
+  public abstract SelectionVector2 getSelectionVector2();
+
+  public abstract SelectionVector4 getSelectionVector4();
+
+
 }

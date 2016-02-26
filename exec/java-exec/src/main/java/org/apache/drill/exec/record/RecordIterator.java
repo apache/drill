@@ -27,6 +27,8 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeMap;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
  * RecordIterator iterates over incoming record batches one record at a time.
@@ -320,6 +322,16 @@ public class RecordIterator implements VectorAccessible {
   public Iterator<VectorWrapper<?>> iterator() {
     assert initialized;
     return container.iterator();
+  }
+
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    throw new UnsupportedOperationException();
   }
 
   // Release all vectors held by record batches, clear out range map.
