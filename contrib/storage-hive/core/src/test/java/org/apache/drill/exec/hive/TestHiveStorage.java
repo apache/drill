@@ -134,7 +134,7 @@ public class TestHiveStorage extends HiveTestBase {
             "timestamp_part",
             "date_part")
         .baselineValues(
-            "binaryfield",
+            "binaryfield".getBytes(),
             false,
             34,
             new BigDecimal("66"),
@@ -244,7 +244,7 @@ public class TestHiveStorage extends HiveTestBase {
               "timestamp_part",
               "date_part")
           .baselineValues(
-              "binaryfield",
+              "binaryfield".getBytes(),
               false,
               34,
               new BigDecimal("66"),
