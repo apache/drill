@@ -19,7 +19,6 @@ package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -457,4 +456,8 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .build().run();
   }
 
+  @Test
+  public void test4443() throws Exception {
+    test("SELECT MIN(columns[1]) FROM dfs_test.`%s/agg/4443.csv` GROUP BY columns[0]", TEST_RES_PATH);
+  }
 }
