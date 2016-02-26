@@ -516,9 +516,6 @@ public class DrillTestWrapper {
             if (obj instanceof Text) {
               obj = obj.toString();
             }
-            else if (obj instanceof byte[]) {
-              obj = new String((byte[]) obj, "UTF-8");
-            }
             record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
           }
           record.put(SchemaPath.getSimplePath(w.getField().getPath()).toExpr(), obj);
