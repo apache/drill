@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.avro;
 
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.junit.Assert;
@@ -47,6 +48,71 @@ public class AvroFormatTest extends BaseTestQuery {
         .expectsNumBatches(2)
         .baselineRecords(testSetup.getExpectedRecords())
         .go();
+  }
+
+  /**
+   * Previously a bug in the Avro table metadata would cause wrong results
+   * for some queries on varchar types, as a length was not provided during metadata
+   * population. In some cases casts were being added with the default length
+   * of 1 and truncating values.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testFiltersOnVarchar() throws Exception {
+
+    final AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues(5000);
+    final String file = testSetup.getFilePath();
+    final String sql =
+        "select a_string " +
+            "from dfs_test.`" + file + "` where a_string = 'a_1'";
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("a_string")
+        .baselineValues("a_1")
+        .go();
+
+    final String sql2 =
+        "select a_string " +
+            "from dfs_test.`" + file + "` where a_string IN ('a_1')";
+    testBuilder()
+        .sqlQuery(sql2)
+        .unOrdered()
+        .baselineColumns("a_string")
+        .baselineValues("a_1")
+        .go();
+  }
+
+  @Test
+  public void testFiltersOnVarBinary() throws Exception {
+    final AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues(5000);
+    final String file = testSetup.getFilePath();
+    final String sql =
+        "select f_bytes " +
+            "from dfs_test.`" + file + "` where f_bytes = BINARY_STRING('\\x61\\x31')";
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("f_bytes");
+
+    for (int i = 0; i < 500; i++) {
+      testBuilder.baselineValues(new byte[] {'a', '1'});
+    }
+    testBuilder.go();
+
+    final String sql2 =
+        "select f_bytes " +
+            "from dfs_test.`" + file + "` where f_bytes IN (BINARY_STRING('\\x61\\x31'))";
+    testBuilder = testBuilder()
+        .sqlQuery(sql2)
+        .unOrdered()
+        .baselineColumns("f_bytes");
+
+    for (int i = 0; i < 500; i++) {
+      testBuilder.baselineValues(new byte[] {'a', '1'});
+    }
+    testBuilder.go();
   }
 
   @Test

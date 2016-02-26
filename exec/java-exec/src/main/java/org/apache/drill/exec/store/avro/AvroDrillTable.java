@@ -82,7 +82,7 @@ public class AvroDrillTable extends DrillTable {
       relDataType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
       break;
     case BYTES:
-      relDataType = typeFactory.createSqlType(SqlTypeName.BINARY);
+      relDataType = typeFactory.createSqlType(SqlTypeName.BINARY, 65000);
       break;
     case DOUBLE:
       relDataType = typeFactory.createSqlType(SqlTypeName.DOUBLE);
@@ -101,7 +101,7 @@ public class AvroDrillTable extends DrillTable {
       break;
     case MAP:
       RelDataType valueType = getNullableRelDataTypeFromAvroType(typeFactory, fieldSchema.getValueType());
-      RelDataType keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
+      RelDataType keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR, 65000);
       relDataType = typeFactory.createMapType(keyType, valueType);
       break;
     case NULL:
@@ -118,13 +118,13 @@ public class AvroDrillTable extends DrillTable {
 
       //TODO This has to be mapped to struct type but because of calcite issue,
       //for now mapping it to map type.
-      keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
+      keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR, 65000);
       valueType = typeFactory.createSqlType(SqlTypeName.ANY);
       relDataType = typeFactory.createMapType(keyType, valueType);
       break;
     case ENUM:
     case STRING:
-      relDataType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
+      relDataType = typeFactory.createSqlType(SqlTypeName.VARCHAR, 65000);
       break;
     case UNION:
       RelDataType optinalType = getNullableRelDataTypeFromAvroType(typeFactory, fieldSchema.getTypes().get(1));

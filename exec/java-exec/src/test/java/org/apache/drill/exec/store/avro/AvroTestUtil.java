@@ -94,7 +94,7 @@ public class AvroTestUtil {
         byte[] drillVal = new byte[((ByteBuffer)value).remaining()];
         bb.get(drillVal);
         bb.position(0);
-        value = new String(drillVal, Charsets.UTF_8);
+        value = drillVal;
       }
       currentExpectedRecord.put("`" + key + "`", value);
     }
@@ -143,10 +143,11 @@ public class AvroTestUtil {
 
     final AvroTestRecordWriter record = new AvroTestRecordWriter(schema, file);
     try {
-      ByteBuffer bb = ByteBuffer.allocate(1);
+      ByteBuffer bb = ByteBuffer.allocate(2);
       bb.put(0, (byte) 'a');
 
       for (int i = 0; i < numRecords; i++) {
+        bb.put(1, (byte) ('0' + (i % 10)));
         bb.position(0);
         record.startRecord();
         record.put("a_string", "a_" + i);
