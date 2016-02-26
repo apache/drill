@@ -186,7 +186,7 @@ public class JdbcDataTest extends JdbcTestBase {
     Scan scan = findOnlyOperator(plan, Scan.class);
     Assert.assertEquals("donuts-json", scan.getStorageEngine());
     Project project = findOnlyOperator(plan, Project.class);
-    Assert.assertEquals(1, project.getSelections().length);
+    Assert.assertEquals(1, project.getSelections().size());
     Assert.assertEquals(Scan.class, project.getInput().getClass());
     Store store = findOnlyOperator(plan, Store.class);
     Assert.assertEquals("queue", store.getStorageEngine());
@@ -244,9 +244,9 @@ public class JdbcDataTest extends JdbcTestBase {
     Assert.assertTrue(filter.getInput() instanceof Scan);
     Project[] projects = Iterables.toArray(findOperator(plan, Project.class), Project.class);
     Assert.assertEquals(2, projects.length);
-    Assert.assertEquals(1, projects[0].getSelections().length);
+    Assert.assertEquals(1, projects[0].getSelections().size());
     Assert.assertEquals(Filter.class, projects[0].getInput().getClass());
-    Assert.assertEquals(2, projects[1].getSelections().length);
+    Assert.assertEquals(2, projects[1].getSelections().size());
     Assert.assertEquals(Project.class, projects[1].getInput().getClass());
     Store store = findOnlyOperator(plan, Store.class);
     Assert.assertEquals("queue", store.getStorageEngine());

@@ -194,16 +194,12 @@ public class TestBuilder {
   // modified code from SchemaPath.De class. This should be used sparingly and only in tests if absolutely needed.
   public static SchemaPath parsePath(String path) {
     try {
-      // logger.debug("Parsing expression string '{}'", expr);
       ExprLexer lexer = new ExprLexer(new ANTLRStringStream(path));
       CommonTokenStream tokens = new CommonTokenStream(lexer);
       ExprParser parser = new ExprParser(tokens);
 
-      //TODO: move functionregistry and error collector to injectables.
-      //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
       ExprParser.parse_return ret = parser.parse();
 
-      // ret.e.resolveAndValidate(expr, errorCollector);
       if (ret.e instanceof SchemaPath) {
         return (SchemaPath) ret.e;
       } else {
