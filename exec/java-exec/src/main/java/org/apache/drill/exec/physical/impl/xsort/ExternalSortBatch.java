@@ -374,6 +374,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
                 (spillCount == 0 && !hasMemoryForInMemorySort(totalCount)) ||
                 // If we haven't spilled so far, make sure we don't exceed the maximum number of batches SV4 can address
                 (spillCount == 0 && totalBatches > Character.MAX_VALUE) ||
+                // TODO(DRILL-4438) - consider setting this threshold more intelligently,
+                // lowering caused a failing low memory condition (test in BasicPhysicalOpUnitTest)
+                // to complete successfully (although it caused perf decrease as there was more spilling)
+
                 // current memory used is more than 95% of memory usage limit of this operator
                 (oAllocator.getAllocatedMemory() > .95 * oAllocator.getLimit()) ||
                 // Number of incoming batches (BatchGroups) exceed the limit and number of incoming batches accumulated
