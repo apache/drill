@@ -69,7 +69,7 @@ void Logger::init(const char* path){
         if (!m_pOutFileStream->is_open()){
             std::cerr << "Logfile could not be opened. Logging to stdout" << std::endl;
             m_filepath.erase();
-            delete m_pOutFileStream;
+            delete m_pOutFileStream; m_pOutFileStream=NULL;
         }
         initialized = true;
 
