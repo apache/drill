@@ -6,35 +6,23 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.base;
-
+package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 
-public abstract class AbstractStore extends AbstractSingle implements Store, Root{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStore.class);
+/**
+ * Implement this interface if a Prel has distribution affinity requirements.
+ */
+public interface HasDistributionAffinity {
 
-  public AbstractStore(PhysicalOperator child) {
-    super(child);
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
-    return physicalVisitor.visitStore(this, value);
-  }
-
-
-  @Override
-  public DistributionAffinity getDistributionAffinity() {
-    return DistributionAffinity.SOFT;
-  }
+  DistributionAffinity getDistributionAffinity();
 }

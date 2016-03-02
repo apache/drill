@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.sys;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +37,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -121,7 +123,7 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   /**
    * If distributed, the scan needs to happen on every node. Since width is enforced, the number of fragments equals
-   * number of Drillbits. And here we set, endpoint affinities to Double.POSITIVE_INFINITY to ensure every
+   * number of Drillbits. And here we set, each endpoint as mandatory assignment required to ensure every
    * Drillbit executes a fragment.
    * @return the Drillbit endpoint affinities
    */
@@ -129,13 +131,20 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   public List<EndpointAffinity> getOperatorAffinity() {
     if (table.isDistributed()) {
       final List<EndpointAffinity> affinities = Lists.newArrayList();
-      for (final DrillbitEndpoint endpoint : plugin.getContext().getBits()) {
-        affinities.add(new EndpointAffinity(endpoint, Double.POSITIVE_INFINITY));
+      final Collection<DrillbitEndpoint> bits = plugin.getContext().getBits();
+      final double affinityPerNode = 1d / bits.size();
+      for (final DrillbitEndpoint endpoint : bits) {
+        affinities.add(new EndpointAffinity(endpoint, affinityPerNode, true, /* maxWidth = */ 1));
       }
       return affinities;
     } else {
       return Collections.emptyList();
     }
+  }
+
+  @Override
+  public DistributionAffinity getDistributionAffinity() {
+    return table.isDistributed() ? DistributionAffinity.HARD : DistributionAffinity.SOFT;
   }
 
   @Override

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.calcite.plan.RelOptRule;
@@ -37,7 +38,9 @@ public class ScanPrule extends Prule{
 
     GroupScan groupScan = scan.getGroupScan();
 
-    DrillDistributionTrait partition = groupScan.getMaxParallelizationWidth() > 1 ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
+    DrillDistributionTrait partition =
+        (groupScan.getMaxParallelizationWidth() > 1 || groupScan.getDistributionAffinity() == DistributionAffinity.HARD)
+            ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
 
     final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(partition);
 
