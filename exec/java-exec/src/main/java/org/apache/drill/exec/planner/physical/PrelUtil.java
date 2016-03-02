@@ -256,7 +256,7 @@ public class PrelUtil {
     final Set<SchemaPath> columns = Sets.newLinkedHashSet();
     final private List<String> fieldNames;
     final private List<RelDataTypeField> fields;
-    final private Set<DesiredField> desiredFields = Sets.newHashSet();
+    final private Set<DesiredField> desiredFields = Sets.newLinkedHashSet();
 
     public RefFieldsVisitor(RelDataType rowType) {
       super(true);

@@ -569,13 +569,11 @@ public class TestUnionAll extends BaseTestQuery{
         ".*UnionAll.*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
