@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Authentication"
-date:  
+date: 2016-03-02 00:30:47 UTC
 parent: "Configure Drill"
 ---
 Authentication is the process of proving a user’s identity to access a process running on a system. Drill currently supports username/password based authentication through the use of the Linux Pluggable Authentication Module (PAM). The authentication option is available through JDBC and ODBC interfaces. Linux PAM provides authentication modules that interface with any installed PAM authentication entity, such as the local operating system password file (passwd or login) or LDAP. 
@@ -157,7 +157,15 @@ Complete the following steps to build and implement a custom authenticator:
            }  
 
 
-2. Add the JAR file that you built to the following directory on each Drill node:  
+2. Create a file named `drill-module.conf` with the following configuration code and then add this file to the root of the JAR file: 
+         
+              drill {
+                classpath.scanning {
+                  packages += "myorg.dept.drill.security"
+                }
+              }  
+This enables the custom classpath scanner to locate the new class. 
+3. Add the JAR file that you built to the following directory on each Drill node:  
    ` <DRILLINSTALL_HOME>/jars`
 3. Add the following configuration to the `drill.exec` block in the `drill-override.conf` file located in `<DRILLINSTALL_HOME>/conf/`:  
 
