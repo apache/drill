@@ -330,7 +330,7 @@ public class TestSimpleJson extends BaseJsonTest {
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
-  /*
+
   @Test
   public void testPushDownSubField5() throws Exception {
     final String sql = "SELECT\n"
@@ -341,6 +341,11 @@ public class TestSimpleJson extends BaseJsonTest {
         + " business.`hours.Tuesday.open` < TIME '10:30:00'"
         ;
     runSQLAndVerifyCount(sql, 1);
+
+    final String[] expectedPlan = {"condition=\\(hours.Tuesday.open < \\{\"\\$time\":\"10:30:00\"\\}\\)"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
   @Test
@@ -352,7 +357,12 @@ public class TestSimpleJson extends BaseJsonTest {
         + "WHERE\n"
         + " business.`hours.Sunday.close` > TIME '20:30:00'"
         ;
-    runSQLAndVerifyCount(sql, 4);
+    runSQLAndVerifyCount(sql, 3);
+
+    final String[] expectedPlan = {"condition=\\(hours.Sunday.close > \\{\"\\$time\":\"20:30:00\"\\}\\)"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
   @Test
@@ -366,6 +376,11 @@ public class TestSimpleJson extends BaseJsonTest {
         + " business.`start_date` = DATE '2012-07-14'"
         ;
     runSQLAndVerifyCount(sql, 1);
+
+    final String[] expectedPlan = {"condition=\\(start_date = \\{\"\\$dateDay\":\"2012-07-14\"\\}\\)"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
   @Test
@@ -379,7 +394,10 @@ public class TestSimpleJson extends BaseJsonTest {
         + " business.`last_update` = TIMESTAMP '2012-10-20 07:42:46'"
         ;
     runSQLAndVerifyCount(sql, 1);
-  }
-  */
 
+    final String[] expectedPlan = {"condition=\\(last_update = \\{\"\\$date\":\"2012-10-20T07:42:46.000Z\"\\}\\)"};
+    final String[] excludedPlan = {};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
+  }
 }

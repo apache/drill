@@ -18,10 +18,10 @@
 package org.apache.drill.exec.store.maprdb.json;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.drill.exec.store.maprdb.MapRDBSubScanSpec;
 import org.apache.hadoop.hbase.HConstants;
-import org.bouncycastle.util.Arrays;
 import org.ojai.DocumentConstants;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
@@ -45,17 +45,17 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
                          @JsonProperty("stopRow") byte[] stopRow,
                          @JsonProperty("cond") QueryCondition cond) {
     super(tableName, regionServer, null, null, null, null);
-    
+
     this.condition = MapRDB.newCondition().and();
-    
+
     if (cond != null) {
       this.condition.condition(cond);
     }
-    
+
     if (startRow != null &&
-        Arrays.areEqual(startRow, HConstants.EMPTY_START_ROW) == false) {
+        Arrays.equals(startRow, HConstants.EMPTY_START_ROW) == false) {
       Value startVal = IdCodec.decode(startRow);
-      
+
       switch(startVal.getType()) {
       case BINARY:
         this.condition.is(DocumentConstants.ID_FIELD, Op.GREATER_OR_EQUAL, startVal.getBinary());
@@ -68,11 +68,11 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
                                         + " for _id");
       }
     }
-    
+
     if (stopRow != null &&
-        Arrays.areEqual(stopRow, HConstants.EMPTY_END_ROW) == false) {
+        Arrays.equals(stopRow, HConstants.EMPTY_END_ROW) == false) {
       Value stopVal = IdCodec.decode(stopRow);
-      
+
       switch(stopVal.getType()) {
       case BINARY:
         this.condition.is(DocumentConstants.ID_FIELD, Op.LESS, stopVal.getBinary());
@@ -85,7 +85,7 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
                                         + " for _id");
       }
     }
-    
+
     this.condition.close().build();
   }
 
@@ -98,6 +98,7 @@ public class JsonSubScanSpec extends MapRDBSubScanSpec {
     return this.condition;
   }
 
+  @Override
   public byte[] getSerializedFilter() {
     if (this.condition != null) {
       ByteBuffer bbuf = ((ConditionImpl)this.condition).getDescriptor().getSerialized();

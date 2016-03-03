@@ -17,11 +17,18 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
-@JsonTypeName("maprdb")
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+@JsonTypeName("maprdb")  @JsonInclude(Include.NON_DEFAULT)
 public class MapRDBFormatPluginConfig implements FormatPluginConfig {
+
+  private boolean allTextMode = false;
+  private boolean readAllNumbersAsDouble = false;
 
   @Override
   public int hashCode() {
@@ -30,7 +37,46 @@ public class MapRDBFormatPluginConfig implements FormatPluginConfig {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof MapRDBFormatPluginConfig;
+    if (this == obj) {
+      return true;
+    }
+
+    if (obj == null) {
+      return false;
+    }
+
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+
+    MapRDBFormatPluginConfig other = (MapRDBFormatPluginConfig)obj;
+
+    if (readAllNumbersAsDouble != other.readAllNumbersAsDouble) {
+      return false;
+    }
+
+    if (allTextMode != other.allTextMode) {
+      return false;
+    }
+
+    return true;
   }
 
+  public boolean isReadAllNumbersAsDouble() {
+    return readAllNumbersAsDouble;
+  }
+
+  public boolean isAllTextMode() {
+    return allTextMode;
+  }
+
+  @JsonProperty("allTextMode")
+  public void setAllTextMode(boolean mode) {
+    allTextMode = mode;
+  }
+
+  @JsonProperty("readAllNumbersAsDouble")
+  public void setReadAllNumbersAsDouble(boolean read) {
+    readAllNumbersAsDouble = read;
+  }
 }

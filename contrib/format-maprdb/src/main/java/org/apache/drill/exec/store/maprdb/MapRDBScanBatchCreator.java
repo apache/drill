@@ -48,7 +48,7 @@ public class MapRDBScanBatchCreator implements BatchCreator<MapRDBSubScan>{
         if (BinaryTableGroupScan.TABLE_BINARY.equals(subScan.getTableType())) {
           readers.add(new HBaseRecordReader(conf, getHBaseSubScanSpec(scanSpec), subScan.getColumns(), context));
         } else {
-          readers.add(new MaprDBJsonRecordReader(scanSpec, subScan.getColumns(), context));
+          readers.add(new MaprDBJsonRecordReader(scanSpec, subScan.getFormatPluginConfig(), subScan.getColumns(), context));
         }
       } catch (Exception e1) {
         throw new ExecutionSetupException(e1);

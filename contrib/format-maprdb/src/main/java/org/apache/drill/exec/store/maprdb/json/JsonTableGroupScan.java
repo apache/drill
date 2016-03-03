@@ -146,7 +146,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
     assert minorFragmentId < endpointFragmentMapping.size() : String.format(
         "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
         minorFragmentId);
-    return new MapRDBSubScan(getUserName(), getStoragePlugin(), getStoragePlugin().getConfig(),
+    return new MapRDBSubScan(getUserName(), formatPluginConfig, getStoragePlugin(), getStoragePlugin().getConfig(),
         endpointFragmentMapping.get(minorFragmentId), columns, TABLE_JSON);
   }
 

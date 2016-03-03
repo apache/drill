@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.maprdb.json;
 
 import static org.ojai.DocumentConstants.ID_KEY;
+import io.netty.buffer.DrillBuf;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +39,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.maprdb.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.maprdb.MapRDBSubScanSpec;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
@@ -51,6 +54,7 @@ import org.ojai.FieldPath;
 import org.ojai.FieldSegment;
 import org.ojai.Value;
 import org.ojai.store.QueryCondition;
+import org.ojai.types.OTime;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -64,8 +68,6 @@ import com.mapr.db.ojai.DBDocumentReaderBase;
 import com.mapr.db.util.ByteBufs;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 
-import io.netty.buffer.DrillBuf;
-
 public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MaprDBJsonRecordReader.class);
 
@@ -75,7 +77,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private QueryCondition condition;
   private FieldPath[] projectedFields;
 
-  private String tableName;
+  private final String tableName;
   private OperatorContext operatorContext;
   private VectorContainerWriter writer;
 
@@ -87,9 +89,13 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
 
   private boolean includeId;
   private boolean idOnly;
-  private boolean unionEnabled;
+  private final boolean unionEnabled;
+  private final boolean readNumbersAsDouble;
+  private final boolean allTextMode;
+  private final long MILLISECONDS_IN_A_DAY  = (long)1000 * 60 * 60 * 24;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec,
+      MapRDBFormatPluginConfig formatPluginConfig,
       List<SchemaPath> projectedColumns, FragmentContext context) {
     buffer = context.getManagedBuffer();
     projectedFields = null;
@@ -97,9 +103,17 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     documentReaderIterators = null;
     includeId = false;
     idOnly    = false;
-    condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(subScanSpec.getSerializedFilter()));
+    byte[] serializedFilter = subScanSpec.getSerializedFilter();
+    condition = null;
+
+    if (serializedFilter != null) {
+      condition = com.mapr.db.impl.ConditionImpl.parseFrom(ByteBufs.wrap(serializedFilter));
+    }
+
     setColumns(projectedColumns);
     unionEnabled = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
+    readNumbersAsDouble = formatPluginConfig.isReadAllNumbersAsDouble();
+    allTextMode = formatPluginConfig.isAllTextMode();
   }
 
   @Override
@@ -180,7 +194,11 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
               recordCount++;
               break;
             case BINARY:
-              writeBinary(map.varBinary(ID_KEY), id.getBinary());
+              if (allTextMode) {
+                writeString(map.varChar(ID_KEY), new String(id.getBinary().array(), Charset.forName("UTF-8")));
+              } else {
+                writeBinary(map.varBinary(ID_KEY), id.getBinary());
+              }
               recordCount++;
               break;
             default:
@@ -224,42 +242,104 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         case NULL:
           break; // not setting the field will leave it as null
         case BINARY:
-          writeBinary(map.varBinary(fieldName), reader.getBinary());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), new String(reader.getBinary().array(), Charset.forName("UTF-8")));
+          } else {
+            writeBinary(map.varBinary(fieldName), reader.getBinary());
+          }
           break;
         case BOOLEAN:
-          map.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getBoolean()));
+          } else {
+            map.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
+          }
           break;
         case STRING:
           writeString(map.varChar(fieldName), reader.getString());
           break;
         case BYTE:
-          map.tinyInt(fieldName).writeTinyInt(reader.getByte());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getByte()));
+          } else if (readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(reader.getByte());
+          } else {
+            map.tinyInt(fieldName).writeTinyInt(reader.getByte());
+          }
           break;
         case SHORT:
-          map.smallInt(fieldName).writeSmallInt(reader.getShort());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getShort()));
+          } else if (readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(reader.getShort());
+          } else {
+            map.smallInt(fieldName).writeSmallInt(reader.getShort());
+          }
           break;
         case INT:
-          map.integer(fieldName).writeInt(reader.getInt());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getInt()));
+          } else if (readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(reader.getInt());
+          } else {
+            map.integer(fieldName).writeInt(reader.getInt());
+          }
           break;
         case LONG:
-          map.bigInt(fieldName).writeBigInt(reader.getLong());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getLong()));
+          } else if (readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(reader.getLong());
+          } else {
+            map.bigInt(fieldName).writeBigInt(reader.getLong());
+          }
           break;
         case FLOAT:
-          map.float4(fieldName).writeFloat4(reader.getFloat());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getFloat()));
+          } else if (readNumbersAsDouble) {
+            map.float8(fieldName).writeFloat8(reader.getFloat());
+          } else {
+            map.float4(fieldName).writeFloat4(reader.getFloat());
+          }
           break;
         case DOUBLE:
-          map.float8(fieldName).writeFloat8(reader.getDouble());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), String.valueOf(reader.getDouble()));
+          } else {
+            map.float8(fieldName).writeFloat8(reader.getDouble());
+          }
           break;
         case DECIMAL:
           throw unsupportedError("Decimal type is currently not supported.");
         case DATE:
-          map.date(fieldName).writeDate(reader.getDate().toDate().getTime());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), reader.getDate().toString());
+          } else {
+
+            long milliSecondsSinceEpoch = reader.getDate().toDaysSinceEpoch() * MILLISECONDS_IN_A_DAY;
+            map.date(fieldName).writeDate(milliSecondsSinceEpoch);
+          }
           break;
         case TIME:
-          map.time(fieldName).writeTime(reader.getTimeInt());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), reader.getTime().toString());
+          } else {
+            OTime t = reader.getTime();
+            int h = t.getHour();
+            int m = t.getMinute();
+            int s = t.getSecond();
+            int ms = t.getMilliSecond();
+            int millisOfDay = ms + (s + ((m + (h * 60)) * 60)) * 1000;
+            map.time(fieldName).writeTime(millisOfDay);
+          }
           break;
         case TIMESTAMP:
-          map.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
+          if (allTextMode) {
+            writeString(map.varChar(fieldName), reader.getTimestamp().toString());
+          } else {
+            map.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
+          }
           break;
         case INTERVAL:
           throw unsupportedError("Interval type is currently not supported.");
@@ -292,42 +372,103 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       case NULL:
         throw unsupportedError("Null values are not supported in lists.");
       case BINARY:
-        writeBinary(list.varBinary(), reader.getBinary());
+        if (allTextMode) {
+          writeString(list.varChar(), new String(reader.getBinary().array(), Charset.forName("UTF-8")));
+        } else {
+          writeBinary(list.varBinary(), reader.getBinary());
+        }
         break;
       case BOOLEAN:
-        list.bit().writeBit(reader.getBoolean() ? 1 : 0);
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getBoolean()));
+        } else {
+          list.bit().writeBit(reader.getBoolean() ? 1 : 0);
+        }
         break;
       case STRING:
         writeString(list.varChar(), reader.getString());
         break;
       case BYTE:
-        list.tinyInt().writeTinyInt(reader.getByte());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getByte()));
+        } else if (readNumbersAsDouble) {
+          list.float8().writeFloat8(reader.getByte());
+        } else {
+          list.tinyInt().writeTinyInt(reader.getByte());
+        }
         break;
       case SHORT:
-        list.smallInt().writeSmallInt(reader.getShort());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getShort()));
+        } else if (readNumbersAsDouble) {
+          list.float8().writeFloat8(reader.getShort());
+        } else {
+          list.smallInt().writeSmallInt(reader.getShort());
+        }
         break;
       case INT:
-        list.integer().writeInt(reader.getInt());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getInt()));
+        } else if (readNumbersAsDouble) {
+          list.float8().writeFloat8(reader.getInt());
+        } else {
+          list.integer().writeInt(reader.getInt());
+        }
         break;
       case LONG:
-        list.bigInt().writeBigInt(reader.getLong());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getLong()));
+        } else if (readNumbersAsDouble) {
+          list.float8().writeFloat8(reader.getLong());
+        } else {
+          list.bigInt().writeBigInt(reader.getLong());
+        }
         break;
       case FLOAT:
-        list.float4().writeFloat4(reader.getFloat());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getFloat()));
+        } else if (readNumbersAsDouble) {
+          list.float8().writeFloat8(reader.getFloat());
+        } else {
+          list.float4().writeFloat4(reader.getFloat());
+        }
         break;
       case DOUBLE:
-        list.float8().writeFloat8(reader.getDouble());
+        if (allTextMode) {
+          writeString(list.varChar(), String.valueOf(reader.getDouble()));
+        } else {
+          list.float8().writeFloat8(reader.getDouble());
+        }
         break;
       case DECIMAL:
         throw unsupportedError("Decimals are currently not supported.");
       case DATE:
-        list.date().writeDate(reader.getDate().toDate().getTime());
+        if (allTextMode) {
+          writeString(list.varChar(), reader.getDate().toString());
+        } else {
+          long milliSecondsSinceEpoch = reader.getDate().toDaysSinceEpoch() * MILLISECONDS_IN_A_DAY;
+          list.date().writeDate(milliSecondsSinceEpoch);
+        }
         break;
       case TIME:
-        list.time().writeTime(reader.getTimeInt());
+        if (allTextMode) {
+          writeString(list.varChar(), reader.getTime().toString());
+        } else {
+          OTime t = reader.getTime();
+          int h = t.getHour();
+          int m = t.getMinute();
+          int s = t.getSecond();
+          int ms = t.getMilliSecond();
+          int millisOfDay = ms + (s + ((m + (h * 60)) * 60)) * 1000;
+          list.time().writeTime(millisOfDay);
+        }
         break;
       case TIMESTAMP:
-        list.timeStamp().writeTimeStamp(reader.getTimestampLong());
+        if (allTextMode) {
+          writeString(list.varChar(), reader.getTimestamp().toString());
+        } else {
+          list.timeStamp().writeTimeStamp(reader.getTimestampLong());
+        }
         break;
       case INTERVAL:
         throw unsupportedError("Interval is currently not supported.");

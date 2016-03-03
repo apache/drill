@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.store.maprdb;
 
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -32,12 +37,6 @@ import org.apache.drill.exec.store.maprdb.binary.MapRDBFilterBuilder;
 import org.apache.drill.exec.store.maprdb.json.JsonConditionBuilder;
 import org.apache.drill.exec.store.maprdb.json.JsonScanSpec;
 import org.apache.drill.exec.store.maprdb.json.JsonTableGroupScan;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rex.RexNode;
-import org.ojai.store.QueryCondition;
 
 import com.google.common.collect.ImmutableList;
 

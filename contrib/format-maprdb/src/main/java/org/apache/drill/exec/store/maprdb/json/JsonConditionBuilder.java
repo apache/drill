@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.maprdb.json;
 
-import static org.ojai.DocumentConstants.ID_KEY;
-
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -164,8 +162,6 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
     SchemaPath field = processor.getPath();
     Value fieldValue = processor.getValue();
 
-    boolean isRowKey = field.getAsUnescapedPath().equals(ID_KEY);
-
     QueryCondition cond = null;
     switch (functionName) {
     case "equal":
@@ -231,7 +227,7 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
     case "like":
       cond = MapRDB.newCondition().like(field.getAsUnescapedPath(), fieldValue.getString()).build();
       break;
-      
+
     default:
     }
 

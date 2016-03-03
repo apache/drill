@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.maprdb.json;
 
-import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,8 +30,13 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.joda.time.LocalTime;
 import org.ojai.Value;
+import org.ojai.types.ODate;
+import org.ojai.types.OTime;
+import org.ojai.types.OTimestamp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +63,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
   public Boolean visitUnknown(LogicalExpression e, LogicalExpression valueArg) throws RuntimeException {
     return false;
   }
- 
+
   public static CompareFunctionsProcessor process(FunctionCall call) {
     String functionName = call.getName();
     LogicalExpression nameArg = call.args.get(0);
@@ -151,15 +155,20 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       this.path = path;
       return true;
     }
-/*
+
     if (valueArg instanceof DateExpression) {
-      this.value = KeyValueBuilder.initFrom(new ODate(((DateExpression)valueArg).getDate()));
+      long d = ((DateExpression)valueArg).getDate();
+      final long MILLISECONDS_IN_A_DAY  = (long)1000 * 60 * 60 * 24;
+      int daysSinceEpoch = (int)(d / MILLISECONDS_IN_A_DAY);
+      this.value = KeyValueBuilder.initFrom(ODate.fromDaysSinceEpoch(daysSinceEpoch));
       this.path = path;
       return true;
     }
 
     if (valueArg instanceof TimeExpression) {
-      this.value = KeyValueBuilder.initFrom(new OTime(((TimeExpression)valueArg).getTime()));
+      int t = ((TimeExpression)valueArg).getTime();
+      LocalTime lT = LocalTime.fromMillisOfDay(t);
+      this.value = KeyValueBuilder.initFrom(new OTime(lT.getHourOfDay(), lT.getMinuteOfHour(), lT.getSecondOfMinute(), lT.getMillisOfSecond()));
       this.path = path;
       return true;
     }
@@ -169,7 +178,7 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
       this.path = path;
       return true;
     }
-*/
+
     return false;
   }
 

@@ -53,6 +53,8 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
 
   private MapRDBFormatPlugin formatPlugin;
 
+  protected MapRDBFormatPluginConfig formatPluginConfig;
+
   protected List<SchemaPath> columns;
 
   protected Map<Integer, List<MapRDBSubScanSpec>> endpointFragmentMapping;
@@ -76,6 +78,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
     super(that);
     this.columns = that.columns;
     this.formatPlugin = that.formatPlugin;
+    this.formatPluginConfig = that.formatPluginConfig;
     this.storagePlugin = that.storagePlugin;
     this.regionsToScan = that.regionsToScan;
     this.filterPushedDown = that.filterPushedDown;
@@ -86,6 +89,7 @@ public abstract class MapRDBGroupScan extends AbstractGroupScan {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.formatPlugin = formatPlugin;
+    this.formatPluginConfig = (MapRDBFormatPluginConfig)formatPlugin.getConfig();
     this.columns = columns;
   }
 
