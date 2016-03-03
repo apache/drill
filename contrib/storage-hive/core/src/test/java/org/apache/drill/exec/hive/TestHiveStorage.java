@@ -20,6 +20,7 @@ package org.apache.drill.exec.hive;
 import com.google.common.collect.ImmutableMap;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.hadoop.fs.FileSystem;
 import org.joda.time.DateTime;
@@ -67,6 +68,25 @@ public class TestHiveStorage extends HiveTestBase {
   @Test
   public void hiveReadWithDb() throws Exception {
     test("select * from hive.kv");
+  }
+
+  @Test
+  public void simpleLimitZero() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from hive.kv limit 0")
+        .expectsEmptyResultSet()
+        .baselineColumns("key", "value")
+        .go();
+  }
+
+  @Test
+  public void simpleLimitZeroPlan() throws Exception {
+    final String[] expectedPlan = {
+      ".*Limit.*\n" +
+          ".*Values.*"
+    };
+    final String[] excludedPlan = {};
+    PlanTestBase.testPlanMatchingPatterns("select * from hive.kv limit 0", expectedPlan, excludedPlan);
   }
 
   @Test
@@ -190,6 +210,66 @@ public class TestHiveStorage extends HiveTestBase {
             new DateTime(Timestamp.valueOf("2013-07-05 17:01:00").getTime()),
             new DateTime(Date.valueOf("2013-07-05").getTime()))
         .go();
+  }
+
+  @Test
+  public void limitZeroVariousTypes() throws Exception {
+    testBuilder().sqlQuery("SELECT * FROM (SELECT boolean_field, tinyint_field, decimal0_field," +
+        "decimal9_field, decimal18_field, decimal28_field, decimal38_field, double_field, float_field, int_field, " +
+        "bigint_field, smallint_field, string_field, varchar_field, timestamp_field, date_field, " +
+        "boolean_part, tinyint_part, decimal0_part, decimal9_part, decimal18_part, decimal28_part, decimal38_part, " +
+        "double_part, float_part, int_part, bigint_part, smallint_part, string_part, varchar_part, timestamp_part, " +
+        "date_part FROM hive.readtest) T LIMIT 0")
+        .baselineColumns(
+            "boolean_field",
+            "tinyint_field",
+            "decimal0_field",
+            "decimal9_field",
+            "decimal18_field",
+            "decimal28_field",
+            "decimal38_field",
+            "double_field",
+            "float_field",
+            "int_field",
+            "bigint_field",
+            "smallint_field",
+            "string_field",
+            "varchar_field",
+            "timestamp_field",
+            "date_field",
+            "boolean_part",
+            "tinyint_part",
+            "decimal0_part",
+            "decimal9_part",
+            "decimal18_part",
+            "decimal28_part",
+            "decimal38_part",
+            "double_part",
+            "float_part",
+            "int_part",
+            "bigint_part",
+            "smallint_part",
+            "string_part",
+            "varchar_part",
+            "timestamp_part",
+            "date_part")
+        .expectsEmptyResultSet()
+        .go();
+  }
+
+  @Test
+  public void limitZeroVariousTypesPlan() throws Exception {
+    PlanTestBase.testPlanMatchingPatterns("SELECT * FROM (SELECT boolean_field, tinyint_field, decimal0_field," +
+            "decimal9_field, decimal18_field, decimal28_field, decimal38_field, double_field, float_field, int_field, " +
+            "bigint_field, smallint_field, string_field, varchar_field, timestamp_field, date_field, " +
+            "boolean_part, tinyint_part, decimal0_part, decimal9_part, decimal18_part, decimal28_part, decimal38_part, " +
+            "double_part, float_part, int_part, bigint_part, smallint_part, string_part, varchar_part, timestamp_part, " +
+            "date_part FROM hive.readtest) T LIMIT 0",
+        new String[] {
+            ".*Limit.*\n" +
+                ".*Values.*"
+        },
+        new String[] {});
   }
 
   /**
