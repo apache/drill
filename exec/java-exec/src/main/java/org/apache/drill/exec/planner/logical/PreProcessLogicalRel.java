@@ -18,12 +18,17 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
 import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.util.ApproximateStringMatcher;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -33,7 +38,6 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
@@ -60,16 +64,18 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   private RelDataTypeFactory factory;
   private DrillOperatorTable table;
   private UnsupportedOperatorCollector unsupportedOperatorCollector;
+  private final UnwrappingExpressionVisitor unwrappingExpressionVisitor;
 
-  public static PreProcessLogicalRel createVisitor(RelDataTypeFactory factory, DrillOperatorTable table) {
-    return new PreProcessLogicalRel(factory, table);
+  public static PreProcessLogicalRel createVisitor(RelDataTypeFactory factory, DrillOperatorTable table, RexBuilder rexBuilder) {
+    return new PreProcessLogicalRel(factory, table, rexBuilder);
   }
 
-  private PreProcessLogicalRel(RelDataTypeFactory factory, DrillOperatorTable table) {
+  private PreProcessLogicalRel(RelDataTypeFactory factory, DrillOperatorTable table, RexBuilder rexBuilder) {
     super();
     this.factory = factory;
     this.table = table;
     this.unsupportedOperatorCollector = new UnsupportedOperatorCollector();
+    this.unwrappingExpressionVisitor = new UnwrappingExpressionVisitor(rexBuilder);
   }
 
   @Override
@@ -82,12 +88,21 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
         throw new UnsupportedOperationException();
       }
     }
-
     return visitChild(aggregate, 0, aggregate.getInput());
   }
 
   @Override
   public RelNode visit(LogicalProject project) {
+    final List<RexNode> projExpr = Lists.newArrayList();
+    for(RexNode rexNode : project.getChildExps()) {
+      projExpr.add(rexNode.accept(unwrappingExpressionVisitor));
+    }
+
+    project =  project.copy(project.getTraitSet(),
+        project.getInput(),
+        projExpr,
+        project.getRowType());
+
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
@@ -162,6 +177,29 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   }
 
   @Override
+  public RelNode visit(LogicalFilter filter) {
+    final RexNode condition = filter.getCondition().accept(unwrappingExpressionVisitor);
+    filter = filter.copy(
+        filter.getTraitSet(),
+        filter.getInput(),
+        condition);
+    return visitChild(filter, 0, filter.getInput());
+  }
+
+  @Override
+  public RelNode visit(LogicalJoin join) {
+    final RexNode conditionExpr = join.getCondition().accept(unwrappingExpressionVisitor);
+    join = join.copy(join.getTraitSet(),
+        conditionExpr,
+        join.getLeft(),
+        join.getRight(),
+        join.getJoinType(),
+        join.isSemiJoinDone());
+
+    return visitChildren(join);
+  }
+
+  @Override
   public RelNode visit(LogicalUnion union) {
     for(RelNode child : union.getInputs()) {
       for(RelDataTypeField dataField : child.getRowType().getFieldList()) {
@@ -213,5 +251,30 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
 
   public void convertException() throws SqlUnsupportedException {
     unsupportedOperatorCollector.convertException();
+  }
+
+  private static class UnwrappingExpressionVisitor extends RexShuttle {
+    private final RexBuilder rexBuilder;
+
+    private UnwrappingExpressionVisitor(RexBuilder rexBuilder) {
+      this.rexBuilder = rexBuilder;
+    }
+
+    @Override
+    public RexNode visitCall(final RexCall call) {
+      final List<RexNode> clonedOperands = visitList(call.operands, new boolean[]{true});
+      final SqlOperator sqlOperator;
+      if(call.getOperator() instanceof DrillCalciteSqlWrapper) {
+        sqlOperator = ((DrillCalciteSqlWrapper) call.getOperator()).getOperator();
+      } else {
+        sqlOperator = call.getOperator();
+      }
+
+      return RexUtil.flatten(rexBuilder,
+          rexBuilder.makeCall(
+              call.getType(),
+              sqlOperator,
+              clonedOperands));
+    }
   }
 }
