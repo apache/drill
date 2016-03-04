@@ -25,6 +25,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -100,6 +101,10 @@ public class ConvertCountToDirectScan extends Prule {
         && agg.getGroupCount() == 0
         && agg.getAggCallList().size() == 1
         && !agg.containsDistinctCall())) {
+      return;
+    }
+
+    if (proj != null && !ProjectRemoveRule.isTrivial(proj)) {
       return;
     }
 
