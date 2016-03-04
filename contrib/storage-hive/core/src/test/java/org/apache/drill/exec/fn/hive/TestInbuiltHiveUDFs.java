@@ -43,4 +43,32 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .baselineValues(new Object[] { null })
         .go();
   }
+
+  @Test
+  public void testReflect() throws Exception {
+    final String query = "select reflect('java.lang.Math', 'round', cast(2 as float)) as col \n" +
+        "from hive.kv \n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues("2")
+        .go();
+  }
+
+  @Test
+  public void testAbs() throws Exception {
+    final String query = "select reflect('java.lang.Math', 'abs', cast(-2 as double)) as col \n" +
+        "from hive.kv \n" +
+        "limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues("2.0")
+        .go();
+  }
 }

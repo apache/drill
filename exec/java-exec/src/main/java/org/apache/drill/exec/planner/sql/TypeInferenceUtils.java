@@ -531,21 +531,7 @@ public class TypeInferenceUtils {
   }
 
   private static DrillFuncHolder resolveDrillFuncHolder(final SqlOperatorBinding opBinding, final List<DrillFuncHolder> functions) {
-    final List<LogicalExpression> args = Lists.newArrayList();
-
-    for (int i = 0; i < opBinding.getOperandCount(); ++i) {
-      final RelDataType type = opBinding.getOperandType(i);
-      final TypeProtos.MinorType minorType = getDrillTypeFromCalciteType(type);
-      final TypeProtos.MajorType majorType;
-      if (type.isNullable()) {
-        majorType =  Types.optional(minorType);
-      } else {
-        majorType = Types.required(minorType);
-      }
-
-      args.add(new MajorTypeInLogicalExpression(majorType));
-    }
-    final FunctionCall functionCall = new FunctionCall(opBinding.getOperator().getName(), args, ExpressionPosition.UNKNOWN);
+    final FunctionCall functionCall = convertSqlOperatorBindingToFunctionCall(opBinding);
     final FunctionResolver functionResolver = FunctionResolverFactory.getResolver();
     final DrillFuncHolder func = functionResolver.getBestMatch(functions, functionCall);
 
@@ -621,6 +607,30 @@ public class TypeInferenceUtils {
       type = typeFactory.createSqlType(sqlTypeName);
     }
     return typeFactory.createTypeWithNullability(type, isNullable);
+  }
+
+  /**
+   * Given a SqlOperatorBinding, convert it to FunctionCall
+   * @param  opBinding    the given SqlOperatorBinding
+   * @return FunctionCall the converted FunctionCall
+   */
+  public static FunctionCall convertSqlOperatorBindingToFunctionCall(final SqlOperatorBinding opBinding) {
+    final List<LogicalExpression> args = Lists.newArrayList();
+
+    for (int i = 0; i < opBinding.getOperandCount(); ++i) {
+      final RelDataType type = opBinding.getOperandType(i);
+      final TypeProtos.MinorType minorType = getDrillTypeFromCalciteType(type);
+      final TypeProtos.MajorType majorType;
+      if (type.isNullable()) {
+        majorType = Types.optional(minorType);
+      } else {
+        majorType = Types.required(minorType);
+      }
+
+      args.add(new MajorTypeInLogicalExpression(majorType));
+    }
+    final FunctionCall functionCall = new FunctionCall(opBinding.getOperator().getName(), args, ExpressionPosition.UNKNOWN);
+    return functionCall;
   }
 
   /**
