@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
-import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
@@ -328,12 +327,72 @@ public class NullableFixedByteAlignedReaders {
         intValue = readIntLittleEndian(bytebuf, start);
       }
 
-      valueVec.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+      valueVec.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue + ParquetReaderUtility.SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY));
     }
 
   }
 
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   */
+  public static class NullableCorruptDateReader extends NullableConvertedReader<NullableDateVector> {
+
+    NullableCorruptDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                       boolean fixedLength, NullableDateVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int intValue;
+      if (usingDictionary) {
+        intValue =  pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      valueVec.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT));
+    }
+
+  }
+
+  /**
+   * Old versions of Drill were writing a non-standard format for date. See DRILL-4203
+   *
+   * For files that lack enough metadata to determine if the dates are corrupt, we must just
+   * correct values when they look corrupt during this low level read.
+   */
+  public static class CorruptionDetectingNullableDateReader extends NullableConvertedReader<NullableDateVector> {
+
+    NullableDateVector dateVector;
+
+    CorruptionDetectingNullableDateReader(ParquetRecordReader parentReader, int allocateSize,
+                                          ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                                          boolean fixedLength, NullableDateVector v, SchemaElement schemaElement)
+        throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      dateVector = (NullableDateVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int intValue;
+      if (usingDictionary) {
+        intValue =  pageReader.dictionaryValueReader.readInteger();
+      } else {
+        intValue = readIntLittleEndian(bytebuf, start);
+      }
+
+      if (intValue > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
+        dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue + ParquetReaderUtility.CORRECT_CORRUPT_DATE_SHIFT));
+      } else {
+        dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(intValue + ParquetReaderUtility.SHIFT_PARQUET_DAY_COUNT_TO_JULIAN_DAY));
+      }
+    }
+  }
+
   public static class NullableDecimal28Reader extends NullableConvertedReader<NullableDecimal28SparseVector> {
+
     NullableDecimal28Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                             boolean fixedLength, NullableDecimal28SparseVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);

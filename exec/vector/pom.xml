@@ -14,7 +14,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.6.0</version>
   </parent>
   <artifactId>vector</artifactId>
   <name>exec/Vectors</name>
@@ -119,6 +119,28 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin> <!-- generate class to provide current version number -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>org.apache.drill.version.Generator</mainClass>
+          <includePluginDependencies>true</includePluginDependencies>
+          <arguments>
+            <argument>${basedir}/target/generated-sources</argument>
+            <argument>${project.version}</argument>
+          </arguments>
+          <sourceRoot>${basedir}/target/generated-sources</sourceRoot>
+        </configuration>
       </plugin>
     </plugins>
     <pluginManagement>
