@@ -22,6 +22,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestUnionAll extends BaseTestQuery{
@@ -557,6 +558,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2746
+  @Ignore("DRILL-4472")
   public void testInListPushDownOverUnionAll() throws Exception {
     String query = "select n_nationkey \n" +
         "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey \n" +
