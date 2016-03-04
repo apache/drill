@@ -47,7 +47,7 @@ public class TestMapRDBSimple extends BaseHBaseTest {
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName";
-    runHBaseSQLVerifyCount(sql, 7);
+    runHBaseSQLVerifyCount(sql, 8);
   }
 
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr;
 
 import java.io.IOException;
 
@@ -25,17 +25,16 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.hadoop.fs.FileStatus;
 
 import com.mapr.fs.MapRFileStatus;
 
-public class MapRDBFormatMatcher extends FormatMatcher {
+public abstract class TableFormatMatcher extends FormatMatcher {
 
-  private final FormatPlugin plugin;
+  private final TableFormatPlugin plugin;
 
-  public MapRDBFormatMatcher(FormatPlugin plugin) {
+  public TableFormatMatcher(TableFormatPlugin plugin) {
     this.plugin = plugin;
   }
 
@@ -58,11 +57,20 @@ public class MapRDBFormatMatcher extends FormatMatcher {
 
   @Override
   public boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException {
-    return (status instanceof MapRFileStatus) &&  ((MapRFileStatus) status).isTable();
+    return (status instanceof MapRFileStatus) 
+        && ((MapRFileStatus) status).isTable()
+        && isSupportedTable((MapRFileStatus) status);
   }
 
   @Override
-  public FormatPlugin getFormatPlugin() {
+  public TableFormatPlugin getFormatPlugin() {
     return plugin;
   }
+
+  /**
+   * Returns true if the path pointed by the MapRFileStatus is a supported table
+   * by this format plugin. The path must point to a MapR table.
+   */
+  protected abstract boolean isSupportedTable(MapRFileStatus status) throws IOException;
+
 }

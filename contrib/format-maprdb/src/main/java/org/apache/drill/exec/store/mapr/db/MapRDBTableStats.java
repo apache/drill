@@ -15,12 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb.util;
+package org.apache.drill.exec.store.mapr.db;
 
-public class CommonFns {
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.mapr.TableMappingRulesFactory;
 
-  public static boolean isNullOrEmpty(final byte[] key) {
-    return key == null || key.length == 0;
+import com.mapr.fs.hbase.HBaseAdminImpl;
+
+public class MapRDBTableStats {
+  private static volatile HBaseAdminImpl admin = null;
+
+  private long numRows;
+
+  public MapRDBTableStats(Configuration conf, String tablePath) throws Exception {
+    if (admin == null) {
+      synchronized (MapRDBTableStats.class) {
+        if (admin == null) {
+          Configuration config = conf;
+          admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(conf));
+        }
+      }
+    }
+    numRows = admin.getNumRows(tablePath);
+  }
+
+  public long getNumRows() {
+    return numRows;
   }
 
 }

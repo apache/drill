@@ -63,7 +63,7 @@ public class MaprDBTestsSuite {
     if (initCount.get() == 0) {
       synchronized (MaprDBTestsSuite.class) {
         if (initCount.get() == 0) {
-          HBaseTestsSuite.configure(false, true);
+          HBaseTestsSuite.configure(false /*manageHBaseCluster*/, true /*createTables*/);
           HBaseTestsSuite.initCluster();
           createJsonTables();
 
@@ -117,7 +117,12 @@ public class MaprDBTestsSuite {
               "  }," +
               "  \"formats\": {" +
               "   \"maprdb\": {" +
-              "      \"type\": \"maprdb\"" +
+              "      \"type\": \"maprdb\"," +
+              "      \"allTextMode\": false," +
+              "      \"readAllNumbersAsDouble\": false" +
+              "    }," +
+              "   \"streams\": {" +
+              "      \"type\": \"streams\"" +
               "    }" +
               "  }" +
               "}";

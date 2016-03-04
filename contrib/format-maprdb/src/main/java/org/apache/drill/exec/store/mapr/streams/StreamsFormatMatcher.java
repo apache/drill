@@ -15,32 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr.streams;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.mapr.TableMappingRulesFactory;
+import java.io.IOException;
 
-import com.mapr.fs.hbase.HBaseAdminImpl;
+import org.apache.drill.exec.store.mapr.TableFormatMatcher;
+import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 
-public class MapRDBTableStats {
-  private static volatile HBaseAdminImpl admin = null;
+import com.mapr.fs.MapRFileStatus;
 
-  private long numRows;
+public class StreamsFormatMatcher extends TableFormatMatcher {
 
-  public MapRDBTableStats(Configuration conf, String tablePath) throws Exception {
-    if (admin == null) {
-      synchronized (MapRDBTableStats.class) {
-        if (admin == null) {
-          Configuration config = conf;
-          admin = new HBaseAdminImpl(config, TableMappingRulesFactory.create(conf));
-        }
-      }
-    }
-    numRows = admin.getNumRows(tablePath);
+  public StreamsFormatMatcher(TableFormatPlugin plugin) {
+    super(plugin);
   }
 
-  public long getNumRows() {
-    return numRows;
+  @Override
+  protected boolean isSupportedTable(MapRFileStatus status) throws IOException {
+    return getFormatPlugin()
+        .getMaprFS()
+        .getTableProperties(status.getPath())
+        .getAttr()
+        .getIsMarlinTable();
   }
 
 }

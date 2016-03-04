@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb.binary;
+package org.apache.drill.exec.store.mapr.db.binary;
+
+import static org.apache.drill.exec.store.mapr.db.util.CommonFns.isNullOrEmpty;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,13 +37,13 @@ import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
-import org.apache.drill.exec.store.maprdb.MapRDBFormatPlugin;
-import org.apache.drill.exec.store.maprdb.MapRDBFormatPluginConfig;
-import org.apache.drill.exec.store.maprdb.MapRDBGroupScan;
-import org.apache.drill.exec.store.maprdb.MapRDBSubScan;
-import org.apache.drill.exec.store.maprdb.MapRDBSubScanSpec;
-import org.apache.drill.exec.store.maprdb.MapRDBTableStats;
-import org.apache.drill.exec.store.maprdb.TabletFragmentInfo;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
+import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
+import org.apache.drill.exec.store.mapr.db.MapRDBGroupScan;
+import org.apache.drill.exec.store.mapr.db.MapRDBSubScan;
+import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
+import org.apache.drill.exec.store.mapr.db.MapRDBTableStats;
+import org.apache.drill.exec.store.mapr.db.TabletFragmentInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -160,10 +162,6 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
         spec.getSerializedFilter(),
         null);
     return subScanSpec;
-  }
-
-  private boolean isNullOrEmpty(byte[] key) {
-    return key == null || key.length == 0;
   }
 
   @Override

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr;
 
 import static com.mapr.fs.jni.MapRConstants.MAPRFS_PREFIX;
 
@@ -26,61 +26,44 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.hbase.HBaseScanSpec;
-import org.apache.drill.exec.store.maprdb.binary.BinaryTableGroupScan;
-import org.apache.drill.exec.store.maprdb.json.JsonScanSpec;
-import org.apache.drill.exec.store.maprdb.json.JsonTableGroupScan;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
 import com.mapr.fs.MapRFileSystem;
-import com.mapr.fs.tables.TableProperties;
 
-public class MapRDBFormatPlugin implements FormatPlugin {
+public abstract class TableFormatPlugin implements FormatPlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MapRDBFormatPlugin.class);
+      .getLogger(TableFormatPlugin.class);
 
   private final FileSystemConfig storageConfig;
-  private final MapRDBFormatPluginConfig config;
-  private final MapRDBFormatMatcher matcher;
+  private final TableFormatPluginConfig config;
   private final Configuration fsConf;
   private final DrillbitContext context;
   private final String name;
 
   private volatile FileSystemPlugin storagePlugin;
-  private volatile MapRFileSystem maprfs;
+  private final MapRFileSystem maprfs;
 
-  public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-      StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new MapRDBFormatPluginConfig());
-  }
-
-  public MapRDBFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-      StoragePluginConfig storageConfig, MapRDBFormatPluginConfig formatConfig) {
+  protected TableFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+      StoragePluginConfig storageConfig, TableFormatPluginConfig formatConfig) {
     this.context = context;
     this.config = formatConfig;
-    this.matcher = new MapRDBFormatMatcher(this);
     this.storageConfig = (FileSystemConfig) storageConfig;
     this.fsConf = fsConf;
     this.name = name == null ? "maprdb" : name;
     try {
       this.maprfs = new MapRFileSystem();
-      maprfs.initialize(new URI(MAPRFS_PREFIX), fsConf);
+      getMaprFS().initialize(new URI(MAPRFS_PREFIX), fsConf);
     } catch (IOException | URISyntaxException e) {
       throw new RuntimeException(e);
     }
@@ -101,42 +84,19 @@ public class MapRDBFormatPlugin implements FormatPlugin {
     return false;
   }
 
-  @Override
-  public FormatMatcher getMatcher() {
-    return matcher;
-  }
-
   public Configuration getFsConf() {
     return fsConf;
+  }
+
+  @Override
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of();
   }
 
   @Override
   public AbstractWriter getWriter(PhysicalOperator child, String location,
       List<String> partitionColumns) throws IOException {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  @JsonIgnore
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of(MapRDBPushFilterIntoScan.FILTER_ON_SCAN, MapRDBPushFilterIntoScan.FILTER_ON_PROJECT);
-  }
-
-  @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns) throws IOException {
-    List<String> files = selection.getFiles();
-    assert (files.size() == 1);
-    String tableName = files.get(0);
-    TableProperties props = maprfs.getTableProperties(new Path(tableName));
-
-    if (props.getAttr().getJson()) {
-      JsonScanSpec scanSpec = new JsonScanSpec(tableName, null/*condition*/);
-      return new JsonTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
-    } else {
-      HBaseScanSpec scanSpec = new HBaseScanSpec(tableName);
-      return new BinaryTableGroupScan(userName, getStoragePlugin(), this, scanSpec, columns);
-    }
   }
 
   @Override
@@ -168,6 +128,11 @@ public class MapRDBFormatPlugin implements FormatPlugin {
       }
     }
     return storagePlugin;
+  }
+
+  @JsonIgnore
+  public MapRFileSystem getMaprFS() {
+    return maprfs;
   }
 
 }

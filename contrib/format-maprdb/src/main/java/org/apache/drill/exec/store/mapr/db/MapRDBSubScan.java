@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr.db;
 
 import java.util.Iterator;
 import java.util.List;
@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 
 // Class containing information for reading a single HBase region
 @JsonTypeName("maprdb-sub-scan")
@@ -106,7 +106,7 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return ImmutableSet.<PhysicalOperator>of().iterator();
   }
 
   @Override
@@ -121,4 +121,5 @@ public class MapRDBSubScan extends AbstractBase implements SubScan {
   public MapRDBFormatPluginConfig getFormatPluginConfig() {
     return fsFormatPluginConfig;
   }
+
 }

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr.db;
 
-import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.store.mapr.TableFormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("maprdb")  @JsonInclude(Include.NON_DEFAULT)
-public class MapRDBFormatPluginConfig implements FormatPluginConfig {
+public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
 
   private boolean allTextMode = false;
   private boolean readAllNumbersAsDouble = false;
@@ -36,26 +36,11 @@ public class MapRDBFormatPluginConfig implements FormatPluginConfig {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-
-    if (obj == null) {
-      return false;
-    }
-
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-
+  protected boolean impEquals(Object obj) {
     MapRDBFormatPluginConfig other = (MapRDBFormatPluginConfig)obj;
-
     if (readAllNumbersAsDouble != other.readAllNumbersAsDouble) {
       return false;
-    }
-
-    if (allTextMode != other.allTextMode) {
+    } else if (allTextMode != other.allTextMode) {
       return false;
     }
 
@@ -79,4 +64,5 @@ public class MapRDBFormatPluginConfig implements FormatPluginConfig {
   public void setReadAllNumbersAsDouble(boolean read) {
     readAllNumbersAsDouble = read;
   }
+
 }

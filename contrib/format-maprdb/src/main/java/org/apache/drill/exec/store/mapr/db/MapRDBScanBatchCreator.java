@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr.db;
 
 import java.util.List;
 
@@ -27,8 +27,8 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.hbase.HBaseRecordReader;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
-import org.apache.drill.exec.store.maprdb.binary.BinaryTableGroupScan;
-import org.apache.drill.exec.store.maprdb.json.MaprDBJsonRecordReader;
+import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
+import org.apache.drill.exec.store.mapr.db.json.MaprDBJsonRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 

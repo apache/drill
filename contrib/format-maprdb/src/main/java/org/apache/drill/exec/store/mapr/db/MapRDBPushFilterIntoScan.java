@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.maprdb;
+package org.apache.drill.exec.store.mapr.db;
 
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -32,11 +32,11 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
-import org.apache.drill.exec.store.maprdb.binary.BinaryTableGroupScan;
-import org.apache.drill.exec.store.maprdb.binary.MapRDBFilterBuilder;
-import org.apache.drill.exec.store.maprdb.json.JsonConditionBuilder;
-import org.apache.drill.exec.store.maprdb.json.JsonScanSpec;
-import org.apache.drill.exec.store.maprdb.json.JsonTableGroupScan;
+import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
+import org.apache.drill.exec.store.mapr.db.binary.MapRDBFilterBuilder;
+import org.apache.drill.exec.store.mapr.db.json.JsonConditionBuilder;
+import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
+import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 
 import com.google.common.collect.ImmutableList;
 
@@ -85,7 +85,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       final FilterPrel filter = (FilterPrel) call.rel(0);
 
       // convert the filter to one that references the child of the project
-      final RexNode condition =  RelOptUtil.pushFilterPastProject(filter.getCondition(), project);
+      final RexNode condition =  RelOptUtil.pushPastProject(filter.getCondition(), project);
 
       if (scan.getGroupScan() instanceof BinaryTableGroupScan) {
         BinaryTableGroupScan groupScan = (BinaryTableGroupScan)scan.getGroupScan();
