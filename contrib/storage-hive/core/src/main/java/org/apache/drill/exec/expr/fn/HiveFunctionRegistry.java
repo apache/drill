@@ -18,18 +18,32 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.Collection;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
@@ -70,7 +84,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   @Override
   public void register(DrillOperatorTable operatorTable) {
     for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
-      operatorTable.add(name, new HiveUDFOperator(name.toUpperCase()));
+      operatorTable.add(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
     }
   }
 
@@ -204,4 +218,46 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     return null;
   }
 
+  public class HiveSqlReturnTypeInference implements SqlReturnTypeInference {
+    private HiveSqlReturnTypeInference() {
+
+    }
+
+    @Override
+    public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+      for (RelDataType type : opBinding.collectOperandTypes()) {
+        final TypeProtos.MinorType minorType = TypeInferenceUtils.getDrillTypeFromCalciteType(type);
+        if(minorType == TypeProtos.MinorType.LATE) {
+          return opBinding.getTypeFactory()
+              .createTypeWithNullability(
+                  opBinding.getTypeFactory().createSqlType(SqlTypeName.ANY),
+                  true);
+        }
+      }
+
+      final FunctionCall functionCall = TypeInferenceUtils.convertSqlOperatorBindingToFunctionCall(opBinding);
+      final HiveFuncHolder hiveFuncHolder = getFunction(functionCall);
+      if(hiveFuncHolder == null) {
+        String operandTypes = "";
+        for(int j = 0; j < opBinding.getOperandCount(); ++j) {
+          operandTypes += opBinding.getOperandType(j).getSqlTypeName();
+          if(j < opBinding.getOperandCount() - 1) {
+            operandTypes += ",";
+          }
+        }
+
+        throw UserException
+            .functionError()
+            .message(String.format("%s does not support operand types (%s)",
+                opBinding.getOperator().getName(),
+                operandTypes))
+            .build(logger);
+      }
+
+      return TypeInferenceUtils.createCalciteTypeWithNullability(
+          opBinding.getTypeFactory(),
+          TypeInferenceUtils.getCalciteTypeFromDrillType(hiveFuncHolder.getReturnType().getMinorType()),
+          hiveFuncHolder.getReturnType().getMode() != TypeProtos.DataMode.REQUIRED);
+    }
+  }
 }
