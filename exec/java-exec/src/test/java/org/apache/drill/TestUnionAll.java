@@ -17,13 +17,17 @@
  */
 package org.apache.drill;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestUnionAll extends BaseTestQuery{
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
@@ -527,6 +531,117 @@ public class TestUnionAll extends BaseTestQuery{
       .build().run();
   }
 
+  @Test
+  public void testUnionAllLeftEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftEmpty = String.format(
+        "select key from dfs_test.`%s` " +
+        "union all " +
+        "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftEmpty)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllBothEmptyJson() throws Exception {
+    final String rootEmpty = FileUtils.getResourceAsFile("/project/pushdown/empty.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` " +
+            "union all " +
+            "select key from dfs_test.`%s`",
+        rootEmpty,
+        rootEmpty);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllRightEmptyBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    String queryRightEmptyBatch = String.format(
+        "select key from dfs_test.`%s` " +
+            "union all " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryRightEmptyBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build().run();
+  }
+
+  @Test
+  public void testUnionAllLeftEmptyBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+
+    final String queryLeftBatch = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union all " +
+            "select key from dfs_test.`%s`",
+        rootSimple,
+        rootSimple);
+
+    testBuilder()
+        .sqlQuery(queryLeftBatch)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(true)
+        .baselineValues(false)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testUnionAllBothEmptyBatch() throws Exception {
+    String rootSimple = FileUtils.getResourceAsFile("/store/json/booleanData.json").toURI().toString();
+    final String query = String.format(
+        "select key from dfs_test.`%s` where 1 = 0 " +
+            "union all " +
+            "select key from dfs_test.`%s` where 1 = 0",
+        rootSimple,
+        rootSimple);
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.INT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("key"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
   @Test // see DRILL-2746
   public void testFilterPushDownOverUnionAll() throws Exception {
     String query = "select n_regionkey from \n"
@@ -558,8 +673,7 @@ public class TestUnionAll extends BaseTestQuery{
   }
 
   @Test // see DRILL-2746
-  @Ignore("DRILL-4472")
-  public void testInListPushDownOverUnionAll() throws Exception {
+  public void testInListOnUnionAll() throws Exception {
     String query = "select n_nationkey \n" +
         "from (select n1.n_nationkey from cp.`tpch/nation.parquet` n1 inner join cp.`tpch/region.parquet` r1 on n1.n_regionkey = r1.r_regionkey \n" +
         "union all \n" +
@@ -571,13 +685,11 @@ public class TestUnionAll extends BaseTestQuery{
         ".*UnionAll.*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*\n" +
             ".*Project.*\n" +
                 ".*HashJoin.*\n" +
-                    ".*Project.*\n" +
-                        ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
+                    ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*"};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
