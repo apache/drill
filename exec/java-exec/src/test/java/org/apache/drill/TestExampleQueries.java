@@ -1194,5 +1194,4 @@ public class TestExampleQueries extends BaseTestQuery {
         .build()
         .run();
   }
-
 }

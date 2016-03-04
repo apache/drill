@@ -17,40 +17,61 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import org.apache.calcite.sql.SqlOperator;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Sets;
 
+/**
+ * Registry of Drill functions.
+ */
 public class DrillFunctionRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
 
-  private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
+  // key: function name (lowercase) value: list of functions with that name
+  private final ArrayListMultimap<String, DrillFuncHolder> registeredFunctions = ArrayListMultimap.create();
 
-  /* Hash map to prevent registering functions with exactly matching signatures
-   * key: Function Name + Input's Major Type
-   * Value: Class name where function is implemented
-   */
-  private HashMap<String, String> functionSignatureMap = new HashMap<>();
+  private static final ImmutableMap<String, Pair<Integer, Integer>> drillFuncToRange = ImmutableMap.<String, Pair<Integer, Integer>> builder()
+      // CONCAT is allowed to take [1, infinity) number of arguments.
+      // Currently, this flexibility is offered by DrillOptiq to rewrite it as
+      // a nested structure
+      .put("CONCAT", Pair.of(1, Integer.MAX_VALUE))
+
+      // When LENGTH is given two arguments, this function relies on DrillOptiq to rewrite it as
+      // another function based on the second argument (encodingType)
+      .put("LENGTH", Pair.of(1, 2))
+
+      // Dummy functions
+      .put("CONVERT_TO", Pair.of(2, 2))
+      .put("CONVERT_FROM", Pair.of(2, 2))
+      .put("FLATTEN", Pair.of(1, 1)).build();
 
   public DrillFunctionRegistry(ScanResult classpathScan) {
     FunctionConverter converter = new FunctionConverter();
     List<AnnotatedClassDescriptor> providerClasses = classpathScan.getAnnotatedClasses();
+
+    // Hash map to prevent registering functions with exactly matching signatures
+    // key: Function Name + Input's Major Type
+    // value: Class name where function is implemented
+    //
+    final Map<String, String> functionSignatureMap = new HashMap<>();
     for (AnnotatedClassDescriptor func : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(func);
       if (holder != null) {
@@ -64,7 +85,7 @@ public class DrillFunctionRegistry {
         }
         for (String name : names) {
           String functionName = name.toLowerCase();
-          methods.put(functionName, holder);
+          registeredFunctions.put(functionName, holder);
           String functionSignature = functionName + functionInput;
           String existingImplementation;
           if ((existingImplementation = functionSignatureMap.get(functionSignature)) != null) {
@@ -84,7 +105,7 @@ public class DrillFunctionRegistry {
     }
     if (logger.isTraceEnabled()) {
       StringBuilder allFunctions = new StringBuilder();
-      for (DrillFuncHolder method: methods.values()) {
+      for (DrillFuncHolder method: registeredFunctions.values()) {
         allFunctions.append(method.toString()).append("\n");
       }
       logger.trace("Registered functions: [\n{}]", allFunctions);
@@ -92,38 +113,54 @@ public class DrillFunctionRegistry {
   }
 
   public int size(){
-    return methods.size();
+    return registeredFunctions.size();
   }
 
   /** Returns functions with given name. Function name is case insensitive. */
   public List<DrillFuncHolder> getMethods(String name) {
-    return this.methods.get(name.toLowerCase());
+    return this.registeredFunctions.get(name.toLowerCase());
   }
 
   public void register(DrillOperatorTable operatorTable) {
-    SqlOperator op;
-    for (Entry<String, Collection<DrillFuncHolder>> function : methods.asMap().entrySet()) {
-      Set<Integer> argCounts = Sets.newHashSet();
-      String name = function.getKey().toUpperCase();
+    for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.asMap().entrySet()) {
+      final ArrayListMultimap<Pair<Integer, Integer>, DrillFuncHolder> functions = ArrayListMultimap.create();
+      final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
+      final String name = function.getKey().toUpperCase();
+      boolean isDeterministic = true;
       for (DrillFuncHolder func : function.getValue()) {
-        if (argCounts.add(func.getParamCount())) {
-          if (func.isAggregating()) {
-            op = new DrillSqlAggOperator(name, func.getParamCount());
+        final int paramCount = func.getParamCount();
+        if(func.isAggregating()) {
+          aggregateFunctions.put(paramCount, func);
+        } else {
+          final Pair<Integer, Integer> argNumberRange;
+          if(drillFuncToRange.containsKey(name)) {
+            argNumberRange = drillFuncToRange.get(name);
           } else {
-            boolean isDeterministic;
-            // prevent Drill from folding constant functions with types that cannot be materialized
-            // into literals
-            if (DrillConstExecutor.NON_REDUCIBLE_TYPES.contains(func.getReturnType().getMinorType())) {
-              isDeterministic = false;
-            } else {
-              isDeterministic = func.isDeterministic();
-            }
-            op = new DrillSqlOperator(name, func.getParamCount(), func.getReturnType(), isDeterministic);
+            argNumberRange = Pair.of(func.getParamCount(), func.getParamCount());
           }
-          operatorTable.add(function.getKey(), op);
+          functions.put(argNumberRange, func);
         }
+
+        if(!func.isDeterministic()) {
+          isDeterministic = false;
+        }
+      }
+      for (Entry<Pair<Integer, Integer>, Collection<DrillFuncHolder>> entry : functions.asMap().entrySet()) {
+        final DrillSqlOperator drillSqlOperator;
+        final Pair<Integer, Integer> range = entry.getKey();
+        final int max = range.getRight();
+        final int min = range.getLeft();
+        drillSqlOperator = new DrillSqlOperator(
+            name,
+            Lists.newArrayList(entry.getValue()),
+            min,
+            max,
+            isDeterministic);
+        operatorTable.add(name, drillSqlOperator);
+      }
+      for (Entry<Integer, Collection<DrillFuncHolder>> entry : aggregateFunctions.asMap().entrySet()) {
+        operatorTable.add(name, new DrillSqlAggOperator(name, Lists.newArrayList(entry.getValue()), entry.getKey()));
       }
     }
   }
-
 }

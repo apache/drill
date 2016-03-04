@@ -25,6 +25,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexContext;
@@ -50,6 +51,8 @@ public class DrillExtractConvertlet implements SqlRexConvertlet {
     final List<SqlNode> operands = call.getOperandList();
     final List<RexNode> exprs = new LinkedList<>();
 
+    String timeUnit = ((SqlIntervalQualifier) operands.get(0)).timeUnitRange.toString();
+
     RelDataTypeFactory typeFactory = cx.getTypeFactory();
 
     //RelDataType nullableReturnType =
@@ -59,7 +62,10 @@ public class DrillExtractConvertlet implements SqlRexConvertlet {
     }
 
     // Determine NULL-able using 2nd argument's Null-able.
-    RelDataType returnType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT), exprs.get(1).getType().isNullable());
+    RelDataType returnType = typeFactory.createTypeWithNullability(
+        typeFactory.createSqlType(
+            TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit)),
+            exprs.get(1).getType().isNullable());
 
     return rexBuilder.makeCall(returnType, call.getOperator(), exprs);
   }

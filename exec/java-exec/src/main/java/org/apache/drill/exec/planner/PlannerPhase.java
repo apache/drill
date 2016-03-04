@@ -135,6 +135,16 @@ public enum PlannerPhase {
     }
   },
 
+  SUM_CONVERSION("Convert SUM to $SUM0") {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
+      return PlannerPhase.mergedRuleSets(
+          RuleSets.ofList(
+              DrillReduceAggregatesRule.INSTANCE_SUM),
+          getStorageRules(context, plugins, this)
+          );
+    }
+  },
+
   PARTITION_PRUNING("Partition Prune Planning") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPruneScanRules(context), getStorageRules(context, plugins, this));

@@ -238,7 +238,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         }
 
         // Do Join Planning.
-        convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.JOIN_PLANNING, intermediateNode2);
+        final RelNode joinNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.JOIN_PLANNING, intermediateNode2);
+
+        // Convert SUM to $SUM0
+        convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.SUM_CONVERSION, joinNode);
       }
 
       final DrillRel drillRel = (DrillRel) convertedRelNode;

@@ -144,7 +144,7 @@ public class TestSimpleFunctions extends ExecTest {
         args,
         ExpressionPosition.UNKNOWN
     );
-    final FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
+    final FunctionResolver resolver = FunctionResolverFactory.getResolver();
     final DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
     assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
   }
