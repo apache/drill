@@ -89,7 +89,7 @@ void Logger::init(const char* path){
 #else 
             << "Current process id is: " << getpid() << std::endl
 #endif
-            << "Initialized Logging to file (" << ((path==NULL)?path:"std::out") << "). "
+            << "Initialized Logging to file (" << ((path!=NULL)?path:"std::out") << "). "
             << std::endl;
     }
 }
