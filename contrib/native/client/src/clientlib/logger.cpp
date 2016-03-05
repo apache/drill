@@ -16,7 +16,7 @@
 * limitations under the License.
 */
 
-#include <unistd.h>
+#include <sys/types.h>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/thread.hpp"
 #include "env.h"
