@@ -34,7 +34,7 @@ class Logger{
     public:
         Logger(){
             m_level = LOG_ERROR;
-            m_pOutStream = NULL;
+            m_pOutFileStream = NULL;
             m_pOutStream = &std::cout;
         }
         ~Logger(){ }
@@ -51,7 +51,7 @@ class Logger{
                 "ERROR  ",
                 "FATAL  "
             };
-            return levelNames[level];
+            return levelNames[level>=LOG_TRACE && level<=LOG_FATAL?level:LOG_ERROR];
         }
 
         // The logging level
@@ -79,19 +79,6 @@ class Logger{
     if (getLogger().m_pOutStream==NULL || level < getLogger().m_level); \
         else getLogger().log(level)       \
 
-
-#if 0
-#define DRILL_MT_LOG(LOG) \
-    { \
-    boost::lock_guard<boost::mutex> logLock(Drill::Logger::s_logMutex); \
-    LOG \
-    }
-
-#define DRILL_LOG(level) \
-    if (Logger::s_pOutStream==NULL || level < Drill::Logger::s_level); \
-        else Drill::Logger::log(level)       \
-
-#endif
 
 } // namespace Drill
 

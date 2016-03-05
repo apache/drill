@@ -330,10 +330,8 @@ int main(int argc, char* argv[]) {
         // To log to stderr
         //Drill::DrillClient::initLogging(NULL, l);
 
-        //Drill::DrillClientConfig::setBufferLimit(2*1024*1024); // 2MB. Allows us to hold at least two record batches.
         int nQueries=queryInputs.size();
-        Drill::DrillClientConfig::setBufferLimit(nQueries*2*1024*1024); // 2MB per query. Allows us to hold at least two record batches.
-
+        Drill::DrillClientConfig::setBufferLimit(nQueries*2*1024*1024); // 2MB per query. The size of a record batch may vary, but is unlikely to exceed the 256 MB which is the default. 
 
         if(!hshakeTimeout.empty()){
             Drill::DrillClientConfig::setHandshakeTimeout(atoi(hshakeTimeout.c_str()));

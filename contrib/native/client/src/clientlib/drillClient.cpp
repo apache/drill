@@ -62,8 +62,6 @@ DrillClientConfig::DrillClientConfig(){
 }
 
 DrillClientConfig::~DrillClientConfig(){
-    //TODO: close the logger
-    //getLogger.close();
 }
 
 void DrillClientConfig::initLogging(const char* path){
@@ -385,10 +383,12 @@ RecordIterator* DrillClient::submitQuery(Drill::QueryType t, const std::string& 
 }
 
 void* DrillClient::getApplicationContext(QueryHandle_t handle){
+    assert(handle!=NULL);
     return ((DrillClientQueryResult*)handle)->getListenerContext();
 }
 
 status_t DrillClient::getQueryStatus(QueryHandle_t handle){
+    assert(handle!=NULL);
     return ((DrillClientQueryResult*)handle)->getQueryStatus();
 }
 

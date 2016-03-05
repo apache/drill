@@ -16,6 +16,7 @@
 * limitations under the License.
 */
 
+#include <unistd.h>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/thread.hpp"
 #include "env.h"
@@ -43,10 +44,9 @@ std::string getTid(){
 }
 
 void Logger::init(const char* path){
-
     static bool initialized = false;
     boost::lock_guard<boost::mutex> logLock(m_logMutex);
-    if (!initialized && path != NULL && m_filepath.empty()) {
+    if (!initialized && path != NULL) {
         std::string fullname = path;
         size_t lastindex = fullname.find_last_of(".");
         std::string filename;
@@ -67,13 +67,13 @@ void Logger::init(const char* path){
         m_pOutFileStream = new std::ofstream;
         m_pOutFileStream->open(m_filepath.c_str(), std::ios_base::out | std::ios_base::app);
         if (!m_pOutFileStream->is_open()){
-            std::cerr << "Logfile could not be opened. Logging to stdout" << std::endl;
+            std::cerr << "Logfile ( " << m_filepath << ") could not be opened. Logging to stdout" << std::endl;
             m_filepath.erase();
             delete m_pOutFileStream; m_pOutFileStream=NULL;
         }
         initialized = true;
 
-        m_pOutStream = (m_pOutFileStream != NULL && m_pOutFileStream->is_open()) ? m_pOutFileStream : &std::cout;
+        m_pOutStream = (m_pOutFileStream != NULL) ? m_pOutFileStream : &std::cout;
 #if defined _WIN32 || defined _WIN64
 
         TCHAR szFile[MAX_PATH];
@@ -81,13 +81,15 @@ void Logger::init(const char* path){
 #endif
         *m_pOutStream
             << "Drill Client Library" << std::endl
-            << "Build Info :" <<  GIT_COMMIT_PROP << std::endl 
+            << "Build info:" <<  GIT_COMMIT_PROP << std::endl 
 
 #if defined _WIN32 || defined _WIN64
-            << "Loaded by process : " << szFile << std::endl
-            << "Current Process Id is: " << ::GetCurrentProcessId() << std::endl
+            << "Loaded by process: " << szFile << std::endl
+            << "Current process id is: " << ::GetCurrentProcessId() << std::endl
+#else 
+            << "Current process id is: " << getpid() << std::endl
 #endif
-            << "Initialized Logging to file (" << path << "). "
+            << "Initialized Logging to file (" << ((path==NULL)?path:"std::out") << "). "
             << std::endl;
     }
 }
@@ -100,6 +102,7 @@ void Logger::close(){
             m_pOutFileStream->close();
         }
         delete m_pOutFileStream; m_pOutFileStream = NULL;
+        m_pOutStream = &std::cout; // set it back to std::cout in case someone tries to log even after close
     }
 }
 

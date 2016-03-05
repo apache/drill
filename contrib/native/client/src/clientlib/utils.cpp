@@ -35,6 +35,7 @@ boost::mutex AllocatedBuffer::s_memCVMutex;
 boost::condition_variable AllocatedBuffer::s_memCV;
 size_t AllocatedBuffer::s_allocatedMem = 0;
 bool AllocatedBuffer::s_isBufferLimitReached = false;
+boost::mutex s_utilMutex;
 
 ByteBuf_t Utils::allocateBuffer(size_t len){
     boost::lock_guard<boost::mutex> memLock(AllocatedBuffer::s_memCVMutex);
@@ -61,9 +62,10 @@ void Utils::freeBuffer(ByteBuf_t b, size_t len){
 }
 
 void Utils::parseConnectStr(const char* connectStr,
-    std::string& pathToDrill,
-    std::string& protocol,
-    std::string& hostPortStr){
+  std::string& pathToDrill,
+  std::string& protocol,
+  std::string& hostPortStr){
+    boost::lock_guard<boost::mutex> memLock(s_utilMutex);
     char u[MAX_CONNECT_STR + 1];
     strncpy(u, connectStr, MAX_CONNECT_STR); u[MAX_CONNECT_STR] = 0;
     char* z = strtok(u, "=");

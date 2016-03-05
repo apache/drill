@@ -58,6 +58,7 @@ class AllocatedBuffer{
         static boost::condition_variable s_memCV;
         static size_t s_allocatedMem;
         static bool s_isBufferLimitReached;
+        static boost::mutex s_utilMutex; // for provideing safety around strtok and other non-reentrant functions
 
 };
 

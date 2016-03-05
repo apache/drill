@@ -104,6 +104,7 @@ connectionStatus_t DrillClientImpl::connect(const char* connStr){
             zook.close();
             m_bIsDirectConnection=true;  
         }else if(!strcmp(protocol.c_str(), "local")){
+            boost::lock_guard<boost::mutex> lock(m_dcMutex);//strtok is not reentrant
             char tempStr[MAX_CONNECT_STR+1];
             strncpy(tempStr, hostPortStr.c_str(), MAX_CONNECT_STR); tempStr[MAX_CONNECT_STR]=0;
             host=strtok(tempStr, ":");
@@ -115,6 +116,8 @@ connectionStatus_t DrillClientImpl::connect(const char* connStr){
         DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Connecting to endpoint: " << host << ":" << port << std::endl;)
         connectionStatus_t ret = this->connect(host.c_str(), port.c_str());
         return ret;
+    }else if(std::strcmp(connStr, m_connectStr.c_str())){ // tring to connect to a different address is not allowed if already connected
+        return handleConnError(CONN_ALREADYCONNECTED, getMessage(ERR_CONN_ALREADYCONN));
     }
     return CONN_SUCCESS;
 }
@@ -1406,9 +1409,11 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr){
             Utils::add(m_drillbits, drillbits);
             exec::DrillbitEndpoint e;
             size_t nextIndex=0;
-            boost::lock_guard<boost::mutex> cLock(m_cMutex);
-            m_lastConnection++;
-            nextIndex = (m_lastConnection)%(getDrillbitCount());
+            {
+                boost::lock_guard<boost::mutex> cLock(m_cMutex);
+                m_lastConnection++;
+                nextIndex = (m_lastConnection)%(getDrillbitCount());
+            }
             DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Pooled Connection"
                     << "(" << (void*)this << ")"
                     << ": Current counter is: " 
@@ -1437,6 +1442,7 @@ connectionStatus_t PooledDrillClientImpl::connect(const char* connStr){
         DrillClientImpl* pDrillClientImpl = new DrillClientImpl();
     stat =  pDrillClientImpl->connect(host.c_str(), port.c_str());
     if(stat == CONN_SUCCESS){
+        boost::lock_guard<boost::mutex> lock(m_poolMutex);
         m_clientConnections.push_back(pDrillClientImpl);
     }else{
         DrillClientError* pErr = pDrillClientImpl->getError();
@@ -1489,6 +1495,7 @@ void PooledDrillClientImpl::freeQueryResources(DrillClientQueryResult* pQryResul
 }
 
 bool PooledDrillClientImpl::Active(){
+    boost::lock_guard<boost::mutex> lock(m_poolMutex);
     for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
         if((*it)->Active()){
             return true;
@@ -1498,6 +1505,7 @@ bool PooledDrillClientImpl::Active(){
 }
 
 void PooledDrillClientImpl::Close() {
+    boost::lock_guard<boost::mutex> lock(m_poolMutex);
     for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
         (*it)->Close();
         delete *it;
@@ -1506,11 +1514,10 @@ void PooledDrillClientImpl::Close() {
 }
 
 DrillClientError* PooledDrillClientImpl::getError(){
-    //TODO: In DrillClientImpl, keep track of the time of each error. Return the newest.
-    //TODO: In DrillClient, getError should take a queryHandle_t to get an error message
     std::string errMsg;
     std::string nl="";
     uint32_t stat;
+    boost::lock_guard<boost::mutex> lock(m_poolMutex);
     for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
         if((*it)->getError() != NULL){
             errMsg+=nl+"Query"/*+(*it)->queryId() +*/":"+(*it)->getError()->msg;
@@ -1526,6 +1533,7 @@ DrillClientError* PooledDrillClientImpl::getError(){
 
 //Waits as long as any one drillbit connection has results pending
 void PooledDrillClientImpl::waitForResults(){
+    boost::lock_guard<boost::mutex> lock(m_poolMutex);
     for(std::vector<DrillClientImpl*>::iterator it = m_clientConnections.begin(); it != m_clientConnections.end(); ++it){
         (*it)->waitForResults();
     }
@@ -1545,9 +1553,11 @@ DrillClientImpl* PooledDrillClientImpl::getOneConnection(){
     while(pDrillClientImpl==NULL){
         if(m_queriesExecuted == 0){
             // First query ever sent can use the connection already established to authenticate the user
+            boost::lock_guard<boost::mutex> lock(m_poolMutex);
             pDrillClientImpl=m_clientConnections[0];// There should be one connection in the list when the first query is executed
         }else if(m_clientConnections.size() == m_maxConcurrentConnections){
             // Pool is full. Use one of the already established connections
+            boost::lock_guard<boost::mutex> lock(m_poolMutex);
             pDrillClientImpl = m_clientConnections[m_queriesExecuted%m_maxConcurrentConnections];
             if(!pDrillClientImpl->Active()){
                 Utils::eraseRemove(m_clientConnections, pDrillClientImpl);
@@ -1558,6 +1568,7 @@ DrillClientImpl* PooledDrillClientImpl::getOneConnection(){
             connectionStatus_t ret=CONN_SUCCESS;
             while(pDrillClientImpl==NULL && tries++ < 3){
                 if((ret=connect(m_connectStr.c_str()))==CONN_SUCCESS){
+                    boost::lock_guard<boost::mutex> lock(m_poolMutex);
                     pDrillClientImpl=m_clientConnections.back();
                     ret=pDrillClientImpl->validateHandshake(m_pUserProperties);
                     if(ret!=CONN_SUCCESS){

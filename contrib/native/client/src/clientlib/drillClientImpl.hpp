@@ -501,6 +501,7 @@ class PooledDrillClientImpl : public DrillClientImplBase{
         // When picking a drillClientImpl to use, we see how many queries each drillClientImpl
         // is currently executing. If none,  
         std::vector<DrillClientImpl*> m_clientConnections; 
+		boost::mutex m_poolMutex; // protect access to the vector
         
         //ZookeeperImpl zook;
         
