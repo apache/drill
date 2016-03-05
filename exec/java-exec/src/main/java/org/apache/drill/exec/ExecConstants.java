@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.exec.physical.impl.common.HashTable;
+import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.AdminOptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
@@ -282,4 +283,21 @@ public interface ExecConstants {
    */
   String ADMIN_USER_GROUPS_KEY = "security.admin.user_groups";
   StringValidator ADMIN_USER_GROUPS_VALIDATOR = new AdminOptionValidator(ADMIN_USER_GROUPS_KEY, "");
+
+  /**
+   * Option whose value is a string representing list of inbound impersonation policies.
+   *
+   * Impersonation policy format:
+   * [
+   *   {
+   *    proxy_principals : { users : [“...”], groups : [“...”] },
+   *    target_principals : { users : [“...”], groups : [“...”] }
+   *   },
+   *   ...
+   * ]
+   */
+  String IMPERSONATION_POLICIES_KEY = "exec.impersonation.inbound_policies";
+  StringValidator IMPERSONATION_POLICY_VALIDATOR =
+      new InboundImpersonationManager.InboundImpersonationPolicyValidator(IMPERSONATION_POLICIES_KEY, "[]");
+
 }

@@ -126,6 +126,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR,
       ExecConstants.ADMIN_USERS_VALIDATOR,
       ExecConstants.ADMIN_USER_GROUPS_VALIDATOR,
+      ExecConstants.IMPERSONATION_POLICY_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,

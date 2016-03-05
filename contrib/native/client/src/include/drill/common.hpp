@@ -140,6 +140,7 @@ typedef enum{
 #define USERPROP_USESSL   "useSSL"        // Not implemented yet
 #define USERPROP_FILEPATH "pemLocation"   // Not implemented yet
 #define USERPROP_FILENAME "pemFile"       // Not implemented yet
+#define USERPROP_IMPERSONATION_TARGET "impersonation_target"
 
 // Bitflags to describe user properties
 // Used in DrillUserProperties::USER_PROPERTIES
