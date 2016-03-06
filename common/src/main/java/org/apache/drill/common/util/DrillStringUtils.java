@@ -163,10 +163,10 @@ public class DrillStringUtils {
   public static int parseBinaryString(ByteBuf str, int strStart, int strEnd) {
     int length = (strEnd - strStart);
     int dstEnd = strStart;
-    for (int i = strStart; i < length ; i++) {
+    for (int i = strStart; i < strStart+length ; i++) {
       byte b = str.getByte(i);
       if (b == '\\'
-          && length > i+3
+          && strEnd > i+3
           && (str.getByte(i+1) == 'x' || str.getByte(i+1) == 'X')) {
         // ok, take next 2 hex digits.
         byte hd1 = str.getByte(i+2);

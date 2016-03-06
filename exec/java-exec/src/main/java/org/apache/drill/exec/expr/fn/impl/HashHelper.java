@@ -17,47 +17,52 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class HashHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashHelper.class);
 
-
-  /** taken from mahout **/
-  public static int hash(ByteBuffer buf, int seed) {
-    // save byte order for later restoration
-
-    int m = 0x5bd1e995;
-    int r = 24;
-
-    int h = seed ^ buf.remaining();
-
-    while (buf.remaining() >= 4) {
-      int k = buf.getInt();
-
-      k *= m;
-      k ^= k >>> r;
-      k *= m;
-
-      h *= m;
-      h ^= k;
-    }
-
-    if (buf.remaining() > 0) {
-      ByteBuffer finish = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
-      // for big-endian version, use this first:
-      // finish.position(4-buf.remaining());
-      finish.put(buf).rewind();
-      h ^= finish.getInt();
-      h *= m;
-    }
-
-    h ^= h >>> 13;
-    h *= m;
-    h ^= h >>> 15;
-
-    return h;
+  public static int hash32(int val, long seed) {
+    double converted = val;
+    return hash32(converted, seed);
+  }
+  public static int hash32(long val, long seed) {
+    double converted = val;
+    return hash32(converted, seed);
   }
 
+  public static int hash32(float val, long seed){
+    double converted = val;
+    return hash32(converted, seed);
+  }
+
+  public static int hash32(double val, long seed) {
+    //return com.google.common.hash.Hashing.murmur3_128().hashLong(Double.doubleToLongBits(val)).asInt();
+    return org.apache.drill.exec.expr.fn.impl.MurmurHash3.murmur3_32(Double.doubleToLongBits(val), (int)seed);
+  }
+  public static int hash32(int start, int end, DrillBuf buffer, int seed){
+    return org.apache.drill.exec.expr.fn.impl.MurmurHash3.murmur3_32(start, end, buffer, seed);
+  }
+
+  public static long hash64(float val, long seed){
+    double converted = val;
+    return hash64(converted, seed);
+  }
+
+  public static long hash64(double val, long seed){
+    return org.apache.drill.exec.expr.fn.impl.MurmurHash3.murmur3_64(Double.doubleToLongBits(val), (int)seed);
+  }
+
+  public static long hash64(long val, long seed){
+    double converted = val;
+    return hash64(converted, seed);
+
+  }
+
+  public static long hash64(long start, long end, DrillBuf buffer, long seed){
+    return org.apache.drill.exec.expr.fn.impl.MurmurHash3.murmur3_64(start, end, buffer, (int)seed);
+  }
 }
