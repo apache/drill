@@ -79,7 +79,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
       // set length of zero, each index in the vector defaults to null so no
       // need to set the nullability
       if (variableWidthVector == null) {
-        decimalLengths.add(null); // store null length in BYTES for null value
+        addDecimalLength(null); // store null length in BYTES for null value
       } else {
         variableWidthVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + pageReader.valuesReadyToRead, 0);
       }
@@ -108,7 +108,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
 =======
 
     if (variableWidthVector == null) {
-      decimalLengths.add(dataTypeLengthInBits); // store decimal length variable length decimal field
+      addDecimalLength(dataTypeLengthInBits); // store decimal length variable length decimal field
     }
     else {
       // I think this also needs to happen if it is null for the random access
@@ -149,7 +149,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     currentValNull = variableWidthVector.getAccessor().isNull(valuesReadInCurrentPass);
 =======
     if (variableWidthVector == null) {
-      currentValNull = decimalLengths.get(valuesReadInCurrentPass) == null;
+      currentValNull = getDecimalLength(valuesReadInCurrentPass) == null;
     }
     else {
       currentValNull = variableWidthVector.getAccessor().getObject(valuesReadInCurrentPass) == null;
