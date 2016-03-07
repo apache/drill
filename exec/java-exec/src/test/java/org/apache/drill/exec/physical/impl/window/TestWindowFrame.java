@@ -423,4 +423,20 @@ public class TestWindowFrame extends BaseTestQuery {
     partition.rowAggregated();
     assertEquals(5, partition.ntile(5));
   }
+
+  @Test
+  public void test4457() throws Exception {
+    runSQL(String.format("CREATE TABLE dfs_test.tmp.`4457` AS " +
+      "SELECT columns[0] AS c0, NULLIF(columns[1], 'null') AS c1 " +
+      "FROM dfs_test.`%s/window/4457.csv`", TEST_RES_PATH));
+
+    testBuilder()
+      .sqlQuery("SELECT COALESCE(FIRST_VALUE(c1) OVER(ORDER BY c0 RANGE BETWEEN CURRENT ROW AND CURRENT ROW), 'EMPTY') AS fv FROM dfs_test.tmp.`4457`")
+      .ordered()
+      .baselineColumns("fv")
+      .baselineValues("a")
+      .baselineValues("b")
+      .baselineValues("EMPTY")
+      .go();
+  }
 }
