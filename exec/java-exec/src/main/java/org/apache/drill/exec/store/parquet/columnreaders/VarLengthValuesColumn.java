@@ -93,7 +93,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
    */
   protected Integer getDecimalLength(int subscript) {
 	  /* Including this code (now commented out) throws an exception, demonstrating
-	   * for accessing subscript 0 in a list with 107 items (for the unit test).
+	   * that the list is definitely not always accessed at the end.
 	  if (subscript != decimalLengths.size() - 1) {
 		  throw new UnsupportedOperationException("Accessing decimalLengths subscript " + subscript + " with size " + decimalLengths.size());
 	  }
