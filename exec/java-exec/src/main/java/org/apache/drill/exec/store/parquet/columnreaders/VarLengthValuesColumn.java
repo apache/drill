@@ -83,7 +83,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
    * @param val decimal length, or null if the value is NULL
    */
   protected void addDecimalLength(Integer val) {
-	  decimalLengths.add(val);
+    decimalLengths.add(val);
   }
 
   /**
@@ -92,13 +92,13 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
    * @return Integer object indicating length, or null if the value is NULL
    */
   protected Integer getDecimalLength(int subscript) {
-	  /* Including this code (now commented out) throws an exception, demonstrating
-	   * that the list is definitely not always accessed at the end.
-	  if (subscript != decimalLengths.size() - 1) {
-		  throw new UnsupportedOperationException("Accessing decimalLengths subscript " + subscript + " with size " + decimalLengths.size());
-	  }
-	  */
-	  return decimalLengths.get(subscript);
+    /* Including this code (now commented out) throws an exception, demonstrating
+     * that the list is definitely not always accessed at the end.
+    if (subscript != decimalLengths.size() - 1) {
+      throw new UnsupportedOperationException("Accessing decimalLengths subscript " + subscript + " with size " + decimalLengths.size());
+    }
+    */
+    return decimalLengths.get(subscript);
   }
 
   public abstract boolean setSafe(int index, DrillBuf bytes, int start, int length);
