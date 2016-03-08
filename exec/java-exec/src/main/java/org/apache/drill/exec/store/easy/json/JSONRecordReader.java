@@ -48,6 +48,8 @@ import com.google.common.collect.ImmutableList;
 public class JSONRecordReader extends AbstractRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
 
+  public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
+
   private VectorContainerWriter writer;
 
   // Data we're consuming
@@ -192,7 +194,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     ReadState write = null;
 //    Stopwatch p = new Stopwatch().start();
     try{
-      outside: while(recordCount < BaseValueVector.INITIAL_VALUE_ALLOCATION) {
+      outside: while(recordCount < DEFAULT_ROWS_PER_BATCH) {
         writer.setPosition(recordCount);
         write = jsonReader.write(writer);
 
