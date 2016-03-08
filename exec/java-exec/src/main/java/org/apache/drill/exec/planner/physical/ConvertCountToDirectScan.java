@@ -25,7 +25,6 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -104,10 +103,6 @@ public class ConvertCountToDirectScan extends Prule {
       return;
     }
 
-    if (proj != null && !ProjectRemoveRule.isTrivial(proj)) {
-      return;
-    }
-
     AggregateCall aggCall = agg.getAggCallList().get(0);
 
     if (aggCall.getAggregation().getName().equals("COUNT") ) {
@@ -122,6 +117,24 @@ public class ConvertCountToDirectScan extends Prule {
       } else if (aggCall.getArgList().size() == 1) {
       // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
         int index = aggCall.getArgList().get(0);
+
+        if (proj != null) {
+          // project in the middle of Agg and Scan : Only when input of AggCall is a RexInputRef in Project, we find the index of Scan's field.
+          // For instance,
+          // Agg - count($0)
+          //  \
+          //  Proj - Exp={$1}
+          //    \
+          //   Scan (col1, col2).
+          // return count of "col2" in Scan's metadata, if found.
+
+          if (proj.getProjects().get(index) instanceof RexInputRef) {
+            index = ((RexInputRef) proj.getProjects().get(index)).getIndex();
+          } else {
+            return;  // do not apply for all other cases.
+          }
+        }
+
         String columnName = scan.getRowType().getFieldNames().get(index).toLowerCase();
 
         cnt = oldGrpScan.getColumnValueCount(SchemaPath.getSimplePath(columnName));

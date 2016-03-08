@@ -30,4 +30,56 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
         new String[] { "CASE" },
         new String[]{});
   }
+
+  @Test
+  public void ensureConvertSimpleCountToDirectScan() throws Exception {
+    final String sql = "select count(*) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(
+        sql,
+        new String[] { "PojoRecordReader" },
+        new String[]{});
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(25L)
+        .go();
+
+  }
+
+  @Test
+  public void ensureConvertSimpleCountConstToDirectScan() throws Exception {
+    final String sql = "select count(100) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(
+        sql,
+        new String[] { "PojoRecordReader" },
+        new String[]{});
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(25L)
+        .go();
+
+  }
+
+  @Test
+  public void ensureConvertSimpleCountConstExprToDirectScan() throws Exception {
+    final String sql = "select count(1 + 2) as cnt from cp.`tpch/nation.parquet`";
+    testPlanMatchingPatterns(
+        sql,
+        new String[] { "PojoRecordReader" },
+        new String[]{});
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(25L)
+        .go();
+
+  }
+
 }
