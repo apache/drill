@@ -122,7 +122,14 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return;
     }
 
-    final LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    LogicalExpression conditionExp = null;
+    try {
+      conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    } catch (ClassCastException e) {
+      // MD-771 bug in DrillOptiq.toDrill() causes filter condition on ITEM operator to throw ClassCastException
+      // For such cases, we return without pushdown
+      return;
+    }
     final JsonConditionBuilder jsonConditionBuilder = new JsonConditionBuilder(groupScan, conditionExp);
     final JsonScanSpec newScanSpec = jsonConditionBuilder.parseTree();
     if (newScanSpec == null) {

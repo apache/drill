@@ -49,6 +49,15 @@ public class TestSimpleJson extends BaseJsonTest {
   }
 
   @Test
+  public void testKVGen() throws Exception {
+    setColumnWidths(new int[] {21, 10, 6});
+    final String sql = "select _id, t.parking[0].`key` K, t.parking[0].`value` V from"
+        + " (select _id, kvgen(b.attributes.Parking) as parking from hbase.business b)"
+        + " as t where t.parking[0].`key` = 'garage' AND t.parking[0].`value` = true";
+    runSQLAndVerifyCount(sql, 1);
+  }
+
+  @Test
   public void testPushdownStringEqual() throws Exception {
     setColumnWidths(new int[] {25, 40, 40, 40});
     final String sql = "SELECT\n"
