@@ -1389,10 +1389,10 @@
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
         <rat.excludeSubprojects>true</rat.excludeSubprojects>
-        <hive.version>1.2.0-mapr-1510</hive.version>
-        <hbase.version>0.98.9-mapr-1503-m7-4.1.0</hbase.version>
-        <hadoop.version>2.7.0-mapr-1506</hadoop.version>
-        <mapr.core.version>4.1.0-mapr</mapr.core.version>
+        <hive.version>1.2.0-mapr-1601</hive.version>
+        <hbase.version>1.1.1-mapr-1602-m7-5.1.0</hbase.version>
+        <hadoop.version>2.7.0-mapr-1602</hadoop.version>
+        <mapr.core.version>5.1.0-mapr</mapr.core.version>
       </properties>
       <dependencyManagement>
         <dependencies>
@@ -1585,11 +1585,6 @@
           </dependency>
           <dependency>
             <groupId>com.mapr.fs</groupId>
-            <artifactId>libprotodefs</artifactId>
-            <version>${mapr.core.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>com.mapr.fs</groupId>
             <artifactId>mapr-hbase</artifactId>
             <version>${mapr.core.version}</version>
             <exclusions>
@@ -1627,6 +1622,27 @@
             <groupId>com.mapr.hadoop</groupId>
             <artifactId>maprfs</artifactId>
             <version>${mapr.core.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>com.mapr.db</groupId>
+            <artifactId>maprdb</artifactId>
+            <version>${mapr.core.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.ojai</groupId>
+            <artifactId>ojai</artifactId>
+            <version>1.0</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.5</version>
           </dependency>
           <dependency>
             <groupId>xerces</groupId>
@@ -1775,6 +1791,21 @@
                 <groupId>asm</groupId>
               </exclusion>
             </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-annotations</artifactId>
+            <version>${hbase.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>${hbase.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-protocol</artifactId>
+            <version>${hbase.version}</version>
           </dependency>
         </dependencies>
       </dependencyManagement>
