@@ -1511,6 +1511,10 @@ void PooledDrillClientImpl::Close() {
         delete *it;
     }
     m_clientConnections.clear();
+    if(m_pUserProperties!=NULL){ delete m_pUserProperties; m_pUserProperties=NULL;}
+    if(m_pError!=NULL){ delete m_pError; m_pError=NULL;}
+    m_lastConnection=-1;
+    m_queriesExecuted=0;
 }
 
 DrillClientError* PooledDrillClientImpl::getError(){

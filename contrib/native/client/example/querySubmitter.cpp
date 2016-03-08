@@ -321,9 +321,11 @@ int main(int argc, char* argv[]) {
 
         Drill::DrillClient client;
 #if defined _WIN32 || defined _WIN64
-		const char* logpathPrefix = "C:\\Users\\Administrator\\Documents\\temp\\drillclient";
+        TCHAR temp[MAX_PATH];
+        GetTempPath(MAX_PATH, tempPath);
+		char* logpathPrefix = tempPath;
 #else
-		const char* logpathPrefix = "/var/log/drill/drillclient";
+		char* logpathPrefix = "/var/log/drill/drillclient";
 #endif
 		// To log to file
         Drill::DrillClient::initLogging(logpathPrefix, l);
