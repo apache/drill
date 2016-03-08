@@ -321,9 +321,11 @@ int main(int argc, char* argv[]) {
 
         Drill::DrillClient client;
 #if defined _WIN32 || defined _WIN64
-        TCHAR temp[MAX_PATH];
+        TCHAR tempPath[MAX_PATH];
         GetTempPath(MAX_PATH, tempPath);
-		char* logpathPrefix = tempPath;
+		char logpathPrefix[MAX_PATH + 128];
+		strcpy(logpathPrefix,tempPath);
+		strcat(logpathPrefix, "\\drillclient");
 #else
 		char* logpathPrefix = "/var/log/drill/drillclient";
 #endif
