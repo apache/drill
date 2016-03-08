@@ -98,7 +98,11 @@ public class JsonReader extends BaseJsonProcessor {
       fieldPath = fieldPath.getChild();
     }
     if (fieldWriter.isEmptyMap()) {
-      fieldWriter.integer(fieldPath.getNameSegment().getPath());
+      if (allTextMode) {
+        fieldWriter.varChar(fieldPath.getNameSegment().getPath());
+      } else {
+        fieldWriter.integer(fieldPath.getNameSegment().getPath());
+      }
     }
   }
 

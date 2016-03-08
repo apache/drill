@@ -180,4 +180,23 @@ public class TestJsonRecordReader extends BaseTestQuery {
         .sqlBaselineQuery(baselineQuery)
         .go();
   }
+
+  @Test
+  public void drill_4479() throws Exception {
+    try {
+      testNoResult("alter session set `store.json.all_text_mode` = true");
+      String query = "select c, count(*) as cnt from dfs.`${WORKING_PATH}/src/test/resources/jsoninput/mostlynulls1.json` group by c";
+      test(query);
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("c", "cnt")
+          .baselineValues("null", "4096")
+          .baselineValues("Hello World", "1")
+          .go();
+    } finally {
+      testNoResult("alter session set `store.json.all_text_mode` = false");
+    }
+  }
+
 }
