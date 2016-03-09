@@ -34,8 +34,8 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.QueryTestUtil;
 import org.apache.drill.SingleRowListener;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.concurrent.ExtendedLatch;
-import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -275,7 +275,7 @@ public class TestDrillbitResilience extends DrillTest {
 
           @Override
           public void cleanup() {
-            DrillAutoCloseables.closeNoChecked(bufferAllocator);
+            AutoCloseables.closeNoChecked(bufferAllocator);
           }
         };
 

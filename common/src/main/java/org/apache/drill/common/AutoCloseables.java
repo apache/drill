@@ -66,7 +66,7 @@ public class AutoCloseables {
 
   /**
    * Closes all autoCloseables if not null and suppresses subsequent exceptions if more than one
-   * @param autoCloseables the closeables to close
+   * @param ac the closeables to close
    */
   public static void close(Iterable<? extends AutoCloseable> ac) throws Exception {
     Exception topLevelException = null;
@@ -86,5 +86,30 @@ public class AutoCloseables {
     if (topLevelException != null) {
       throw topLevelException;
     }
+  }
+
+  /**
+   * close() an {@see java.lang.AutoCloseable} without throwing a (checked)
+   * {@see java.lang.Exception}. This wraps the close() call with a
+   * try-catch that will rethrow an Exception wrapped with a
+   * {@see java.lang.RuntimeException}, providing a way to call close()
+   * without having to do the try-catch everywhere or propagate the Exception.
+   *
+   * @param autoCloseable the AutoCloseable to close; may be null
+   * @throws RuntimeException if an Exception occurs; the Exception is
+   *   wrapped by the RuntimeException
+   */
+  public static void closeNoChecked(final AutoCloseable autoCloseable) {
+    if (autoCloseable != null) {
+      try {
+        autoCloseable.close();
+      } catch(final Exception e) {
+        throw new RuntimeException("Exception while closing", e);
+      }
+    }
+  }
+
+  // prevents instantiation
+  private AutoCloseables() {
   }
 }

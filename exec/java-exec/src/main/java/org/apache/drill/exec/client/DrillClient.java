@@ -25,7 +25,6 @@ import io.netty.buffer.DrillBuf;
 import io.netty.channel.EventLoopGroup;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +35,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -302,8 +301,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     if (this.client != null) {
       this.client.close();
     }
-    if (this.ownsAllocator && allocator != null) {
-      DrillAutoCloseables.closeNoChecked(allocator);
+    if (ownsAllocator && allocator != null) {
+      AutoCloseables.closeNoChecked(allocator);
     }
     if (ownsZkConnection) {
       if (clusterCoordinator != null) {

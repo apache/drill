@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.complex.writer;
 
 import java.io.ByteArrayOutputStream;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -52,7 +52,7 @@ public class TestRepeated {
 
   @AfterClass
   public static void destroyAllocator() {
-    DrillAutoCloseables.closeNoChecked(allocator);
+    AutoCloseables.closeNoChecked(allocator);
   }
 //
 //  @Test
