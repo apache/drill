@@ -51,7 +51,7 @@ public interface ExecConstants {
   String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
   String USE_IP_ADDRESS = "drill.exec.rpc.use.ip";
   String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
-  String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
+  @Deprecated String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
   String TRACE_DUMP_DIRECTORY = "drill.exec.trace.directory";
   String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";

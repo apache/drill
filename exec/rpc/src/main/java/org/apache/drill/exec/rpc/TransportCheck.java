@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.base.Stopwatch;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -27,15 +28,19 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.internal.SystemPropertyUtil;
+import org.slf4j.Logger;
 
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * TransportCheck decides whether or not to use the native EPOLL mechanism for communication.
  */
 public class TransportCheck {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransportCheck.class);
+//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransportCheck.class);
 
   private static final String USE_LINUX_EPOLL = "drill.exec.enable-epoll";
 
@@ -74,5 +79,37 @@ public class TransportCheck {
      }else{
        return new NioEventLoopGroup(nThreads, new NamedThreadFactory(prefix));
      }
+  }
+
+  /**
+   * Shuts down the given event loop group gracefully.
+   *
+   * @param eventLoopGroup event loop group to shutdown
+   * @param groupName group name
+   * @param logger logger
+   */
+  public static void shutDownEventLoopGroup(final EventLoopGroup eventLoopGroup,
+                                            final String groupName,
+                                            final Logger logger) {
+    try {
+      final Stopwatch watch = Stopwatch.createStarted();
+      // this takes 1s to complete
+      // known issue: https://github.com/netty/netty/issues/2545
+      eventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).get();
+      final long elapsed = watch.elapsed(MILLISECONDS);
+      if (elapsed > 500) {
+        logger.info("Closed " + groupName + " in " + elapsed + " ms.");
+      }
+    } catch (final InterruptedException | ExecutionException e) {
+      logger.warn("Failure while shutting down {}.", groupName, e);
+
+      // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
+      // interruption and respond to it if it wants to.
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  // prevents instantiation
+  private TransportCheck() {
   }
 }

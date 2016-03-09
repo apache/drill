@@ -132,8 +132,8 @@ public class DrillbitContext implements AutoCloseable {
     return this.storagePlugins;
   }
 
-  public EventLoopGroup getBitLoopGroup() {
-    return context.getBitLoopGroup();
+  public EventLoopGroup getUserLoopGroup() {
+    return context.getUserLoopGroup();
   }
 
   public DataConnectionCreator getDataConnectionsPool() {

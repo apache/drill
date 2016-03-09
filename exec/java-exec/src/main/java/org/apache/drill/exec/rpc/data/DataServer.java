@@ -62,7 +62,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         alloc.getAsByteBufAllocator(),
-        context.getBitLoopGroup());
+        context.getDataLoopGroup());
     this.context = context;
     this.workBus = workBus;
     this.bee = bee;

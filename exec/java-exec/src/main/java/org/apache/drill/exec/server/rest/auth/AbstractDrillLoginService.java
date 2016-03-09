@@ -50,6 +50,8 @@ public abstract class AbstractDrillLoginService implements LoginService {
           .setConfig(drillbitContext.getConfig())
           .setClusterCoordinator(drillbitContext.getClusterCoordinator())
           .setAllocator(drillbitContext.getAllocator())
+          .setEventLoopGroup(drillbitContext.getUserLoopGroup())
+          .setExecutorService(drillbitContext.getExecutor())
           .build();
       final Properties props = new Properties();
       props.setProperty("user", userName);

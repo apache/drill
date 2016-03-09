@@ -49,7 +49,7 @@ public class DataClient extends BasicClient<RpcType, DataClientConnection, BitCl
     super(
         DataRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         context.getAllocator().getAsByteBufAllocator(),
-        context.getBitClientLoopGroup(),
+        context.getDataLoopGroup(),
         RpcType.HANDSHAKE,
         BitServerHandshake.class,
         BitServerHandshake.PARSER);

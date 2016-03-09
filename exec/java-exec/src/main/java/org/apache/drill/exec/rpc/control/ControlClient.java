@@ -54,7 +54,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
       BootStrapContext context, ControlConnectionManager.CloseHandlerCreator closeHandlerFactory) {
     super(ControlRpcConfig.getMapping(context.getConfig(), context.getExecutor()),
         allocator.getAsByteBufAllocator(),
-        context.getBitLoopGroup(),
+        context.getControlLoopGroup(),
         RpcType.HANDSHAKE,
         BitControlHandshake.class,
         BitControlHandshake.PARSER);

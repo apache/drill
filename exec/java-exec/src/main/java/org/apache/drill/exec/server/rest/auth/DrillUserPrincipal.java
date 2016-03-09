@@ -122,6 +122,8 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
             .setConfig(drillbitContext.getConfig())
             .setClusterCoordinator(drillbitContext.getClusterCoordinator())
             .setAllocator(drillbitContext.getAllocator())
+            .setEventLoopGroup(drillbitContext.getUserLoopGroup())
+            .setExecutorService(drillbitContext.getExecutor())
             .build();
         drillClient.connect();
         return  drillClient;
