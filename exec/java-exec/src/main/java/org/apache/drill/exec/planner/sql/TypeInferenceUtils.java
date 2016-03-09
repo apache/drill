@@ -227,7 +227,9 @@ public class TypeInferenceUtils {
 
       final DrillFuncHolder func = resolveDrillFuncHolder(opBinding, functions);
       final RelDataType returnType = getReturnType(opBinding, func);
-      return returnType;
+      return returnType.getSqlTypeName() == SqlTypeName.VARBINARY
+          ? createCalciteTypeWithNullability(factory, SqlTypeName.ANY, returnType.isNullable())
+              : returnType;
     }
 
     private static RelDataType getReturnType(final SqlOperatorBinding opBinding, final DrillFuncHolder func) {
@@ -512,19 +514,18 @@ public class TypeInferenceUtils {
       RelDataType ret = factory.createTypeWithNullability(
           opBinding.getOperandType(1),
           isNullable);
-
       if (opBinding instanceof SqlCallBinding) {
         SqlCallBinding callBinding = (SqlCallBinding) opBinding;
         SqlNode operand0 = callBinding.operand(0);
 
         // dynamic parameters and null constants need their types assigned
         // to them using the type they are casted to.
-        if (((operand0 instanceof SqlLiteral)
-                && (((SqlLiteral) operand0).getValue() == null))
+        if(((operand0 instanceof SqlLiteral)
+            && (((SqlLiteral) operand0).getValue() == null))
                 || (operand0 instanceof SqlDynamicParam)) {
           callBinding.getValidator().setValidatedNodeType(
-                  operand0,
-                  ret);
+              operand0,
+              ret);
         }
       }
 

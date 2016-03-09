@@ -23,10 +23,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
@@ -35,9 +38,11 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
+import org.apache.drill.exec.planner.sql.DrillSqlAggOperatorNotInfer;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
 import com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.exec.planner.sql.DrillSqlOperatorNotInfer;
 
 /**
  * Registry of Drill functions.
@@ -122,6 +127,13 @@ public class DrillFunctionRegistry {
   }
 
   public void register(DrillOperatorTable operatorTable) {
+    registerForInference(operatorTable);
+    registerForDefault(operatorTable);
+  }
+
+  public void registerForInference(DrillOperatorTable operatorTable) {
+    final Map<String, DrillSqlOperator.DrillSqlOperatorBuilder> map = Maps.newHashMap();
+    final Map<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> mapAgg = Maps.newHashMap();
     for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.asMap().entrySet()) {
       final ArrayListMultimap<Pair<Integer, Integer>, DrillFuncHolder> functions = ArrayListMultimap.create();
       final ArrayListMultimap<Integer, DrillFuncHolder> aggregateFunctions = ArrayListMultimap.create();
@@ -146,20 +158,79 @@ public class DrillFunctionRegistry {
         }
       }
       for (Entry<Pair<Integer, Integer>, Collection<DrillFuncHolder>> entry : functions.asMap().entrySet()) {
-        final DrillSqlOperator drillSqlOperator;
         final Pair<Integer, Integer> range = entry.getKey();
         final int max = range.getRight();
         final int min = range.getLeft();
-        drillSqlOperator = new DrillSqlOperator(
-            name,
-            Lists.newArrayList(entry.getValue()),
-            min,
-            max,
-            isDeterministic);
-        operatorTable.add(name, drillSqlOperator);
+        if(map.containsKey(name)) {
+          final DrillSqlOperator.DrillSqlOperatorBuilder drillSqlOperatorBuilder = map.get(name);
+          drillSqlOperatorBuilder
+              .addFunctions(entry.getValue())
+              .setArgumentCount(min, max)
+              .setDeterministic(isDeterministic);
+        } else {
+          final DrillSqlOperator.DrillSqlOperatorBuilder drillSqlOperatorBuilder = new DrillSqlOperator.DrillSqlOperatorBuilder();
+          drillSqlOperatorBuilder
+              .setName(name)
+              .addFunctions(entry.getValue())
+              .setArgumentCount(min, max)
+              .setDeterministic(isDeterministic);
+
+          map.put(name, drillSqlOperatorBuilder);
+        }
       }
       for (Entry<Integer, Collection<DrillFuncHolder>> entry : aggregateFunctions.asMap().entrySet()) {
-        operatorTable.add(name, new DrillSqlAggOperator(name, Lists.newArrayList(entry.getValue()), entry.getKey()));
+        if(mapAgg.containsKey(name)) {
+          final DrillSqlAggOperator.DrillSqlAggOperatorBuilder drillSqlAggOperatorBuilder = mapAgg.get(name);
+          drillSqlAggOperatorBuilder
+              .addFunctions(entry.getValue())
+              .setArgumentCount(entry.getKey(), entry.getKey());
+        } else {
+          final DrillSqlAggOperator.DrillSqlAggOperatorBuilder drillSqlAggOperatorBuilder = new DrillSqlAggOperator.DrillSqlAggOperatorBuilder();
+          drillSqlAggOperatorBuilder
+              .setName(name)
+              .addFunctions(entry.getValue())
+              .setArgumentCount(entry.getKey(), entry.getKey());
+
+          mapAgg.put(name, drillSqlAggOperatorBuilder);
+        }
+      }
+    }
+
+    for(final Entry<String, DrillSqlOperator.DrillSqlOperatorBuilder> entry : map.entrySet()) {
+      operatorTable.addInference(
+          entry.getKey(),
+          entry.getValue().build());
+    }
+
+    for(final Entry<String, DrillSqlAggOperator.DrillSqlAggOperatorBuilder> entry : mapAgg.entrySet()) {
+      operatorTable.addInference(
+          entry.getKey(),
+          entry.getValue().build());
+    }
+  }
+
+  public void registerForDefault(DrillOperatorTable operatorTable) {
+    SqlOperator op;
+    for (Entry<String, Collection<DrillFuncHolder>> function : registeredFunctions.asMap().entrySet()) {
+      Set<Integer> argCounts = Sets.newHashSet();
+      String name = function.getKey().toUpperCase();
+      for (DrillFuncHolder func : function.getValue()) {
+        if (argCounts.add(func.getParamCount())) {
+          if (func.isAggregating()) {
+            op = new DrillSqlAggOperatorNotInfer(name, func.getParamCount());
+          } else {
+            boolean isDeterministic;
+            // prevent Drill from folding constant functions with types that cannot be materialized
+            // into literals
+            if (DrillConstExecutor.NON_REDUCIBLE_TYPES.contains(func.getReturnType().getMinorType())) {
+              isDeterministic = false;
+            } else {
+              isDeterministic = func.isDeterministic();
+            }
+            op = new DrillSqlOperatorNotInfer(name, func.getParamCount(), func.getReturnType(), isDeterministic);
+          }
+          operatorTable.addDefault(function.getKey(), op);
+        }
       }
     }
   }

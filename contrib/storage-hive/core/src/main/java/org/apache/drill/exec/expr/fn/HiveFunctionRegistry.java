@@ -43,6 +43,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
+import org.apache.drill.exec.planner.sql.HiveUDFOperatorNotInfer;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
@@ -84,7 +85,8 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
   @Override
   public void register(DrillOperatorTable operatorTable) {
     for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
-      operatorTable.add(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
+      operatorTable.addDefault(name, new HiveUDFOperatorNotInfer(name.toUpperCase()));
+      operatorTable.addInference(name, new HiveUDFOperator(name.toUpperCase(), new HiveSqlReturnTypeInference()));
     }
   }
 

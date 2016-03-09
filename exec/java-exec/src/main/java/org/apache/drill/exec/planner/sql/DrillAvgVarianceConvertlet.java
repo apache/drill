@@ -23,9 +23,12 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.util.Util;
@@ -40,7 +43,16 @@ import org.apache.calcite.util.Util;
 public class DrillAvgVarianceConvertlet implements SqlRexConvertlet {
 
   private final SqlAvgAggFunction.Subtype subtype;
-  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false);
+  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false,
+      new SqlReturnTypeInference() {
+        @Override
+        public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+          return TypeInferenceUtils.createCalciteTypeWithNullability(
+              opBinding.getTypeFactory(),
+              SqlTypeName.ANY,
+              opBinding.getOperandType(0).isNullable());
+        }
+      });
 
   public DrillAvgVarianceConvertlet(SqlAvgAggFunction.Subtype subtype) {
     this.subtype = subtype;

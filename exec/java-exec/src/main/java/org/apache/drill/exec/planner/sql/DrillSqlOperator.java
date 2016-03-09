@@ -19,12 +19,17 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillSqlOperator extends SqlFunction {
@@ -39,15 +44,54 @@ public class DrillSqlOperator extends SqlFunction {
    * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
    */
   @Deprecated
-  public DrillSqlOperator(String name, int argCount, boolean isDeterministic) {
-    this(name, new ArrayList<DrillFuncHolder>(), argCount, argCount, isDeterministic);
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic) {
+    this(name,
+        argCount,
+        isDeterministic,
+        DynamicReturnType.INSTANCE);
   }
 
-  public DrillSqlOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, boolean isDeterministic) {
+  /**
+   * This constructor exists for the legacy reason.
+   *
+   * It is because Drill cannot access to DrillOperatorTable at the place where this constructor is being called.
+   * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
+   */
+  @Deprecated
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic,
+      final SqlReturnTypeInference sqlReturnTypeInference) {
+    this(name,
+        new ArrayList<DrillFuncHolder>(),
+        argCount,
+        argCount,
+        isDeterministic,
+        sqlReturnTypeInference);
+  }
+
+  /**
+   * This constructor exists for the legacy reason.
+   *
+   * It is because Drill cannot access to DrillOperatorTable at the place where this constructor is being called.
+   * In principle, if Drill needs a DrillSqlOperator, it is supposed to go to DrillOperatorTable for pickup.
+   */
+  @Deprecated
+  public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic, final RelDataType type) {
+    this(name,
+        new ArrayList<DrillFuncHolder>(),
+        argCount,
+        argCount,
+        isDeterministic, new SqlReturnTypeInference() {
+          @Override
+          public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+            return type;
+          }
+        });
+  }
+
+  protected DrillSqlOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, boolean isDeterministic,
+      SqlReturnTypeInference sqlReturnTypeInference) {
     super(new SqlIdentifier(name, SqlParserPos.ZERO),
-        TypeInferenceUtils.getDrillSqlReturnTypeInference(
-            name,
-            functions),
+        sqlReturnTypeInference,
         null,
         Checker.getChecker(argCountMin, argCountMax),
         null,
@@ -63,5 +107,48 @@ public class DrillSqlOperator extends SqlFunction {
 
   public List<DrillFuncHolder> getFunctions() {
     return functions;
+  }
+
+  public static class DrillSqlOperatorBuilder {
+    private String name;
+    private final List<DrillFuncHolder> functions = Lists.newArrayList();
+    private int argCountMin = Integer.MAX_VALUE;
+    private int argCountMax = Integer.MIN_VALUE;
+    private boolean isDeterministic = true;
+
+    public DrillSqlOperatorBuilder setName(final String name) {
+      this.name = name;
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder addFunctions(Collection<DrillFuncHolder> functions) {
+      this.functions.addAll(functions);
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setArgumentCount(final int argCountMin, final int argCountMax) {
+      this.argCountMin = Math.min(this.argCountMin, argCountMin);
+      this.argCountMax = Math.max(this.argCountMax, argCountMax);
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setDeterministic(boolean isDeterministic) {
+      if(this.isDeterministic) {
+        this.isDeterministic = isDeterministic;
+      }
+      return this;
+    }
+
+    public DrillSqlOperator build() {
+      return new DrillSqlOperator(
+          name,
+          functions,
+          argCountMin,
+          argCountMax,
+          isDeterministic,
+          TypeInferenceUtils.getDrillSqlReturnTypeInference(
+              name,
+              functions));
+    }
   }
 }

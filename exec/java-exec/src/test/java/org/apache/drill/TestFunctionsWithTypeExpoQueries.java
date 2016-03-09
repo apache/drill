@@ -29,7 +29,7 @@ import java.util.List;
 public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   @Test
   public void testConcatWithMoreThanTwoArgs() throws Exception {
-    final String query = "select concat(r_name, r_name, r_name) as col \n" +
+    final String query = "select concat(r_name, r_name, r_name, 'f') as col \n" +
         "from cp.`tpch/region.parquet` limit 0";
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
@@ -58,7 +58,6 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
               "       over(order by position_id) as rnum " +
               "       from cp.`employee.json`)";
 
-
       final String view2 =
           "create view TestFunctionsWithTypeExpoQueries_testViewShield2 as \n" +
               "select row_number() over(order by position_id) as rnum, " +
@@ -68,7 +67,6 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
       test(view1);
       test(view2);
-
       testBuilder()
           .sqlQuery("select * from TestFunctionsWithTypeExpoQueries_testViewShield1")
           .ordered()
@@ -92,6 +90,38 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query1)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query2)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query3)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testTrim() throws Exception {
+    final String query1 = "SELECT trim('drill') as col FROM cp.`tpch/region.parquet` limit 0";
+    final String query2 = "SELECT trim('drill') as col FROM cp.`tpch/region.parquet` limit 0";
+    final String query3 = "SELECT trim('drill') as col FROM cp.`tpch/region.parquet` limit 0";
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.VARCHAR)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
     testBuilder()
@@ -294,8 +324,28 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   }
 
   @Test
-  public void testSQRT() throws Exception {
+  public void testSQRTDecimalLiteral() throws Exception {
     final String query = "SELECT sqrt(5.1) as col \n" +
+        "from cp.`tpch/nation.parquet` \n" +
+        "limit 0";
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testSQRTIntegerLiteral() throws Exception {
+    final String query = "SELECT sqrt(4) as col \n" +
         "from cp.`tpch/nation.parquet` \n" +
         "limit 0";
 
@@ -334,6 +384,27 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
   }
 
   @Test
+  public void testEqualBetweenIntervalAndTimestampDiff() throws Exception {
+    final String query = "select to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') + interval '10-11' year to month as col \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "where (to_timestamp('2016-11-02 10:00:00','YYYY-MM-dd HH:mm:ss') - to_timestamp('2016-01-01 10:00:00','YYYY-MM-dd HH:mm:ss') < interval '5 10:00:00' day to second) \n" +
+        "limit 0";
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.TIMESTAMP)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
   public void testAvgAndSUM() throws Exception {
     final String query = "SELECT AVG(cast(r_regionkey as float)) AS `col1`, \n" +
         "SUM(cast(r_regionkey as float)) AS `col2`, \n" +
@@ -358,6 +429,115 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
 
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col1"), majorType1));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col2"), majorType2));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col3"), majorType3));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testAvgCountStar() throws Exception {
+    final String query = "select avg(distinct cast(r_regionkey as bigint)) + avg(cast(r_regionkey as integer)) as col1, \n" +
+        "sum(distinct cast(r_regionkey as bigint)) + 100 as col2, count(*) as col3 \n" +
+        "from cp.`tpch/region.parquet` alltypes_v \n" +
+        "where cast(r_regionkey as bigint) = 100000000000000000 \n" +
+        "limit 0";
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType1 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final TypeProtos.MajorType majorType2 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final TypeProtos.MajorType majorType3 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col1"), majorType1));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col2"), majorType2));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col3"), majorType3));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test // explain plan including all attributes for
+  public void testUDFInGroupBy() throws Exception {
+    final String query = "select count(*) as col1, substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2) as col2, \n" +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) as col3 \n" +
+        "from cp.`tpch/region.parquet` t1 \n" +
+        "left outer join cp.`tpch/nation.parquet` t2 on cast(t1.r_regionkey as Integer) = cast(t2.n_nationkey as Integer) \n" +
+        "left outer join cp.`employee.json` t3 on cast(t1.r_regionkey as Integer) = cast(t3.employee_id as Integer) \n" +
+        "group by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2), \n" +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) \n" +
+        "order by substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2),\n" +
+        "char_length(substr(lower(UPPER(cast(t3.full_name as varchar(100)))), 5, 2)) \n" +
+        "limit 0";
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType1 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+
+    final TypeProtos.MajorType majorType2 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.VARCHAR)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+    final TypeProtos.MajorType majorType3 = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col1"), majorType1));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col2"), majorType2));
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col3"), majorType3));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testWindowSumAvg() throws Exception {
+    final String query = "with query as ( \n" +
+        "select sum(cast(employee_id as integer)) over w as col1, cast(avg(cast(employee_id as bigint)) over w as double precision) as col2, count(*) over w as col3 \n" +
+        "from cp.`tpch/region.parquet` \n" +
+        "window w as (partition by cast(full_name as varchar(10)) order by cast(full_name as varchar(10)) nulls first)) \n" +
+        "select * \n" +
+        "from query \n" +
+        "limit 0";
+
+    final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    final TypeProtos.MajorType majorType1 = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.BIGINT)
+            .setMode(TypeProtos.DataMode.OPTIONAL)
+            .build();
+
+    final TypeProtos.MajorType majorType2 = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.FLOAT8)
+            .setMode(TypeProtos.DataMode.OPTIONAL)
+            .build();
+
+    final TypeProtos.MajorType majorType3 = TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.BIGINT)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col1"), majorType1));
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col2"), majorType2));
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col3"), majorType3));

@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,7 +32,16 @@ import com.google.common.collect.Maps;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlCountAggFunction;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.trace.CalciteTrace;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
+import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
+import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
@@ -51,15 +59,12 @@ import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.fun.SqlSumAggFunction;
 import org.apache.calcite.sql.fun.SqlSumEmptyIsZeroAggFunction;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.CompositeList;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Util;
 
-import org.apache.calcite.util.trace.CalciteTrace;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
-import org.apache.drill.exec.planner.sql.DrillCalciteSqlWrapper;
-import org.apache.drill.exec.planner.sql.DrillSqlOperator;
+import com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 
 /**
  * Rule to reduce aggregates to simpler forms. Currently only AVG(x) to
@@ -71,13 +76,21 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   /**
    * The singleton.
    */
-
   public static final DrillReduceAggregatesRule INSTANCE =
       new DrillReduceAggregatesRule(operand(LogicalAggregate.class, any()));
   public static final DrillConvertSumToSumZero INSTANCE_SUM =
-          new DrillConvertSumToSumZero(operand(DrillAggregateRel.class, any()));
+      new DrillConvertSumToSumZero(operand(DrillAggregateRel.class, any()));
 
-  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false);
+  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false,
+      new SqlReturnTypeInference() {
+        @Override
+        public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+          return TypeInferenceUtils.createCalciteTypeWithNullability(
+              opBinding.getTypeFactory(),
+              SqlTypeName.ANY,
+              opBinding.getOperandType(0).isNullable());
+      }
+  });
 
   //~ Constructors -----------------------------------------------------------
 
@@ -222,7 +235,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       // case COUNT(x) when 0 then null else SUM0(x) end
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
     }
-
     if (sqlAggFunction instanceof SqlAvgAggFunction) {
       final SqlAvgAggFunction.Subtype subtype = ((SqlAvgAggFunction) sqlAggFunction).getSubtype();
       switch (subtype) {
@@ -292,7 +304,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       AggregateCall oldCall,
       List<AggregateCall> newCalls,
       Map<AggregateCall, RexNode> aggCallMapping) {
-    final boolean isWrapper = useWrapper(oldCall);
+    final PlannerSettings plannerSettings = (PlannerSettings) oldAggRel.getCluster().getPlanner().getContext();
+    final boolean isInferenceEnabled = plannerSettings.isTypeInferenceEnabled();
     final int nGroups = oldAggRel.getGroupCount();
     RelDataTypeFactory typeFactory =
         oldAggRel.getCluster().getTypeFactory();
@@ -302,25 +315,12 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         getFieldType(
             oldAggRel.getInput(),
             iAvgInput);
-
-    final RelDataType sumType;
-    if(isWrapper) {
-      sumType = oldCall.getType();
-    } else {
-      sumType =
-          typeFactory.createTypeWithNullability(
-              avgInputType,
-              avgInputType.isNullable() || nGroups == 0);
-    }
+    RelDataType sumType =
+        typeFactory.createTypeWithNullability(
+            avgInputType,
+            avgInputType.isNullable() || nGroups == 0);
     // SqlAggFunction sumAgg = new SqlSumAggFunction(sumType);
-    SqlAggFunction sumAgg;
-    if(isWrapper) {
-      sumAgg = new DrillCalciteSqlAggFunctionWrapper(
-          new SqlSumEmptyIsZeroAggFunction(), sumType);
-    } else {
-      sumAgg = new SqlSumEmptyIsZeroAggFunction();
-    }
-
+    SqlAggFunction sumAgg = new SqlSumEmptyIsZeroAggFunction();
     AggregateCall sumCall =
         new AggregateCall(
             sumAgg,
@@ -385,15 +385,21 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             newCalls,
             aggCallMapping,
             ImmutableList.of(avgInputType));
-    final RexNode divideRef =
-        rexBuilder.makeCall(
-            SqlStdOperatorTable.DIVIDE,
-            numeratorRef,
-            denominatorRef);
-
-    if(isWrapper) {
-      return divideRef;
+    if(isInferenceEnabled) {
+      return rexBuilder.makeCall(
+          new DrillSqlOperator(
+              "divide",
+              2,
+              true,
+              oldCall.getType()),
+          numeratorRef,
+          denominatorRef);
     } else {
+      final RexNode divideRef =
+          rexBuilder.makeCall(
+              SqlStdOperatorTable.DIVIDE,
+              numeratorRef,
+              denominatorRef);
       return rexBuilder.makeCast(
           typeFactory.createSqlType(SqlTypeName.ANY), divideRef);
     }
@@ -404,34 +410,29 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       AggregateCall oldCall,
       List<AggregateCall> newCalls,
       Map<AggregateCall, RexNode> aggCallMapping) {
-    final boolean isWrapper = useWrapper(oldCall);
+    final PlannerSettings plannerSettings = (PlannerSettings) oldAggRel.getCluster().getPlanner().getContext();
+    final boolean isInferenceEnabled = plannerSettings.isTypeInferenceEnabled();
     final int nGroups = oldAggRel.getGroupCount();
     RelDataTypeFactory typeFactory =
         oldAggRel.getCluster().getTypeFactory();
     RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
-
-    final RelDataType argType;
-    if(isWrapper) {
-      argType = oldCall.getType();
-    } else {
-      int arg = oldCall.getArgList().get(0);
-      argType =
-          getFieldType(
-              oldAggRel.getInput(),
-              arg);
-    }
-
+    int arg = oldCall.getArgList().get(0);
+    RelDataType argType =
+        getFieldType(
+            oldAggRel.getInput(),
+            arg);
     final RelDataType sumType;
     final SqlAggFunction sumZeroAgg;
-    if(isWrapper) {
+    if(isInferenceEnabled) {
       sumType = oldCall.getType();
       sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
           new SqlSumEmptyIsZeroAggFunction(), sumType);
     } else {
-      sumType = typeFactory.createTypeWithNullability(argType, argType.isNullable());
+      sumType =
+          typeFactory.createTypeWithNullability(
+              argType, argType.isNullable());
       sumZeroAgg = new SqlSumEmptyIsZeroAggFunction();
     }
-
     AggregateCall sumZeroCall =
         new AggregateCall(
             sumZeroAgg,
@@ -488,7 +489,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       List<AggregateCall> newCalls,
       Map<AggregateCall, RexNode> aggCallMapping,
       List<RexNode> inputExprs) {
-    final boolean isWrapper = useWrapper(oldCall);
     // stddev_pop(x) ==>
     //   power(
     //     (sum(x * x) - sum(x) * sum(x) / count(x))
@@ -500,6 +500,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     //     (sum(x * x) - sum(x) * sum(x) / count(x))
     //     / nullif(count(x) - 1, 0),
     //     .5)
+    final PlannerSettings plannerSettings = (PlannerSettings) oldAggRel.getCluster().getPlanner().getContext();
+    final boolean isInferenceEnabled = plannerSettings.isTypeInferenceEnabled();
     final int nGroups = oldAggRel.getGroupCount();
     RelDataTypeFactory typeFactory =
         oldAggRel.getCluster().getTypeFactory();
@@ -525,26 +527,13 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         typeFactory.createTypeWithNullability(
             argType,
             true);
-    final AggregateCall sumArgSquaredAggCall;
-    if(isWrapper) {
-      sumArgSquaredAggCall =
-          new AggregateCall(
-              new DrillCalciteSqlAggFunctionWrapper(
-                  new SqlSumAggFunction(sumType), sumType),
-              oldCall.isDistinct(),
-              ImmutableIntList.of(argSquaredOrdinal),
-              sumType,
-              null);
-    } else {
-      sumArgSquaredAggCall =
-          new AggregateCall(
-              new SqlSumAggFunction(sumType),
-              oldCall.isDistinct(),
-              ImmutableIntList.of(argSquaredOrdinal),
-              sumType,
-              null);
-    }
-
+    final AggregateCall sumArgSquaredAggCall =
+        new AggregateCall(
+            new SqlSumAggFunction(sumType),
+            oldCall.isDistinct(),
+            ImmutableIntList.of(argSquaredOrdinal),
+            sumType,
+            null);
     final RexNode sumArgSquared =
         rexBuilder.addAggCall(
             sumArgSquaredAggCall,
@@ -554,26 +543,13 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             aggCallMapping,
             ImmutableList.of(argType));
 
-    final AggregateCall sumArgAggCall;
-    if(isWrapper) {
-      sumArgAggCall =
-          new AggregateCall(
-              new DrillCalciteSqlAggFunctionWrapper(
-                  new SqlSumAggFunction(sumType), sumType),
-              oldCall.isDistinct(),
-              ImmutableIntList.of(argOrdinal),
-              sumType,
-              null);
-    } else {
-      sumArgAggCall =
-          new AggregateCall(
-              new SqlSumAggFunction(sumType),
-              oldCall.isDistinct(),
-              ImmutableIntList.of(argOrdinal),
-              sumType,
-              null);
-    }
-
+    final AggregateCall sumArgAggCall =
+        new AggregateCall(
+            new SqlSumAggFunction(sumType),
+            oldCall.isDistinct(),
+            ImmutableIntList.of(argOrdinal),
+            sumType,
+            null);
     final RexNode sumArg =
           rexBuilder.addAggCall(
               sumArgAggCall,
@@ -635,9 +611,20 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               countEqOne, nul, countMinusOne);
     }
 
+    final SqlOperator divide;
+    if(isInferenceEnabled) {
+      divide = new DrillSqlOperator(
+          "divide",
+          2,
+          true,
+          oldCall.getType());
+    } else {
+      divide = SqlStdOperatorTable.DIVIDE;
+    }
+
     final RexNode div =
         rexBuilder.makeCall(
-            SqlStdOperatorTable.DIVIDE, diff, denominator);
+            divide, diff, denominator);
 
     RexNode result = div;
     if (sqrt) {
@@ -648,17 +635,17 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               SqlStdOperatorTable.POWER, div, half);
     }
 
-    /*
-     * Currently calcite's strategy to infer the return type of aggregate functions
-     * is wrong because it uses the first known argument to determine output type. For
-     * instance if we are performing stddev on an integer column then it interprets the
-     * output type to be integer which is incorrect as it should be double. So based on
-     * this if we add cast after rewriting the aggregate we add an additional cast which
-     * would cause wrong results. So we simply add a cast to ANY.
-     */
-    if(isWrapper) {
+    if(isInferenceEnabled) {
       return result;
     } else {
+     /*
+      * Currently calcite's strategy to infer the return type of aggregate functions
+      * is wrong because it uses the first known argument to determine output type. For
+      * instance if we are performing stddev on an integer column then it interprets the
+      * output type to be integer which is incorrect as it should be double. So based on
+      * this if we add cast after rewriting the aggregate we add an additional cast which
+      * would cause wrong results. So we simply add a cast to ANY.
+      */
       return rexBuilder.makeCast(
           typeFactory.createSqlType(SqlTypeName.ANY), result);
     }
@@ -702,10 +689,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     final RelDataTypeField inputField =
         relNode.getRowType().getFieldList().get(i);
     return inputField.getType();
-  }
-
-  private boolean useWrapper(AggregateCall aggregateCall) {
-    return aggregateCall.getAggregation() instanceof DrillCalciteSqlWrapper;
   }
 
   private static class DrillConvertSumToSumZero extends RelOptRule {
@@ -756,11 +739,11 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               new SqlSumEmptyIsZeroAggFunction(), sumType);
           AggregateCall sumZeroCall =
               new AggregateCall(
-              sumZeroAgg,
-              oldAggregateCall.isDistinct(),
-              oldAggregateCall.getArgList(),
-              sumType,
-              null);
+                  sumZeroAgg,
+                  oldAggregateCall.isDistinct(),
+                  oldAggregateCall.getArgList(),
+                  sumType,
+                  null);
           oldAggRel.getCluster().getRexBuilder()
               .addAggCall(sumZeroCall,
                   oldAggRel.getGroupCount(),
