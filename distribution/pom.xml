@@ -245,18 +245,6 @@
           <artifactId>maprdb</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.ojai</groupId>
-          <artifactId>ojai</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>com.mapr.fs</groupId>
-          <artifactId>mapr-hbase</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.antlr</groupId>
-          <artifactId>antlr4-runtime</artifactId>
-        </dependency>
-        <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-winutils</artifactId>
           <version>2.7.0-mapr-1506</version>
