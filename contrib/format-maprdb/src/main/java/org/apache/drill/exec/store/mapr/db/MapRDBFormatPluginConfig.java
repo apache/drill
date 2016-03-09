@@ -27,8 +27,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("maprdb")  @JsonInclude(Include.NON_DEFAULT)
 public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
 
-  private boolean allTextMode = false;
-  private boolean readAllNumbersAsDouble = false;
+  public boolean allTextMode = false;
+  public boolean readAllNumbersAsDouble = false;
+  public boolean enablePushdown = true;
 
   @Override
   public int hashCode() {
@@ -41,6 +42,8 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
     if (readAllNumbersAsDouble != other.readAllNumbersAsDouble) {
       return false;
     } else if (allTextMode != other.allTextMode) {
+      return false;
+    } else if (enablePushdown != other.enablePushdown) {
       return false;
     }
 
@@ -63,6 +66,15 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   @JsonProperty("readAllNumbersAsDouble")
   public void setReadAllNumbersAsDouble(boolean read) {
     readAllNumbersAsDouble = read;
+  }
+
+  public boolean isEnablePushdown() {
+    return enablePushdown;
+  }
+
+  @JsonProperty("enablePushdown")
+  public void setEnablePushdown(boolean enablePushdown) {
+    this.enablePushdown = enablePushdown;
   }
 
 }

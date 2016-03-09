@@ -112,7 +112,8 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       FilterPrel filter, final ProjectPrel project, ScanPrel scan,
       JsonTableGroupScan groupScan, RexNode condition) {
 
-    if (groupScan.isFilterPushedDown()) {
+    if (groupScan.isDisablePushdown() // Do not pushdown filter if it is disabled in plugin configuration
+        || groupScan.isFilterPushedDown()) { // see below
       /*
        * The rule can get triggered again due to the transformed "scan => filter" sequence
        * created by the earlier execution of this rule when we could not do a complete
@@ -202,4 +203,5 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of(childRel)));
     }
   }
+
 }

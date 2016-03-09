@@ -39,7 +39,16 @@ import com.mapr.tests.annotations.ClusterTest;
 public class TestSimpleJson extends BaseJsonTest {
 
   @Test
-  public void testMe() throws Exception {
+  public void testSelectStar() throws Exception {
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`business` business";
+    runSQLAndVerifyCount(sql, 10);
+  }
+
+  @Test
+  public void testSelectId() throws Exception {
     setColumnWidths(new int[] {23});
     final String sql = "SELECT\n"
         + "  _id\n"
@@ -55,6 +64,24 @@ public class TestSimpleJson extends BaseJsonTest {
         + " (select _id, kvgen(b.attributes.Parking) as parking from hbase.business b)"
         + " as t where t.parking[0].`key` = 'garage' AND t.parking[0].`value` = true";
     runSQLAndVerifyCount(sql, 1);
+  }
+
+  @Test
+  public void testPushdownDisabled() throws Exception {
+    setColumnWidths(new int[] {25, 40, 40, 40});
+    final String sql = "SELECT\n"
+        + "  _id, name, categories, full_address\n"
+        + "FROM\n"
+        + "  table(hbase.`business`(type => 'maprdb', enablePushdown => false)) business\n"
+        + "WHERE\n"
+        + " name <> 'Sprint'"
+        ;
+    runSQLAndVerifyCount(sql, 9);
+
+    final String[] expectedPlan = {"condition=null", "columns=\\[`\\*`\\]"};
+    final String[] excludedPlan = {"condition=\\(name != \"Sprint\"\\)", "columns=\\[`name`, `_id`, `categories`, `full_address`\\]"};
+
+    PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
 
   @Test
@@ -131,7 +158,7 @@ public class TestSimpleJson extends BaseJsonTest {
         ;
     runSQLAndVerifyCount(sql, 9);
 
-    final String[] expectedPlan = {"condition=\\(name != \"Sprint\"\\)"};
+    final String[] expectedPlan = {"condition=\\(name != \"Sprint\"\\)", "columns=\\[`name`, `_id`, `categories`, `full_address`\\]"};
     final String[] excludedPlan = {};
 
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
@@ -409,4 +436,5 @@ public class TestSimpleJson extends BaseJsonTest {
 
     PlanTestBase.testPlanMatchingPatterns(sql, expectedPlan, excludedPlan);
   }
+
 }

@@ -112,7 +112,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
       regionsToScan = new TreeMap<TabletFragmentInfo, String>();
       for (TabletInfo tabletInfo : tabletInfos) {
         TabletInfoImpl tabletInfoImpl = (TabletInfoImpl) tabletInfo;
-        if (!foundStartRegion 
+        if (!foundStartRegion
             && !isNullOrEmpty(scanSpec.getStartRow())
             && !tabletInfoImpl.containsRow(scanSpec.getStartRow())) {
           continue;
@@ -169,6 +169,15 @@ public class JsonTableGroupScan extends MapRDBGroupScan {
   @JsonIgnore
   public String getTableName() {
     return scanSpec.getTableName();
+  }
+
+  public boolean isDisablePushdown() {
+    return !formatPluginConfig.isEnablePushdown();
+  }
+
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return formatPluginConfig.isEnablePushdown();
   }
 
   @Override
