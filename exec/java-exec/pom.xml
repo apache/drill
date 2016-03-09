@@ -430,20 +430,6 @@
       </activation>
     </profile>
     <profile>
-      <id>mapr</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.mapr.hadoop</groupId>
-          <artifactId>maprfs</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-          <version>20090211</version>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
       <id>cdh4</id>
       <dependencies>
         <dependency>
