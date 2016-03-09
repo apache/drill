@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.rpc.control;
+package org.apache.drill.exec.work;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 
 public class WorkEventBus {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkEventBus.class);
+
   private final ConcurrentMap<FragmentHandle, FragmentManager> managers = Maps.newConcurrentMap();
   private final ConcurrentMap<QueryId, FragmentStatusListener> listeners =
       new ConcurrentHashMap<>(16, 0.75f, 16);

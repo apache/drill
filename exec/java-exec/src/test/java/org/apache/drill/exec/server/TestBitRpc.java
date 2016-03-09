@@ -31,8 +31,6 @@ import mockit.MockUp;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -51,7 +49,7 @@ import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.work.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionManager;
 import org.apache.drill.exec.rpc.data.DataServer;
 import org.apache.drill.exec.rpc.data.DataTunnel;

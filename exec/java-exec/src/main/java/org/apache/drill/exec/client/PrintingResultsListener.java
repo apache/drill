@@ -20,7 +20,7 @@ package org.apache.drill.exec.client;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
@@ -65,7 +65,7 @@ public class PrintingResultsListener implements UserResultsListener {
 
   @Override
   public void queryCompleted(QueryState state) {
-    DrillAutoCloseables.closeNoChecked(allocator);
+    AutoCloseables.closeNoChecked(allocator);
     System.out.println("Total rows returned : " + count.get() + ".  Returned in " + w.elapsed(TimeUnit.MILLISECONDS)
         + "ms.");
   }

@@ -42,7 +42,7 @@ import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.work.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentManager;

@@ -19,7 +19,7 @@ package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
@@ -56,7 +56,7 @@ public class TestByteComparisonFunctions extends ExecTest {
     helloLong.buffer.release();
     goodbye.buffer.release();
     goodbyeLong.buffer.release();
-    DrillAutoCloseables.closeNoChecked(allocator);
+    AutoCloseables.closeNoChecked(allocator);
   }
 
   @Test

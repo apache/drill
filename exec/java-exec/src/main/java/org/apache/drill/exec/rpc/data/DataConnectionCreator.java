@@ -23,7 +23,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.work.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 

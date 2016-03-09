@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.rel.RelFieldCollation.Direction;
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -322,7 +322,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       builder.getSv4().clear();
       selectionVector4.clear();
     } finally {
-      DrillAutoCloseables.closeNoChecked(builder);
+      AutoCloseables.closeNoChecked(builder);
     }
     logger.debug("Took {} us to purge", watch.elapsed(TimeUnit.MICROSECONDS));
   }

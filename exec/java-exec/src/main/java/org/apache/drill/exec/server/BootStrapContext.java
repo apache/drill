@@ -24,7 +24,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.DrillAutoCloseables;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
@@ -124,6 +124,6 @@ public class BootStrapContext implements AutoCloseable {
       }
     }
 
-    DrillAutoCloseables.closeNoChecked(allocator);
+    AutoCloseables.closeNoChecked(allocator);
   }
 }
