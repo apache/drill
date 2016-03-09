@@ -28,7 +28,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("SELECT concat_ws(string_field, string_part, '|') as rst from hive.readtest")
         .unOrdered()
         .baselineColumns("rst")
-        .baselineValues("stringstringfield|")
+        .baselineValues("stringstringfield|".getBytes())
         .baselineValues(new Object[] { null })
         .go();
   }
@@ -39,7 +39,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("SELECT encode(varchar_field, 'UTF-8') as rst from hive.readtest")
         .unOrdered()
         .baselineColumns("rst")
-        .baselineValues("varcharfield")
+        .baselineValues("varcharfield".getBytes())
         .baselineValues(new Object[] { null })
         .go();
   }
