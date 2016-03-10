@@ -177,25 +177,6 @@ public class TestParquetMetadataCache extends PlanTestBase {
       .go();
   }
 
-  @Test
-  public void testFix4376() throws Exception {
-    // first create some parquet subfolders
-    runSQL("CREATE TABLE dfs_test.tmp.`4376`    AS SELECT * FROM cp.`employee.json` LIMIT 1");
-    runSQL("CREATE TABLE dfs_test.tmp.`4376/01` AS SELECT * FROM cp.`employee.json` LIMIT 2");
-    runSQL("CREATE TABLE dfs_test.tmp.`4376/02` AS SELECT * FROM cp.`employee.json` LIMIT 4");
-    runSQL("CREATE TABLE dfs_test.tmp.`4376/0`  AS SELECT * FROM cp.`employee.json` LIMIT 8");
-    runSQL("CREATE TABLE dfs_test.tmp.`4376/11` AS SELECT * FROM cp.`employee.json` LIMIT 16");
-    runSQL("CREATE TABLE dfs_test.tmp.`4376/12` AS SELECT * FROM cp.`employee.json` LIMIT 32");
-    // next, build the metadata cache file
-    runSQL("REFRESH TABLE METADATA dfs_test.tmp.`4376`");
-
-    testBuilder()
-      .sqlQuery("SELECT COUNT(*) AS `count` FROM dfs_test.tmp.`4376/0*`")
-      .ordered()
-      .baselineColumns("count").baselineValues(15L)
-      .go();
-    }
-
   private void checkForMetadataFile(String table) throws Exception {
     String tmpDir = getDfsTestTmpSchemaLocation();
     String metaFile = Joiner.on("/").join(tmpDir, table, Metadata.METADATA_FILENAME);
