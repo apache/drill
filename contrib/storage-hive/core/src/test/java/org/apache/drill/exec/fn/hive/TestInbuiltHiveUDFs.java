@@ -19,9 +19,11 @@ package org.apache.drill.exec.fn.hive;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.TestBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.hive.HiveTestBase;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.Test;
 
 import java.util.List;
@@ -69,5 +71,17 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
+  }
+
+  @Test // DRILL-4459
+  public void testGetJsonObject() throws Exception {
+    testBuilder()
+        .sqlQuery("select convert_from(json, 'json') as json from hive.simple_json " +
+            "where GET_JSON_OBJECT(simple_json.json, '$.employee_id') like 'Emp2'")
+        .ordered()
+        .baselineColumns("json")
+        .baselineValues(TestBuilder.mapOf("employee_id","Emp2","full_name","Kamesh",
+            "first_name","Bh","last_name","Venkata","position","Store"))
+        .go();
   }
 }
