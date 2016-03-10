@@ -19,7 +19,7 @@
 
 <#list drillOI.map as entry>
 <#if entry.needOIForDrillType == true>
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}ObjectInspector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}${entry.hiveOI}.java" />
 
 <#include "/@includes/license.ftl" />
 
@@ -47,7 +47,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-public class Drill${entry.drillType}ObjectInspector {
+public class Drill${entry.drillType}${entry.hiveOI} {
 <#assign seq = ["Required", "Optional"]>
 <#list seq as mode>
 
@@ -56,7 +56,7 @@ public class Drill${entry.drillType}ObjectInspector {
       super(TypeInfoFactory.${entry.hiveType?lower_case}TypeInfo);
     }
 
-<#if entry.drillType == "VarChar">
+<#if entry.drillType == "VarChar" && entry.hiveType == "VARCHAR">
     @Override
     public HiveVarcharWritable getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
@@ -85,18 +85,18 @@ public class Drill${entry.drillType}ObjectInspector {
       final String s = StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
       return new HiveVarchar(s, HiveVarchar.MAX_VARCHAR_LENGTH);
     }
-<#elseif entry.drillType == "Var16Char">
+<#elseif entry.drillType == "VarChar" && entry.hiveType == "STRING">
     @Override
     public Text getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder)o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return new Text(StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer));
+      return new Text(StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer));
     }
 
     @Override
@@ -105,11 +105,11 @@ public class Drill${entry.drillType}ObjectInspector {
       if (o == null) {
         return null;
       }
-      final NullableVar16CharHolder h = (NullableVar16CharHolder)o;
+      final NullableVarCharHolder h = (NullableVarCharHolder)o;
     <#else>
-      final Var16CharHolder h = (Var16CharHolder)o;
+      final VarCharHolder h = (VarCharHolder)o;
     </#if>
-      return StringFunctionHelpers.toStringFromUTF16(h.start, h.end, h.buffer);
+      return StringFunctionHelpers.toStringFromUTF8(h.start, h.end, h.buffer);
     }
 <#elseif entry.drillType == "VarBinary">
     @Override

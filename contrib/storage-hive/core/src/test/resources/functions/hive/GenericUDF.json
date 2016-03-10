@@ -13,10 +13,10 @@
             url: "http://apache.org",
             entries:[
                 {records: 100, types: [
-                   {name: "str1", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "str2", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "str3", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "nullableStr1", type: "VAR16CHAR", mode: "OPTIONAL"},
+                   {name: "str1", type: "VARCHAR", mode: "REQUIRED"},
+                   {name: "str2", type: "VARCHAR", mode: "REQUIRED"},
+                   {name: "str3", type: "VARCHAR", mode: "REQUIRED"},
+                   {name: "nullableStr1", type: "VARCHAR", mode: "OPTIONAL"},
                    {name: "flt1", type: "FLOAT4", mode: "REQUIRED"}
                 ]}
             ]
