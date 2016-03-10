@@ -17,11 +17,17 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TestAggregateFunctions extends BaseTestQuery {
 
@@ -459,5 +465,30 @@ public class TestAggregateFunctions extends BaseTestQuery {
   @Test
   public void test4443() throws Exception {
     test("SELECT MIN(columns[1]) FROM dfs_test.`%s/agg/4443.csv` GROUP BY columns[0]", TEST_RES_PATH);
+  }
+
+  @Test
+  public void testCountStarRequired() throws Exception {
+    final String query = "select count(*) as col from cp.`tpch/region.parquet`";
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(TypeProtos.MinorType.BIGINT)
+        .setMode(TypeProtos.DataMode.REQUIRED)
+        .build();
+    expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .build()
+        .run();
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col")
+        .baselineValues(5l)
+        .build()
+        .run();
   }
 }
