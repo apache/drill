@@ -150,7 +150,11 @@ public class FileSelection {
     logger.debug("FileSelection.minusDirectories() took {} ms, numFiles: {}",
         timer.elapsed(TimeUnit.MILLISECONDS), total);
 
-    fileSel.setExpanded();
+    // fileSel will be null if we query an empty folder
+    if (fileSel != null) {
+      fileSel.setExpanded();
+    }
+
     return fileSel;
   }
 

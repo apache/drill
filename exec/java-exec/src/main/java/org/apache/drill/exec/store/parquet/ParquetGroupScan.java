@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -568,6 +569,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
    * @return file selection read from cache
    *
    * @throws IOException
+   * @throws UserException when the updated selection is empty, this happens if the user selects an empty folder.
    */
   private FileSelection
   initFromMetadataCache(FileSelection selection, Path metaFilePath) throws IOException {
@@ -580,7 +582,8 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
     List<String> fileNames = Lists.newArrayList();
     List<FileStatus> fileStatuses = selection.getStatuses(fs);
 
-    if (fileStatuses.size() == 1 && fileStatuses.get(0).isDirectory()) {
+    final Path first = fileStatuses.get(0).getPath();
+    if (fileStatuses.size() == 1 && selection.getSelectionRoot().equals(first.toString())) {
       // we are selecting all files from selection root. Expand the file list from the cache
       for (Metadata.ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
         fileNames.add(file.getPath());
@@ -590,7 +593,7 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
       // we need to expand the files from fileStatuses
       for (FileStatus status : fileStatuses) {
         if (status.isDirectory()) {
-          //TODO read the metadata cache files in parallel
+          //TODO [DRILL-4496] read the metadata cache files in parallel
           final Path metaPath = new Path(status.getPath(), Metadata.METADATA_FILENAME);
           final Metadata.ParquetTableMetadataBase metadata = Metadata.readBlockMeta(fs, metaPath.toString());
           for (Metadata.ParquetFileMetadata file : metadata.getFiles()) {
@@ -604,6 +607,11 @@ public class ParquetGroupScan extends AbstractFileGroupScan {
 
       // populate fileSet so we only keep the selected row groups
       fileSet = Sets.newHashSet(fileNames);
+    }
+
+    if (fileNames.isEmpty()) {
+      // no files were found, most likely we tried to query some empty sub folders
+      throw UserException.validationError().message("The table you tried to query is empty").build(logger);
     }
 
     // when creating the file selection, set the selection root in the form /a/b instead of
