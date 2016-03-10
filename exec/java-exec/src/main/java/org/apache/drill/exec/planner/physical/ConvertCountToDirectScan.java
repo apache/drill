@@ -167,7 +167,7 @@ public class ConvertCountToDirectScan extends Prule {
    * Class to represent the count aggregate result.
    */
   public static class CountQueryResult {
-    public Long count;
+    public long count;
 
     public CountQueryResult(long cnt) {
       this.count = cnt;
