@@ -119,7 +119,8 @@ public class MaprDBTestsSuite {
               "   \"maprdb\": {" +
               "      \"type\": \"maprdb\"," +
               "      \"allTextMode\": false," +
-              "      \"readAllNumbersAsDouble\": false" +
+              "      \"readAllNumbersAsDouble\": false," +
+              "      \"enablePushdown\": true" +
               "    }," +
               "   \"streams\": {" +
               "      \"type\": \"streams\"" +

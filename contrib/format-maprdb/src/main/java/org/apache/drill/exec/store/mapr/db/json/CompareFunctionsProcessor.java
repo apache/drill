@@ -174,9 +174,11 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     }
 
     if (valueArg instanceof TimeStampExpression) {
-      this.value = KeyValueBuilder.initFrom(new OTimestamp(((TimeStampExpression)valueArg).getTimeStamp()));
-      this.path = path;
-      return true;
+      // disable pushdown of TimeStampExpression type until bug 22824 is fixed.
+      //
+      // this.value = KeyValueBuilder.initFrom(new OTimestamp(((TimeStampExpression)valueArg).getTimeStamp()));
+      // this.path = path;
+      // return true;
     }
 
     return false;
