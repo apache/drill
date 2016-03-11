@@ -48,7 +48,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testDate() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -82,7 +85,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testSortDate() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -116,7 +122,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testTimeStamp() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -150,7 +159,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testInterval() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -208,7 +220,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testLiterals() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();
@@ -247,7 +262,10 @@ public class TestDateTypes extends PopUnitTestBase {
     public void testDateAdd() throws Exception {
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
-             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+             DrillClient client = DrillClient.newBuilder()
+                 .setConfig(CONFIG)
+                 .setClusterCoordinator(serviceSet.getCoordinator())
+                 .build()) {
 
             // run query.
             bit.run();

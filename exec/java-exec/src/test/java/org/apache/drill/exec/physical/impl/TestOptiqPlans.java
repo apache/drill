@@ -132,7 +132,10 @@ public class TestOptiqPlans extends ExecTest {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(config, serviceSet);
-        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
@@ -161,7 +164,10 @@ public class TestOptiqPlans extends ExecTest {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(config, serviceSet);
-        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
@@ -190,7 +196,10 @@ public class TestOptiqPlans extends ExecTest {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(config, serviceSet);
-        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
@@ -229,7 +238,10 @@ public class TestOptiqPlans extends ExecTest {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(config, serviceSet);
-        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.LOGICAL,
@@ -268,7 +280,10 @@ public class TestOptiqPlans extends ExecTest {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(config, serviceSet);
-        final DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(config)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
       bit1.run();
       client.connect();
       final List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,

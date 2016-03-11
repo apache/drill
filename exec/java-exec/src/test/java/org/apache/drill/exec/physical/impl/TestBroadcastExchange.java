@@ -40,7 +40,10 @@ public class TestBroadcastExchange extends PopUnitTestBase {
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+        DrillClient client = DrillClient.newBuilder()
+            .setConfig(CONFIG)
+            .setClusterCoordinator(serviceSet.getCoordinator())
+            .build()) {
 
       bit1.run();
       bit2.run();
@@ -68,7 +71,10 @@ public class TestBroadcastExchange extends PopUnitTestBase {
 
     try (Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+        DrillClient client = DrillClient.newBuilder()
+            .setConfig(CONFIG)
+            .setClusterCoordinator(serviceSet.getCoordinator())
+            .build()) {
 
       bit1.run();
       bit2.run();

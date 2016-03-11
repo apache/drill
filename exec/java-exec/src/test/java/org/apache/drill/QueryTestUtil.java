@@ -63,7 +63,10 @@ public class QueryTestUtil {
    */
   public static DrillClient createClient(final DrillConfig drillConfig, final RemoteServiceSet remoteServiceSet,
       final int maxWidth, final Properties props) throws RpcException, OutOfMemoryException {
-    final DrillClient drillClient = new DrillClient(drillConfig, remoteServiceSet.getCoordinator());
+    final DrillClient drillClient = DrillClient.newBuilder()
+        .setConfig(drillConfig)
+        .setClusterCoordinator(remoteServiceSet.getCoordinator())
+        .build();
     drillClient.connect(props);
 
     final List<QueryDataBatch> results = drillClient.runQuery(

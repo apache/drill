@@ -131,7 +131,10 @@ public class TestHashJoin extends PopUnitTestBase {
     // Function checks hash join with single equality condition
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
        Drillbit bit = new Drillbit(CONFIG, serviceSet);
-       DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+       DrillClient client = DrillClient.newBuilder()
+           .setConfig(CONFIG)
+           .setClusterCoordinator(serviceSet.getCoordinator())
+           .build()) {
 
       // run query.
       bit.run();
@@ -174,7 +177,10 @@ public class TestHashJoin extends PopUnitTestBase {
     // Function tests with hash join with exchanges
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
       final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-      final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+      final DrillClient client = DrillClient.newBuilder()
+          .setConfig(CONFIG)
+          .setClusterCoordinator(serviceSet.getCoordinator())
+          .build()) {
 
       // run query.
       bit.run();
@@ -202,7 +208,10 @@ public class TestHashJoin extends PopUnitTestBase {
     // Function tests hash join with multiple join conditions
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
       final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-      final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+      final DrillClient client = DrillClient.newBuilder()
+          .setConfig(CONFIG)
+          .setClusterCoordinator(serviceSet.getCoordinator())
+          .build()) {
 
       // run query.
       bit.run();
@@ -248,7 +257,10 @@ public class TestHashJoin extends PopUnitTestBase {
     // Another test for hash join with exchanges
     try (final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
          final Drillbit bit = new Drillbit(CONFIG, serviceSet);
-         final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       // run query.
       bit.run();
@@ -274,7 +286,10 @@ public class TestHashJoin extends PopUnitTestBase {
     final RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try (final Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        final DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+         final DrillClient client = DrillClient.newBuilder()
+             .setConfig(CONFIG)
+             .setClusterCoordinator(serviceSet.getCoordinator())
+             .build()) {
 
       bit1.run();
       client.connect();

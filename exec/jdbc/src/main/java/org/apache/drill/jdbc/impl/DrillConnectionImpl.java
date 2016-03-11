@@ -17,7 +17,6 @@
  */
 package org.apache.drill.jdbc.impl;
 
-import java.io.IOException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -133,12 +132,18 @@ class DrillConnectionImpl extends AvaticaConnection
 
         makeTmpSchemaLocationsUnique(bit.getContext().getStorage(), info);
 
-        this.client = new DrillClient(dConfig, set.getCoordinator());
+        this.client = DrillClient.newBuilder()
+            .setConfig(dConfig)
+            .setClusterCoordinator(set.getCoordinator())
+            .build();
         this.client.connect(null, info);
       } else if(config.isDirect()) {
         final DrillConfig dConfig = DrillConfig.forClient();
         this.allocator = RootAllocatorFactory.newRoot(dConfig);
-        this.client = new DrillClient(dConfig, true); // Get a direct connection
+        this.client = DrillClient.newBuilder()
+            .setConfig(dConfig)
+            .setDirectConnection(true) // Get a direct connection
+            .build();
         this.client.connect(config.getZookeeperConnectionString(), info);
       } else {
         final DrillConfig dConfig = DrillConfig.forClient();

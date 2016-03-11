@@ -118,8 +118,11 @@ public class DrillUserPrincipal implements Principal, AutoCloseable {
     public DrillClient getDrillClient() throws IOException {
       try {
         // Create a DrillClient
-        drillClient = new DrillClient(drillbitContext.getConfig(),
-            drillbitContext.getClusterCoordinator(), drillbitContext.getAllocator());
+        drillClient = DrillClient.newBuilder()
+            .setConfig(drillbitContext.getConfig())
+            .setClusterCoordinator(drillbitContext.getClusterCoordinator())
+            .setAllocator(drillbitContext.getAllocator())
+            .build();
         drillClient.connect();
         return  drillClient;
       } catch (final Exception e) {
